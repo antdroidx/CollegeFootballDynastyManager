@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="credits">
+        Achi Jones - Original Developer of Football Coach, the original base of this version of the game.\n\n
+        Akshay Easwaran - Developer of Football Coach for iOS\n\n
+        Jonas Gehring - Developer of Graphview libraries for Android\n\n
+        Reddit - users at /r/FootballCoach\n\n
+        OperationSports - the many users of the gaming community\n\n
+    </string>
+</resources>

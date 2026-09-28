@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog">Thank you for playing College Football Coach: Career Edition!
+        \n\nPlease share any feedback to the developer on how to improve this game!
+        \n\n  v1.4
+        \n+ New Dashboard UI
+        \n+ Added Offensive and Defensive Coordinators
+        \n+ New Player and Coaching Profiles
+        \n+ Year-by-Year Stats
+        \n+ Updated Transfers Dialogs
+        \n+ In-Game Injuries
+        \n+ Several game tweaks and code re-writes
+        \n+ Ability to Cut Players
+        \n+ Convert to Pro-Rel in Preseason
+        \n\n v1.4.33
+        \n+ Added Coaching Age Import Feature
+
+
+    </string>
+</resources>

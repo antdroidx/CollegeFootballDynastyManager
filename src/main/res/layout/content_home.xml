@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/homeMain"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primary_material_dark_1"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingBottom="8dp"
+    android:theme="@style/Base.ThemeOverlay.AppCompat.Dark"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="antdroid.cfbcoach.Home"
+    tools:showIn="@layout/activity_home">
+
+    <ImageView
+        android:id="@+id/imageLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_marginTop="0dp"
+        android:layout_weight="5"
+        android:adjustViewBounds="true"
+        android:maxWidth="300dp"
+        android:maxHeight="400dp"
+        android:padding="5dp"
+        android:scaleType="fitCenter" />
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonNewGame"
+            android:layout_width="0dip"
+            android:layout_height="fill_parent"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="New Game"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonCustom"
+            android:layout_width="0dip"
+            android:layout_height="fill_parent"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Custom Game"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonLoadGame"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Load"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/buttonImportSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Import"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/buttonDeleteSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Delete"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonChangeTheme"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Toggle Theme"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonUpdates"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:background="@color/design_default_color_primary_dark"
+            android:padding="0dp"
+            android:text="Recent Changes"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonTutorial"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Game Manual"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/buttonCredits"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Credits"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="0dp">
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/Links"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="EXTERNAL LINKS"
+        android:textAlignment="center"
+        android:textSize="10sp" />
+
+    <LinearLayout
+        android:layout_width="250dp"
+        android:layout_height="0dip"
+        android:layout_gravity="center"
+        android:layout_margin="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/buttonDonate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Rosters"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/buttonSubreddit"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Reddit"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/buttonAntdroid"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="Antdroid"
+            android:textSize="10sp" />
+
+        <Button
+            android:id="@+id/buttonGitHub"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="0dp"
+            android:layout_weight="1"
+            android:padding="0dp"
+            android:text="GitHub"
+            android:textSize="10sp" />
+
+    </LinearLayout>
+
+    <!--suppress AndroidDomInspection -->
+    <TextView
+        android:id="@+id/versionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:text="@string/versionName"
+        android:textAlignment="center"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:text="© Achi Jones, 2016 | Anthony Nguyen, 2017-21"
+        android:textAlignment="center"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textSize="12sp" />
+
+
+</LinearLayout>

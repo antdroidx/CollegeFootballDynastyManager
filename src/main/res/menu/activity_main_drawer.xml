@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:title="@string/menu_home"
+            android:visible="true" />
+    </group>
+
+    <item android:title="Team">
+        <menu>
+            <item
+                android:id="@+id/nav_roster"
+                android:title="@string/menu_roster" />
+            <item
+                android:id="@+id/nav_teamplayerstats"
+                android:title="@string/menu_teamplayerstats" />
+            <item
+                android:id="@+id/nav_teamstats"
+                android:title="@string/menu_teamstats" />
+            <item
+                android:id="@+id/nav_schedule"
+                android:title="@string/menu_schedule" />
+        </menu>
+    </item>
+
+    <item android:title="League">
+        <menu>
+            <item
+                android:id="@+id/nav_news"
+                android:title="@string/menu_news" />
+            <item
+                android:id="@+id/nav_scores"
+                android:title="@string/menu_scores" />
+            <item
+                android:id="@+id/nav_standings"
+                android:title="@string/menu_standings" />
+            <item
+                android:id="@+id/nav_rankings"
+                android:title="@string/menu_rankings" />
+            <item
+                android:id="@+id/nav_leagueteamstats"
+                android:title="@string/menu_leagueteamstats" />
+            <item
+                android:id="@+id/nav_leagueplayerstats"
+                android:title="@string/menu_leagueplayerstats" />
+            <item
+                android:id="@+id/nav_awards"
+                android:title="@string/menu_leagueawards" />
+            <item
+                android:id="@+id/nav_postseason"
+                android:title="@string/menu_postseason" />
+        </menu>
+    </item>
+
+</menu>

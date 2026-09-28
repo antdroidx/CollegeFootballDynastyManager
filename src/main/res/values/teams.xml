@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="teams">
+xBoston,BC,Atlantic,68,Atlantic,3%
+South Carolina Tech,SCT,Atlantic,87,Atlantic,3%
+Durham,DUKE,Atlantic,50,Coastal,3%
+Florida State,FSU,Atlantic,62,Atlantic,3%
+Georgia IT,GT,Atlantic,52,Coastal,3%
+Louisville,LOUI,Atlantic,61,Atlantic,4%
+Miami,MIA,Atlantic,74,Coastal,3%
+North Carolina,UNC,Atlantic,50,Coastal,3%
+NC State,NCST,Atlantic,65,Atlantic,3%
+Pittsburgh,PITT,Atlantic,65,Coastal,3%
+Syracuse,SYR,Atlantic,64,Atlantic,3%
+Winston-Salem,WINS,Atlantic,50,Atlantic,3%
+Virginia,VIR,Atlantic,62,Coastal,3%
+Virginia Poly,VPOL,Atlantic,72,Coastal,3%
+[END_CONF]%
+Illinois,ILL,Great Lakes,50,West,2%
+Indiana,IND,Great Lakes,50,East,2%
+Iowa,IOW,Great Lakes,67,West,1%
+Maryland,MARY,Great Lakes,52,East,3%
+Michigan,MIC,Great Lakes,80,East,2%
+Michigan State,MSU,Great Lakes,71,East,2%
+Minnesota,MIN,Great Lakes,58,West,1%
+Nebraska,NEB,Great Lakes,65,West,1%
+Chicago,CHI,Great Lakes,67,West,2%
+Ohio State,OSU,Great Lakes,85,East,2%
+Penn State,PSU,Great Lakes,80,East,3%
+Purdue,PUR,Great Lakes,55,West,2%
+New Jersey,NJ,Great Lakes,50,East,3%
+Wisconsin,WIS,Great Lakes,75,West,2%
+[END_CONF]%
+Waco,WACO,Southwest,50,South,1%
+Iowa State,ISU,Southwest,66,North,1%
+Texas IT,TTEC,Southwest,53,South,1%
+Kansas,KAN,Southwest,50,North,1%
+Kansas State,KSU,Southwest,58,North,1%
+Oklahoma,OKL,Southwest,83,South,1%
+Oklahoma State,OKST,Southwest,75,South,1%
+Texas,TEX,Southwest,78,South,1%
+Ft Worth,FTWO,Southwest,73,North,1%
+West Virginia,WVU,Southwest,77,North,2%
+[END_CONF]%
+Arizona,ARIZ,Pacific,58,South,0%
+Arizona State,ASU,Pacific,63,South,0%
+California,CAL,Pacific,60,North,0%
+Colorado,COL,Pacific,60,South,0%
+Oregon,OREG,Pacific,74,North,0%
+Oregon State,ORST,Pacific,50,North,0%
+San Francisco,SF,Pacific,75,North,0%
+Pasadena,LA,Pacific,57,South,0%
+Southern Cal,SCAL,Pacific,76,South,0%
+Washington,WASH,Pacific,77,North,0%
+Washington State,WSU,Pacific,76,North,0%
+Utah,UTAH,Pacific,71,South,0%
+[END_CONF]%
+Alabama,BAMA,Southern,90,West,4%
+Arkansas,ARK,Southern,50,West,4%
+Auburn,AUB,Southern,74,West,4%
+Florida,FLOR,Southern,75,East,3%
+Georgia,UGA,Southern,85,East,4%
+Kentucky,UK,Southern,68,East,2%
+Lousiana State,LSU,Southern,77,West,4%
+Missouri,MIZ,Southern,60,East,1%
+Ole Miss,MISS,Southern,50,West,4%
+Mississippi State,MSST,Southern,70,West,4%
+South Carolina,SC,Southern,60,East,4%
+Tennessee,TENN,Southern,65,East,4%
+College Station,COLST,Southern,70,West,1%
+Nashville,NASH,Southern,50,East,4%
+[END_CONF]%
+Central Florida,UCF,Patriot,68,East,3%
+Cincinnati,CINN,Patriot,58,East,2%
+East Carolina,ECU,Patriot,32,East,3%
+Houston,HOU,Patriot,55,West,1%
+Memphis,MEMP,Patriot,58,West,4%
+Navy,NAVY,Patriot,42,West,3%
+South Florida,USF,Patriot,65,East,3%
+Dallas,DAL,Patriot,47,West,4%
+Philadelphia,PHL,Patriot,43,East,3%
+Tulane,TUL,Patriot,38,West,4%
+Tulsa,TULS,Patriot,39,West,1%
+Connecticut,CONN,Patriot,35,East,3%
+[END_CONF]%
+Akron,AKR,Central,35,East,2%
+Muncie,MUNC,Central,28,West,2%
+Bowling Green,BG,Central,30,East,2%
+Buffalo,BUF,Central,34,East,3%
+Central Michigan,CMU,Central,40,West,2%
+Eastern Michigan,EMU,Central,38,West,2%
+Kent,KENT,Central,30,East,2%
+Miami OH,MiOH,Central,34,East,2%
+Northern Illinois,NIU,Central,44,West,2%
+Ohio,OHIO,Central,44,East,2%
+Toledo,TOL,Central,44,West,2%
+Western Michigan,WMU,Central,44,West,2%
+[END_CONF]%
+Charlotte,CHAR,Liberty,40,East,3%
+Boca Raton,BOCA,Liberty,44,East,3%
+Miami Intl,MINT,Liberty,44,East,3%
+Louisiana Poly,LPOL,Liberty,44,West,4%
+Huntington,HUNT,Liberty,45,East,3%
+Mid Tenn State,MTSU,Liberty,42,East,4%
+North Texas,NTEX,Liberty,43,West,1%
+Norfolk,NORF,Liberty,35,East,3%
+South Houston,SHOU,Liberty,32,West,1%
+South Mississippi,SMIS,Liberty,42,West,4%
+Birmingham,UAB,Liberty,45,West,4%
+El Paso,UTEP,Liberty,34,West,1%
+San Antonio,UTSA,Liberty,43,West,1%
+Western Kentucky,WKU,Liberty,43,East,4%
+[END_CONF]%
+Air Force,AF,Mountain,42,Mountain,0%
+Boise,BOIS,Mountain,60,Mountain,0%
+Colorado State,CSU,Mountain,47,Mountain,0%
+Fresno,FRES,Mountain,52,West,0%
+Hawaii,HAW,Mountain,38,West,0%
+Nevada,NEV,Mountain,38,West,0%
+New Mexico,NMEX,Mountain,38,Mountain,1%
+San Diego,SD,Mountain,60,West,0%
+San Jose,SJ,Mountain,30,West,0%
+Las Vegas,UNLV,Mountain,28,West,0%
+Utah State,UTST,Mountain,50,Mountain,0%
+Wyoming,WYM,Mountain,45,Mountain,0%
+[END_CONF]%
+Appalachian,APP,Sunshine,42,East,2%
+Arkansas State,AKS,Sunshine,33,West,4%
+Coastal,COC,Sunshine,36,East,5%
+Monroe,LMON,Sunshine,38,West,3%
+Lafayette,LALF,Sunshine,35,West,4%
+Troy,TROY,Sunshine,46,East,4%
+Texas State,TXST,Sunshine,30,West,1%
+South Georgia,SOGA,Sunshine,37,East,4%
+Georgia State,GAST,Sunshine,27,West,4%
+South Alabama,SAL,Sunshine,31,East,4%
+[END_CONF]%
+Army,ARMY,Independent,43,East,3%
+Provo,PROV,Independent,55,West,0%
+Lynchburg,LYNC,Independent,33,East,3%
+New Mexico St,NMST,Independent,38,West,1%
+South Bend,SB,Independent,80,West,2%
+Massachusetts,MASS,Independent,38,East,3%</string>
+</resources>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/playScore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SCORE VS SCORE"
+            android:textAlignment="center"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:indeterminate="true"
+            android:progressDrawable="@color/colorAccentDark" />
+
+        <TextView
+            android:id="@+id/playPBP"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Play by Play" />
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

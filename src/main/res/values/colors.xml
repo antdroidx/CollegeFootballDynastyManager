@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#607D8B</color>
+    <color name="colorPrimaryDark">#262222</color>
+    <color name="colorAccent">#BCDFF0</color>
+    <color name="colorAccentDark">#349C47</color>
+    <color name="greenLight">#00ffcc</color>
+    <color name="blueDark">#1d2c58</color>
+    <color name="blueLight">#B2C1D9</color>
+    <color name="winColor">#5994DE</color>
+    <color name="winColorPressed">#4a78ec</color>
+    <color name="lossColor">#F14E4E</color>
+    <color name="lossColorPressed">#940101</color>
+    <color name="grey">#AEB0BC</color>
+    <color name="greyPressed">#b3b3b3</color>
+    <color name="foreground_material_dark_1">#9e9e9e</color>
+    <color name="primary_material_dark_1">#212121</color>
+    <color name="primary_material_dark_2">#212121</color>
+    <color name="rosterColorDk">#ffffff</color>
+    <color name="rosterColorLt">#000000</color>
+</resources>
