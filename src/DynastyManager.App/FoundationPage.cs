@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Seasons;
 using DynastyManager.Data.Import;
 using DynastyManager.Data.Persistence;
 using Microsoft.Maui.Controls;
@@ -117,7 +118,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Phase 4 — Dynasty Save Lab",
+                        Text = "Phase 5 — Season Engine Foundation",
                         FontSize = 18
                     },
                     _importStatus,
@@ -261,26 +262,24 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return;
 
-        _currentDynasty = _currentDynasty.Phase == SeasonPhase.Preseason
-            ? _currentDynasty with
-            {
-                Week = 1,
-                Phase = SeasonPhase.RegularSeason
-            }
-            : _currentDynasty with
-            {
-                Week = _currentDynasty.Week + 1
-            };
+        _currentDynasty = SeasonProgression.Advance(_currentDynasty);
 
         RenderCurrentDynasty();
 
-        if (_rollingAutosaveSwitch.IsToggled && _saveRepository is not null)
+        if (_rollingAutosaveSwitch.IsToggled &&
+            _saveRepository is not null &&
+            _currentDynasty.Week >= 1)
         {
             var kind = RollingAutosavePolicy.GetSlotForWeek(_currentDynasty.Week);
             await _saveRepository.SaveRollingWeeklyAsync(_currentDynasty);
             await RefreshSaveSlotsAsync();
             _rollingAutosaveStatus.Text =
                 $"Saved Week {_currentDynasty.Week} to {RollingAutosavePolicy.GetDisplayName(kind)}.";
+        }
+        else if (_currentDynasty.Week == 0)
+        {
+            _rollingAutosaveStatus.Text =
+                $"Started {_currentDynasty.SeasonYear} preseason.";
         }
     }
 
