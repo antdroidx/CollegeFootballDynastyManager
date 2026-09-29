@@ -85,13 +85,8 @@ jobs:
             adb shell monkey -p antdroid.cfbcoach.dev -c android.intent.category.LAUNCHER 1
             sleep 8
             adb logcat -d > android-logcat.txt
-            PID="$(adb shell pidof antdroid.cfbcoach.dev | tr -d '\r')"
-            if [ -z "$PID" ]; then
-              echo "App process is not alive after launch."
-              grep -Ei "FATAL EXCEPTION|AndroidRuntime|antdroid\.cfbcoach\.dev|mono|dotnet|maui" android-logcat.txt | tail -n 250 || true
-              exit 1
-            fi
-            echo "App survived launch with PID $PID"
+            adb shell pidof antdroid.cfbcoach.dev
+            echo "App survived launch."
 
       - name: Upload runtime log
         if: always()
