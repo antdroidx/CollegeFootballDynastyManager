@@ -18,6 +18,9 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <ApplicationTitle>CF Dynasty Manager Dev</ApplicationTitle>
     <ApplicationId>antdroid.cfbcoach.dev</ApplicationId>
+
+    <!-- GitHub/standalone debug APKs are sideloaded without Visual Studio Fast Deployment. -->
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
   </PropertyGroup>
 
   <ItemGroup>
