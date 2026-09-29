@@ -17,5 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DynastyManager.Core\DynastyManager.Core.csproj" />
+    <ProjectReference Include="..\..\src\DynastyManager.Data\DynastyManager.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\src\main\assets\universe.csv" Link="TestData\universe.csv" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\main\assets\roster.csv" Link="TestData\roster.csv" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\main\assets\coach.csv" Link="TestData\coach.csv" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
