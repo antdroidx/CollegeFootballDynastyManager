@@ -40,4 +40,10 @@
     <ProjectReference Include="..\DynastyManager.Core\DynastyManager.Core.csproj" />
     <ProjectReference Include="..\DynastyManager.Data\DynastyManager.Data.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <MauiAsset Include="..\main\assets\universe.csv" LogicalName="legacy_universe.csv" />
+    <MauiAsset Include="..\main\assets\roster.csv" LogicalName="legacy_roster.csv" />
+    <MauiAsset Include="..\main\assets\coach.csv" LogicalName="legacy_coach.csv" />
+  </ItemGroup>
 </Project>
