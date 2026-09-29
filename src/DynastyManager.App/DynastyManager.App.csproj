@@ -21,6 +21,16 @@
 
     <!-- GitHub/standalone debug APKs are sideloaded without Visual Studio Fast Deployment. -->
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+
+    <!-- Keep CI/dev APKs signed with one stable development certificate so updates install in-place. -->
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)..\..\build\keys\cfdm-dev.keystore</AndroidSigningKeyStore>
+    <AndroidSigningStorePass>cfdm-dev</AndroidSigningStorePass>
+    <AndroidSigningKeyAlias>cfdmdev</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>cfdm-dev</AndroidSigningKeyPass>
+
+    <!-- Use the flattened full-color bitmap for the current Android test icon. -->
+    <AndroidUseLegacyIconGeneration>true</AndroidUseLegacyIconGeneration>
   </PropertyGroup>
 
   <ItemGroup>
