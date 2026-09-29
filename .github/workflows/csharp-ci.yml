@@ -72,10 +72,6 @@ jobs:
           -p:JavaSdkDirectory="$JAVA_HOME"
           -p:AcceptAndroidSDKLicenses=True
 
-      - name: Set CI Android version code
-        shell: bash
-        run: echo "APP_VERSION_CODE=$((100000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
-
       - name: Build Android debug APK
         run: >
           timeout 8m dotnet build src/DynastyManager.App/DynastyManager.App.csproj
@@ -83,7 +79,15 @@ jobs:
           -c Debug
           --no-restore
           -p:AndroidPackageFormats=apk
-          -p:ApplicationVersion="$APP_VERSION_CODE"
+          -bl:android-build.binlog
+
+      - name: Upload Android build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: android-build.binlog
+          if-no-files-found: ignore
 
       - name: Select signed APK
         shell: bash
@@ -97,6 +101,7 @@ jobs:
           echo "Using $APK_PATH"
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: dynasty-manager-android-debug
