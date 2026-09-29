@@ -19,8 +19,6 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
         if (string.IsNullOrWhiteSpace(databasePath))
             throw new ArgumentException("A database path is required.", nameof(databasePath));
 
-        SQLitePCL.Batteries_V2.Init();
-
         _database = new SQLiteAsyncConnection(
             databasePath,
             SQLiteOpenFlags.ReadWrite |
