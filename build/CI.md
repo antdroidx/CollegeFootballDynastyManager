@@ -32,9 +32,11 @@ changes. `check-packaged-resources.py` now catches missing explicit icon, splash
 and asset files before toolchain setup. CI runs this on Linux, where path case
 must also match.
 
-The Android manifest directly references the full-color drawable icon, so the
-obsolete `AndroidUseLegacyIconGeneration` setting was removed. It caused the
-Android package phase to stall after project compilation on the hosted runner.
+The Android manifest uses the standard MAUI-generated mipmap icon. The manual
+drawable overlay and obsolete `AndroidUseLegacyIconGeneration` setting were
+removed after the build log showed Android resource collection stalling on the
+manual overlay. The existing `MauiIcon` continues to generate the full-color
+launcher icon.
 
 Local validation: run `python3 build/check-packaged-resources.py`, `actionlint`,
 and `dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release`.

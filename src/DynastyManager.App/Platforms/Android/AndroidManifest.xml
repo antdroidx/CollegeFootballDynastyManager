@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:allowBackup="true"
-        android:icon="@drawable/appicon_cfdm"
-        android:roundIcon="@drawable/appicon_cfdm"
+        android:icon="@mipmap/appicon_cfdm"
+        android:roundIcon="@mipmap/appicon_cfdm_round"
         android:supportsRtl="true" />
 </manifest>
