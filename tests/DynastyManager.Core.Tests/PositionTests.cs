@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using Xunit;
 
 namespace DynastyManager.Core.Tests;
 
