@@ -2,6 +2,7 @@ using DynastyManager.Core.Models;
 using DynastyManager.Data.Import;
 using DynastyManager.Data.Persistence;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Storage;
 
 namespace DynastyManager.App;
@@ -47,7 +48,8 @@ public sealed class FoundationPage : ContentPage
 
         var newDynastyButton = new Button
         {
-            Text = "Create New Dynasty"
+            Text = "Create New Dynasty",
+            TextColor = Colors.White
         };
         newDynastyButton.Clicked += CreateNewDynasty;
 
@@ -60,6 +62,7 @@ public sealed class FoundationPage : ContentPage
         _advanceWeekButton = new Button
         {
             Text = "Advance Week",
+            TextColor = Colors.White,
             IsEnabled = false
         };
         _advanceWeekButton.Clicked += AdvanceWeek;
@@ -67,6 +70,7 @@ public sealed class FoundationPage : ContentPage
         _manualSaveButton = new Button
         {
             Text = "Manual Save",
+            TextColor = Colors.White,
             IsEnabled = false
         };
         _manualSaveButton.Clicked += async (_, _) => await SaveCurrentAsync(SaveKind.Manual);
@@ -74,6 +78,7 @@ public sealed class FoundationPage : ContentPage
         _autosaveButton = new Button
         {
             Text = "Autosave Current",
+            TextColor = Colors.White,
             IsEnabled = false
         };
         _autosaveButton.Clicked += async (_, _) => await SaveCurrentAsync(SaveKind.AutosaveCurrent);
@@ -344,13 +349,15 @@ public sealed class FoundationPage : ContentPage
         {
             var loadButton = new Button
             {
-                Text = "Load"
+                Text = "Load",
+                TextColor = Colors.White
             };
             loadButton.Clicked += async (_, _) => await LoadSaveAsync(save.SaveId);
 
             var deleteButton = new Button
             {
-                Text = "Delete"
+                Text = "Delete",
+                TextColor = Colors.White
             };
             deleteButton.Clicked += async (_, _) => await DeleteSaveAsync(save.SaveId);
 
