@@ -272,7 +272,8 @@ public sealed class FoundationPage : ContentPage
         if (_rollingAutosaveSwitch.IsToggled && _saveRepository is not null)
         {
             var kind = RollingAutosavePolicy.GetSlotForWeek(_currentDynasty.Week);
-            await SaveCurrentAsync(kind);
+            await _saveRepository.SaveRollingWeeklyAsync(_currentDynasty);
+            await RefreshSaveSlotsAsync();
             _rollingAutosaveStatus.Text =
                 $"Saved Week {_currentDynasty.Week} to {RollingAutosavePolicy.GetDisplayName(kind)}.";
         }
