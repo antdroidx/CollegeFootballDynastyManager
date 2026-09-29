@@ -6,7 +6,9 @@ builds. Branches without a PR can use a manual workflow run.
 
 The `build-test-android` job checks packaged resources, restores packages,
 runs core tests, and uploads `dynasty-manager-android-debug` immediately after
-building. The filename and signed-APK selection stay unchanged. The APK uses
+building. Android packaging has an eight-minute cap so a toolchain hang does
+not consume a runner for the full job timeout. The filename and signed-APK
+selection stay unchanged. The APK uses
 the existing Debug package ID, embedded assemblies, stable development signing
 key, supported architectures, and `100000 + github.run_number` version code.
 Keep the workflow filename to preserve its run-number sequence. Re-running the
@@ -30,6 +32,10 @@ already corrected this to the tracked `appicon_cfdm.png` before these workflow
 changes. `check-packaged-resources.py` now catches missing explicit icon, splash,
 and asset files before toolchain setup. CI runs this on Linux, where path case
 must also match.
+
+The Android manifest directly references the full-color drawable icon, so the
+obsolete `AndroidUseLegacyIconGeneration` setting was removed. It caused the
+Android package phase to stall after project compilation on the hosted runner.
 
 Local validation: run `python3 build/check-packaged-resources.py`, `actionlint`,
 and `dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release`.

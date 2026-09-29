@@ -29,8 +29,6 @@
     <AndroidSigningKeyAlias>cfdmdev</AndroidSigningKeyAlias>
     <AndroidSigningKeyPass>cfdm-dev</AndroidSigningKeyPass>
 
-    <!-- Use the flattened full-color bitmap for the current Android test icon. -->
-    <AndroidUseLegacyIconGeneration>true</AndroidUseLegacyIconGeneration>
   </PropertyGroup>
 
   <ItemGroup>
