@@ -3,15 +3,22 @@ name: C# / MAUI CI
 on:
   push:
     branches:
-      - csharp-maui-foundation
+      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      run_emulator:
+        description: Run Android launch validation after uploading the APK
+        type: boolean
+        default: false
 
+permissions:
+  contents: read
 
 concurrency:
-  group: csharp-maui-${{ github.ref }}
+  group: csharp-maui-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,6 +30,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check packaged resources
+        run: python3 build/check-packaged-resources.py
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
@@ -30,9 +40,18 @@ jobs:
           java-version: '17'
 
       - name: Set up .NET 10
+        id: dotnet
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ steps.dotnet.outputs.dotnet-version }}-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', '**/NuGet.Config', '**/nuget.config', 'global.json', '.github/workflows/csharp-ci.yml') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ runner.arch }}-${{ steps.dotnet.outputs.dotnet-version }}-
 
       - name: Install .NET MAUI Android workload
         run: dotnet workload install maui-android --version 10.0.301.1
@@ -47,6 +66,7 @@ jobs:
         run: >
           dotnet build src/DynastyManager.App/DynastyManager.App.csproj
           -t:InstallAndroidDependencies
+          --no-restore
           -f net10.0-android
           -p:AndroidSdkDirectory="$ANDROID_SDK_ROOT"
           -p:JavaSdkDirectory="$JAVA_HOME"
@@ -75,6 +95,33 @@ jobs:
           test -n "$APK_PATH"
           echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
           echo "Using $APK_PATH"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dynasty-manager-android-debug
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error
+          compression-level: 0
+
+  android-launch:
+    needs: build-test-android
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download built APK
+        uses: actions/download-artifact@v4
+        with:
+          name: dynasty-manager-android-debug
+          path: apk
+
+      - name: Select APK
+        shell: bash
+        run: |
+          APK_PATH="$(find apk -name '*.apk' -print -quit)"
+          test -n "$APK_PATH"
+          echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
 
       - name: Enable KVM access
         run: |
@@ -105,10 +152,3 @@ jobs:
           name: android-launch-log
           path: android-logcat.txt
           if-no-files-found: ignore
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: dynasty-manager-android-debug
-          path: ${{ env.APK_PATH }}
-          if-no-files-found: error
