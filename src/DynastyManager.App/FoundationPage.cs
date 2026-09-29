@@ -15,6 +15,8 @@ public sealed class FoundationPage : ContentPage
     private readonly Button _advanceWeekButton;
     private readonly Button _manualSaveButton;
     private readonly Button _autosaveButton;
+    private readonly Switch _rollingAutosaveSwitch;
+    private readonly Label _rollingAutosaveStatus;
     private readonly VerticalStackLayout _saveList;
 
     private SqliteDynastySaveRepository? _saveRepository;
@@ -76,6 +78,19 @@ public sealed class FoundationPage : ContentPage
         };
         _autosaveButton.Clicked += async (_, _) => await SaveCurrentAsync(SaveKind.AutosaveCurrent);
 
+        _rollingAutosaveSwitch = new Switch
+        {
+            IsToggled = Preferences.Default.Get("rolling_autosave_enabled", true)
+        };
+        _rollingAutosaveSwitch.Toggled += (_, args) =>
+            Preferences.Default.Set("rolling_autosave_enabled", args.Value);
+
+        _rollingAutosaveStatus = new Label
+        {
+            Text = "Keeps the latest three weekly checkpoints automatically.",
+            FontSize = 13
+        };
+
         _saveList = new VerticalStackLayout
         {
             Spacing = 10
@@ -131,6 +146,21 @@ public sealed class FoundationPage : ContentPage
                             _autosaveButton
                         }
                     },
+                    new HorizontalStackLayout
+                    {
+                        Spacing = 10,
+                        Children =
+                        {
+                            _rollingAutosaveSwitch,
+                            new Label
+                            {
+                                Text = "3-slot rolling weekly autosave",
+                                VerticalTextAlignment = TextAlignment.Center,
+                                FontAttributes = FontAttributes.Bold
+                            }
+                        }
+                    },
+                    _rollingAutosaveStatus,
 
                     new BoxView { HeightRequest = 1 },
 
@@ -141,7 +171,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Manual saves create new slots. Autosave Current updates the same slot for the active dynasty."
+                        Text = "Manual saves create new slots. Autosave Current updates one slot. Weekly Auto 1–3 rotate automatically after each advanced week when enabled."
                     },
                     _saveList
                 }
@@ -221,7 +251,7 @@ public sealed class FoundationPage : ContentPage
         RenderCurrentDynasty();
     }
 
-    private void AdvanceWeek(object? sender, EventArgs e)
+    private async void AdvanceWeek(object? sender, EventArgs e)
     {
         if (_currentDynasty is null)
             return;
@@ -238,6 +268,14 @@ public sealed class FoundationPage : ContentPage
             };
 
         RenderCurrentDynasty();
+
+        if (_rollingAutosaveSwitch.IsToggled && _saveRepository is not null)
+        {
+            var kind = RollingAutosavePolicy.GetSlotForWeek(_currentDynasty.Week);
+            await SaveCurrentAsync(kind);
+            _rollingAutosaveStatus.Text =
+                $"Saved Week {_currentDynasty.Week} to {RollingAutosavePolicy.GetDisplayName(kind)}.";
+        }
     }
 
     private async Task SaveCurrentAsync(SaveKind kind)
@@ -331,7 +369,7 @@ public sealed class FoundationPage : ContentPage
                     {
                         Text =
                             $"{save.UserTeamName} • {save.SeasonYear} • " +
-                            $"{FormatWeek(save)} • {save.Kind}"
+                            $"{FormatWeek(save)} • {RollingAutosavePolicy.GetDisplayName(save.Kind)}"
                     },
                     new Label
                     {
