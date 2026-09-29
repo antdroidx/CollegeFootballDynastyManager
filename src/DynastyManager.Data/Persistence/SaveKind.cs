@@ -5,5 +5,8 @@ public enum SaveKind
     Manual,
     AutosaveCurrent,
     AutosavePreviousWeek,
-    StartOfSeason
+    StartOfSeason,
+    WeeklyAuto1,
+    WeeklyAuto2,
+    WeeklyAuto3
 }
