@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DynastyManager.Core\DynastyManager.Core.csproj" />
   </ItemGroup>
 </Project>
