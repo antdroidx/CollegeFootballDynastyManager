@@ -9,8 +9,8 @@ runs core tests, and uploads `dynasty-manager-android-debug` immediately after
 building. Android packaging has an eight-minute cap so a toolchain hang does
 not consume a runner for the full job timeout. The filename and signed-APK
 selection stay unchanged. The APK uses the existing Debug package ID, embedded
-assemblies, stable development signing key, supported architectures, and the
-project's configured version code. A build binary log is retained as
+assemblies, stable development signing key, supported architectures, and a
+monotonically increasing `400 + github.run_number` version code. A build binary log is retained as
 `android-build-log` whenever packaging starts, including after a timeout.
 
 The separate `android-launch` job downloads that exact artifact (no rebuild)
