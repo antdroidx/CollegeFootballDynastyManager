@@ -7,7 +7,7 @@ public static class RollingAutosavePolicy
         if (week < 1)
             throw new ArgumentOutOfRangeException(nameof(week), "Week must be at least 1.");
 
-        return (week - 1) % 3 switch
+        return ((week - 1) % 3) switch
         {
             0 => SaveKind.WeeklyAuto1,
             1 => SaveKind.WeeklyAuto2,
