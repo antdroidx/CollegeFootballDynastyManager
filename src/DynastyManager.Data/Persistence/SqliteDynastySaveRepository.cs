@@ -62,6 +62,23 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
         return id;
     }
 
+    public async Task<Guid> SaveRollingWeeklyAsync(DynastyState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        await InitializeAsync();
+
+        var kind = RollingAutosavePolicy.GetSlotForWeek(state.Week);
+        var dynastyId = state.DynastyId.ToString("D");
+        var kindValue = (int)kind;
+
+        var existing = await _database.Table<DynastySaveRecord>()
+            .Where(x => x.DynastyId == dynastyId && x.SaveKind == kindValue)
+            .FirstOrDefaultAsync();
+
+        var saveId = existing is null ? (Guid?)null : Guid.Parse(existing.SaveId);
+        return await SaveAsync(state, kind, saveId);
+    }
+
     public async Task<DynastyState?> LoadAsync(Guid saveId)
     {
         await InitializeAsync();
