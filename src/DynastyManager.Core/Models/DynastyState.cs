@@ -10,5 +10,6 @@ public sealed record DynastyState
     public int SeasonYear { get; init; }
     public int Week { get; init; }
     public SeasonPhase Phase { get; init; } = SeasonPhase.Preseason;
+    public IReadOnlyList<ScheduledGame> Schedule { get; init; } = Array.Empty<ScheduledGame>();
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 }

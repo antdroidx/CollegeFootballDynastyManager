@@ -1,5 +1,6 @@
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Seasons;
+using DynastyManager.Core.Simulation;
 using DynastyManager.Data.Import;
 using DynastyManager.Data.Persistence;
 using Microsoft.Maui.Controls;
@@ -19,10 +20,12 @@ public sealed class FoundationPage : ContentPage
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
     private readonly Label _rollingAutosaveStatus;
+    private readonly VerticalStackLayout _scheduleList;
     private readonly VerticalStackLayout _saveList;
 
     private SqliteDynastySaveRepository? _saveRepository;
     private DynastyState? _currentDynasty;
+    private IReadOnlyDictionary<string, Team> _teamsByName = new Dictionary<string, Team>(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<string> _teamNames = Array.Empty<string>();
     private bool _loaded;
 
@@ -97,6 +100,11 @@ public sealed class FoundationPage : ContentPage
             FontSize = 13
         };
 
+        _scheduleList = new VerticalStackLayout
+        {
+            Spacing = 6
+        };
+
         _saveList = new VerticalStackLayout
         {
             Spacing = 10
@@ -118,7 +126,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Phase 5 — Season Engine Foundation",
+                        Text = "Phase 5 — Weekly Schedule & Simulation",
                         FontSize = 18
                     },
                     _importStatus,
@@ -172,6 +180,19 @@ public sealed class FoundationPage : ContentPage
 
                     new Label
                     {
+                        Text = "USER SCHEDULE",
+                        FontAttributes = FontAttributes.Bold
+                    },
+                    new Label
+                    {
+                        Text = "Regular-season games are generated deterministically. Advancing from a regular-season week simulates every game scheduled for that week."
+                    },
+                    _scheduleList,
+
+                    new BoxView { HeightRequest = 1 },
+
+                    new Label
+                    {
                         Text = "SAVE SLOTS",
                         FontAttributes = FontAttributes.Bold
                     },
@@ -204,8 +225,11 @@ public sealed class FoundationPage : ContentPage
             var roster = LegacyRosterCsvImporter.Import(rosterCsv);
             var coaches = LegacyCoachCsvImporter.Import(coachCsv);
 
-            _teamNames = universe.Teams
-                .Select(team => team.Name)
+            _teamsByName = universe.Teams.ToDictionary(
+                team => team.Name,
+                StringComparer.OrdinalIgnoreCase);
+
+            _teamNames = _teamsByName.Keys
                 .OrderBy(name => name)
                 .ToArray();
 
@@ -244,13 +268,21 @@ public sealed class FoundationPage : ContentPage
             ? $"{teamName} Dynasty"
             : _dynastyNameEntry.Text.Trim();
 
+        var dynastyId = Guid.NewGuid();
+        const int startingYear = 2026;
+
         _currentDynasty = new DynastyState
         {
+            DynastyId = dynastyId,
             DynastyName = dynastyName,
             UserTeamName = teamName,
-            SeasonYear = 2026,
+            SeasonYear = startingYear,
             Week = 0,
-            Phase = SeasonPhase.Preseason
+            Phase = SeasonPhase.Preseason,
+            Schedule = SeasonScheduleBuilder.BuildRegularSeason(
+                _teamsByName.Values,
+                dynastyId,
+                startingYear)
         };
 
         SetDynastyControlsEnabled(true);
@@ -262,7 +294,27 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return;
 
+        if (_currentDynasty.Phase == SeasonPhase.RegularSeason &&
+            _currentDynasty.Week >= 1)
+        {
+            _currentDynasty = WeekSimulation.SimulateCurrentRegularSeasonWeek(
+                _currentDynasty,
+                _teamsByName);
+        }
+
+        var wasOffseason = _currentDynasty.Phase == SeasonPhase.Offseason;
         _currentDynasty = SeasonProgression.Advance(_currentDynasty);
+
+        if (wasOffseason && _currentDynasty.Phase == SeasonPhase.Preseason)
+        {
+            _currentDynasty = _currentDynasty with
+            {
+                Schedule = SeasonScheduleBuilder.BuildRegularSeason(
+                    _teamsByName.Values,
+                    _currentDynasty.DynastyId,
+                    _currentDynasty.SeasonYear)
+            };
+        }
 
         RenderCurrentDynasty();
 
@@ -313,7 +365,16 @@ public sealed class FoundationPage : ContentPage
         if (state is null)
             return;
 
-        _currentDynasty = state;
+        _currentDynasty = state.Schedule.Count == 0 && _teamsByName.Count > 1
+            ? state with
+            {
+                Schedule = SeasonScheduleBuilder.BuildRegularSeason(
+                    _teamsByName.Values,
+                    state.DynastyId,
+                    state.SeasonYear)
+            }
+            : state;
+
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
     }
@@ -409,15 +470,72 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
         {
             _currentDynastyLabel.Text = "No dynasty loaded.";
+            _scheduleList.Children.Clear();
             return;
         }
 
+        var userGames = _currentDynasty.Schedule
+            .Where(game => game.InvolvesTeam(_currentDynasty.UserTeamName) && game.HasPlayed)
+            .ToArray();
+
+        var wins = userGames.Count(game =>
+            game.WinnerTeamName?.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase) == true);
+        var losses = userGames.Length - wins;
+
         _currentDynastyLabel.Text =
             $"{_currentDynasty.DynastyName}\n" +
-            $"{_currentDynasty.UserTeamName}\n" +
+            $"{_currentDynasty.UserTeamName} • Record {wins}-{losses}\n" +
             $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • " +
             $"{(_currentDynasty.Week == 0 ? "Preseason" : $"Week {_currentDynasty.Week}")}\n" +
             $"Dynasty ID: {_currentDynasty.DynastyId}";
+
+        RenderUserSchedule();
+    }
+
+    private void RenderUserSchedule()
+    {
+        _scheduleList.Children.Clear();
+
+        if (_currentDynasty is null || _currentDynasty.Schedule.Count == 0)
+        {
+            _scheduleList.Children.Add(new Label
+            {
+                Text = "No schedule available."
+            });
+            return;
+        }
+
+        foreach (var game in _currentDynasty.Schedule
+                     .Where(game => game.InvolvesTeam(_currentDynasty.UserTeamName))
+                     .OrderBy(game => game.Week))
+        {
+            var isHome = game.HomeTeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase);
+            var opponent = isHome ? game.AwayTeamName : game.HomeTeamName;
+            var location = isHome ? "vs" : "@";
+            var status = "Upcoming";
+
+            if (game.HasPlayed && game.HomeScore is int homeScore && game.AwayScore is int awayScore)
+            {
+                var userScore = isHome ? homeScore : awayScore;
+                var opponentScore = isHome ? awayScore : homeScore;
+                var result = userScore > opponentScore ? "W" : "L";
+                status = $"{result} {userScore}-{opponentScore}";
+            }
+
+            _scheduleList.Children.Add(new Label
+            {
+                Text = $"Week {game.Week}: {location} {opponent} • {status}",
+                FontAttributes =
+                    _currentDynasty.Phase == SeasonPhase.RegularSeason &&
+                    game.Week == _currentDynasty.Week
+                        ? FontAttributes.Bold
+                        : FontAttributes.None
+            });
+        }
     }
 
     private void SetDynastyControlsEnabled(bool enabled)
