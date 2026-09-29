@@ -108,6 +108,47 @@ public sealed class DynastySaveRepositoryTests
         }
     }
 
+    [Fact]
+    public async Task RollingWeeklyAutosaveKeepsLatestThreeCheckpoints()
+    {
+        var path = TempDatabasePath();
+
+        try
+        {
+            await using var repository = new SqliteDynastySaveRepository(path);
+
+            var state = new DynastyState
+            {
+                DynastyName = "Three Deep",
+                UserTeamName = "Washington",
+                SeasonYear = 2032,
+                Week = 1,
+                Phase = SeasonPhase.RegularSeason
+            };
+
+            for (var week = 1; week <= 4; week++)
+            {
+                state = state with { Week = week };
+                await repository.SaveRollingWeeklyAsync(state);
+            }
+
+            var slots = (await repository.ListAsync())
+                .Where(slot => slot.Kind is SaveKind.WeeklyAuto1 or SaveKind.WeeklyAuto2 or SaveKind.WeeklyAuto3)
+                .OrderBy(slot => slot.Week)
+                .ToArray();
+
+            Assert.Equal(3, slots.Length);
+            Assert.Equal(new[] { 2, 3, 4 }, slots.Select(slot => slot.Week).ToArray());
+            Assert.Contains(slots, slot => slot.Kind == SaveKind.WeeklyAuto1 && slot.Week == 4);
+            Assert.Contains(slots, slot => slot.Kind == SaveKind.WeeklyAuto2 && slot.Week == 2);
+            Assert.Contains(slots, slot => slot.Kind == SaveKind.WeeklyAuto3 && slot.Week == 3);
+        }
+        finally
+        {
+            DeleteIfExists(path);
+        }
+    }
+
     private static string TempDatabasePath() =>
         Path.Combine(Path.GetTempPath(), $"cfdm-{Guid.NewGuid():N}.db3");
 
