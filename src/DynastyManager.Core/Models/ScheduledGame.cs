@@ -7,6 +7,7 @@ public sealed record ScheduledGame
     public int Week { get; init; }
     public required string HomeTeamName { get; init; }
     public required string AwayTeamName { get; init; }
+    public ScheduledGameType GameType { get; init; } = ScheduledGameType.NonConference;
     public int SimulationSeed { get; init; }
     public bool HasPlayed { get; init; }
     public int? HomeScore { get; init; }

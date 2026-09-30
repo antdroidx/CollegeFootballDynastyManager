@@ -12,7 +12,7 @@ public static class WeekSimulation
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
 
-        if (state.Phase != SeasonPhase.RegularSeason || state.Week < 1)
+        if (state.Phase != SeasonPhase.RegularSeason)
             return state;
 
         var changed = false;

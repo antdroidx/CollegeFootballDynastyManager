@@ -20,19 +20,31 @@ public class SeasonProgressionTests
         };
 
     [Fact]
-    public void PreseasonStartsRegularSeasonAtWeekOne()
+    public void PreseasonOpensRegularSeasonAtWeekZero()
     {
-        var next = SeasonProgression.Advance(State(SeasonPhase.Preseason, 0));
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.Preseason, 0));
+
+        Assert.Equal(SeasonPhase.RegularSeason, next.Phase);
+        Assert.Equal(0, next.Week);
+        Assert.Equal(2026, next.SeasonYear);
+    }
+
+    [Fact]
+    public void WeekZeroAdvancesToWeekOne()
+    {
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.RegularSeason, 0));
 
         Assert.Equal(SeasonPhase.RegularSeason, next.Phase);
         Assert.Equal(1, next.Week);
-        Assert.Equal(2026, next.SeasonYear);
     }
 
     [Fact]
     public void RegularSeasonAdvancesUntilLegacyWeekThirteenBoundary()
     {
-        var next = SeasonProgression.Advance(State(SeasonPhase.RegularSeason, 12));
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.RegularSeason, 12));
 
         Assert.Equal(SeasonPhase.RegularSeason, next.Phase);
         Assert.Equal(13, next.Week);
@@ -41,7 +53,8 @@ public class SeasonProgressionTests
     [Fact]
     public void WeekThirteenAdvancesToConferenceChampionship()
     {
-        var next = SeasonProgression.Advance(State(SeasonPhase.RegularSeason, 13));
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.RegularSeason, 13));
 
         Assert.Equal(SeasonPhase.ConferenceChampionship, next.Phase);
         Assert.Equal(14, next.Week);
@@ -66,7 +79,8 @@ public class SeasonProgressionTests
     [Fact]
     public void OffseasonStartsNextYearPreseason()
     {
-        var next = SeasonProgression.Advance(State(SeasonPhase.Offseason, 19));
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.Offseason, 19));
 
         Assert.Equal(SeasonPhase.Preseason, next.Phase);
         Assert.Equal(0, next.Week);

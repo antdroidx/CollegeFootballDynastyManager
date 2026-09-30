@@ -10,7 +10,7 @@ public class ScheduleSimulationTests
         Guid.Parse("11111111-2222-3333-4444-555555555555");
 
     [Fact]
-    public void DefaultScheduleHasTwelveGamesPerTeam()
+    public void DefaultScheduleHasTwelveGamesPerTeamAndSmallWeekZeroSlate()
     {
         var teams = CreateTeams(14);
         var schedule = SeasonScheduleBuilder.BuildRegularSeason(
@@ -19,13 +19,28 @@ public class ScheduleSimulationTests
             2026);
 
         Assert.Equal(84, schedule.Count);
-        Assert.All(
-            teams,
-            team => Assert.Equal(
-                12,
-                schedule.Count(game => game.InvolvesTeam(team.Name))));
-        Assert.Equal(12, schedule.Max(game => game.Week));
-        Assert.Empty(schedule.Where(game => game.Week == 13));
+        Assert.Equal(5, schedule.Count(game => game.Week == 0));
+
+        foreach (var team in teams)
+        {
+            var teamSchedule = schedule
+                .Where(game => game.InvolvesTeam(team.Name))
+                .ToArray();
+
+            Assert.Equal(12, teamSchedule.Length);
+            Assert.Equal(
+                teamSchedule.Length,
+                teamSchedule
+                    .Select(game => game.Week)
+                    .Distinct()
+                    .Count());
+            Assert.Equal(
+                6,
+                teamSchedule.Count(game =>
+                    game.HomeTeamName.Equals(
+                        team.Name,
+                        StringComparison.OrdinalIgnoreCase)));
+        }
     }
 
     [Fact]
@@ -36,20 +51,28 @@ public class ScheduleSimulationTests
             teams,
             DynastyId,
             2026,
-            weeks: 3);
+            weeks: 3,
+            gamesPerTeam: 3,
+            weekZeroGames: 0);
 
         Assert.Equal(12, schedule.Count);
 
         for (var week = 1; week <= 3; week++)
         {
             var games = schedule.Where(game => game.Week == week).ToArray();
-            Assert.Equal(4, games.Length);
-
             var teamNames = games
-                .SelectMany(game => new[] { game.HomeTeamName, game.AwayTeamName })
+                .SelectMany(game => new[]
+                {
+                    game.HomeTeamName,
+                    game.AwayTeamName
+                })
                 .ToArray();
 
-            Assert.Equal(8, teamNames.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+            Assert.Equal(
+                teamNames.Length,
+                teamNames
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count());
         }
 
         foreach (var team in teams)
@@ -65,13 +88,17 @@ public class ScheduleSimulationTests
             teams,
             DynastyId,
             2030,
-            weeks: 5);
+            weeks: 5,
+            gamesPerTeam: 5,
+            weekZeroGames: 0);
 
         var second = SeasonScheduleBuilder.BuildRegularSeason(
             teams,
             DynastyId,
             2030,
-            weeks: 5);
+            weeks: 5,
+            gamesPerTeam: 5,
+            weekZeroGames: 0);
 
         Assert.Equal(first, second);
     }
@@ -79,8 +106,8 @@ public class ScheduleSimulationTests
     [Fact]
     public void GameSimulationIsDeterministicAndCannotTie()
     {
-        var home = CreateTeam("Home", 82);
-        var away = CreateTeam("Away", 78);
+        var home = CreateTeam("Home", 82, "Home Conference");
+        var away = CreateTeam("Away", 78, "Away Conference");
         var game = new ScheduledGame
         {
             GameId = "test",
@@ -102,15 +129,20 @@ public class ScheduleSimulationTests
     }
 
     [Fact]
-    public void WeekSimulationOnlyProcessesCurrentWeek()
+    public void WeekSimulationProcessesWeekZero()
     {
         var teams = CreateTeams(4);
-        var lookup = teams.ToDictionary(team => team.Name, StringComparer.OrdinalIgnoreCase);
+        var lookup = teams.ToDictionary(
+            team => team.Name,
+            StringComparer.OrdinalIgnoreCase);
+
         var schedule = SeasonScheduleBuilder.BuildRegularSeason(
             teams,
             DynastyId,
             2026,
-            weeks: 2);
+            weeks: 2,
+            gamesPerTeam: 2,
+            weekZeroGames: 1);
 
         var state = new DynastyState
         {
@@ -118,28 +150,41 @@ public class ScheduleSimulationTests
             DynastyName = "Test Dynasty",
             UserTeamName = teams[0].Name,
             SeasonYear = 2026,
-            Week = 1,
+            Week = 0,
             Phase = SeasonPhase.RegularSeason,
             Schedule = schedule
         };
 
-        var simulated = WeekSimulation.SimulateCurrentRegularSeasonWeek(state, lookup);
+        var simulated = WeekSimulation.SimulateCurrentRegularSeasonWeek(
+            state,
+            lookup);
 
-        Assert.All(simulated.Schedule.Where(game => game.Week == 1), game => Assert.True(game.HasPlayed));
-        Assert.All(simulated.Schedule.Where(game => game.Week == 2), game => Assert.False(game.HasPlayed));
+        Assert.All(
+            simulated.Schedule.Where(game => game.Week == 0),
+            game => Assert.True(game.HasPlayed));
+
+        Assert.All(
+            simulated.Schedule.Where(game => game.Week > 0),
+            game => Assert.False(game.HasPlayed));
     }
 
     private static Team[] CreateTeams(int count) =>
         Enumerable.Range(1, count)
-            .Select(index => CreateTeam($"Team {index:D2}", 55 + index))
+            .Select(index => CreateTeam(
+                $"Team {index:D2}",
+                55 + index,
+                $"Conference {index:D2}"))
             .ToArray();
 
-    private static Team CreateTeam(string name, int prestige) =>
+    private static Team CreateTeam(
+        string name,
+        int prestige,
+        string conference) =>
         new()
         {
             Name = name,
             Abbreviation = name.Replace("Team ", "T"),
-            ConferenceName = "Test",
+            ConferenceName = conference,
             Prestige = prestige
         };
 }

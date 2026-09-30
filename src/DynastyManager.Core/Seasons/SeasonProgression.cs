@@ -4,8 +4,8 @@ namespace DynastyManager.Core.Seasons;
 
 /// <summary>
 /// Advances the dynasty calendar through the legacy-style season phases.
-/// This is deliberately platform-independent so schedules and simulation can
-/// consume the same progression rules later.
+/// Week 0 is an optional opening regular-season slot; only teams scheduled
+/// there play, but the league calendar still advances through it.
 /// </summary>
 public static class SeasonProgression
 {
@@ -26,7 +26,7 @@ public static class SeasonProgression
         {
             SeasonPhase.Preseason => state with
             {
-                Week = 1,
+                Week = 0,
                 Phase = SeasonPhase.RegularSeason
             },
 

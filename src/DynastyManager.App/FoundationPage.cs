@@ -187,7 +187,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Each team gets a 12-game regular-season schedule inside the 13-week regular-season window. Advancing from a regular-season week simulates every game scheduled for that week."
+                        Text = "Each team gets 12 games. A small national Week 0 slate opens the season, followed by Weeks 1–13. Conference members use the legacy conference/OOC mix; Independents play nonconference schedules."
                     },
                     _scheduleList,
 
@@ -300,8 +300,7 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return;
 
-        if (_currentDynasty.Phase == SeasonPhase.RegularSeason &&
-            _currentDynasty.Week >= 1)
+        if (_currentDynasty.Phase == SeasonPhase.RegularSeason)
         {
             _currentDynasty = WeekSimulation.SimulateCurrentRegularSeasonWeek(
                 _currentDynasty,
@@ -335,10 +334,16 @@ public sealed class FoundationPage : ContentPage
             _rollingAutosaveStatus.Text =
                 $"Saved Week {_currentDynasty.Week} to {RollingAutosavePolicy.GetDisplayName(kind)}.";
         }
-        else if (_currentDynasty.Week == 0)
+        else if (_currentDynasty.Phase == SeasonPhase.Preseason)
         {
             _rollingAutosaveStatus.Text =
                 $"Started {_currentDynasty.SeasonYear} preseason.";
+        }
+        else if (_currentDynasty.Phase == SeasonPhase.RegularSeason &&
+                 _currentDynasty.Week == 0)
+        {
+            _rollingAutosaveStatus.Text =
+                "Week 0 is ready. Only the scheduled opening games will be simulated.";
         }
     }
 
@@ -491,11 +496,29 @@ public sealed class FoundationPage : ContentPage
                 StringComparison.OrdinalIgnoreCase) == true);
         var losses = userGames.Length - wins;
 
+        var conferenceGames = userGames
+            .Where(game =>
+                game.GameType == ScheduledGameType.Conference)
+            .ToArray();
+
+        var conferenceWins = conferenceGames.Count(game =>
+            game.WinnerTeamName?.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase) == true);
+        var conferenceLosses =
+            conferenceGames.Length - conferenceWins;
+
+        var weekLabel = _currentDynasty.Phase == SeasonPhase.Preseason
+            ? "Preseason"
+            : _currentDynasty.Phase == SeasonPhase.RegularSeason
+                ? $"Week {_currentDynasty.Week}"
+                : $"Week {_currentDynasty.Week}";
+
         _currentDynastyLabel.Text =
             $"{_currentDynasty.DynastyName}\n" +
-            $"{_currentDynasty.UserTeamName} • Record {wins}-{losses}\n" +
-            $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • " +
-            $"{(_currentDynasty.Week == 0 ? "Preseason" : $"Week {_currentDynasty.Week}")}\n" +
+            $"{_currentDynasty.UserTeamName} • Record {wins}-{losses} • " +
+            $"Conf {conferenceWins}-{conferenceLosses}\n" +
+            $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
         RenderUserSchedule();
@@ -543,9 +566,13 @@ public sealed class FoundationPage : ContentPage
                 }
             }
 
+            var gameType = game.GameType == ScheduledGameType.Conference
+                ? "CONF"
+                : "OOC";
+
             _scheduleList.Children.Add(new Label
             {
-                Text = $"Week {game.Week}: {location} {opponent} • {status}",
+                Text = $"Week {game.Week}: {location} {opponent} • {gameType} • {status}",
                 FontAttributes =
                     _currentDynasty.Phase == SeasonPhase.RegularSeason &&
                     game.Week == _currentDynasty.Week
@@ -563,7 +590,9 @@ public sealed class FoundationPage : ContentPage
     }
 
     private static string FormatWeek(DynastySaveInfo save) =>
-        save.Week == 0 ? save.Phase.ToString() : $"Week {save.Week}";
+        save.Phase == SeasonPhase.Preseason
+            ? "Preseason"
+            : $"Week {save.Week}";
 
     private static async Task<string> ReadAssetAsync(string fileName)
     {
