@@ -185,7 +185,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Regular-season games are generated deterministically. Advancing from a regular-season week simulates every game scheduled for that week."
+                        Text = "Each team gets a 12-game regular-season schedule inside the 13-week regular-season window. Advancing from a regular-season week simulates every game scheduled for that week."
                     },
                     _scheduleList,
 

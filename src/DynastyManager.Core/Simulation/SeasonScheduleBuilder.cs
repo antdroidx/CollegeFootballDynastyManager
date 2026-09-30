@@ -4,16 +4,23 @@ namespace DynastyManager.Core.Simulation;
 
 public static class SeasonScheduleBuilder
 {
+    public const int DefaultRegularSeasonWeeks = 13;
+    public const int DefaultGamesPerTeam = 12;
+
     public static IReadOnlyList<ScheduledGame> BuildRegularSeason(
         IEnumerable<Team> teams,
         Guid dynastyId,
         int seasonYear,
-        int weeks = 13)
+        int weeks = DefaultRegularSeasonWeeks,
+        int gamesPerTeam = DefaultGamesPerTeam)
     {
         ArgumentNullException.ThrowIfNull(teams);
 
         if (weeks < 1)
             throw new ArgumentOutOfRangeException(nameof(weeks));
+
+        if (gamesPerTeam < 1)
+            throw new ArgumentOutOfRangeException(nameof(gamesPerTeam));
 
         var ordered = teams
             .GroupBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
@@ -36,7 +43,9 @@ public static class SeasonScheduleBuilder
             rotation.Add(bye);
 
         var availableRounds = rotation.Count - 1;
-        var rounds = Math.Min(weeks, availableRounds);
+        var rounds = Math.Min(
+            Math.Min(weeks, gamesPerTeam),
+            availableRounds);
         var games = new List<ScheduledGame>(rounds * rotation.Count / 2);
 
         for (var round = 0; round < rounds; round++)

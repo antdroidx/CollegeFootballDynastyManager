@@ -10,6 +10,25 @@ public class ScheduleSimulationTests
         Guid.Parse("11111111-2222-3333-4444-555555555555");
 
     [Fact]
+    public void DefaultScheduleHasTwelveGamesPerTeam()
+    {
+        var teams = CreateTeams(14);
+        var schedule = SeasonScheduleBuilder.BuildRegularSeason(
+            teams,
+            DynastyId,
+            2026);
+
+        Assert.Equal(84, schedule.Count);
+        Assert.All(
+            teams,
+            team => Assert.Equal(
+                12,
+                schedule.Count(game => game.InvolvesTeam(team.Name))));
+        Assert.Equal(12, schedule.Max(game => game.Week));
+        Assert.Empty(schedule.Where(game => game.Week == 13));
+    }
+
+    [Fact]
     public void ScheduleBuilderCreatesOneGamePerTeamPerWeek()
     {
         var teams = CreateTeams(8);
