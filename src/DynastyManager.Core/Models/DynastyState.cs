@@ -17,5 +17,7 @@ public sealed record DynastyState
         Array.Empty<CollegeFootballPlayoffSeedRecord>();
     public IReadOnlyList<NationalChampionRecord> NationalChampionshipHistory { get; init; } =
         Array.Empty<NationalChampionRecord>();
+    public IReadOnlyList<BowlResultRecord> BowlHistory { get; init; } =
+        Array.Empty<BowlResultRecord>();
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 }
