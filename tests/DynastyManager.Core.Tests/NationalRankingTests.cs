@@ -103,6 +103,42 @@ public class NationalRankingTests
         Assert.Equal(second.Name, rankings[0].TeamName);
     }
 
+    [Fact]
+    public void FinalPollPlacesNationalChampionFirstAndRunnerUpSecond()
+    {
+        var champion = Team("Champion", 70);
+        var runnerUp = Team("Runner Up", 95);
+        var other = Team("Other", 90);
+
+        var lookup = new[] { champion, runnerUp, other }.ToDictionary(
+            team => team.Name,
+            StringComparer.OrdinalIgnoreCase);
+
+        var state = State(Array.Empty<ScheduledGame>()) with
+        {
+            NationalChampionshipHistory = new[]
+            {
+                new NationalChampionRecord
+                {
+                    SeasonYear = 2026,
+                    ChampionTeamName = champion.Name,
+                    RunnerUpTeamName = runnerUp.Name,
+                    ChampionScore = 24,
+                    RunnerUpScore = 21
+                }
+            }
+        };
+
+        var rankings = NationalRankingService.Build(state, lookup);
+
+        Assert.Equal(champion.Name, rankings[0].TeamName);
+        Assert.Equal(1, rankings[0].Rank);
+        Assert.Equal(runnerUp.Name, rankings[1].TeamName);
+        Assert.Equal(2, rankings[1].Rank);
+        Assert.Equal(other.Name, rankings[2].TeamName);
+        Assert.Equal(3, rankings[2].Rank);
+    }
+
     private static DynastyState State(
         IReadOnlyList<ScheduledGame> schedule) =>
         new()
