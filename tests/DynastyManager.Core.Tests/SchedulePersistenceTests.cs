@@ -60,6 +60,30 @@ public class SchedulePersistenceTests
                         ChampionScore = 31,
                         RunnerUpScore = 24
                     }
+                },
+                CollegeFootballPlayoffHistory = new[]
+                {
+                    new CollegeFootballPlayoffSeedRecord
+                    {
+                        SeasonYear = 2025,
+                        Seed = 1,
+                        NationalRank = 1,
+                        TeamName = "Washington",
+                        ConferenceName = "Test",
+                        IsConferenceChampion = true,
+                        IsAutomaticBid = true
+                    }
+                },
+                NationalChampionshipHistory = new[]
+                {
+                    new NationalChampionRecord
+                    {
+                        SeasonYear = 2025,
+                        ChampionTeamName = "Washington",
+                        RunnerUpTeamName = "Oregon",
+                        ChampionScore = 35,
+                        RunnerUpScore = 28
+                    }
                 }
             };
 
@@ -81,6 +105,15 @@ public class SchedulePersistenceTests
                 loaded.ConferenceChampionshipHistory);
             Assert.Equal("Washington", champion.ChampionTeamName);
             Assert.Equal(2025, champion.SeasonYear);
+
+            var playoffSeed = Assert.Single(
+                loaded.CollegeFootballPlayoffHistory);
+            Assert.Equal(1, playoffSeed.Seed);
+            Assert.True(playoffSeed.IsAutomaticBid);
+
+            var nationalChampion = Assert.Single(
+                loaded.NationalChampionshipHistory);
+            Assert.Equal("Washington", nationalChampion.ChampionTeamName);
         }
         finally
         {

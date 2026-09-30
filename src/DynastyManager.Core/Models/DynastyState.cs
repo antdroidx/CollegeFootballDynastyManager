@@ -13,5 +13,9 @@ public sealed record DynastyState
     public IReadOnlyList<ScheduledGame> Schedule { get; init; } = Array.Empty<ScheduledGame>();
     public IReadOnlyList<ConferenceChampionRecord> ConferenceChampionshipHistory { get; init; } =
         Array.Empty<ConferenceChampionRecord>();
+    public IReadOnlyList<CollegeFootballPlayoffSeedRecord> CollegeFootballPlayoffHistory { get; init; } =
+        Array.Empty<CollegeFootballPlayoffSeedRecord>();
+    public IReadOnlyList<NationalChampionRecord> NationalChampionshipHistory { get; init; } =
+        Array.Empty<NationalChampionRecord>();
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 }

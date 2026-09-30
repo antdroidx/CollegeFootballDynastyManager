@@ -60,20 +60,58 @@ public class SeasonProgressionTests
         Assert.Equal(14, next.Week);
     }
 
-    [Theory]
-    [InlineData(SeasonPhase.ConferenceChampionship, SeasonPhase.Postseason)]
-    [InlineData(SeasonPhase.Postseason, SeasonPhase.TransferPortal)]
-    [InlineData(SeasonPhase.TransferPortal, SeasonPhase.Recruiting)]
-    [InlineData(SeasonPhase.Recruiting, SeasonPhase.RosterManagement)]
-    [InlineData(SeasonPhase.RosterManagement, SeasonPhase.Offseason)]
-    public void LaterSeasonPhasesAdvanceInOrder(
-        SeasonPhase current,
-        SeasonPhase expected)
+    [Fact]
+    public void ConferenceChampionshipAdvancesToPostseasonWeekFifteen()
     {
-        var next = SeasonProgression.Advance(State(current, 14));
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.ConferenceChampionship, 14));
+
+        Assert.Equal(SeasonPhase.Postseason, next.Phase);
+        Assert.Equal(15, next.Week);
+    }
+
+    [Theory]
+    [InlineData(15, 16)]
+    [InlineData(16, 17)]
+    [InlineData(17, 18)]
+    public void PostseasonAdvancesThroughFourPlayoffWeeks(
+        int currentWeek,
+        int expectedWeek)
+    {
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.Postseason, currentWeek));
+
+        Assert.Equal(SeasonPhase.Postseason, next.Phase);
+        Assert.Equal(expectedWeek, next.Week);
+    }
+
+    [Fact]
+    public void ChampionshipWeekAdvancesToTransferPortal()
+    {
+        var next = SeasonProgression.Advance(
+            State(
+                SeasonPhase.Postseason,
+                CollegeFootballPlayoffService.NationalChampionshipWeek));
+
+        Assert.Equal(SeasonPhase.TransferPortal, next.Phase);
+        Assert.Equal(19, next.Week);
+    }
+
+    [Theory]
+    [InlineData(SeasonPhase.TransferPortal, SeasonPhase.Recruiting, 19, 20)]
+    [InlineData(SeasonPhase.Recruiting, SeasonPhase.RosterManagement, 20, 21)]
+    [InlineData(SeasonPhase.RosterManagement, SeasonPhase.Offseason, 21, 22)]
+    public void LaterOffseasonPhasesAdvanceInOrder(
+        SeasonPhase current,
+        SeasonPhase expected,
+        int currentWeek,
+        int expectedWeek)
+    {
+        var next = SeasonProgression.Advance(
+            State(current, currentWeek));
 
         Assert.Equal(expected, next.Phase);
-        Assert.Equal(15, next.Week);
+        Assert.Equal(expectedWeek, next.Week);
     }
 
     [Fact]

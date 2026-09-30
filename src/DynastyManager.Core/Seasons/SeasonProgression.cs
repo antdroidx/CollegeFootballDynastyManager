@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
 
 namespace DynastyManager.Core.Seasons;
 
@@ -44,6 +45,14 @@ public static class SeasonProgression
                 Week = state.Week + 1,
                 Phase = SeasonPhase.Postseason
             },
+
+            SeasonPhase.Postseason when state.Week <
+                CollegeFootballPlayoffService.NationalChampionshipWeek =>
+                state with
+                {
+                    Week = state.Week + 1,
+                    Phase = SeasonPhase.Postseason
+                },
 
             SeasonPhase.Postseason => state with
             {

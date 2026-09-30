@@ -23,6 +23,8 @@ public sealed class FoundationPage : ContentPage
     private readonly Label _rollingAutosaveStatus;
     private readonly Label _nationalRankingStatus;
     private readonly VerticalStackLayout _nationalRankingsList;
+    private readonly Label _postseasonStatus;
+    private readonly VerticalStackLayout _postseasonList;
     private readonly Label _conferenceChampionshipStatus;
     private readonly VerticalStackLayout _conferenceStandingsList;
     private readonly VerticalStackLayout _scheduleList;
@@ -116,6 +118,17 @@ public sealed class FoundationPage : ContentPage
         _nationalRankingsList = new VerticalStackLayout
         {
             Spacing = 3
+        };
+
+        _postseasonStatus = new Label
+        {
+            Text = "The 12-team CFP field is selected after conference championships.",
+            FontSize = 13
+        };
+
+        _postseasonList = new VerticalStackLayout
+        {
+            Spacing = 4
         };
 
         _conferenceChampionshipStatus = new Label
@@ -214,6 +227,16 @@ public sealed class FoundationPage : ContentPage
                     },
                     _nationalRankingStatus,
                     _nationalRankingsList,
+
+                    new BoxView { HeightRequest = 1 },
+
+                    new Label
+                    {
+                        Text = "COLLEGE FOOTBALL PLAYOFF",
+                        FontAttributes = FontAttributes.Bold
+                    },
+                    _postseasonStatus,
+                    _postseasonList,
 
                     new BoxView { HeightRequest = 1 },
 
@@ -384,6 +407,17 @@ public sealed class FoundationPage : ContentPage
                     _teamsByName,
                     _simulationProfiles);
         }
+        else if (phaseBeforeAdvance == SeasonPhase.Postseason)
+        {
+            _currentDynasty = CollegeFootballPlayoffService
+                .SimulateCurrentRound(
+                    _currentDynasty,
+                    _teamsByName,
+                    _simulationProfiles);
+
+            _currentDynasty = CollegeFootballPlayoffService
+                .ScheduleNextRound(_currentDynasty);
+        }
 
         var wasOffseason = phaseBeforeAdvance == SeasonPhase.Offseason;
         _currentDynasty = SeasonProgression.Advance(_currentDynasty);
@@ -393,6 +427,16 @@ public sealed class FoundationPage : ContentPage
         {
             _currentDynasty = ConferenceChampionshipService
                 .ScheduleChampionships(
+                    _currentDynasty,
+                    _teamsByName,
+                    _simulationProfiles);
+        }
+
+        if (phaseBeforeAdvance == SeasonPhase.ConferenceChampionship &&
+            _currentDynasty.Phase == SeasonPhase.Postseason)
+        {
+            _currentDynasty = CollegeFootballPlayoffService
+                .InitializePlayoff(
                     _currentDynasty,
                     _teamsByName,
                     _simulationProfiles);
@@ -604,6 +648,9 @@ public sealed class FoundationPage : ContentPage
             _nationalRankingStatus.Text =
                 "National rankings will appear after a dynasty is created.";
             _nationalRankingsList.Children.Clear();
+            _postseasonStatus.Text =
+                "The 12-team CFP field is selected after conference championships.";
+            _postseasonList.Children.Clear();
             _conferenceChampionshipStatus.Text =
                 "Conference standings will appear after a dynasty is created.";
             _conferenceStandingsList.Children.Clear();
@@ -647,6 +694,7 @@ public sealed class FoundationPage : ContentPage
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
         RenderNationalRankings();
+        RenderPostseason();
         RenderConferenceRace();
         RenderUserSchedule();
     }
@@ -695,6 +743,99 @@ public sealed class FoundationPage : ContentPage
             });
         }
     }
+
+    private void RenderPostseason()
+    {
+        _postseasonList.Children.Clear();
+
+        if (_currentDynasty is null)
+        {
+            _postseasonStatus.Text =
+                "No postseason data available.";
+            return;
+        }
+
+        var field = _currentDynasty.CollegeFootballPlayoffHistory
+            .Where(record => record.SeasonYear == _currentDynasty.SeasonYear)
+            .OrderBy(record => record.Seed)
+            .ToArray();
+
+        var champion = _currentDynasty.NationalChampionshipHistory
+            .FirstOrDefault(record =>
+                record.SeasonYear == _currentDynasty.SeasonYear);
+
+        if (champion is not null)
+        {
+            _postseasonStatus.Text =
+                $"{champion.SeasonYear} National Champion: " +
+                $"{champion.ChampionTeamName} " +
+                $"{champion.ChampionScore}-{champion.RunnerUpScore} " +
+                $"over {champion.RunnerUpTeamName}";
+        }
+        else if (field.Length == CollegeFootballPlayoffService.PlayoffTeamCount)
+        {
+            _postseasonStatus.Text =
+                "12-team CFP field: five highest-ranked conference champions + seven at-large teams.";
+        }
+        else
+        {
+            _postseasonStatus.Text =
+                "The 12-team CFP field is selected after conference championships.";
+            return;
+        }
+
+        foreach (var selection in field)
+        {
+            var marker = selection.IsAutomaticBid
+                ? "AUTO"
+                : "AT-LARGE";
+
+            _postseasonList.Children.Add(new Label
+            {
+                Text =
+                    $"{selection.Seed}. {selection.TeamName} • " +
+                    $"#{selection.NationalRank} • {marker}" +
+                    (selection.Seed <= 4 ? " • BYE" : string.Empty),
+                FontAttributes = selection.TeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? FontAttributes.Bold
+                    : FontAttributes.None
+            });
+        }
+
+        foreach (var game in _currentDynasty.Schedule
+                     .Where(game =>
+                         game.SeasonYear == _currentDynasty.SeasonYear &&
+                         game.GameType == ScheduledGameType.CollegeFootballPlayoff)
+                     .OrderBy(game => game.Week)
+                     .ThenBy(game => game.PlayoffBracketSlot))
+        {
+            var result = game.HasPlayed &&
+                         game.HomeScore is int homeScore &&
+                         game.AwayScore is int awayScore
+                ? $"{homeScore}-{awayScore}"
+                : "Upcoming";
+
+            _postseasonList.Children.Add(new Label
+            {
+                Text =
+                    $"{FormatPostseasonRound(game.PostseasonRound)}: " +
+                    $"#{game.AwaySeed} {game.AwayTeamName} vs " +
+                    $"#{game.HomeSeed} {game.HomeTeamName} • {result}"
+            });
+        }
+    }
+
+    private static string FormatPostseasonRound(PostseasonRound round) =>
+        round switch
+        {
+            PostseasonRound.FirstRound => "First Round",
+            PostseasonRound.Quarterfinal => "Quarterfinal",
+            PostseasonRound.Semifinal => "Semifinal",
+            PostseasonRound.NationalChampionship => "National Championship",
+            _ => "Postseason"
+        };
 
     private void RenderConferenceRace()
     {
@@ -848,6 +989,7 @@ public sealed class FoundationPage : ContentPage
             {
                 ScheduledGameType.Conference => "CONF",
                 ScheduledGameType.ConferenceChampionship => "CCG",
+                ScheduledGameType.CollegeFootballPlayoff => "CFP",
                 _ => "OOC"
             };
 

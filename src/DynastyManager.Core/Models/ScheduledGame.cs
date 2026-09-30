@@ -8,6 +8,11 @@ public sealed record ScheduledGame
     public required string HomeTeamName { get; init; }
     public required string AwayTeamName { get; init; }
     public ScheduledGameType GameType { get; init; } = ScheduledGameType.NonConference;
+    public PostseasonRound PostseasonRound { get; init; } = PostseasonRound.None;
+    public int PlayoffBracketSlot { get; init; }
+    public int? HomeSeed { get; init; }
+    public int? AwaySeed { get; init; }
+    public bool IsNeutralSite { get; init; }
     public int SimulationSeed { get; init; }
     public bool HasPlayed { get; init; }
     public int? HomeScore { get; init; }

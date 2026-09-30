@@ -46,7 +46,7 @@ public static class DeterministicGameSimulator
             homeProfile,
             awayProfile,
             random,
-            HomeFieldRatingBonus);
+            game.IsNeutralSite ? 0.0 : HomeFieldRatingBonus);
 
         var away = SimulateSide(
             awayProfile,
