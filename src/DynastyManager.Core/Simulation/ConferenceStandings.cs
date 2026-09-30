@@ -4,16 +4,16 @@ namespace DynastyManager.Core.Simulation;
 
 /// <summary>
 /// Builds regular-season conference standings. The legacy game primarily
-/// sorted by conference wins and used head-to-head for a two-team tie. Until
-/// national polls are ported, larger/unresolved ties use overall wins,
-/// conference point differential, prestige, then team name deterministically.
+/// sorted by conference wins, used head-to-head for a two-team tie, and used
+/// national poll position for larger/unresolved ties.
 /// </summary>
 public static class ConferenceStandings
 {
     public static IReadOnlyList<ConferenceStanding> Build(
         DynastyState state,
         IReadOnlyDictionary<string, Team> teamsByName,
-        string conferenceName)
+        string conferenceName,
+        IReadOnlyDictionary<string, int>? nationalRanks = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
@@ -125,7 +125,11 @@ public static class ConferenceStandings
             }
 
             tied.Sort((left, right) =>
-                CompareFallback(left, right, teamsByName));
+                CompareFallback(
+                    left,
+                    right,
+                    teamsByName,
+                    nationalRanks));
             ordered.AddRange(tied);
         }
 
@@ -170,8 +174,18 @@ public static class ConferenceStandings
     private static int CompareFallback(
         ConferenceStanding left,
         ConferenceStanding right,
-        IReadOnlyDictionary<string, Team> teamsByName)
+        IReadOnlyDictionary<string, Team> teamsByName,
+        IReadOnlyDictionary<string, int>? nationalRanks)
     {
+        if (nationalRanks is not null &&
+            nationalRanks.TryGetValue(left.TeamName, out var leftRank) &&
+            nationalRanks.TryGetValue(right.TeamName, out var rightRank))
+        {
+            var poll = leftRank.CompareTo(rightRank);
+            if (poll != 0)
+                return poll;
+        }
+
         var overallWins = right.OverallWins.CompareTo(left.OverallWins);
         if (overallWins != 0)
             return overallWins;

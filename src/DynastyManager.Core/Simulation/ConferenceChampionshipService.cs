@@ -8,7 +8,8 @@ public static class ConferenceChampionshipService
 
     public static DynastyState ScheduleChampionships(
         DynastyState state,
-        IReadOnlyDictionary<string, Team> teamsByName)
+        IReadOnlyDictionary<string, Team> teamsByName,
+        IReadOnlyDictionary<string, TeamSimulationProfile>? profilesByTeam = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
@@ -24,6 +25,12 @@ public static class ConferenceChampionshipService
         }
 
         var championshipGames = new List<ScheduledGame>();
+        var nationalRanks = NationalRankingService
+            .Build(state, teamsByName, profilesByTeam)
+            .ToDictionary(
+                ranking => ranking.TeamName,
+                ranking => ranking.Rank,
+                StringComparer.OrdinalIgnoreCase);
 
         foreach (var conference in teamsByName.Values
                      .GroupBy(
@@ -41,7 +48,8 @@ public static class ConferenceChampionshipService
             var standings = ConferenceStandings.Build(
                 state,
                 teamsByName,
-                conference.Key);
+                conference.Key,
+                nationalRanks);
 
             if (standings.Count < 2)
                 continue;

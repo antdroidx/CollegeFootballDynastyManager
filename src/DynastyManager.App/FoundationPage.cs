@@ -21,6 +21,8 @@ public sealed class FoundationPage : ContentPage
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
     private readonly Label _rollingAutosaveStatus;
+    private readonly Label _nationalRankingStatus;
+    private readonly VerticalStackLayout _nationalRankingsList;
     private readonly Label _conferenceChampionshipStatus;
     private readonly VerticalStackLayout _conferenceStandingsList;
     private readonly VerticalStackLayout _scheduleList;
@@ -105,6 +107,17 @@ public sealed class FoundationPage : ContentPage
             FontSize = 13
         };
 
+        _nationalRankingStatus = new Label
+        {
+            Text = "National rankings will appear after a dynasty is created.",
+            FontSize = 13
+        };
+
+        _nationalRankingsList = new VerticalStackLayout
+        {
+            Spacing = 3
+        };
+
         _conferenceChampionshipStatus = new Label
         {
             Text = "Conference standings will appear after a dynasty is created.",
@@ -142,7 +155,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Phase 5 — Roster-Informed Game Simulation",
+                        Text = "Phase 6 — National Rankings & Postseason Foundation",
                         FontSize = 18
                     },
                     _importStatus,
@@ -191,6 +204,16 @@ public sealed class FoundationPage : ContentPage
                         }
                     },
                     _rollingAutosaveStatus,
+
+                    new BoxView { HeightRequest = 1 },
+
+                    new Label
+                    {
+                        Text = "NATIONAL TOP 25",
+                        FontAttributes = FontAttributes.Bold
+                    },
+                    _nationalRankingStatus,
+                    _nationalRankingsList,
 
                     new BoxView { HeightRequest = 1 },
 
@@ -371,7 +394,8 @@ public sealed class FoundationPage : ContentPage
             _currentDynasty = ConferenceChampionshipService
                 .ScheduleChampionships(
                     _currentDynasty,
-                    _teamsByName);
+                    _teamsByName,
+                    _simulationProfiles);
         }
 
         if (wasOffseason && _currentDynasty.Phase == SeasonPhase.Preseason)
@@ -577,6 +601,9 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
         {
             _currentDynastyLabel.Text = "No dynasty loaded.";
+            _nationalRankingStatus.Text =
+                "National rankings will appear after a dynasty is created.";
+            _nationalRankingsList.Children.Clear();
             _conferenceChampionshipStatus.Text =
                 "Conference standings will appear after a dynasty is created.";
             _conferenceStandingsList.Children.Clear();
@@ -619,8 +646,54 @@ public sealed class FoundationPage : ContentPage
             $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
+        RenderNationalRankings();
         RenderConferenceRace();
         RenderUserSchedule();
+    }
+
+    private void RenderNationalRankings()
+    {
+        _nationalRankingsList.Children.Clear();
+
+        if (_currentDynasty is null)
+        {
+            _nationalRankingStatus.Text =
+                "No ranking data available.";
+            return;
+        }
+
+        var rankings = NationalRankingService.Build(
+            _currentDynasty,
+            _teamsByName,
+            _simulationProfiles);
+
+        var userRanking = rankings.FirstOrDefault(ranking =>
+            ranking.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase));
+
+        _nationalRankingStatus.Text =
+            userRanking is null
+                ? "User team is not ranked."
+                : userRanking.Rank <= 25
+                    ? $"Your team: #{userRanking.Rank} {userRanking.TeamName}"
+                    : $"Your team: NR ({userRanking.Rank}) {userRanking.TeamName}";
+
+        foreach (var ranking in rankings.Take(25))
+        {
+            _nationalRankingsList.Children.Add(new Label
+            {
+                Text =
+                    $"#{ranking.Rank} {ranking.TeamName} • " +
+                    $"{ranking.Wins}-{ranking.Losses} • " +
+                    $"{ranking.ConferenceName}",
+                FontAttributes = ranking.TeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? FontAttributes.Bold
+                    : FontAttributes.None
+            });
+        }
     }
 
     private void RenderConferenceRace()
@@ -654,10 +727,21 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
+        var nationalRanks = NationalRankingService
+            .Build(
+                _currentDynasty,
+                _teamsByName,
+                _simulationProfiles)
+            .ToDictionary(
+                ranking => ranking.TeamName,
+                ranking => ranking.Rank,
+                StringComparer.OrdinalIgnoreCase);
+
         var standings = ConferenceStandings.Build(
             _currentDynasty,
             _teamsByName,
-            userTeam.ConferenceName);
+            userTeam.ConferenceName,
+            nationalRanks);
 
         var titleGame = _currentDynasty.Schedule
             .FirstOrDefault(game =>

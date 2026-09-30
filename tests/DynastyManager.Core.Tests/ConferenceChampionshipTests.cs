@@ -26,8 +26,10 @@ public class ConferenceChampionshipTests
             new[]
             {
                 PlayedConference("A-B", "A", "B", 24, 17),
-                PlayedConference("A-D", "D", "A", 21, 14),
-                PlayedConference("B-C", "B", "C", 28, 14)
+                PlayedConference("A-C", "A", "C", 28, 14),
+                PlayedConference("D-A", "D", "A", 21, 14),
+                PlayedConference("B-C", "B", "C", 28, 14),
+                PlayedConference("B-D", "B", "D", 31, 17)
             });
 
         var standings = ConferenceStandings.Build(
@@ -45,8 +47,8 @@ public class ConferenceChampionshipTests
             .index;
 
         Assert.True(indexA < indexB);
-        Assert.Equal(1, standings[indexA].ConferenceWins);
-        Assert.Equal(1, standings[indexB].ConferenceWins);
+        Assert.Equal(2, standings[indexA].ConferenceWins);
+        Assert.Equal(2, standings[indexB].ConferenceWins);
     }
 
     [Fact]
@@ -81,9 +83,9 @@ public class ConferenceChampionshipTests
             .ScheduleChampionships(state, lookup);
 
         var titleGame = Assert.Single(
-            state.Schedule.Where(game =>
-                game.GameType ==
-                    ScheduledGameType.ConferenceChampionship));
+            state.Schedule,
+            game => game.GameType ==
+                ScheduledGameType.ConferenceChampionship);
 
         Assert.Equal("Team 1", titleGame.HomeTeamName);
         Assert.Equal("Team 2", titleGame.AwayTeamName);
@@ -93,9 +95,9 @@ public class ConferenceChampionshipTests
             .SimulateChampionships(state, lookup);
 
         titleGame = Assert.Single(
-            state.Schedule.Where(game =>
-                game.GameType ==
-                    ScheduledGameType.ConferenceChampionship));
+            state.Schedule,
+            game => game.GameType ==
+                ScheduledGameType.ConferenceChampionship);
 
         Assert.True(titleGame.HasPlayed);
 
