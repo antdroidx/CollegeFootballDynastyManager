@@ -45,7 +45,7 @@ public class OffseasonPlayerLifecycleTests
 
         for (var team = 1; team <= 130; team++)
         {
-            for (var player = 1; player <= 70; player++)
+            for (var player = 1; player <= DynastyRosterRules.MaximumRosterSize; player++)
             {
                 players.Add(Player(
                     $"Player {team}-{player}",
