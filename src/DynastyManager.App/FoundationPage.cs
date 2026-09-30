@@ -26,6 +26,8 @@ public sealed class FoundationPage : ContentPage
     private SqliteDynastySaveRepository? _saveRepository;
     private DynastyState? _currentDynasty;
     private IReadOnlyDictionary<string, Team> _teamsByName = new Dictionary<string, Team>(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyDictionary<string, TeamSimulationProfile> _simulationProfiles =
+        new Dictionary<string, TeamSimulationProfile>(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyList<string> _teamNames = Array.Empty<string>();
     private bool _loaded;
 
@@ -126,7 +128,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Phase 5 — Weekly Schedule & Simulation",
+                        Text = "Phase 5 — Roster-Informed Game Simulation",
                         FontSize = 18
                     },
                     _importStatus,
@@ -229,6 +231,10 @@ public sealed class FoundationPage : ContentPage
                 team => team.Name,
                 StringComparer.OrdinalIgnoreCase);
 
+            _simulationProfiles = LegacyRosterSimulationProfileBuilder.Build(
+                roster.Players,
+                universe.Teams);
+
             _teamNames = _teamsByName.Keys
                 .OrderBy(name => name)
                 .ToArray();
@@ -238,7 +244,7 @@ public sealed class FoundationPage : ContentPage
             _importStatus.Text =
                 $"Legacy data ready: {universe.Conferences.Count:N0} conferences • " +
                 $"{universe.Teams.Count:N0} teams • {roster.Players.Count:N0} players • " +
-                $"{coaches.Count:N0} coaches";
+                $"{coaches.Count:N0} coaches • {_simulationProfiles.Count:N0} sim profiles";
 
             var databasePath = Path.Combine(
                 FileSystem.Current.AppDataDirectory,
@@ -299,7 +305,8 @@ public sealed class FoundationPage : ContentPage
         {
             _currentDynasty = WeekSimulation.SimulateCurrentRegularSeasonWeek(
                 _currentDynasty,
-                _teamsByName);
+                _teamsByName,
+                _simulationProfiles);
         }
 
         var wasOffseason = _currentDynasty.Phase == SeasonPhase.Offseason;
@@ -524,6 +531,16 @@ public sealed class FoundationPage : ContentPage
                 var opponentScore = isHome ? awayScore : homeScore;
                 var result = userScore > opponentScore ? "W" : "L";
                 status = $"{result} {userScore}-{opponentScore}";
+
+                var userStats = isHome ? game.HomeStats : game.AwayStats;
+                var opponentStats = isHome ? game.AwayStats : game.HomeStats;
+
+                if (userStats is not null && opponentStats is not null)
+                {
+                    status +=
+                        $" • {userStats.TotalYards}-{opponentStats.TotalYards} yds" +
+                        $" • TO {userStats.Turnovers}-{opponentStats.Turnovers}";
+                }
             }
 
             _scheduleList.Children.Add(new Label

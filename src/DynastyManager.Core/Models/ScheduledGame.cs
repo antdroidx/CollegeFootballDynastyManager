@@ -11,6 +11,8 @@ public sealed record ScheduledGame
     public bool HasPlayed { get; init; }
     public int? HomeScore { get; init; }
     public int? AwayScore { get; init; }
+    public GameTeamStats? HomeStats { get; init; }
+    public GameTeamStats? AwayStats { get; init; }
 
     public bool InvolvesTeam(string teamName) =>
         HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ||

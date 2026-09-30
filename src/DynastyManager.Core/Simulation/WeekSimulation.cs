@@ -6,7 +6,8 @@ public static class WeekSimulation
 {
     public static DynastyState SimulateCurrentRegularSeasonWeek(
         DynastyState state,
-        IReadOnlyDictionary<string, Team> teamsByName)
+        IReadOnlyDictionary<string, Team> teamsByName,
+        IReadOnlyDictionary<string, TeamSimulationProfile>? profilesByTeam = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
@@ -29,8 +30,16 @@ public static class WeekSimulation
                     throw new InvalidOperationException(
                         $"Scheduled away team '{game.AwayTeamName}' is not available.");
 
+                profilesByTeam?.TryGetValue(game.HomeTeamName, out var homeProfile);
+                profilesByTeam?.TryGetValue(game.AwayTeamName, out var awayProfile);
+
                 changed = true;
-                return DeterministicGameSimulator.Simulate(game, homeTeam, awayTeam);
+                return DeterministicGameSimulator.Simulate(
+                    game,
+                    homeTeam,
+                    awayTeam,
+                    homeProfile,
+                    awayProfile);
             })
             .ToArray();
 

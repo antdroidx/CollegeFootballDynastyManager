@@ -61,6 +61,10 @@ public class SchedulePersistenceTests
             Assert.Equal(played.HomeScore, loadedGame.HomeScore);
             Assert.Equal(played.AwayScore, loadedGame.AwayScore);
             Assert.Equal(played.SimulationSeed, loadedGame.SimulationSeed);
+            Assert.NotNull(loadedGame.HomeStats);
+            Assert.NotNull(loadedGame.AwayStats);
+            Assert.Equal(played.HomeStats?.TotalYards, loadedGame.HomeStats.TotalYards);
+            Assert.Equal(played.AwayStats?.Turnovers, loadedGame.AwayStats.Turnovers);
         }
         finally
         {
