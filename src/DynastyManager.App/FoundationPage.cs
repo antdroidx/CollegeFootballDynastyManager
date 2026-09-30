@@ -14,6 +14,7 @@ public sealed class FoundationPage : ContentPage
     private readonly Label _importStatus;
     private readonly Entry _dynastyNameEntry;
     private readonly Picker _teamPicker;
+    private readonly Button _newDynastyButton;
     private readonly Label _currentDynastyLabel;
     private readonly Button _advanceWeekButton;
     private readonly Button _manualSaveButton;
@@ -52,12 +53,12 @@ public sealed class FoundationPage : ContentPage
             Title = "Choose your team"
         };
 
-        var newDynastyButton = new Button
+        _newDynastyButton = new Button
         {
             Text = "Create New Dynasty",
             TextColor = Colors.White
         };
-        newDynastyButton.Clicked += CreateNewDynasty;
+        _newDynastyButton.Clicked += CreateNewDynasty;
 
         _currentDynastyLabel = new Label
         {
@@ -142,7 +143,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     _dynastyNameEntry,
                     _teamPicker,
-                    newDynastyButton,
+                    _newDynastyButton,
 
                     new BoxView { HeightRequest = 1 },
 
@@ -260,7 +261,7 @@ public sealed class FoundationPage : ContentPage
         }
     }
 
-    private void CreateNewDynasty(object? sender, EventArgs e)
+    private async void CreateNewDynasty(object? sender, EventArgs e)
     {
         if (_teamPicker.SelectedIndex < 0 ||
             _teamPicker.SelectedIndex >= _teamNames.Count)
@@ -277,22 +278,42 @@ public sealed class FoundationPage : ContentPage
         var dynastyId = Guid.NewGuid();
         const int startingYear = 2026;
 
-        _currentDynasty = new DynastyState
-        {
-            DynastyId = dynastyId,
-            DynastyName = dynastyName,
-            UserTeamName = teamName,
-            SeasonYear = startingYear,
-            Week = 0,
-            Phase = SeasonPhase.Preseason,
-            Schedule = SeasonScheduleBuilder.BuildRegularSeason(
-                _teamsByName.Values,
-                dynastyId,
-                startingYear)
-        };
+        SetNewDynastyControlsEnabled(false);
+        SetDynastyControlsEnabled(false);
+        _currentDynastyLabel.Text =
+            "Generating the 130-team schedule…";
 
-        SetDynastyControlsEnabled(true);
-        RenderCurrentDynasty();
+        try
+        {
+            var schedule = await GenerateScheduleAsync(
+                dynastyId,
+                startingYear);
+
+            _currentDynasty = new DynastyState
+            {
+                DynastyId = dynastyId,
+                DynastyName = dynastyName,
+                UserTeamName = teamName,
+                SeasonYear = startingYear,
+                Week = 0,
+                Phase = SeasonPhase.Preseason,
+                Schedule = schedule
+            };
+
+            SetDynastyControlsEnabled(true);
+            RenderCurrentDynasty();
+        }
+        catch (Exception ex)
+        {
+            _currentDynasty = null;
+            _currentDynastyLabel.Text =
+                $"Schedule generation failed: {ex.Message}";
+            _scheduleList.Children.Clear();
+        }
+        finally
+        {
+            SetNewDynastyControlsEnabled(true);
+        }
     }
 
     private async void AdvanceWeek(object? sender, EventArgs e)
@@ -313,13 +334,31 @@ public sealed class FoundationPage : ContentPage
 
         if (wasOffseason && _currentDynasty.Phase == SeasonPhase.Preseason)
         {
-            _currentDynasty = _currentDynasty with
+            SetDynastyControlsEnabled(false);
+            _rollingAutosaveStatus.Text =
+                $"Generating {_currentDynasty.SeasonYear} schedule…";
+
+            try
             {
-                Schedule = SeasonScheduleBuilder.BuildRegularSeason(
-                    _teamsByName.Values,
+                var schedule = await GenerateScheduleAsync(
                     _currentDynasty.DynastyId,
-                    _currentDynasty.SeasonYear)
-            };
+                    _currentDynasty.SeasonYear);
+
+                _currentDynasty = _currentDynasty with
+                {
+                    Schedule = schedule
+                };
+            }
+            catch (Exception ex)
+            {
+                _rollingAutosaveStatus.Text =
+                    $"Schedule generation failed: {ex.Message}";
+                SetDynastyControlsEnabled(true);
+                RenderCurrentDynasty();
+                return;
+            }
+
+            SetDynastyControlsEnabled(true);
         }
 
         RenderCurrentDynasty();
@@ -377,16 +416,30 @@ public sealed class FoundationPage : ContentPage
         if (state is null)
             return;
 
-        _currentDynasty = state.Schedule.Count == 0 && _teamsByName.Count > 1
-            ? state with
-            {
-                Schedule = SeasonScheduleBuilder.BuildRegularSeason(
-                    _teamsByName.Values,
-                    state.DynastyId,
-                    state.SeasonYear)
-            }
-            : state;
+        if (state.Schedule.Count == 0 && _teamsByName.Count > 1)
+        {
+            SetDynastyControlsEnabled(false);
+            _currentDynastyLabel.Text =
+                "Generating schedule for this older save…";
 
+            try
+            {
+                state = state with
+                {
+                    Schedule = await GenerateScheduleAsync(
+                        state.DynastyId,
+                        state.SeasonYear)
+                };
+            }
+            catch (Exception ex)
+            {
+                _currentDynastyLabel.Text =
+                    $"Schedule generation failed: {ex.Message}";
+                return;
+            }
+        }
+
+        _currentDynasty = state;
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
     }
@@ -580,6 +633,29 @@ public sealed class FoundationPage : ContentPage
                         : FontAttributes.None
             });
         }
+    }
+
+    private Task<IReadOnlyList<ScheduledGame>> GenerateScheduleAsync(
+        Guid dynastyId,
+        int seasonYear)
+    {
+        // The conference/OOC scheduler is CPU-bound. Running it on the UI
+        // thread makes Android appear frozen while the full 130-team slate is
+        // constructed, especially on lower-power devices.
+        var teams = _teamsByName.Values.ToArray();
+
+        return Task.Run<IReadOnlyList<ScheduledGame>>(() =>
+            SeasonScheduleBuilder.BuildRegularSeason(
+                teams,
+                dynastyId,
+                seasonYear));
+    }
+
+    private void SetNewDynastyControlsEnabled(bool enabled)
+    {
+        _newDynastyButton.IsEnabled = enabled;
+        _dynastyNameEntry.IsEnabled = enabled;
+        _teamPicker.IsEnabled = enabled;
     }
 
     private void SetDynastyControlsEnabled(bool enabled)
