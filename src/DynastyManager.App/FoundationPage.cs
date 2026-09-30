@@ -21,6 +21,8 @@ public sealed class FoundationPage : ContentPage
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
     private readonly Label _rollingAutosaveStatus;
+    private readonly Label _offseasonRosterStatus;
+    private readonly VerticalStackLayout _transferPortalList;
     private readonly Label _nationalRankingStatus;
     private readonly VerticalStackLayout _nationalRankingsList;
     private readonly Label _postseasonStatus;
@@ -35,6 +37,8 @@ public sealed class FoundationPage : ContentPage
     private IReadOnlyDictionary<string, Team> _teamsByName = new Dictionary<string, Team>(StringComparer.OrdinalIgnoreCase);
     private IReadOnlyDictionary<string, TeamSimulationProfile> _simulationProfiles =
         new Dictionary<string, TeamSimulationProfile>(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyList<ImportedPlayerRow> _legacyRosterRows =
+        Array.Empty<ImportedPlayerRow>();
     private IReadOnlyList<string> _teamNames = Array.Empty<string>();
     private bool _loaded;
 
@@ -109,6 +113,17 @@ public sealed class FoundationPage : ContentPage
             FontSize = 13
         };
 
+        _offseasonRosterStatus = new Label
+        {
+            Text = "Roster data will appear after a dynasty is created.",
+            FontSize = 13
+        };
+
+        _transferPortalList = new VerticalStackLayout
+        {
+            Spacing = 3
+        };
+
         _nationalRankingStatus = new Label
         {
             Text = "National rankings will appear after a dynasty is created.",
@@ -168,7 +183,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Phase 6 — National Rankings & Postseason Foundation",
+                        Text = "Phase 7 — Offseason Player Lifecycle & Transfer Portal",
                         FontSize = 18
                     },
                     _importStatus,
@@ -217,6 +232,16 @@ public sealed class FoundationPage : ContentPage
                         }
                     },
                     _rollingAutosaveStatus,
+
+                    new BoxView { HeightRequest = 1 },
+
+                    new Label
+                    {
+                        Text = "ROSTER & TRANSFER PORTAL",
+                        FontAttributes = FontAttributes.Bold
+                    },
+                    _offseasonRosterStatus,
+                    _transferPortalList,
 
                     new BoxView { HeightRequest = 1 },
 
@@ -301,6 +326,8 @@ public sealed class FoundationPage : ContentPage
                 team => team.Name,
                 StringComparer.OrdinalIgnoreCase);
 
+            _legacyRosterRows = roster.Players;
+
             _simulationProfiles = LegacyRosterSimulationProfileBuilder.Build(
                 roster.Players,
                 universe.Teams);
@@ -358,6 +385,11 @@ public sealed class FoundationPage : ContentPage
                 dynastyId,
                 startingYear);
 
+            var activeRoster = LegacyDynastyRosterFactory.Create(
+                _legacyRosterRows,
+                dynastyId,
+                startingYear);
+
             _currentDynasty = new DynastyState
             {
                 DynastyId = dynastyId,
@@ -366,7 +398,8 @@ public sealed class FoundationPage : ContentPage
                 SeasonYear = startingYear,
                 Week = 0,
                 Phase = SeasonPhase.Preseason,
-                Schedule = schedule
+                Schedule = schedule,
+                ActiveRoster = activeRoster
             };
 
             SetDynastyControlsEnabled(true);
@@ -427,6 +460,13 @@ public sealed class FoundationPage : ContentPage
 
         var wasOffseason = phaseBeforeAdvance == SeasonPhase.Offseason;
         _currentDynasty = SeasonProgression.Advance(_currentDynasty);
+
+        if (phaseBeforeAdvance == SeasonPhase.Postseason &&
+            _currentDynasty.Phase == SeasonPhase.TransferPortal)
+        {
+            _currentDynasty = OffseasonPlayerLifecycleService
+                .EnterTransferPortal(_currentDynasty);
+        }
 
         if (phaseBeforeAdvance == SeasonPhase.RegularSeason &&
             _currentDynasty.Phase == SeasonPhase.ConferenceChampionship)
@@ -561,6 +601,25 @@ public sealed class FoundationPage : ContentPage
             }
         }
 
+        if (state.ActiveRoster.Count == 0 &&
+            _legacyRosterRows.Count > 0)
+        {
+            state = state with
+            {
+                ActiveRoster = LegacyDynastyRosterFactory.Create(
+                    _legacyRosterRows,
+                    state.DynastyId,
+                    state.SeasonYear)
+            };
+        }
+
+        if (state.Phase == SeasonPhase.TransferPortal &&
+            state.TransferPortalEntries.Count == 0)
+        {
+            state = OffseasonPlayerLifecycleService
+                .EnterTransferPortal(state);
+        }
+
         _currentDynasty = state;
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
@@ -657,6 +716,9 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
         {
             _currentDynastyLabel.Text = "No dynasty loaded.";
+            _offseasonRosterStatus.Text =
+                "Roster data will appear after a dynasty is created.";
+            _transferPortalList.Children.Clear();
             _nationalRankingStatus.Text =
                 "National rankings will appear after a dynasty is created.";
             _nationalRankingsList.Children.Clear();
@@ -705,10 +767,111 @@ public sealed class FoundationPage : ContentPage
             $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
+        RenderOffseasonRoster();
         RenderNationalRankings();
         RenderPostseason();
         RenderConferenceRace();
         RenderUserSchedule();
+    }
+
+    private void RenderOffseasonRoster()
+    {
+        _transferPortalList.Children.Clear();
+
+        if (_currentDynasty is null)
+        {
+            _offseasonRosterStatus.Text =
+                "No roster data available.";
+            return;
+        }
+
+        var userRoster = _currentDynasty.ActiveRoster
+            .Where(player => player.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        var userPortal = _currentDynasty.TransferPortalEntries
+            .Where(entry => entry.OriginTeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        var userDepartures = _currentDynasty.RecentPlayerDepartures
+            .Where(departure => departure.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (_currentDynasty.TransferPortalEntries.Count == 0)
+        {
+            _offseasonRosterStatus.Text =
+                $"{_currentDynasty.UserTeamName}: {userRoster.Length} active players. " +
+                "The transfer portal opens after the postseason.";
+            return;
+        }
+
+        var graduates = userDepartures.Count(departure =>
+            departure.Reason == PlayerDepartureReason.Graduation);
+        var earlyPro = userDepartures.Count(departure =>
+            departure.Reason == PlayerDepartureReason.EarlyProDeclaration);
+        var portalSeason = _currentDynasty.TransferPortalEntries
+            .Max(entry => entry.SeasonYear);
+
+        _offseasonRosterStatus.Text =
+            $"{portalSeason} portal: {_currentDynasty.TransferPortalEntries.Count:N0} national entries • " +
+            $"{_currentDynasty.UserTeamName}: {userRoster.Length} active • " +
+            $"{userPortal.Length} entered portal • {graduates} graduates • " +
+            $"{earlyPro} early pro";
+
+        if (userPortal.Length > 0)
+        {
+            _transferPortalList.Children.Add(new Label
+            {
+                Text = "YOUR TRANSFERS OUT",
+                FontAttributes = FontAttributes.Bold
+            });
+
+            foreach (var entry in userPortal
+                         .OrderByDescending(entry => entry.Player.OverallRating)
+                         .ThenBy(entry => entry.Player.FullName, StringComparer.OrdinalIgnoreCase)
+                         .Take(12))
+            {
+                _transferPortalList.Children.Add(new Label
+                {
+                    Text =
+                        $"{entry.Player.Position} {entry.Player.FullName} • " +
+                        $"OVR {entry.Player.OverallRating} • Year {entry.Player.ClassYear}"
+                });
+            }
+        }
+
+        _transferPortalList.Children.Add(new Label
+        {
+            Text = "TOP NATIONAL PORTAL PLAYERS",
+            FontAttributes = FontAttributes.Bold,
+            Margin = new Thickness(0, 6, 0, 0)
+        });
+
+        foreach (var entry in _currentDynasty.TransferPortalEntries
+                     .OrderByDescending(entry => entry.Player.OverallRating)
+                     .ThenByDescending(entry => entry.Player.TalentLevel)
+                     .ThenBy(entry => entry.Player.FullName, StringComparer.OrdinalIgnoreCase)
+                     .Take(12))
+        {
+            _transferPortalList.Children.Add(new Label
+            {
+                Text =
+                    $"{entry.Player.OverallRating} OVR • {entry.Player.Position} " +
+                    $"{entry.Player.FullName} • {entry.OriginTeamName} • " +
+                    $"Year {entry.Player.ClassYear}",
+                FontAttributes = entry.OriginTeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? FontAttributes.Bold
+                    : FontAttributes.None
+            });
+        }
     }
 
     private void RenderNationalRankings()

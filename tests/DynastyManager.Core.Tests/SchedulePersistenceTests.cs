@@ -96,6 +96,50 @@ public class SchedulePersistenceTests
                         WinnerScore = 27,
                         LoserScore = 20
                     }
+                },
+                ActiveRoster = new[]
+                {
+                    new DynastyPlayer
+                    {
+                        PlayerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                        FullName = "Active Player",
+                        TeamName = "Washington",
+                        Position = Position.QB,
+                        ClassYear = 3,
+                        TalentLevel = 8,
+                        OverallRating = 86
+                    }
+                },
+                TransferPortalEntries = new[]
+                {
+                    new TransferPortalEntry
+                    {
+                        SeasonYear = 2025,
+                        OriginTeamName = "Oregon",
+                        Player = new DynastyPlayer
+                        {
+                            PlayerId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+                            FullName = "Portal Player",
+                            TeamName = "Oregon",
+                            Position = Position.WR,
+                            ClassYear = 3,
+                            TalentLevel = 7,
+                            OverallRating = 82
+                        }
+                    }
+                },
+                RecentPlayerDepartures = new[]
+                {
+                    new PlayerDepartureRecord
+                    {
+                        SeasonYear = 2025,
+                        PlayerId = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+                        FullName = "Graduated Player",
+                        TeamName = "Washington",
+                        Position = Position.OL,
+                        OverallRating = 80,
+                        Reason = PlayerDepartureReason.Graduation
+                    }
                 }
             };
 
@@ -130,6 +174,20 @@ public class SchedulePersistenceTests
             var bowlResult = Assert.Single(loaded.BowlHistory);
             Assert.Equal("Carnation Bowl", bowlResult.BowlName);
             Assert.Equal("Washington", bowlResult.WinnerTeamName);
+
+            var activePlayer = Assert.Single(loaded.ActiveRoster);
+            Assert.Equal("Active Player", activePlayer.FullName);
+            Assert.Equal(3, activePlayer.ClassYear);
+
+            var portalPlayer = Assert.Single(loaded.TransferPortalEntries);
+            Assert.Equal("Portal Player", portalPlayer.Player.FullName);
+            Assert.Equal("Oregon", portalPlayer.OriginTeamName);
+
+            var departure = Assert.Single(loaded.RecentPlayerDepartures);
+            Assert.Equal("Graduated Player", departure.FullName);
+            Assert.Equal(
+                PlayerDepartureReason.Graduation,
+                departure.Reason);
         }
         finally
         {
