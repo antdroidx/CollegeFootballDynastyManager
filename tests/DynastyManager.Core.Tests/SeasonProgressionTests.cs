@@ -1,5 +1,6 @@
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Seasons;
+using DynastyManager.Core.Simulation;
 using Xunit;
 
 namespace DynastyManager.Core.Tests;
