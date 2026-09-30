@@ -62,14 +62,16 @@ public static class NationalRankingService
                 away.Team.Name,
                 homeScore,
                 awayScore,
-                game.HomeStats);
+                game.HomeStats,
+                game.AwayStats);
 
             RecordGame(
                 away,
                 home.Team.Name,
                 awayScore,
                 homeScore,
-                game.AwayStats);
+                game.AwayStats,
+                game.HomeStats);
         }
 
         var preseasonOrder = accumulators.Values
@@ -193,14 +195,16 @@ public static class NationalRankingService
         string opponentName,
         int pointsFor,
         int pointsAgainst,
-        GameTeamStats? stats)
+        GameTeamStats? stats,
+        GameTeamStats? opponentStats)
     {
         team.PointsFor += pointsFor;
         team.PointsAgainst += pointsAgainst;
 
-        if (stats is not null)
+        if (stats is not null && opponentStats is not null)
         {
             team.YardsFor += stats.TotalYards;
+            team.YardsAgainst += opponentStats.TotalYards;
             team.GamesWithStats++;
         }
 
