@@ -84,6 +84,18 @@ public class SchedulePersistenceTests
                         ChampionScore = 35,
                         RunnerUpScore = 28
                     }
+                },
+                BowlHistory = new[]
+                {
+                    new BowlResultRecord
+                    {
+                        SeasonYear = 2025,
+                        BowlName = "Carnation Bowl",
+                        WinnerTeamName = "Washington",
+                        LoserTeamName = "Oregon",
+                        WinnerScore = 27,
+                        LoserScore = 20
+                    }
                 }
             };
 
@@ -114,6 +126,10 @@ public class SchedulePersistenceTests
             var nationalChampion = Assert.Single(
                 loaded.NationalChampionshipHistory);
             Assert.Equal("Washington", nationalChampion.ChampionTeamName);
+
+            var bowlResult = Assert.Single(loaded.BowlHistory);
+            Assert.Equal("Carnation Bowl", bowlResult.BowlName);
+            Assert.Equal("Washington", bowlResult.WinnerTeamName);
         }
         finally
         {
