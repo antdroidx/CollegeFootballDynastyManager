@@ -30,8 +30,14 @@ public static class WeekSimulation
                     throw new InvalidOperationException(
                         $"Scheduled away team '{game.AwayTeamName}' is not available.");
 
-                profilesByTeam?.TryGetValue(game.HomeTeamName, out var homeProfile);
-                profilesByTeam?.TryGetValue(game.AwayTeamName, out var awayProfile);
+                TeamSimulationProfile? homeProfile = null;
+                TeamSimulationProfile? awayProfile = null;
+
+                if (profilesByTeam is not null)
+                {
+                    profilesByTeam.TryGetValue(game.HomeTeamName, out homeProfile);
+                    profilesByTeam.TryGetValue(game.AwayTeamName, out awayProfile);
+                }
 
                 changed = true;
                 return DeterministicGameSimulator.Simulate(
