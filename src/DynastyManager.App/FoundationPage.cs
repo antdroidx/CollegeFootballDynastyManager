@@ -377,7 +377,7 @@ public sealed class FoundationPage : ContentPage
         SetNewDynastyControlsEnabled(false);
         SetDynastyControlsEnabled(false);
         _currentDynastyLabel.Text =
-            "Generating the 130-team schedule…";
+            $"Generating the {_teamsByName.Count}-team schedule…";
 
         try
         {
@@ -387,6 +387,7 @@ public sealed class FoundationPage : ContentPage
 
             var activeRoster = LegacyDynastyRosterFactory.Create(
                 _legacyRosterRows,
+                _teamsByName.Values,
                 dynastyId,
                 startingYear);
 
@@ -608,6 +609,7 @@ public sealed class FoundationPage : ContentPage
             {
                 ActiveRoster = LegacyDynastyRosterFactory.Create(
                     _legacyRosterRows,
+                    _teamsByName.Values,
                     state.DynastyId,
                     state.SeasonYear)
             };
