@@ -166,7 +166,7 @@ public static class NationalRankingService
             scored.Add(new ScoredTeam(value, score));
         }
 
-        return scored
+        var rankings = scored
             .OrderByDescending(item => item.Score)
             .ThenByDescending(item => item.Value.Wins)
             .ThenBy(item => item.Value.Losses)
@@ -186,6 +186,54 @@ public static class NationalRankingService
                 OpponentPointsPerGame = item.Value.GamesPlayed == 0
                     ? 0
                     : item.Value.PointsAgainst / (double)item.Value.GamesPlayed
+            })
+            .ToArray();
+
+        return ApplyFinalChampionshipPlacement(state, rankings);
+    }
+
+    private static IReadOnlyList<NationalRanking> ApplyFinalChampionshipPlacement(
+        DynastyState state,
+        IReadOnlyList<NationalRanking> rankings)
+    {
+        var championship = state.NationalChampionshipHistory
+            .FirstOrDefault(record =>
+                record.SeasonYear == state.SeasonYear);
+
+        if (championship is null)
+            return rankings;
+
+        var champion = rankings.FirstOrDefault(ranking =>
+            ranking.TeamName.Equals(
+                championship.ChampionTeamName,
+                StringComparison.OrdinalIgnoreCase));
+
+        var runnerUp = rankings.FirstOrDefault(ranking =>
+            ranking.TeamName.Equals(
+                championship.RunnerUpTeamName,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (champion is null || runnerUp is null)
+            return rankings;
+
+        var reordered = new List<NationalRanking>(rankings.Count)
+        {
+            champion,
+            runnerUp
+        };
+
+        reordered.AddRange(rankings.Where(ranking =>
+            !ranking.TeamName.Equals(
+                championship.ChampionTeamName,
+                StringComparison.OrdinalIgnoreCase) &&
+            !ranking.TeamName.Equals(
+                championship.RunnerUpTeamName,
+                StringComparison.OrdinalIgnoreCase)));
+
+        return reordered
+            .Select((ranking, index) => ranking with
+            {
+                Rank = index + 1
             })
             .ToArray();
     }
