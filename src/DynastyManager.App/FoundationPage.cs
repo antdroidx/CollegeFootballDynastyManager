@@ -409,6 +409,12 @@ public sealed class FoundationPage : ContentPage
         }
         else if (phaseBeforeAdvance == SeasonPhase.Postseason)
         {
+            _currentDynasty = BowlService
+                .SimulateCurrentWeek(
+                    _currentDynasty,
+                    _teamsByName,
+                    _simulationProfiles);
+
             _currentDynasty = CollegeFootballPlayoffService
                 .SimulateCurrentRound(
                     _currentDynasty,
@@ -437,6 +443,12 @@ public sealed class FoundationPage : ContentPage
         {
             _currentDynasty = CollegeFootballPlayoffService
                 .InitializePlayoff(
+                    _currentDynasty,
+                    _teamsByName,
+                    _simulationProfiles);
+
+            _currentDynasty = BowlService
+                .InitializeBowls(
                     _currentDynasty,
                     _teamsByName,
                     _simulationProfiles);
@@ -825,6 +837,42 @@ public sealed class FoundationPage : ContentPage
                     $"#{game.HomeSeed} {game.HomeTeamName} • {result}"
             });
         }
+
+        var bowls = _currentDynasty.Schedule
+            .Where(game =>
+                game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType == ScheduledGameType.Bowl)
+            .OrderBy(game => game.Week)
+            .ThenBy(game => game.BowlName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (bowls.Length > 0)
+        {
+            _postseasonList.Children.Add(new Label
+            {
+                Text = "NON-CFP BOWLS",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+
+            foreach (var game in bowls)
+            {
+                var result = game.HasPlayed &&
+                             game.HomeScore is int homeScore &&
+                             game.AwayScore is int awayScore
+                    ? $"{game.AwayTeamName} {awayScore}, {game.HomeTeamName} {homeScore}"
+                    : $"{game.AwayTeamName} vs {game.HomeTeamName} • Upcoming";
+
+                _postseasonList.Children.Add(new Label
+                {
+                    Text = $"{game.BowlName}: {result}",
+                    FontAttributes = game.InvolvesTeam(
+                        _currentDynasty.UserTeamName)
+                        ? FontAttributes.Bold
+                        : FontAttributes.None
+                });
+            }
+        }
     }
 
     private static string FormatPostseasonRound(PostseasonRound round) =>
@@ -990,6 +1038,7 @@ public sealed class FoundationPage : ContentPage
                 ScheduledGameType.Conference => "CONF",
                 ScheduledGameType.ConferenceChampionship => "CCG",
                 ScheduledGameType.CollegeFootballPlayoff => "CFP",
+                ScheduledGameType.Bowl => "BOWL",
                 _ => "OOC"
             };
 
