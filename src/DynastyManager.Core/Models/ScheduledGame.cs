@@ -13,6 +13,7 @@ public sealed record ScheduledGame
     public int? HomeSeed { get; init; }
     public int? AwaySeed { get; init; }
     public bool IsNeutralSite { get; init; }
+    public string? BowlName { get; init; }
     public int SimulationSeed { get; init; }
     public bool HasPlayed { get; init; }
     public int? HomeScore { get; init; }
