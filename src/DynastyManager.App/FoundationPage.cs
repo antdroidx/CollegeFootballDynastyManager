@@ -814,7 +814,7 @@ public sealed class FoundationPage : ContentPage
             var result = game.HasPlayed &&
                          game.HomeScore is int homeScore &&
                          game.AwayScore is int awayScore
-                ? $"{homeScore}-{awayScore}"
+                ? $"{awayScore}-{homeScore}"
                 : "Upcoming";
 
             _postseasonList.Children.Add(new Label
