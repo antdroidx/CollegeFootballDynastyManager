@@ -48,7 +48,19 @@ public class SchedulePersistenceTests
                 SeasonYear = 2026,
                 Week = 2,
                 Phase = SeasonPhase.RegularSeason,
-                Schedule = new[] { played }
+                Schedule = new[] { played },
+                ConferenceChampionshipHistory = new[]
+                {
+                    new ConferenceChampionRecord
+                    {
+                        SeasonYear = 2025,
+                        ConferenceName = "Test",
+                        ChampionTeamName = "Washington",
+                        RunnerUpTeamName = "Oregon",
+                        ChampionScore = 31,
+                        RunnerUpScore = 24
+                    }
+                }
             };
 
             await using var repository = new SqliteDynastySaveRepository(path);
@@ -65,6 +77,10 @@ public class SchedulePersistenceTests
             Assert.NotNull(loadedGame.AwayStats);
             Assert.Equal(played.HomeStats?.TotalYards, loadedGame.HomeStats.TotalYards);
             Assert.Equal(played.AwayStats?.Turnovers, loadedGame.AwayStats.Turnovers);
+            var champion = Assert.Single(
+                loaded.ConferenceChampionshipHistory);
+            Assert.Equal("Washington", champion.ChampionTeamName);
+            Assert.Equal(2025, champion.SeasonYear);
         }
         finally
         {

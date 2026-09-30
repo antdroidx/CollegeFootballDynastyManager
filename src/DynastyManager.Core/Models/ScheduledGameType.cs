@@ -3,5 +3,6 @@ namespace DynastyManager.Core.Models;
 public enum ScheduledGameType
 {
     NonConference = 0,
-    Conference = 1
+    Conference = 1,
+    ConferenceChampionship = 2
 }

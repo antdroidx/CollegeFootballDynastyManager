@@ -21,6 +21,8 @@ public sealed class FoundationPage : ContentPage
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
     private readonly Label _rollingAutosaveStatus;
+    private readonly Label _conferenceChampionshipStatus;
+    private readonly VerticalStackLayout _conferenceStandingsList;
     private readonly VerticalStackLayout _scheduleList;
     private readonly VerticalStackLayout _saveList;
 
@@ -103,6 +105,17 @@ public sealed class FoundationPage : ContentPage
             FontSize = 13
         };
 
+        _conferenceChampionshipStatus = new Label
+        {
+            Text = "Conference standings will appear after a dynasty is created.",
+            FontSize = 13
+        };
+
+        _conferenceStandingsList = new VerticalStackLayout
+        {
+            Spacing = 4
+        };
+
         _scheduleList = new VerticalStackLayout
         {
             Spacing = 6
@@ -178,6 +191,16 @@ public sealed class FoundationPage : ContentPage
                         }
                     },
                     _rollingAutosaveStatus,
+
+                    new BoxView { HeightRequest = 1 },
+
+                    new Label
+                    {
+                        Text = "CONFERENCE RACE",
+                        FontAttributes = FontAttributes.Bold
+                    },
+                    _conferenceChampionshipStatus,
+                    _conferenceStandingsList,
 
                     new BoxView { HeightRequest = 1 },
 
@@ -321,16 +344,35 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return;
 
-        if (_currentDynasty.Phase == SeasonPhase.RegularSeason)
+        var phaseBeforeAdvance = _currentDynasty.Phase;
+
+        if (phaseBeforeAdvance == SeasonPhase.RegularSeason)
         {
             _currentDynasty = WeekSimulation.SimulateCurrentRegularSeasonWeek(
                 _currentDynasty,
                 _teamsByName,
                 _simulationProfiles);
         }
+        else if (phaseBeforeAdvance == SeasonPhase.ConferenceChampionship)
+        {
+            _currentDynasty = ConferenceChampionshipService
+                .SimulateChampionships(
+                    _currentDynasty,
+                    _teamsByName,
+                    _simulationProfiles);
+        }
 
-        var wasOffseason = _currentDynasty.Phase == SeasonPhase.Offseason;
+        var wasOffseason = phaseBeforeAdvance == SeasonPhase.Offseason;
         _currentDynasty = SeasonProgression.Advance(_currentDynasty);
+
+        if (phaseBeforeAdvance == SeasonPhase.RegularSeason &&
+            _currentDynasty.Phase == SeasonPhase.ConferenceChampionship)
+        {
+            _currentDynasty = ConferenceChampionshipService
+                .ScheduleChampionships(
+                    _currentDynasty,
+                    _teamsByName);
+        }
 
         if (wasOffseason && _currentDynasty.Phase == SeasonPhase.Preseason)
         {
@@ -535,6 +577,9 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
         {
             _currentDynastyLabel.Text = "No dynasty loaded.";
+            _conferenceChampionshipStatus.Text =
+                "Conference standings will appear after a dynasty is created.";
+            _conferenceStandingsList.Children.Clear();
             _scheduleList.Children.Clear();
             return;
         }
@@ -574,7 +619,103 @@ public sealed class FoundationPage : ContentPage
             $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
+        RenderConferenceRace();
         RenderUserSchedule();
+    }
+
+    private void RenderConferenceRace()
+    {
+        _conferenceStandingsList.Children.Clear();
+
+        if (_currentDynasty is null ||
+            !_teamsByName.TryGetValue(
+                _currentDynasty.UserTeamName,
+                out var userTeam))
+        {
+            _conferenceChampionshipStatus.Text =
+                "No conference data available.";
+            return;
+        }
+
+        var conferenceTeams = _teamsByName.Values
+            .Where(team => team.ConferenceName.Equals(
+                userTeam.ConferenceName,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (conferenceTeams.Length <
+                ConferenceChampionshipService.MinimumConferenceTeams ||
+            userTeam.ConferenceName.Equals(
+                "Independent",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            _conferenceChampionshipStatus.Text =
+                $"{userTeam.ConferenceName}: no conference championship.";
+            return;
+        }
+
+        var standings = ConferenceStandings.Build(
+            _currentDynasty,
+            _teamsByName,
+            userTeam.ConferenceName);
+
+        var titleGame = _currentDynasty.Schedule
+            .FirstOrDefault(game =>
+                game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType ==
+                    ScheduledGameType.ConferenceChampionship &&
+                _teamsByName.TryGetValue(
+                    game.HomeTeamName,
+                    out var home) &&
+                home.ConferenceName.Equals(
+                    userTeam.ConferenceName,
+                    StringComparison.OrdinalIgnoreCase));
+
+        var champion = _currentDynasty
+            .ConferenceChampionshipHistory
+            .FirstOrDefault(record =>
+                record.SeasonYear == _currentDynasty.SeasonYear &&
+                record.ConferenceName.Equals(
+                    userTeam.ConferenceName,
+                    StringComparison.OrdinalIgnoreCase));
+
+        if (champion is not null)
+        {
+            _conferenceChampionshipStatus.Text =
+                $"{champion.ConferenceName} Champion: " +
+                $"{champion.ChampionTeamName} " +
+                $"{champion.ChampionScore}-{champion.RunnerUpScore} " +
+                $"over {champion.RunnerUpTeamName}";
+        }
+        else if (titleGame is not null)
+        {
+            _conferenceChampionshipStatus.Text =
+                $"{userTeam.ConferenceName} Championship: " +
+                $"{titleGame.AwayTeamName} @ {titleGame.HomeTeamName}";
+        }
+        else
+        {
+            _conferenceChampionshipStatus.Text =
+                $"Top two {userTeam.ConferenceName} teams qualify for the championship.";
+        }
+
+        for (var index = 0; index < standings.Count; index++)
+        {
+            var standing = standings[index];
+
+            _conferenceStandingsList.Children.Add(new Label
+            {
+                Text =
+                    $"{index + 1}. {standing.TeamName} • " +
+                    $"Conf {standing.ConferenceWins}-{standing.ConferenceLosses} • " +
+                    $"Overall {standing.OverallWins}-{standing.OverallLosses}",
+                FontAttributes = standing.TeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? FontAttributes.Bold
+                    : FontAttributes.None
+            });
+        }
     }
 
     private void RenderUserSchedule()
@@ -619,9 +760,12 @@ public sealed class FoundationPage : ContentPage
                 }
             }
 
-            var gameType = game.GameType == ScheduledGameType.Conference
-                ? "CONF"
-                : "OOC";
+            var gameType = game.GameType switch
+            {
+                ScheduledGameType.Conference => "CONF",
+                ScheduledGameType.ConferenceChampionship => "CCG",
+                _ => "OOC"
+            };
 
             _scheduleList.Children.Add(new Label
             {
