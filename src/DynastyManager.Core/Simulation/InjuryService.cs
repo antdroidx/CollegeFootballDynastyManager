@@ -332,7 +332,7 @@ public static class InjuryService
             InjurySeverity.Minor or
             InjurySeverity.Moderate)
         {
-            var durabilityLoss =
+            var moderateDurabilityLoss =
                 severity == InjurySeverity.Moderate &&
                 Deterministic(
                     state,
@@ -344,7 +344,7 @@ public static class InjuryService
 
             return new Regression(
                 0, 0, 0, 0, 0,
-                durabilityLoss,
+                moderateDurabilityLoss,
                 0);
         }
 
