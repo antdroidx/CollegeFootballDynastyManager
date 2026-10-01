@@ -21,7 +21,7 @@ public static class InteractiveRecruitingService
             return state;
         }
 
-        if (state.RecruitingPointsRemaining > 0)
+        if (state.RecruitingPointsPhase == state.Phase)
             return state;
 
         var rosterCount = state.ActiveRoster.Count(player =>
@@ -40,7 +40,8 @@ public static class InteractiveRecruitingService
         return state with
         {
             RecruitingPointsRemaining =
-                Math.Max(900, startingPoints)
+                Math.Max(900, startingPoints),
+            RecruitingPointsPhase = state.Phase
         };
     }
 
