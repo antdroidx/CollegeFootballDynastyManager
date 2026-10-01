@@ -9,4 +9,5 @@ public sealed record RecruitingCommitmentRecord
     public required string TeamName { get; init; }
     public required Position Position { get; init; }
     public int OverallRating { get; init; }
+    public bool WasCpuAssisted { get; init; }
 }
