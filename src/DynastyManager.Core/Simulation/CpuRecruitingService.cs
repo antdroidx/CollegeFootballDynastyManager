@@ -41,6 +41,7 @@ public static class CpuRecruitingService
                 record.SeasonYear == state.SeasonYear &&
                 record.Source == source)
             .Select(record => record.ProspectId)
+            .Concat(roster.Select(player => player.PlayerId))
             .ToHashSet();
 
         MaterializeResolvedInteractions(
@@ -133,8 +134,13 @@ public static class CpuRecruitingService
         List<RecruitingCommitmentRecord> commitments,
         HashSet<Guid> usedProspectIds)
     {
-        var byId = candidates.ToDictionary(
-            candidate => candidate.ProspectId);
+        var byId = candidates
+            .GroupBy(candidate => candidate.ProspectId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .OrderByDescending(candidate => candidate.OverallRating)
+                    .First());
 
         foreach (var interaction in state.RecruitingInteractions
                      .Where(interaction =>
@@ -289,10 +295,17 @@ public static class CpuRecruitingService
                     entry.Player.TalentLevel,
                     entry.Player.ClassYear,
                     entry.OriginTeamName))
+                .GroupBy(candidate => candidate.ProspectId)
+                .Select(group => group
+                    .OrderByDescending(candidate => candidate.OverallRating)
+                    .First())
                 .ToArray();
         }
 
         return state.HighSchoolRecruitingPool
+            .Where(recruit =>
+                recruit.SeasonYear == 0 ||
+                recruit.SeasonYear == state.SeasonYear)
             .Select(recruit => new Candidate(
                 recruit.RecruitId,
                 recruit.FullName,
@@ -302,6 +315,10 @@ public static class CpuRecruitingService
                 Math.Clamp(recruit.StarRating * 2, 1, 10),
                 1,
                 string.Empty))
+            .GroupBy(candidate => candidate.ProspectId)
+            .Select(group => group
+                .OrderByDescending(candidate => candidate.OverallRating)
+                .First())
             .ToArray();
     }
 
