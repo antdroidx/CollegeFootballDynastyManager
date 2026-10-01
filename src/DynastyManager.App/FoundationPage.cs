@@ -440,22 +440,39 @@ public sealed class FoundationPage : ContentPage
                         _teamsByName);
             }
 
-            _currentDynasty = CpuRecruitingService
-                .ApplyPhaseAssistance(
-                    _currentDynasty,
-                    _teamsByName);
+            SetDynastyControlsEnabled(false);
+            _rollingAutosaveStatus.Text =
+                phaseBeforeAdvance == SeasonPhase.TransferPortal
+                    ? "CPU teams are resolving transfer-portal needs…"
+                    : "CPU teams are resolving recruiting classes…";
+
+            var recruitingState = _currentDynasty;
+            _currentDynasty = await Task.Run(() =>
+                CpuRecruitingService.ApplyPhaseAssistance(
+                    recruitingState,
+                    _teamsByName));
 
             _currentDynasty = _currentDynasty with
             {
                 RecruitingPointsRemaining = 0
             };
+
+            SetDynastyControlsEnabled(true);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.RosterManagement)
         {
-            _currentDynasty = WalkOnRosterService.FillAllTeams(
-                _currentDynasty,
-                _teamsByName);
+            SetDynastyControlsEnabled(false);
+            _rollingAutosaveStatus.Text =
+                "Filling remaining roster shortages with walk-ons…";
+
+            var rosterState = _currentDynasty;
+            _currentDynasty = await Task.Run(() =>
+                WalkOnRosterService.FillAllTeams(
+                    rosterState,
+                    _teamsByName));
+
+            SetDynastyControlsEnabled(true);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.RegularSeason)
