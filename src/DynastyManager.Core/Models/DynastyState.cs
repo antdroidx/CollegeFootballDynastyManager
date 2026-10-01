@@ -32,5 +32,6 @@ public sealed record DynastyState
     public IReadOnlyList<RecruitingCommitmentRecord> RecruitingCommitments { get; init; } =
         Array.Empty<RecruitingCommitmentRecord>();
     public int RecruitingPointsRemaining { get; init; }
+    public SeasonPhase? RecruitingPointsPhase { get; init; }
     public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 }
