@@ -99,6 +99,7 @@ public static class WalkOnRosterService
                     ClassYear = 1,
                     TalentLevel = talentLevel,
                     OverallRating = Math.Clamp(overall, 50, 67),
+                    PotentialRating = Math.Clamp(overall + 4, 54, 72),
                     IsWalkOn = true
                 });
 

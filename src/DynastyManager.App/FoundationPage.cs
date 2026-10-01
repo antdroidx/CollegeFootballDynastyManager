@@ -183,7 +183,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Phase 8 — Roster Management & Depth Charts",
+                        Text = "Phase 9 — Player Development & Injuries",
                         FontSize = 18
                     },
                     _importStatus,
@@ -403,6 +403,11 @@ public sealed class FoundationPage : ContentPage
                 ActiveRoster = activeRoster
             };
 
+            _currentDynasty = PlayerRatingService
+                .EnsureProfiles(_currentDynasty);
+            _currentDynasty = RosterManagementService
+                .NormalizeAllDepthCharts(_currentDynasty);
+
             SetDynastyControlsEnabled(true);
             RenderCurrentDynasty();
         }
@@ -452,6 +457,9 @@ public sealed class FoundationPage : ContentPage
                     recruitingState,
                     _teamsByName));
 
+            _currentDynasty = PlayerRatingService
+                .EnsureProfiles(_currentDynasty);
+
             _currentDynasty = _currentDynasty with
             {
                 RecruitingPointsRemaining = 0
@@ -472,6 +480,9 @@ public sealed class FoundationPage : ContentPage
                     rosterState,
                     _teamsByName));
 
+            _currentDynasty = PlayerRatingService
+                .EnsureProfiles(_currentDynasty);
+
             _currentDynasty = RosterManagementService
                 .NormalizeAllDepthCharts(_currentDynasty);
 
@@ -483,7 +494,10 @@ public sealed class FoundationPage : ContentPage
             _currentDynasty = WeekSimulation.SimulateCurrentRegularSeasonWeek(
                 _currentDynasty,
                 _teamsByName,
-                _simulationProfiles);
+                BuildCurrentSimulationProfiles());
+
+            _currentDynasty = InjuryService
+                .AdvanceAndGenerateForCurrentWeek(_currentDynasty);
         }
         else if (phaseBeforeAdvance == SeasonPhase.ConferenceChampionship)
         {
@@ -491,24 +505,47 @@ public sealed class FoundationPage : ContentPage
                 .SimulateChampionships(
                     _currentDynasty,
                     _teamsByName,
-                    _simulationProfiles);
+                    BuildCurrentSimulationProfiles());
+
+            _currentDynasty = InjuryService
+                .AdvanceAndGenerateForCurrentWeek(_currentDynasty);
         }
         else if (phaseBeforeAdvance == SeasonPhase.Postseason)
         {
+            var postseasonProfiles =
+                BuildCurrentSimulationProfiles();
+
             _currentDynasty = BowlService
                 .SimulateCurrentWeek(
                     _currentDynasty,
                     _teamsByName,
-                    _simulationProfiles);
+                    postseasonProfiles);
 
             _currentDynasty = CollegeFootballPlayoffService
                 .SimulateCurrentRound(
                     _currentDynasty,
                     _teamsByName,
-                    _simulationProfiles);
+                    postseasonProfiles);
+
+            _currentDynasty = InjuryService
+                .AdvanceAndGenerateForCurrentWeek(_currentDynasty);
 
             _currentDynasty = CollegeFootballPlayoffService
                 .ScheduleNextRound(_currentDynasty);
+        }
+
+        if (phaseBeforeAdvance == SeasonPhase.Offseason)
+        {
+            SetDynastyControlsEnabled(false);
+            _rollingAutosaveStatus.Text =
+                "Applying player development and offseason regression…";
+
+            var developmentState = _currentDynasty;
+            _currentDynasty = await Task.Run(() =>
+                PlayerDevelopmentService.ApplyOffseasonDevelopment(
+                    developmentState));
+
+            SetDynastyControlsEnabled(true);
         }
 
         var wasOffseason = phaseBeforeAdvance == SeasonPhase.Offseason;
@@ -534,6 +571,8 @@ public sealed class FoundationPage : ContentPage
         if (phaseBeforeAdvance == SeasonPhase.Recruiting &&
             _currentDynasty.Phase == SeasonPhase.RosterManagement)
         {
+            _currentDynasty = PlayerRatingService
+                .EnsureProfiles(_currentDynasty);
             _currentDynasty = RosterManagementService
                 .NormalizeAllDepthCharts(_currentDynasty);
         }
@@ -572,7 +611,7 @@ public sealed class FoundationPage : ContentPage
                 .ScheduleChampionships(
                     _currentDynasty,
                     _teamsByName,
-                    _simulationProfiles);
+                    BuildCurrentSimulationProfiles());
         }
 
         if (phaseBeforeAdvance == SeasonPhase.ConferenceChampionship &&
@@ -582,13 +621,13 @@ public sealed class FoundationPage : ContentPage
                 .InitializePlayoff(
                     _currentDynasty,
                     _teamsByName,
-                    _simulationProfiles);
+                    BuildCurrentSimulationProfiles());
 
             _currentDynasty = BowlService
                 .InitializeBowls(
                     _currentDynasty,
                     _teamsByName,
-                    _simulationProfiles);
+                    BuildCurrentSimulationProfiles());
         }
 
         if (wasOffseason && _currentDynasty.Phase == SeasonPhase.Preseason)
@@ -710,6 +749,10 @@ public sealed class FoundationPage : ContentPage
                     state.SeasonYear)
             };
         }
+
+        state = PlayerRatingService.EnsureProfiles(state);
+        state = RosterManagementService
+            .NormalizeAllDepthCharts(state);
 
         if (state.Phase == SeasonPhase.TransferPortal &&
             state.TransferPortalEntries.Count == 0)
@@ -1059,10 +1102,54 @@ public sealed class FoundationPage : ContentPage
                 ? $"{walkOns} walk-ons filled remaining roster shortages."
                 : "No walk-ons were needed.";
 
+        var recentDevelopment = _currentDynasty.PlayerDevelopmentHistory
+            .Where(record =>
+                record.TeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase) &&
+                record.SeasonYear >= _currentDynasty.SeasonYear - 1)
+            .ToArray();
+
+        var developmentText = recentDevelopment.Length == 0
+            ? string.Empty
+            : $" • Dev avg {recentDevelopment.Average(record => record.OverallChange):+0.0;-0.0;0.0}";
+
+        var activeInjuries = userRoster
+            .Where(player => player.CurrentInjury is not null)
+            .OrderByDescending(player =>
+                player.CurrentInjury!.Severity)
+            .ThenByDescending(player =>
+                player.CurrentInjury!.WeeksRemaining)
+            .ToArray();
+
         _offseasonRosterStatus.Text =
             $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active players • " +
-            $"{manualSignings} manual signings • {cpuAssisted} CPU-assisted signings. " +
+            $"{manualSignings} manual signings • {cpuAssisted} CPU-assisted signings" +
+            $"{developmentText}. " +
             safetyText;
+
+        if (activeInjuries.Length > 0)
+        {
+            _transferPortalList.Children.Add(new Label
+            {
+                Text = "CURRENT INJURIES",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 6, 0, 0)
+            });
+
+            foreach (var player in activeInjuries.Take(12))
+            {
+                var injury = player.CurrentInjury!;
+
+                _transferPortalList.Children.Add(new Label
+                {
+                    Text =
+                        $"{player.Position} {player.FullName} • OVR {player.OverallRating} • " +
+                        $"{injury.BodyArea} • {injury.Severity} • " +
+                        $"{injury.WeeksRemaining} wk"
+                });
+            }
+        }
     }
 
     private void RenderRosterManagement(
@@ -1157,6 +1244,14 @@ public sealed class FoundationPage : ContentPage
 
         if (player.HasRedshirted && !player.IsRedshirted)
             status.Add("RS USED");
+
+        if (player.CurrentInjury is not null)
+        {
+            status.Add(
+                $"{player.CurrentInjury.Severity.ToString().ToUpperInvariant()} " +
+                $"{player.CurrentInjury.BodyArea} " +
+                $"{player.CurrentInjury.WeeksRemaining}WK");
+        }
 
         var depthLabel = player.IsRedshirted
             ? "RS"
@@ -1274,7 +1369,7 @@ public sealed class FoundationPage : ContentPage
                     {
                         Text =
                             $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
-                            $"Year {player.ClassYear}" +
+                            $"POT {player.PotentialRating} • Year {player.ClassYear}" +
                             (status.Count > 0
                                 ? $" • {string.Join(" • ", status)}"
                                 : string.Empty),
@@ -1282,6 +1377,14 @@ public sealed class FoundationPage : ContentPage
                             RosterManagementService.IsStarter(player)
                                 ? FontAttributes.Bold
                                 : FontAttributes.None
+                    },
+                    new Label
+                    {
+                        Text =
+                            $"SPD {player.SpeedRating} • STR {player.StrengthRating} • " +
+                            $"AGI {player.AgilityRating} • AWR {player.AwarenessRating} • " +
+                            $"TECH {player.TechniqueRating} • DUR {player.DurabilityRating}",
+                        FontSize = 12
                     },
                     new HorizontalStackLayout
                     {
@@ -1448,6 +1551,20 @@ public sealed class FoundationPage : ContentPage
         });
     }
 
+    private IReadOnlyDictionary<string, TeamSimulationProfile>
+        BuildCurrentSimulationProfiles()
+    {
+        if (_currentDynasty is null ||
+            _currentDynasty.ActiveRoster.Count == 0)
+        {
+            return _simulationProfiles;
+        }
+
+        return DynastyRosterSimulationProfileBuilder.Build(
+            _currentDynasty,
+            _teamsByName.Values);
+    }
+
     private void RenderNationalRankings()
     {
         _nationalRankingsList.Children.Clear();
@@ -1462,7 +1579,7 @@ public sealed class FoundationPage : ContentPage
         var rankings = NationalRankingService.Build(
             _currentDynasty,
             _teamsByName,
-            _simulationProfiles);
+            BuildCurrentSimulationProfiles());
 
         var userRanking = rankings.FirstOrDefault(ranking =>
             ranking.TeamName.Equals(
@@ -1657,7 +1774,7 @@ public sealed class FoundationPage : ContentPage
             .Build(
                 _currentDynasty,
                 _teamsByName,
-                _simulationProfiles)
+                BuildCurrentSimulationProfiles())
             .ToDictionary(
                 ranking => ranking.TeamName,
                 ranking => ranking.Rank,

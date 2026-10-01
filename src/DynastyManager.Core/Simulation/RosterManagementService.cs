@@ -223,7 +223,8 @@ public static class RosterManagementService
                 player.TeamName.Equals(
                     teamName,
                     StringComparison.OrdinalIgnoreCase) &&
-                !player.IsRedshirted)
+                !player.IsRedshirted &&
+                player.CurrentInjury is null)
             .GroupBy(player => player.Position)
             .ToDictionary(
                 group => group.Key,

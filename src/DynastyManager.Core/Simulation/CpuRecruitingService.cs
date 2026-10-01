@@ -285,6 +285,7 @@ public static class CpuRecruitingService
                     entry.Player.FullName,
                     entry.Player.Position,
                     entry.Player.OverallRating,
+                    entry.Player.PotentialRating,
                     entry.Player.TalentLevel,
                     entry.Player.ClassYear,
                     entry.OriginTeamName))
@@ -297,6 +298,7 @@ public static class CpuRecruitingService
                 recruit.FullName,
                 recruit.Position,
                 recruit.TrueOverallRating,
+                recruit.PotentialRating,
                 Math.Clamp(recruit.StarRating * 2, 1, 10),
                 1,
                 string.Empty))
@@ -308,6 +310,7 @@ public static class CpuRecruitingService
         string FullName,
         Position Position,
         int OverallRating,
+        int PotentialRating,
         int TalentLevel,
         int ClassYear,
         string OriginTeamName)
@@ -321,7 +324,8 @@ public static class CpuRecruitingService
                 Position = Position,
                 ClassYear = ClassYear,
                 TalentLevel = TalentLevel,
-                OverallRating = OverallRating
+                OverallRating = OverallRating,
+                PotentialRating = PotentialRating
             };
     }
 }

@@ -108,6 +108,23 @@ public class SchedulePersistenceTests
                         ClassYear = 3,
                         TalentLevel = 8,
                         OverallRating = 86,
+                        PotentialRating = 94,
+                        SpeedRating = 84,
+                        StrengthRating = 82,
+                        AgilityRating = 83,
+                        AwarenessRating = 90,
+                        TechniqueRating = 91,
+                        DurabilityRating = 80,
+                        CurrentInjury = new PlayerInjury
+                        {
+                            InjuryId = Guid.Parse("44444444-4444-4444-4444-444444444444"),
+                            SeasonYear = 2026,
+                            StartWeek = 2,
+                            BodyArea = InjuryBodyArea.Shoulder,
+                            Severity = InjurySeverity.Major,
+                            InitialWeeks = 6,
+                            WeeksRemaining = 4
+                        },
                         DepthChartOrder = 1,
                         IsRedshirted = true,
                         HasRedshirted = false
@@ -142,6 +159,41 @@ public class SchedulePersistenceTests
                         Position = Position.OL,
                         OverallRating = 80,
                         Reason = PlayerDepartureReason.Graduation
+                    }
+                },
+                InjuryHistory = new[]
+                {
+                    new PlayerInjuryRecord
+                    {
+                        InjuryId = Guid.Parse("44444444-4444-4444-4444-444444444444"),
+                        SeasonYear = 2026,
+                        Week = 2,
+                        PlayerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                        PlayerName = "Active Player",
+                        TeamName = "Washington",
+                        Position = Position.QB,
+                        BodyArea = InjuryBodyArea.Shoulder,
+                        Severity = InjurySeverity.Major,
+                        InitialWeeks = 6,
+                        StrengthLoss = 2,
+                        TechniqueLoss = 2,
+                        DurabilityLoss = 3,
+                        PotentialLoss = 1
+                    }
+                },
+                PlayerDevelopmentHistory = new[]
+                {
+                    new PlayerDevelopmentRecord
+                    {
+                        SeasonYear = 2025,
+                        PlayerId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+                        PlayerName = "Active Player",
+                        TeamName = "Washington",
+                        Position = Position.QB,
+                        BeforeOverall = 83,
+                        AfterOverall = 86,
+                        BeforePotential = 94,
+                        AfterPotential = 94
                     }
                 }
             };
@@ -182,6 +234,14 @@ public class SchedulePersistenceTests
             Assert.Equal("Active Player", activePlayer.FullName);
             Assert.Equal(3, activePlayer.ClassYear);
             Assert.Equal(1, activePlayer.DepthChartOrder);
+            Assert.Equal(94, activePlayer.PotentialRating);
+            Assert.Equal(84, activePlayer.SpeedRating);
+            Assert.Equal(91, activePlayer.TechniqueRating);
+            Assert.NotNull(activePlayer.CurrentInjury);
+            Assert.Equal(
+                InjurySeverity.Major,
+                activePlayer.CurrentInjury!.Severity);
+            Assert.Equal(4, activePlayer.CurrentInjury.WeeksRemaining);
             Assert.True(activePlayer.IsRedshirted);
             Assert.False(activePlayer.HasRedshirted);
 
@@ -194,6 +254,15 @@ public class SchedulePersistenceTests
             Assert.Equal(
                 PlayerDepartureReason.Graduation,
                 departure.Reason);
+
+            var injury = Assert.Single(loaded.InjuryHistory);
+            Assert.Equal(InjuryBodyArea.Shoulder, injury.BodyArea);
+            Assert.Equal(1, injury.PotentialLoss);
+
+            var development = Assert.Single(
+                loaded.PlayerDevelopmentHistory);
+            Assert.Equal(83, development.BeforeOverall);
+            Assert.Equal(86, development.AfterOverall);
         }
         finally
         {

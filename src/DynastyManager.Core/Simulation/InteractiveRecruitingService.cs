@@ -469,7 +469,9 @@ public static class InteractiveRecruitingService
                 1,
                 10),
             OverallRating =
-                recruit.TrueOverallRating
+                recruit.TrueOverallRating,
+            PotentialRating =
+                recruit.PotentialRating
         };
     }
 
