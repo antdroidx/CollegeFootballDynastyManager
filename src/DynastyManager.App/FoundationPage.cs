@@ -928,7 +928,8 @@ public sealed class FoundationPage : ContentPage
                 $"TRANSFER PORTAL • Recruiting points: {_currentDynasty.RecruitingPointsRemaining:N0} • " +
                 $"{_currentDynasty.TransferPortalEntries.Count:N0} national entries • " +
                 $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active • " +
-                $"{userPortal.Length} transfers out • {graduates} graduates • {earlyPro} early pro";
+                $"{userPortal.Length} transfers out • {graduates} graduates • {earlyPro} early pro\n" +
+                "CPU Assist: ON — remaining transfer needs are filled when you advance.";
 
             if (userPortal.Length > 0)
             {
@@ -986,7 +987,8 @@ public sealed class FoundationPage : ContentPage
             _offseasonRosterStatus.Text =
                 $"HIGH-SCHOOL RECRUITING • Recruiting points: {_currentDynasty.RecruitingPointsRemaining:N0} • " +
                 $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} recruits • " +
-                $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active";
+                $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active\n" +
+                "CPU Assist: ON — remaining recruiting needs are filled when you advance.";
 
             _transferPortalList.Children.Add(new Label
             {
