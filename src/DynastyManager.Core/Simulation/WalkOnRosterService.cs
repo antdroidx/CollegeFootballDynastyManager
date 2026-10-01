@@ -117,9 +117,11 @@ public static class WalkOnRosterService
         string teamName)
     {
         var counts = roster
-            .Where(player => player.TeamName.Equals(
-                teamName,
-                StringComparison.OrdinalIgnoreCase))
+            .Where(player =>
+                player.TeamName.Equals(
+                    teamName,
+                    StringComparison.OrdinalIgnoreCase) &&
+                !player.IsRedshirted)
             .GroupBy(player => player.Position)
             .ToDictionary(
                 group => group.Key,

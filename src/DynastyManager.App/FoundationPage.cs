@@ -183,7 +183,7 @@ public sealed class FoundationPage : ContentPage
                     },
                     new Label
                     {
-                        Text = "Phase 7 — Interactive Transfer Portal & Recruiting",
+                        Text = "Phase 8 — Roster Management & Depth Charts",
                         FontSize = 18
                     },
                     _importStatus,
@@ -472,6 +472,9 @@ public sealed class FoundationPage : ContentPage
                     rosterState,
                     _teamsByName));
 
+            _currentDynasty = RosterManagementService
+                .NormalizeAllDepthCharts(_currentDynasty);
+
             SetDynastyControlsEnabled(true);
         }
 
@@ -526,6 +529,13 @@ public sealed class FoundationPage : ContentPage
                         _currentDynasty,
                         portalTeam);
             }
+        }
+
+        if (phaseBeforeAdvance == SeasonPhase.Recruiting &&
+            _currentDynasty.Phase == SeasonPhase.RosterManagement)
+        {
+            _currentDynasty = RosterManagementService
+                .NormalizeAllDepthCharts(_currentDynasty);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.TransferPortal &&
@@ -732,6 +742,12 @@ public sealed class FoundationPage : ContentPage
                 .EnsurePhaseInitialized(
                     state,
                     phaseTeam);
+        }
+
+        if (state.Phase == SeasonPhase.RosterManagement)
+        {
+            state = RosterManagementService
+                .NormalizeAllDepthCharts(state);
         }
 
         _currentDynasty = state;
@@ -1015,6 +1031,12 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
+        if (_currentDynasty.Phase == SeasonPhase.RosterManagement)
+        {
+            RenderRosterManagement(userRoster);
+            return;
+        }
+
         var userCommitments = _currentDynasty.RecruitingCommitments
             .Where(commitment =>
                 commitment.SeasonYear == _currentDynasty.SeasonYear &&
@@ -1041,6 +1063,240 @@ public sealed class FoundationPage : ContentPage
             $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active players • " +
             $"{manualSignings} manual signings • {cpuAssisted} CPU-assisted signings. " +
             safetyText;
+    }
+
+    private void RenderRosterManagement(
+        IReadOnlyList<DynastyPlayer> userRoster)
+    {
+        if (_currentDynasty is null)
+            return;
+
+        var warnings = RosterManagementService.GetPositionWarnings(
+            _currentDynasty,
+            _currentDynasty.UserTeamName);
+
+        var redshirts = userRoster.Count(player =>
+            player.IsRedshirted);
+        var walkOns = userRoster.Count(player =>
+            player.IsWalkOn);
+
+        _offseasonRosterStatus.Text =
+            $"ROSTER MANAGEMENT • {_currentDynasty.UserTeamName}: " +
+            $"{userRoster.Count}/{DynastyRosterRules.MaximumRosterSize} players • " +
+            $"{redshirts} redshirts • {walkOns} walk-ons\n" +
+            (warnings.Count == 0
+                ? "All legacy position minimums are satisfied. "
+                : $"POSITION WARNINGS: {string.Join(" • ", warnings)}\n") +
+            "Use ↑/↓ to set depth order. Redshirted players do not count toward playable minimums. " +
+            "Cuts are filled with walk-ons when you advance.";
+
+        foreach (var position in Enum.GetValues<Position>())
+        {
+            var players = userRoster
+                .Where(player => player.Position == position)
+                .OrderBy(player => player.DepthChartOrder)
+                .ThenByDescending(player => player.OverallRating)
+                .ToArray();
+
+            if (players.Length == 0)
+                continue;
+
+            var playableCount = players.Count(player =>
+                !player.IsRedshirted);
+
+            var target = DynastyRosterRules.TargetPositionCounts.TryGetValue(
+                position,
+                out var targetCount)
+                ? targetCount
+                : 0;
+
+            var minimum = DynastyRosterRules.MinimumPositionCounts.TryGetValue(
+                position,
+                out var minimumCount)
+                ? minimumCount
+                : 0;
+
+            var starters = DynastyRosterRules.StarterPositionCounts.TryGetValue(
+                position,
+                out var starterCount)
+                ? starterCount
+                : 0;
+
+            _transferPortalList.Children.Add(new Label
+            {
+                Text =
+                    $"{position} • {players.Length}/{target} roster • " +
+                    $"{playableCount} playable • min {minimum} • starters {starters}" +
+                    (playableCount < minimum ? " • NEED DEPTH" : string.Empty),
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 2)
+            });
+
+            foreach (var player in players)
+                AddRosterPlayerCard(player, playableCount);
+        }
+    }
+
+    private void AddRosterPlayerCard(
+        DynastyPlayer player,
+        int playableCount)
+    {
+        if (_currentDynasty is null)
+            return;
+
+        var status = new List<string>();
+
+        if (RosterManagementService.IsStarter(player))
+            status.Add("STARTER");
+
+        if (player.IsRedshirted)
+            status.Add("REDSHIRT");
+
+        if (player.IsWalkOn)
+            status.Add("WALK-ON");
+
+        if (player.HasRedshirted && !player.IsRedshirted)
+            status.Add("RS USED");
+
+        var depthLabel = player.IsRedshirted
+            ? "RS"
+            : $"#{player.DepthChartOrder}";
+
+        var upButton = new Button
+        {
+            Text = "↑",
+            TextColor = Colors.White,
+            IsEnabled =
+                !player.IsRedshirted &&
+                player.DepthChartOrder > 1
+        };
+
+        upButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty = RosterManagementService.MovePlayer(
+                _currentDynasty,
+                _currentDynasty.UserTeamName,
+                player.PlayerId,
+                -1);
+
+            RenderCurrentDynasty();
+        };
+
+        var downButton = new Button
+        {
+            Text = "↓",
+            TextColor = Colors.White,
+            IsEnabled =
+                !player.IsRedshirted &&
+                player.DepthChartOrder < playableCount
+        };
+
+        downButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty = RosterManagementService.MovePlayer(
+                _currentDynasty,
+                _currentDynasty.UserTeamName,
+                player.PlayerId,
+                1);
+
+            RenderCurrentDynasty();
+        };
+
+        var redshirtButton = new Button
+        {
+            Text = player.IsRedshirted
+                ? "Remove RS"
+                : player.HasRedshirted
+                    ? "RS Used"
+                    : "Redshirt",
+            TextColor = Colors.White,
+            IsEnabled =
+                RosterManagementService.CanRedshirt(player)
+        };
+
+        redshirtButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty = RosterManagementService.ToggleRedshirt(
+                _currentDynasty,
+                _currentDynasty.UserTeamName,
+                player.PlayerId);
+
+            RenderCurrentDynasty();
+        };
+
+        var cutButton = new Button
+        {
+            Text = "Cut",
+            TextColor = Colors.White
+        };
+
+        cutButton.Clicked += async (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            var confirmed = await DisplayAlert(
+                "Release player?",
+                $"Release {player.FullName}? A walk-on can fill the open roster spot when you advance.",
+                "Release",
+                "Cancel");
+
+            if (!confirmed || _currentDynasty is null)
+                return;
+
+            _currentDynasty = RosterManagementService.ReleasePlayer(
+                _currentDynasty,
+                _currentDynasty.UserTeamName,
+                player.PlayerId);
+
+            RenderCurrentDynasty();
+        };
+
+        _transferPortalList.Children.Add(new Border
+        {
+            StrokeThickness = 1,
+            Padding = 8,
+            Content = new VerticalStackLayout
+            {
+                Spacing = 4,
+                Children =
+                {
+                    new Label
+                    {
+                        Text =
+                            $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
+                            $"Year {player.ClassYear}" +
+                            (status.Count > 0
+                                ? $" • {string.Join(" • ", status)}"
+                                : string.Empty),
+                        FontAttributes =
+                            RosterManagementService.IsStarter(player)
+                                ? FontAttributes.Bold
+                                : FontAttributes.None
+                    },
+                    new HorizontalStackLayout
+                    {
+                        Spacing = 6,
+                        Children =
+                        {
+                            upButton,
+                            downButton,
+                            redshirtButton,
+                            cutButton
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void AddRecruitingTargetCard(

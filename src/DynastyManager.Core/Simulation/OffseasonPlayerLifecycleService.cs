@@ -3,8 +3,8 @@ using DynastyManager.Core.Models;
 namespace DynastyManager.Core.Simulation;
 
 /// <summary>
-/// First modernized offseason player-lifecycle layer. Seniors leave,
-/// elite juniors can declare early, returning players advance a class,
+/// Offseason player lifecycle. Seniors leave, elite juniors can declare early,
+/// redshirt seasons preserve a class year, returning players advance eligibility,
 /// and a deterministic national transfer-portal pool is generated while
 /// protecting a basic starter/depth core at every position.
 /// </summary>
@@ -16,22 +16,7 @@ public static class OffseasonPlayerLifecycleService
     private const int EarlyProChancePercent = 66;
 
     private static readonly IReadOnlyDictionary<Position, int> ProtectedDepth =
-        new Dictionary<Position, int>
-        {
-            [Position.QB] = 1,
-            [Position.RB] = 2,
-            [Position.WR] = 3,
-            [Position.TE] = 1,
-            [Position.OL] = 5,
-            [Position.DE] = 2,
-            [Position.DT] = 2,
-            [Position.OLB] = 2,
-            [Position.MLB] = 1,
-            [Position.CB] = 3,
-            [Position.FS] = 1,
-            [Position.SS] = 1,
-            [Position.K] = 1
-        };
+        DynastyRosterRules.StarterPositionCounts;
 
     public static DynastyState EnterTransferPortal(
         DynastyState state)
@@ -55,6 +40,16 @@ public static class OffseasonPlayerLifecycleService
 
         foreach (var player in state.ActiveRoster)
         {
+            if (player.IsRedshirted)
+            {
+                returning.Add(player with
+                {
+                    IsRedshirted = false,
+                    HasRedshirted = true
+                });
+                continue;
+            }
+
             if (player.ClassYear >= 4)
             {
                 departures.Add(ToDeparture(
@@ -73,7 +68,7 @@ public static class OffseasonPlayerLifecycleService
                 continue;
             }
 
-            returning.Add(player);
+            returning.Add(AdvanceClassYear(player));
         }
 
         var protectedPlayers = GetProtectedPlayerIds(returning);
@@ -101,7 +96,6 @@ public static class OffseasonPlayerLifecycleService
 
         var activeRoster = returning
             .Where(player => !portalIds.Contains(player.PlayerId))
-            .Select(AdvanceClassYear)
             .ToArray();
 
         var portal = portalPlayers
@@ -109,16 +103,17 @@ public static class OffseasonPlayerLifecycleService
             {
                 SeasonYear = state.SeasonYear,
                 OriginTeamName = player.TeamName,
-                Player = AdvanceClassYear(player)
+                Player = player
             })
             .ToArray();
 
-        return state with
-        {
-            ActiveRoster = activeRoster,
-            TransferPortalEntries = portal,
-            RecentPlayerDepartures = departures
-        };
+        return RosterManagementService.NormalizeAllDepthCharts(
+            state with
+            {
+                ActiveRoster = activeRoster,
+                TransferPortalEntries = portal,
+                RecentPlayerDepartures = departures
+            });
     }
 
     private static HashSet<Guid> GetProtectedPlayerIds(
@@ -136,7 +131,12 @@ public static class OffseasonPlayerLifecycleService
                 : 1;
 
             foreach (var player in group
-                         .OrderByDescending(player => player.OverallRating)
+                         .OrderBy(player => player.IsRedshirted ? 1 : 0)
+                         .ThenBy(player =>
+                             player.DepthChartOrder > 0
+                                 ? player.DepthChartOrder
+                                 : int.MaxValue)
+                         .ThenByDescending(player => player.OverallRating)
                          .ThenByDescending(player => player.TalentLevel)
                          .ThenBy(player => player.FullName, StringComparer.OrdinalIgnoreCase)
                          .Take(protectCount))

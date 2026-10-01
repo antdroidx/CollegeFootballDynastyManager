@@ -10,4 +10,7 @@ public sealed record DynastyPlayer
     public int TalentLevel { get; init; }
     public int OverallRating { get; init; }
     public bool IsWalkOn { get; init; }
+    public int DepthChartOrder { get; init; }
+    public bool IsRedshirted { get; init; }
+    public bool HasRedshirted { get; init; }
 }

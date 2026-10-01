@@ -107,7 +107,10 @@ public class SchedulePersistenceTests
                         Position = Position.QB,
                         ClassYear = 3,
                         TalentLevel = 8,
-                        OverallRating = 86
+                        OverallRating = 86,
+                        DepthChartOrder = 1,
+                        IsRedshirted = true,
+                        HasRedshirted = false
                     }
                 },
                 TransferPortalEntries = new[]
@@ -178,6 +181,9 @@ public class SchedulePersistenceTests
             var activePlayer = Assert.Single(loaded.ActiveRoster);
             Assert.Equal("Active Player", activePlayer.FullName);
             Assert.Equal(3, activePlayer.ClassYear);
+            Assert.Equal(1, activePlayer.DepthChartOrder);
+            Assert.True(activePlayer.IsRedshirted);
+            Assert.False(activePlayer.HasRedshirted);
 
             var portalPlayer = Assert.Single(loaded.TransferPortalEntries);
             Assert.Equal("Portal Player", portalPlayer.Player.FullName);

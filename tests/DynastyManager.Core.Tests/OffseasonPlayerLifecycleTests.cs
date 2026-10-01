@@ -39,6 +39,38 @@ public class OffseasonPlayerLifecycleTests
     }
 
     [Fact]
+    public void CompletedRedshirtSeasonPreservesClassYearAndMarksRedshirtUsed()
+    {
+        var redshirtSenior = Player(
+            "Redshirt Senior",
+            "Test",
+            Position.QB,
+            4,
+            88) with
+        {
+            IsRedshirted = true
+        };
+
+        var state = State(new[] { redshirtSenior });
+
+        var updated =
+            OffseasonPlayerLifecycleService.EnterTransferPortal(state);
+
+        var player = updated.ActiveRoster
+            .Concat(updated.TransferPortalEntries.Select(entry => entry.Player))
+            .Single(candidate =>
+                candidate.PlayerId == redshirtSenior.PlayerId);
+
+        Assert.Equal(4, player.ClassYear);
+        Assert.False(player.IsRedshirted);
+        Assert.True(player.HasRedshirted);
+        Assert.DoesNotContain(
+            updated.RecentPlayerDepartures,
+            departure =>
+                departure.PlayerId == redshirtSenior.PlayerId);
+    }
+
+    [Fact]
     public void LargeRosterProducesPortalInsideRequestedRangeWithoutDuplicates()
     {
         var players = new List<DynastyPlayer>();
