@@ -61,6 +61,7 @@ public static class HighSchoolRecruitingPoolFactory
                     seasonYear,
                     index,
                     $"{first}|{last}|{position}"),
+                SeasonYear = seasonYear,
                 FullName = $"{first} {last}",
                 Position = position,
                 StarRating = stars,
