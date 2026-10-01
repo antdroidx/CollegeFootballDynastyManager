@@ -438,12 +438,24 @@ public sealed class FoundationPage : ContentPage
                         _currentDynasty,
                         recruitingTeam,
                         _teamsByName);
-
-                _currentDynasty = _currentDynasty with
-                {
-                    RecruitingPointsRemaining = 0
-                };
             }
+
+            _currentDynasty = CpuRecruitingService
+                .ApplyPhaseAssistance(
+                    _currentDynasty,
+                    _teamsByName);
+
+            _currentDynasty = _currentDynasty with
+            {
+                RecruitingPointsRemaining = 0
+            };
+        }
+
+        if (phaseBeforeAdvance == SeasonPhase.RosterManagement)
+        {
+            _currentDynasty = WalkOnRosterService.FillAllTeams(
+                _currentDynasty,
+                _teamsByName);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.RegularSeason)
@@ -984,16 +996,32 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
-        var signedThisYear = _currentDynasty.RecruitingCommitments.Count(commitment =>
-            commitment.SeasonYear == _currentDynasty.SeasonYear &&
-            commitment.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase));
+        var userCommitments = _currentDynasty.RecruitingCommitments
+            .Where(commitment =>
+                commitment.SeasonYear == _currentDynasty.SeasonYear &&
+                commitment.TeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        var cpuAssisted = userCommitments.Count(commitment =>
+            commitment.WasCpuAssisted);
+
+        var manualSignings = userCommitments.Length - cpuAssisted;
+
+        var walkOns = userRoster.Count(player =>
+            player.IsWalkOn);
+
+        var safetyText = _currentDynasty.Phase == SeasonPhase.RosterManagement
+            ? "Advance once more to fill any remaining shortages with walk-ons."
+            : walkOns > 0
+                ? $"{walkOns} walk-ons filled remaining roster shortages."
+                : "No walk-ons were needed.";
 
         _offseasonRosterStatus.Text =
             $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active players • " +
-            $"{signedThisYear} signed this offseason. " +
-            "Interactive portal and recruiting actions appear during those phases.";
+            $"{manualSignings} manual signings • {cpuAssisted} CPU-assisted signings. " +
+            safetyText;
     }
 
     private void AddRecruitingTargetCard(
