@@ -153,7 +153,7 @@ public class CpuRecruitingAndWalkOnTests
             player => Assert.Equal(1, player.ClassYear));
     }
 
-    private static IEnumerable<DynastyPlayer> BuildRoster(
+    private static IReadOnlyList<DynastyPlayer> BuildRoster(
         string teamName,
         int count) =>
         Enumerable.Range(1, count)
@@ -162,7 +162,8 @@ public class CpuRecruitingAndWalkOnTests
                 teamName,
                 PositionFor(index),
                 1 + index % 4,
-                70 + index % 12));
+                70 + index % 12))
+            .ToArray();
 
     private static IReadOnlyList<HighSchoolRecruit> BuildRecruitPool(
         int count) =>
