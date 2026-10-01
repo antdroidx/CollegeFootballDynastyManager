@@ -38,7 +38,16 @@ public static class OffseasonPlayerLifecycleService
         var departures = new List<PlayerDepartureRecord>();
         var returning = new List<DynastyPlayer>();
 
-        foreach (var player in state.ActiveRoster)
+        var uniqueRoster = state.ActiveRoster
+            .GroupBy(player => player.PlayerId)
+            .Select(group => group
+                .OrderByDescending(player => player.ClassYear)
+                .ThenByDescending(player => player.OverallRating)
+                .ThenBy(player => player.TeamName, StringComparer.OrdinalIgnoreCase)
+                .First())
+            .ToArray();
+
+        foreach (var player in uniqueRoster)
         {
             if (player.IsRedshirted)
             {
@@ -112,6 +121,7 @@ public static class OffseasonPlayerLifecycleService
             {
                 ActiveRoster = activeRoster,
                 TransferPortalEntries = portal,
+                HighSchoolRecruitingPool = Array.Empty<HighSchoolRecruit>(),
                 RecentPlayerDepartures = departures
             });
     }
