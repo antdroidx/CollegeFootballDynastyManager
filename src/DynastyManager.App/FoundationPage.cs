@@ -11,6 +11,16 @@ namespace DynastyManager.App;
 
 public sealed class FoundationPage : ContentPage
 {
+    private enum AppSection
+    {
+        Home,
+        Schedule,
+        Roster,
+        Recruiting,
+        Rankings,
+        Program,
+        More
+    }
     private readonly Label _importStatus;
     private readonly Entry _dynastyNameEntry;
     private readonly Picker _teamPicker;
@@ -31,6 +41,16 @@ public sealed class FoundationPage : ContentPage
     private readonly VerticalStackLayout _conferenceStandingsList;
     private readonly VerticalStackLayout _scheduleList;
     private readonly VerticalStackLayout _saveList;
+    private readonly ContentView _sectionHost;
+    private readonly Label _screenTitle;
+    private readonly Label _homeStatus;
+    private readonly VerticalStackLayout _homeHighlights;
+    private readonly Label _recruitingStatus;
+    private readonly VerticalStackLayout _recruitingList;
+    private readonly Label _programStatus;
+    private readonly VerticalStackLayout _programList;
+    private readonly Dictionary<AppSection, Button> _navButtons = new();
+    private AppSection _activeSection = AppSection.Home;
 
     private SqliteDynastySaveRepository? _saveRepository;
     private DynastyState? _currentDynasty;
@@ -167,143 +187,321 @@ public sealed class FoundationPage : ContentPage
             Spacing = 10
         };
 
-        Content = new ScrollView
+        _sectionHost = new ContentView();
+
+        _screenTitle = new Label
         {
-            Content = new VerticalStackLayout
+            Text = "Home",
+            FontSize = 26,
+            FontAttributes = FontAttributes.Bold
+        };
+
+        _homeStatus = new Label
+        {
+            Text = "Create or load a dynasty to begin.",
+            FontSize = 14
+        };
+
+        _homeHighlights = new VerticalStackLayout
+        {
+            Spacing = 8
+        };
+
+        _recruitingStatus = new Label
+        {
+            Text = "Recruiting information will appear after a dynasty is created.",
+            FontSize = 13
+        };
+
+        _recruitingList = new VerticalStackLayout
+        {
+            Spacing = 8
+        };
+
+        _programStatus = new Label
+        {
+            Text = "Program information will appear after a dynasty is created.",
+            FontSize = 14
+        };
+
+        _programList = new VerticalStackLayout
+        {
+            Spacing = 8
+        };
+
+        var navigation = new HorizontalStackLayout
+        {
+            Spacing = 6,
+            Padding = new Thickness(8, 6)
+        };
+
+        foreach (var section in Enum.GetValues<AppSection>())
+        {
+            var captured = section;
+            var button = new Button
             {
-                Padding = new Thickness(24),
-                Spacing = 14,
-                Children =
+                Text = section switch
                 {
-                    new Label
-                    {
-                        Text = "College Football Dynasty Manager",
-                        FontSize = 28,
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    new Label
-                    {
-                        Text = "Phase 9 — Player Development & Injuries",
-                        FontSize = 18
-                    },
-                    _importStatus,
+                    AppSection.Recruiting => "Recruit",
+                    AppSection.Rankings => "Ranks",
+                    _ => section.ToString()
+                },
+                FontSize = 12,
+                Padding = new Thickness(12, 8)
+            };
 
-                    new BoxView { HeightRequest = 1 },
+            button.Clicked += (_, _) => ShowSection(captured);
+            _navButtons[section] = button;
+            navigation.Children.Add(button);
+        }
 
-                    new Label
-                    {
-                        Text = "NEW DYNASTY",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    _dynastyNameEntry,
-                    _teamPicker,
-                    _newDynastyButton,
-
-                    new BoxView { HeightRequest = 1 },
-
-                    new Label
-                    {
-                        Text = "CURRENT DYNASTY",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    _currentDynastyLabel,
-                    new HorizontalStackLayout
-                    {
-                        Spacing = 10,
-                        Children =
-                        {
-                            _advanceWeekButton,
-                            _manualSaveButton,
-                            _autosaveButton
-                        }
-                    },
-                    new HorizontalStackLayout
-                    {
-                        Spacing = 10,
-                        Children =
-                        {
-                            _rollingAutosaveSwitch,
-                            new Label
-                            {
-                                Text = "3-slot rolling weekly autosave",
-                                VerticalTextAlignment = TextAlignment.Center,
-                                FontAttributes = FontAttributes.Bold
-                            }
-                        }
-                    },
-                    _rollingAutosaveStatus,
-
-                    new BoxView { HeightRequest = 1 },
-
-                    new Label
-                    {
-                        Text = "ROSTER & TRANSFER PORTAL",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    _offseasonRosterStatus,
-                    _transferPortalList,
-
-                    new BoxView { HeightRequest = 1 },
-
-                    new Label
-                    {
-                        Text = "NATIONAL TOP 25",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    _nationalRankingStatus,
-                    _nationalRankingsList,
-
-                    new BoxView { HeightRequest = 1 },
-
-                    new Label
-                    {
-                        Text = "COLLEGE FOOTBALL PLAYOFF",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    _postseasonStatus,
-                    _postseasonList,
-
-                    new BoxView { HeightRequest = 1 },
-
-                    new Label
-                    {
-                        Text = "CONFERENCE RACE",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    _conferenceChampionshipStatus,
-                    _conferenceStandingsList,
-
-                    new BoxView { HeightRequest = 1 },
-
-                    new Label
-                    {
-                        Text = "USER SCHEDULE",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    new Label
-                    {
-                        Text = "Each team gets 12 games. A small national Week 0 slate opens the season, followed by Weeks 1–13. Conference members use the legacy conference/OOC mix; Independents play nonconference schedules."
-                    },
-                    _scheduleList,
-
-                    new BoxView { HeightRequest = 1 },
-
-                    new Label
-                    {
-                        Text = "SAVE SLOTS",
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    new Label
-                    {
-                        Text = "Manual saves create new slots. Autosave Current updates one slot. Weekly Auto 1–3 rotate automatically after each advanced week when enabled."
-                    },
-                    _saveList
-                }
+        var navigationBar = new Border
+        {
+            StrokeThickness = 1,
+            Padding = 0,
+            Content = new ScrollView
+            {
+                Orientation = ScrollOrientation.Horizontal,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
+                Content = navigation
             }
         };
 
+        var root = new Grid
+        {
+            RowDefinitions =
+            {
+                new RowDefinition { Height = GridLength.Star },
+                new RowDefinition { Height = GridLength.Auto }
+            }
+        };
+
+        root.Add(_sectionHost);
+        Grid.SetRow(_sectionHost, 0);
+
+        root.Add(navigationBar);
+        Grid.SetRow(navigationBar, 1);
+
+        Content = root;
+        ShowSection(AppSection.Home);
+
         Loaded += OnLoaded;
     }
+
+    private void ShowSection(AppSection section)
+    {
+        _activeSection = section;
+
+        foreach (var pair in _navButtons)
+        {
+            pair.Value.FontAttributes =
+                pair.Key == section
+                    ? FontAttributes.Bold
+                    : FontAttributes.None;
+            pair.Value.Opacity =
+                pair.Key == section
+                    ? 1.0
+                    : 0.72;
+        }
+
+        _screenTitle.Text = section switch
+        {
+            AppSection.Home => "Dynasty Home",
+            AppSection.Schedule => "Schedule",
+            AppSection.Roster => "Roster & Depth Chart",
+            AppSection.Recruiting => "Recruiting & Transfer Portal",
+            AppSection.Rankings => "Rankings & Postseason",
+            AppSection.Program => "Program",
+            AppSection.More => "Dynasty & Saves",
+            _ => section.ToString()
+        };
+
+        View sectionContent = section switch
+        {
+            AppSection.Home => BuildHomeSection(),
+            AppSection.Schedule => BuildScheduleSection(),
+            AppSection.Roster => BuildRosterSection(),
+            AppSection.Recruiting => BuildRecruitingSection(),
+            AppSection.Rankings => BuildRankingsSection(),
+            AppSection.Program => BuildProgramSection(),
+            AppSection.More => BuildMoreSection(),
+            _ => BuildHomeSection()
+        };
+
+        _sectionHost.Content = null;
+        _sectionHost.Content = new ScrollView
+        {
+            Content = new VerticalStackLayout
+            {
+                Padding = new Thickness(16, 14, 16, 24),
+                Spacing = 14,
+                Children =
+                {
+                    _screenTitle,
+                    sectionContent
+                }
+            }
+        };
+    }
+
+    private View BuildHomeSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 14,
+            Children =
+            {
+                new Label
+                {
+                    Text = "CURRENT DYNASTY",
+                    FontAttributes = FontAttributes.Bold
+                },
+                _currentDynastyLabel,
+                new HorizontalStackLayout
+                {
+                    Spacing = 8,
+                    Children =
+                    {
+                        _advanceWeekButton,
+                        _manualSaveButton,
+                        _autosaveButton
+                    }
+                },
+                _homeStatus,
+                _homeHighlights
+            }
+        };
+
+    private View BuildScheduleSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 10,
+            Children =
+            {
+                new Label
+                {
+                    Text = "Your complete season schedule, results, and postseason games.",
+                    FontSize = 13
+                },
+                _scheduleList
+            }
+        };
+
+    private View BuildRosterSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 10,
+            Children =
+            {
+                _offseasonRosterStatus,
+                _transferPortalList
+            }
+        };
+
+    private View BuildRecruitingSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 10,
+            Children =
+            {
+                _recruitingStatus,
+                _recruitingList
+            }
+        };
+
+    private View BuildRankingsSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 12,
+            Children =
+            {
+                new Label
+                {
+                    Text = "NATIONAL TOP 25",
+                    FontAttributes = FontAttributes.Bold
+                },
+                _nationalRankingStatus,
+                _nationalRankingsList,
+                new BoxView { HeightRequest = 1 },
+                new Label
+                {
+                    Text = "CONFERENCE RACE",
+                    FontAttributes = FontAttributes.Bold
+                },
+                _conferenceChampionshipStatus,
+                _conferenceStandingsList,
+                new BoxView { HeightRequest = 1 },
+                new Label
+                {
+                    Text = "COLLEGE FOOTBALL PLAYOFF & BOWLS",
+                    FontAttributes = FontAttributes.Bold
+                },
+                _postseasonStatus,
+                _postseasonList
+            }
+        };
+
+    private View BuildProgramSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 10,
+            Children =
+            {
+                _programStatus,
+                _programList
+            }
+        };
+
+    private View BuildMoreSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 12,
+            Children =
+            {
+                new Label
+                {
+                    Text = "NEW DYNASTY",
+                    FontAttributes = FontAttributes.Bold
+                },
+                _dynastyNameEntry,
+                _teamPicker,
+                _newDynastyButton,
+                new BoxView { HeightRequest = 1 },
+                new Label
+                {
+                    Text = "AUTOSAVE",
+                    FontAttributes = FontAttributes.Bold
+                },
+                new HorizontalStackLayout
+                {
+                    Spacing = 10,
+                    Children =
+                    {
+                        _rollingAutosaveSwitch,
+                        new Label
+                        {
+                            Text = "3-slot rolling weekly autosave",
+                            VerticalTextAlignment = TextAlignment.Center,
+                            FontAttributes = FontAttributes.Bold
+                        }
+                    }
+                },
+                _rollingAutosaveStatus,
+                new BoxView { HeightRequest = 1 },
+                new Label
+                {
+                    Text = "SAVE SLOTS",
+                    FontAttributes = FontAttributes.Bold
+                },
+                _saveList,
+                new BoxView { HeightRequest = 1 },
+                new Label
+                {
+                    Text = "DATA STATUS",
+                    FontAttributes = FontAttributes.Bold
+                },
+                _importStatus
+            }
+        };
 
     private async void OnLoaded(object? sender, EventArgs e)
     {
@@ -410,6 +608,7 @@ public sealed class FoundationPage : ContentPage
 
             SetDynastyControlsEnabled(true);
             RenderCurrentDynasty();
+            ShowSection(AppSection.Home);
         }
         catch (Exception ex)
         {
@@ -689,6 +888,12 @@ public sealed class FoundationPage : ContentPage
             _rollingAutosaveStatus.Text =
                 "Week 0 is ready. Only the scheduled opening games will be simulated.";
         }
+        else
+        {
+            _rollingAutosaveStatus.Text =
+                $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • " +
+                $"Week {_currentDynasty.Week}";
+        }
         }
         catch (Exception ex)
         {
@@ -813,6 +1018,7 @@ public sealed class FoundationPage : ContentPage
         _currentDynasty = state;
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
+        ShowSection(AppSection.Home);
     }
 
     private async Task DeleteSaveAsync(Guid saveId)
@@ -909,6 +1115,15 @@ public sealed class FoundationPage : ContentPage
             _offseasonRosterStatus.Text =
                 "Roster data will appear after a dynasty is created.";
             _transferPortalList.Children.Clear();
+            _recruitingStatus.Text =
+                "Recruiting information will appear after a dynasty is created.";
+            _recruitingList.Children.Clear();
+            _homeStatus.Text =
+                "Create or load a dynasty to begin.";
+            _homeHighlights.Children.Clear();
+            _programStatus.Text =
+                "Program information will appear after a dynasty is created.";
+            _programList.Children.Clear();
             _nationalRankingStatus.Text =
                 "National rankings will appear after a dynasty is created.";
             _nationalRankingsList.Children.Clear();
@@ -958,6 +1173,9 @@ public sealed class FoundationPage : ContentPage
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
         RenderOffseasonRoster();
+        RenderRecruitingScreen();
+        RenderHomeScreen();
+        RenderProgramScreen();
         RenderNationalRankings();
         RenderPostseason();
         RenderConferenceRace();
@@ -981,46 +1199,76 @@ public sealed class FoundationPage : ContentPage
                 StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
-        var userPortal = _currentDynasty.TransferPortalEntries
-            .Where(entry => entry.OriginTeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase))
+        RenderRosterManagement(userRoster);
+
+        var activeInjuries = userRoster
+            .Where(player => player.CurrentInjury is not null)
+            .OrderByDescending(player => player.CurrentInjury!.Severity)
+            .ThenByDescending(player => player.CurrentInjury!.WeeksRemaining)
             .ToArray();
 
-        var userDepartures = _currentDynasty.RecentPlayerDepartures
-            .Where(departure => departure.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase))
-            .ToArray();
+        if (activeInjuries.Length > 0)
+        {
+            _transferPortalList.Children.Insert(
+                0,
+                new Label
+                {
+                    Text =
+                        $"CURRENT INJURIES: {activeInjuries.Length} • " +
+                        string.Join(
+                            " • ",
+                            activeInjuries.Take(4).Select(player =>
+                                $"{player.Position} {player.FullName} " +
+                                $"({player.CurrentInjury!.Severity}, " +
+                                $"{player.CurrentInjury.WeeksRemaining} wk)")),
+                    FontSize = 12
+                });
+        }
+    }
 
-        var graduates = userDepartures.Count(departure =>
-            departure.Reason == PlayerDepartureReason.Graduation);
-        var earlyPro = userDepartures.Count(departure =>
-            departure.Reason == PlayerDepartureReason.EarlyProDeclaration);
+    private void RenderRecruitingScreen()
+    {
+        _recruitingList.Children.Clear();
+
+        if (_currentDynasty is null)
+        {
+            _recruitingStatus.Text =
+                "No recruiting data available.";
+            return;
+        }
+
+        var userRosterCount = _currentDynasty.ActiveRoster.Count(player =>
+            player.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase));
 
         if (_currentDynasty.Phase == SeasonPhase.TransferPortal)
         {
-            _offseasonRosterStatus.Text =
-                $"TRANSFER PORTAL • Recruiting points: {_currentDynasty.RecruitingPointsRemaining:N0} • " +
-                $"{_currentDynasty.TransferPortalEntries.Count:N0} national entries • " +
-                $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active • " +
-                $"{userPortal.Length} transfers out • {graduates} graduates • {earlyPro} early pro\n" +
-                "CPU Assist: ON — remaining transfer needs are filled when you advance.";
+            var transfersOut = _currentDynasty.TransferPortalEntries
+                .Where(entry => entry.OriginTeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase))
+                .ToArray();
 
-            if (userPortal.Length > 0)
+            _recruitingStatus.Text =
+                $"TRANSFER PORTAL • {_currentDynasty.TransferPortalEntries.Count:N0} entries • " +
+                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
+                $"Roster {userRosterCount}/85 • {transfersOut.Length} transfers out\n" +
+                "Scout, offer, and pitch targets. CPU Assist fills remaining needs when you advance.";
+
+            if (transfersOut.Length > 0)
             {
-                _transferPortalList.Children.Add(new Label
+                _recruitingList.Children.Add(new Label
                 {
-                    Text = "YOUR TRANSFERS OUT",
+                    Text = "TRANSFERS OUT",
                     FontAttributes = FontAttributes.Bold
                 });
 
-                foreach (var entry in userPortal
+                foreach (var entry in transfersOut
                              .OrderByDescending(entry => entry.Player.OverallRating)
-                             .ThenBy(entry => entry.Player.FullName, StringComparer.OrdinalIgnoreCase)
                              .Take(10))
                 {
-                    _transferPortalList.Children.Add(new Label
+                    _recruitingList.Children.Add(new Label
                     {
                         Text =
                             $"{entry.Player.Position} {entry.Player.FullName} • " +
@@ -1029,7 +1277,7 @@ public sealed class FoundationPage : ContentPage
                 }
             }
 
-            _transferPortalList.Children.Add(new Label
+            _recruitingList.Children.Add(new Label
             {
                 Text = "TOP PORTAL TARGETS",
                 FontAttributes = FontAttributes.Bold,
@@ -1043,7 +1291,7 @@ public sealed class FoundationPage : ContentPage
                          .OrderByDescending(entry => entry.Player.OverallRating)
                          .ThenByDescending(entry => entry.Player.TalentLevel)
                          .ThenBy(entry => entry.Player.FullName, StringComparer.OrdinalIgnoreCase)
-                         .Take(10))
+                         .Take(16))
             {
                 AddRecruitingTargetCard(
                     RecruitingSource.TransferPortal,
@@ -1060,13 +1308,12 @@ public sealed class FoundationPage : ContentPage
 
         if (_currentDynasty.Phase == SeasonPhase.Recruiting)
         {
-            _offseasonRosterStatus.Text =
-                $"HIGH-SCHOOL RECRUITING • Recruiting points: {_currentDynasty.RecruitingPointsRemaining:N0} • " +
-                $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} recruits • " +
-                $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active\n" +
-                "CPU Assist: ON — remaining recruiting needs are filled when you advance.";
+            _recruitingStatus.Text =
+                $"HIGH-SCHOOL RECRUITING • {_currentDynasty.HighSchoolRecruitingPool.Count:N0} recruits • " +
+                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • Roster {userRosterCount}/85\n" +
+                "Scout, offer, and pitch targets. CPU Assist fills remaining needs when you advance.";
 
-            _transferPortalList.Children.Add(new Label
+            _recruitingList.Children.Add(new Label
             {
                 Text = "TOP HIGH-SCHOOL TARGETS",
                 FontAttributes = FontAttributes.Bold
@@ -1076,7 +1323,7 @@ public sealed class FoundationPage : ContentPage
                          .OrderByDescending(recruit => recruit.StarRating)
                          .ThenByDescending(recruit => recruit.TrueOverallRating)
                          .ThenBy(recruit => recruit.FullName, StringComparer.OrdinalIgnoreCase)
-                         .Take(12))
+                         .Take(20))
             {
                 AddRecruitingTargetCard(
                     RecruitingSource.HighSchool,
@@ -1091,81 +1338,224 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
-        if (_currentDynasty.Phase == SeasonPhase.RosterManagement)
+        var latestCommitments = _currentDynasty.RecruitingCommitments
+            .Where(record => record.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(record => record.SeasonYear)
+            .ThenByDescending(record => record.OverallRating)
+            .Take(20)
+            .ToArray();
+
+        _recruitingStatus.Text =
+            $"Recruiting is currently closed ({_currentDynasty.Phase}). " +
+            "The Transfer Portal and high-school recruiting reopen during the offseason.";
+
+        if (latestCommitments.Length > 0)
         {
-            RenderRosterManagement(userRoster);
+            _recruitingList.Children.Add(new Label
+            {
+                Text = "RECENT SIGNEES",
+                FontAttributes = FontAttributes.Bold
+            });
+
+            foreach (var commitment in latestCommitments)
+            {
+                _recruitingList.Children.Add(new Label
+                {
+                    Text =
+                        $"{commitment.SeasonYear} • {commitment.Position} " +
+                        $"{commitment.PlayerName} • OVR {commitment.OverallRating} • " +
+                        $"{commitment.Source}" +
+                        (commitment.WasCpuAssisted ? " • CPU ASSIST" : string.Empty)
+                });
+            }
+        }
+    }
+
+    private void RenderHomeScreen()
+    {
+        _homeHighlights.Children.Clear();
+
+        if (_currentDynasty is null)
+        {
+            _homeStatus.Text = "Create or load a dynasty to begin.";
             return;
         }
 
-        var userCommitments = _currentDynasty.RecruitingCommitments
-            .Where(commitment =>
-                commitment.SeasonYear == _currentDynasty.SeasonYear &&
-                commitment.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase))
-            .ToArray();
+        var rankings = NationalRankingService.Build(
+            _currentDynasty,
+            _teamsByName,
+            BuildCurrentSimulationProfiles());
 
-        var cpuAssisted = userCommitments.Count(commitment =>
-            commitment.WasCpuAssisted);
+        var userRanking = rankings.FirstOrDefault(ranking =>
+            ranking.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase));
 
-        var manualSignings = userCommitments.Length - cpuAssisted;
+        var nextGame = _currentDynasty.Schedule
+            .Where(game =>
+                game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.InvolvesTeam(_currentDynasty.UserTeamName) &&
+                !game.HasPlayed)
+            .OrderBy(game => game.Week)
+            .FirstOrDefault();
 
-        var walkOns = userRoster.Count(player =>
-            player.IsWalkOn);
-
-        var safetyText = _currentDynasty.Phase == SeasonPhase.RosterManagement
-            ? "Advance once more to fill any remaining shortages with walk-ons."
-            : walkOns > 0
-                ? $"{walkOns} walk-ons filled remaining roster shortages."
-                : "No walk-ons were needed.";
-
-        var recentDevelopment = _currentDynasty.PlayerDevelopmentHistory
-            .Where(record =>
-                record.TeamName.Equals(
+        var injuries = _currentDynasty.ActiveRoster
+            .Where(player =>
+                player.TeamName.Equals(
                     _currentDynasty.UserTeamName,
                     StringComparison.OrdinalIgnoreCase) &&
-                record.SeasonYear >= _currentDynasty.SeasonYear - 1)
+                player.CurrentInjury is not null)
             .ToArray();
 
-        var developmentText = recentDevelopment.Length == 0
-            ? string.Empty
-            : $" • Dev avg {recentDevelopment.Average(record => record.OverallChange):+0.0;-0.0;0.0}";
+        _homeStatus.Text =
+            $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • " +
+            (userRanking is null
+                ? "Unranked"
+                : userRanking.Rank <= 25
+                    ? $"#{userRanking.Rank} nationally"
+                    : $"NR ({userRanking.Rank})");
 
-        var activeInjuries = userRoster
-            .Where(player => player.CurrentInjury is not null)
-            .OrderByDescending(player =>
-                player.CurrentInjury!.Severity)
-            .ThenByDescending(player =>
-                player.CurrentInjury!.WeeksRemaining)
-            .ToArray();
-
-        _offseasonRosterStatus.Text =
-            $"{_currentDynasty.UserTeamName}: {userRoster.Length}/85 active players • " +
-            $"{manualSignings} manual signings • {cpuAssisted} CPU-assisted signings" +
-            $"{developmentText}. " +
-            safetyText;
-
-        RenderDevelopmentResults();
-
-        if (activeInjuries.Length > 0)
+        _homeHighlights.Children.Add(new Border
         {
-            _transferPortalList.Children.Add(new Label
+            StrokeThickness = 1,
+            Padding = 12,
+            Content = new Label
             {
-                Text = "CURRENT INJURIES",
-                FontAttributes = FontAttributes.Bold,
-                Margin = new Thickness(0, 6, 0, 0)
-            });
+                Text = nextGame is null
+                    ? "NEXT GAME\nNo upcoming game currently scheduled."
+                    : $"NEXT GAME\nWeek {nextGame.Week}: " +
+                      $"{(nextGame.HomeTeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase) ? "vs" : "@")} " +
+                      $"{(nextGame.HomeTeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase) ? nextGame.AwayTeamName : nextGame.HomeTeamName)}",
+                FontAttributes = FontAttributes.Bold
+            }
+        });
 
-            foreach (var player in activeInjuries.Take(12))
+        _homeHighlights.Children.Add(new Border
+        {
+            StrokeThickness = 1,
+            Padding = 12,
+            Content = new Label
             {
-                var injury = player.CurrentInjury!;
+                Text = injuries.Length == 0
+                    ? "INJURIES\nNo current injuries."
+                    : $"INJURIES\n{injuries.Length} active • " +
+                      string.Join(
+                          " • ",
+                          injuries.Take(3).Select(player =>
+                              $"{player.Position} {player.FullName} " +
+                              $"{player.CurrentInjury!.WeeksRemaining}wk"))
+            }
+        });
 
-                _transferPortalList.Children.Add(new Label
+        if (_currentDynasty.Phase is
+            SeasonPhase.TransferPortal or
+            SeasonPhase.Recruiting or
+            SeasonPhase.RosterManagement)
+        {
+            _homeHighlights.Children.Add(new Border
+            {
+                StrokeThickness = 1,
+                Padding = 12,
+                Content = new Label
                 {
                     Text =
-                        $"{player.Position} {player.FullName} • OVR {player.OverallRating} • " +
-                        $"{injury.BodyArea} • {injury.Severity} • " +
-                        $"{injury.WeeksRemaining} wk"
+                        $"ACTION REQUIRED\n{_currentDynasty.Phase}: " +
+                        "open Recruiting or Roster to review the offseason before advancing.",
+                    FontAttributes = FontAttributes.Bold
+                }
+            });
+        }
+    }
+
+    private void RenderProgramScreen()
+    {
+        _programList.Children.Clear();
+
+        if (_currentDynasty is null ||
+            !_teamsByName.TryGetValue(
+                _currentDynasty.UserTeamName,
+                out var team))
+        {
+            _programStatus.Text =
+                "No program data available.";
+            return;
+        }
+
+        _programStatus.Text =
+            $"{team.Name} • {team.ConferenceName} • Prestige {team.Prestige}";
+
+        var titles = _currentDynasty.NationalChampionshipHistory
+            .Where(record => record.ChampionTeamName.Equals(
+                team.Name,
+                StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(record => record.SeasonYear)
+            .ToArray();
+
+        var conferenceTitles = _currentDynasty.ConferenceChampionshipHistory
+            .Where(record => record.ChampionTeamName.Equals(
+                team.Name,
+                StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(record => record.SeasonYear)
+            .ToArray();
+
+        _programList.Children.Add(new Label
+        {
+            Text =
+                $"National titles: {titles.Length} • " +
+                $"Conference titles: {conferenceTitles.Length}",
+            FontAttributes = FontAttributes.Bold
+        });
+
+        var latestDevelopment = GetLatestUserDevelopmentRecords();
+        if (latestDevelopment.Count > 0)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text =
+                    $"Latest player development: " +
+                    $"{FormatSigned(latestDevelopment.Average(record => record.OverallChange))} OVR average"
+            });
+        }
+
+        if (titles.Length > 0)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text = "NATIONAL CHAMPIONSHIPS",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+
+            foreach (var title in titles.Take(10))
+            {
+                _programList.Children.Add(new Label
+                {
+                    Text =
+                        $"{title.SeasonYear} • defeated {title.RunnerUpTeamName} " +
+                        $"{title.ChampionScore}-{title.RunnerUpScore}"
+                });
+            }
+        }
+
+        if (conferenceTitles.Length > 0)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text = "CONFERENCE CHAMPIONSHIPS",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+
+            foreach (var title in conferenceTitles.Take(10))
+            {
+                _programList.Children.Add(new Label
+                {
+                    Text =
+                        $"{title.SeasonYear} • {title.ConferenceName} • " +
+                        $"defeated {title.RunnerUpTeamName} " +
+                        $"{title.ChampionScore}-{title.RunnerUpScore}"
                 });
             }
         }
@@ -1186,15 +1576,20 @@ public sealed class FoundationPage : ContentPage
         var walkOns = userRoster.Count(player =>
             player.IsWalkOn);
 
+        var rosterManagementOpen =
+            _currentDynasty.Phase == SeasonPhase.RosterManagement;
+
         _offseasonRosterStatus.Text =
-            $"ROSTER MANAGEMENT • {_currentDynasty.UserTeamName}: " +
+            $"{(rosterManagementOpen ? "ROSTER MANAGEMENT" : "ROSTER")} • {_currentDynasty.UserTeamName}: " +
             $"{userRoster.Count}/{DynastyRosterRules.MaximumRosterSize} players • " +
             $"{redshirts} redshirts • {walkOns} walk-ons\n" +
             (warnings.Count == 0
                 ? "All legacy position minimums are satisfied. "
                 : $"POSITION WARNINGS: {string.Join(" • ", warnings)}\n") +
-            "Use ↑/↓ to set depth order. Redshirted players do not count toward playable minimums. " +
-            "Cuts are filled with walk-ons when you advance.";
+            (rosterManagementOpen
+                ? "Use ↑/↓ to set depth order. Redshirted players do not count toward playable minimums. " +
+                  "Cuts are filled with walk-ons when you advance."
+                : "Depth chart changes are available now. Redshirt and Cut controls open during Roster Management.");
 
         var latestDevelopment = GetLatestUserDevelopmentRecords()
             .ToDictionary(record => record.PlayerId);
@@ -1346,6 +1741,7 @@ public sealed class FoundationPage : ContentPage
                     : "Redshirt",
             TextColor = Colors.White,
             IsEnabled =
+                _currentDynasty.Phase == SeasonPhase.RosterManagement &&
                 RosterManagementService.CanRedshirt(player)
         };
 
@@ -1365,7 +1761,9 @@ public sealed class FoundationPage : ContentPage
         var cutButton = new Button
         {
             Text = "Cut",
-            TextColor = Colors.White
+            TextColor = Colors.White,
+            IsEnabled =
+                _currentDynasty.Phase == SeasonPhase.RosterManagement
         };
 
         cutButton.Clicked += async (_, _) =>
@@ -1667,7 +2065,7 @@ public sealed class FoundationPage : ContentPage
             RenderCurrentDynasty();
         };
 
-        _transferPortalList.Children.Add(new Border
+        _recruitingList.Children.Add(new Border
         {
             StrokeThickness = 1,
             Padding = 8,
