@@ -1145,6 +1145,8 @@ public sealed class FoundationPage : ContentPage
             $"{developmentText}. " +
             safetyText;
 
+        RenderDevelopmentResults();
+
         if (activeInjuries.Length > 0)
         {
             _transferPortalList.Children.Add(new Label
@@ -1194,6 +1196,11 @@ public sealed class FoundationPage : ContentPage
             "Use ↑/↓ to set depth order. Redshirted players do not count toward playable minimums. " +
             "Cuts are filled with walk-ons when you advance.";
 
+        var latestDevelopment = GetLatestUserDevelopmentRecords()
+            .ToDictionary(record => record.PlayerId);
+
+        RenderDevelopmentResults();
+
         foreach (var position in Enum.GetValues<Position>())
         {
             var players = userRoster
@@ -1237,13 +1244,23 @@ public sealed class FoundationPage : ContentPage
             });
 
             foreach (var player in players)
-                AddRosterPlayerCard(player, playableCount);
+            {
+                latestDevelopment.TryGetValue(
+                    player.PlayerId,
+                    out var development);
+
+                AddRosterPlayerCard(
+                    player,
+                    playableCount,
+                    development);
+            }
         }
     }
 
     private void AddRosterPlayerCard(
         DynastyPlayer player,
-        int playableCount)
+        int playableCount,
+        PlayerDevelopmentRecord? development)
     {
         if (_currentDynasty is null)
             return;
@@ -1403,6 +1420,21 @@ public sealed class FoundationPage : ContentPage
                             $"TECH {player.TechniqueRating} • DUR {player.DurabilityRating}",
                         FontSize = 12
                     },
+                    new Label
+                    {
+                        Text = development is null
+                            ? string.Empty
+                            : $"Last dev ({development.SeasonYear}→{development.SeasonYear + 1}): " +
+                              $"OVR {development.BeforeOverall}→{development.AfterOverall} " +
+                              $"({FormatSigned(development.OverallChange)}) • " +
+                              $"POT {development.BeforePotential}→{development.AfterPotential} " +
+                              $"({FormatSigned(development.AfterPotential - development.BeforePotential)})",
+                        FontSize = 12,
+                        IsVisible = development is not null,
+                        FontAttributes = development?.OverallChange is > 0
+                            ? FontAttributes.Bold
+                            : FontAttributes.None
+                    },
                     new HorizontalStackLayout
                     {
                         Spacing = 6,
@@ -1418,6 +1450,109 @@ public sealed class FoundationPage : ContentPage
             }
         });
     }
+
+    private IReadOnlyList<PlayerDevelopmentRecord>
+        GetLatestUserDevelopmentRecords()
+    {
+        if (_currentDynasty is null)
+            return Array.Empty<PlayerDevelopmentRecord>();
+
+        var userRecords = _currentDynasty.PlayerDevelopmentHistory
+            .Where(record => record.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (userRecords.Length == 0)
+            return Array.Empty<PlayerDevelopmentRecord>();
+
+        var latestSeason = userRecords.Max(record =>
+            record.SeasonYear);
+
+        return userRecords
+            .Where(record =>
+                record.SeasonYear == latestSeason)
+            .ToArray();
+    }
+
+    private void RenderDevelopmentResults()
+    {
+        var records = GetLatestUserDevelopmentRecords();
+
+        if (records.Count == 0)
+            return;
+
+        var seasonYear = records[0].SeasonYear;
+        var improved = records.Count(record =>
+            record.OverallChange > 0);
+        var unchanged = records.Count(record =>
+            record.OverallChange == 0);
+        var regressed = records.Count(record =>
+            record.OverallChange < 0);
+        var average = records.Average(record =>
+            record.OverallChange);
+
+        _transferPortalList.Children.Add(new Label
+        {
+            Text = $"{seasonYear}→{seasonYear + 1} PLAYER DEVELOPMENT RESULTS",
+            FontAttributes = FontAttributes.Bold,
+            Margin = new Thickness(0, 8, 0, 0)
+        });
+
+        _transferPortalList.Children.Add(new Label
+        {
+            Text =
+                $"Improved {improved} • Unchanged {unchanged} • " +
+                $"Regressed {regressed} • Avg {FormatSigned(average)} OVR",
+            FontSize = 13
+        });
+
+        var movers = records
+            .Where(record => record.OverallChange != 0)
+            .OrderByDescending(record =>
+                Math.Abs(record.OverallChange))
+            .ThenByDescending(record =>
+                record.OverallChange)
+            .ThenBy(record =>
+                record.PlayerName,
+                StringComparer.OrdinalIgnoreCase)
+            .Take(12)
+            .ToArray();
+
+        if (movers.Length == 0)
+            return;
+
+        _transferPortalList.Children.Add(new Label
+        {
+            Text = "BIGGEST MOVERS",
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 12
+        });
+
+        foreach (var record in movers)
+        {
+            _transferPortalList.Children.Add(new Label
+            {
+                Text =
+                    $"{record.Position} {record.PlayerName} • " +
+                    $"OVR {record.BeforeOverall}→{record.AfterOverall} " +
+                    $"({FormatSigned(record.OverallChange)}) • " +
+                    $"POT {record.BeforePotential}→{record.AfterPotential} " +
+                    $"({FormatSigned(record.AfterPotential - record.BeforePotential)})",
+                FontSize = 12
+            });
+        }
+    }
+
+    private static string FormatSigned(int value) =>
+        value > 0
+            ? $"+{value}"
+            : value.ToString();
+
+    private static string FormatSigned(double value) =>
+        value > 0
+            ? $"+{value:0.0}"
+            : value.ToString("0.0");
 
     private void AddRecruitingTargetCard(
         RecruitingSource source,
