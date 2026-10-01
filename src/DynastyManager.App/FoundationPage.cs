@@ -429,7 +429,12 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return;
 
-        var phaseBeforeAdvance = _currentDynasty.Phase;
+        var phaseAtStart = _currentDynasty.Phase;
+        var weekAtStart = _currentDynasty.Week;
+
+        try
+        {
+            var phaseBeforeAdvance = _currentDynasty.Phase;
 
         if (phaseBeforeAdvance is
             SeasonPhase.TransferPortal or SeasonPhase.Recruiting)
@@ -580,7 +585,9 @@ public sealed class FoundationPage : ContentPage
         if (phaseBeforeAdvance == SeasonPhase.TransferPortal &&
             _currentDynasty.Phase == SeasonPhase.Recruiting)
         {
-            if (_currentDynasty.HighSchoolRecruitingPool.Count == 0)
+            if (_currentDynasty.HighSchoolRecruitingPool.Count == 0 ||
+                _currentDynasty.HighSchoolRecruitingPool.Any(recruit =>
+                    recruit.SeasonYear != _currentDynasty.SeasonYear))
             {
                 _currentDynasty = _currentDynasty with
                 {
@@ -682,6 +689,14 @@ public sealed class FoundationPage : ContentPage
             _rollingAutosaveStatus.Text =
                 "Week 0 is ready. Only the scheduled opening games will be simulated.";
         }
+        }
+        catch (Exception ex)
+        {
+            SetDynastyControlsEnabled(true);
+            _rollingAutosaveStatus.Text =
+                $"Advance failed at {phaseAtStart} Week {weekAtStart}: {ex.Message}";
+            RenderCurrentDynasty();
+        }
     }
 
     private async Task SaveCurrentAsync(SaveKind kind)
@@ -762,7 +777,9 @@ public sealed class FoundationPage : ContentPage
         }
 
         if (state.Phase == SeasonPhase.Recruiting &&
-            state.HighSchoolRecruitingPool.Count == 0)
+            (state.HighSchoolRecruitingPool.Count == 0 ||
+             state.HighSchoolRecruitingPool.Any(recruit =>
+                 recruit.SeasonYear != state.SeasonYear)))
         {
             state = state with
             {
