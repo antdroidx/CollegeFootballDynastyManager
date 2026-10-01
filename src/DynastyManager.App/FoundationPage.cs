@@ -50,6 +50,7 @@ public sealed class FoundationPage : ContentPage
     private readonly Label _programStatus;
     private readonly VerticalStackLayout _programList;
     private readonly Dictionary<AppSection, Button> _navButtons = new();
+    private readonly Dictionary<AppSection, View> _sectionViews = new();
     private AppSection _activeSection = AppSection.Home;
 
     private SqliteDynastySaveRepository? _saveRepository;
@@ -267,20 +268,59 @@ public sealed class FoundationPage : ContentPage
             }
         };
 
+        var pages = new Grid();
+
+        foreach (var section in Enum.GetValues<AppSection>())
+        {
+            View sectionContent = section switch
+            {
+                AppSection.Home => BuildHomeSection(),
+                AppSection.Schedule => BuildScheduleSection(),
+                AppSection.Roster => BuildRosterSection(),
+                AppSection.Recruiting => BuildRecruitingSection(),
+                AppSection.Rankings => BuildRankingsSection(),
+                AppSection.Program => BuildProgramSection(),
+                AppSection.More => BuildMoreSection(),
+                _ => BuildHomeSection()
+            };
+
+            var page = new ScrollView
+            {
+                IsVisible = false,
+                Content = new VerticalStackLayout
+                {
+                    Padding = new Thickness(16, 10, 16, 24),
+                    Spacing = 14,
+                    Children =
+                    {
+                        sectionContent
+                    }
+                }
+            };
+
+            _sectionViews[section] = page;
+            pages.Children.Add(page);
+        }
+
         var root = new Grid
         {
             RowDefinitions =
             {
+                new RowDefinition { Height = GridLength.Auto },
                 new RowDefinition { Height = GridLength.Star },
                 new RowDefinition { Height = GridLength.Auto }
             }
         };
 
-        root.Add(_sectionHost);
-        Grid.SetRow(_sectionHost, 0);
+        root.Add(_screenTitle);
+        Grid.SetRow(_screenTitle, 0);
+        _screenTitle.Margin = new Thickness(16, 12, 16, 4);
+
+        root.Add(pages);
+        Grid.SetRow(pages, 1);
 
         root.Add(navigationBar);
-        Grid.SetRow(navigationBar, 1);
+        Grid.SetRow(navigationBar, 2);
 
         Content = root;
         ShowSection(AppSection.Home);
@@ -304,6 +344,9 @@ public sealed class FoundationPage : ContentPage
                     : 0.72;
         }
 
+        foreach (var pair in _sectionViews)
+            pair.Value.IsVisible = pair.Key == section;
+
         _screenTitle.Text = section switch
         {
             AppSection.Home => "Dynasty Home",
@@ -315,37 +358,19 @@ public sealed class FoundationPage : ContentPage
             AppSection.More => "Dynasty & Saves",
             _ => section.ToString()
         };
-
-        View sectionContent = section switch
-        {
-            AppSection.Home => BuildHomeSection(),
-            AppSection.Schedule => BuildScheduleSection(),
-            AppSection.Roster => BuildRosterSection(),
-            AppSection.Recruiting => BuildRecruitingSection(),
-            AppSection.Rankings => BuildRankingsSection(),
-            AppSection.Program => BuildProgramSection(),
-            AppSection.More => BuildMoreSection(),
-            _ => BuildHomeSection()
-        };
-
-        _sectionHost.Content = null;
-        _sectionHost.Content = new ScrollView
-        {
-            Content = new VerticalStackLayout
-            {
-                Padding = new Thickness(16, 14, 16, 24),
-                Spacing = 14,
-                Children =
-                {
-                    _screenTitle,
-                    sectionContent
-                }
-            }
-        };
     }
 
-    private View BuildHomeSection() =>
-        new VerticalStackLayout
+    private View BuildHomeSection()
+    {
+        var dynastyManagerButton = new Button
+        {
+            Text = "Create / Load Dynasty",
+            TextColor = Colors.White
+        };
+        dynastyManagerButton.Clicked += (_, _) =>
+            ShowSection(AppSection.More);
+
+        return new VerticalStackLayout
         {
             Spacing = 14,
             Children =
@@ -366,10 +391,12 @@ public sealed class FoundationPage : ContentPage
                         _autosaveButton
                     }
                 },
+                dynastyManagerButton,
                 _homeStatus,
                 _homeHighlights
             }
         };
+    }
 
     private View BuildScheduleSection() =>
         new VerticalStackLayout
