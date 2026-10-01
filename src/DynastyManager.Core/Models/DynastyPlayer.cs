@@ -9,4 +9,5 @@ public sealed record DynastyPlayer
     public int ClassYear { get; init; }
     public int TalentLevel { get; init; }
     public int OverallRating { get; init; }
+    public bool IsWalkOn { get; init; }
 }
