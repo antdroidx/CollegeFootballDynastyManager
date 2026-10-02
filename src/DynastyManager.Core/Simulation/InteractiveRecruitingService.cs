@@ -7,6 +7,7 @@ public static class InteractiveRecruitingService
     public const int ScoutCost = 25;
     public const int PitchCost = 50;
     public const int ScoutStep = 25;
+    public const int MidseasonPortalBasePoints = 250;
 
     public static DynastyState EnsurePhaseInitialized(
         DynastyState state,
@@ -15,14 +16,30 @@ public static class InteractiveRecruitingService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(userTeam);
 
+        var isMidseasonPortal =
+            state.Phase == SeasonPhase.RegularSeason &&
+            state.TransferPortalEntries.Count > 0;
+
         if (state.Phase is not
-            (SeasonPhase.TransferPortal or SeasonPhase.Recruiting))
+                (SeasonPhase.TransferPortal or SeasonPhase.Recruiting) &&
+            !isMidseasonPortal)
         {
             return state;
         }
 
-        if (state.RecruitingPointsPhase == state.Phase)
+        if (isMidseasonPortal)
+        {
+            if (state.RecruitingPointsPhase ==
+                    SeasonPhase.RegularSeason &&
+                state.RecruitingPointsWeek == state.Week)
+            {
+                return state;
+            }
+        }
+        else if (state.RecruitingPointsPhase == state.Phase)
+        {
             return state;
+        }
 
         var rosterCount = state.ActiveRoster.Count(player =>
             player.TeamName.Equals(
@@ -33,15 +50,23 @@ public static class InteractiveRecruitingService
             0,
             DynastyRosterRules.MaximumRosterSize - rosterCount) * 28;
 
-        var startingPoints =
-            userTeam.Prestige * 15 +
-            shortageBonus;
+        var startingPoints = isMidseasonPortal
+            ? MidseasonPortalBasePoints +
+              userTeam.Prestige * 2
+            : userTeam.Prestige * 15 +
+              shortageBonus;
 
         return state with
         {
-            RecruitingPointsRemaining =
-                Math.Max(900, startingPoints),
-            RecruitingPointsPhase = state.Phase
+            RecruitingPointsRemaining = isMidseasonPortal
+                ? Math.Max(
+                    MidseasonPortalBasePoints,
+                    startingPoints)
+                : Math.Max(900, startingPoints),
+            RecruitingPointsPhase = state.Phase,
+            RecruitingPointsWeek = isMidseasonPortal
+                ? state.Week
+                : -1
         };
     }
 
@@ -171,23 +196,38 @@ public static class InteractiveRecruitingService
         ArgumentNullException.ThrowIfNull(userTeam);
         ArgumentNullException.ThrowIfNull(teamsByName);
 
-        var source = state.Phase switch
+        var sources = state.Phase switch
         {
             SeasonPhase.TransferPortal =>
-                RecruitingSource.TransferPortal,
+                new[] { RecruitingSource.TransferPortal },
             SeasonPhase.Recruiting =>
-                RecruitingSource.HighSchool,
-            _ => (RecruitingSource?)null
+                new[]
+                {
+                    RecruitingSource.HighSchool,
+                    RecruitingSource.TransferPortal
+                },
+            SeasonPhase.RegularSeason
+                when state.TransferPortalEntries.Count > 0 =>
+                new[] { RecruitingSource.TransferPortal },
+            _ => Array.Empty<RecruitingSource>()
         };
 
-        if (source is null)
+        if (sources.Length == 0)
             return state;
+
+        var isMidseasonPortal =
+            state.Phase == SeasonPhase.RegularSeason;
 
         var current = state.RecruitingInteractions
             .Where(interaction =>
                 interaction.SeasonYear == state.SeasonYear &&
-                interaction.Source == source &&
-                interaction.CommittedTeamName is null)
+                sources.Contains(interaction.Source) &&
+                interaction.CommittedTeamName is null &&
+                (!isMidseasonPortal ||
+                 interaction.Source !=
+                    RecruitingSource.TransferPortal ||
+                 (interaction.ScholarshipOffered &&
+                  interaction.UserInterest >= 60)))
             .ToArray();
 
         if (current.Length == 0)
@@ -195,7 +235,10 @@ public static class InteractiveRecruitingService
 
         var roster = state.ActiveRoster.ToList();
         var commitments = state.RecruitingCommitments.ToList();
+        var pendingTransfers =
+            state.PendingTransferCommitments.ToList();
         var interactions = state.RecruitingInteractions.ToList();
+        var portalEntries = state.TransferPortalEntries.ToList();
 
         var userRosterCount = roster.Count(player =>
             player.TeamName.Equals(
@@ -205,13 +248,19 @@ public static class InteractiveRecruitingService
         foreach (var interaction in current
                      .OrderByDescending(item => item.UserInterest))
         {
+            var deferTransfer =
+                isMidseasonPortal &&
+                interaction.Source ==
+                    RecruitingSource.TransferPortal;
+
             var resolvedTeam = ResolveCommitment(
                 state,
                 userTeam,
                 teamsByName,
                 interaction);
 
-            if (resolvedTeam.Equals(
+            if (!deferTransfer &&
+                resolvedTeam.Equals(
                     state.UserTeamName,
                     StringComparison.OrdinalIgnoreCase) &&
                 userRosterCount >=
@@ -222,6 +271,14 @@ public static class InteractiveRecruitingService
                     teamsByName,
                     interaction);
             }
+
+            var player = CreateCommittedPlayer(
+                state,
+                interaction,
+                resolvedTeam);
+
+            if (player is null)
+                continue;
 
             var updatedInteraction = interaction with
             {
@@ -236,6 +293,97 @@ public static class InteractiveRecruitingService
             if (index >= 0)
                 interactions[index] = updatedInteraction;
 
+            if (deferTransfer)
+            {
+                var originTeamName = portalEntries
+                    .First(entry =>
+                        entry.Player.PlayerId ==
+                        interaction.ProspectId)
+                    .OriginTeamName;
+
+                pendingTransfers.Add(
+                    new PendingTransferCommitment
+                    {
+                        ProspectId = interaction.ProspectId,
+                        CommittedSeasonYear =
+                            state.SeasonYear,
+                        CommittedWeek = state.Week,
+                        JoinSeasonYear =
+                            state.SeasonYear + 1,
+                        TeamName = resolvedTeam,
+                        OriginTeamName = originTeamName,
+                        Player = player,
+                        WasUserCommitment =
+                            resolvedTeam.Equals(
+                                state.UserTeamName,
+                                StringComparison.OrdinalIgnoreCase)
+                    });
+
+                commitments.Add(new RecruitingCommitmentRecord
+                {
+                    SeasonYear = state.SeasonYear,
+                    JoinSeasonYear =
+                        state.SeasonYear + 1,
+                    ProspectId = interaction.ProspectId,
+                    Source = RecruitingSource.TransferPortal,
+                    PlayerName = player.FullName,
+                    TeamName = resolvedTeam,
+                    Position = player.Position,
+                    OverallRating = player.OverallRating,
+                    WasCpuAssisted =
+                        !resolvedTeam.Equals(
+                            state.UserTeamName,
+                            StringComparison.OrdinalIgnoreCase)
+                });
+
+                portalEntries.RemoveAll(entry =>
+                    entry.Player.PlayerId ==
+                    interaction.ProspectId);
+                continue;
+            }
+
+            if (interaction.Source ==
+                RecruitingSource.TransferPortal)
+            {
+                if (roster.Count(candidate =>
+                        candidate.TeamName.Equals(
+                            resolvedTeam,
+                            StringComparison.OrdinalIgnoreCase)) <
+                    DynastyRosterRules.MaximumRosterSize)
+                {
+                    roster.Add(player);
+
+                    if (resolvedTeam.Equals(
+                            state.UserTeamName,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        userRosterCount++;
+                    }
+                }
+
+                commitments.Add(new RecruitingCommitmentRecord
+                {
+                    SeasonYear = state.SeasonYear,
+                    JoinSeasonYear =
+                        state.SeasonYear + 1,
+                    ProspectId = interaction.ProspectId,
+                    Source = RecruitingSource.TransferPortal,
+                    PlayerName = player.FullName,
+                    TeamName = resolvedTeam,
+                    Position = player.Position,
+                    OverallRating = player.OverallRating,
+                    WasCpuAssisted =
+                        !resolvedTeam.Equals(
+                            state.UserTeamName,
+                            StringComparison.OrdinalIgnoreCase)
+                });
+
+                portalEntries.RemoveAll(entry =>
+                    entry.Player.PlayerId ==
+                    interaction.ProspectId);
+                continue;
+            }
+
             if (!resolvedTeam.Equals(
                     state.UserTeamName,
                     StringComparison.OrdinalIgnoreCase))
@@ -243,19 +391,14 @@ public static class InteractiveRecruitingService
                 continue;
             }
 
-            var player = CreateCommittedPlayer(
-                state,
-                interaction);
-
-            if (player is null)
-                continue;
-
             roster.Add(player);
             userRosterCount++;
 
             commitments.Add(new RecruitingCommitmentRecord
             {
                 SeasonYear = state.SeasonYear,
+                JoinSeasonYear =
+                    state.SeasonYear + 1,
                 ProspectId = interaction.ProspectId,
                 Source = interaction.Source,
                 PlayerName = player.FullName,
@@ -268,6 +411,9 @@ public static class InteractiveRecruitingService
         return state with
         {
             ActiveRoster = roster,
+            TransferPortalEntries = portalEntries,
+            PendingTransferCommitments =
+                pendingTransfers,
             RecruitingInteractions = interactions,
             RecruitingCommitments = commitments
         };
@@ -430,7 +576,8 @@ public static class InteractiveRecruitingService
 
     private static DynastyPlayer? CreateCommittedPlayer(
         DynastyState state,
-        RecruitingInteraction interaction)
+        RecruitingInteraction interaction,
+        string teamName)
     {
         if (interaction.Source ==
             RecruitingSource.TransferPortal)
@@ -445,7 +592,7 @@ public static class InteractiveRecruitingService
 
             return portal.Player with
             {
-                TeamName = state.UserTeamName
+                TeamName = teamName
             };
         }
 
@@ -461,7 +608,7 @@ public static class InteractiveRecruitingService
         {
             PlayerId = recruit.RecruitId,
             FullName = recruit.FullName,
-            TeamName = state.UserTeamName,
+            TeamName = teamName,
             Position = recruit.Position,
             ClassYear = 1,
             TalentLevel = Math.Clamp(

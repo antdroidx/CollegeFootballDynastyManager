@@ -29,11 +29,18 @@ public static class OffseasonPlayerLifecycleService
             return state;
         }
 
-        if (state.TransferPortalEntries.Any(entry =>
-                entry.SeasonYear == state.SeasonYear))
+        if (state.TransferPortalEntryWindowSeasonYear ==
+            state.SeasonYear)
         {
             return state;
         }
+
+        var existingHoldovers = state.TransferPortalEntries
+            .GroupBy(entry => entry.Player.PlayerId)
+            .Select(group => group
+                .OrderByDescending(entry => entry.SeasonYear)
+                .First())
+            .ToArray();
 
         var departures = new List<PlayerDepartureRecord>();
         var returning = new List<DynastyPlayer>();
@@ -107,13 +114,24 @@ public static class OffseasonPlayerLifecycleService
             .Where(player => !portalIds.Contains(player.PlayerId))
             .ToArray();
 
-        var portal = portalPlayers
+        var newPortalEntries = portalPlayers
             .Select(player => new TransferPortalEntry
             {
                 SeasonYear = state.SeasonYear,
                 OriginTeamName = player.TeamName,
+                WeeksInPortal = 0,
                 Player = player
-            })
+            });
+
+        var portal = existingHoldovers
+            .Concat(newPortalEntries)
+            .Where(entry => !activeRoster.Any(player =>
+                player.PlayerId == entry.Player.PlayerId))
+            .GroupBy(entry => entry.Player.PlayerId)
+            .Select(group => group
+                .OrderByDescending(entry => entry.SeasonYear)
+                .ThenBy(entry => entry.WeeksInPortal)
+                .First())
             .ToArray();
 
         return RosterManagementService.NormalizeAllDepthCharts(
@@ -121,6 +139,8 @@ public static class OffseasonPlayerLifecycleService
             {
                 ActiveRoster = activeRoster,
                 TransferPortalEntries = portal,
+                TransferPortalEntryWindowSeasonYear =
+                    state.SeasonYear,
                 HighSchoolRecruitingPool = Array.Empty<HighSchoolRecruit>(),
                 RecentPlayerDepartures = departures
             });

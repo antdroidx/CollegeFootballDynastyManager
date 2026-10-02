@@ -104,6 +104,7 @@ public static class CpuRecruitingService
                 commitments.Add(new RecruitingCommitmentRecord
                 {
                     SeasonYear = state.SeasonYear,
+                    JoinSeasonYear = state.SeasonYear + 1,
                     ProspectId = candidate.ProspectId,
                     Source = source.Value,
                     PlayerName = candidate.FullName,
@@ -121,6 +122,14 @@ public static class CpuRecruitingService
         return state with
         {
             ActiveRoster = roster,
+            TransferPortalEntries =
+                source == RecruitingSource.TransferPortal
+                    ? state.TransferPortalEntries
+                        .Where(entry =>
+                            !usedProspectIds.Contains(
+                                entry.Player.PlayerId))
+                        .ToArray()
+                    : state.TransferPortalEntries,
             RecruitingCommitments = commitments
         };
     }
@@ -165,6 +174,7 @@ public static class CpuRecruitingService
             commitments.Add(new RecruitingCommitmentRecord
             {
                 SeasonYear = state.SeasonYear,
+                JoinSeasonYear = state.SeasonYear + 1,
                 ProspectId = candidate.ProspectId,
                 Source = source,
                 PlayerName = candidate.FullName,

@@ -662,6 +662,18 @@ public sealed class FoundationPage : ContentPage
         {
             var phaseBeforeAdvance = _currentDynasty.Phase;
 
+        if (phaseBeforeAdvance == SeasonPhase.RegularSeason &&
+            _teamsByName.TryGetValue(
+                _currentDynasty.UserTeamName,
+                out var midseasonRecruitingTeam))
+        {
+            _currentDynasty = InteractiveRecruitingService
+                .ResolveCurrentPhase(
+                    _currentDynasty,
+                    midseasonRecruitingTeam,
+                    _teamsByName);
+        }
+
         if (phaseBeforeAdvance is
             SeasonPhase.TransferPortal or SeasonPhase.Recruiting)
         {
@@ -729,6 +741,9 @@ public sealed class FoundationPage : ContentPage
 
             _currentDynasty = InjuryService
                 .AdvanceAndGenerateForCurrentWeek(_currentDynasty);
+
+            _currentDynasty = TransferPortalMarketService
+                .AdvanceRegularSeasonWeek(_currentDynasty);
         }
         else if (phaseBeforeAdvance == SeasonPhase.ConferenceChampionship)
         {
@@ -788,6 +803,9 @@ public sealed class FoundationPage : ContentPage
             _currentDynasty = OffseasonPlayerLifecycleService
                 .EnterTransferPortal(_currentDynasty);
 
+            _currentDynasty = TransferPortalMarketService
+                .MaterializePendingCommitments(_currentDynasty);
+
             if (_teamsByName.TryGetValue(
                     _currentDynasty.UserTeamName,
                     out var portalTeam))
@@ -797,6 +815,17 @@ public sealed class FoundationPage : ContentPage
                         _currentDynasty,
                         portalTeam);
             }
+        }
+
+        if (_currentDynasty.Phase == SeasonPhase.RegularSeason &&
+            _teamsByName.TryGetValue(
+                _currentDynasty.UserTeamName,
+                out var regularSeasonRecruitingTeam))
+        {
+            _currentDynasty = InteractiveRecruitingService
+                .EnsurePhaseInitialized(
+                    _currentDynasty,
+                    regularSeasonRecruitingTeam);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.Recruiting &&
@@ -1002,10 +1031,23 @@ public sealed class FoundationPage : ContentPage
             .NormalizeAllDepthCharts(state);
 
         if (state.Phase == SeasonPhase.TransferPortal &&
-            state.TransferPortalEntries.Count == 0)
+            state.TransferPortalEntryWindowSeasonYear !=
+                state.SeasonYear)
         {
-            state = OffseasonPlayerLifecycleService
-                .EnterTransferPortal(state);
+            if (state.TransferPortalEntries.Any(entry =>
+                    entry.SeasonYear == state.SeasonYear))
+            {
+                state = state with
+                {
+                    TransferPortalEntryWindowSeasonYear =
+                        state.SeasonYear
+                };
+            }
+            else
+            {
+                state = OffseasonPlayerLifecycleService
+                    .EnterTransferPortal(state);
+            }
         }
 
         if (state.Phase == SeasonPhase.Recruiting &&
@@ -1024,8 +1066,10 @@ public sealed class FoundationPage : ContentPage
             };
         }
 
-        if (state.Phase is
-                SeasonPhase.TransferPortal or SeasonPhase.Recruiting &&
+        if ((state.Phase is
+                 SeasonPhase.TransferPortal or SeasonPhase.Recruiting ||
+             (state.Phase == SeasonPhase.RegularSeason &&
+              state.TransferPortalEntries.Count > 0)) &&
             _teamsByName.TryGetValue(
                 state.UserTeamName,
                 out var phaseTeam))
@@ -1269,31 +1313,107 @@ public sealed class FoundationPage : ContentPage
                 _currentDynasty.UserTeamName,
                 StringComparison.OrdinalIgnoreCase));
 
+        var portalOpenForRecruiting =
+            _currentDynasty.Phase is
+                SeasonPhase.TransferPortal or
+                SeasonPhase.Recruiting or
+                SeasonPhase.RegularSeason;
+
+        var availablePortal = _currentDynasty.TransferPortalEntries
+            .Where(entry => !entry.OriginTeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(entry => entry.Player.OverallRating)
+            .ThenByDescending(entry => entry.Player.TalentLevel)
+            .ThenBy(entry => entry.Player.FullName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var pendingUserTransfers =
+            _currentDynasty.PendingTransferCommitments
+                .Where(commitment =>
+                    commitment.TeamName.Equals(
+                        _currentDynasty.UserTeamName,
+                        StringComparison.OrdinalIgnoreCase))
+                .OrderBy(commitment => commitment.JoinSeasonYear)
+                .ThenByDescending(commitment =>
+                    commitment.Player.OverallRating)
+                .ToArray();
+
+        var exitsThisSeason =
+            _currentDynasty.TransferPortalExitHistory.Count(exit =>
+                exit.ExitSeasonYear ==
+                    _currentDynasty.SeasonYear);
+
+        _recruitingStatus.Text = _currentDynasty.Phase switch
+        {
+            SeasonPhase.TransferPortal =>
+                $"PORTAL ENTRY WINDOW OPEN • " +
+                $"{_currentDynasty.TransferPortalEntries.Count:N0} available • " +
+                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
+                $"Roster {userRosterCount}/85\n" +
+                "New FBS portal entrants are created only during this window. " +
+                "Unsigned players remain available after it closes.",
+
+            SeasonPhase.Recruiting =>
+                $"OFFSEASON RECRUITING • " +
+                $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} high-school recruits • " +
+                $"{availablePortal.Length:N0} unsigned transfers • " +
+                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
+                $"Roster {userRosterCount}/85\n" +
+                "High-school recruits and transfer-portal players can be pursued at the same time.",
+
+            SeasonPhase.RegularSeason =>
+                $"PORTAL ENTRY WINDOW CLOSED • " +
+                $"{availablePortal.Length:N0} unsigned transfers still available • " +
+                $"Weekly portal points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
+                $"{exitsThisSeason:N0} left the FBS market this season\n" +
+                $"Mid-season transfer commitments join in {_currentDynasty.SeasonYear + 1}; " +
+                "they do not join the current roster.",
+
+            _ =>
+                $"Recruiting is currently closed ({_currentDynasty.Phase}). " +
+                $"{availablePortal.Length:N0} unsigned portal players remain in the market."
+        };
+
+        if (pendingUserTransfers.Length > 0)
+        {
+            _recruitingList.Children.Add(new Label
+            {
+                Text = "COMMITTED TRANSFERS — FUTURE ROSTER",
+                FontAttributes = FontAttributes.Bold
+            });
+
+            foreach (var commitment in pendingUserTransfers.Take(12))
+            {
+                _recruitingList.Children.Add(new Label
+                {
+                    Text =
+                        $"{commitment.Player.Position} {commitment.Player.FullName} • " +
+                        $"OVR {commitment.Player.OverallRating} • " +
+                        $"joins {commitment.JoinSeasonYear}"
+                });
+            }
+        }
+
         if (_currentDynasty.Phase == SeasonPhase.TransferPortal)
         {
             var transfersOut = _currentDynasty.TransferPortalEntries
                 .Where(entry => entry.OriginTeamName.Equals(
                     _currentDynasty.UserTeamName,
                     StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(entry => entry.Player.OverallRating)
                 .ToArray();
-
-            _recruitingStatus.Text =
-                $"TRANSFER PORTAL • {_currentDynasty.TransferPortalEntries.Count:N0} entries • " +
-                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
-                $"Roster {userRosterCount}/85 • {transfersOut.Length} transfers out\n" +
-                "Scout, offer, and pitch targets. CPU Assist fills remaining needs when you advance.";
 
             if (transfersOut.Length > 0)
             {
                 _recruitingList.Children.Add(new Label
                 {
-                    Text = "TRANSFERS OUT",
-                    FontAttributes = FontAttributes.Bold
+                    Text = "YOUR TRANSFERS OUT",
+                    FontAttributes = FontAttributes.Bold,
+                    Margin = new Thickness(0, 6, 0, 0)
                 });
 
-                foreach (var entry in transfersOut
-                             .OrderByDescending(entry => entry.Player.OverallRating)
-                             .Take(10))
+                foreach (var entry in transfersOut.Take(10))
                 {
                     _recruitingList.Children.Add(new Label
                     {
@@ -1303,47 +1423,15 @@ public sealed class FoundationPage : ContentPage
                     });
                 }
             }
-
-            _recruitingList.Children.Add(new Label
-            {
-                Text = "TOP PORTAL TARGETS",
-                FontAttributes = FontAttributes.Bold,
-                Margin = new Thickness(0, 6, 0, 0)
-            });
-
-            foreach (var entry in _currentDynasty.TransferPortalEntries
-                         .Where(entry => !entry.OriginTeamName.Equals(
-                             _currentDynasty.UserTeamName,
-                             StringComparison.OrdinalIgnoreCase))
-                         .OrderByDescending(entry => entry.Player.OverallRating)
-                         .ThenByDescending(entry => entry.Player.TalentLevel)
-                         .ThenBy(entry => entry.Player.FullName, StringComparer.OrdinalIgnoreCase)
-                         .Take(16))
-            {
-                AddRecruitingTargetCard(
-                    RecruitingSource.TransferPortal,
-                    entry.Player.PlayerId,
-                    entry.Player.FullName,
-                    entry.Player.Position,
-                    entry.OriginTeamName,
-                    entry.Player.ClassYear,
-                    null);
-            }
-
-            return;
         }
 
         if (_currentDynasty.Phase == SeasonPhase.Recruiting)
         {
-            _recruitingStatus.Text =
-                $"HIGH-SCHOOL RECRUITING • {_currentDynasty.HighSchoolRecruitingPool.Count:N0} recruits • " +
-                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • Roster {userRosterCount}/85\n" +
-                "Scout, offer, and pitch targets. CPU Assist fills remaining needs when you advance.";
-
             _recruitingList.Children.Add(new Label
             {
                 Text = "TOP HIGH-SCHOOL TARGETS",
-                FontAttributes = FontAttributes.Bold
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 6, 0, 0)
             });
 
             foreach (var recruit in _currentDynasty.HighSchoolRecruitingPool
@@ -1361,8 +1449,32 @@ public sealed class FoundationPage : ContentPage
                     1,
                     recruit.PotentialRating);
             }
+        }
 
-            return;
+        if (portalOpenForRecruiting &&
+            availablePortal.Length > 0)
+        {
+            _recruitingList.Children.Add(new Label
+            {
+                Text = _currentDynasty.Phase ==
+                        SeasonPhase.RegularSeason
+                    ? "UNSIGNED TRANSFERS"
+                    : "TOP PORTAL TARGETS",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+
+            foreach (var entry in availablePortal.Take(20))
+            {
+                AddRecruitingTargetCard(
+                    RecruitingSource.TransferPortal,
+                    entry.Player.PlayerId,
+                    entry.Player.FullName,
+                    entry.Player.Position,
+                    $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
+                    entry.Player.ClassYear,
+                    null);
+            }
         }
 
         var latestCommitments = _currentDynasty.RecruitingCommitments
@@ -1374,26 +1486,28 @@ public sealed class FoundationPage : ContentPage
             .Take(20)
             .ToArray();
 
-        _recruitingStatus.Text =
-            $"Recruiting is currently closed ({_currentDynasty.Phase}). " +
-            "The Transfer Portal and high-school recruiting reopen during the offseason.";
-
         if (latestCommitments.Length > 0)
         {
             _recruitingList.Children.Add(new Label
             {
-                Text = "RECENT SIGNEES",
-                FontAttributes = FontAttributes.Bold
+                Text = "RECENT COMMITMENTS",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 0)
             });
 
             foreach (var commitment in latestCommitments)
             {
+                var joinText =
+                    commitment.JoinSeasonYear > commitment.SeasonYear
+                        ? $" • joins {commitment.JoinSeasonYear}"
+                        : string.Empty;
+
                 _recruitingList.Children.Add(new Label
                 {
                     Text =
                         $"{commitment.SeasonYear} • {commitment.Position} " +
                         $"{commitment.PlayerName} • OVR {commitment.OverallRating} • " +
-                        $"{commitment.Source}" +
+                        $"{commitment.Source}{joinText}" +
                         (commitment.WasCpuAssisted ? " • CPU ASSIST" : string.Empty)
                 });
             }

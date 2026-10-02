@@ -3,6 +3,7 @@ namespace DynastyManager.Core.Models;
 public sealed record RecruitingCommitmentRecord
 {
     public int SeasonYear { get; init; }
+    public int JoinSeasonYear { get; init; }
     public Guid ProspectId { get; init; }
     public RecruitingSource Source { get; init; }
     public required string PlayerName { get; init; }
