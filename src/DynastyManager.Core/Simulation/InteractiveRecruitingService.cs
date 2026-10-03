@@ -8,6 +8,7 @@ public static class InteractiveRecruitingService
     public const int PitchCost = 50;
     public const int ScoutStep = 25;
     public const int MidseasonPortalBasePoints = 250;
+    public const int OffseasonRecruitingWeeklyBasePoints = 350;
 
     public static DynastyState EnsurePhaseInitialized(
         DynastyState state,
@@ -19,6 +20,8 @@ public static class InteractiveRecruitingService
         var isMidseasonPortal =
             state.Phase == SeasonPhase.RegularSeason &&
             state.TransferPortalEntries.Count > 0;
+        var isOffseasonRecruiting =
+            state.Phase == SeasonPhase.Recruiting;
 
         if (state.Phase is not
                 (SeasonPhase.TransferPortal or SeasonPhase.Recruiting) &&
@@ -27,10 +30,9 @@ public static class InteractiveRecruitingService
             return state;
         }
 
-        if (isMidseasonPortal)
+        if (isMidseasonPortal || isOffseasonRecruiting)
         {
-            if (state.RecruitingPointsPhase ==
-                    SeasonPhase.RegularSeason &&
+            if (state.RecruitingPointsPhase == state.Phase &&
                 state.RecruitingPointsWeek == state.Week)
             {
                 return state;
@@ -53,8 +55,11 @@ public static class InteractiveRecruitingService
         var startingPoints = isMidseasonPortal
             ? MidseasonPortalBasePoints +
               userTeam.Prestige * 2
-            : userTeam.Prestige * 15 +
-              shortageBonus;
+            : isOffseasonRecruiting
+                ? userTeam.Prestige * 4 +
+                  shortageBonus / 6
+                : userTeam.Prestige * 15 +
+                  shortageBonus;
 
         return state with
         {
@@ -62,11 +67,16 @@ public static class InteractiveRecruitingService
                 ? Math.Max(
                     MidseasonPortalBasePoints,
                     startingPoints)
-                : Math.Max(900, startingPoints),
+                : isOffseasonRecruiting
+                    ? Math.Max(
+                        OffseasonRecruitingWeeklyBasePoints,
+                        startingPoints)
+                    : Math.Max(900, startingPoints),
             RecruitingPointsPhase = state.Phase,
-            RecruitingPointsWeek = isMidseasonPortal
-                ? state.Week
-                : -1
+            RecruitingPointsWeek =
+                isMidseasonPortal || isOffseasonRecruiting
+                    ? state.Week
+                    : -1
         };
     }
 
@@ -223,6 +233,8 @@ public static class InteractiveRecruitingService
                 interaction.SeasonYear == state.SeasonYear &&
                 sources.Contains(interaction.Source) &&
                 interaction.CommittedTeamName is null &&
+                (state.Phase != SeasonPhase.Recruiting ||
+                 interaction.ScholarshipOffered) &&
                 (!isMidseasonPortal ||
                  interaction.Source !=
                     RecruitingSource.TransferPortal ||

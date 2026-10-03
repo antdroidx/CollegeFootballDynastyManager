@@ -100,6 +100,98 @@ public class InteractiveRecruitingTests
     }
 
     [Fact]
+    public void RecruitingPointsRefreshOnEachRecruitingWeek()
+    {
+        var user = Team("User", 80);
+
+        var weekOne = new DynastyState
+        {
+            DynastyName = "Weekly Recruiting",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingPointsRemaining = 0,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20
+        };
+
+        var sameWeek =
+            InteractiveRecruitingService.EnsurePhaseInitialized(
+                weekOne,
+                user);
+
+        Assert.Equal(0, sameWeek.RecruitingPointsRemaining);
+
+        var weekTwo =
+            InteractiveRecruitingService.EnsurePhaseInitialized(
+                weekOne with { Week = 21 },
+                user);
+
+        Assert.True(weekTwo.RecruitingPointsRemaining > 0);
+        Assert.Equal(21, weekTwo.RecruitingPointsWeek);
+        Assert.Equal(
+            SeasonPhase.Recruiting,
+            weekTwo.RecruitingPointsPhase);
+    }
+
+    [Fact]
+    public void ScoutedRecruitWithoutScholarshipDoesNotResolve()
+    {
+        var user = Team("User", 80);
+        var rival = Team("Rival", 75);
+        var recruit = new HighSchoolRecruit
+        {
+            RecruitId = Guid.Parse(
+                "12121212-3434-5656-7878-909090909090"),
+            SeasonYear = 2027,
+            FullName = "Scouted Only",
+            Position = Position.WR,
+            StarRating = 4,
+            TrueOverallRating = 79,
+            PotentialRating = 90
+        };
+
+        var state = new DynastyState
+        {
+            DynastyName = "Scouting Test",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingPointsRemaining = 500,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
+            HighSchoolRecruitingPool = new[] { recruit }
+        };
+
+        state = InteractiveRecruitingService.Scout(
+            state,
+            RecruitingSource.HighSchool,
+            recruit.RecruitId);
+
+        state = InteractiveRecruitingService.ResolveCurrentPhase(
+            state,
+            user,
+            new[] { user, rival }.ToDictionary(
+                team => team.Name,
+                StringComparer.OrdinalIgnoreCase));
+
+        Assert.Empty(state.RecruitingCommitments);
+
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                state,
+                RecruitingSource.HighSchool,
+                recruit.RecruitId);
+
+        Assert.Null(interaction.CommittedTeamName);
+        Assert.Equal(
+            InteractiveRecruitingService.ScoutStep,
+            interaction.ScoutingPercent);
+    }
+
+    [Fact]
     public void HighSchoolPoolUsesScaledSizeAndValidRatings()
     {
         var rows = new[]

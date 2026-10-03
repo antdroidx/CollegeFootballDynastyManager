@@ -661,6 +661,10 @@ public sealed class FoundationPage : ContentPage
         try
         {
             var phaseBeforeAdvance = _currentDynasty.Phase;
+            var finalRecruitingWeek =
+                phaseBeforeAdvance == SeasonPhase.Recruiting &&
+                SeasonProgression.IsFinalRecruitingWeek(
+                    _currentDynasty);
 
         if (phaseBeforeAdvance == SeasonPhase.RegularSeason &&
             _teamsByName.TryGetValue(
@@ -688,27 +692,33 @@ public sealed class FoundationPage : ContentPage
                         _teamsByName);
             }
 
-            SetDynastyControlsEnabled(false);
-            _rollingAutosaveStatus.Text =
-                phaseBeforeAdvance == SeasonPhase.TransferPortal
-                    ? "CPU teams are resolving transfer-portal needs…"
-                    : "CPU teams are resolving recruiting classes…";
+            if (phaseBeforeAdvance ==
+                    SeasonPhase.TransferPortal ||
+                finalRecruitingWeek)
+            {
+                SetDynastyControlsEnabled(false);
+                _rollingAutosaveStatus.Text =
+                    phaseBeforeAdvance ==
+                            SeasonPhase.TransferPortal
+                        ? "CPU teams are resolving transfer-portal needs…"
+                        : "Finalizing recruiting classes…";
 
-            var recruitingState = _currentDynasty;
-            _currentDynasty = await Task.Run(() =>
-                CpuRecruitingService.ApplyPhaseAssistance(
-                    recruitingState,
-                    _teamsByName));
+                var recruitingState = _currentDynasty;
+                _currentDynasty = await Task.Run(() =>
+                    CpuRecruitingService.ApplyPhaseAssistance(
+                        recruitingState,
+                        _teamsByName));
 
-            _currentDynasty = PlayerRatingService
-                .EnsureProfiles(_currentDynasty);
+                _currentDynasty = PlayerRatingService
+                    .EnsureProfiles(_currentDynasty);
+
+                SetDynastyControlsEnabled(true);
+            }
 
             _currentDynasty = _currentDynasty with
             {
                 RecruitingPointsRemaining = 0
             };
-
-            SetDynastyControlsEnabled(true);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.RosterManagement)
@@ -864,6 +874,17 @@ public sealed class FoundationPage : ContentPage
                         _currentDynasty,
                         recruitingTeam);
             }
+        }
+
+        if (_currentDynasty.Phase == SeasonPhase.Recruiting &&
+            _teamsByName.TryGetValue(
+                _currentDynasty.UserTeamName,
+                out var weeklyRecruitingTeam))
+        {
+            _currentDynasty = InteractiveRecruitingService
+                .EnsurePhaseInitialized(
+                    _currentDynasty,
+                    weeklyRecruitingTeam);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.RegularSeason &&
@@ -1230,11 +1251,14 @@ public sealed class FoundationPage : ContentPage
         var conferenceLosses =
             conferenceGames.Length - conferenceWins;
 
-        var weekLabel = _currentDynasty.Phase == SeasonPhase.Preseason
-            ? "Preseason"
-            : _currentDynasty.Phase == SeasonPhase.RegularSeason
-                ? $"Week {_currentDynasty.Week}"
-                : $"Week {_currentDynasty.Week}";
+        var weekLabel = _currentDynasty.Phase switch
+        {
+            SeasonPhase.Preseason => "Preseason",
+            SeasonPhase.Recruiting =>
+                $"Recruiting Week {SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)} " +
+                $"of {SeasonProgression.RecruitingWeekCount}",
+            _ => $"Week {_currentDynasty.Week}"
+        };
 
         _currentDynastyLabel.Text =
             $"{_currentDynasty.DynastyName}\n" +
@@ -1355,12 +1379,15 @@ public sealed class FoundationPage : ContentPage
                 "Unsigned players remain available after it closes.",
 
             SeasonPhase.Recruiting =>
-                $"OFFSEASON RECRUITING • " +
+                $"OFFSEASON RECRUITING • Week " +
+                $"{SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)} " +
+                $"of {SeasonProgression.RecruitingWeekCount} • " +
                 $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} high-school recruits • " +
                 $"{availablePortal.Length:N0} unsigned transfers • " +
-                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
+                $"Weekly points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
                 $"Roster {userRosterCount}/85\n" +
-                "High-school recruits and transfer-portal players can be pursued at the same time.",
+                "High-school recruits and transfer-portal players can be pursued together. " +
+                "Unused weekly points do not roll over.",
 
             SeasonPhase.RegularSeason =>
                 $"PORTAL ENTRY WINDOW CLOSED • " +
@@ -2630,9 +2657,16 @@ public sealed class FoundationPage : ContentPage
     }
 
     private static string FormatWeek(DynastySaveInfo save) =>
-        save.Phase == SeasonPhase.Preseason
-            ? "Preseason"
-            : $"Week {save.Week}";
+        save.Phase switch
+        {
+            SeasonPhase.Preseason => "Preseason",
+            SeasonPhase.Recruiting =>
+                $"Recruiting Week {Math.Clamp(
+                    save.Week - SeasonProgression.FirstRecruitingWeek + 1,
+                    1,
+                    SeasonProgression.RecruitingWeekCount)}",
+            _ => $"Week {save.Week}"
+        };
 
     private static async Task<string> ReadAssetAsync(string fileName)
     {

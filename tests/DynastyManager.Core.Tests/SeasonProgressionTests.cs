@@ -98,28 +98,82 @@ public class SeasonProgressionTests
         Assert.Equal(19, next.Week);
     }
 
-    [Theory]
-    [InlineData(SeasonPhase.TransferPortal, SeasonPhase.Recruiting, 19, 20)]
-    [InlineData(SeasonPhase.Recruiting, SeasonPhase.RosterManagement, 20, 21)]
-    [InlineData(SeasonPhase.RosterManagement, SeasonPhase.Offseason, 21, 22)]
-    public void LaterOffseasonPhasesAdvanceInOrder(
-        SeasonPhase current,
-        SeasonPhase expected,
-        int currentWeek,
-        int expectedWeek)
+    [Fact]
+    public void PortalEntryWindowAdvancesToRecruitingWeekOne()
     {
         var next = SeasonProgression.Advance(
-            State(current, currentWeek));
+            State(SeasonPhase.TransferPortal, 19));
 
-        Assert.Equal(expected, next.Phase);
+        Assert.Equal(SeasonPhase.Recruiting, next.Phase);
+        Assert.Equal(
+            SeasonProgression.FirstRecruitingWeek,
+            next.Week);
+        Assert.Equal(
+            1,
+            SeasonProgression.GetRecruitingWeekNumber(next));
+    }
+
+    [Theory]
+    [InlineData(20, 21, 2)]
+    [InlineData(21, 22, 3)]
+    [InlineData(22, 23, 4)]
+    [InlineData(23, 24, 5)]
+    [InlineData(24, 25, 6)]
+    public void RecruitingAdvancesThroughSixWeeks(
+        int currentWeek,
+        int expectedWeek,
+        int expectedRecruitingWeek)
+    {
+        var next = SeasonProgression.Advance(
+            State(SeasonPhase.Recruiting, currentWeek));
+
+        Assert.Equal(SeasonPhase.Recruiting, next.Phase);
         Assert.Equal(expectedWeek, next.Week);
+        Assert.Equal(
+            expectedRecruitingWeek,
+            SeasonProgression.GetRecruitingWeekNumber(next));
+    }
+
+    [Fact]
+    public void FinalRecruitingWeekAdvancesToRosterManagement()
+    {
+        var state = State(
+            SeasonPhase.Recruiting,
+            SeasonProgression.LastRecruitingWeek);
+
+        Assert.True(
+            SeasonProgression.IsFinalRecruitingWeek(state));
+
+        var next = SeasonProgression.Advance(state);
+
+        Assert.Equal(
+            SeasonPhase.RosterManagement,
+            next.Phase);
+        Assert.Equal(
+            SeasonProgression.LastRecruitingWeek + 1,
+            next.Week);
+    }
+
+    [Fact]
+    public void RosterManagementAdvancesToOffseason()
+    {
+        var currentWeek =
+            SeasonProgression.LastRecruitingWeek + 1;
+
+        var next = SeasonProgression.Advance(
+            State(
+                SeasonPhase.RosterManagement,
+                currentWeek));
+
+        Assert.Equal(SeasonPhase.Offseason, next.Phase);
+        Assert.Equal(currentWeek + 1, next.Week);
     }
 
     [Fact]
     public void OffseasonStartsNextYearPreseason()
     {
         var next = SeasonProgression.Advance(
-            State(SeasonPhase.Offseason, 19));
+            State(SeasonPhase.Offseason, 27));
 
         Assert.Equal(SeasonPhase.Preseason, next.Phase);
         Assert.Equal(0, next.Week);

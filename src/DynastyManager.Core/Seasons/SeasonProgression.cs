@@ -11,6 +11,11 @@ namespace DynastyManager.Core.Seasons;
 public static class SeasonProgression
 {
     public const int DefaultRegularSeasonWeeks = 13;
+    public const int RecruitingWeekCount = 6;
+    public const int FirstRecruitingWeek =
+        CollegeFootballPlayoffService.NationalChampionshipWeek + 2;
+    public const int LastRecruitingWeek =
+        FirstRecruitingWeek + RecruitingWeekCount - 1;
 
     public static DynastyState Advance(
         DynastyState state,
@@ -66,6 +71,14 @@ public static class SeasonProgression
                 Phase = SeasonPhase.Recruiting
             },
 
+            SeasonPhase.Recruiting when
+                state.Week < LastRecruitingWeek =>
+                state with
+                {
+                    Week = state.Week + 1,
+                    Phase = SeasonPhase.Recruiting
+                },
+
             SeasonPhase.Recruiting => state with
             {
                 Week = state.Week + 1,
@@ -90,5 +103,28 @@ public static class SeasonProgression
                 state.Phase,
                 "Unknown season phase.")
         };
+    }
+
+    public static int GetRecruitingWeekNumber(
+        DynastyState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        if (state.Phase != SeasonPhase.Recruiting)
+            return 0;
+
+        return Math.Clamp(
+            state.Week - FirstRecruitingWeek + 1,
+            1,
+            RecruitingWeekCount);
+    }
+
+    public static bool IsFinalRecruitingWeek(
+        DynastyState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        return state.Phase == SeasonPhase.Recruiting &&
+               state.Week >= LastRecruitingWeek;
     }
 }
