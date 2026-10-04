@@ -99,6 +99,39 @@ public class CpuRecruitingAndWalkOnTests
     }
 
     [Fact]
+    public void DisabledUserAssistanceStillLetsCpuTeamsRecruit()
+    {
+        var user = Team("User", 80);
+        var rival = Team("Rival", 70);
+        var teams = new[] { user, rival }.ToDictionary(
+            team => team.Name, StringComparer.OrdinalIgnoreCase);
+        var state = new DynastyState
+        {
+            DynastyName = "Assistance Toggle Test",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = false,
+            ActiveRoster = BuildRoster(user.Name, 60)
+                .Concat(BuildRoster(rival.Name, 60)).ToArray(),
+            HighSchoolRecruitingPool = BuildRecruitPool(80)
+        };
+
+        var updated = CpuRecruitingService.ApplyPhaseAssistance(
+            state, teams, state.RecruitingAssistanceEnabled);
+
+        Assert.Equal(60, updated.ActiveRoster.Count(player =>
+            player.TeamName == user.Name));
+        Assert.True(updated.ActiveRoster.Count(player =>
+            player.TeamName == rival.Name) > 60);
+        Assert.DoesNotContain(updated.RecruitingCommitments,
+            commitment => commitment.TeamName == user.Name);
+        Assert.Contains(updated.RecruitingCommitments,
+            commitment => commitment.TeamName == rival.Name);
+    }
+
+    [Fact]
     public void WalkOnsFillEveryTeamToExactlyEightyFivePlayers()
     {
         var user = Team("User", 80);

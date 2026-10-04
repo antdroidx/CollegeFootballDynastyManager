@@ -14,7 +14,8 @@ public static class CpuRecruitingService
 
     public static DynastyState ApplyPhaseAssistance(
         DynastyState state,
-        IReadOnlyDictionary<string, Team> teamsByName)
+        IReadOnlyDictionary<string, Team> teamsByName,
+        bool assistUserTeam = true)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
@@ -66,6 +67,13 @@ public static class CpuRecruitingService
 
         foreach (var team in teams)
         {
+            if (!assistUserTeam && team.Name.Equals(
+                    state.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             var rosterCount = CountTeamRoster(roster, team.Name);
             var capacity = Math.Max(
                 0,

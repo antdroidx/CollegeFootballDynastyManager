@@ -43,6 +43,7 @@ public sealed class FoundationPage : ContentPage
     private enum ScoutedFilter
     {
         All,
+        Scouted,
         Unscouted,
         Partial,
         Mostly,
@@ -68,6 +69,7 @@ public sealed class FoundationPage : ContentPage
     private readonly Button _manualSaveButton;
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
+    private readonly Switch _recruitingAssistanceSwitch;
     private readonly Label _rollingAutosaveStatus;
     private readonly Label _offseasonRosterStatus;
     private readonly VerticalStackLayout _transferPortalList;
@@ -185,6 +187,21 @@ public sealed class FoundationPage : ContentPage
         };
         _rollingAutosaveSwitch.Toggled += (_, args) =>
             Preferences.Default.Set("rolling_autosave_enabled", args.Value);
+
+        _recruitingAssistanceSwitch = new Switch
+        {
+            IsToggled = true
+        };
+        _recruitingAssistanceSwitch.Toggled += (_, args) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty = _currentDynasty with
+            {
+                RecruitingAssistanceEnabled = args.Value
+            };
+        };
 
         _rollingAutosaveStatus = new Label
         {
@@ -394,6 +411,7 @@ public sealed class FoundationPage : ContentPage
             ItemsSource = new[]
             {
                 "All Scouting",
+                "Scouted (Any Level)",
                 "Unscouted",
                 "Partially Scouted",
                 "Mostly Scouted",
@@ -812,6 +830,31 @@ public sealed class FoundationPage : ContentPage
                 new BoxView { HeightRequest = 1 },
                 new Label
                 {
+                    Text = "RECRUITING ASSISTANCE",
+                    FontAttributes = FontAttributes.Bold
+                },
+                new HorizontalStackLayout
+                {
+                    Spacing = 10,
+                    Children =
+                    {
+                        _recruitingAssistanceSwitch,
+                        new Label
+                        {
+                            Text = "CPU fills remaining roster needs",
+                            VerticalTextAlignment = TextAlignment.Center,
+                            FontAttributes = FontAttributes.Bold
+                        }
+                    }
+                },
+                new Label
+                {
+                    Text = "Enabled by default. Your manual targets resolve first; assistance fills open roster spots afterward.",
+                    FontSize = 12
+                },
+                new BoxView { HeightRequest = 1 },
+                new Label
+                {
                     Text = "AUTOSAVE",
                     FontAttributes = FontAttributes.Bold
                 },
@@ -934,10 +977,13 @@ public sealed class FoundationPage : ContentPage
 
         try
         {
+            await ShowAdvanceProgressAsync("Creating dynasty...", 0.05);
+            await ShowAdvanceProgressAsync("Generating league schedule...", 0.18);
             var schedule = await GenerateScheduleAsync(
                 dynastyId,
                 startingYear);
 
+            await ShowAdvanceProgressAsync("Building team rosters...", 0.42);
             var activeRoster = LegacyDynastyRosterFactory.Create(
                 _legacyRosterRows,
                 _teamsByName.Values,
@@ -952,6 +998,8 @@ public sealed class FoundationPage : ContentPage
                 SeasonYear = startingYear,
                 Week = 0,
                 Phase = SeasonPhase.Preseason,
+                RecruitingAssistanceEnabled =
+                    _recruitingAssistanceSwitch.IsToggled,
                 Schedule = schedule,
                 ActiveRoster = activeRoster,
                 HighSchoolRecruitingPool =
@@ -964,11 +1012,14 @@ public sealed class FoundationPage : ContentPage
 
             _currentDynasty = PlayerRatingService
                 .EnsureProfiles(_currentDynasty);
+            await ShowAdvanceProgressAsync("Setting depth charts...", 0.68);
             _currentDynasty = RosterManagementService
                 .NormalizeAllDepthCharts(_currentDynasty);
+            await ShowAdvanceProgressAsync("Hiring scouting department...", 0.84);
             _currentDynasty = ScoutingDepartmentService.EnsureDepartment(
                 _currentDynasty, _teamsByName[teamName]);
 
+            await ShowAdvanceProgressAsync("Dynasty ready", 1.0);
             SetDynastyControlsEnabled(true);
             RenderCurrentDynasty();
             ShowSection(AppSection.Home);
@@ -982,6 +1033,7 @@ public sealed class FoundationPage : ContentPage
         }
         finally
         {
+            _advanceOverlay.IsVisible = false;
             SetNewDynastyControlsEnabled(true);
         }
     }
@@ -1050,7 +1102,8 @@ public sealed class FoundationPage : ContentPage
                 _currentDynasty = await Task.Run(() =>
                     CpuRecruitingService.ApplyPhaseAssistance(
                         recruitingState,
-                        _teamsByName));
+                        _teamsByName,
+                        recruitingState.RecruitingAssistanceEnabled));
 
                 _currentDynasty = PlayerRatingService
                     .EnsureProfiles(_currentDynasty);
@@ -1108,6 +1161,16 @@ public sealed class FoundationPage : ContentPage
             await ShowAdvanceProgressAsync("Processing the transfer portal...", 0.62);
             _currentDynasty = TransferPortalMarketService
                 .AdvanceRegularSeasonWeek(_currentDynasty);
+
+            if (weekAtStart == 6)
+            {
+                await ShowAdvanceProgressAsync(
+                    "Applying midseason player development...", 0.68);
+                var midseasonState = _currentDynasty;
+                _currentDynasty = await Task.Run(() =>
+                    PlayerDevelopmentService.ApplyMidseasonDevelopment(
+                        midseasonState));
+            }
         }
         else if (phaseBeforeAdvance == SeasonPhase.ConferenceChampionship)
         {
@@ -1395,6 +1458,11 @@ public sealed class FoundationPage : ContentPage
         if (_saveRepository is null)
             return;
 
+        SetNewDynastyControlsEnabled(false);
+        SetDynastyControlsEnabled(false);
+        try
+        {
+        await ShowAdvanceProgressAsync("Loading dynasty save...", 0.08);
         var state = await _saveRepository.LoadAsync(saveId);
         if (state is null)
             return;
@@ -1407,6 +1475,7 @@ public sealed class FoundationPage : ContentPage
 
             try
             {
+                await ShowAdvanceProgressAsync("Rebuilding missing schedule...", 0.24);
                 state = state with
                 {
                     Schedule = await GenerateScheduleAsync(
@@ -1425,6 +1494,7 @@ public sealed class FoundationPage : ContentPage
         if (state.ActiveRoster.Count == 0 &&
             _legacyRosterRows.Count > 0)
         {
+            await ShowAdvanceProgressAsync("Restoring team rosters...", 0.38);
             state = state with
             {
                 ActiveRoster = LegacyDynastyRosterFactory.Create(
@@ -1435,6 +1505,7 @@ public sealed class FoundationPage : ContentPage
             };
         }
 
+        await ShowAdvanceProgressAsync("Checking players and depth charts...", 0.54);
         state = PlayerRatingService.EnsureProfiles(state);
         state = RosterManagementService
             .NormalizeAllDepthCharts(state);
@@ -1477,6 +1548,7 @@ public sealed class FoundationPage : ContentPage
 
         if (_teamsByName.TryGetValue(state.UserTeamName, out var scoutingTeam))
         {
+            await ShowAdvanceProgressAsync("Restoring scouting department...", 0.72);
             state = ScoutingDepartmentService.EnsureDepartment(
                 state, scoutingTeam);
         }
@@ -1501,10 +1573,21 @@ public sealed class FoundationPage : ContentPage
                 .NormalizeAllDepthCharts(state);
         }
 
+        await ShowAdvanceProgressAsync("Preparing dynasty screen...", 0.90);
         _currentDynasty = state;
+        _recruitingAssistanceSwitch.IsToggled =
+            state.RecruitingAssistanceEnabled;
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
         ShowSection(AppSection.Home);
+        await ShowAdvanceProgressAsync("Dynasty loaded", 1.0);
+        }
+        finally
+        {
+            _advanceOverlay.IsVisible = false;
+            SetNewDynastyControlsEnabled(true);
+            SetDynastyControlsEnabled(_currentDynasty is not null);
+        }
     }
 
     private async Task DeleteSaveAsync(Guid saveId)
@@ -1958,6 +2041,7 @@ public sealed class FoundationPage : ContentPage
                     prospect.ProspectId).ScoutingPercent;
                 return scoutedFilter switch
                 {
+                    ScoutedFilter.Scouted => percent > 0,
                     ScoutedFilter.Unscouted => percent == 0,
                     ScoutedFilter.Partial => percent is > 0 and < 50,
                     ScoutedFilter.Mostly => percent is >= 50 and < 100,
@@ -2277,6 +2361,8 @@ public sealed class FoundationPage : ContentPage
                 ? "OFFER • "
                 : string.Empty;
 
+        var nationalRank = GetProspectNationalRank(prospect);
+
         var interest =
             interaction.CommittedTeamName is not null
                 ? $"Committed: {interaction.CommittedTeamName}"
@@ -2333,7 +2419,8 @@ public sealed class FoundationPage : ContentPage
                 new Label
                 {
                     Text =
-                        $"{overallText} • {prospect.Subtitle} • " +
+                        $"#{nationalRank} {prospect.Source} • {overallText} • " +
+                        $"{prospect.Subtitle} • " +
                         $"Scout {interaction.ScoutingPercent}%",
                     FontSize = 11,
                     Opacity = 0.82
@@ -2382,6 +2469,41 @@ public sealed class FoundationPage : ContentPage
                 Padding = new Thickness(10, 7),
                 Content = row
             });
+    }
+
+    private int GetProspectNationalRank(
+        RecruitingProspectDisplay prospect)
+    {
+        if (_currentDynasty is null)
+            return 0;
+
+        IEnumerable<Guid> rankedIds = prospect.Source ==
+            RecruitingSource.HighSchool
+            ? _currentDynasty.HighSchoolRecruitingPool
+                .Where(recruit => recruit.SeasonYear == 0 ||
+                    recruit.SeasonYear == _currentDynasty.SeasonYear)
+                .OrderByDescending(recruit => recruit.StarRating)
+                .ThenByDescending(recruit => recruit.TrueOverallRating)
+                .ThenByDescending(recruit => recruit.PotentialRating)
+                .ThenBy(recruit => recruit.FullName,
+                    StringComparer.OrdinalIgnoreCase)
+                .Select(recruit => recruit.RecruitId)
+            : _currentDynasty.TransferPortalEntries
+                .OrderByDescending(entry => entry.Player.OverallRating)
+                .ThenByDescending(entry => entry.Player.PotentialRating)
+                .ThenBy(entry => entry.Player.FullName,
+                    StringComparer.OrdinalIgnoreCase)
+                .Select(entry => entry.Player.PlayerId);
+
+        var rank = 1;
+        foreach (var id in rankedIds)
+        {
+            if (id == prospect.ProspectId)
+                return rank;
+            rank++;
+        }
+
+        return rank;
     }
 
     private void RenderSelectedRecruitDetail()
@@ -2975,51 +3097,125 @@ public sealed class FoundationPage : ContentPage
         _recruitingDetailHost.Content = null;
         _recruitingDetailHost.IsVisible = false;
 
-        var commitments =
-            _currentDynasty.RecruitingCommitments
-                .Where(record =>
-                    record.TeamName.Equals(
-                        _currentDynasty.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(record =>
-                    record.SeasonYear)
-                .ThenByDescending(record =>
-                    record.OverallRating)
-                .ToArray();
+        var allCommitments = _currentDynasty.RecruitingCommitments
+            .Where(record => record.SeasonYear == _currentDynasty.SeasonYear)
+            .ToArray();
+        var userCommitments = allCommitments
+            .Where(record => record.TeamName.Equals(
+                _currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(record => record.OverallRating)
+            .ToArray();
 
-        _recruitingResultsStatus.Text =
-            commitments.Length == 0
-                ? "No commitments yet."
-                : $"{commitments.Length:N0} commitments";
+        _recruitingResultsStatus.Text = allCommitments.Length == 0
+            ? "No commitments yet. Rankings update as players commit."
+            : $"{allCommitments.Length:N0} national commitments • " +
+              $"{userCommitments.Length:N0} to your team";
 
-        foreach (var commitment in
-                 commitments.Take(100))
+        var classRankings = allCommitments
+            .GroupBy(record => record.TeamName,
+                StringComparer.OrdinalIgnoreCase)
+            .Select(group => new
+            {
+                TeamName = group.Key,
+                Count = group.Count(),
+                PortalCount = group.Count(record =>
+                    record.Source == RecruitingSource.TransferPortal),
+                Score = group.Sum(record =>
+                    record.OverallRating * record.OverallRating / 10.0)
+            })
+            .OrderByDescending(item => item.Score)
+            .ThenByDescending(item => item.Count)
+            .ThenBy(item => item.TeamName,
+                StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        _recruitingList.Children.Add(new Label
         {
-            var joinText =
-                commitment.JoinSeasonYear >
-                    commitment.SeasonYear
-                    ? $" • joins {commitment.JoinSeasonYear}"
-                    : string.Empty;
+            Text = "RECRUITING CLASS RANKINGS",
+            FontAttributes = FontAttributes.Bold
+        });
 
-            _recruitingList.Children.Add(
-                new Border
-                {
-                    StrokeThickness = 1,
-                    Padding = new Thickness(10, 7),
-                    Content = new Label
-                    {
-                        Text =
-                            $"{commitment.Position} {commitment.PlayerName} • " +
-                            $"OVR {commitment.OverallRating} • {commitment.Source}" +
-                            joinText +
-                            (commitment.WasCpuAssisted
-                                ? " • CPU ASSIST"
-                                : string.Empty),
-                        FontAttributes =
-                            FontAttributes.Bold
-                    }
-                });
+        foreach (var item in classRankings.Take(25).Select((item, index) =>
+                     new { Item = item, Rank = index + 1 }))
+        {
+            _recruitingList.Children.Add(new Label
+            {
+                Text = $"#{item.Rank} {item.Item.TeamName} • " +
+                       $"{item.Item.Count} commits • " +
+                       $"{item.Item.PortalCount} transfers",
+                FontAttributes = item.Item.TeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase)
+                    ? FontAttributes.Bold
+                    : FontAttributes.None
+            });
         }
+
+        var userRank = Array.FindIndex(classRankings, item =>
+            item.TeamName.Equals(_currentDynasty.UserTeamName,
+                StringComparison.OrdinalIgnoreCase));
+        if (userRank >= 25)
+        {
+            var item = classRankings[userRank];
+            _recruitingList.Children.Add(new Label
+            {
+                Text = $"#{userRank + 1} {item.TeamName} • " +
+                       $"{item.Count} commits • {item.PortalCount} transfers",
+                FontAttributes = FontAttributes.Bold
+            });
+        }
+
+        _recruitingList.Children.Add(new BoxView { HeightRequest = 1 });
+        _recruitingList.Children.Add(new Label
+        {
+            Text = "YOUR COMMITMENTS",
+            FontAttributes = FontAttributes.Bold
+        });
+        foreach (var commitment in userCommitments)
+            AddCommitmentRow(commitment, false);
+
+        _recruitingList.Children.Add(new BoxView { HeightRequest = 1 });
+        _recruitingList.Children.Add(new Label
+        {
+            Text = "AROUND THE NATION",
+            FontAttributes = FontAttributes.Bold
+        });
+        foreach (var commitment in allCommitments
+                     .Where(record => !record.TeamName.Equals(
+                         _currentDynasty.UserTeamName,
+                         StringComparison.OrdinalIgnoreCase))
+                     .OrderByDescending(record => record.OverallRating)
+                     .ThenBy(record => record.TeamName,
+                         StringComparer.OrdinalIgnoreCase)
+                     .Take(100))
+        {
+            AddCommitmentRow(commitment, true);
+        }
+    }
+
+    private void AddCommitmentRow(
+        RecruitingCommitmentRecord commitment,
+        bool showTeam)
+    {
+        var joinText = commitment.JoinSeasonYear > commitment.SeasonYear
+            ? $" • joins {commitment.JoinSeasonYear}"
+            : string.Empty;
+        var teamText = showTeam ? $" • {commitment.TeamName}" : string.Empty;
+
+        _recruitingList.Children.Add(new Border
+        {
+            StrokeThickness = 1,
+            Padding = new Thickness(10, 7),
+            Content = new Label
+            {
+                Text = $"{commitment.Position} {commitment.PlayerName} • " +
+                       $"OVR {commitment.OverallRating} • {commitment.Source}" +
+                       teamText + joinText +
+                       (commitment.WasCpuAssisted ? " • CPU ASSIST" : string.Empty),
+                FontAttributes = FontAttributes.Bold
+            }
+        });
     }
 
     private static string FormatPitchType(
@@ -3443,7 +3639,7 @@ public sealed class FoundationPage : ContentPage
             if (_currentDynasty is null)
                 return;
 
-            var confirmed = await DisplayAlert(
+            var confirmed = await DisplayAlertAsync(
                 "Release player?",
                 $"Release {player.FullName}? A walk-on can fill the open roster spot when you advance.",
                 "Release",

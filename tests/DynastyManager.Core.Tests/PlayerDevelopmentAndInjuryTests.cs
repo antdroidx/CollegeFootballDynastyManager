@@ -39,6 +39,28 @@ public class PlayerDevelopmentAndInjuryTests
     }
 
     [Fact]
+    public void MidseasonDevelopmentRunsOnceAndRecordsProgressionOrRegression()
+    {
+        var players = new[]
+        {
+            RatedPlayer("Young QB", Position.QB, 70, 95, 1),
+            RatedPlayer("Senior QB", Position.QB, 88, 84, 4)
+        };
+        var state = RosterManagementService.NormalizeAllDepthCharts(
+            State(SeasonPhase.RegularSeason, players) with { Week = 6 });
+
+        var updated = PlayerDevelopmentService.ApplyMidseasonDevelopment(state);
+        var repeated = PlayerDevelopmentService.ApplyMidseasonDevelopment(updated);
+
+        Assert.Equal(2, updated.PlayerDevelopmentHistory.Count(record =>
+            record.Stage == PlayerDevelopmentStage.Midseason));
+        Assert.Equal(updated.PlayerDevelopmentHistory.Count,
+            repeated.PlayerDevelopmentHistory.Count);
+        Assert.Contains(updated.PlayerDevelopmentHistory,
+            record => record.OverallChange != 0);
+    }
+
+    [Fact]
     public void SevereKneeInjuryCausesPermanentRelatedRegression()
     {
         var player = RatedPlayer(

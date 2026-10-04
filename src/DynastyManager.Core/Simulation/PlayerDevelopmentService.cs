@@ -13,7 +13,8 @@ public static class PlayerDevelopmentService
             return state;
 
         if (state.PlayerDevelopmentHistory.Any(record =>
-                record.SeasonYear == state.SeasonYear))
+                record.SeasonYear == state.SeasonYear &&
+                record.Stage == PlayerDevelopmentStage.Offseason))
         {
             return state;
         }
@@ -32,7 +33,8 @@ public static class PlayerDevelopmentService
 
             var developed = DevelopPlayer(
                 state,
-                player);
+                player,
+                false);
 
             updatedPlayers.Add(developed);
 
@@ -46,7 +48,8 @@ public static class PlayerDevelopmentService
                 BeforeOverall = beforeOverall,
                 AfterOverall = developed.OverallRating,
                 BeforePotential = beforePotential,
-                AfterPotential = developed.PotentialRating
+                AfterPotential = developed.PotentialRating,
+                Stage = PlayerDevelopmentStage.Offseason
             });
         }
 
@@ -58,9 +61,51 @@ public static class PlayerDevelopmentService
             });
     }
 
+    public static DynastyState ApplyMidseasonDevelopment(
+        DynastyState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        if (state.Phase != SeasonPhase.RegularSeason || state.Week < 6 ||
+            state.PlayerDevelopmentHistory.Any(record =>
+                record.SeasonYear == state.SeasonYear &&
+                record.Stage == PlayerDevelopmentStage.Midseason))
+        {
+            return state;
+        }
+
+        state = PlayerRatingService.EnsureProfiles(state);
+        var history = state.PlayerDevelopmentHistory.ToList();
+        var players = state.ActiveRoster.Select(player =>
+        {
+            var developed = DevelopPlayer(state, player, true);
+            history.Add(new PlayerDevelopmentRecord
+            {
+                SeasonYear = state.SeasonYear,
+                PlayerId = player.PlayerId,
+                PlayerName = player.FullName,
+                TeamName = player.TeamName,
+                Position = player.Position,
+                BeforeOverall = player.OverallRating,
+                AfterOverall = developed.OverallRating,
+                BeforePotential = player.PotentialRating,
+                AfterPotential = developed.PotentialRating,
+                Stage = PlayerDevelopmentStage.Midseason
+            });
+            return developed;
+        }).ToArray();
+
+        return RosterManagementService.NormalizeAllDepthCharts(state with
+        {
+            ActiveRoster = players,
+            PlayerDevelopmentHistory = history
+        });
+    }
+
     private static DynastyPlayer DevelopPlayer(
         DynastyState state,
-        DynastyPlayer player)
+        DynastyPlayer player,
+        bool midseason)
     {
         var potentialGap =
             player.PotentialRating -
@@ -124,15 +169,29 @@ public static class PlayerDevelopmentService
             -3,
             6);
 
+        if (midseason)
+        {
+            targetChange = targetChange switch
+            {
+                >= 4 => 2,
+                >= 1 => 1,
+                <= -2 => -1,
+                _ => 0
+            };
+        }
+
         var developed = ApplyAttributeDevelopment(
             state,
             player,
             targetChange);
 
-        developed = developed with
+        if (!midseason)
         {
-            CurrentInjury = null
-        };
+            developed = developed with
+            {
+                CurrentInjury = null
+            };
+        }
 
         if (developed.OverallRating >
             developed.PotentialRating + 1)
