@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Seasons;
 
 namespace DynastyManager.Core.Simulation;
 
@@ -101,6 +102,7 @@ public static class InteractiveRecruitingService
 
         interaction = interaction with
         {
+            IsOnTargetBoard = true,
             ScoutingPercent = Math.Min(
                 100,
                 interaction.ScoutingPercent + ScoutStep)
@@ -130,6 +132,7 @@ public static class InteractiveRecruitingService
 
         interaction = interaction with
         {
+            IsOnTargetBoard = true,
             ScholarshipOffered =
                 !interaction.ScholarshipOffered,
             UserInterest =
@@ -145,7 +148,20 @@ public static class InteractiveRecruitingService
         DynastyState state,
         Team userTeam,
         RecruitingSource source,
-        Guid prospectId)
+        Guid prospectId) =>
+        Pitch(
+            state,
+            userTeam,
+            source,
+            prospectId,
+            RecruitPitchType.ProgramPrestige);
+
+    public static DynastyState Pitch(
+        DynastyState state,
+        Team userTeam,
+        RecruitingSource source,
+        Guid prospectId,
+        RecruitPitchType pitchType)
     {
         ArgumentNullException.ThrowIfNull(userTeam);
 
@@ -165,9 +181,28 @@ public static class InteractiveRecruitingService
             source,
             prospectId);
 
-        var needBonus = GetPositionNeedBonus(
-            state,
-            position);
+        var needBonus =
+            pitchType == RecruitPitchType.PlayingTime
+                ? GetPositionNeedBonus(
+                    state,
+                    position)
+                : 0;
+
+        var preference = RecruitPreferenceService
+            .GetPreferences(
+                state,
+                source,
+                prospectId)
+            .First(item =>
+                item.Type == pitchType);
+
+        var programGrade =
+            RecruitPreferenceService.GetProgramGrade(
+                state,
+                userTeam,
+                source,
+                prospectId,
+                pitchType);
 
         var deterministicBonus =
             SimulationSeed.Create(
@@ -175,16 +210,20 @@ public static class InteractiveRecruitingService
                 state.SeasonYear,
                 interaction.UserInterest,
                 prospectId.ToString("N"),
-                "recruiting-pitch") % 11;
+                $"recruiting-pitch-{pitchType}") % 8;
 
         var gain =
-            16 +
-            userTeam.Prestige / 10 +
+            5 +
+            preference.Importance / 10 +
+            programGrade / 12 +
+            userTeam.Prestige / 20 +
             needBonus +
             deterministicBonus;
 
         interaction = interaction with
         {
+            IsOnTargetBoard = true,
+            LastPitchType = pitchType,
             UserInterest =
                 interaction.UserInterest + gain
         };
@@ -196,6 +235,28 @@ public static class InteractiveRecruitingService
                     state.RecruitingPointsRemaining - PitchCost
             },
             interaction);
+    }
+
+    public static DynastyState ToggleTargetBoard(
+        DynastyState state,
+        RecruitingSource source,
+        Guid prospectId)
+    {
+        var interaction = GetOrCreateInteraction(
+            state,
+            source,
+            prospectId);
+
+        if (interaction.CommittedTeamName is not null)
+            return state;
+
+        return ReplaceInteraction(
+            state,
+            interaction with
+            {
+                IsOnTargetBoard =
+                    !interaction.IsOnTargetBoard
+            });
     }
 
     public static DynastyState ResolveCurrentPhase(
@@ -234,7 +295,10 @@ public static class InteractiveRecruitingService
                 sources.Contains(interaction.Source) &&
                 interaction.CommittedTeamName is null &&
                 (state.Phase != SeasonPhase.Recruiting ||
-                 interaction.ScholarshipOffered) &&
+                 (interaction.ScholarshipOffered &&
+                  ShouldResolveRecruitingTarget(
+                      state,
+                      interaction))) &&
                 (!isMidseasonPortal ||
                  interaction.Source !=
                     RecruitingSource.TransferPortal ||
@@ -530,6 +594,43 @@ public static class InteractiveRecruitingService
         {
             RecruitingInteractions = interactions
         };
+    }
+
+    private static bool ShouldResolveRecruitingTarget(
+        DynastyState state,
+        RecruitingInteraction interaction)
+    {
+        if (state.Phase != SeasonPhase.Recruiting)
+            return true;
+
+        if (SeasonProgression.IsFinalRecruitingWeek(state))
+            return true;
+
+        var recruitingWeek =
+            SeasonProgression.GetRecruitingWeekNumber(state);
+
+        var leaderInterest = Math.Max(
+            interaction.UserInterest,
+            interaction.RivalInterest);
+
+        var threshold = Math.Max(
+            92,
+            150 - (recruitingWeek - 1) * 14);
+
+        if (leaderInterest < threshold)
+            return false;
+
+        var commitChance =
+            18 + recruitingWeek * 12;
+
+        var roll = SimulationSeed.Create(
+            state.DynastyId,
+            state.SeasonYear,
+            state.Week,
+            interaction.ProspectId.ToString("N"),
+            "weekly-recruit-commit") % 100;
+
+        return roll < commitChance;
     }
 
     private static string ResolveCommitment(

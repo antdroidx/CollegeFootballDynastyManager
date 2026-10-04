@@ -192,6 +192,170 @@ public class InteractiveRecruitingTests
     }
 
     [Fact]
+    public void TargetBoardToggleDoesNotSpendRecruitingPoints()
+    {
+        var prospect = PortalPlayer(
+            "Board Target",
+            "Old School",
+            Position.CB,
+            82);
+
+        var state = PortalState(prospect) with
+        {
+            RecruitingPointsRemaining = 400
+        };
+
+        state = InteractiveRecruitingService.ToggleTargetBoard(
+            state,
+            RecruitingSource.TransferPortal,
+            prospect.PlayerId);
+
+        Assert.Equal(400, state.RecruitingPointsRemaining);
+
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                state,
+                RecruitingSource.TransferPortal,
+                prospect.PlayerId);
+
+        Assert.True(interaction.IsOnTargetBoard);
+    }
+
+    [Fact]
+    public void ScoutingGraduallyRevealsRecruitPriorities()
+    {
+        var prospect = PortalPlayer(
+            "Priority Target",
+            "Old School",
+            Position.OLB,
+            83);
+
+        var state = PortalState(prospect) with
+        {
+            RecruitingPointsRemaining = 500
+        };
+
+        Assert.Empty(
+            RecruitPreferenceService.GetRevealedPreferences(
+                state,
+                RecruitingSource.TransferPortal,
+                prospect.PlayerId));
+
+        state = InteractiveRecruitingService.Scout(
+            state,
+            RecruitingSource.TransferPortal,
+            prospect.PlayerId);
+
+        Assert.Single(
+            RecruitPreferenceService.GetRevealedPreferences(
+                state,
+                RecruitingSource.TransferPortal,
+                prospect.PlayerId));
+
+        state = InteractiveRecruitingService.Scout(
+            state,
+            RecruitingSource.TransferPortal,
+            prospect.PlayerId);
+
+        Assert.Equal(
+            2,
+            RecruitPreferenceService.GetRevealedPreferences(
+                state,
+                RecruitingSource.TransferPortal,
+                prospect.PlayerId).Count);
+    }
+
+    [Fact]
+    public void SpecificPitchRecordsPitchTypeAndAddsTargetToBoard()
+    {
+        var user = Team("User", 85);
+        var prospect = PortalPlayer(
+            "Pitch Target",
+            "Old School",
+            Position.WR,
+            84);
+
+        var state = PortalState(prospect) with
+        {
+            RecruitingPointsRemaining = 500
+        };
+
+        state = InteractiveRecruitingService.Pitch(
+            state,
+            user,
+            RecruitingSource.TransferPortal,
+            prospect.PlayerId,
+            RecruitPitchType.PlayingTime);
+
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                state,
+                RecruitingSource.TransferPortal,
+                prospect.PlayerId);
+
+        Assert.Equal(
+            RecruitPitchType.PlayingTime,
+            interaction.LastPitchType);
+        Assert.True(interaction.IsOnTargetBoard);
+        Assert.True(interaction.UserInterest > 0);
+        Assert.Equal(
+            500 - InteractiveRecruitingService.PitchCost,
+            state.RecruitingPointsRemaining);
+    }
+
+    [Fact]
+    public void EarlyRecruitingWeekDoesNotForceLowInterestOfferToResolve()
+    {
+        var user = Team("User", 80);
+        var rival = Team("Rival", 75);
+        var recruit = new HighSchoolRecruit
+        {
+            RecruitId = Guid.Parse(
+                "91919191-8282-7373-6464-555555555555"),
+            SeasonYear = 2027,
+            FullName = "Patient Recruit",
+            Position = Position.QB,
+            StarRating = 4,
+            TrueOverallRating = 78,
+            PotentialRating = 91
+        };
+
+        var state = new DynastyState
+        {
+            DynastyId = Guid.Parse(
+                "01010101-0202-0303-0404-050505050505"),
+            DynastyName = "Patient Recruiting",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingPointsRemaining = 500,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
+            HighSchoolRecruitingPool = new[] { recruit }
+        };
+
+        state = InteractiveRecruitingService.ToggleScholarship(
+            state,
+            RecruitingSource.HighSchool,
+            recruit.RecruitId);
+
+        state = InteractiveRecruitingService.ResolveCurrentPhase(
+            state,
+            user,
+            new[] { user, rival }.ToDictionary(
+                team => team.Name,
+                StringComparer.OrdinalIgnoreCase));
+
+        Assert.Empty(state.RecruitingCommitments);
+        Assert.Null(
+            InteractiveRecruitingService.GetInteraction(
+                state,
+                RecruitingSource.HighSchool,
+                recruit.RecruitId).CommittedTeamName);
+    }
+
+    [Fact]
     public void HighSchoolPoolUsesScaledSizeAndValidRatings()
     {
         var rows = new[]

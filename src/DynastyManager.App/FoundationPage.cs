@@ -21,6 +21,33 @@ public sealed class FoundationPage : ContentPage
         Program,
         More
     }
+
+    private enum RecruitingView
+    {
+        Board,
+        HighSchool,
+        TransferPortal,
+        Commitments
+    }
+
+    private enum RecruitingSort
+    {
+        BestAvailable,
+        Interest,
+        Position,
+        Name
+    }
+
+    private sealed record RecruitingProspectDisplay(
+        RecruitingSource Source,
+        Guid ProspectId,
+        string FullName,
+        Position Position,
+        string Subtitle,
+        int ClassYear,
+        int? Potential,
+        int? StarRating,
+        int OverallRating);
     private readonly Label _importStatus;
     private readonly Entry _dynastyNameEntry;
     private readonly Picker _teamPicker;
@@ -46,12 +73,24 @@ public sealed class FoundationPage : ContentPage
     private readonly Label _homeStatus;
     private readonly VerticalStackLayout _homeHighlights;
     private readonly Label _recruitingStatus;
+    private readonly HorizontalStackLayout _recruitingMetrics;
+    private readonly HorizontalStackLayout _recruitingTabs;
+    private readonly Dictionary<RecruitingView, Button> _recruitingTabButtons = new();
+    private readonly SearchBar _recruitingSearch;
+    private readonly Picker _recruitingPositionFilter;
+    private readonly Picker _recruitingSortPicker;
+    private readonly Picker _recruitingStarFilter;
+    private readonly Label _recruitingResultsStatus;
+    private readonly ContentView _recruitingDetailHost;
     private readonly VerticalStackLayout _recruitingList;
     private readonly Label _programStatus;
     private readonly VerticalStackLayout _programList;
     private readonly Dictionary<AppSection, Button> _navButtons = new();
     private readonly Dictionary<AppSection, View> _sectionViews = new();
     private AppSection _activeSection = AppSection.Home;
+    private RecruitingView _recruitingView = RecruitingView.HighSchool;
+    private RecruitingSource? _selectedRecruitSource;
+    private Guid? _selectedRecruitId;
 
     private SqliteDynastySaveRepository? _saveRepository;
     private DynastyState? _currentDynasty;
@@ -193,7 +232,7 @@ public sealed class FoundationPage : ContentPage
         _screenTitle = new Label
         {
             Text = "Home",
-            FontSize = 26,
+            FontSize = 23,
             FontAttributes = FontAttributes.Bold
         };
 
@@ -211,12 +250,117 @@ public sealed class FoundationPage : ContentPage
         _recruitingStatus = new Label
         {
             Text = "Recruiting information will appear after a dynasty is created.",
+            FontSize = 12
+        };
+
+        _recruitingMetrics = new HorizontalStackLayout
+        {
+            Spacing = 8
+        };
+
+        _recruitingTabs = new HorizontalStackLayout
+        {
+            Spacing = 6
+        };
+
+        foreach (var view in Enum.GetValues<RecruitingView>())
+        {
+            var capturedView = view;
+            var button = new Button
+            {
+                Text = view switch
+                {
+                    RecruitingView.Board => "Target Board",
+                    RecruitingView.HighSchool => "High School",
+                    RecruitingView.TransferPortal => "Portal",
+                    RecruitingView.Commitments => "Commits",
+                    _ => view.ToString()
+                },
+                FontSize = 12,
+                Padding = new Thickness(12, 7),
+                TextColor = Colors.White
+            };
+
+            button.Clicked += (_, _) =>
+            {
+                _recruitingView = capturedView;
+                _selectedRecruitSource = null;
+                _selectedRecruitId = null;
+                RenderRecruitingScreen();
+            };
+
+            _recruitingTabButtons[view] = button;
+            _recruitingTabs.Children.Add(button);
+        }
+
+        _recruitingSearch = new SearchBar
+        {
+            Placeholder = "Search recruits by name or school",
             FontSize = 13
+        };
+        _recruitingSearch.TextChanged += (_, _) =>
+            RenderRecruitingScreen();
+
+        _recruitingPositionFilter = new Picker
+        {
+            Title = "Position",
+            ItemsSource = new[]
+            {
+                "All Positions"
+            }.Concat(
+                Enum.GetValues<Position>()
+                    .Select(position => position.ToString()))
+             .ToList(),
+            SelectedIndex = 0
+        };
+        _recruitingPositionFilter.SelectedIndexChanged += (_, _) =>
+            RenderRecruitingScreen();
+
+        _recruitingSortPicker = new Picker
+        {
+            Title = "Sort",
+            ItemsSource = new[]
+            {
+                "Best Available",
+                "Interest",
+                "Position",
+                "Name"
+            }.ToList(),
+            SelectedIndex = 0
+        };
+        _recruitingSortPicker.SelectedIndexChanged += (_, _) =>
+            RenderRecruitingScreen();
+
+        _recruitingStarFilter = new Picker
+        {
+            Title = "Stars",
+            ItemsSource = new[]
+            {
+                "All Stars",
+                "5 Star",
+                "4 Star",
+                "3 Star",
+                "2 Star",
+                "1 Star"
+            }.ToList(),
+            SelectedIndex = 0
+        };
+        _recruitingStarFilter.SelectedIndexChanged += (_, _) =>
+            RenderRecruitingScreen();
+
+        _recruitingResultsStatus = new Label
+        {
+            FontSize = 12
+        };
+
+        _recruitingDetailHost = new ContentView
+        {
+            IsVisible = false
         };
 
         _recruitingList = new VerticalStackLayout
         {
-            Spacing = 8
+            Spacing = 4
         };
 
         _programStatus = new Label
@@ -247,8 +391,9 @@ public sealed class FoundationPage : ContentPage
                     AppSection.Rankings => "Ranks",
                     _ => section.ToString()
                 },
-                FontSize = 12,
-                Padding = new Thickness(12, 8)
+                FontSize = 11,
+                Padding = new Thickness(11, 8),
+                TextColor = Colors.White
             };
 
             button.Clicked += (_, _) => ShowSection(captured);
@@ -284,19 +429,31 @@ public sealed class FoundationPage : ContentPage
                 _ => BuildHomeSection()
             };
 
-            var page = new ScrollView
+            View page;
+
+            if (section == AppSection.Recruiting)
             {
-                IsVisible = false,
-                Content = new VerticalStackLayout
+                sectionContent.Margin =
+                    new Thickness(16, 6, 16, 10);
+                sectionContent.IsVisible = false;
+                page = sectionContent;
+            }
+            else
+            {
+                page = new ScrollView
                 {
-                    Padding = new Thickness(16, 10, 16, 24),
-                    Spacing = 14,
-                    Children =
+                    IsVisible = false,
+                    Content = new VerticalStackLayout
                     {
-                        sectionContent
+                        Padding = new Thickness(16, 10, 16, 24),
+                        Spacing = 14,
+                        Children =
+                        {
+                            sectionContent
+                        }
                     }
-                }
-            };
+                };
+            }
 
             _sectionViews[section] = page;
             pages.Children.Add(page);
@@ -352,7 +509,7 @@ public sealed class FoundationPage : ContentPage
             AppSection.Home => "Dynasty Home",
             AppSection.Schedule => "Schedule",
             AppSection.Roster => "Roster & Depth Chart",
-            AppSection.Recruiting => "Recruiting & Transfer Portal",
+            AppSection.Recruiting => "Recruiting",
             AppSection.Rankings => "Rankings & Postseason",
             AppSection.Program => "Program",
             AppSection.More => "Dynasty & Saves",
@@ -424,16 +581,81 @@ public sealed class FoundationPage : ContentPage
             }
         };
 
-    private View BuildRecruitingSection() =>
-        new VerticalStackLayout
+    private View BuildRecruitingSection()
+    {
+        var filterStrip = new HorizontalStackLayout
         {
-            Spacing = 10,
+            Spacing = 8,
             Children =
             {
-                _recruitingStatus,
-                _recruitingList
+                _recruitingPositionFilter,
+                _recruitingStarFilter,
+                _recruitingSortPicker
             }
         };
+
+        var filterScroller = new ScrollView
+        {
+            Orientation = ScrollOrientation.Horizontal,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
+            Content = filterStrip
+        };
+
+        var listScroll = new ScrollView
+        {
+            Content = _recruitingList
+        };
+
+        var root = new Grid
+        {
+            RowDefinitions =
+            {
+                new RowDefinition { Height = GridLength.Auto },
+                new RowDefinition { Height = GridLength.Auto },
+                new RowDefinition { Height = GridLength.Auto },
+                new RowDefinition { Height = GridLength.Auto },
+                new RowDefinition { Height = GridLength.Auto },
+                new RowDefinition { Height = GridLength.Auto },
+                new RowDefinition { Height = GridLength.Auto },
+                new RowDefinition { Height = GridLength.Star }
+            },
+            RowSpacing = 7
+        };
+
+        root.Add(_recruitingMetrics);
+        Grid.SetRow(_recruitingMetrics, 0);
+
+        root.Add(_recruitingStatus);
+        Grid.SetRow(_recruitingStatus, 1);
+
+        var tabScroller = new ScrollView
+        {
+            Orientation = ScrollOrientation.Horizontal,
+            HorizontalScrollBarVisibility =
+                ScrollBarVisibility.Never,
+            Content = _recruitingTabs
+        };
+
+        root.Add(tabScroller);
+        Grid.SetRow(tabScroller, 2);
+
+        root.Add(_recruitingSearch);
+        Grid.SetRow(_recruitingSearch, 3);
+
+        root.Add(filterScroller);
+        Grid.SetRow(filterScroller, 4);
+
+        root.Add(_recruitingDetailHost);
+        Grid.SetRow(_recruitingDetailHost, 5);
+
+        root.Add(_recruitingResultsStatus);
+        Grid.SetRow(_recruitingResultsStatus, 6);
+
+        root.Add(listScroll);
+        Grid.SetRow(listScroll, 7);
+
+        return root;
+    }
 
     private View BuildRankingsSection() =>
         new VerticalStackLayout
@@ -1324,222 +1546,1004 @@ public sealed class FoundationPage : ContentPage
     private void RenderRecruitingScreen()
     {
         _recruitingList.Children.Clear();
+        _recruitingMetrics.Children.Clear();
 
         if (_currentDynasty is null)
         {
             _recruitingStatus.Text =
                 "No recruiting data available.";
+            _recruitingResultsStatus.Text = string.Empty;
+            _recruitingDetailHost.Content = null;
+            _recruitingDetailHost.IsVisible = false;
             return;
         }
 
-        var userRosterCount = _currentDynasty.ActiveRoster.Count(player =>
-            player.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase));
+        NormalizeRecruitingViewForPhase();
 
-        var portalOpenForRecruiting =
-            _currentDynasty.Phase is
-                SeasonPhase.TransferPortal or
-                SeasonPhase.Recruiting or
-                SeasonPhase.RegularSeason;
+        foreach (var pair in _recruitingTabButtons)
+        {
+            pair.Value.FontAttributes =
+                pair.Key == _recruitingView
+                    ? FontAttributes.Bold
+                    : FontAttributes.None;
+            pair.Value.Opacity =
+                pair.Key == _recruitingView
+                    ? 1.0
+                    : 0.68;
+        }
 
-        var availablePortal = _currentDynasty.TransferPortalEntries
-            .Where(entry => !entry.OriginTeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(entry => entry.Player.OverallRating)
-            .ThenByDescending(entry => entry.Player.TalentLevel)
-            .ThenBy(entry => entry.Player.FullName, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        _recruitingStarFilter.IsVisible =
+            _recruitingView ==
+                RecruitingView.HighSchool;
 
-        var pendingUserTransfers =
-            _currentDynasty.PendingTransferCommitments
-                .Where(commitment =>
-                    commitment.TeamName.Equals(
+        _recruitingTabButtons[RecruitingView.HighSchool]
+            .IsEnabled =
+            _currentDynasty.Phase ==
+                SeasonPhase.Recruiting &&
+            _currentDynasty.HighSchoolRecruitingPool.Count > 0;
+
+        _recruitingTabButtons[RecruitingView.TransferPortal]
+            .IsEnabled =
+            _currentDynasty.TransferPortalEntries.Count > 0;
+
+        var userRosterCount =
+            _currentDynasty.ActiveRoster.Count(player =>
+                player.TeamName.Equals(
+                    _currentDynasty.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase));
+
+        var availablePortal =
+            _currentDynasty.TransferPortalEntries
+                .Where(entry =>
+                    !entry.OriginTeamName.Equals(
                         _currentDynasty.UserTeamName,
                         StringComparison.OrdinalIgnoreCase))
-                .OrderBy(commitment => commitment.JoinSeasonYear)
-                .ThenByDescending(commitment =>
-                    commitment.Player.OverallRating)
                 .ToArray();
 
-        var exitsThisSeason =
-            _currentDynasty.TransferPortalExitHistory.Count(exit =>
-                exit.ExitSeasonYear ==
-                    _currentDynasty.SeasonYear);
+        var boardCount =
+            _currentDynasty.RecruitingInteractions.Count(
+                interaction =>
+                    interaction.SeasonYear ==
+                        _currentDynasty.SeasonYear &&
+                    interaction.IsOnTargetBoard &&
+                    interaction.CommittedTeamName is null);
 
-        _recruitingStatus.Text = _currentDynasty.Phase switch
-        {
-            SeasonPhase.TransferPortal =>
-                $"PORTAL ENTRY WINDOW OPEN • " +
-                $"{_currentDynasty.TransferPortalEntries.Count:N0} available • " +
-                $"Points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
-                $"Roster {userRosterCount}/85\n" +
-                "New FBS portal entrants are created only during this window. " +
-                "Unsigned players remain available after it closes.",
+        var userCommitments =
+            _currentDynasty.RecruitingCommitments.Count(
+                commitment =>
+                    commitment.TeamName.Equals(
+                        _currentDynasty.UserTeamName,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    commitment.SeasonYear ==
+                        _currentDynasty.SeasonYear);
 
-            SeasonPhase.Recruiting =>
-                $"OFFSEASON RECRUITING • Week " +
-                $"{SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)} " +
-                $"of {SeasonProgression.RecruitingWeekCount} • " +
-                $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} high-school recruits • " +
-                $"{availablePortal.Length:N0} unsigned transfers • " +
-                $"Weekly points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
-                $"Roster {userRosterCount}/85\n" +
-                "High-school recruits and transfer-portal players can be pursued together. " +
-                "Unused weekly points do not roll over.",
+        AddRecruitingMetric(
+            "WEEK",
+            _currentDynasty.Phase ==
+                SeasonPhase.Recruiting
+                ? $"{SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)}/{SeasonProgression.RecruitingWeekCount}"
+                : _currentDynasty.Phase ==
+                    SeasonPhase.TransferPortal
+                    ? "ENTRY"
+                    : _currentDynasty.Phase ==
+                        SeasonPhase.RegularSeason
+                        ? $"W{_currentDynasty.Week}"
+                        : "—");
 
-            SeasonPhase.RegularSeason =>
-                $"PORTAL ENTRY WINDOW CLOSED • " +
-                $"{availablePortal.Length:N0} unsigned transfers still available • " +
-                $"Weekly portal points {_currentDynasty.RecruitingPointsRemaining:N0} • " +
-                $"{exitsThisSeason:N0} left the FBS market this season\n" +
-                $"Mid-season transfer commitments join in {_currentDynasty.SeasonYear + 1}; " +
-                "they do not join the current roster.",
+        AddRecruitingMetric(
+            "POINTS",
+            _currentDynasty.RecruitingPointsRemaining
+                .ToString("N0"));
 
-            _ =>
-                $"Recruiting is currently closed ({_currentDynasty.Phase}). " +
-                $"{availablePortal.Length:N0} unsigned portal players remain in the market."
-        };
+        AddRecruitingMetric(
+            "BOARD",
+            boardCount.ToString());
 
-        if (pendingUserTransfers.Length > 0)
-        {
-            _recruitingList.Children.Add(new Label
+        AddRecruitingMetric(
+            "COMMITS",
+            userCommitments.ToString());
+
+        _recruitingStatus.Text =
+            _currentDynasty.Phase switch
             {
-                Text = "COMMITTED TRANSFERS — FUTURE ROSTER",
-                FontAttributes = FontAttributes.Bold
-            });
+                SeasonPhase.TransferPortal =>
+                    $"Portal entry window open • " +
+                    $"{availablePortal.Length:N0} available • " +
+                    $"Roster {userRosterCount}/85",
 
-            foreach (var commitment in pendingUserTransfers.Take(12))
-            {
-                _recruitingList.Children.Add(new Label
-                {
-                    Text =
-                        $"{commitment.Player.Position} {commitment.Player.FullName} • " +
-                        $"OVR {commitment.Player.OverallRating} • " +
-                        $"joins {commitment.JoinSeasonYear}"
-                });
-            }
+                SeasonPhase.Recruiting =>
+                    $"Offseason recruiting • " +
+                    $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} HS recruits • " +
+                    $"{availablePortal.Length:N0} unsigned transfers • " +
+                    "weekly points do not roll over",
+
+                SeasonPhase.RegularSeason =>
+                    $"Portal entry closed • " +
+                    $"{availablePortal.Length:N0} unsigned transfers remain • " +
+                    $"mid-season commits join {_currentDynasty.SeasonYear + 1}",
+
+                _ =>
+                    $"Recruiting currently closed • " +
+                    $"{availablePortal.Length:N0} unsigned transfers remain"
+            };
+
+        RenderSelectedRecruitDetail();
+
+        if (_recruitingView ==
+            RecruitingView.Commitments)
+        {
+            RenderRecruitingCommitments();
+            return;
         }
 
-        if (_currentDynasty.Phase == SeasonPhase.TransferPortal)
+        var prospects = GetRecruitingProspectsForCurrentView();
+
+        var search = _recruitingSearch.Text?.Trim();
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            var transfersOut = _currentDynasty.TransferPortalEntries
-                .Where(entry => entry.OriginTeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase))
-                .OrderByDescending(entry => entry.Player.OverallRating)
-                .ToArray();
+            prospects = prospects
+                .Where(prospect =>
+                    prospect.FullName.Contains(
+                        search,
+                        StringComparison.OrdinalIgnoreCase) ||
+                    prospect.Subtitle.Contains(
+                        search,
+                        StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
 
-            if (transfersOut.Length > 0)
+        if (_recruitingPositionFilter.SelectedIndex > 0 &&
+            Enum.TryParse<Position>(
+                _recruitingPositionFilter.SelectedItem?.ToString(),
+                out var selectedPosition))
+        {
+            prospects = prospects
+                .Where(prospect =>
+                    prospect.Position ==
+                        selectedPosition)
+                .ToList();
+        }
+
+        if (_recruitingView ==
+                RecruitingView.HighSchool &&
+            _recruitingStarFilter.SelectedIndex > 0)
+        {
+            var stars =
+                6 - _recruitingStarFilter.SelectedIndex;
+
+            prospects = prospects
+                .Where(prospect =>
+                    prospect.StarRating == stars)
+                .ToList();
+        }
+
+        prospects = SortRecruitingProspects(
+            prospects);
+
+        var total = prospects.Count;
+        var visible = prospects
+            .Take(80)
+            .ToArray();
+
+        _recruitingResultsStatus.Text =
+            total == 0
+                ? GetEmptyRecruitingMessage()
+                : total > visible.Length
+                    ? $"Showing {visible.Length} of {total:N0} • use search/filters to narrow the list"
+                    : $"{total:N0} players";
+
+        foreach (var prospect in visible)
+            AddRecruitingCompactRow(prospect);
+    }
+
+    private void NormalizeRecruitingViewForPhase()
+    {
+        if (_currentDynasty is null)
+            return;
+
+        if (_currentDynasty.Phase ==
+                SeasonPhase.TransferPortal ||
+            _currentDynasty.Phase ==
+                SeasonPhase.RegularSeason)
+        {
+            if (_recruitingView ==
+                RecruitingView.HighSchool)
             {
-                _recruitingList.Children.Add(new Label
-                {
-                    Text = "YOUR TRANSFERS OUT",
-                    FontAttributes = FontAttributes.Bold,
-                    Margin = new Thickness(0, 6, 0, 0)
-                });
+                _recruitingView =
+                    RecruitingView.TransferPortal;
+            }
 
-                foreach (var entry in transfersOut.Take(10))
+            return;
+        }
+
+        if (_currentDynasty.Phase ==
+                SeasonPhase.Recruiting &&
+            _recruitingView ==
+                RecruitingView.TransferPortal &&
+            _currentDynasty.TransferPortalEntries.Count == 0)
+        {
+            _recruitingView =
+                RecruitingView.HighSchool;
+            return;
+        }
+
+        if (_currentDynasty.Phase is not
+                (SeasonPhase.TransferPortal or
+                 SeasonPhase.Recruiting or
+                 SeasonPhase.RegularSeason) &&
+            _recruitingView is
+                RecruitingView.HighSchool or
+                RecruitingView.TransferPortal)
+        {
+            _recruitingView =
+                RecruitingView.Commitments;
+        }
+    }
+
+    private void AddRecruitingMetric(
+        string label,
+        string value)
+    {
+        _recruitingMetrics.Children.Add(
+            new Border
+            {
+                StrokeThickness = 1,
+                Padding = new Thickness(10, 5),
+                Content = new VerticalStackLayout
                 {
-                    _recruitingList.Children.Add(new Label
+                    Spacing = 0,
+                    Children =
                     {
-                        Text =
-                            $"{entry.Player.Position} {entry.Player.FullName} • " +
-                            $"OVR {entry.Player.OverallRating} • Year {entry.Player.ClassYear}"
-                    });
+                        new Label
+                        {
+                            Text = label,
+                            FontSize = 9,
+                            Opacity = 0.7
+                        },
+                        new Label
+                        {
+                            Text = value,
+                            FontAttributes =
+                                FontAttributes.Bold,
+                            FontSize = 15
+                        }
+                    }
                 }
-            }
+            });
+    }
+
+    private List<RecruitingProspectDisplay>
+        GetRecruitingProspectsForCurrentView()
+    {
+        if (_currentDynasty is null)
+            return new();
+
+        if (_recruitingView ==
+            RecruitingView.HighSchool)
+        {
+            return _currentDynasty
+                .HighSchoolRecruitingPool
+                .Where(recruit =>
+                    recruit.SeasonYear == 0 ||
+                    recruit.SeasonYear ==
+                        _currentDynasty.SeasonYear)
+                .Select(recruit =>
+                    new RecruitingProspectDisplay(
+                        RecruitingSource.HighSchool,
+                        recruit.RecruitId,
+                        recruit.FullName,
+                        recruit.Position,
+                        $"{recruit.StarRating}★ high-school recruit",
+                        1,
+                        recruit.PotentialRating,
+                        recruit.StarRating,
+                        recruit.TrueOverallRating))
+                .ToList();
         }
 
-        if (_currentDynasty.Phase == SeasonPhase.Recruiting)
+        if (_recruitingView ==
+            RecruitingView.TransferPortal)
         {
-            _recruitingList.Children.Add(new Label
-            {
-                Text = "TOP HIGH-SCHOOL TARGETS",
-                FontAttributes = FontAttributes.Bold,
-                Margin = new Thickness(0, 6, 0, 0)
-            });
+            return _currentDynasty
+                .TransferPortalEntries
+                .Where(entry =>
+                    !entry.OriginTeamName.Equals(
+                        _currentDynasty.UserTeamName,
+                        StringComparison.OrdinalIgnoreCase))
+                .Select(entry =>
+                    new RecruitingProspectDisplay(
+                        RecruitingSource.TransferPortal,
+                        entry.Player.PlayerId,
+                        entry.Player.FullName,
+                        entry.Player.Position,
+                        $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
+                        entry.Player.ClassYear,
+                        entry.Player.PotentialRating > 0
+                            ? entry.Player.PotentialRating
+                            : null,
+                        null,
+                        entry.Player.OverallRating))
+                .ToList();
+        }
 
-            foreach (var recruit in _currentDynasty.HighSchoolRecruitingPool
-                         .OrderByDescending(recruit => recruit.StarRating)
-                         .ThenByDescending(recruit => recruit.TrueOverallRating)
-                         .ThenBy(recruit => recruit.FullName, StringComparer.OrdinalIgnoreCase)
-                         .Take(20))
-            {
-                AddRecruitingTargetCard(
-                    RecruitingSource.HighSchool,
+        var board = new List<RecruitingProspectDisplay>();
+
+        foreach (var interaction in
+                 _currentDynasty.RecruitingInteractions
+                     .Where(interaction =>
+                         interaction.SeasonYear ==
+                             _currentDynasty.SeasonYear &&
+                         interaction.IsOnTargetBoard &&
+                         interaction.CommittedTeamName is null))
+        {
+            var prospect =
+                TryGetRecruitingProspect(
+                    interaction.Source,
+                    interaction.ProspectId);
+
+            if (prospect is not null)
+                board.Add(prospect);
+        }
+
+        return board;
+    }
+
+    private RecruitingProspectDisplay?
+        TryGetRecruitingProspect(
+            RecruitingSource source,
+            Guid prospectId)
+    {
+        if (_currentDynasty is null)
+            return null;
+
+        if (source ==
+            RecruitingSource.HighSchool)
+        {
+            var recruit =
+                _currentDynasty.HighSchoolRecruitingPool
+                    .FirstOrDefault(item =>
+                        item.RecruitId == prospectId);
+
+            return recruit is null
+                ? null
+                : new RecruitingProspectDisplay(
+                    source,
                     recruit.RecruitId,
                     recruit.FullName,
                     recruit.Position,
-                    $"{recruit.StarRating}-star recruit",
+                    $"{recruit.StarRating}★ high-school recruit",
                     1,
-                    recruit.PotentialRating);
-            }
+                    recruit.PotentialRating,
+                    recruit.StarRating,
+                    recruit.TrueOverallRating);
         }
 
-        if (portalOpenForRecruiting &&
-            availablePortal.Length > 0)
+        var entry =
+            _currentDynasty.TransferPortalEntries
+                .FirstOrDefault(item =>
+                    item.Player.PlayerId ==
+                        prospectId);
+
+        return entry is null
+            ? null
+            : new RecruitingProspectDisplay(
+                source,
+                entry.Player.PlayerId,
+                entry.Player.FullName,
+                entry.Player.Position,
+                $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
+                entry.Player.ClassYear,
+                entry.Player.PotentialRating > 0
+                    ? entry.Player.PotentialRating
+                    : null,
+                null,
+                entry.Player.OverallRating);
+    }
+
+    private List<RecruitingProspectDisplay>
+        SortRecruitingProspects(
+            List<RecruitingProspectDisplay> prospects)
+    {
+        if (_currentDynasty is null)
+            return prospects;
+
+        var sort = (RecruitingSort)Math.Clamp(
+            _recruitingSortPicker.SelectedIndex,
+            0,
+            Enum.GetValues<RecruitingSort>().Length - 1);
+
+        IEnumerable<RecruitingProspectDisplay> query =
+            sort switch
+            {
+                RecruitingSort.Interest =>
+                    prospects.OrderByDescending(
+                            prospect =>
+                                InteractiveRecruitingService
+                                    .GetInteraction(
+                                        _currentDynasty,
+                                        prospect.Source,
+                                        prospect.ProspectId)
+                                    .UserInterest)
+                        .ThenByDescending(
+                            prospect =>
+                                prospect.OverallRating),
+
+                RecruitingSort.Position =>
+                    prospects.OrderBy(
+                            prospect =>
+                                prospect.Position)
+                        .ThenByDescending(
+                            prospect =>
+                                prospect.OverallRating),
+
+                RecruitingSort.Name =>
+                    prospects.OrderBy(
+                        prospect =>
+                            prospect.FullName,
+                        StringComparer.OrdinalIgnoreCase),
+
+                _ =>
+                    prospects.OrderByDescending(
+                            prospect =>
+                                prospect.OverallRating)
+                        .ThenByDescending(
+                            prospect =>
+                                prospect.StarRating ?? 0)
+            };
+
+        return query.ToList();
+    }
+
+    private string GetEmptyRecruitingMessage() =>
+        _recruitingView switch
         {
-            _recruitingList.Children.Add(new Label
-            {
-                Text = _currentDynasty.Phase ==
-                        SeasonPhase.RegularSeason
-                    ? "UNSIGNED TRANSFERS"
-                    : "TOP PORTAL TARGETS",
-                FontAttributes = FontAttributes.Bold,
-                Margin = new Thickness(0, 8, 0, 0)
-            });
+            RecruitingView.Board =>
+                "Target board is empty. Open a player and choose Add to Board.",
+            RecruitingView.HighSchool =>
+                "No high-school recruits match these filters.",
+            RecruitingView.TransferPortal =>
+                "No available transfers match these filters.",
+            _ => "No results."
+        };
 
-            foreach (var entry in availablePortal.Take(20))
-            {
-                AddRecruitingTargetCard(
-                    RecruitingSource.TransferPortal,
-                    entry.Player.PlayerId,
-                    entry.Player.FullName,
-                    entry.Player.Position,
-                    $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
-                    entry.Player.ClassYear,
-                    null);
-            }
-        }
+    private void AddRecruitingCompactRow(
+        RecruitingProspectDisplay prospect)
+    {
+        if (_currentDynasty is null)
+            return;
 
-        var latestCommitments = _currentDynasty.RecruitingCommitments
-            .Where(record => record.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(record => record.SeasonYear)
-            .ThenByDescending(record => record.OverallRating)
-            .Take(20)
-            .ToArray();
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                _currentDynasty,
+                prospect.Source,
+                prospect.ProspectId);
 
-        if (latestCommitments.Length > 0)
+        var range =
+            InteractiveRecruitingService.GetScoutedOverallRange(
+                _currentDynasty,
+                prospect.Source,
+                prospect.ProspectId);
+
+        var overallText =
+            range.Minimum == range.Maximum
+                ? $"{range.Minimum} OVR"
+                : $"{range.Minimum}-{range.Maximum} OVR";
+
+        var boardMarker =
+            interaction.IsOnTargetBoard
+                ? "★ "
+                : string.Empty;
+
+        var offerMarker =
+            interaction.ScholarshipOffered
+                ? "OFFER • "
+                : string.Empty;
+
+        var interest =
+            interaction.CommittedTeamName is not null
+                ? $"Committed: {interaction.CommittedTeamName}"
+                : $"{offerMarker}Interest {interaction.UserInterest} / {interaction.RivalInterest}";
+
+        var viewButton = new Button
         {
-            _recruitingList.Children.Add(new Label
-            {
-                Text = "RECENT COMMITMENTS",
-                FontAttributes = FontAttributes.Bold,
-                Margin = new Thickness(0, 8, 0, 0)
-            });
+            Text = "View",
+            FontSize = 11,
+            Padding = new Thickness(12, 5),
+            TextColor = Colors.White
+        };
 
-            foreach (var commitment in latestCommitments)
-            {
-                var joinText =
-                    commitment.JoinSeasonYear > commitment.SeasonYear
-                        ? $" • joins {commitment.JoinSeasonYear}"
-                        : string.Empty;
+        viewButton.Clicked += (_, _) =>
+        {
+            _selectedRecruitSource =
+                prospect.Source;
+            _selectedRecruitId =
+                prospect.ProspectId;
+            RenderRecruitingScreen();
+        };
 
-                _recruitingList.Children.Add(new Label
+        var info = new VerticalStackLayout
+        {
+            Spacing = 1,
+            Children =
+            {
+                new Label
                 {
                     Text =
-                        $"{commitment.SeasonYear} • {commitment.Position} " +
-                        $"{commitment.PlayerName} • OVR {commitment.OverallRating} • " +
-                        $"{commitment.Source}{joinText}" +
-                        (commitment.WasCpuAssisted ? " • CPU ASSIST" : string.Empty)
+                        $"{boardMarker}{prospect.Position} {prospect.FullName}",
+                    FontAttributes =
+                        FontAttributes.Bold,
+                    FontSize = 14
+                },
+                new Label
+                {
+                    Text =
+                        $"{overallText} • {prospect.Subtitle} • " +
+                        $"Scout {interaction.ScoutingPercent}%",
+                    FontSize = 11,
+                    Opacity = 0.82
+                },
+                new Label
+                {
+                    Text = interest,
+                    FontSize = 11,
+                    Opacity = 0.82
+                }
+            }
+        };
+
+        var row = new Grid
+        {
+            ColumnDefinitions =
+            {
+                new ColumnDefinition
+                {
+                    Width = GridLength.Star
+                },
+                new ColumnDefinition
+                {
+                    Width = GridLength.Auto
+                }
+            },
+            ColumnSpacing = 8
+        };
+
+        row.Add(info);
+        Grid.SetColumn(info, 0);
+
+        row.Add(viewButton);
+        Grid.SetColumn(viewButton, 1);
+
+        _recruitingList.Children.Add(
+            new Border
+            {
+                StrokeThickness = 1,
+                Padding = new Thickness(10, 7),
+                Content = row
+            });
+    }
+
+    private void RenderSelectedRecruitDetail()
+    {
+        if (_currentDynasty is null ||
+            _selectedRecruitSource is null ||
+            _selectedRecruitId is null)
+        {
+            _recruitingDetailHost.Content = null;
+            _recruitingDetailHost.IsVisible = false;
+            return;
+        }
+
+        var source =
+            _selectedRecruitSource.Value;
+        var prospect =
+            TryGetRecruitingProspect(
+                source,
+                _selectedRecruitId.Value);
+
+        if (prospect is null)
+        {
+            _selectedRecruitSource = null;
+            _selectedRecruitId = null;
+            _recruitingDetailHost.Content = null;
+            _recruitingDetailHost.IsVisible = false;
+            return;
+        }
+
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                _currentDynasty,
+                source,
+                prospect.ProspectId);
+
+        var recruitingOpen =
+            source == RecruitingSource.HighSchool
+                ? _currentDynasty.Phase ==
+                    SeasonPhase.Recruiting
+                : _currentDynasty.Phase is
+                    SeasonPhase.TransferPortal or
+                    SeasonPhase.Recruiting or
+                    SeasonPhase.RegularSeason;
+
+        var range =
+            InteractiveRecruitingService.GetScoutedOverallRange(
+                _currentDynasty,
+                source,
+                prospect.ProspectId);
+
+        var revealedPreferences =
+            RecruitPreferenceService.GetRevealedPreferences(
+                _currentDynasty,
+                source,
+                prospect.ProspectId);
+
+        var boardButton = new Button
+        {
+            Text = interaction.IsOnTargetBoard
+                ? "Remove from Board"
+                : "Add to Board",
+            FontSize = 11,
+            TextColor = Colors.White
+        };
+
+        boardButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty =
+                InteractiveRecruitingService
+                    .ToggleTargetBoard(
+                        _currentDynasty,
+                        source,
+                        prospect.ProspectId);
+
+            RenderCurrentDynasty();
+        };
+
+        var scoutButton = new Button
+        {
+            Text =
+                $"Scout ({InteractiveRecruitingService.ScoutCost})",
+            FontSize = 11,
+            TextColor = Colors.White,
+            IsEnabled =
+                recruitingOpen &&
+                interaction.CommittedTeamName is null &&
+                interaction.ScoutingPercent < 100 &&
+                _currentDynasty.RecruitingPointsRemaining >=
+                    InteractiveRecruitingService.ScoutCost
+        };
+
+        scoutButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty =
+                InteractiveRecruitingService.Scout(
+                    _currentDynasty,
+                    source,
+                    prospect.ProspectId);
+
+            RenderCurrentDynasty();
+        };
+
+        var offerButton = new Button
+        {
+            Text = interaction.ScholarshipOffered
+                ? "Withdraw Offer"
+                : "Offer Scholarship",
+            FontSize = 11,
+            TextColor = Colors.White,
+            IsEnabled =
+                recruitingOpen &&
+                interaction.CommittedTeamName is null
+        };
+
+        offerButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty =
+                InteractiveRecruitingService
+                    .ToggleScholarship(
+                        _currentDynasty,
+                        source,
+                        prospect.ProspectId);
+
+            RenderCurrentDynasty();
+        };
+
+        var pitchPicker = new Picker
+        {
+            Title = "Choose pitch",
+            ItemsSource = Enum.GetValues<RecruitPitchType>()
+                .Select(FormatPitchType)
+                .ToList(),
+            SelectedIndex = interaction.LastPitchType is not null
+                ? (int)interaction.LastPitchType.Value
+                : revealedPreferences.Count > 0
+                    ? (int)revealedPreferences[0].Type
+                    : (int)RecruitPitchType.ProgramPrestige
+        };
+
+        var pitchButton = new Button
+        {
+            Text =
+                $"Pitch ({InteractiveRecruitingService.PitchCost})",
+            FontSize = 11,
+            TextColor = Colors.White,
+            IsEnabled =
+                recruitingOpen &&
+                interaction.CommittedTeamName is null &&
+                _currentDynasty.RecruitingPointsRemaining >=
+                    InteractiveRecruitingService.PitchCost
+        };
+
+        pitchButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null ||
+                !_teamsByName.TryGetValue(
+                    _currentDynasty.UserTeamName,
+                    out var userTeam))
+            {
+                return;
+            }
+
+            var pitch = (RecruitPitchType)Math.Clamp(
+                pitchPicker.SelectedIndex,
+                0,
+                Enum.GetValues<RecruitPitchType>().Length - 1);
+
+            _currentDynasty =
+                InteractiveRecruitingService.Pitch(
+                    _currentDynasty,
+                    userTeam,
+                    source,
+                    prospect.ProspectId,
+                    pitch);
+
+            RenderCurrentDynasty();
+        };
+
+        var closeButton = new Button
+        {
+            Text = "Close",
+            FontSize = 11,
+            Padding = new Thickness(10, 5)
+        };
+        closeButton.Clicked += (_, _) =>
+        {
+            _selectedRecruitSource = null;
+            _selectedRecruitId = null;
+            RenderRecruitingScreen();
+        };
+
+        var preferenceLayout =
+            new VerticalStackLayout
+            {
+                Spacing = 2
+            };
+
+        if (revealedPreferences.Count == 0)
+        {
+            preferenceLayout.Children.Add(
+                new Label
+                {
+                    Text =
+                        "Scout to reveal what matters to this player. " +
+                        "25% scouting reveals the top priority.",
+                    FontSize = 11,
+                    Opacity = 0.8
                 });
+        }
+        else if (_teamsByName.TryGetValue(
+                     _currentDynasty.UserTeamName,
+                     out var userTeam))
+        {
+            foreach (var preference in
+                     revealedPreferences)
+            {
+                var grade =
+                    RecruitPreferenceService.GetProgramGrade(
+                        _currentDynasty,
+                        userTeam,
+                        source,
+                        prospect.ProspectId,
+                        preference.Type);
+
+                preferenceLayout.Children.Add(
+                    new Label
+                    {
+                        Text =
+                            $"{FormatPitchType(preference.Type)}: " +
+                            $"{RecruitPreferenceService.GetImportanceLabel(preference.Importance)} • " +
+                            $"{userTeam.Name} {RecruitPreferenceService.GetGradeLabel(grade)}",
+                        FontSize = 11
+                    });
             }
         }
+
+        var actions = new FlexLayout
+        {
+            Direction = FlexDirection.Row,
+            Wrap = FlexWrap.Wrap,
+            AlignItems = FlexAlignItems.Center,
+            JustifyContent = FlexJustify.Start
+        };
+
+        foreach (var button in new[]
+                 {
+                     boardButton,
+                     scoutButton,
+                     offerButton
+                 })
+        {
+            button.Margin =
+                new Thickness(0, 0, 6, 6);
+            actions.Children.Add(button);
+        }
+
+        pitchPicker.Margin =
+            new Thickness(0, 0, 6, 6);
+        pitchPicker.WidthRequest = 170;
+        actions.Children.Add(pitchPicker);
+
+        pitchButton.Margin =
+            new Thickness(0, 0, 6, 6);
+        actions.Children.Add(pitchButton);
+
+        closeButton.Margin =
+            new Thickness(0, 0, 6, 6);
+        actions.Children.Add(closeButton);
+
+        var potText =
+            source == RecruitingSource.HighSchool &&
+            prospect.Potential is not null &&
+            interaction.ScoutingPercent >= 75
+                ? $" • POT {prospect.Potential}"
+                : string.Empty;
+
+        var lastPitchText =
+            interaction.LastPitchType is not null
+                ? $" • Last pitch: {FormatPitchType(interaction.LastPitchType.Value)}"
+                : string.Empty;
+
+        _recruitingDetailHost.Content =
+            new Border
+            {
+                StrokeThickness = 1,
+                Padding = 10,
+                Content = new VerticalStackLayout
+                {
+                    Spacing = 5,
+                    Children =
+                    {
+                        new Label
+                        {
+                            Text =
+                                $"{prospect.Position} {prospect.FullName}",
+                            FontAttributes =
+                                FontAttributes.Bold,
+                            FontSize = 17
+                        },
+                        new Label
+                        {
+                            Text =
+                                $"{prospect.Subtitle} • Year {prospect.ClassYear}",
+                            FontSize = 11
+                        },
+                        new Label
+                        {
+                            Text =
+                                $"OVR {(range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum} est.")}{potText} • " +
+                                $"Scout {interaction.ScoutingPercent}% • " +
+                                $"Interest {interaction.UserInterest} vs {interaction.RivalInterest}" +
+                                lastPitchText,
+                            FontSize = 12
+                        },
+                        new Label
+                        {
+                            Text = recruitingOpen
+                                ? "Recruiting actions are available."
+                                : "Recruiting actions are closed in the current phase.",
+                            FontSize = 10,
+                            Opacity = 0.72
+                        },
+                        new Label
+                        {
+                            Text = "REVEALED PRIORITIES",
+                            FontAttributes =
+                                FontAttributes.Bold,
+                            FontSize = 11
+                        },
+                        preferenceLayout,
+                        actions
+                    }
+                }
+            };
+
+        _recruitingDetailHost.IsVisible = true;
     }
+
+    private void RenderRecruitingCommitments()
+    {
+        if (_currentDynasty is null)
+            return;
+
+        _recruitingDetailHost.Content = null;
+        _recruitingDetailHost.IsVisible = false;
+
+        var commitments =
+            _currentDynasty.RecruitingCommitments
+                .Where(record =>
+                    record.TeamName.Equals(
+                        _currentDynasty.UserTeamName,
+                        StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(record =>
+                    record.SeasonYear)
+                .ThenByDescending(record =>
+                    record.OverallRating)
+                .ToArray();
+
+        _recruitingResultsStatus.Text =
+            commitments.Length == 0
+                ? "No commitments yet."
+                : $"{commitments.Length:N0} commitments";
+
+        foreach (var commitment in
+                 commitments.Take(100))
+        {
+            var joinText =
+                commitment.JoinSeasonYear >
+                    commitment.SeasonYear
+                    ? $" • joins {commitment.JoinSeasonYear}"
+                    : string.Empty;
+
+            _recruitingList.Children.Add(
+                new Border
+                {
+                    StrokeThickness = 1,
+                    Padding = new Thickness(10, 7),
+                    Content = new Label
+                    {
+                        Text =
+                            $"{commitment.Position} {commitment.PlayerName} • " +
+                            $"OVR {commitment.OverallRating} • {commitment.Source}" +
+                            joinText +
+                            (commitment.WasCpuAssisted
+                                ? " • CPU ASSIST"
+                                : string.Empty),
+                        FontAttributes =
+                            FontAttributes.Bold
+                    }
+                });
+        }
+    }
+
+    private static string FormatPitchType(
+        RecruitPitchType type) =>
+        type switch
+        {
+            RecruitPitchType.PlayingTime =>
+                "Playing Time",
+            RecruitPitchType.ProgramPrestige =>
+                "Program Prestige",
+            RecruitPitchType.ProPotential =>
+                "Pro Potential",
+            RecruitPitchType.Development =>
+                "Development",
+            RecruitPitchType.SchemeFit =>
+                "Scheme Fit",
+            RecruitPitchType.Proximity =>
+                "Location",
+            RecruitPitchType.Facilities =>
+                "Facilities",
+            RecruitPitchType.Academics =>
+                "Academics",
+            _ => type.ToString()
+        };
 
     private void RenderHomeScreen()
     {
@@ -2119,155 +3123,6 @@ public sealed class FoundationPage : ContentPage
         value > 0
             ? $"+{value:0.0}"
             : value.ToString("0.0");
-
-    private void AddRecruitingTargetCard(
-        RecruitingSource source,
-        Guid prospectId,
-        string fullName,
-        Position position,
-        string subtitle,
-        int classYear,
-        int? potential)
-    {
-        if (_currentDynasty is null)
-            return;
-
-        var interaction = InteractiveRecruitingService.GetInteraction(
-            _currentDynasty,
-            source,
-            prospectId);
-
-        var range = InteractiveRecruitingService.GetScoutedOverallRange(
-            _currentDynasty,
-            source,
-            prospectId);
-
-        var overallText = range.Minimum == range.Maximum
-            ? $"OVR {range.Minimum}"
-            : $"OVR {range.Minimum}-{range.Maximum} est.";
-
-        var interestStatus = interaction.CommittedTeamName is not null
-            ? $"Committed: {interaction.CommittedTeamName}"
-            : $"Interest {interaction.UserInterest} vs rival {interaction.RivalInterest}";
-
-        var details =
-            $"{position} {fullName} • {overallText} • {subtitle} • " +
-            $"Year {classYear} • Scout {interaction.ScoutingPercent}%";
-
-        if (source == RecruitingSource.HighSchool &&
-            potential is not null &&
-            interaction.ScoutingPercent >= 75)
-        {
-            details += $" • POT {potential}";
-        }
-
-        var scoutButton = new Button
-        {
-            Text = $"Scout ({InteractiveRecruitingService.ScoutCost})",
-            TextColor = Colors.White,
-            IsEnabled =
-                interaction.CommittedTeamName is null &&
-                interaction.ScoutingPercent < 100 &&
-                _currentDynasty.RecruitingPointsRemaining >=
-                    InteractiveRecruitingService.ScoutCost
-        };
-
-        scoutButton.Clicked += (_, _) =>
-        {
-            if (_currentDynasty is null)
-                return;
-
-            _currentDynasty = InteractiveRecruitingService.Scout(
-                _currentDynasty,
-                source,
-                prospectId);
-            RenderCurrentDynasty();
-        };
-
-        var offerButton = new Button
-        {
-            Text = interaction.ScholarshipOffered
-                ? "Withdraw Offer"
-                : "Offer Scholarship",
-            TextColor = Colors.White,
-            IsEnabled = interaction.CommittedTeamName is null
-        };
-
-        offerButton.Clicked += (_, _) =>
-        {
-            if (_currentDynasty is null)
-                return;
-
-            _currentDynasty = InteractiveRecruitingService.ToggleScholarship(
-                _currentDynasty,
-                source,
-                prospectId);
-            RenderCurrentDynasty();
-        };
-
-        var pitchButton = new Button
-        {
-            Text = $"Pitch ({InteractiveRecruitingService.PitchCost})",
-            TextColor = Colors.White,
-            IsEnabled =
-                interaction.CommittedTeamName is null &&
-                _currentDynasty.RecruitingPointsRemaining >=
-                    InteractiveRecruitingService.PitchCost
-        };
-
-        pitchButton.Clicked += (_, _) =>
-        {
-            if (_currentDynasty is null ||
-                !_teamsByName.TryGetValue(
-                    _currentDynasty.UserTeamName,
-                    out var userTeam))
-            {
-                return;
-            }
-
-            _currentDynasty = InteractiveRecruitingService.Pitch(
-                _currentDynasty,
-                userTeam,
-                source,
-                prospectId);
-            RenderCurrentDynasty();
-        };
-
-        _recruitingList.Children.Add(new Border
-        {
-            StrokeThickness = 1,
-            Padding = 8,
-            Content = new VerticalStackLayout
-            {
-                Spacing = 4,
-                Children =
-                {
-                    new Label
-                    {
-                        Text = details,
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    new Label
-                    {
-                        Text =
-                            $"{interestStatus} • " +
-                            $"{(interaction.ScholarshipOffered ? "Scholarship offered" : "No scholarship offer")}",
-                        FontSize = 12
-                    },
-                    new HorizontalStackLayout
-                    {
-                        Spacing = 6,
-                        Children =
-                        {
-                            scoutButton,
-                            offerButton,
-                            pitchButton
-                        }
-                    }
-                }
-            }
-        });
-    }
 
     private IReadOnlyDictionary<string, TeamSimulationProfile>
         BuildCurrentSimulationProfiles()
