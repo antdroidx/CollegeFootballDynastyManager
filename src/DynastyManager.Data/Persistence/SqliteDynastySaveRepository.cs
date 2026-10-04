@@ -97,7 +97,27 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
                 $"Save schema {record.SchemaVersion} is newer than this app supports ({DynastyState.CurrentSchemaVersion}).");
         }
 
-        return JsonSerializer.Deserialize<DynastyState>(record.SnapshotJson, JsonOptions);
+        var state = JsonSerializer.Deserialize<DynastyState>(
+            record.SnapshotJson, JsonOptions);
+        if (state is not null && record.SchemaVersion < 9)
+        {
+            state = state with
+            {
+                HighSchoolRecruitingPool = state.HighSchoolRecruitingPool
+                    .Select(recruit => recruit with
+                    {
+                        HomeState = Math.Clamp(recruit.HomeRegion, 0, 49),
+                        HomeRegion = Math.Clamp(recruit.HomeRegion / 10, 0, 4)
+                    })
+                    .ToArray()
+            };
+        }
+        return state is null
+            ? null
+            : state with
+            {
+                SchemaVersion = DynastyState.CurrentSchemaVersion
+            };
     }
 
     public async Task<IReadOnlyList<DynastySaveInfo>> ListAsync()

@@ -141,7 +141,9 @@ public static class OffseasonPlayerLifecycleService
                 TransferPortalEntries = portal,
                 TransferPortalEntryWindowSeasonYear =
                     state.SeasonYear,
-                HighSchoolRecruitingPool = Array.Empty<HighSchoolRecruit>(),
+                HighSchoolRecruitingPool = state.HighSchoolRecruitingPool
+                    .Where(recruit => recruit.SeasonYear == state.SeasonYear)
+                    .ToArray(),
                 RecentPlayerDepartures = departures
             });
     }

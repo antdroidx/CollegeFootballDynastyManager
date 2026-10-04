@@ -10,4 +10,5 @@ public sealed record HighSchoolRecruit
     public int TrueOverallRating { get; init; }
     public int PotentialRating { get; init; }
     public int HomeRegion { get; init; }
+    public int HomeState { get; init; }
 }

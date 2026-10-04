@@ -121,6 +121,21 @@ public static class TransferPortalMarketService
             if (!rosterIds.Add(commitment.ProspectId))
                 continue;
 
+            var teamRoster = roster.Where(player =>
+                    player.TeamName.Equals(commitment.TeamName,
+                        StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            if (teamRoster.Length >= DynastyRosterRules.MaximumRosterSize)
+            {
+                var released = teamRoster
+                    .OrderBy(player => player.OverallRating)
+                    .ThenBy(player => player.PotentialRating)
+                    .ThenByDescending(player => player.ClassYear)
+                    .First();
+                roster.Remove(released);
+                rosterIds.Remove(released.PlayerId);
+            }
+
             roster.Add(commitment.Player with
             {
                 TeamName = commitment.TeamName,

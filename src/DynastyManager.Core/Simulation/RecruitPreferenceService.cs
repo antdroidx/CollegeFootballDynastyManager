@@ -243,15 +243,27 @@ public static class RecruitPreferenceService
         if (homeRegion is not null &&
             homeRegion.Value == team.LegacyRegionId)
         {
-            return 98;
+            return 88 + SimulationSeed.Create(
+                state.DynastyId, state.SeasonYear,
+                team.LegacyRegionId, team.Name,
+                $"home-proximity-{prospectId:N}") % 12;
         }
 
-        return 48 + SimulationSeed.Create(
+        if (homeRegion is not null &&
+            Math.Abs(homeRegion.Value - team.LegacyRegionId) == 1)
+        {
+            return 64 + SimulationSeed.Create(
+                state.DynastyId, state.SeasonYear,
+                team.LegacyRegionId, team.Name,
+                $"near-proximity-{prospectId:N}") % 25;
+        }
+
+        return 42 + SimulationSeed.Create(
             state.DynastyId,
             homeRegion ?? 0,
             team.LegacyRegionId,
             team.Name,
-            $"proximity-{prospectId:N}") % 38;
+            $"proximity-{prospectId:N}") % 40;
     }
 
     private static int? GetHomeRegion(

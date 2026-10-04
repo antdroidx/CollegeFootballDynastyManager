@@ -235,6 +235,45 @@ public class TransferPortalMarketTests
             updated.TransferPortalEntryWindowSeasonYear);
     }
 
+    [Fact]
+    public void PendingTransferReplacesLowestPlayerOnFullRoster()
+    {
+        var incoming = Player(Guid.NewGuid(), "Incoming", "Old School",
+            Position.QB, 2, 85);
+        var roster = Enumerable.Range(0, DynastyRosterRules.MaximumRosterSize)
+            .Select(index => Player(Guid.NewGuid(), $"Roster {index}", "User",
+                Position.WR, 2, 60 + index % 20)).ToArray();
+        var state = new DynastyState
+        {
+            DynastyName = "Full Roster",
+            UserTeamName = "User",
+            SeasonYear = 2027,
+            Phase = SeasonPhase.TransferPortal,
+            ActiveRoster = roster,
+            PendingTransferCommitments = new[]
+            {
+                new PendingTransferCommitment
+                {
+                    ProspectId = incoming.PlayerId,
+                    CommittedSeasonYear = 2027,
+                    JoinSeasonYear = 2028,
+                    TeamName = "User",
+                    OriginTeamName = "Old School",
+                    Player = incoming
+                }
+            }
+        };
+
+        var updated = TransferPortalMarketService
+            .MaterializePendingCommitments(state);
+
+        Assert.Equal(DynastyRosterRules.MaximumRosterSize,
+            updated.ActiveRoster.Count(player => player.TeamName == "User"));
+        Assert.Contains(updated.ActiveRoster,
+            player => player.PlayerId == incoming.PlayerId);
+        Assert.Empty(updated.PendingTransferCommitments);
+    }
+
     private static DynastyPlayer Player(
         Guid id,
         string name,

@@ -8,6 +8,7 @@ public sealed record RecruitingInteraction
     public int ScoutingPercent { get; init; }
     public bool ScholarshipOffered { get; init; }
     public bool IsOnTargetBoard { get; init; }
+    public bool IsPriorityScout { get; init; }
     public int UserInterest { get; init; }
     public int RivalInterest { get; init; }
     public RecruitPitchType? LastPitchType { get; init; }

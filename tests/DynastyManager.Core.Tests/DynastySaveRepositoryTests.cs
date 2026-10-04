@@ -21,7 +21,26 @@ public sealed class DynastySaveRepositoryTests
                 UserTeamName = "Washington",
                 SeasonYear = 2031,
                 Week = 8,
-                Phase = SeasonPhase.RegularSeason
+                Phase = SeasonPhase.RegularSeason,
+                ScoutingStaff = new[]
+                {
+                    new ScoutStaff
+                    {
+                        FullName = "Save Test Scout",
+                        TalentEvaluation = 82,
+                        PotentialEvaluation = 79,
+                        RegionalKnowledge = 85,
+                        WorkRate = 76
+                    }
+                },
+                ScoutAssignments = new[]
+                {
+                    new ScoutAssignment
+                    {
+                        ScoutId = Guid.Parse("12121212-3434-5656-7878-909090909090"),
+                        Scope = ScoutAssignmentScope.TeamNeeds
+                    }
+                }
             };
 
             var saveId = await repository.SaveAsync(state, SaveKind.Manual);
@@ -33,6 +52,10 @@ public sealed class DynastySaveRepositoryTests
             Assert.Equal(2031, loaded.SeasonYear);
             Assert.Equal(8, loaded.Week);
             Assert.Equal(SeasonPhase.RegularSeason, loaded.Phase);
+            Assert.Single(loaded.ScoutingStaff);
+            Assert.Single(loaded.ScoutAssignments);
+            Assert.Equal(DynastyState.CurrentSchemaVersion,
+                loaded.SchemaVersion);
         }
         finally
         {

@@ -54,6 +54,9 @@ public static class HighSchoolRecruitingPoolFactory
                 Value(dynastyId, seasonYear, index, "last") %
                 names.LastNames.Count];
 
+            var homeState =
+                Value(dynastyId, seasonYear, index, "state") % 50;
+
             recruits[index] = new HighSchoolRecruit
             {
                 RecruitId = CreateId(
@@ -71,13 +74,16 @@ public static class HighSchoolRecruitingPoolFactory
                     Value(dynastyId, seasonYear, index, "potential") % 11,
                     overall,
                     99),
-                HomeRegion =
-                    Value(dynastyId, seasonYear, index, "region") % 50
+                HomeState = homeState,
+                HomeRegion = GetRegionForState(homeState)
             };
         }
 
         return recruits;
     }
+
+    private static int GetRegionForState(int stateIndex) =>
+        Math.Clamp(stateIndex / 10, 0, 4);
 
     private static int GenerateOverall(
         Guid dynastyId,

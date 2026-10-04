@@ -335,17 +335,27 @@ public static class InteractiveRecruitingService
                 teamsByName,
                 interaction);
 
-            if (!deferTransfer &&
-                resolvedTeam.Equals(
-                    state.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase) &&
-                userRosterCount >=
-                    DynastyRosterRules.MaximumRosterSize)
+            if (!deferTransfer && roster.Count(candidate =>
+                    candidate.TeamName.Equals(resolvedTeam,
+                        StringComparison.OrdinalIgnoreCase)) >=
+                DynastyRosterRules.MaximumRosterSize)
             {
-                resolvedTeam = ResolveRivalTeam(
-                    state,
-                    teamsByName,
-                    interaction);
+                var availableTeam = teamsByName.Values
+                    .Where(team => roster.Count(candidate =>
+                        candidate.TeamName.Equals(team.Name,
+                            StringComparison.OrdinalIgnoreCase)) <
+                        DynastyRosterRules.MaximumRosterSize)
+                    .OrderByDescending(team => team.Prestige +
+                        SimulationSeed.Create(state.DynastyId,
+                            state.SeasonYear, team.Prestige,
+                            interaction.ProspectId.ToString("N"),
+                            $"capacity-{team.Name}") % 21)
+                    .FirstOrDefault();
+
+                if (availableTeam is null)
+                    continue;
+
+                resolvedTeam = availableTeam.Name;
             }
 
             var player = CreateCommittedPlayer(
@@ -522,16 +532,53 @@ public static class InteractiveRecruitingService
 
         var uncertainty = interaction.ScoutingPercent switch
         {
-            >= 100 => 0,
-            >= 75 => 2,
-            >= 50 => 4,
-            >= 25 => 6,
-            _ => 9
+            >= 100 => 1,
+            >= 75 => 3,
+            >= 50 => 5,
+            >= 25 => 7,
+            _ => 10
         };
 
+        var evaluator = state.ScoutingStaff.Count == 0
+            ? 65
+            : (int)state.ScoutingStaff.Average(item => item.TalentEvaluation);
+        uncertainty = Math.Max(1, uncertainty - Math.Max(0, evaluator - 70) / 15);
+        var errorSpan = Math.Max(1, uncertainty);
+        var estimate = overall +
+            SimulationSeed.Create(state.DynastyId, state.SeasonYear,
+                interaction.ScoutingPercent, prospectId.ToString("N"),
+                "overall-estimate") % (errorSpan * 2 + 1) - errorSpan;
+
         return (
-            Math.Max(40, overall - uncertainty),
-            Math.Min(99, overall + uncertainty));
+            Math.Max(40, estimate - uncertainty),
+            Math.Min(99, estimate + uncertainty));
+    }
+
+    public static (int Minimum, int Maximum) GetScoutedPotentialRange(
+        DynastyState state,
+        RecruitingSource source,
+        Guid prospectId)
+    {
+        var interaction = GetInteraction(state, source, prospectId);
+        var potential = source == RecruitingSource.HighSchool
+            ? state.HighSchoolRecruitingPool.First(item =>
+                item.RecruitId == prospectId).PotentialRating
+            : state.TransferPortalEntries.First(item =>
+                item.Player.PlayerId == prospectId).Player.PotentialRating;
+        var evaluator = state.ScoutingStaff.Count == 0
+            ? 65
+            : (int)state.ScoutingStaff.Average(item => item.PotentialEvaluation);
+        var uncertainty = interaction.ScoutingPercent switch
+        {
+            >= 100 => 2, >= 75 => 4, >= 50 => 7, >= 25 => 10, _ => 14
+        };
+        uncertainty = Math.Max(2, uncertainty - Math.Max(0, evaluator - 70) / 12);
+        var estimate = potential +
+            SimulationSeed.Create(state.DynastyId, state.SeasonYear,
+                interaction.ScoutingPercent, prospectId.ToString("N"),
+                "potential-estimate") % (uncertainty * 2 + 1) - uncertainty;
+        return (Math.Max(40, estimate - uncertainty),
+            Math.Min(99, estimate + uncertainty));
     }
 
     private static RecruitingInteraction GetOrCreateInteraction(
@@ -650,6 +697,9 @@ public static class InteractiveRecruitingService
         var userScore =
             interaction.UserInterest +
             userTeam.Prestige / 4 +
+            RecruitPreferenceService.GetProgramGrade(
+                state, userTeam, interaction.Source,
+                interaction.ProspectId, RecruitPitchType.Proximity) / 9 +
             SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
@@ -676,6 +726,10 @@ public static class InteractiveRecruitingService
                 StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(team =>
                 team.Prestige +
+                RecruitPreferenceService.GetProgramGrade(
+                    state, team, interaction.Source,
+                    interaction.ProspectId,
+                    RecruitPitchType.Proximity) / 5 +
                 SimulationSeed.Create(
                     state.DynastyId,
                     state.SeasonYear,
