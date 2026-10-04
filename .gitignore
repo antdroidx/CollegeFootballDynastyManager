@@ -1,0 +1,18 @@
+# .NET / Visual Studio
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Android / Java local build state
+.gradle/
+local.properties
+*.apk
+*.aab
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
