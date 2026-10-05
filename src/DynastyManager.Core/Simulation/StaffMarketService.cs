@@ -58,8 +58,8 @@ public static class StaffMarketService
             var sourcePrestige =
                 ProgramPrestigeService.GetCurrentPrestige(state, sourceTeam);
 
-            if (staff.Role is StaffRole.OffensiveCoordinator or
-                StaffRole.DefensiveCoordinator &&
+            if ((staff.Role is StaffRole.OffensiveCoordinator or
+                 StaffRole.DefensiveCoordinator) &&
                 staff.OverallRating >= 68)
             {
                 candidates.Add(new StaffMarketCandidate
@@ -458,9 +458,9 @@ public static class StaffMarketService
             candidate.SourceTeamName?.Equals(
                 userTeam.Name,
                 StringComparison.OrdinalIgnoreCase) == true &&
-            candidate.SourceRole is
+            (candidate.SourceRole is
                 StaffRole.OffensiveCoordinator or
-                StaffRole.DefensiveCoordinator &&
+                StaffRole.DefensiveCoordinator) &&
             candidate.TargetRole == StaffRole.HeadCoach
                 ? StaffMovementType.Promoted
                 : candidate.Origin == StaffCandidateOrigin.ActiveStaff
@@ -566,9 +566,9 @@ public static class StaffMarketService
                 .Where(item =>
                     item.IsAvailable &&
                     item.TargetRole == vacancy.Role &&
-                    !item.SourceTeamName?.Equals(
+                    item.SourceTeamName?.Equals(
                         state.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase) == true)
+                        StringComparison.OrdinalIgnoreCase) != true)
                 .Where(item =>
                     item.MinimumProgramPrestige <= targetPrestige + 8)
                 .Where(item =>
@@ -663,9 +663,9 @@ public static class StaffMarketService
                 selected.SourceTeamName?.Equals(
                     vacancy.TeamName,
                     StringComparison.OrdinalIgnoreCase) == true &&
-                selected.SourceRole is
+                (selected.SourceRole is
                     StaffRole.OffensiveCoordinator or
-                    StaffRole.DefensiveCoordinator &&
+                    StaffRole.DefensiveCoordinator) &&
                 vacancy.Role == StaffRole.HeadCoach
                     ? StaffMovementType.Promoted
                     : selected.Origin == StaffCandidateOrigin.ActiveStaff
@@ -806,9 +806,9 @@ public static class StaffMarketService
             StyleLabel = GetStyleLabel(member, member.Role)
         });
 
-        if (member.Role is
-            StaffRole.OffensiveCoordinator or
-            StaffRole.DefensiveCoordinator &&
+        if ((member.Role is
+             StaffRole.OffensiveCoordinator or
+             StaffRole.DefensiveCoordinator) &&
             member.OverallRating >= 68)
         {
             candidates.Add(new StaffMarketCandidate
@@ -865,9 +865,9 @@ public static class StaffMarketService
                 StringComparison.OrdinalIgnoreCase))
         {
             return candidate.TargetRole == StaffRole.HeadCoach &&
-                   candidate.SourceRole is
+                   (candidate.SourceRole is
                        StaffRole.OffensiveCoordinator or
-                       StaffRole.DefensiveCoordinator;
+                       StaffRole.DefensiveCoordinator);
         }
 
         var sourcePrestige =
@@ -876,9 +876,9 @@ public static class StaffMarketService
             ProgramPrestigeService.GetCurrentPrestige(state, destination);
 
         if (candidate.TargetRole == StaffRole.HeadCoach &&
-            candidate.SourceRole is
+            (candidate.SourceRole is
                 StaffRole.OffensiveCoordinator or
-                StaffRole.DefensiveCoordinator)
+                StaffRole.DefensiveCoordinator))
         {
             return destinationPrestige >= sourcePrestige - 10;
         }
