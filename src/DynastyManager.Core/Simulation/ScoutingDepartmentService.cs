@@ -14,19 +14,46 @@ public static class ScoutingDepartmentService
         if (state.ScoutingStaff.Count > 0)
             return EnsureAssignments(state, userTeam);
 
-        var names = new[] { "Morgan Reed", "Darius Cole", "Jamie Navarro" };
-        var scouts = names.Select((name, index) => new ScoutStaff
+        var chief = StaffManagementService.GetStaff(
+            state, userTeam.Name, StaffRole.ChiefScout);
+        var names = new[]
+        {
+            "Morgan Reed", "Darius Cole", "Jamie Navarro",
+            "Avery Brooks", "Cameron Hayes"
+        };
+        var staffManagement = chief?.StaffManagement ?? 65;
+        var scoutCount = Math.Clamp(2 + staffManagement / 24, 3, names.Length);
+        var talentBase = chief?.TalentEvaluation ?? 68;
+        var potentialBase = chief?.PotentialEvaluation ?? 68;
+        var regionBase = chief?.RegionalKnowledge ?? 68;
+
+        var scouts = names.Take(scoutCount).Select((name, index) => new ScoutStaff
         {
             ScoutId = StableId(state.DynastyId, $"scout-{index}"),
             FullName = name,
-            TalentEvaluation = 62 + Seed(state, index, "talent") % 27,
-            PotentialEvaluation = 62 + Seed(state, index, "potential") % 27,
-            RegionalKnowledge = 62 + Seed(state, index, "region") % 27,
-            WorkRate = 62 + Seed(state, index, "work") % 27
+            TalentEvaluation = Math.Clamp(
+                talentBase - 8 + Seed(state, index, "talent") % 17, 45, 96),
+            PotentialEvaluation = Math.Clamp(
+                potentialBase - 8 + Seed(state, index, "potential") % 17, 45, 96),
+            RegionalKnowledge = Math.Clamp(
+                regionBase - 8 + Seed(state, index, "region") % 17, 45, 96),
+            WorkRate = Math.Clamp(
+                55 + staffManagement / 3 + Seed(state, index, "work") % 13, 45, 96)
         }).ToArray();
 
         return EnsureAssignments(state with { ScoutingStaff = scouts }, userTeam);
     }
+
+    public static DynastyState RebuildDepartment(
+        DynastyState state,
+        Team userTeam) =>
+        EnsureDepartment(
+            state with
+            {
+                ScoutingStaff = Array.Empty<ScoutStaff>(),
+                ScoutAssignments = Array.Empty<ScoutAssignment>()
+            },
+            userTeam);
 
     public static DynastyState SetAssignment(
         DynastyState state,
