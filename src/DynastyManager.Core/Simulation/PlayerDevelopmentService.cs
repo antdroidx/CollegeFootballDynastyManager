@@ -186,12 +186,15 @@ public static class PlayerDevelopmentService
                 "development") %
             5 - 2;
 
+        var staffFactor = GetStaffDevelopmentFactor(state, player);
+
         var targetChange = Math.Clamp(
             gapFactor +
             classFactor +
             roleFactor +
             redshirtFactor +
             injuryFactor +
+            staffFactor +
             random,
             -3,
             6);
@@ -332,6 +335,36 @@ public static class PlayerDevelopmentService
             return Math.Max(0, change);
 
         return Math.Min(0, change);
+    }
+
+    private static int GetStaffDevelopmentFactor(
+        DynastyState state,
+        DynastyPlayer player)
+    {
+        var coordinatorRole = player.Position switch
+        {
+            Position.QB or Position.RB or Position.WR or Position.TE or Position.OL =>
+                StaffRole.OffensiveCoordinator,
+            Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS =>
+                StaffRole.DefensiveCoordinator,
+            _ => StaffRole.SpecialTeamsCoordinator
+        };
+
+        var headCoach = StaffManagementService.GetRoleRating(
+            state, player.TeamName, StaffRole.HeadCoach);
+        var coordinator = StaffManagementService.GetRoleRating(
+            state, player.TeamName, coordinatorRole);
+        var strength = StaffManagementService.GetRoleRating(
+            state, player.TeamName, StaffRole.StrengthConditioningDirector);
+
+        var average = (headCoach + coordinator + strength) / 3.0;
+        return average switch
+        {
+            >= 84 => 2,
+            >= 68 => 1,
+            < 48 => -1,
+            _ => 0
+        };
     }
 
     private static double PhysicalMultiplier(int classYear) =>
