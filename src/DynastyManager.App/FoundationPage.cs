@@ -1541,11 +1541,11 @@ public sealed class FoundationPage : ContentPage
         state = StaffManagementService.EnsureLeagueStaff(
             state, _teamsByName.Values);
 
-        if (state.Phase is
-                SeasonPhase.TransferPortal or
-                SeasonPhase.Recruiting or
-                SeasonPhase.RosterManagement or
-                SeasonPhase.Offseason &&
+        if ((state.Phase is
+                 SeasonPhase.TransferPortal or
+                 SeasonPhase.Recruiting or
+                 SeasonPhase.RosterManagement or
+                 SeasonPhase.Offseason) &&
             state.TeamSeasonHistory.Any(item =>
                 item.SeasonYear == state.SeasonYear))
         {
@@ -3574,7 +3574,7 @@ public sealed class FoundationPage : ContentPage
                   StaffMarketService.GetHeadCoachStatus(
                       _currentDynasty, team) == "Hot Seat"
                     ? NegativeChangeColor
-                    : Colors.Unspecified;
+                    : NeutralChangeColor;
 
             var info = new VerticalStackLayout
             {
