@@ -28,7 +28,8 @@ public static class NationalRankingService
             .GroupBy(team => team.ConferenceName, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(
                 group => group.Key,
-                group => group.Average(team => team.Prestige),
+                group => group.Average(team =>
+                    ProgramPrestigeService.GetCurrentPrestige(state, team)),
                 StringComparer.OrdinalIgnoreCase);
 
         var accumulators = teams.ToDictionary(
@@ -36,6 +37,7 @@ public static class NationalRankingService
             team => new Accumulator(
                 team,
                 GetPreseasonScore(
+                    state,
                     team,
                     teamsByName,
                     profilesByTeam,
@@ -76,7 +78,8 @@ public static class NationalRankingService
 
         var preseasonOrder = accumulators.Values
             .OrderByDescending(value => value.PreseasonScore)
-            .ThenByDescending(value => value.Team.Prestige)
+            .ThenByDescending(value =>
+                ProgramPrestigeService.GetCurrentPrestige(state, value.Team))
             .ThenBy(value => value.Team.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
@@ -170,7 +173,8 @@ public static class NationalRankingService
             .OrderByDescending(item => item.Score)
             .ThenByDescending(item => item.Value.Wins)
             .ThenBy(item => item.Value.Losses)
-            .ThenByDescending(item => item.Value.Team.Prestige)
+            .ThenByDescending(item =>
+                ProgramPrestigeService.GetCurrentPrestige(state, item.Value.Team))
             .ThenBy(item => item.Value.Team.Name, StringComparer.OrdinalIgnoreCase)
             .Select((item, index) => new NationalRanking
             {
@@ -290,6 +294,7 @@ public static class NationalRankingService
     }
 
     private static double GetPreseasonScore(
+        DynastyState state,
         Team team,
         IReadOnlyDictionary<string, Team> teamsByName,
         IReadOnlyDictionary<string, TeamSimulationProfile>? profilesByTeam,
@@ -298,8 +303,9 @@ public static class NationalRankingService
         TeamSimulationProfile? profile = null;
         profilesByTeam?.TryGetValue(team.Name, out profile);
 
+        var prestigeValue = ProgramPrestigeService.GetCurrentPrestige(state, team);
         var fallbackRating = Math.Clamp(
-            60.0 + (team.Prestige - 50) * 0.5,
+            60.0 + (prestigeValue - 50) * 0.5,
             55.0,
             95.0);
 
@@ -313,16 +319,16 @@ public static class NationalRankingService
 
         var conferenceComponent =
             conferenceTeamCount < ConferenceChampionshipService.MinimumConferenceTeams
-                ? team.Prestige / 1.2
+                ? prestigeValue / 1.2
                 : conferencePrestige.TryGetValue(
                     team.ConferenceName,
                     out var prestige)
                     ? prestige
-                    : team.Prestige;
+                    : prestigeValue;
 
         return offenseTalent +
                defenseTalent +
-               3.0 * team.Prestige +
+               3.0 * prestigeValue +
                conferenceComponent;
     }
 
