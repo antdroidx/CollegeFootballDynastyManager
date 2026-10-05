@@ -41,11 +41,7 @@ public static class StaffManagementService
             }
         }
 
-        return state with
-        {
-            Staff = staff,
-            StaffLastAdvancedSeasonYear = state.SeasonYear
-        };
+        return state with { Staff = staff };
     }
 
     public static StaffMember? GetStaff(
@@ -145,7 +141,11 @@ public static class StaffManagementService
             };
         }).ToArray();
 
-        return state with { Staff = staff };
+        return state with
+        {
+            Staff = staff,
+            StaffLastAdvancedSeasonYear = state.SeasonYear
+        };
     }
 
     private static StaffMember CreateStaff(
