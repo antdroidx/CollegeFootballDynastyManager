@@ -69,6 +69,7 @@ public static class RecruitPreferenceService
             state,
             source,
             prospectId);
+        var prestige = ProgramPrestigeService.GetCurrentPrestige(state, team);
 
         return pitchType switch
         {
@@ -79,17 +80,17 @@ public static class RecruitPreferenceService
                     position),
 
             RecruitPitchType.ProgramPrestige =>
-                Math.Clamp(team.Prestige, 35, 99),
+                Math.Clamp(prestige, 35, 99),
 
             RecruitPitchType.ProPotential =>
                 Math.Clamp(
-                    42 + team.Prestige * 3 / 5,
+                    42 + prestige * 3 / 5,
                     40,
                     99),
 
             RecruitPitchType.Development =>
                 Math.Clamp(
-                    48 + team.Prestige / 2,
+                    48 + prestige / 2,
                     40,
                     99),
 
@@ -97,7 +98,7 @@ public static class RecruitPreferenceService
                 52 + SimulationSeed.Create(
                     state.DynastyId,
                     state.SeasonYear,
-                    team.Prestige,
+                    prestige,
                     team.Name,
                     $"scheme-{prospectId:N}") % 44,
 
@@ -110,7 +111,7 @@ public static class RecruitPreferenceService
 
             RecruitPitchType.Facilities =>
                 Math.Clamp(
-                    45 + team.Prestige / 2,
+                    45 + prestige / 2,
                     40,
                     99),
 
