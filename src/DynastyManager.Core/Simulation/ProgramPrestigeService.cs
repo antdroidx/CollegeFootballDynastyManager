@@ -72,8 +72,15 @@ public static class ProgramPrestigeService
                 item.SeasonYear == state.SeasonYear &&
                 item.ChampionTeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase));
 
+            var recruitingSeason = state.RecruitingCommitments
+                .Where(item =>
+                    item.SeasonYear < state.SeasonYear &&
+                    item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.SeasonYear)
+                .DefaultIfEmpty(state.SeasonYear)
+                .Max();
             var commitments = state.RecruitingCommitments.Where(item =>
-                    item.SeasonYear == state.SeasonYear &&
+                    item.SeasonYear == recruitingSeason &&
                     item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
             var recruitingScore = commitments.Length == 0
