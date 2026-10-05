@@ -266,11 +266,19 @@ public static class InjuryService
         DynastyState state,
         DynastyPlayer player)
     {
+        var medical = StaffManagementService.GetRoleRating(
+            state, player.TeamName, StaffRole.MedicalTrainingDirector);
+        var conditioning = StaffManagementService.GetRoleRating(
+            state, player.TeamName, StaffRole.StrengthConditioningDirector);
+        var preventionAdjustment =
+            (int)Math.Round(((medical + conditioning) / 2.0 - 60) * 1.35);
+
         var chanceBasisPoints = Math.Clamp(
             110 +
-            (80 - player.DurabilityRating) * 3,
-            45,
-            210);
+            (80 - player.DurabilityRating) * 3 -
+            preventionAdjustment,
+            35,
+            230);
 
         return Deterministic(
                    state,
@@ -308,7 +316,7 @@ public static class InjuryService
             player,
             "duration");
 
-        return severity switch
+        var baseDuration = severity switch
         {
             InjurySeverity.Minor =>
                 1 + roll % 2,
@@ -320,6 +328,18 @@ public static class InjuryService
                 9 + roll % 8,
             _ => 1
         };
+
+        var medical = StaffManagementService.GetRoleRating(
+            state, player.TeamName, StaffRole.MedicalTrainingDirector);
+        var recoveryBonus = medical switch
+        {
+            >= 90 => 2,
+            >= 75 => 1,
+            < 45 => -1,
+            _ => 0
+        };
+
+        return Math.Max(1, baseDuration - recoveryBonus);
     }
 
     private static Regression GetRegression(
