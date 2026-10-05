@@ -147,6 +147,64 @@ public sealed class PrestigeStaffHistoryTests
             scout => Assert.InRange(scout.TalentEvaluation, 45, 96));
     }
 
+    [Fact]
+    public void ReplacingChiefScoutRefreshesSubordinateScouts()
+    {
+        var team = Team("User", 82);
+        var chiefA = new StaffMember
+        {
+            StaffId = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            FullName = "Chief Alpha",
+            TeamName = "User",
+            Role = StaffRole.ChiefScout,
+            TalentEvaluation = 82,
+            PotentialEvaluation = 83,
+            RegionalKnowledge = 80,
+            StaffManagement = 78
+        };
+
+        var state = State() with { Staff = new[] { chiefA } };
+        state = ScoutingDepartmentService.EnsureDepartment(state, team);
+        var oldIds = state.ScoutingStaff.Select(item => item.ScoutId).ToHashSet();
+        var oldNames = state.ScoutingStaff.Select(item => item.FullName).ToHashSet();
+
+        var chiefB = chiefA with
+        {
+            StaffId = Guid.Parse("22222222-2222-2222-2222-222222222222"),
+            FullName = "Chief Bravo",
+            TalentEvaluation = 90,
+            PotentialEvaluation = 91,
+            RegionalKnowledge = 89,
+            StaffManagement = 92
+        };
+
+        state = StaffManagementService.Hire(state, chiefB);
+        state = ScoutingDepartmentService.RebuildDepartment(state, team);
+
+        Assert.DoesNotContain(state.ScoutingStaff,
+            scout => oldIds.Contains(scout.ScoutId));
+        Assert.DoesNotContain(state.ScoutingStaff,
+            scout => oldNames.Contains(scout.FullName));
+    }
+
+    [Fact]
+    public void ScoutNamesDoNotReuseProgramStaffNames()
+    {
+        var team = Team("User", 80);
+        var state = ProgramPrestigeService.EnsureInitialPrestige(
+            State(), new[] { team });
+        state = StaffManagementService.EnsureLeagueStaff(
+            state, new[] { team });
+        state = ScoutingDepartmentService.EnsureDepartment(state, team);
+
+        var staffNames = state.Staff
+            .Select(item => item.FullName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        Assert.All(state.ScoutingStaff,
+            scout => Assert.DoesNotContain(scout.FullName, staffNames));
+    }
+
     private static DynastyState State() => new()
     {
         DynastyId = Guid.Parse("90909090-8080-7070-6060-505050505050"),
