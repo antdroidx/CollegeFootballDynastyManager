@@ -250,6 +250,19 @@ public static class CpuRecruitingService
                 : candidate.OverallRating * 100 -
                   (candidate.OverallRating - programTarget - 8) * 175;
 
+        var coordinatorRole = candidate.Position switch
+        {
+            Position.QB or Position.RB or Position.WR or Position.TE or Position.OL =>
+                StaffRole.OffensiveCoordinator,
+            Position.K => StaffRole.SpecialTeamsCoordinator,
+            _ => StaffRole.DefensiveCoordinator
+        };
+        var headRecruiting = StaffManagementService.GetStaff(
+            state, team.Name, StaffRole.HeadCoach)?.Recruiting ?? 60;
+        var coordinatorRecruiting = StaffManagementService.GetStaff(
+            state, team.Name, coordinatorRole)?.Recruiting ?? 60;
+        var staffFit = (headRecruiting + coordinatorRecruiting - 120) * 7;
+
         var deterministicFit =
             SimulationSeed.Create(
                 state.DynastyId,
@@ -258,7 +271,7 @@ public static class CpuRecruitingService
                 team.Name,
                 candidate.ProspectId.ToString("N")) % 100;
 
-        return qualityFit + deterministicFit;
+        return qualityFit + staffFit + deterministicFit;
     }
 
     private static Position SelectMostNeededPosition(
