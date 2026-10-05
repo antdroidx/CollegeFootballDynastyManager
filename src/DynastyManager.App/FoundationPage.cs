@@ -4144,6 +4144,8 @@ public sealed class FoundationPage : ContentPage
             return;
 
         var seasonYear = records[0].SeasonYear;
+        var isMidseason = records.All(record =>
+            record.Stage == PlayerDevelopmentStage.Midseason);
         var improved = records.Count(record =>
             record.OverallChange > 0);
         var unchanged = records.Count(record =>
@@ -4155,7 +4157,9 @@ public sealed class FoundationPage : ContentPage
 
         _transferPortalList.Children.Add(new Label
         {
-            Text = $"{seasonYear}→{seasonYear + 1} PLAYER DEVELOPMENT RESULTS",
+            Text = isMidseason
+                ? $"{seasonYear} MIDSEASON PLAYER DEVELOPMENT"
+                : $"{seasonYear}→{seasonYear + 1} PLAYER DEVELOPMENT RESULTS",
             FontAttributes = FontAttributes.Bold,
             Margin = new Thickness(0, 8, 0, 0)
         });
