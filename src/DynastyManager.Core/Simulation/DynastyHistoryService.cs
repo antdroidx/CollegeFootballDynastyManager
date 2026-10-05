@@ -39,8 +39,15 @@ public static class DynastyHistoryService
                      item.LoserTeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase)))
                 .OrderByDescending(item => item.BowlName)
                 .FirstOrDefault();
+            var recruitingSeason = state.RecruitingCommitments
+                .Where(item =>
+                    item.SeasonYear < state.SeasonYear &&
+                    item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(item => item.SeasonYear)
+                .DefaultIfEmpty(state.SeasonYear)
+                .Max();
             var commitments = state.RecruitingCommitments.Where(item =>
-                    item.SeasonYear == state.SeasonYear &&
+                    item.SeasonYear == recruitingSeason &&
                     item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
 
