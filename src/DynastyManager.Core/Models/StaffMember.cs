@@ -30,6 +30,9 @@ public sealed record StaffMember
     public int PotentialEvaluation { get; init; }
     public int RegionalKnowledge { get; init; }
     public int StaffManagement { get; init; }
+    public int Age { get; init; } = 45;
+    public int CareerYears { get; init; }
+    public int GrowthPotential { get; init; } = 3;
     public int TenureYears { get; init; }
     public int ContractYearsRemaining { get; init; } = 3;
 
