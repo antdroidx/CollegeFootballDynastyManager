@@ -61,7 +61,7 @@ public static class CpuRecruitingService
                 candidate => candidate.ProspectId);
 
         var teams = teamsByName.Values
-            .OrderByDescending(team => team.Prestige)
+            .OrderByDescending(team => ProgramPrestigeService.GetCurrentPrestige(state, team))
             .ThenBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
@@ -240,8 +240,9 @@ public static class CpuRecruitingService
         Team team,
         Candidate candidate)
     {
+        var prestige = ProgramPrestigeService.GetCurrentPrestige(state, team);
         var programTarget =
-            58 + team.Prestige / 3;
+            58 + prestige / 3;
 
         var qualityFit =
             candidate.OverallRating <= programTarget + 8
@@ -253,7 +254,7 @@ public static class CpuRecruitingService
             SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
-                team.Prestige,
+                prestige,
                 team.Name,
                 candidate.ProspectId.ToString("N")) % 100;
 
