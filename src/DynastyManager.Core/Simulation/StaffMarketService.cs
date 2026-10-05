@@ -1099,8 +1099,18 @@ public static class StaffMarketService
         DynastyState state,
         Team team)
     {
-        var prestige =
+        var seasonExpectation = state.ProgramPrestigeHistory
+            .Where(item =>
+                item.SeasonYear == state.SeasonYear &&
+                item.TeamName.Equals(
+                    team.Name,
+                    StringComparison.OrdinalIgnoreCase))
+            .Select(item => (int?)item.StartingPrestige)
+            .FirstOrDefault();
+
+        var prestige = seasonExpectation ??
             ProgramPrestigeService.GetCurrentPrestige(state, team);
+
         return Math.Clamp(
             4 + (prestige - 50) / 7,
             3,
