@@ -1247,6 +1247,14 @@ public sealed class FoundationPage : ContentPage
             _currentDynasty = ProgramPrestigeService.ApplySeasonResults(
                 _currentDynasty, _teamsByName, finalProfiles);
 
+            await ShowAdvanceProgressAsync("Evaluating coaching staffs...", 0.77);
+            _currentDynasty = StaffManagementService.AdvanceSeason(
+                _currentDynasty);
+            _currentDynasty = StaffMarketService.EnsureMarket(
+                _currentDynasty, _teamsByName);
+            _currentDynasty = StaffMarketService.RunCpuCarousel(
+                _currentDynasty, _teamsByName);
+
             if (_teamsByName.TryGetValue(_currentDynasty.UserTeamName,
                     out var reportTeam))
             {
@@ -1382,8 +1390,6 @@ public sealed class FoundationPage : ContentPage
                     ScoutingRecommendationReport = null
                 };
 
-                _currentDynasty = StaffManagementService.AdvanceSeason(
-                    _currentDynasty);
                 _currentDynasty = StaffManagementService.EnsureLeagueStaff(
                     _currentDynasty, _teamsByName.Values);
 
@@ -1534,6 +1540,21 @@ public sealed class FoundationPage : ContentPage
             state, _teamsByName.Values);
         state = StaffManagementService.EnsureLeagueStaff(
             state, _teamsByName.Values);
+
+        if (state.Phase is
+                SeasonPhase.TransferPortal or
+                SeasonPhase.Recruiting or
+                SeasonPhase.RosterManagement or
+                SeasonPhase.Offseason &&
+            state.TeamSeasonHistory.Any(item =>
+                item.SeasonYear == state.SeasonYear))
+        {
+            state = StaffManagementService.AdvanceSeason(state);
+            state = StaffMarketService.EnsureMarket(
+                state, _teamsByName);
+            state = StaffMarketService.RunCpuCarousel(
+                state, _teamsByName);
+        }
 
         if (state.Phase == SeasonPhase.TransferPortal &&
             state.TransferPortalEntryWindowSeasonYear !=
