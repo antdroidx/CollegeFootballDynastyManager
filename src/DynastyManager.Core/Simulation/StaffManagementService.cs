@@ -41,7 +41,11 @@ public static class StaffManagementService
             }
         }
 
-        return state with { Staff = staff };
+        return state with
+        {
+            Staff = staff,
+            StaffLastAdvancedSeasonYear = state.SeasonYear
+        };
     }
 
     public static StaffMember? GetStaff(
@@ -98,6 +102,9 @@ public static class StaffManagementService
 
     public static DynastyState AdvanceSeason(DynastyState state)
     {
+        if (state.StaffLastAdvancedSeasonYear >= state.SeasonYear)
+            return state;
+
         var staff = state.Staff.Select(item =>
         {
             var growthSeed = SimulationSeed.Create(
@@ -106,23 +113,33 @@ public static class StaffManagementService
                 (int)item.Role,
                 item.TeamName,
                 $"staff-growth-{item.StaffId:N}");
-            var growth = growthSeed % 100 < 22 ? 1 : 0;
+            var growthChance = Math.Clamp(
+                8 + item.GrowthPotential * 8 - Math.Max(0, item.Age - 58),
+                3,
+                48);
+            var growth = growthSeed % 100 < growthChance ? 1 : 0;
+            var decline = item.Age >= 64 && growthSeed % 100 < Math.Min(35, item.Age - 58)
+                ? 1
+                : 0;
+            var netChange = growth - decline;
 
             return item with
             {
-                Reputation = Clamp(item.Reputation + growth),
-                Leadership = Clamp(item.Leadership + growth),
-                Recruiting = Clamp(item.Recruiting + growth),
-                PlayerDevelopment = Clamp(item.PlayerDevelopment + growth),
-                GameManagement = Clamp(item.GameManagement + growth),
-                Scheme = Clamp(item.Scheme + growth),
-                SpecialTeams = Clamp(item.SpecialTeams + growth),
-                Medical = Clamp(item.Medical + growth),
-                Conditioning = Clamp(item.Conditioning + growth),
-                TalentEvaluation = Clamp(item.TalentEvaluation + growth),
-                PotentialEvaluation = Clamp(item.PotentialEvaluation + growth),
-                RegionalKnowledge = Clamp(item.RegionalKnowledge + growth),
-                StaffManagement = Clamp(item.StaffManagement + growth),
+                Reputation = Clamp(item.Reputation + netChange),
+                Leadership = Clamp(item.Leadership + netChange),
+                Recruiting = Clamp(item.Recruiting + netChange),
+                PlayerDevelopment = Clamp(item.PlayerDevelopment + netChange),
+                GameManagement = Clamp(item.GameManagement + netChange),
+                Scheme = Clamp(item.Scheme + netChange),
+                SpecialTeams = Clamp(item.SpecialTeams + netChange),
+                Medical = Clamp(item.Medical + netChange),
+                Conditioning = Clamp(item.Conditioning + netChange),
+                TalentEvaluation = Clamp(item.TalentEvaluation + netChange),
+                PotentialEvaluation = Clamp(item.PotentialEvaluation + netChange),
+                RegionalKnowledge = Clamp(item.RegionalKnowledge + netChange),
+                StaffManagement = Clamp(item.StaffManagement + netChange),
+                Age = item.Age + 1,
+                CareerYears = item.CareerYears + 1,
                 TenureYears = item.TenureYears + 1,
                 ContractYearsRemaining = Math.Max(0, item.ContractYearsRemaining - 1)
             };
@@ -179,6 +196,18 @@ public static class StaffManagementService
             PotentialEvaluation = Attribute("potential", role == StaffRole.ChiefScout ? 8 : -4),
             RegionalKnowledge = Attribute("region", role == StaffRole.ChiefScout ? 7 : -4),
             StaffManagement = Attribute("management", role == StaffRole.ChiefScout ? 7 : 0),
+            Age = 34 + seed % 27,
+            CareerYears = seed % 18,
+            GrowthPotential = Math.Clamp(
+                5 - Math.Max(0, (34 + seed % 27) - 42) / 8 +
+                SimulationSeed.Create(
+                    state.DynastyId,
+                    state.SeasonYear,
+                    salt + (int)role,
+                    team.Name,
+                    "staff-growth-potential") % 2,
+                1,
+                5),
             ContractYearsRemaining = 2 + seed % 4
         };
     }
