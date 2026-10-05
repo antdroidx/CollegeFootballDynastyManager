@@ -98,6 +98,19 @@ public static class DynastyRosterSimulationProfileBuilder
             var safety =
                 (fs + ss) / 2.0;
 
+            var headCoach = StaffManagementService.GetRoleRating(
+                state, team.Name, StaffRole.HeadCoach);
+            var offenseStaff = StaffManagementService.GetRoleRating(
+                state, team.Name, StaffRole.OffensiveCoordinator);
+            var defenseStaff = StaffManagementService.GetRoleRating(
+                state, team.Name, StaffRole.DefensiveCoordinator);
+            var specialTeamsStaff = StaffManagementService.GetRoleRating(
+                state, team.Name, StaffRole.SpecialTeamsCoordinator);
+            var headCoachModifier = Math.Clamp((headCoach - 60) * .035, -1.5, 1.5);
+            var offenseModifier = Math.Clamp((offenseStaff - 60) * .075, -3.0, 3.0) + headCoachModifier;
+            var defenseModifier = Math.Clamp((defenseStaff - 60) * .075, -3.0, 3.0) + headCoachModifier;
+            var specialTeamsModifier = Math.Clamp((specialTeamsStaff - 60) * .085, -3.0, 3.0) + headCoachModifier * .5;
+
             profiles[team.Name] = new TeamSimulationProfile
             {
                 TeamName = team.Name,
@@ -106,29 +119,34 @@ public static class DynastyRosterSimulationProfileBuilder
                     wr * .25 +
                     te * .10 +
                     ol * .30 +
-                    rb * .05,
+                    rb * .05 +
+                    offenseModifier,
                 RushOffenseRating =
                     rb * .35 +
                     ol * .40 +
                     qb * .10 +
-                    te * .15,
+                    te * .15 +
+                    offenseModifier,
                 PassDefenseRating =
                     cb * .30 +
                     safety * .20 +
                     de * .20 +
                     olb * .15 +
                     dt * .05 +
-                    mlb * .10,
+                    mlb * .10 +
+                    defenseModifier,
                 RushDefenseRating =
                     dt * .20 +
                     de * .15 +
                     mlb * .25 +
                     olb * .20 +
                     safety * .15 +
-                    cb * .05,
+                    cb * .05 +
+                    defenseModifier,
                 SpecialTeamsRating =
                     kicker * .85 +
-                    fallback * .15,
+                    fallback * .15 +
+                    specialTeamsModifier,
                 RosterSize = roster.Length
             };
         }
