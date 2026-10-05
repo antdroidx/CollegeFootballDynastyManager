@@ -307,6 +307,52 @@ public static class StaffMarketService
         return available;
     }
 
+    public static int GetProjectedOverall(
+        StaffMarketCandidate candidate) =>
+        GetProjectedOverall(candidate.Profile, candidate.TargetRole);
+
+    private static int GetProjectedOverall(
+        StaffMember profile,
+        StaffRole role) =>
+        role switch
+        {
+            StaffRole.HeadCoach =>
+                Average(
+                    profile.Leadership,
+                    profile.Recruiting,
+                    profile.PlayerDevelopment,
+                    profile.GameManagement),
+            StaffRole.OffensiveCoordinator or
+                StaffRole.DefensiveCoordinator =>
+                Average(
+                    profile.Scheme,
+                    profile.PlayerDevelopment,
+                    profile.Recruiting,
+                    profile.GameManagement),
+            StaffRole.SpecialTeamsCoordinator =>
+                Average(
+                    profile.SpecialTeams,
+                    profile.PlayerDevelopment,
+                    profile.GameManagement),
+            StaffRole.MedicalTrainingDirector =>
+                Average(
+                    profile.Medical,
+                    profile.Leadership,
+                    profile.PlayerDevelopment),
+            StaffRole.StrengthConditioningDirector =>
+                Average(
+                    profile.Conditioning,
+                    profile.PlayerDevelopment,
+                    profile.Leadership),
+            StaffRole.ChiefScout =>
+                Average(
+                    profile.TalentEvaluation,
+                    profile.PotentialEvaluation,
+                    profile.RegionalKnowledge,
+                    profile.StaffManagement),
+            _ => profile.OverallRating
+        };
+
     public static int GetCandidateFitScore(
         DynastyState state,
         Team team,
