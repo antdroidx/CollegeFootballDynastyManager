@@ -61,6 +61,24 @@ public class PlayerDevelopmentAndInjuryTests
     }
 
     [Fact]
+    public void LatestDevelopmentRecordsPreferOffseasonAndContainOnePerPlayer()
+    {
+        var playerId = Guid.NewGuid();
+        var history = new[]
+        {
+            DevelopmentRecord(playerId, PlayerDevelopmentStage.Midseason, 70, 72),
+            DevelopmentRecord(playerId, PlayerDevelopmentStage.Offseason, 72, 75)
+        };
+
+        var latest = PlayerDevelopmentService.GetLatestRecords(history, "Test");
+
+        var record = Assert.Single(latest);
+        Assert.Equal(PlayerDevelopmentStage.Offseason, record.Stage);
+        Assert.Equal(75, record.AfterOverall);
+        Assert.Single(latest.Select(item => item.PlayerId).Distinct());
+    }
+
+    [Fact]
     public void SevereKneeInjuryCausesPermanentRelatedRegression()
     {
         var player = RatedPlayer(
@@ -256,5 +274,24 @@ public class PlayerDevelopmentAndInjuryTests
             AwarenessRating = overall,
             TechniqueRating = overall,
             DurabilityRating = overall
+        };
+
+    private static PlayerDevelopmentRecord DevelopmentRecord(
+        Guid playerId,
+        PlayerDevelopmentStage stage,
+        int before,
+        int after) =>
+        new()
+        {
+            SeasonYear = 2026,
+            PlayerId = playerId,
+            PlayerName = "Test Player",
+            TeamName = "Test",
+            Position = Position.QB,
+            BeforeOverall = before,
+            AfterOverall = after,
+            BeforePotential = 90,
+            AfterPotential = 90,
+            Stage = stage
         };
 }

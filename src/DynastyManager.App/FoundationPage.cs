@@ -3723,22 +3723,9 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return Array.Empty<PlayerDevelopmentRecord>();
 
-        var userRecords = _currentDynasty.PlayerDevelopmentHistory
-            .Where(record => record.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase))
-            .ToArray();
-
-        if (userRecords.Length == 0)
-            return Array.Empty<PlayerDevelopmentRecord>();
-
-        var latestSeason = userRecords.Max(record =>
-            record.SeasonYear);
-
-        return userRecords
-            .Where(record =>
-                record.SeasonYear == latestSeason)
-            .ToArray();
+        return PlayerDevelopmentService.GetLatestRecords(
+            _currentDynasty.PlayerDevelopmentHistory,
+            _currentDynasty.UserTeamName);
     }
 
     private void RenderDevelopmentResults()

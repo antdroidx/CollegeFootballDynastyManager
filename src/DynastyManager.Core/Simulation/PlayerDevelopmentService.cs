@@ -4,6 +4,33 @@ namespace DynastyManager.Core.Simulation;
 
 public static class PlayerDevelopmentService
 {
+    public static IReadOnlyList<PlayerDevelopmentRecord> GetLatestRecords(
+        IEnumerable<PlayerDevelopmentRecord> history,
+        string teamName)
+    {
+        ArgumentNullException.ThrowIfNull(history);
+        ArgumentException.ThrowIfNullOrWhiteSpace(teamName);
+
+        var teamRecords = history
+            .Where(record => record.TeamName.Equals(
+                teamName,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (teamRecords.Length == 0)
+            return Array.Empty<PlayerDevelopmentRecord>();
+
+        var latestSeason = teamRecords.Max(record => record.SeasonYear);
+        return teamRecords
+            .Where(record => record.SeasonYear == latestSeason)
+            .GroupBy(record => record.PlayerId)
+            .Select(group => group
+                .OrderBy(record =>
+                    record.Stage == PlayerDevelopmentStage.Offseason ? 0 : 1)
+                .First())
+            .ToArray();
+    }
+
     public static DynastyState ApplyOffseasonDevelopment(
         DynastyState state)
     {
