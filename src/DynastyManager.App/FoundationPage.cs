@@ -3470,6 +3470,328 @@ public sealed class FoundationPage : ContentPage
         }
     }
 
+    private void RenderProgramStaff(Team team)
+    {
+        if (_currentDynasty is null)
+            return;
+
+        _programList.Children.Add(new Label
+        {
+            Text = "STAFF",
+            FontAttributes = FontAttributes.Bold,
+            Margin = new Thickness(0, 10, 0, 0)
+        });
+
+        foreach (var staff in StaffManagementService.GetTeamStaff(
+                     _currentDynasty, team.Name))
+        {
+            var replaceButton = new Button
+            {
+                Text = "Replace",
+                FontSize = 11,
+                Padding = new Thickness(10, 4),
+                TextColor = Colors.White,
+                HorizontalOptions = LayoutOptions.End
+            };
+            var role = staff.Role;
+            replaceButton.Clicked += async (_, _) =>
+                await ReplaceStaffAsync(team, role);
+
+            var detail = staff.Role switch
+            {
+                StaffRole.ChiefScout =>
+                    $"EVAL {staff.TalentEvaluation}/{staff.PotentialEvaluation} • " +
+                    $"REG {staff.RegionalKnowledge} • MGMT {staff.StaffManagement}",
+                StaffRole.MedicalTrainingDirector =>
+                    $"MED {staff.Medical} • LEAD {staff.Leadership}",
+                StaffRole.StrengthConditioningDirector =>
+                    $"COND {staff.Conditioning} • DEV {staff.PlayerDevelopment}",
+                StaffRole.SpecialTeamsCoordinator =>
+                    $"ST {staff.SpecialTeams} • DEV {staff.PlayerDevelopment} • GM {staff.GameManagement}",
+                StaffRole.OffensiveCoordinator or StaffRole.DefensiveCoordinator =>
+                    $"SCHEME {staff.Scheme} • DEV {staff.PlayerDevelopment} • REC {staff.Recruiting}",
+                _ =>
+                    $"LEAD {staff.Leadership} • DEV {staff.PlayerDevelopment} • " +
+                    $"REC {staff.Recruiting} • GM {staff.GameManagement}"
+            };
+
+            _programList.Children.Add(new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Star },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                },
+                ColumnSpacing = 8,
+                Children =
+                {
+                    new VerticalStackLayout
+                    {
+                        Spacing = 1,
+                        Children =
+                        {
+                            new Label
+                            {
+                                Text =
+                                    $"{FormatStaffRole(staff.Role)} • {staff.FullName} • " +
+                                    $"OVR {staff.OverallRating}",
+                                FontAttributes = FontAttributes.Bold,
+                                FontSize = 12
+                            },
+                            new Label
+                            {
+                                Text =
+                                    $"{detail} • Tenure {staff.TenureYears}y • " +
+                                    $"Contract {staff.ContractYearsRemaining}y",
+                                FontSize = 11
+                            }
+                        }
+                    },
+                    replaceButton
+                }
+            });
+            Grid.SetColumn(replaceButton, 1);
+        }
+    }
+
+    private async Task ReplaceStaffAsync(Team team, StaffRole role)
+    {
+        if (_currentDynasty is null)
+            return;
+
+        var candidate = StaffManagementService.GenerateCandidate(
+            _currentDynasty, team, role);
+        var current = StaffManagementService.GetStaff(
+            _currentDynasty, team.Name, role);
+
+        var hire = await DisplayAlert(
+            $"Hire {FormatStaffRole(role)}?",
+            $"{candidate.FullName} • OVR {candidate.OverallRating}\n" +
+            $"Current: {(current is null ? "Vacant" : $"{current.FullName} • OVR {current.OverallRating}")}\n\n" +
+            "Program prestige influences the quality of candidates willing to join.",
+            "Hire",
+            "Cancel");
+
+        if (!hire || _currentDynasty is null)
+            return;
+
+        _currentDynasty = StaffManagementService.Hire(
+            _currentDynasty, candidate);
+
+        if (role == StaffRole.ChiefScout)
+        {
+            _currentDynasty = ScoutingDepartmentService.RebuildDepartment(
+                _currentDynasty, team);
+        }
+
+        RenderCurrentDynasty();
+    }
+
+    private void RenderProgramHistory(Team team)
+    {
+        if (_currentDynasty is null)
+            return;
+
+        var prestige = _currentDynasty.ProgramPrestigeHistory
+            .Where(item =>
+                item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase) &&
+                item.SeasonYear >= _currentDynasty.SeasonYear - 8)
+            .OrderByDescending(item => item.SeasonYear)
+            .ToArray();
+
+        var completedPrestige = prestige
+            .FirstOrDefault(item => item.SeasonYear >= _currentDynasty.SeasonYear - 1 &&
+                                    item.Reasons.Any(reason =>
+                                        !reason.Equals("Initial program reputation",
+                                            StringComparison.OrdinalIgnoreCase)));
+        if (completedPrestige is not null)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text =
+                    $"PRESTIGE TREND • {completedPrestige.SeasonYear}: " +
+                    $"{completedPrestige.StartingPrestige}→{completedPrestige.EndingPrestige} " +
+                    $"({FormatSigned(completedPrestige.Change)})",
+                TextColor = GetChangeColor(completedPrestige.Change),
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+            _programList.Children.Add(new Label
+            {
+                Text = string.Join(" • ", completedPrestige.Reasons),
+                FontSize = 11
+            });
+        }
+
+        var seasons = _currentDynasty.TeamSeasonHistory
+            .Where(item => item.TeamName.Equals(
+                team.Name, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(item => item.SeasonYear)
+            .Take(8)
+            .ToArray();
+
+        if (seasons.Length > 0)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text = "SEASON HISTORY",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 10, 0, 0)
+            });
+
+            foreach (var season in seasons)
+            {
+                var achievements = new List<string>();
+                if (season.NationalChampion) achievements.Add("National Champion");
+                else if (season.PlayoffParticipant) achievements.Add("CFP");
+                if (season.ConferenceChampion) achievements.Add("Conference Champion");
+                if (season.FinalRanking > 0) achievements.Add($"#{season.FinalRanking}");
+                if (!string.IsNullOrWhiteSpace(season.BowlName))
+                    achievements.Add(
+                        $"{season.BowlName} {(season.WonBowl == true ? "W" : "L")}");
+
+                _programList.Children.Add(new Label
+                {
+                    Text =
+                        $"{season.SeasonYear} • {season.Wins}-{season.Losses} " +
+                        $"({season.ConferenceWins}-{season.ConferenceLosses} conf)" +
+                        (achievements.Count > 0
+                            ? $" • {string.Join(" • ", achievements)}"
+                            : string.Empty),
+                    FontSize = 12
+                });
+            }
+        }
+
+        if (_currentDynasty.PlayerSeasonStats.Count > 0)
+        {
+            var latestStatSeason = _currentDynasty.PlayerSeasonStats.Max(item => item.SeasonYear);
+            var nationalLeaders = _currentDynasty.PlayerSeasonStats
+                .Where(item => item.SeasonYear == latestStatSeason)
+                .OrderByDescending(item =>
+                    item.ScrimmageYards + item.Touchdowns * 100)
+                .Take(5)
+                .ToArray();
+
+            _programList.Children.Add(new Label
+            {
+                Text = $"NATIONAL STAT LEADERS • {latestStatSeason}",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 10, 0, 0)
+            });
+            foreach (var stat in nationalLeaders)
+            {
+                _programList.Children.Add(new Label
+                {
+                    Text =
+                        $"{stat.Position} {stat.PlayerName} ({stat.TeamName}) • " +
+                        $"{stat.ScrimmageYards:N0} yds • {stat.Touchdowns} TD",
+                    FontSize = 11
+                });
+            }
+
+            var conferenceLeaders = _currentDynasty.PlayerSeasonStats
+                .Where(item =>
+                    item.SeasonYear == latestStatSeason &&
+                    _teamsByName.TryGetValue(item.TeamName, out var statTeam) &&
+                    statTeam.ConferenceName.Equals(
+                        team.ConferenceName, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(item =>
+                    item.ScrimmageYards + item.Touchdowns * 100)
+                .Take(5)
+                .ToArray();
+
+            _programList.Children.Add(new Label
+            {
+                Text = $"{team.ConferenceName.ToUpperInvariant()} STAT LEADERS",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+            foreach (var stat in conferenceLeaders)
+            {
+                _programList.Children.Add(new Label
+                {
+                    Text =
+                        $"{stat.Position} {stat.PlayerName} ({stat.TeamName}) • " +
+                        $"{stat.ScrimmageYards:N0} yds • {stat.Touchdowns} TD",
+                    FontSize = 11
+                });
+            }
+
+            var schoolCareerLeader = _currentDynasty.PlayerSeasonStats
+                .Where(item => item.TeamName.Equals(
+                    team.Name, StringComparison.OrdinalIgnoreCase))
+                .GroupBy(item => new { item.PlayerId, item.PlayerName, item.Position })
+                .Select(group => new
+                {
+                    group.Key.PlayerName,
+                    group.Key.Position,
+                    Yards = group.Sum(item => item.ScrimmageYards),
+                    Touchdowns = group.Sum(item => item.Touchdowns)
+                })
+                .OrderByDescending(item => item.Yards)
+                .FirstOrDefault();
+
+            if (schoolCareerLeader is not null)
+            {
+                _programList.Children.Add(new Label
+                {
+                    Text =
+                        $"SCHOOL CAREER YARDS LEADER • {schoolCareerLeader.Position} " +
+                        $"{schoolCareerLeader.PlayerName} • " +
+                        $"{schoolCareerLeader.Yards:N0} yds • " +
+                        $"{schoolCareerLeader.Touchdowns} TD",
+                    FontAttributes = FontAttributes.Bold,
+                    FontSize = 11,
+                    Margin = new Thickness(0, 6, 0, 0)
+                });
+            }
+        }
+
+        var latestAwardSeason = _currentDynasty.PlayerAwardHistory
+            .Select(item => item.SeasonYear)
+            .DefaultIfEmpty(0)
+            .Max();
+        var programAwards = _currentDynasty.PlayerAwardHistory
+            .Where(item =>
+                item.SeasonYear == latestAwardSeason &&
+                item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(item => item.AwardName)
+            .ToArray();
+
+        if (programAwards.Length > 0)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text = $"AWARDS • {latestAwardSeason}",
+                FontAttributes = FontAttributes.Bold,
+                Margin = new Thickness(0, 10, 0, 0)
+            });
+            foreach (var award in programAwards)
+            {
+                _programList.Children.Add(new Label
+                {
+                    Text =
+                        $"{award.AwardName} • {award.Position} {award.PlayerName} • " +
+                        award.Summary,
+                    FontSize = 11
+                });
+            }
+        }
+    }
+
+    private static string FormatStaffRole(StaffRole role) => role switch
+    {
+        StaffRole.HeadCoach => "Head Coach",
+        StaffRole.OffensiveCoordinator => "Offensive Coordinator",
+        StaffRole.DefensiveCoordinator => "Defensive Coordinator",
+        StaffRole.SpecialTeamsCoordinator => "Special Teams",
+        StaffRole.MedicalTrainingDirector => "Medical / Training",
+        StaffRole.StrengthConditioningDirector => "Strength & Conditioning",
+        StaffRole.ChiefScout => "Chief Scout",
+        _ => role.ToString()
+    };
+
     private void RenderRosterManagement(
         IReadOnlyList<DynastyPlayer> userRoster)
     {
