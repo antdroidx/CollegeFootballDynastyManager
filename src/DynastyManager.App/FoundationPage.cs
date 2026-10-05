@@ -3534,101 +3534,200 @@ public sealed class FoundationPage : ContentPage
             Margin = new Thickness(0, 10, 0, 0)
         });
 
-        foreach (var staff in StaffManagementService.GetTeamStaff(
-                     _currentDynasty, team.Name))
+        foreach (var role in Enum.GetValues<StaffRole>())
         {
-            var replaceButton = new Button
+            var staff = StaffManagementService.GetStaff(
+                _currentDynasty, team.Name, role);
+
+            var candidatesButton = new Button
             {
-                Text = "Replace",
+                Text = staff is null ? "Fill Vacancy" : "Candidates",
                 FontSize = 11,
                 Padding = new Thickness(10, 4),
                 TextColor = Colors.White,
                 HorizontalOptions = LayoutOptions.End
             };
-            var role = staff.Role;
-            replaceButton.Clicked += async (_, _) =>
-                await ReplaceStaffAsync(team, role);
+            var selectedRole = role;
+            candidatesButton.Clicked += async (_, _) =>
+                await OpenStaffMarketAsync(team, selectedRole);
 
-            var detail = staff.Role switch
+            var detail = staff is null
+                ? "VACANT • Select a candidate from the shared staff market."
+                : GetStaffRoleDetail(staff);
+
+            var status = role == StaffRole.HeadCoach && staff is not null
+                ? $" • {StaffMarketService.GetHeadCoachStatus(_currentDynasty, team)}"
+                : string.Empty;
+
+            var title = staff is null
+                ? $"{FormatStaffRole(role)} • VACANT"
+                : $"{FormatStaffRole(role)} • {staff.FullName} • OVR {staff.OverallRating}{status}";
+
+            var subtext = staff is null
+                ? detail
+                : $"{detail} • Age {staff.Age} • Upside {staff.GrowthPotential}/5 • " +
+                  $"Tenure {staff.TenureYears}y • Contract {staff.ContractYearsRemaining}y";
+
+            var textColor = staff is null
+                ? NegativeChangeColor
+                : role == StaffRole.HeadCoach &&
+                  StaffMarketService.GetHeadCoachStatus(
+                      _currentDynasty, team) == "Hot Seat"
+                    ? NegativeChangeColor
+                    : Colors.Unspecified;
+
+            var info = new VerticalStackLayout
             {
-                StaffRole.ChiefScout =>
-                    $"EVAL {staff.TalentEvaluation}/{staff.PotentialEvaluation} • " +
-                    $"REG {staff.RegionalKnowledge} • MGMT {staff.StaffManagement}",
-                StaffRole.MedicalTrainingDirector =>
-                    $"MED {staff.Medical} • LEAD {staff.Leadership}",
-                StaffRole.StrengthConditioningDirector =>
-                    $"COND {staff.Conditioning} • DEV {staff.PlayerDevelopment}",
-                StaffRole.SpecialTeamsCoordinator =>
-                    $"ST {staff.SpecialTeams} • DEV {staff.PlayerDevelopment} • GM {staff.GameManagement}",
-                StaffRole.OffensiveCoordinator or StaffRole.DefensiveCoordinator =>
-                    $"SCHEME {staff.Scheme} • DEV {staff.PlayerDevelopment} • REC {staff.Recruiting}",
-                _ =>
-                    $"LEAD {staff.Leadership} • DEV {staff.PlayerDevelopment} • " +
-                    $"REC {staff.Recruiting} • GM {staff.GameManagement}"
+                Spacing = 1,
+                Children =
+                {
+                    new Label
+                    {
+                        Text = title,
+                        FontAttributes = FontAttributes.Bold,
+                        FontSize = 12,
+                        TextColor = textColor
+                    },
+                    new Label
+                    {
+                        Text = subtext,
+                        FontSize = 11
+                    }
+                }
             };
 
-            _programList.Children.Add(new Grid
+            var row = new Grid
             {
                 ColumnDefinitions =
                 {
                     new ColumnDefinition { Width = GridLength.Star },
                     new ColumnDefinition { Width = GridLength.Auto }
                 },
-                ColumnSpacing = 8,
-                Children =
-                {
-                    new VerticalStackLayout
-                    {
-                        Spacing = 1,
-                        Children =
-                        {
-                            new Label
-                            {
-                                Text =
-                                    $"{FormatStaffRole(staff.Role)} • {staff.FullName} • " +
-                                    $"OVR {staff.OverallRating}",
-                                FontAttributes = FontAttributes.Bold,
-                                FontSize = 12
-                            },
-                            new Label
-                            {
-                                Text =
-                                    $"{detail} • Tenure {staff.TenureYears}y • " +
-                                    $"Contract {staff.ContractYearsRemaining}y",
-                                FontSize = 11
-                            }
-                        }
-                    },
-                    replaceButton
-                }
-            });
-            Grid.SetColumn(replaceButton, 1);
+                ColumnSpacing = 8
+            };
+            row.Add(info);
+            row.Add(candidatesButton);
+            Grid.SetColumn(candidatesButton, 1);
+
+            _programList.Children.Add(row);
         }
+
+        RenderStaffCarouselHistory();
     }
 
-    private async Task ReplaceStaffAsync(Team team, StaffRole role)
+    private static string GetStaffRoleDetail(StaffMember staff) =>
+        staff.Role switch
+        {
+            StaffRole.ChiefScout =>
+                $"EVAL {staff.TalentEvaluation}/{staff.PotentialEvaluation} • " +
+                $"REG {staff.RegionalKnowledge} • MGMT {staff.StaffManagement}",
+            StaffRole.MedicalTrainingDirector =>
+                $"MED {staff.Medical} • LEAD {staff.Leadership}",
+            StaffRole.StrengthConditioningDirector =>
+                $"COND {staff.Conditioning} • DEV {staff.PlayerDevelopment}",
+            StaffRole.SpecialTeamsCoordinator =>
+                $"ST {staff.SpecialTeams} • DEV {staff.PlayerDevelopment} • GM {staff.GameManagement}",
+            StaffRole.OffensiveCoordinator or StaffRole.DefensiveCoordinator =>
+                $"SCHEME {staff.Scheme} • DEV {staff.PlayerDevelopment} • REC {staff.Recruiting}",
+            _ =>
+                $"LEAD {staff.Leadership} • DEV {staff.PlayerDevelopment} • " +
+                $"REC {staff.Recruiting} • GM {staff.GameManagement}"
+        };
+
+    private async Task OpenStaffMarketAsync(
+        Team team,
+        StaffRole role)
     {
         if (_currentDynasty is null)
             return;
 
-        var candidate = StaffManagementService.GenerateCandidate(
-            _currentDynasty, team, role);
-        var current = StaffManagementService.GetStaff(
-            _currentDynasty, team.Name, role);
+        _currentDynasty = StaffMarketService.EnsureMarket(
+            _currentDynasty, _teamsByName);
+
+        var candidates = StaffMarketService.GetCandidatesForTeam(
+            _currentDynasty,
+            team,
+            role,
+            9);
+
+        if (candidates.Count == 0)
+        {
+            await DisplayAlert(
+                "Staff Market",
+                $"No available {FormatStaffRole(role)} candidates are currently interested.",
+                "OK");
+            return;
+        }
+
+        var choices = candidates
+            .Select((candidate, index) =>
+            {
+                var fit = StaffMarketService.GetCandidateFitScore(
+                    _currentDynasty, team, candidate);
+                var source = candidate.Origin == StaffCandidateOrigin.FreeAgent
+                    ? "Free Agent"
+                    : candidate.SourceTeamName ?? candidate.Origin.ToString();
+
+                return $"{index + 1}. {candidate.Profile.FullName} • " +
+                       $"OVR {candidate.Profile.OverallRating} • Fit {fit} • " +
+                       $"{candidate.StyleLabel} • {source}";
+            })
+            .ToArray();
+
+        var selected = await DisplayActionSheet(
+            $"{FormatStaffRole(role)} Candidates",
+            "Cancel",
+            null,
+            choices);
+
+        if (string.IsNullOrWhiteSpace(selected) ||
+            selected.Equals("Cancel", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var selectedIndex = Array.IndexOf(choices, selected);
+        if (selectedIndex < 0 || selectedIndex >= candidates.Count)
+            return;
+
+        var candidate = candidates[selectedIndex];
+        var profile = candidate.Profile;
+        var fitScore = StaffMarketService.GetCandidateFitScore(
+            _currentDynasty, team, candidate);
+        var prestige = ProgramPrestigeService.GetCurrentPrestige(
+            _currentDynasty, team);
+        var interest = prestige + 8 >= candidate.MinimumProgramPrestige
+            ? "Interested"
+            : "Long shot";
+        var sourceText = candidate.Origin switch
+        {
+            StaffCandidateOrigin.FreeAgent => "Free Agent",
+            StaffCandidateOrigin.FiredStaff =>
+                $"Previously at {candidate.SourceTeamName}",
+            _ =>
+                $"Currently {FormatStaffRole(candidate.SourceRole ?? profile.Role)} at " +
+                $"{candidate.SourceTeamName}"
+        };
 
         var hire = await DisplayAlert(
-            $"Hire {FormatStaffRole(role)}?",
-            $"{candidate.FullName} • OVR {candidate.OverallRating}\n" +
-            $"Current: {(current is null ? "Vacant" : $"{current.FullName} • OVR {current.OverallRating}")}\n\n" +
-            "Program prestige influences the quality of candidates willing to join.",
+            $"Hire {profile.FullName}?",
+            $"{FormatStaffRole(role)} • OVR {profile.OverallRating} • Fit {fitScore}\n" +
+            $"{candidate.StyleLabel} • {sourceText}\n" +
+            $"Reputation {profile.Reputation} • Upside {candidate.GrowthPotential}/5 • Age {profile.Age}\n" +
+            $"{GetStaffCandidateDetail(profile, role)}\n" +
+            $"Market interest: {interest} • Minimum prestige {candidate.MinimumProgramPrestige}\n\n" +
+            "Hiring active staff can create a vacancy at their current school, which the CPU will refill from the same market.",
             "Hire",
             "Cancel");
 
         if (!hire || _currentDynasty is null)
             return;
 
-        _currentDynasty = StaffManagementService.Hire(
-            _currentDynasty, candidate);
+        _currentDynasty = StaffMarketService.HireUserCandidate(
+            _currentDynasty,
+            team,
+            candidate.CandidateId,
+            _teamsByName);
 
         if (role == StaffRole.ChiefScout)
         {
@@ -3637,6 +3736,74 @@ public sealed class FoundationPage : ContentPage
         }
 
         RenderCurrentDynasty();
+    }
+
+    private static string GetStaffCandidateDetail(
+        StaffMember staff,
+        StaffRole role) =>
+        role switch
+        {
+            StaffRole.HeadCoach =>
+                $"Leadership {staff.Leadership} • Recruiting {staff.Recruiting} • " +
+                $"Development {staff.PlayerDevelopment} • Game Mgmt {staff.GameManagement}",
+            StaffRole.OffensiveCoordinator or StaffRole.DefensiveCoordinator =>
+                $"Scheme {staff.Scheme} • Development {staff.PlayerDevelopment} • " +
+                $"Recruiting {staff.Recruiting} • Game Mgmt {staff.GameManagement}",
+            StaffRole.SpecialTeamsCoordinator =>
+                $"Special Teams {staff.SpecialTeams} • Development {staff.PlayerDevelopment} • " +
+                $"Game Mgmt {staff.GameManagement}",
+            StaffRole.MedicalTrainingDirector =>
+                $"Medical {staff.Medical} • Leadership {staff.Leadership} • " +
+                $"Development {staff.PlayerDevelopment}",
+            StaffRole.StrengthConditioningDirector =>
+                $"Conditioning {staff.Conditioning} • Development {staff.PlayerDevelopment} • " +
+                $"Leadership {staff.Leadership}",
+            StaffRole.ChiefScout =>
+                $"Talent Eval {staff.TalentEvaluation} • Potential Eval {staff.PotentialEvaluation} • " +
+                $"Regional {staff.RegionalKnowledge} • Management {staff.StaffManagement}",
+            _ => $"OVR {staff.OverallRating}"
+        };
+
+    private void RenderStaffCarouselHistory()
+    {
+        if (_currentDynasty is null)
+            return;
+
+        var events = _currentDynasty.StaffMovementHistory
+            .Where(item => item.SeasonYear == _currentDynasty.SeasonYear)
+            .TakeLast(14)
+            .Reverse()
+            .ToArray();
+
+        if (events.Length == 0)
+            return;
+
+        _programList.Children.Add(new Label
+        {
+            Text = "COACHING CAROUSEL",
+            FontAttributes = FontAttributes.Bold,
+            Margin = new Thickness(0, 10, 0, 0)
+        });
+
+        foreach (var movement in events)
+        {
+            var route = movement.MovementType == StaffMovementType.Fired
+                ? $"{movement.FromTeamName} released {movement.FullName}"
+                : $"{movement.FullName}: " +
+                  $"{movement.FromTeamName ?? "Free Agent"} → {movement.ToTeamName}";
+
+            _programList.Children.Add(new Label
+            {
+                Text =
+                    $"{movement.MovementType.ToString().ToUpperInvariant()} • " +
+                    $"{FormatStaffRole(movement.Role)} • {route} • " +
+                    $"OVR {movement.OverallRating}",
+                FontSize = 11,
+                TextColor = movement.MovementType == StaffMovementType.Fired
+                    ? NegativeChangeColor
+                    : PositiveChangeColor
+            });
+        }
     }
 
     private void RenderProgramHistory(Team team)
