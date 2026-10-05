@@ -20,7 +20,8 @@ public static class StaffManagementService
 
     public static DynastyState EnsureLeagueStaff(
         DynastyState state,
-        IEnumerable<Team> teams)
+        IEnumerable<Team> teams,
+        string? preserveVacanciesForTeam = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teams);
@@ -33,6 +34,15 @@ public static class StaffManagementService
                 if (staff.Any(item =>
                         item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase) &&
                         item.Role == role))
+                {
+                    continue;
+                }
+
+                if (preserveVacanciesForTeam is not null &&
+                    team.Name.Equals(
+                        preserveVacanciesForTeam,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    state.StaffMarketSeasonYear == state.SeasonYear)
                 {
                     continue;
                 }
