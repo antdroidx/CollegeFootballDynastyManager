@@ -44,6 +44,8 @@ public static class InteractiveRecruitingService
             return state;
         }
 
+        var prestige = ProgramPrestigeService.GetCurrentPrestige(state, userTeam);
+
         var rosterCount = state.ActiveRoster.Count(player =>
             player.TeamName.Equals(
                 state.UserTeamName,
@@ -55,11 +57,11 @@ public static class InteractiveRecruitingService
 
         var startingPoints = isMidseasonPortal
             ? MidseasonPortalBasePoints +
-              userTeam.Prestige * 2
+              prestige * 2
             : isOffseasonRecruiting
-                ? userTeam.Prestige * 4 +
+                ? prestige * 4 +
                   shortageBonus / 6
-                : userTeam.Prestige * 15 +
+                : prestige * 15 +
                   shortageBonus;
 
         return state with
@@ -212,11 +214,13 @@ public static class InteractiveRecruitingService
                 prospectId.ToString("N"),
                 $"recruiting-pitch-{pitchType}") % 8;
 
+        var prestige = ProgramPrestigeService.GetCurrentPrestige(state, userTeam);
+
         var gain =
             5 +
             preference.Importance / 10 +
             programGrade / 12 +
-            userTeam.Prestige / 20 +
+            prestige / 20 +
             needBonus +
             deterministicBonus;
 
@@ -694,9 +698,10 @@ public static class InteractiveRecruitingService
                 interaction);
         }
 
+        var userPrestige = ProgramPrestigeService.GetCurrentPrestige(state, userTeam);
         var userScore =
             interaction.UserInterest +
-            userTeam.Prestige / 4 +
+            userPrestige / 4 +
             RecruitPreferenceService.GetProgramGrade(
                 state, userTeam, interaction.Source,
                 interaction.ProspectId, RecruitPitchType.Proximity) / 9 +
@@ -725,7 +730,7 @@ public static class InteractiveRecruitingService
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(team =>
-                team.Prestige +
+                ProgramPrestigeService.GetCurrentPrestige(state, team) +
                 RecruitPreferenceService.GetProgramGrade(
                     state, team, interaction.Source,
                     interaction.ProspectId,
@@ -733,7 +738,7 @@ public static class InteractiveRecruitingService
                 SimulationSeed.Create(
                     state.DynastyId,
                     state.SeasonYear,
-                    team.Prestige,
+                    ProgramPrestigeService.GetCurrentPrestige(state, team),
                     interaction.ProspectId.ToString("N"),
                     $"rival-{team.Name}") % 31)
             .ThenBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
