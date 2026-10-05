@@ -36,8 +36,9 @@ public static class DynastyRosterSimulationProfileBuilder
 
             roster ??= Array.Empty<DynastyPlayer>();
 
+            var prestige = ProgramPrestigeService.GetCurrentPrestige(state, team);
             var fallback = Math.Clamp(
-                60.0 + (team.Prestige - 50) * .5,
+                60.0 + (prestige - 50) * .5,
                 55.0,
                 95.0);
 
