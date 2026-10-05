@@ -2,7 +2,7 @@ namespace DynastyManager.Core.Models;
 
 public sealed record DynastyState
 {
-    public const int CurrentSchemaVersion = 11;
+    public const int CurrentSchemaVersion = 12;
 
     public Guid DynastyId { get; init; } = Guid.NewGuid();
     public required string DynastyName { get; init; }
@@ -42,6 +42,13 @@ public sealed record DynastyState
         Array.Empty<RecruitingCommitmentRecord>();
     public IReadOnlyList<StaffMember> Staff { get; init; } =
         Array.Empty<StaffMember>();
+    public IReadOnlyList<StaffMarketCandidate> StaffMarketCandidates { get; init; } =
+        Array.Empty<StaffMarketCandidate>();
+    public IReadOnlyList<StaffMovementRecord> StaffMovementHistory { get; init; } =
+        Array.Empty<StaffMovementRecord>();
+    public int StaffMarketSeasonYear { get; init; }
+    public int StaffMarketProcessedSeasonYear { get; init; }
+    public int StaffLastAdvancedSeasonYear { get; init; }
     public IReadOnlyList<ProgramPrestigeSnapshot> ProgramPrestigeHistory { get; init; } =
         Array.Empty<ProgramPrestigeSnapshot>();
     public IReadOnlyList<TeamSeasonHistoryRecord> TeamSeasonHistory { get; init; } =
