@@ -6,41 +6,79 @@ namespace DynastyManager.Core.Simulation;
 
 public static class ScoutingDepartmentService
 {
+    private static readonly string[] ScoutNames =
+    {
+        "Blake Hart", "Trevor Mercer", "Isaiah Wallace", "Nolan Pierce",
+        "Grant Caldwell", "Evan Kim", "Miles Ortiz", "Jared Vaughn",
+        "Colin Rhodes", "Wesley Tate", "Owen Bishop", "Caleb Knox"
+    };
     public static DynastyState EnsureDepartment(DynastyState state, Team userTeam)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(userTeam);
 
         if (state.ScoutingStaff.Count > 0)
-            return EnsureAssignments(state, userTeam);
+        {
+            var staffNames = state.Staff
+                .Select(item => item.FullName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (!state.ScoutingStaff.Any(scout =>
+                    staffNames.Contains(scout.FullName)))
+            {
+                return EnsureAssignments(state, userTeam);
+            }
+
+            state = state with
+            {
+                ScoutingStaff = Array.Empty<ScoutStaff>(),
+                ScoutAssignments = Array.Empty<ScoutAssignment>()
+            };
+        }
 
         var chief = StaffManagementService.GetStaff(
             state, userTeam.Name, StaffRole.ChiefScout);
-        var names = new[]
-        {
-            "Morgan Reed", "Darius Cole", "Jamie Navarro",
-            "Avery Brooks", "Cameron Hayes"
-        };
+        var departmentKey = chief?.StaffId.ToString("N") ?? "legacy";
         var staffManagement = chief?.StaffManagement ?? 65;
         var scoutCount = chief is null
             ? 3
-            : Math.Clamp(2 + staffManagement / 24, 3, names.Length);
+            : Math.Clamp(2 + staffManagement / 24, 3, 5);
         var talentBase = chief?.TalentEvaluation ?? 68;
         var potentialBase = chief?.PotentialEvaluation ?? 68;
         var regionBase = chief?.RegionalKnowledge ?? 68;
 
-        var scouts = names.Take(scoutCount).Select((name, index) => new ScoutStaff
+        var selectedNames = ScoutNames
+            .OrderBy(name => SimulationSeed.Create(
+                state.DynastyId,
+                state.SeasonYear,
+                name.Length,
+                userTeam.Name,
+                $"scout-name-{departmentKey}-{name}"))
+            .Take(scoutCount)
+            .ToArray();
+
+        var scouts = selectedNames.Select((name, index) => new ScoutStaff
         {
-            ScoutId = StableId(state.DynastyId, $"scout-{index}"),
+            ScoutId = StableId(
+                state.DynastyId,
+                $"scout-{departmentKey}-{index}"),
             FullName = name,
             TalentEvaluation = Math.Clamp(
-                talentBase - 8 + Seed(state, index, "talent") % 17, 45, 96),
+                talentBase - 8 +
+                Seed(state, index, $"{departmentKey}-talent") % 17,
+                45, 96),
             PotentialEvaluation = Math.Clamp(
-                potentialBase - 8 + Seed(state, index, "potential") % 17, 45, 96),
+                potentialBase - 8 +
+                Seed(state, index, $"{departmentKey}-potential") % 17,
+                45, 96),
             RegionalKnowledge = Math.Clamp(
-                regionBase - 8 + Seed(state, index, "region") % 17, 45, 96),
+                regionBase - 8 +
+                Seed(state, index, $"{departmentKey}-region") % 17,
+                45, 96),
             WorkRate = Math.Clamp(
-                55 + staffManagement / 3 + Seed(state, index, "work") % 13, 45, 96)
+                55 + staffManagement / 3 +
+                Seed(state, index, $"{departmentKey}-work") % 13,
+                45, 96)
         }).ToArray();
 
         return EnsureAssignments(state with { ScoutingStaff = scouts }, userTeam);
