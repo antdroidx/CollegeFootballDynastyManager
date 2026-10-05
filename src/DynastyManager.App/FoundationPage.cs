@@ -12,6 +12,9 @@ namespace DynastyManager.App;
 
 public sealed class FoundationPage : ContentPage
 {
+    private static readonly Color PositiveChangeColor = Color.FromArgb("#22C55E");
+    private static readonly Color NegativeChangeColor = Color.FromArgb("#EF4444");
+    private static readonly Color NeutralChangeColor = Color.FromArgb("#94A3B8");
     private enum AppSection
     {
         Home,
@@ -1015,7 +1018,12 @@ public sealed class FoundationPage : ContentPage
             await ShowAdvanceProgressAsync("Setting depth charts...", 0.68);
             _currentDynasty = RosterManagementService
                 .NormalizeAllDepthCharts(_currentDynasty);
-            await ShowAdvanceProgressAsync("Hiring scouting department...", 0.84);
+            await ShowAdvanceProgressAsync("Hiring program staff...", 0.76);
+            _currentDynasty = ProgramPrestigeService.EnsureInitialPrestige(
+                _currentDynasty, _teamsByName.Values);
+            _currentDynasty = StaffManagementService.EnsureLeagueStaff(
+                _currentDynasty, _teamsByName.Values);
+            await ShowAdvanceProgressAsync("Hiring scouting department...", 0.88);
             _currentDynasty = ScoutingDepartmentService.EnsureDepartment(
                 _currentDynasty, _teamsByName[teamName]);
 
@@ -1231,6 +1239,14 @@ public sealed class FoundationPage : ContentPage
         if (phaseBeforeAdvance == SeasonPhase.Postseason &&
             _currentDynasty.Phase == SeasonPhase.TransferPortal)
         {
+            await ShowAdvanceProgressAsync("Finalizing season history and awards...", 0.74);
+            var finalProfiles = BuildCurrentSimulationProfiles();
+            _currentDynasty = DynastyHistoryService.FinalizeSeason(
+                _currentDynasty, _teamsByName, finalProfiles);
+            await ShowAdvanceProgressAsync("Updating program prestige...", 0.76);
+            _currentDynasty = ProgramPrestigeService.ApplySeasonResults(
+                _currentDynasty, _teamsByName, finalProfiles);
+
             if (_teamsByName.TryGetValue(_currentDynasty.UserTeamName,
                     out var reportTeam))
             {
@@ -1365,6 +1381,11 @@ public sealed class FoundationPage : ContentPage
                             _legacyRosterRows),
                     ScoutingRecommendationReport = null
                 };
+
+                _currentDynasty = StaffManagementService.AdvanceSeason(
+                    _currentDynasty);
+                _currentDynasty = StaffManagementService.EnsureLeagueStaff(
+                    _currentDynasty, _teamsByName.Values);
 
                 if (_teamsByName.TryGetValue(_currentDynasty.UserTeamName,
                         out var newSeasonTeam))
@@ -1509,6 +1530,10 @@ public sealed class FoundationPage : ContentPage
         state = PlayerRatingService.EnsureProfiles(state);
         state = RosterManagementService
             .NormalizeAllDepthCharts(state);
+        state = ProgramPrestigeService.EnsureInitialPrestige(
+            state, _teamsByName.Values);
+        state = StaffManagementService.EnsureLeagueStaff(
+            state, _teamsByName.Values);
 
         if (state.Phase == SeasonPhase.TransferPortal &&
             state.TransferPortalEntryWindowSeasonYear !=
@@ -3351,8 +3376,19 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
+        var currentPrestige = ProgramPrestigeService.GetCurrentPrestige(
+            _currentDynasty, team);
+        var latestPrestige = _currentDynasty.ProgramPrestigeHistory
+            .Where(item => item.TeamName.Equals(
+                team.Name, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(item => item.SeasonYear)
+            .FirstOrDefault();
+        var prestigeChange = latestPrestige?.Change ?? 0;
+
         _programStatus.Text =
-            $"{team.Name} • {team.ConferenceName} • Prestige {team.Prestige}";
+            $"{team.Name} • {team.ConferenceName} • Prestige {currentPrestige} " +
+            $"({FormatSigned(prestigeChange)})";
+        _programStatus.TextColor = GetChangeColor(prestigeChange);
 
         var titles = _currentDynasty.NationalChampionshipHistory
             .Where(record => record.ChampionTeamName.Equals(
@@ -3376,14 +3412,19 @@ public sealed class FoundationPage : ContentPage
             FontAttributes = FontAttributes.Bold
         });
 
+        RenderProgramStaff(team);
+        RenderProgramHistory(team);
+
         var latestDevelopment = GetLatestUserDevelopmentRecords();
         if (latestDevelopment.Count > 0)
         {
+            var developmentAverage = latestDevelopment.Average(record => record.OverallChange);
             _programList.Children.Add(new Label
             {
                 Text =
                     $"Latest player development: " +
-                    $"{FormatSigned(latestDevelopment.Average(record => record.OverallChange))} OVR average"
+                    $"{FormatSigned(developmentAverage)} OVR average",
+                TextColor = GetChangeColor(developmentAverage)
             });
         }
 
@@ -3697,6 +3738,7 @@ public sealed class FoundationPage : ContentPage
                               $"({FormatSigned(development.AfterPotential - development.BeforePotential)})",
                         FontSize = 12,
                         IsVisible = development is not null,
+                        TextColor = GetChangeColor(development?.OverallChange ?? 0),
                         FontAttributes = development?.OverallChange is > 0
                             ? FontAttributes.Bold
                             : FontAttributes.None
@@ -3792,10 +3834,25 @@ public sealed class FoundationPage : ContentPage
                     $"({FormatSigned(record.OverallChange)}) • " +
                     $"POT {record.BeforePotential}→{record.AfterPotential} " +
                     $"({FormatSigned(record.AfterPotential - record.BeforePotential)})",
-                FontSize = 12
+                FontSize = 12,
+                TextColor = GetChangeColor(record.OverallChange)
             });
         }
     }
+
+    private static Color GetChangeColor(int value) =>
+        value > 0
+            ? PositiveChangeColor
+            : value < 0
+                ? NegativeChangeColor
+                : NeutralChangeColor;
+
+    private static Color GetChangeColor(double value) =>
+        value > 0.05
+            ? PositiveChangeColor
+            : value < -0.05
+                ? NegativeChangeColor
+                : NeutralChangeColor;
 
     private static string FormatSigned(int value) =>
         value > 0
@@ -4152,9 +4209,17 @@ public sealed class FoundationPage : ContentPage
                 _ => "OOC"
             };
 
+            var resultColor = game.HasPlayed && game.WinnerTeamName is not null
+                ? game.WinnerTeamName.Equals(
+                    _currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase)
+                    ? PositiveChangeColor
+                    : NegativeChangeColor
+                : NeutralChangeColor;
+
             _scheduleList.Children.Add(new Label
             {
                 Text = $"Week {game.Week}: {location} {opponent} • {gameType} • {status}",
+                TextColor = resultColor,
                 FontAttributes =
                     _currentDynasty.Phase == SeasonPhase.RegularSeason &&
                     game.Week == _currentDynasty.Week
