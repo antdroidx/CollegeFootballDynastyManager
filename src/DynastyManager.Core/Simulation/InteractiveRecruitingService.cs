@@ -216,11 +216,15 @@ public static class InteractiveRecruitingService
 
         var prestige = ProgramPrestigeService.GetCurrentPrestige(state, userTeam);
 
+        var staffBonus = GetRecruitingStaffBonus(
+            state, userTeam.Name, position);
+
         var gain =
             5 +
             preference.Importance / 10 +
             programGrade / 12 +
             prestige / 20 +
+            staffBonus +
             needBonus +
             deterministicBonus;
 
@@ -699,9 +703,15 @@ public static class InteractiveRecruitingService
         }
 
         var userPrestige = ProgramPrestigeService.GetCurrentPrestige(state, userTeam);
+        var position = GetProspectPosition(
+            state, interaction.Source, interaction.ProspectId);
+        var userStaffBonus = GetRecruitingStaffBonus(
+            state, userTeam.Name, position);
+
         var userScore =
             interaction.UserInterest +
             userPrestige / 4 +
+            userStaffBonus * 2 +
             RecruitPreferenceService.GetProgramGrade(
                 state, userTeam, interaction.Source,
                 interaction.ProspectId, RecruitPitchType.Proximity) / 9 +
@@ -731,6 +741,10 @@ public static class InteractiveRecruitingService
                 StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(team =>
                 ProgramPrestigeService.GetCurrentPrestige(state, team) +
+                GetRecruitingStaffBonus(
+                    state,
+                    team.Name,
+                    GetProspectPosition(state, interaction.Source, interaction.ProspectId)) * 2 +
                 RecruitPreferenceService.GetProgramGrade(
                     state, team, interaction.Source,
                     interaction.ProspectId,
@@ -830,6 +844,31 @@ public static class InteractiveRecruitingService
             .First(recruit =>
                 recruit.RecruitId == prospectId)
             .TrueOverallRating;
+    }
+
+    private static int GetRecruitingStaffBonus(
+        DynastyState state,
+        string teamName,
+        Position position)
+    {
+        var coordinatorRole = position switch
+        {
+            Position.QB or Position.RB or Position.WR or Position.TE or Position.OL =>
+                StaffRole.OffensiveCoordinator,
+            Position.K => StaffRole.SpecialTeamsCoordinator,
+            _ => StaffRole.DefensiveCoordinator
+        };
+
+        var headCoach = StaffManagementService.GetStaff(
+            state, teamName, StaffRole.HeadCoach)?.Recruiting ?? 60;
+        var coordinator = StaffManagementService.GetStaff(
+            state, teamName, coordinatorRole)?.Recruiting ?? 60;
+        var average = (headCoach + coordinator) / 2.0;
+
+        return Math.Clamp(
+            (int)Math.Round((average - 60) / 8.0),
+            -3,
+            5);
     }
 
     private static int GetPositionNeedBonus(
