@@ -3673,7 +3673,7 @@ public sealed class FoundationPage : ContentPage
                     : candidate.SourceTeamName ?? candidate.Origin.ToString();
 
                 return $"{index + 1}. {candidate.Profile.FullName} • " +
-                       $"OVR {candidate.Profile.OverallRating} • Fit {fit} • " +
+                       $"OVR {StaffMarketService.GetProjectedOverall(candidate)} • Fit {fit} • " +
                        $"{candidate.StyleLabel} • {source}";
             })
             .ToArray();
@@ -3715,7 +3715,7 @@ public sealed class FoundationPage : ContentPage
 
         var hire = await DisplayAlert(
             $"Hire {profile.FullName}?",
-            $"{FormatStaffRole(role)} • OVR {profile.OverallRating} • Fit {fitScore}\n" +
+            $"{FormatStaffRole(role)} • OVR {StaffMarketService.GetProjectedOverall(candidate)} • Fit {fitScore}\n" +
             $"{candidate.StyleLabel} • {sourceText}\n" +
             $"Reputation {profile.Reputation} • Upside {candidate.GrowthPotential}/5 • Age {profile.Age}\n" +
             $"{GetStaffCandidateDetail(profile, role)}\n" +
