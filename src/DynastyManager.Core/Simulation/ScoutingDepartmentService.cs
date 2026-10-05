@@ -12,7 +12,9 @@ public static class ScoutingDepartmentService
         "Grant Caldwell", "Evan Kim", "Miles Ortiz", "Jared Vaughn",
         "Colin Rhodes", "Wesley Tate", "Owen Bishop", "Caleb Knox"
     };
-    public static DynastyState EnsureDepartment(DynastyState state, Team userTeam)
+    public static DynastyState EnsureDepartment(
+        DynastyState state,
+        Team userTeam)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(userTeam);
@@ -29,13 +31,49 @@ public static class ScoutingDepartmentService
                 return EnsureAssignments(state, userTeam);
             }
 
-            state = state with
+            var previousNames = state.ScoutingStaff
+                .Select(item => item.FullName)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            return BuildDepartment(
+                state with
+                {
+                    ScoutingStaff = Array.Empty<ScoutStaff>(),
+                    ScoutAssignments = Array.Empty<ScoutAssignment>()
+                },
+                userTeam,
+                previousNames);
+        }
+
+        return BuildDepartment(state, userTeam);
+    }
+
+    public static DynastyState RebuildDepartment(
+        DynastyState state,
+        Team userTeam)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(userTeam);
+
+        var previousNames = state.ScoutingStaff
+            .Select(item => item.FullName)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return BuildDepartment(
+            state with
             {
                 ScoutingStaff = Array.Empty<ScoutStaff>(),
                 ScoutAssignments = Array.Empty<ScoutAssignment>()
-            };
-        }
+            },
+            userTeam,
+            previousNames);
+    }
 
+    private static DynastyState BuildDepartment(
+        DynastyState state,
+        Team userTeam,
+        IReadOnlySet<string>? excludedNames = null)
+    {
         var chief = StaffManagementService.GetStaff(
             state, userTeam.Name, StaffRole.ChiefScout);
         var departmentKey = chief?.StaffId.ToString("N") ?? "legacy";
@@ -47,7 +85,14 @@ public static class ScoutingDepartmentService
         var potentialBase = chief?.PotentialEvaluation ?? 68;
         var regionBase = chief?.RegionalKnowledge ?? 68;
 
-        var selectedNames = ScoutNames
+        var availableNames = ScoutNames
+            .Where(name => excludedNames is null ||
+                           !excludedNames.Contains(name))
+            .ToArray();
+        if (availableNames.Length < scoutCount)
+            availableNames = ScoutNames;
+
+        var selectedNames = availableNames
             .OrderBy(name => SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
@@ -81,19 +126,10 @@ public static class ScoutingDepartmentService
                 45, 96)
         }).ToArray();
 
-        return EnsureAssignments(state with { ScoutingStaff = scouts }, userTeam);
-    }
-
-    public static DynastyState RebuildDepartment(
-        DynastyState state,
-        Team userTeam) =>
-        EnsureDepartment(
-            state with
-            {
-                ScoutingStaff = Array.Empty<ScoutStaff>(),
-                ScoutAssignments = Array.Empty<ScoutAssignment>()
-            },
+        return EnsureAssignments(
+            state with { ScoutingStaff = scouts },
             userTeam);
+    }
 
     public static DynastyState SetAssignment(
         DynastyState state,
