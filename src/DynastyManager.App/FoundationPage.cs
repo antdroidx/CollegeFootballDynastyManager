@@ -2428,6 +2428,27 @@ public sealed class FoundationPage : ContentPage
             RenderCurrentDynasty();
         };
 
+        var quickOfferButton = new Button
+        {
+            Text = interaction.ScholarshipOffered ? "Withdraw" : "Offer",
+            FontSize = 11,
+            Padding = new Thickness(10, 5),
+            TextColor = Colors.White,
+            IsVisible = _recruitingView == RecruitingView.Board,
+            IsEnabled =
+                interaction.CommittedTeamName is null &&
+                IsRecruitingOpen(prospect.Source)
+        };
+        quickOfferButton.Clicked += (_, _) =>
+        {
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty = InteractiveRecruitingService.ToggleScholarship(
+                _currentDynasty, prospect.Source, prospect.ProspectId);
+            RenderCurrentDynasty();
+        };
+
         var info = new VerticalStackLayout
         {
             Spacing = 1,
@@ -2474,6 +2495,10 @@ public sealed class FoundationPage : ContentPage
                 new ColumnDefinition
                 {
                     Width = GridLength.Auto
+                },
+                new ColumnDefinition
+                {
+                    Width = GridLength.Auto
                 }
             },
             ColumnSpacing = 8
@@ -2486,6 +2511,12 @@ public sealed class FoundationPage : ContentPage
         Grid.SetColumn(viewButton, 1);
         row.Add(boardButton);
         Grid.SetColumn(boardButton, 2);
+
+        if (_recruitingView == RecruitingView.Board)
+        {
+            row.Add(quickOfferButton);
+            Grid.SetColumn(quickOfferButton, 3);
+        }
 
         _recruitingList.Children.Add(
             new Border
@@ -4032,7 +4063,7 @@ public sealed class FoundationPage : ContentPage
                     {
                         Text =
                             $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
-                            $"POT {player.PotentialRating} • Year {player.ClassYear}" +
+                            $"POT {FormatPotentialStars(player.PotentialRating)} • Year {player.ClassYear}" +
                             (status.Count > 0
                                 ? $" • {string.Join(" • ", status)}"
                                 : string.Empty),
@@ -4056,8 +4087,8 @@ public sealed class FoundationPage : ContentPage
                             : $"Last dev ({development.SeasonYear}→{development.SeasonYear + 1}): " +
                               $"OVR {development.BeforeOverall}→{development.AfterOverall} " +
                               $"({FormatSigned(development.OverallChange)}) • " +
-                              $"POT {development.BeforePotential}→{development.AfterPotential} " +
-                              $"({FormatSigned(development.AfterPotential - development.BeforePotential)})",
+                              $"POT {FormatPotentialStars(development.BeforePotential)}→" +
+                              $"{FormatPotentialStars(development.AfterPotential)}",
                         FontSize = 12,
                         IsVisible = development is not null,
                         TextColor = GetChangeColor(development?.OverallChange ?? 0),
@@ -4087,9 +4118,22 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return Array.Empty<PlayerDevelopmentRecord>();
 
-        return PlayerDevelopmentService.GetLatestRecords(
+        var records = PlayerDevelopmentService.GetLatestRecords(
             _currentDynasty.PlayerDevelopmentHistory,
             _currentDynasty.UserTeamName);
+
+        if (records.Count > 0 &&
+            records.All(record =>
+                record.Stage == PlayerDevelopmentStage.Midseason) &&
+            !(_currentDynasty.Phase == SeasonPhase.RegularSeason &&
+              _currentDynasty.Week == 7 &&
+              records.All(record =>
+                  record.SeasonYear == _currentDynasty.SeasonYear)))
+        {
+            return Array.Empty<PlayerDevelopmentRecord>();
+        }
+
+        return records;
     }
 
     private void RenderDevelopmentResults()
@@ -4154,13 +4198,23 @@ public sealed class FoundationPage : ContentPage
                     $"{record.Position} {record.PlayerName} • " +
                     $"OVR {record.BeforeOverall}→{record.AfterOverall} " +
                     $"({FormatSigned(record.OverallChange)}) • " +
-                    $"POT {record.BeforePotential}→{record.AfterPotential} " +
-                    $"({FormatSigned(record.AfterPotential - record.BeforePotential)})",
+                    $"POT {FormatPotentialStars(record.BeforePotential)}→" +
+                    $"{FormatPotentialStars(record.AfterPotential)}",
                 FontSize = 12,
                 TextColor = GetChangeColor(record.OverallChange)
             });
         }
     }
+
+    private static string FormatPotentialStars(int potential) =>
+        potential switch
+        {
+            >= 92 => "5★",
+            >= 84 => "4★",
+            >= 76 => "3★",
+            >= 68 => "2★",
+            _ => "1★"
+        };
 
     private static Color GetChangeColor(int value) =>
         value > 0
