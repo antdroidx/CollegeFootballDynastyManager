@@ -1539,7 +1539,11 @@ public sealed class FoundationPage : ContentPage
         state = ProgramPrestigeService.EnsureInitialPrestige(
             state, _teamsByName.Values);
         state = StaffManagementService.EnsureLeagueStaff(
-            state, _teamsByName.Values);
+            state,
+            _teamsByName.Values,
+            state.StaffMarketSeasonYear == state.SeasonYear
+                ? state.UserTeamName
+                : null);
 
         if ((state.Phase is
                  SeasonPhase.TransferPortal or
