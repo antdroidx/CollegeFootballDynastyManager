@@ -22,7 +22,9 @@ public static class ScoutingDepartmentService
             "Avery Brooks", "Cameron Hayes"
         };
         var staffManagement = chief?.StaffManagement ?? 65;
-        var scoutCount = Math.Clamp(2 + staffManagement / 24, 3, names.Length);
+        var scoutCount = chief is null
+            ? 3
+            : Math.Clamp(2 + staffManagement / 24, 3, names.Length);
         var talentBase = chief?.TalentEvaluation ?? 68;
         var potentialBase = chief?.PotentialEvaluation ?? 68;
         var regionBase = chief?.RegionalKnowledge ?? 68;
