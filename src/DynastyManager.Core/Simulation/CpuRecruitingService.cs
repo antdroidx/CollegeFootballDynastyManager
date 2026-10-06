@@ -11,6 +11,128 @@ namespace DynastyManager.Core.Simulation;
 public static class CpuRecruitingService
 {
     public const int MaximumCpuTransferAdditionsPerTeam = 8;
+    public const int WeeklyUserAssistanceOffers = 3;
+    public const int MaximumUserAssistedOpenOffers = 10;
+
+    public static DynastyState ApplyWeeklyUserAssistance(
+        DynastyState state,
+        Team userTeam)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(userTeam);
+
+        if (!state.RecruitingAssistanceEnabled ||
+            state.Phase != SeasonPhase.Recruiting ||
+            (state.RecruitingAssistanceSeasonYear == state.SeasonYear &&
+             state.RecruitingAssistanceWeek == state.Week))
+        {
+            return state;
+        }
+
+        var interactions = state.RecruitingInteractions.ToList();
+        var openOffers = interactions.Count(item =>
+            item.SeasonYear == state.SeasonYear &&
+            item.Source == RecruitingSource.HighSchool &&
+            item.CommittedTeamName is null &&
+            item.ScholarshipOffered);
+
+        var rosterCount = CountTeamRoster(
+            state.ActiveRoster,
+            state.UserTeamName);
+        var openSlots = Math.Max(
+            0,
+            DynastyRosterRules.MaximumRosterSize - rosterCount);
+        var desiredOpenOffers = Math.Min(
+            MaximumUserAssistedOpenOffers,
+            Math.Max(3, openSlots));
+        var additions = Math.Min(
+            WeeklyUserAssistanceOffers,
+            Math.Max(0, desiredOpenOffers - openOffers));
+
+        for (var index = 0; index < additions; index++)
+        {
+            var candidate = state.HighSchoolRecruitingPool
+                .Where(recruit =>
+                    recruit.SeasonYear == 0 ||
+                    recruit.SeasonYear == state.SeasonYear)
+                .Where(recruit =>
+                {
+                    var interaction =
+                        InteractiveRecruitingService.GetInteraction(
+                            state with
+                            {
+                                RecruitingInteractions = interactions
+                            },
+                            RecruitingSource.HighSchool,
+                            recruit.RecruitId);
+
+                    if (interaction.CommittedTeamName is not null ||
+                        interaction.ScholarshipOffered ||
+                        interaction.IsOnTargetBoard ||
+                        interaction.WasCpuAssisted)
+                    {
+                        return false;
+                    }
+
+                    return RecruitPreferenceService.GetAttainabilityScore(
+                        state with
+                        {
+                            RecruitingInteractions = interactions
+                        },
+                        userTeam,
+                        RecruitingSource.HighSchool,
+                        recruit.RecruitId) >= 35;
+                })
+                .OrderByDescending(recruit =>
+                    GetUserAssistanceScore(
+                        state with
+                        {
+                            RecruitingInteractions = interactions
+                        },
+                        userTeam,
+                        recruit))
+                .ThenBy(recruit => recruit.FullName,
+                    StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+
+            if (candidate is null)
+                break;
+
+            var existing =
+                InteractiveRecruitingService.GetInteraction(
+                    state with
+                    {
+                        RecruitingInteractions = interactions
+                    },
+                    RecruitingSource.HighSchool,
+                    candidate.RecruitId);
+
+            var updated = existing with
+            {
+                IsOnTargetBoard = true,
+                ScholarshipOffered = true,
+                WasCpuAssisted = true,
+                UserInterest = existing.UserInterest + 15
+            };
+
+            var existingIndex = interactions.FindIndex(item =>
+                item.SeasonYear == updated.SeasonYear &&
+                item.Source == updated.Source &&
+                item.ProspectId == updated.ProspectId);
+
+            if (existingIndex >= 0)
+                interactions[existingIndex] = updated;
+            else
+                interactions.Add(updated);
+        }
+
+        return state with
+        {
+            RecruitingInteractions = interactions,
+            RecruitingAssistanceSeasonYear = state.SeasonYear,
+            RecruitingAssistanceWeek = state.Week
+        };
+    }
 
     public static DynastyState ApplyPhaseAssistance(
         DynastyState state,
@@ -213,6 +335,21 @@ public static class CpuRecruitingService
                     StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
+        if (team.Name.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase) &&
+            source == RecruitingSource.HighSchool)
+        {
+            pool = pool
+                .Where(candidate =>
+                    RecruitPreferenceService.GetAttainabilityScore(
+                        state,
+                        team,
+                        RecruitingSource.HighSchool,
+                        candidate.ProspectId) >= 30)
+                .ToArray();
+        }
+
         if (pool.Length == 0)
             return null;
 
@@ -233,6 +370,67 @@ public static class CpuRecruitingService
             .ThenByDescending(candidate => candidate.OverallRating)
             .ThenBy(candidate => candidate.FullName, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault();
+    }
+
+    private static int GetUserAssistanceScore(
+        DynastyState state,
+        Team userTeam,
+        HighSchoolRecruit recruit)
+    {
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                state,
+                RecruitingSource.HighSchool,
+                recruit.RecruitId);
+        var attainability =
+            RecruitPreferenceService.GetAttainabilityScore(
+                state,
+                userTeam,
+                RecruitingSource.HighSchool,
+                recruit.RecruitId);
+        var need =
+            GetUserAssistancePositionNeed(
+                state,
+                recruit.Position);
+        var scoutKnowledge = interaction.ScoutingPercent;
+
+        return attainability * 10 +
+               need * 220 +
+               recruit.StarRating * 90 +
+               scoutKnowledge * 2 +
+               SimulationSeed.Create(
+                   state.DynastyId,
+                   state.SeasonYear,
+                   state.Week,
+                   userTeam.Name,
+                   $"assist-{recruit.RecruitId:N}") % 61;
+    }
+
+    private static int GetUserAssistancePositionNeed(
+        DynastyState state,
+        Position position)
+    {
+        var current = state.ActiveRoster.Count(player =>
+            player.TeamName.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase) &&
+            player.Position == position);
+        var offered = state.RecruitingInteractions.Count(item =>
+            item.SeasonYear == state.SeasonYear &&
+            item.Source == RecruitingSource.HighSchool &&
+            item.ScholarshipOffered &&
+            item.CommittedTeamName is null &&
+            state.HighSchoolRecruitingPool.Any(recruit =>
+                recruit.RecruitId == item.ProspectId &&
+                recruit.Position == position));
+        var target =
+            DynastyRosterRules.TargetPositionCounts.TryGetValue(
+                position,
+                out var count)
+                ? count
+                : 1;
+
+        return Math.Max(0, target - current - offered);
     }
 
     private static int GetCandidateFitScore(
