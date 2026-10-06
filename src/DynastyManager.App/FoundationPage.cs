@@ -844,7 +844,7 @@ public sealed class FoundationPage : ContentPage
                         _recruitingAssistanceSwitch,
                         new Label
                         {
-                            Text = "CPU fills remaining roster needs",
+                            Text = "CPU suggests weekly targets and offers",
                             VerticalTextAlignment = TextAlignment.Center,
                             FontAttributes = FontAttributes.Bold
                         }
@@ -852,7 +852,7 @@ public sealed class FoundationPage : ContentPage
                 },
                 new Label
                 {
-                    Text = "Enabled by default. Your manual targets resolve first; assistance fills open roster spots afterward.",
+                    Text = "Enabled by default. Assistance adds realistic need-based targets and scholarship offers to your board each recruiting week. Walk-ons fill any remaining roster shortages.",
                     FontSize = 12
                 },
                 new BoxView { HeightRequest = 1 },
