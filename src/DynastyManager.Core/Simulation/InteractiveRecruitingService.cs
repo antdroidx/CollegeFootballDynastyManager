@@ -135,6 +135,7 @@ public static class InteractiveRecruitingService
         interaction = interaction with
         {
             IsOnTargetBoard = true,
+            WasCpuAssisted = false,
             ScholarshipOffered =
                 !interaction.ScholarshipOffered,
             UserInterest =
@@ -263,7 +264,8 @@ public static class InteractiveRecruitingService
             interaction with
             {
                 IsOnTargetBoard =
-                    !interaction.IsOnTargetBoard
+                    !interaction.IsOnTargetBoard,
+                WasCpuAssisted = false
             });
     }
 
