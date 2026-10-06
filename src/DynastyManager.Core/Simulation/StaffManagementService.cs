@@ -26,11 +26,25 @@ public static class StaffManagementService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teams);
 
-        var staff = state.Staff.ToList();
+        var staff = state.Staff
+            .Where(item =>
+                !(item.Role == StaffRole.HeadCoach &&
+                  item.TeamName.Equals(
+                      state.UserTeamName,
+                      StringComparison.OrdinalIgnoreCase)))
+            .ToList();
         foreach (var team in teams.OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase))
         {
             foreach (var role in RequiredRoles)
             {
+                if (role == StaffRole.HeadCoach &&
+                    team.Name.Equals(
+                        state.UserTeamName,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 if (staff.Any(item =>
                         item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase) &&
                         item.Role == role))
@@ -91,6 +105,14 @@ public static class StaffManagementService
         DynastyState state,
         StaffMember candidate)
     {
+        if (candidate.Role == StaffRole.HeadCoach &&
+            candidate.TeamName.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return state;
+        }
+
         var staff = state.Staff
             .Where(item => !(item.TeamName.Equals(
                                 candidate.TeamName,
