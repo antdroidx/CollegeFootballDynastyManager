@@ -26,6 +26,12 @@ public static class StaffManagementService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teams);
 
+        var teamArray = teams
+            .OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        state = EnsureUserHeadCoach(state, teamArray);
+
         var staff = state.Staff
             .Where(item =>
                 !(item.Role == StaffRole.HeadCoach &&
@@ -33,7 +39,7 @@ public static class StaffManagementService
                       state.UserTeamName,
                       StringComparison.OrdinalIgnoreCase)))
             .ToList();
-        foreach (var team in teams.OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase))
+        foreach (var team in teamArray)
         {
             foreach (var role in RequiredRoles)
             {
@@ -71,10 +77,21 @@ public static class StaffManagementService
     public static StaffMember? GetStaff(
         DynastyState state,
         string teamName,
-        StaffRole role) =>
-        state.Staff.FirstOrDefault(item =>
+        StaffRole role)
+    {
+        if (role == StaffRole.HeadCoach &&
+            teamName.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase) &&
+            state.UserHeadCoach is not null)
+        {
+            return state.UserHeadCoach;
+        }
+
+        return state.Staff.FirstOrDefault(item =>
             item.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
             item.Role == role);
+    }
 
     public static int GetRoleRating(
         DynastyState state,
@@ -177,6 +194,112 @@ public static class StaffManagementService
         {
             Staff = staff,
             StaffLastAdvancedSeasonYear = state.SeasonYear
+        };
+    }
+
+    public static DynastyState EnsureUserHeadCoach(
+        DynastyState state,
+        IEnumerable<Team> teams)
+    {
+        if (state.UserHeadCoach is not null)
+        {
+            if (!state.UserHeadCoach.TeamName.Equals(
+                    state.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return state with
+                {
+                    UserHeadCoach = state.UserHeadCoach with
+                    {
+                        TeamName = state.UserTeamName,
+                        Role = StaffRole.HeadCoach
+                    }
+                };
+            }
+
+            return state;
+        }
+
+        var userTeam = teams.FirstOrDefault(team =>
+            team.Name.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase));
+        if (userTeam is null)
+            return state;
+
+        var legacy = state.Staff.FirstOrDefault(item =>
+            item.TeamName.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase) &&
+            item.Role == StaffRole.HeadCoach);
+
+        var profile = legacy is not null
+            ? legacy with
+            {
+                FullName = "YOU",
+                TeamName = state.UserTeamName,
+                Role = StaffRole.HeadCoach
+            }
+            : CreateUserHeadCoach(state, userTeam);
+
+        return state with
+        {
+            UserHeadCoach = profile
+        };
+    }
+
+    private static StaffMember CreateUserHeadCoach(
+        DynastyState state,
+        Team team)
+    {
+        var prestige =
+            ProgramPrestigeService.GetCurrentPrestige(state, team);
+        var baseRating = Math.Clamp(
+            55 + prestige / 10,
+            58,
+            66);
+
+        int Attribute(string key, int adjustment = 0)
+        {
+            var noise = SimulationSeed.Create(
+                state.DynastyId,
+                state.SeasonYear,
+                adjustment,
+                team.Name,
+                $"user-hc-{key}") % 7 - 3;
+
+            return Math.Clamp(
+                baseRating + adjustment + noise,
+                50,
+                75);
+        }
+
+        return new StaffMember
+        {
+            StaffId = StableId(
+                state.DynastyId,
+                "user-head-coach"),
+            FullName = "YOU",
+            TeamName = team.Name,
+            Role = StaffRole.HeadCoach,
+            Reputation = Attribute("reputation", -2),
+            Leadership = Attribute("leadership", 1),
+            Recruiting = Attribute("recruiting"),
+            PlayerDevelopment = Attribute("development"),
+            GameManagement = Attribute("game-management"),
+            Scheme = Attribute("scheme"),
+            SpecialTeams = 60,
+            Medical = 60,
+            Conditioning = 60,
+            TalentEvaluation = 60,
+            PotentialEvaluation = 60,
+            RegionalKnowledge = 60,
+            StaffManagement = Attribute("staff-management"),
+            Age = 35,
+            CareerYears = 0,
+            GrowthPotential = 5,
+            TenureYears = 0,
+            ContractYearsRemaining = 4
         };
     }
 
