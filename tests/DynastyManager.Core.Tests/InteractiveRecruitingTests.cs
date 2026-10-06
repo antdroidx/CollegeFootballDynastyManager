@@ -364,10 +364,10 @@ public class InteractiveRecruitingTests
             Recruit("Elite Reach", 5, 90, 98, Position.QB, 4),
             Recruit("Local QB", 1, 61, 78, Position.QB, 1),
             Recruit("Local RB", 1, 60, 76, Position.RB, 1),
-            Recruit("Local WR", 2, 66, 82, Position.WR, 1),
-            Recruit("Local OL", 2, 65, 80, Position.OL, 1),
+            Recruit("Local WR", 1, 62, 80, Position.WR, 1),
+            Recruit("Local OL", 1, 61, 79, Position.OL, 1),
             Recruit("Local LB", 1, 60, 77, Position.OLB, 1),
-            Recruit("Local CB", 2, 64, 81, Position.CB, 1)
+            Recruit("Local CB", 1, 62, 80, Position.CB, 1)
         };
 
         var state = new DynastyState
