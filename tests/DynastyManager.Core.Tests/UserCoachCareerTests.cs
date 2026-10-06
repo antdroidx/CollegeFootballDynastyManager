@@ -39,6 +39,54 @@ public sealed class UserCoachCareerTests
     }
 
     [Fact]
+    public void UserHeadCoachRatingChangesSimulationProfile()
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(
+            State(),
+            teams.Values);
+        var baseCoach = state.UserHeadCoach!;
+
+        var low = state with
+        {
+            UserHeadCoach = baseCoach with
+            {
+                Leadership = 45,
+                Recruiting = 45,
+                PlayerDevelopment = 45,
+                GameManagement = 45
+            }
+        };
+        var high = state with
+        {
+            UserHeadCoach = baseCoach with
+            {
+                Leadership = 95,
+                Recruiting = 95,
+                PlayerDevelopment = 95,
+                GameManagement = 95
+            }
+        };
+
+        var lowProfile =
+            DynastyRosterSimulationProfileBuilder
+                .Build(low, teams.Values)["User"];
+        var highProfile =
+            DynastyRosterSimulationProfileBuilder
+                .Build(high, teams.Values)["User"];
+
+        Assert.True(
+            highProfile.PassOffenseRating >
+            lowProfile.PassOffenseRating);
+        Assert.True(
+            highProfile.RushDefenseRating >
+            lowProfile.RushDefenseRating);
+        Assert.True(
+            highProfile.SpecialTeamsRating >
+            lowProfile.SpecialTeamsRating);
+    }
+
+    [Fact]
     public void StrongSeasonDevelopsCoachAndGeneratesJobOffers()
     {
         var teams = Teams();
