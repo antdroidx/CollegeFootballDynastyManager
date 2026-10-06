@@ -18,9 +18,23 @@ public static class UserCoachCareerService
             teamsByName.Values);
 
         if (state.UserHeadCoach is null ||
-            state.UserCoachLastEvaluatedSeasonYear >= state.SeasonYear ||
             !teamsByName.TryGetValue(state.UserTeamName, out var team))
         {
+            return state;
+        }
+
+        if (state.UserCoachLastEvaluatedSeasonYear >= state.SeasonYear)
+        {
+            if (state.UserCoachIsFired &&
+                !state.UserCoachJobOffers.Any(item =>
+                    item.Status ==
+                        UserCoachJobOfferStatus.Pending))
+            {
+                return GenerateJobOffers(
+                    state,
+                    teamsByName);
+            }
+
             return state;
         }
 
