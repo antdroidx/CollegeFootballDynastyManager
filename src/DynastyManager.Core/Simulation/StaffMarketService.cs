@@ -555,15 +555,112 @@ public static class StaffMarketService
         };
     }
 
+    public static DynastyState HandleUserHeadCoachMove(
+        DynastyState state,
+        string oldTeamName,
+        string newTeamName,
+        IReadOnlyDictionary<string, Team> teamsByName)
+    {
+        if (oldTeamName.Equals(
+                newTeamName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return state;
+        }
+
+        state = EnsureMarket(state, teamsByName);
+
+        var staff = state.Staff.ToList();
+        var candidates =
+            state.StaffMarketCandidates.ToList();
+        var history =
+            state.StaffMovementHistory.ToList();
+        var vacancies =
+            new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+        var displaced = staff.FirstOrDefault(item =>
+            item.TeamName.Equals(
+                newTeamName,
+                StringComparison.OrdinalIgnoreCase) &&
+            item.Role == StaffRole.HeadCoach);
+
+        if (displaced is not null)
+        {
+            ReleaseToMarket(
+                state,
+                displaced,
+                "Program hired the user as head coach.",
+                StaffMovementType.Fired,
+                null,
+                staff,
+                candidates,
+                history,
+                teamsByName);
+        }
+
+        if (teamsByName.ContainsKey(oldTeamName))
+        {
+            vacancies.Add(VacancyKey(
+                oldTeamName,
+                StaffRole.HeadCoach));
+        }
+
+        if (state.UserHeadCoach is not null)
+        {
+            history.Add(new StaffMovementRecord
+            {
+                SeasonYear = state.SeasonYear,
+                StaffId =
+                    state.UserHeadCoach.StaffId,
+                FullName = "YOU",
+                Role = StaffRole.HeadCoach,
+                MovementType =
+                    StaffMovementType.Hired,
+                FromTeamName = oldTeamName,
+                ToTeamName = newTeamName,
+                OverallRating =
+                    state.UserHeadCoach.OverallRating,
+                Reason =
+                    "User accepted a head-coaching job offer."
+            });
+        }
+
+        FillCpuVacancies(
+            state,
+            teamsByName,
+            staff,
+            candidates,
+            history,
+            vacancies);
+
+        return state with
+        {
+            Staff = staff,
+            StaffMarketCandidates = candidates,
+            StaffMovementHistory = history
+        };
+    }
+
     public static string GetHeadCoachStatus(
         DynastyState state,
         Team team)
     {
-        var coach = state.Staff.FirstOrDefault(item =>
-            item.TeamName.Equals(
-                team.Name,
-                StringComparison.OrdinalIgnoreCase) &&
-            item.Role == StaffRole.HeadCoach);
+        if (team.Name.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            if (state.UserCoachIsFired)
+                return "Fired";
+
+            return UserCoachCareerService.GetJobSecurityLabel(
+                state.UserCoachJobSecurity);
+        }
+
+        var coach = StaffManagementService.GetStaff(
+            state,
+            team.Name,
+            StaffRole.HeadCoach);
         if (coach is null)
             return "Vacant";
 
