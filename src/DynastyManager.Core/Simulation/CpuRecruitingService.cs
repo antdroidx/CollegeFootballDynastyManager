@@ -4,15 +4,14 @@ namespace DynastyManager.Core.Simulation;
 
 /// <summary>
 /// CPU recruiting support for the league. CPU programs fill roster needs
-/// directly. The user program receives visible weekly high-school targets and
-/// scholarship offers when assistance is enabled; final high-school signings
-/// are not silently generated for the user. Transfer assistance remains capped.
+/// directly. User recruiting assistance can operate the same visible recruiting
+/// system as the player: target board, scholarships, scouting and pitches. The
+/// workload setting controls how much of the available recruiting budget staff
+/// may use, while manual user-managed prospects are never overwritten.
 /// </summary>
 public static class CpuRecruitingService
 {
     public const int MaximumCpuTransferAdditionsPerTeam = 8;
-    public const int WeeklyUserAssistanceOffers = 3;
-    public const int MaximumUserAssistedOpenOffers = 10;
 
     public static DynastyState ApplyWeeklyUserAssistance(
         DynastyState state,
@@ -21,20 +20,28 @@ public static class CpuRecruitingService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(userTeam);
 
+        var workload = Math.Clamp(
+            state.RecruitingAssistanceWorkloadPercent,
+            0,
+            100);
+        var sources = GetAssistanceSources(state);
+
         if (!state.RecruitingAssistanceEnabled ||
-            state.Phase != SeasonPhase.Recruiting ||
+            workload <= 0 ||
+            sources.Length == 0 ||
             (state.RecruitingAssistanceSeasonYear == state.SeasonYear &&
-             state.RecruitingAssistanceWeek == state.Week))
+             state.RecruitingAssistanceWeek == state.Week &&
+             state.RecruitingAssistancePhase == state.Phase))
         {
             return state;
         }
 
-        var interactions = state.RecruitingInteractions.ToList();
-        var openOffers = interactions.Count(item =>
-            item.SeasonYear == state.SeasonYear &&
-            item.Source == RecruitingSource.HighSchool &&
-            item.CommittedTeamName is null &&
-            item.ScholarshipOffered);
+        var startingPoints = state.RecruitingPointsRemaining;
+        var pointBudget = Math.Clamp(
+            (int)Math.Floor(
+                startingPoints * (workload / 100.0)),
+            0,
+            startingPoints);
 
         var rosterCount = CountTeamRoster(
             state.ActiveRoster,
@@ -42,95 +49,287 @@ public static class CpuRecruitingService
         var openSlots = Math.Max(
             0,
             DynastyRosterRules.MaximumRosterSize - rosterCount);
-        var desiredOpenOffers = Math.Min(
-            MaximumUserAssistedOpenOffers,
-            Math.Max(3, openSlots));
-        var additions = Math.Min(
-            WeeklyUserAssistanceOffers,
-            Math.Max(0, desiredOpenOffers - openOffers));
 
-        for (var index = 0; index < additions; index++)
+        var currentOffers = state.RecruitingInteractions.Count(item =>
+            item.SeasonYear == state.SeasonYear &&
+            sources.Contains(item.Source) &&
+            item.CommittedTeamName is null &&
+            item.ScholarshipOffered);
+
+        var offerMultiplier =
+            0.75 + workload / 100.0 * 0.75;
+        var desiredOpenOffers = openSlots == 0
+            ? 0
+            : Math.Max(
+                Math.Min(3, openSlots),
+                (int)Math.Ceiling(
+                    openSlots * offerMultiplier));
+
+        var additionsNeeded = Math.Max(
+            0,
+            desiredOpenOffers - currentOffers);
+
+        var availableCandidates = sources
+            .SelectMany(source =>
+                GetCandidates(state, source)
+                    .Select(candidate =>
+                        new AssistanceCandidate(
+                            source,
+                            candidate)))
+            .Where(item =>
+                item.Source != RecruitingSource.TransferPortal ||
+                !item.Candidate.OriginTeamName.Equals(
+                    state.UserTeamName,
+                    StringComparison.OrdinalIgnoreCase))
+            .Where(item =>
+            {
+                var interaction =
+                    InteractiveRecruitingService.GetInteraction(
+                        state,
+                        item.Source,
+                        item.Candidate.ProspectId);
+
+                if (interaction.CommittedTeamName is not null ||
+                    interaction.ScholarshipOffered ||
+                    IsManualInteraction(interaction))
+                {
+                    return false;
+                }
+
+                var threshold =
+                    Math.Clamp(38 - workload / 8, 24, 38);
+                return RecruitPreferenceService
+                    .GetAttainabilityScore(
+                        state,
+                        userTeam,
+                        item.Source,
+                        item.Candidate.ProspectId) >=
+                    threshold;
+            })
+            .OrderByDescending(item =>
+                GetUserAssistanceScore(
+                    state,
+                    userTeam,
+                    item.Source,
+                    item.Candidate))
+            .ThenByDescending(item =>
+                item.Candidate.OverallRating)
+            .ThenBy(item =>
+                item.Candidate.FullName,
+                StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        foreach (var candidate in availableCandidates
+                     .Take(additionsNeeded))
         {
-            var candidate = state.HighSchoolRecruitingPool
-                .Where(recruit =>
-                    recruit.SeasonYear == 0 ||
-                    recruit.SeasonYear == state.SeasonYear)
-                .Where(recruit =>
+            state = InteractiveRecruitingService
+                .ToggleScholarship(
+                    state,
+                    candidate.Source,
+                    candidate.Candidate.ProspectId,
+                    cpuAssisted: true);
+        }
+
+        var assistedTargets = GetAssistedTargets(
+            state,
+            userTeam,
+            sources);
+
+        if (assistedTargets.Length > 0 &&
+            pointBudget >=
+                InteractiveRecruitingService.ScoutCost)
+        {
+            var chiefScout =
+                StaffManagementService.GetStaff(
+                    state,
+                    state.UserTeamName,
+                    StaffRole.ChiefScout);
+            var scoutQuality =
+                GetScoutQuality(state, chiefScout);
+            var scoutingShare = Math.Clamp(
+                0.20 +
+                (scoutQuality - 50) / 200.0,
+                0.18,
+                0.42);
+            var scoutingBudget =
+                (int)Math.Floor(
+                    pointBudget * scoutingShare);
+            var targetScoutPercent = workload switch
+            {
+                >= 90 => 100,
+                >= 60 => 75,
+                _ => 50
+            };
+            if (scoutQuality >= 85)
+            {
+                targetScoutPercent = Math.Min(
+                    100,
+                    targetScoutPercent + 25);
+            }
+
+            var scoutingSpent = 0;
+            var madeProgress = true;
+
+            while (madeProgress &&
+                   scoutingSpent +
+                       InteractiveRecruitingService.ScoutCost <=
+                   scoutingBudget)
+            {
+                madeProgress = false;
+
+                foreach (var target in assistedTargets)
                 {
                     var interaction =
                         InteractiveRecruitingService.GetInteraction(
-                            state with
-                            {
-                                RecruitingInteractions = interactions
-                            },
-                            RecruitingSource.HighSchool,
-                            recruit.RecruitId);
+                            state,
+                            target.Source,
+                            target.Candidate.ProspectId);
 
-                    if (interaction.CommittedTeamName is not null ||
-                        interaction.ScholarshipOffered ||
-                        interaction.IsOnTargetBoard ||
-                        interaction.WasCpuAssisted)
+                    if (interaction.ScoutingPercent >=
+                            targetScoutPercent ||
+                        state.RecruitingPointsRemaining <
+                            InteractiveRecruitingService.ScoutCost ||
+                        scoutingSpent +
+                            InteractiveRecruitingService.ScoutCost >
+                            scoutingBudget)
                     {
-                        return false;
+                        continue;
                     }
 
-                    return RecruitPreferenceService.GetAttainabilityScore(
-                        state with
-                        {
-                            RecruitingInteractions = interactions
-                        },
-                        userTeam,
-                        RecruitingSource.HighSchool,
-                        recruit.RecruitId) >= 35;
-                })
-                .OrderByDescending(recruit =>
-                    GetUserAssistanceScore(
-                        state with
-                        {
-                            RecruitingInteractions = interactions
-                        },
-                        userTeam,
-                        recruit))
-                .ThenBy(recruit => recruit.FullName,
-                    StringComparer.OrdinalIgnoreCase)
-                .FirstOrDefault();
+                    var before =
+                        state.RecruitingPointsRemaining;
+                    state = InteractiveRecruitingService.Scout(
+                        state,
+                        target.Source,
+                        target.Candidate.ProspectId,
+                        cpuAssisted: true);
 
-            if (candidate is null)
-                break;
-
-            var existing =
-                InteractiveRecruitingService.GetInteraction(
-                    state with
+                    if (state.RecruitingPointsRemaining <
+                        before)
                     {
-                        RecruitingInteractions = interactions
-                    },
-                    RecruitingSource.HighSchool,
-                    candidate.RecruitId);
+                        scoutingSpent +=
+                            before -
+                            state.RecruitingPointsRemaining;
+                        madeProgress = true;
+                    }
+                }
+            }
+        }
 
-            var updated = existing with
+        var spentSoFar =
+            startingPoints - state.RecruitingPointsRemaining;
+        var remainingBudget =
+            Math.Max(0, pointBudget - spentSoFar);
+
+        assistedTargets = GetAssistedTargets(
+            state,
+            userTeam,
+            sources);
+
+        var pitchProgress = true;
+        while (pitchProgress &&
+               remainingBudget >=
+                   InteractiveRecruitingService.PitchCost &&
+               state.RecruitingPointsRemaining >=
+                   InteractiveRecruitingService.PitchCost)
+        {
+            pitchProgress = false;
+
+            foreach (var target in assistedTargets)
             {
-                IsOnTargetBoard = true,
-                ScholarshipOffered = true,
-                WasCpuAssisted = true,
-                UserInterest = existing.UserInterest + 15
-            };
+                if (remainingBudget <
+                        InteractiveRecruitingService.PitchCost ||
+                    state.RecruitingPointsRemaining <
+                        InteractiveRecruitingService.PitchCost)
+                {
+                    break;
+                }
 
-            var existingIndex = interactions.FindIndex(item =>
-                item.SeasonYear == updated.SeasonYear &&
-                item.Source == updated.Source &&
-                item.ProspectId == updated.ProspectId);
+                var interaction =
+                    InteractiveRecruitingService.GetInteraction(
+                        state,
+                        target.Source,
+                        target.Candidate.ProspectId);
+                if (interaction.CommittedTeamName is not null ||
+                    !interaction.ScholarshipOffered ||
+                    !interaction.WasCpuAssisted)
+                {
+                    continue;
+                }
 
-            if (existingIndex >= 0)
-                interactions[existingIndex] = updated;
-            else
-                interactions.Add(updated);
+                var pitchType = GetBestPitchType(
+                    state,
+                    userTeam,
+                    target.Source,
+                    target.Candidate);
+
+                var before =
+                    state.RecruitingPointsRemaining;
+                state = InteractiveRecruitingService.Pitch(
+                    state,
+                    userTeam,
+                    target.Source,
+                    target.Candidate.ProspectId,
+                    pitchType,
+                    cpuAssisted: true);
+
+                var spent =
+                    before - state.RecruitingPointsRemaining;
+                if (spent > 0)
+                {
+                    remainingBudget -= spent;
+                    pitchProgress = true;
+                }
+            }
+        }
+
+        if (remainingBudget >=
+                InteractiveRecruitingService.ScoutCost &&
+            state.RecruitingPointsRemaining >=
+                InteractiveRecruitingService.ScoutCost)
+        {
+            assistedTargets = GetAssistedTargets(
+                state,
+                userTeam,
+                sources);
+
+            foreach (var target in assistedTargets)
+            {
+                if (remainingBudget <
+                        InteractiveRecruitingService.ScoutCost ||
+                    state.RecruitingPointsRemaining <
+                        InteractiveRecruitingService.ScoutCost)
+                {
+                    break;
+                }
+
+                var interaction =
+                    InteractiveRecruitingService.GetInteraction(
+                        state,
+                        target.Source,
+                        target.Candidate.ProspectId);
+                if (interaction.ScoutingPercent >= 100)
+                    continue;
+
+                var before =
+                    state.RecruitingPointsRemaining;
+                state = InteractiveRecruitingService.Scout(
+                    state,
+                    target.Source,
+                    target.Candidate.ProspectId,
+                    cpuAssisted: true);
+                var spent =
+                    before - state.RecruitingPointsRemaining;
+                remainingBudget -= spent;
+            }
         }
 
         return state with
         {
-            RecruitingInteractions = interactions,
-            RecruitingAssistanceSeasonYear = state.SeasonYear,
-            RecruitingAssistanceWeek = state.Week
+            RecruitingAssistanceSeasonYear =
+                state.SeasonYear,
+            RecruitingAssistanceWeek = state.Week,
+            RecruitingAssistancePhase = state.Phase
         };
     }
 
@@ -376,38 +575,142 @@ public static class CpuRecruitingService
             .FirstOrDefault();
     }
 
+    private static RecruitingSource[] GetAssistanceSources(
+        DynastyState state) =>
+        state.Phase switch
+        {
+            SeasonPhase.TransferPortal =>
+                new[] { RecruitingSource.TransferPortal },
+            SeasonPhase.Recruiting =>
+                new[]
+                {
+                    RecruitingSource.HighSchool,
+                    RecruitingSource.TransferPortal
+                },
+            SeasonPhase.RegularSeason
+                when state.TransferPortalEntries.Count > 0 =>
+                new[] { RecruitingSource.TransferPortal },
+            _ => Array.Empty<RecruitingSource>()
+        };
+
+    private static bool IsManualInteraction(
+        RecruitingInteraction interaction) =>
+        !interaction.WasCpuAssisted &&
+        (interaction.IsOnTargetBoard ||
+         interaction.ScholarshipOffered ||
+         interaction.ScoutingPercent > 0 ||
+         interaction.LastPitchType is not null ||
+         interaction.UserInterest > 0);
+
+    private static AssistanceCandidate[] GetAssistedTargets(
+        DynastyState state,
+        Team userTeam,
+        IReadOnlyCollection<RecruitingSource> sources) =>
+        state.RecruitingInteractions
+            .Where(interaction =>
+                interaction.SeasonYear == state.SeasonYear &&
+                sources.Contains(interaction.Source) &&
+                interaction.WasCpuAssisted &&
+                interaction.ScholarshipOffered &&
+                interaction.CommittedTeamName is null)
+            .Select(interaction =>
+            {
+                var candidate = GetCandidates(
+                        state,
+                        interaction.Source)
+                    .FirstOrDefault(item =>
+                        item.ProspectId ==
+                        interaction.ProspectId);
+                return candidate is null
+                    ? null
+                    : new AssistanceCandidate(
+                        interaction.Source,
+                        candidate);
+            })
+            .Where(item => item is not null)
+            .Select(item => item!)
+            .OrderByDescending(item =>
+                GetUserAssistanceScore(
+                    state,
+                    userTeam,
+                    item.Source,
+                    item.Candidate))
+            .ToArray();
+
     private static int GetUserAssistanceScore(
         DynastyState state,
         Team userTeam,
-        HighSchoolRecruit recruit)
+        RecruitingSource source,
+        Candidate candidate)
     {
         var interaction =
             InteractiveRecruitingService.GetInteraction(
                 state,
-                RecruitingSource.HighSchool,
-                recruit.RecruitId);
+                source,
+                candidate.ProspectId);
         var attainability =
             RecruitPreferenceService.GetAttainabilityScore(
                 state,
                 userTeam,
-                RecruitingSource.HighSchool,
-                recruit.RecruitId);
+                source,
+                candidate.ProspectId);
         var need =
             GetUserAssistancePositionNeed(
                 state,
-                recruit.Position);
-        var scoutKnowledge = interaction.ScoutingPercent;
+                candidate.Position);
+        var scoutKnowledge =
+            interaction.ScoutingPercent;
+        var coordinator =
+            StaffManagementService.GetStaff(
+                state,
+                state.UserTeamName,
+                GetRecruitingCoordinatorRole(
+                    candidate.Position));
+        var headCoach =
+            StaffManagementService.GetStaff(
+                state,
+                state.UserTeamName,
+                StaffRole.HeadCoach);
+        var chiefScout =
+            StaffManagementService.GetStaff(
+                state,
+                state.UserTeamName,
+                StaffRole.ChiefScout);
 
-        return attainability * 10 +
-               need * 220 +
-               recruit.StarRating * 90 +
-               scoutKnowledge * 2 +
+        var recruitingStaff =
+            ((headCoach?.Recruiting ?? 60) +
+             (coordinator?.Recruiting ?? 60)) / 2;
+        var scoutQuality =
+            GetScoutQuality(
+                state,
+                chiefScout);
+        var recommended =
+            state.ScoutingRecommendationReport?
+                .Recommendations.Any(item =>
+                    item.ProspectId ==
+                    candidate.ProspectId) == true
+                ? 250
+                : 0;
+
+        var publicQuality = source ==
+            RecruitingSource.HighSchool
+                ? candidate.TalentLevel * 45
+                : candidate.OverallRating * 5;
+
+        return attainability * 12 +
+               need * 260 +
+               publicQuality +
+               scoutKnowledge * 3 +
+               (recruitingStaff - 60) * 18 +
+               (scoutQuality - 60) * 10 +
+               recommended +
                SimulationSeed.Create(
                    state.DynastyId,
                    state.SeasonYear,
                    state.Week,
                    userTeam.Name,
-                   $"assist-{recruit.RecruitId:N}") % 61;
+                   $"assist-{source}-{candidate.ProspectId:N}") %
+               61;
     }
 
     private static int GetUserAssistancePositionNeed(
@@ -419,14 +722,16 @@ public static class CpuRecruitingService
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase) &&
             player.Position == position);
+
         var offered = state.RecruitingInteractions.Count(item =>
             item.SeasonYear == state.SeasonYear &&
-            item.Source == RecruitingSource.HighSchool &&
             item.ScholarshipOffered &&
             item.CommittedTeamName is null &&
-            state.HighSchoolRecruitingPool.Any(recruit =>
-                recruit.RecruitId == item.ProspectId &&
-                recruit.Position == position));
+            GetProspectPosition(
+                state,
+                item.Source,
+                item.ProspectId) == position);
+
         var target =
             DynastyRosterRules.TargetPositionCounts.TryGetValue(
                 position,
@@ -434,7 +739,108 @@ public static class CpuRecruitingService
                 ? count
                 : 1;
 
-        return Math.Max(0, target - current - offered);
+        return Math.Max(
+            0,
+            target - current - offered);
+    }
+
+    private static Position? GetProspectPosition(
+        DynastyState state,
+        RecruitingSource source,
+        Guid prospectId)
+    {
+        if (source == RecruitingSource.HighSchool)
+        {
+            return state.HighSchoolRecruitingPool
+                .FirstOrDefault(item =>
+                    item.RecruitId == prospectId)
+                ?.Position;
+        }
+
+        return state.TransferPortalEntries
+            .FirstOrDefault(item =>
+                item.Player.PlayerId == prospectId)
+            ?.Player.Position;
+    }
+
+    private static StaffRole GetRecruitingCoordinatorRole(
+        Position position) =>
+        position switch
+        {
+            Position.QB or Position.RB or
+            Position.WR or Position.TE or
+            Position.OL =>
+                StaffRole.OffensiveCoordinator,
+            Position.K =>
+                StaffRole.SpecialTeamsCoordinator,
+            _ =>
+                StaffRole.DefensiveCoordinator
+        };
+
+    private static int GetScoutQuality(
+        DynastyState state,
+        StaffMember? chiefScout)
+    {
+        var chiefQuality = chiefScout is null
+            ? 60
+            : (chiefScout.TalentEvaluation +
+               chiefScout.PotentialEvaluation +
+               chiefScout.RegionalKnowledge +
+               chiefScout.StaffManagement) / 4;
+
+        var subScouts = state.ScoutingStaff;
+        if (subScouts.Count == 0)
+            return chiefQuality;
+
+        var subordinateQuality =
+            (int)Math.Round(
+                subScouts.Average(item =>
+                    (item.TalentEvaluation +
+                     item.PotentialEvaluation +
+                     item.RegionalKnowledge +
+                     item.WorkRate) / 4.0));
+
+        return (chiefQuality * 2 +
+                subordinateQuality) / 3;
+    }
+
+    private static RecruitPitchType GetBestPitchType(
+        DynastyState state,
+        Team userTeam,
+        RecruitingSource source,
+        Candidate candidate)
+    {
+        var preferences =
+            RecruitPreferenceService.GetPreferences(
+                state,
+                source,
+                candidate.ProspectId);
+
+        return preferences
+            .OrderByDescending(preference =>
+            {
+                var grade =
+                    RecruitPreferenceService.GetProgramGrade(
+                        state,
+                        userTeam,
+                        source,
+                        candidate.ProspectId,
+                        preference.Type);
+                var needBonus =
+                    preference.Type ==
+                        RecruitPitchType.PlayingTime
+                        ? GetUserAssistancePositionNeed(
+                            state,
+                            candidate.Position) * 8
+                        : 0;
+
+                return preference.Importance * 2 +
+                       grade +
+                       needBonus;
+            })
+            .ThenBy(item => item.Type)
+            .First()
+            .Type;
     }
 
     private static int GetCandidateFitScore(
@@ -555,6 +961,10 @@ public static class CpuRecruitingService
                 .First())
             .ToArray();
     }
+
+    private sealed record AssistanceCandidate(
+        RecruitingSource Source,
+        Candidate Candidate);
 
     private sealed record Candidate(
         Guid ProspectId,
