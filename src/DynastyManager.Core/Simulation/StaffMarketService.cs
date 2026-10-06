@@ -280,6 +280,14 @@ public static class StaffMarketService
         StaffRole role,
         int maximum = 8)
     {
+        if (role == StaffRole.HeadCoach &&
+            team.Name.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return Array.Empty<StaffMarketCandidate>();
+        }
+
         var prestige =
             ProgramPrestigeService.GetCurrentPrestige(state, team);
 
@@ -427,8 +435,11 @@ public static class StaffMarketService
             item.CandidateId == candidateId &&
             item.IsAvailable);
 
-        if (candidate is null)
+        if (candidate is null ||
+            candidate.TargetRole == StaffRole.HeadCoach)
+        {
             return state;
+        }
 
         var staff = state.Staff.ToList();
         var candidates = state.StaffMarketCandidates.ToList();
