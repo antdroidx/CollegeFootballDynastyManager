@@ -51,7 +51,7 @@ public sealed class StaffMarketTests
                 Season("CPU", 2, 10),
                 Season("User", 8, 4)
             },
-            Staff = FullStaff("User", 72)
+            Staff = FullStaff("User", 72, includeHeadCoach: false)
                 .Concat(FullStaff("CPU", 62))
                 .ToArray()
         };
@@ -107,7 +107,7 @@ public sealed class StaffMarketTests
                 Season("CPU", 11, 1),
                 Season("User", 8, 4)
             },
-            Staff = FullStaff("User", 70)
+            Staff = FullStaff("User", 70, includeHeadCoach: false)
                 .Concat(cpuStaff.Select(item =>
                     item.StaffId == headCoach.StaffId
                         ? item with { ContractYearsRemaining = 0 }
