@@ -22,13 +22,18 @@ public sealed class StaffMarketTests
             second.StaffMarketCandidates.Select(item => item.CandidateId));
 
         var user = teams["User"];
-        foreach (var role in Enum.GetValues<StaffRole>())
+        foreach (var role in Enum.GetValues<StaffRole>()
+                     .Where(role => role != StaffRole.HeadCoach))
         {
             var candidates = StaffMarketService.GetCandidatesForTeam(
                 first, user, role, 8);
             Assert.True(candidates.Count >= 5);
         }
 
+        Assert.Empty(StaffMarketService.GetCandidatesForTeam(
+            first, user, StaffRole.HeadCoach, 8));
+        Assert.Contains(first.StaffMarketCandidates, item =>
+            item.Origin == StaffCandidateOrigin.FreeAgent);
         Assert.Contains(first.StaffMarketCandidates, item =>
             item.TargetRole == StaffRole.HeadCoach &&
             item.SourceRole is StaffRole.OffensiveCoordinator or
@@ -126,12 +131,12 @@ public sealed class StaffMarketTests
     }
 
     [Fact]
-    public void UserCanPromoteOwnCoordinatorAndLeavesCoordinatorVacancy()
+    public void UserCannotHireHeadCoachBecauseUserIsHeadCoach()
     {
         var teams = Teams();
         var state = BaseState() with
         {
-            Staff = FullStaff("User", 78)
+            Staff = FullStaff("User", 78, includeHeadCoach: false)
                 .Concat(FullStaff("CPU", 70))
                 .ToArray()
         };
@@ -151,17 +156,13 @@ public sealed class StaffMarketTests
             candidate.CandidateId,
             teams);
 
-        var newHeadCoach = updated.Staff.Single(item =>
-            item.TeamName == "User" &&
-            item.Role == StaffRole.HeadCoach);
-
-        Assert.Equal(coordinator.StaffId, newHeadCoach.StaffId);
         Assert.DoesNotContain(updated.Staff, item =>
             item.TeamName == "User" &&
-            item.Role == StaffRole.OffensiveCoordinator);
-        Assert.Contains(updated.StaffMovementHistory, item =>
+            item.Role == StaffRole.HeadCoach);
+        Assert.Contains(updated.Staff, item =>
             item.StaffId == coordinator.StaffId &&
-            item.MovementType == StaffMovementType.Promoted);
+            item.TeamName == "User" &&
+            item.Role == StaffRole.OffensiveCoordinator);
     }
 
     private static DynastyState BaseState() => new()
@@ -217,10 +218,17 @@ public sealed class StaffMarketTests
 
     private static IEnumerable<StaffMember> FullStaff(
         string team,
-        int rating)
+        int rating,
+        bool includeHeadCoach = true)
     {
         foreach (var role in Enum.GetValues<StaffRole>())
         {
+            if (!includeHeadCoach &&
+                role == StaffRole.HeadCoach)
+            {
+                continue;
+            }
+
             yield return Staff(team, role, rating);
         }
     }
