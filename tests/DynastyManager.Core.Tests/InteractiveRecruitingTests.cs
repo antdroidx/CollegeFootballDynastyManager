@@ -356,30 +356,35 @@ public class InteractiveRecruitingTests
     }
 
     [Fact]
-    public void WeeklyCpuAssistanceCreatesVisibleRealisticBoardOffers()
+    public void FullAutoAssistanceCanUseEntireWeeklyRecruitingBudget()
     {
-        var user = Team("User", 25);
-        var recruits = new[]
-        {
-            Recruit("Elite Reach", 5, 90, 98, Position.QB, 4),
-            Recruit("Local QB", 1, 61, 78, Position.QB, 1),
-            Recruit("Local RB", 1, 60, 76, Position.RB, 1),
-            Recruit("Local WR", 1, 62, 80, Position.WR, 1),
-            Recruit("Local OL", 1, 61, 79, Position.OL, 1),
-            Recruit("Local LB", 1, 60, 77, Position.OLB, 1),
-            Recruit("Local CB", 1, 62, 80, Position.CB, 1)
-        };
+        var user = Team("User", 65);
+        var recruits = Enumerable.Range(1, 30)
+            .Select(index =>
+                Recruit(
+                    $"Recruit {index}",
+                    2 + index % 2,
+                    66 + index % 9,
+                    78 + index % 12,
+                    Enum.GetValues<Position>()[
+                        index % Enum.GetValues<Position>().Length],
+                    1))
+            .ToArray();
 
         var state = new DynastyState
         {
             DynastyId =
                 Guid.Parse("99999999-8888-7777-6666-555555555555"),
-            DynastyName = "Assisted Recruiting",
+            DynastyName = "Full Auto Recruiting",
             UserTeamName = user.Name,
             SeasonYear = 2027,
             Week = 20,
             Phase = SeasonPhase.Recruiting,
             RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100,
+            RecruitingPointsRemaining = 500,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
             HighSchoolRecruitingPool = recruits
         };
 
@@ -388,38 +393,200 @@ public class InteractiveRecruitingTests
                 state,
                 user);
 
-        var offers = assisted.RecruitingInteractions
-            .Where(item =>
+        Assert.True(
+            assisted.RecruitingPointsRemaining <
+            InteractiveRecruitingService.PitchCost);
+
+        Assert.True(
+            assisted.RecruitingInteractions.Count(item =>
                 item.WasCpuAssisted &&
                 item.IsOnTargetBoard &&
-                item.ScholarshipOffered)
+                item.ScholarshipOffered) > 3);
+
+        Assert.Contains(
+            assisted.RecruitingInteractions,
+            item =>
+                item.WasCpuAssisted &&
+                item.ScoutingPercent > 0);
+
+        Assert.Contains(
+            assisted.RecruitingInteractions,
+            item =>
+                item.WasCpuAssisted &&
+                item.LastPitchType is not null);
+    }
+
+    [Fact]
+    public void HalfWorkloadLeavesAboutHalfTheWeeklyPointsForUser()
+    {
+        var user = Team("User", 70);
+        var recruits = Enumerable.Range(1, 30)
+            .Select(index =>
+                Recruit(
+                    $"Shared Recruit {index}",
+                    2 + index % 2,
+                    67 + index % 8,
+                    80 + index % 10,
+                    Enum.GetValues<Position>()[
+                        index % Enum.GetValues<Position>().Length],
+                    1))
             .ToArray();
 
-        Assert.Equal(
-            CpuRecruitingService.WeeklyUserAssistanceOffers,
-            offers.Length);
-        Assert.DoesNotContain(
-            offers,
-            item => item.ProspectId == recruits[0].RecruitId);
+        var state = new DynastyState
+        {
+            DynastyId =
+                Guid.Parse("88888888-7777-6666-5555-444444444444"),
+            DynastyName = "Shared Recruiting",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 50,
+            RecruitingPointsRemaining = 600,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
+            HighSchoolRecruitingPool = recruits
+        };
 
-        var sameWeek =
+        var assisted =
             CpuRecruitingService.ApplyWeeklyUserAssistance(
+                state,
+                user);
+
+        var spent =
+            state.RecruitingPointsRemaining -
+            assisted.RecruitingPointsRemaining;
+
+        Assert.InRange(spent, 275, 300);
+        Assert.InRange(
+            assisted.RecruitingPointsRemaining,
+            300,
+            325);
+    }
+
+    [Fact]
+    public void AssistanceDoesNotTakeOverManualRecruitingTargets()
+    {
+        var user = Team("User", 70);
+        var manual = Recruit(
+            "Manual Target",
+            3,
+            72,
+            86,
+            Position.QB,
+            1);
+        var auto = Recruit(
+            "Auto Target",
+            2,
+            68,
+            82,
+            Position.RB,
+            1);
+
+        var state = new DynastyState
+        {
+            DynastyId =
+                Guid.Parse("77777777-6666-5555-4444-333333333333"),
+            DynastyName = "Manual Priority Recruiting",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100,
+            RecruitingPointsRemaining = 250,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
+            HighSchoolRecruitingPool =
+                new[] { manual, auto },
+            RecruitingInteractions = new[]
+            {
+                new RecruitingInteraction
+                {
+                    ProspectId = manual.RecruitId,
+                    Source = RecruitingSource.HighSchool,
+                    SeasonYear = 2027,
+                    IsOnTargetBoard = true,
+                    ScholarshipOffered = true,
+                    UserInterest = 15,
+                    WasCpuAssisted = false
+                }
+            }
+        };
+
+        var assisted =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                state,
+                user);
+
+        var manualAfter =
+            InteractiveRecruitingService.GetInteraction(
                 assisted,
-                user);
-        Assert.Equal(
-            offers.Length,
-            sameWeek.RecruitingInteractions.Count(item =>
-                item.WasCpuAssisted &&
-                item.ScholarshipOffered));
+                RecruitingSource.HighSchool,
+                manual.RecruitId);
 
-        var nextWeek =
+        Assert.False(manualAfter.WasCpuAssisted);
+        Assert.Equal(15, manualAfter.UserInterest);
+        Assert.Null(manualAfter.LastPitchType);
+        Assert.Equal(0, manualAfter.ScoutingPercent);
+    }
+
+    [Fact]
+    public void LowPrestigeAssistanceAvoidsUnrealisticFiveStarReach()
+    {
+        var user = Team("User", 25);
+        var elite = Recruit(
+            "Elite Reach",
+            5,
+            90,
+            98,
+            Position.QB,
+            4);
+        var realistic = Enumerable.Range(1, 8)
+            .Select(index =>
+                Recruit(
+                    $"Local Prospect {index}",
+                    1,
+                    59 + index,
+                    75 + index,
+                    Position.RB,
+                    1))
+            .ToArray();
+
+        var state = new DynastyState
+        {
+            DynastyId =
+                Guid.Parse("66666666-5555-4444-3333-222222222222"),
+            DynastyName = "Realistic Assistance",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100,
+            RecruitingPointsRemaining = 300,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
+            HighSchoolRecruitingPool =
+                new[] { elite }.Concat(realistic).ToArray()
+        };
+
+        var assisted =
             CpuRecruitingService.ApplyWeeklyUserAssistance(
-                sameWeek with { Week = 21 },
+                state,
                 user);
-        Assert.True(
-            nextWeek.RecruitingInteractions.Count(item =>
+
+        Assert.DoesNotContain(
+            assisted.RecruitingInteractions,
+            item =>
+                item.ProspectId == elite.RecruitId &&
+                item.ScholarshipOffered);
+        Assert.Contains(
+            assisted.RecruitingInteractions,
+            item =>
                 item.WasCpuAssisted &&
-                item.ScholarshipOffered) > offers.Length);
+                item.ScholarshipOffered);
     }
 
     [Fact]
