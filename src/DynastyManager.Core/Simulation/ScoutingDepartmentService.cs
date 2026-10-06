@@ -195,7 +195,16 @@ public static class ScoutingDepartmentService
                 item.ScoutId == scout.ScoutId);
             var capacity = 8 + scout.WorkRate / 7;
             var candidates = GetAssignedCandidates(state, assignment)
-                .OrderByDescending(recruit => GetPriorityScore(state, recruit))
+                .Where(recruit =>
+                    IsAutoScoutCandidate(
+                        state,
+                        userTeam,
+                        recruit))
+                .OrderByDescending(recruit =>
+                    GetPriorityScore(
+                        state,
+                        userTeam,
+                        recruit))
                 .ThenBy(recruit => recruit.RecruitId)
                 .Take(capacity);
 
@@ -240,34 +249,82 @@ public static class ScoutingDepartmentService
             return state;
 
         var evaluated = state.HighSchoolRecruitingPool
-            .Select(recruit => new Evaluation(
-                recruit,
-                InteractiveRecruitingService.GetInteraction(
-                    state, RecruitingSource.HighSchool, recruit.RecruitId),
-                GetPositionNeed(state, recruit.Position)))
+            .Select(recruit =>
+            {
+                var interaction =
+                    InteractiveRecruitingService.GetInteraction(
+                        state,
+                        RecruitingSource.HighSchool,
+                        recruit.RecruitId);
+                return new Evaluation(
+                    recruit,
+                    interaction,
+                    GetPositionNeed(state, recruit.Position),
+                    RecruitPreferenceService.GetAttainabilityScore(
+                        state,
+                        userTeam,
+                        RecruitingSource.HighSchool,
+                        recruit.RecruitId));
+            })
             .Where(item => item.Interaction.ScoutingPercent >= 75 &&
                            item.Interaction.CommittedTeamName is null)
             .ToArray();
 
         var recommendations = new List<ScoutingRecommendation>();
-        AddSection(recommendations, ScoutingRecommendationSection.TopTargets,
-            evaluated.OrderByDescending(item => item.Recruit.TrueOverallRating + item.Recruit.PotentialRating / 2),
-            "Most talented fully evaluated prospect");
-        AddSection(recommendations, ScoutingRecommendationSection.BestFits,
-            evaluated.OrderByDescending(item =>
-                RecruitPreferenceService.GetProgramGrade(state, userTeam,
-                    RecruitingSource.HighSchool, item.Recruit.RecruitId,
-                    RecruitPitchType.SchemeFit) + item.Recruit.TrueOverallRating),
-            "Strong scheme and program fit");
-        AddSection(recommendations, ScoutingRecommendationSection.HiddenGems,
-            evaluated.Where(item => IsSleeper(item.Recruit))
-                .OrderByDescending(item => item.Recruit.TrueOverallRating - item.Recruit.StarRating * 10),
+        var realistic = evaluated
+            .Where(item =>
+                item.Attainability >= 35 ||
+                (item.Interaction.UserInterest >= 65 &&
+                 item.Attainability >= 22))
+            .ToArray();
+
+        AddSection(
+            recommendations,
+            ScoutingRecommendationSection.TopTargets,
+            realistic.OrderByDescending(item =>
+                item.Recruit.TrueOverallRating +
+                item.Recruit.PotentialRating / 2 +
+                item.Attainability),
+            "Best combination of talent and realistic signing chance");
+        AddSection(
+            recommendations,
+            ScoutingRecommendationSection.BestFits,
+            realistic.OrderByDescending(item =>
+                RecruitPreferenceService.GetProgramGrade(
+                    state,
+                    userTeam,
+                    RecruitingSource.HighSchool,
+                    item.Recruit.RecruitId,
+                    RecruitPitchType.SchemeFit) +
+                item.Attainability +
+                item.Recruit.TrueOverallRating),
+            "Strong scheme, program fit, and attainable interest");
+        AddSection(
+            recommendations,
+            ScoutingRecommendationSection.HiddenGems,
+            realistic
+                .Where(item => IsSleeper(item.Recruit))
+                .OrderByDescending(item =>
+                    item.Recruit.TrueOverallRating -
+                    item.Recruit.StarRating * 10 +
+                    item.Attainability),
             "Grades above his public star profile");
-        AddSection(recommendations, ScoutingRecommendationSection.TeamNeeds,
-            evaluated.OrderByDescending(item => item.Need * 20 + item.Recruit.TrueOverallRating),
-            "Fills a current roster need");
-        AddSection(recommendations, ScoutingRecommendationSection.HighInterest,
-            evaluated.OrderByDescending(item => item.Interaction.UserInterest),
+        AddSection(
+            recommendations,
+            ScoutingRecommendationSection.TeamNeeds,
+            realistic.OrderByDescending(item =>
+                item.Need * 20 +
+                item.Attainability * 2 +
+                item.Recruit.TrueOverallRating),
+            "Fills a current roster need and is realistically attainable");
+        AddSection(
+            recommendations,
+            ScoutingRecommendationSection.HighInterest,
+            evaluated
+                .Where(item => item.Attainability >= 22)
+                .OrderByDescending(item =>
+                    item.Interaction.UserInterest * 2 +
+                    item.Attainability),
             "High current interest in your program");
 
         return state with
@@ -328,19 +385,55 @@ public static class ScoutingDepartmentService
         };
     }
 
-    private static int GetPriorityScore(DynastyState state, HighSchoolRecruit recruit)
+    private static bool IsAutoScoutCandidate(
+        DynastyState state,
+        Team userTeam,
+        HighSchoolRecruit recruit)
+    {
+        var interaction = InteractiveRecruitingService.GetInteraction(
+            state,
+            RecruitingSource.HighSchool,
+            recruit.RecruitId);
+
+        if (interaction.IsPriorityScout ||
+            interaction.IsOnTargetBoard ||
+            interaction.ScoutingPercent > 0)
+        {
+            return true;
+        }
+
+        return RecruitPreferenceService.GetAttainabilityScore(
+            state,
+            userTeam,
+            RecruitingSource.HighSchool,
+            recruit.RecruitId) >= 28;
+    }
+
+    private static int GetPriorityScore(
+        DynastyState state,
+        Team userTeam,
+        HighSchoolRecruit recruit)
     {
         var interaction = InteractiveRecruitingService.GetInteraction(
             state, RecruitingSource.HighSchool, recruit.RecruitId);
         if (interaction.ScoutingPercent >= 100)
             return -10000;
 
-        var progressBonus = interaction.ScoutingPercent > 0 ? 2500 : 0;
+        var attainability =
+            RecruitPreferenceService.GetAttainabilityScore(
+                state,
+                userTeam,
+                RecruitingSource.HighSchool,
+                recruit.RecruitId);
+        var progressBonus =
+            interaction.ScoutingPercent > 0 ? 2500 : 0;
+
         return (interaction.IsPriorityScout ? 10000 : 0) +
-               (interaction.IsOnTargetBoard ? 3000 : 0) +
+               (interaction.IsOnTargetBoard ? 4000 : 0) +
                progressBonus +
-               GetPositionNeed(state, recruit.Position) * 150 +
-               recruit.StarRating * 100 + recruit.TrueOverallRating -
+               GetPositionNeed(state, recruit.Position) * 200 +
+               attainability * 70 +
+               recruit.StarRating * 80 -
                interaction.ScoutingPercent * 3;
     }
 
@@ -387,7 +480,9 @@ public static class ScoutingDepartmentService
                 Source = RecruitingSource.HighSchool,
                 PlayerName = recruit.FullName,
                 Position = recruit.Position,
-                Summary = summary
+                Summary =
+                    $"{summary} • " +
+                    $"{RecruitPreferenceService.GetAttainabilityLabel(item.Attainability)} target"
             });
         }
     }
@@ -402,5 +497,6 @@ public static class ScoutingDepartmentService
     private sealed record Evaluation(
         HighSchoolRecruit Recruit,
         RecruitingInteraction Interaction,
-        int Need);
+        int Need,
+        int Attainability);
 }
