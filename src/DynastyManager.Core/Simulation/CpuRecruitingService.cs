@@ -392,10 +392,11 @@ public static class CpuRecruitingService
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase);
 
-            if ((!assistUserTeam && isUserTeam) ||
-                (isUserTeam &&
-                 source == RecruitingSource.HighSchool))
+            if (isUserTeam)
             {
+                // The user program always recruits through the visible
+                // interaction system. Assistance may automate those actions,
+                // but never silently signs players here.
                 continue;
             }
 
@@ -695,11 +696,18 @@ public static class CpuRecruitingService
         var publicQuality = source ==
             RecruitingSource.HighSchool
                 ? candidate.TalentLevel * 45
-                : candidate.OverallRating * 5;
+                : Math.Max(
+                    0,
+                    candidate.OverallRating - 50) * 6;
+        var sourceBalance =
+            source == RecruitingSource.HighSchool
+                ? 40
+                : 0;
 
         return attainability * 12 +
                need * 260 +
                publicQuality +
+               sourceBalance +
                scoutKnowledge * 3 +
                (recruitingStaff - 60) * 18 +
                (scoutQuality - 60) * 10 +
