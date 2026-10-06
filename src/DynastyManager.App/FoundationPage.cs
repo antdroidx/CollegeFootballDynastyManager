@@ -3537,8 +3537,15 @@ public sealed class FoundationPage : ContentPage
             FontAttributes = FontAttributes.Bold,
             Margin = new Thickness(0, 10, 0, 0)
         });
+        _programList.Children.Add(new Label
+        {
+            Text = "You are the Head Coach • Manage the staff reporting to you below.",
+            FontSize = 11,
+            FontAttributes = FontAttributes.Italic
+        });
 
-        foreach (var role in Enum.GetValues<StaffRole>())
+        foreach (var role in Enum.GetValues<StaffRole>()
+                     .Where(role => role != StaffRole.HeadCoach))
         {
             var staff = StaffManagementService.GetStaff(
                 _currentDynasty, team.Name, role);
@@ -3778,6 +3785,28 @@ public sealed class FoundationPage : ContentPage
             .TakeLast(14)
             .Reverse()
             .ToArray();
+
+        var generatedFreeAgents = _currentDynasty.StaffMarketCandidates.Count(item =>
+            item.IsAvailable &&
+            item.Origin == StaffCandidateOrigin.FreeAgent);
+        var releasedCandidates = _currentDynasty.StaffMarketCandidates.Count(item =>
+            item.IsAvailable &&
+            item.Origin == StaffCandidateOrigin.FiredStaff);
+        var activeCandidates = _currentDynasty.StaffMarketCandidates.Count(item =>
+            item.IsAvailable &&
+            item.Origin == StaffCandidateOrigin.ActiveStaff);
+
+        if (generatedFreeAgents + releasedCandidates + activeCandidates > 0)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text =
+                    $"STAFF MARKET • {generatedFreeAgents} generated free agents • " +
+                    $"{releasedCandidates} released staff • {activeCandidates} active/poachable",
+                FontSize = 11,
+                Margin = new Thickness(0, 8, 0, 0)
+            });
+        }
 
         if (events.Length == 0)
             return;
