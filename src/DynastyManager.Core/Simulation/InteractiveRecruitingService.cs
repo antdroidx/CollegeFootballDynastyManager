@@ -500,7 +500,8 @@ public static class InteractiveRecruitingService
                 PlayerName = player.FullName,
                 TeamName = state.UserTeamName,
                 Position = player.Position,
-                OverallRating = player.OverallRating
+                OverallRating = player.OverallRating,
+                WasCpuAssisted = interaction.WasCpuAssisted
             });
         }
 
