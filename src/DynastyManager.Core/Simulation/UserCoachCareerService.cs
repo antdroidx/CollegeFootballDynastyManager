@@ -323,6 +323,15 @@ public static class UserCoachCareerService
                         : Math.Max(
                             0,
                             teamExpected - teamSeason.Wins) * 4;
+                var currentHeadCoach =
+                    StaffManagementService.GetStaff(
+                        state,
+                        team.Name,
+                        StaffRole.HeadCoach);
+                var hasOpening =
+                    currentHeadCoach is null ||
+                    currentHeadCoach.ContractYearsRemaining <= 1 ||
+                    opportunity >= 8;
 
                 var reputationGap =
                     coach.Reputation - prestige;
@@ -363,17 +372,23 @@ public static class UserCoachCareerService
                     Team = team,
                     Prestige = prestige,
                     Fit = fit,
-                    Opportunity = opportunity
+                    Opportunity = opportunity,
+                    HasOpening = hasOpening
                 };
             })
             .Where(item =>
-                state.UserCoachIsFired
+                (state.UserCoachIsFired
+                    ? item.HasOpening ||
+                      item.Prestige <=
+                      currentPrestige - 8
+                    : item.HasOpening) &&
+                (state.UserCoachIsFired
                     ? item.Prestige <=
                       Math.Max(
                           currentPrestige + 5,
                           coach.Reputation + 8)
                     : item.Prestige <=
-                      coach.Reputation + 18)
+                      coach.Reputation + 18))
             .OrderByDescending(item => item.Fit)
             .ThenByDescending(item => item.Prestige)
             .ThenBy(item => item.Team.Name,
@@ -398,7 +413,8 @@ public static class UserCoachCareerService
                                          state,
                                          team),
                              Fit = 50,
-                             Opportunity = 0
+                             Opportunity = 0,
+                             HasOpening = true
                          })
                          .OrderBy(item =>
                              Math.Abs(
