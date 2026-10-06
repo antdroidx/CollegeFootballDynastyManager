@@ -1333,6 +1333,10 @@ public sealed class FoundationPage : ContentPage
                     .EnsurePhaseInitialized(
                         _currentDynasty,
                         portalTeam);
+                _currentDynasty = CpuRecruitingService
+                    .ApplyWeeklyUserAssistance(
+                        _currentDynasty,
+                        portalTeam);
             }
         }
 
@@ -1343,6 +1347,10 @@ public sealed class FoundationPage : ContentPage
         {
             _currentDynasty = InteractiveRecruitingService
                 .EnsurePhaseInitialized(
+                    _currentDynasty,
+                    regularSeasonRecruitingTeam);
+            _currentDynasty = CpuRecruitingService
+                .ApplyWeeklyUserAssistance(
                     _currentDynasty,
                     regularSeasonRecruitingTeam);
         }
@@ -1680,13 +1688,10 @@ public sealed class FoundationPage : ContentPage
                     state,
                     phaseTeam);
 
-            if (state.Phase == SeasonPhase.Recruiting)
-            {
-                state = CpuRecruitingService
-                    .ApplyWeeklyUserAssistance(
-                        state,
-                        phaseTeam);
-            }
+            state = CpuRecruitingService
+                .ApplyWeeklyUserAssistance(
+                    state,
+                    phaseTeam);
         }
 
         if (state.Phase == SeasonPhase.RosterManagement)
