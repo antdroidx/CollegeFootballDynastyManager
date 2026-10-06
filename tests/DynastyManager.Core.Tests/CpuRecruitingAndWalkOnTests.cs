@@ -79,7 +79,7 @@ public class CpuRecruitingAndWalkOnTests
     }
 
     [Fact]
-    public void TransferCpuAssistIsCappedSoHighSchoolRecruitingStillMatters()
+    public void UserPortalAssistanceUsesVisibleRecruitingInsteadOfDirectSignings()
     {
         var user = Team("User", 85);
         var teams = new[] { user }
@@ -110,20 +110,45 @@ public class CpuRecruitingAndWalkOnTests
             SeasonYear = 2027,
             Week = 19,
             Phase = SeasonPhase.TransferPortal,
+            RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100,
+            RecruitingPointsRemaining = 500,
+            RecruitingPointsPhase = SeasonPhase.TransferPortal,
             ActiveRoster = BuildRoster(user.Name, 50),
             TransferPortalEntries = portal
         };
 
-        var updated = CpuRecruitingService.ApplyPhaseAssistance(
-            state,
-            teams);
-
-        var additions = updated.ActiveRoster.Count(player =>
-            player.TeamName == user.Name) - 50;
+        var assisted =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                state,
+                user);
 
         Assert.Equal(
-            CpuRecruitingService.MaximumCpuTransferAdditionsPerTeam,
-            additions);
+            50,
+            assisted.ActiveRoster.Count(player =>
+                player.TeamName == user.Name));
+        Assert.Contains(
+            assisted.RecruitingInteractions,
+            interaction =>
+                interaction.Source ==
+                    RecruitingSource.TransferPortal &&
+                interaction.WasCpuAssisted &&
+                interaction.ScholarshipOffered);
+
+        var finalized =
+            CpuRecruitingService.ApplyPhaseAssistance(
+                assisted,
+                teams);
+
+        Assert.Equal(
+            50,
+            finalized.ActiveRoster.Count(player =>
+                player.TeamName == user.Name));
+        Assert.DoesNotContain(
+            finalized.RecruitingCommitments,
+            commitment =>
+                commitment.TeamName == user.Name &&
+                commitment.WasCpuAssisted);
     }
 
     [Fact]
