@@ -127,6 +127,102 @@ public static class RecruitPreferenceService
         };
     }
 
+    public static int GetAttainabilityScore(
+        DynastyState state,
+        Team team,
+        RecruitingSource source,
+        Guid prospectId)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(team);
+
+        var prestige = ProgramPrestigeService.GetCurrentPrestige(
+            state,
+            team);
+        var interaction = InteractiveRecruitingService.GetInteraction(
+            state,
+            source,
+            prospectId);
+
+        var qualityFloor = source == RecruitingSource.HighSchool
+            ? GetHighSchoolPrestigeFloor(state, prospectId)
+            : GetTransferPrestigeFloor(state, prospectId);
+
+        var preferences = GetPreferences(
+            state,
+            source,
+            prospectId)
+            .Take(4)
+            .ToArray();
+
+        var weightedFit = preferences.Length == 0
+            ? 60
+            : (int)Math.Round(
+                preferences.Sum(item =>
+                    item.Importance *
+                    GetProgramGrade(
+                        state,
+                        team,
+                        source,
+                        prospectId,
+                        item.Type)) /
+                Math.Max(1.0, preferences.Sum(item => item.Importance)));
+
+        var score =
+            45 +
+            (prestige - qualityFloor) +
+            (int)Math.Round((weightedFit - 55) * .45) +
+            (int)Math.Round(
+                Math.Clamp(interaction.UserInterest, 0, 100) * .35);
+
+        return Math.Clamp(score, 0, 100);
+    }
+
+    public static string GetAttainabilityLabel(int score) =>
+        score switch
+        {
+            >= 72 => "Strong",
+            >= 52 => "Realistic",
+            >= 35 => "Reach",
+            >= 22 => "Long Shot",
+            _ => "Very Unlikely"
+        };
+
+    private static int GetHighSchoolPrestigeFloor(
+        DynastyState state,
+        Guid prospectId)
+    {
+        var recruit = state.HighSchoolRecruitingPool
+            .First(item => item.RecruitId == prospectId);
+
+        return recruit.StarRating switch
+        {
+            >= 5 => 78,
+            4 => 64,
+            3 => 48,
+            2 => 32,
+            _ => 20
+        };
+    }
+
+    private static int GetTransferPrestigeFloor(
+        DynastyState state,
+        Guid prospectId)
+    {
+        var overall = state.TransferPortalEntries
+            .First(item => item.Player.PlayerId == prospectId)
+            .Player.OverallRating;
+
+        return overall switch
+        {
+            >= 90 => 78,
+            >= 84 => 68,
+            >= 78 => 58,
+            >= 72 => 48,
+            _ => 35
+        };
+    }
+
     public static string GetImportanceLabel(int importance) =>
         importance switch
         {
