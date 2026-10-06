@@ -3,10 +3,10 @@ using DynastyManager.Core.Models;
 namespace DynastyManager.Core.Simulation;
 
 /// <summary>
-/// CPU recruiting safety net for every program, including the user team.
-/// Manual user recruiting resolves first; CPU assistance then fills remaining
-/// roster needs from the same portal/recruit pool. Transfer assistance is
-/// intentionally capped so high-school recruiting still matters.
+/// CPU recruiting support for the league. CPU programs fill roster needs
+/// directly. The user program receives visible weekly high-school targets and
+/// scholarship offers when assistance is enabled; final high-school signings
+/// are not silently generated for the user. Transfer assistance remains capped.
 /// </summary>
 public static class CpuRecruitingService
 {
