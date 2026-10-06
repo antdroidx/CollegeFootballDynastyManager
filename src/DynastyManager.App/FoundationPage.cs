@@ -3692,7 +3692,7 @@ public sealed class FoundationPage : ContentPage
                 var fit = StaffMarketService.GetCandidateFitScore(
                     _currentDynasty, team, candidate);
                 var source = candidate.Origin == StaffCandidateOrigin.FreeAgent
-                    ? "Free Agent"
+                    ? "Generated Free Agent"
                     : candidate.SourceTeamName ?? candidate.Origin.ToString();
 
                 return $"{index + 1}. {candidate.Profile.FullName} • " +
@@ -3728,7 +3728,7 @@ public sealed class FoundationPage : ContentPage
             : "Long shot";
         var sourceText = candidate.Origin switch
         {
-            StaffCandidateOrigin.FreeAgent => "Free Agent",
+            StaffCandidateOrigin.FreeAgent => "Generated Free Agent",
             StaffCandidateOrigin.FiredStaff =>
                 $"Previously at {candidate.SourceTeamName}",
             _ =>
