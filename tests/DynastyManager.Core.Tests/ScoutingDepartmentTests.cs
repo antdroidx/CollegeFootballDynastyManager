@@ -85,6 +85,76 @@ public class ScoutingDepartmentTests
     }
 
     [Fact]
+    public void LowPrestigeScoutingReportAvoidsUninterestedFiveStarReach()
+    {
+        var fiveStar = new HighSchoolRecruit
+        {
+            RecruitId = Guid.Parse("aaaaaaaa-1111-2222-3333-444444444444"),
+            SeasonYear = 2027,
+            FullName = "National Five Star",
+            Position = Position.QB,
+            StarRating = 5,
+            TrueOverallRating = 89,
+            PotentialRating = 97,
+            HomeState = 45,
+            HomeRegion = 4
+        };
+        var realistic = new HighSchoolRecruit
+        {
+            RecruitId = Guid.Parse("bbbbbbbb-1111-2222-3333-444444444444"),
+            SeasonYear = 2027,
+            FullName = "Regional Prospect",
+            Position = Position.QB,
+            StarRating = 1,
+            TrueOverallRating = 62,
+            PotentialRating = 78,
+            HomeState = 1,
+            HomeRegion = 1
+        };
+        var team = new Team
+        {
+            Name = "User",
+            Abbreviation = "USR",
+            ConferenceName = "Test",
+            Prestige = 25,
+            LegacyRegionId = 1
+        };
+        var state = State(0) with
+        {
+            HighSchoolRecruitingPool = new[] { fiveStar, realistic },
+            RecruitingInteractions = new[]
+            {
+                new RecruitingInteraction
+                {
+                    ProspectId = fiveStar.RecruitId,
+                    Source = RecruitingSource.HighSchool,
+                    SeasonYear = 2027,
+                    ScoutingPercent = 80
+                },
+                new RecruitingInteraction
+                {
+                    ProspectId = realistic.RecruitId,
+                    Source = RecruitingSource.HighSchool,
+                    SeasonYear = 2027,
+                    ScoutingPercent = 80
+                }
+            }
+        };
+
+        var updated =
+            ScoutingDepartmentService.GenerateRecommendationReport(
+                state,
+                team);
+
+        Assert.DoesNotContain(
+            updated.ScoutingRecommendationReport!.Recommendations,
+            item => item.ProspectId == fiveStar.RecruitId);
+        Assert.Contains(
+            updated.ScoutingRecommendationReport.Recommendations,
+            item => item.ProspectId == realistic.RecruitId);
+    }
+
+    [Fact]
     public void FullyScoutedRatingStillHasSmallUncertainty()
     {
         var state = State(1);
