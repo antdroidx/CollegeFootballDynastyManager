@@ -3714,7 +3714,10 @@ public sealed class FoundationPage : ContentPage
                 Text = "Decline",
                 FontSize = 11,
                 Padding = new Thickness(10, 4),
-                TextColor = Colors.White
+                TextColor = Colors.White,
+                IsEnabled =
+                    !_currentDynasty.UserCoachIsFired ||
+                    pendingOffers.Length > 1
             };
 
             var selectedOffer = offer;
