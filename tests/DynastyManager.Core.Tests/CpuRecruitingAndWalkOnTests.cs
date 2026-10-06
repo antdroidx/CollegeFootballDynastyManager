@@ -7,7 +7,7 @@ namespace DynastyManager.Core.Tests;
 public class CpuRecruitingAndWalkOnTests
 {
     [Fact]
-    public void SkippingHighSchoolRecruitingStillFillsUserNeedsWithCpuAssistance()
+    public void SkippingManualRecruitingUsesVisibleAssistanceThenWalkOns()
     {
         var user = Team("User", 80);
         var rival = Team("Rival", 70);
@@ -25,29 +25,57 @@ public class CpuRecruitingAndWalkOnTests
             SeasonYear = 2027,
             Week = 20,
             Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = true,
             ActiveRoster = BuildRoster(user.Name, 60)
                 .Concat(BuildRoster(rival.Name, 60))
                 .ToArray(),
             HighSchoolRecruitingPool = BuildRecruitPool(80)
         };
 
-        var updated = CpuRecruitingService.ApplyPhaseAssistance(
-            state,
+        var assisted =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                state,
+                user);
+
+        Assert.Contains(
+            assisted.RecruitingInteractions,
+            interaction =>
+                interaction.WasCpuAssisted &&
+                interaction.IsOnTargetBoard &&
+                interaction.ScholarshipOffered);
+
+        var finalized = CpuRecruitingService.ApplyPhaseAssistance(
+            assisted,
             teams);
 
-        var userCount = updated.ActiveRoster.Count(player =>
-            player.TeamName == user.Name);
+        Assert.Equal(
+            60,
+            finalized.ActiveRoster.Count(player =>
+                player.TeamName == user.Name));
+
+        Assert.DoesNotContain(
+            finalized.RecruitingCommitments,
+            commitment =>
+                commitment.TeamName == user.Name &&
+                commitment.Source == RecruitingSource.HighSchool);
+
+        var filled = WalkOnRosterService.FillAllTeams(
+            finalized with
+            {
+                Phase = SeasonPhase.RosterManagement
+            },
+            teams);
 
         Assert.Equal(
             DynastyRosterRules.MaximumRosterSize,
-            userCount);
+            filled.ActiveRoster.Count(player =>
+                player.TeamName == user.Name));
 
         Assert.Contains(
-            updated.RecruitingCommitments,
-            commitment =>
-                commitment.TeamName == user.Name &&
-                commitment.Source == RecruitingSource.HighSchool &&
-                commitment.WasCpuAssisted);
+            filled.ActiveRoster,
+            player =>
+                player.TeamName == user.Name &&
+                player.IsWalkOn);
     }
 
     [Fact]
