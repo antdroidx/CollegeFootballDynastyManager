@@ -356,6 +356,73 @@ public class InteractiveRecruitingTests
     }
 
     [Fact]
+    public void WeeklyCpuAssistanceCreatesVisibleRealisticBoardOffers()
+    {
+        var user = Team("User", 25);
+        var recruits = new[]
+        {
+            Recruit("Elite Reach", 5, 90, 98, Position.QB, 4),
+            Recruit("Local QB", 1, 61, 78, Position.QB, 1),
+            Recruit("Local RB", 1, 60, 76, Position.RB, 1),
+            Recruit("Local WR", 2, 66, 82, Position.WR, 1),
+            Recruit("Local OL", 2, 65, 80, Position.OL, 1),
+            Recruit("Local LB", 1, 60, 77, Position.OLB, 1),
+            Recruit("Local CB", 2, 64, 81, Position.CB, 1)
+        };
+
+        var state = new DynastyState
+        {
+            DynastyId =
+                Guid.Parse("99999999-8888-7777-6666-555555555555"),
+            DynastyName = "Assisted Recruiting",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = true,
+            HighSchoolRecruitingPool = recruits
+        };
+
+        var assisted =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                state,
+                user);
+
+        var offers = assisted.RecruitingInteractions
+            .Where(item =>
+                item.WasCpuAssisted &&
+                item.IsOnTargetBoard &&
+                item.ScholarshipOffered)
+            .ToArray();
+
+        Assert.Equal(
+            CpuRecruitingService.WeeklyUserAssistanceOffers,
+            offers.Length);
+        Assert.DoesNotContain(
+            offers,
+            item => item.ProspectId == recruits[0].RecruitId);
+
+        var sameWeek =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                assisted,
+                user);
+        Assert.Equal(
+            offers.Length,
+            sameWeek.RecruitingInteractions.Count(item =>
+                item.WasCpuAssisted &&
+                item.ScholarshipOffered));
+
+        var nextWeek =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                sameWeek with { Week = 21 },
+                user);
+        Assert.True(
+            nextWeek.RecruitingInteractions.Count(item =>
+                item.WasCpuAssisted &&
+                item.ScholarshipOffered) > offers.Length);
+    }
+
+    [Fact]
     public void HighSchoolPoolUsesScaledSizeAndValidRatings()
     {
         var rows = new[]
@@ -396,6 +463,25 @@ public class InteractiveRecruitingTests
             Assert.InRange(recruit.HomeRegion, 0, 49);
         });
     }
+
+    private static HighSchoolRecruit Recruit(
+        string name,
+        int stars,
+        int overall,
+        int potential,
+        Position position,
+        int region) => new()
+    {
+        RecruitId = Guid.NewGuid(),
+        SeasonYear = 2027,
+        FullName = name,
+        Position = position,
+        StarRating = stars,
+        TrueOverallRating = overall,
+        PotentialRating = potential,
+        HomeState = region,
+        HomeRegion = region
+    };
 
     private static DynastyState PortalState(DynastyPlayer prospect) =>
         new()
