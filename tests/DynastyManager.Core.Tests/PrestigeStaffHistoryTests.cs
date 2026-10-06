@@ -7,7 +7,7 @@ namespace DynastyManager.Core.Tests;
 public sealed class PrestigeStaffHistoryTests
 {
     [Fact]
-    public void LeagueStaffCreatesOnlyTheSevenCoreRolesPerProgram()
+    public void LeagueStaffOmitsHeadCoachForUserProgram()
     {
         var teams = new[] { Team("User", 72), Team("Rival", 78) };
         var state = State();
@@ -15,10 +15,16 @@ public sealed class PrestigeStaffHistoryTests
         state = ProgramPrestigeService.EnsureInitialPrestige(state, teams);
         state = StaffManagementService.EnsureLeagueStaff(state, teams);
 
-        Assert.Equal(14, state.Staff.Count);
+        Assert.Equal(13, state.Staff.Count);
         Assert.Equal(
-            Enum.GetValues<StaffRole>().Length,
+            Enum.GetValues<StaffRole>().Length - 1,
             StaffManagementService.GetTeamStaff(state, "User").Count);
+        Assert.DoesNotContain(state.Staff, item =>
+            item.TeamName == "User" &&
+            item.Role == StaffRole.HeadCoach);
+        Assert.Contains(state.Staff, item =>
+            item.TeamName == "Rival" &&
+            item.Role == StaffRole.HeadCoach);
         Assert.Contains(state.Staff, item =>
             item.TeamName == "User" && item.Role == StaffRole.SpecialTeamsCoordinator);
         Assert.Contains(state.Staff, item =>
