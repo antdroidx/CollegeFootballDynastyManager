@@ -1,5 +1,5 @@
 name: C# / MAUI CI
-run-name: Build \${{ github.run_number }} • \${{ github.head_ref || github.ref_name }}
+run-name: Build ${{ github.run_number }} • ${{ github.head_ref || github.ref_name }}
 
 on:
   push:
