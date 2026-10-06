@@ -1051,6 +1051,16 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null || _isAdvancing)
             return;
 
+        if (_currentDynasty.UserCoachIsFired)
+        {
+            await DisplayAlert(
+                "Head Coach Job Required",
+                "You were fired from your previous program. Open Program and accept a head-coaching offer before advancing.",
+                "OK");
+            ShowSection(AppSection.Program);
+            return;
+        }
+
         _isAdvancing = true;
         SetDynastyControlsEnabled(false);
         await ShowAdvanceProgressAsync("Preparing weekly advance...", 0.04);
@@ -1246,6 +1256,10 @@ public sealed class FoundationPage : ContentPage
             await ShowAdvanceProgressAsync("Updating program prestige...", 0.76);
             _currentDynasty = ProgramPrestigeService.ApplySeasonResults(
                 _currentDynasty, _teamsByName, finalProfiles);
+            _currentDynasty = UserCoachCareerService
+                .EvaluateCompletedSeason(
+                    _currentDynasty,
+                    _teamsByName);
 
             await ShowAdvanceProgressAsync("Evaluating coaching staffs...", 0.77);
             _currentDynasty = StaffManagementService.AdvanceSeason(
@@ -1557,6 +1571,10 @@ public sealed class FoundationPage : ContentPage
             state.TeamSeasonHistory.Any(item =>
                 item.SeasonYear == state.SeasonYear))
         {
+            state = UserCoachCareerService
+                .EvaluateCompletedSeason(
+                    state,
+                    _teamsByName);
             state = StaffManagementService.AdvanceSeason(state);
             state = StaffMarketService.EnsureMarket(
                 state, _teamsByName);
@@ -3414,6 +3432,22 @@ public sealed class FoundationPage : ContentPage
             }
         });
 
+        if (_currentDynasty.UserCoachIsFired)
+        {
+            _homeHighlights.Children.Add(new Border
+            {
+                StrokeThickness = 1,
+                Padding = 12,
+                Content = new Label
+                {
+                    Text =
+                        "ACTION REQUIRED\nYou were fired. Open Program and accept a new head-coaching job.",
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = NegativeChangeColor
+                }
+            });
+        }
+
         if (_currentDynasty.Phase is
             SeasonPhase.TransferPortal or
             SeasonPhase.Recruiting or
@@ -3484,6 +3518,7 @@ public sealed class FoundationPage : ContentPage
             FontAttributes = FontAttributes.Bold
         });
 
+        RenderUserCoachCareer(team);
         RenderProgramStaff(team);
         RenderProgramHistory(team);
 
@@ -3539,6 +3574,223 @@ public sealed class FoundationPage : ContentPage
                         $"{title.ChampionScore}-{title.RunnerUpScore}"
                 });
             }
+        }
+    }
+
+    private void RenderUserCoachCareer(Team team)
+    {
+        if (_currentDynasty is null ||
+            _currentDynasty.UserHeadCoach is null)
+        {
+            return;
+        }
+
+        var coach = _currentDynasty.UserHeadCoach;
+        var security =
+            _currentDynasty.UserCoachJobSecurity;
+        var securityLabel =
+            UserCoachCareerService.GetJobSecurityLabel(
+                security);
+        var career = _currentDynasty.UserCoachCareerHistory;
+        var wins = career.Sum(item => item.Wins);
+        var losses = career.Sum(item => item.Losses);
+        var titles = career.Count(item =>
+            item.NationalChampion);
+        var conferenceTitles = career.Count(item =>
+            item.ConferenceChampion);
+
+        _programList.Children.Add(new Label
+        {
+            Text = "HEAD COACH • YOU",
+            FontAttributes = FontAttributes.Bold,
+            Margin = new Thickness(0, 10, 0, 0),
+            TextColor = _currentDynasty.UserCoachIsFired
+                ? NegativeChangeColor
+                : Colors.White
+        });
+
+        _programList.Children.Add(new Label
+        {
+            Text =
+                $"OVR {coach.OverallRating} • REP {coach.Reputation} • " +
+                $"Job Security {security}% ({securityLabel}) • " +
+                $"Contract {coach.ContractYearsRemaining}y",
+            FontAttributes = FontAttributes.Bold,
+            TextColor = security switch
+            {
+                <= 20 => NegativeChangeColor,
+                <= 35 => NegativeChangeColor,
+                >= 70 => PositiveChangeColor,
+                _ => NeutralChangeColor
+            }
+        });
+
+        _programList.Children.Add(new Label
+        {
+            Text =
+                $"Leadership {coach.Leadership} • Recruiting {coach.Recruiting} • " +
+                $"Development {coach.PlayerDevelopment} • Game Mgmt {coach.GameManagement}",
+            FontSize = 11
+        });
+
+        _programList.Children.Add(new Label
+        {
+            Text =
+                $"Career {wins}-{losses} • Tenure {coach.TenureYears}y • " +
+                $"National titles {titles} • Conference titles {conferenceTitles}",
+            FontSize = 11
+        });
+
+        var latest = career
+            .OrderByDescending(item => item.SeasonYear)
+            .FirstOrDefault();
+        if (latest is not null)
+        {
+            _programList.Children.Add(new Label
+            {
+                Text =
+                    $"{latest.SeasonYear} COACH DEVELOPMENT • " +
+                    $"Leadership {FormatSigned(latest.LeadershipChange)} • " +
+                    $"Recruiting {FormatSigned(latest.RecruitingChange)} • " +
+                    $"Development {FormatSigned(latest.PlayerDevelopmentChange)} • " +
+                    $"Game Mgmt {FormatSigned(latest.GameManagementChange)}",
+                FontSize = 11,
+                TextColor = GetChangeColor(
+                    latest.OverallAfter -
+                    latest.OverallBefore)
+            });
+        }
+
+        if (_currentDynasty.UserCoachIsFired)
+        {
+            _programList.Children.Add(new Border
+            {
+                StrokeThickness = 1,
+                Padding = 10,
+                Margin = new Thickness(0, 6, 0, 4),
+                Content = new Label
+                {
+                    Text =
+                        $"FIRED • {_currentDynasty.UserCoachFiredFromTeamName}\n" +
+                        "Accept another head-coaching job before advancing the dynasty.",
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = NegativeChangeColor
+                }
+            });
+        }
+
+        var pendingOffers =
+            _currentDynasty.UserCoachJobOffers
+                .Where(item =>
+                    item.Status ==
+                        UserCoachJobOfferStatus.Pending)
+                .OrderByDescending(item =>
+                    item.ProgramPrestige)
+                .ThenByDescending(item =>
+                    item.FitScore)
+                .ToArray();
+
+        if (pendingOffers.Length == 0)
+            return;
+
+        _programList.Children.Add(new Label
+        {
+            Text = "HEAD COACH JOB OFFERS",
+            FontAttributes = FontAttributes.Bold,
+            Margin = new Thickness(0, 8, 0, 0)
+        });
+
+        foreach (var offer in pendingOffers)
+        {
+            var acceptButton = new Button
+            {
+                Text = "Accept",
+                FontSize = 11,
+                Padding = new Thickness(10, 4),
+                TextColor = Colors.White
+            };
+            var declineButton = new Button
+            {
+                Text = "Decline",
+                FontSize = 11,
+                Padding = new Thickness(10, 4),
+                TextColor = Colors.White
+            };
+
+            var selectedOffer = offer;
+            acceptButton.Clicked += async (_, _) =>
+            {
+                if (_currentDynasty is null)
+                    return;
+
+                var accept = await DisplayAlert(
+                    "Accept Head Coaching Job?",
+                    $"Leave {_currentDynasty.UserTeamName} for {selectedOffer.TeamName}? " +
+                    $"Prestige {selectedOffer.ProgramPrestige} • " +
+                    $"{selectedOffer.ContractYears}-year contract.",
+                    "Accept",
+                    "Cancel");
+
+                if (!accept || _currentDynasty is null)
+                    return;
+
+                _currentDynasty =
+                    UserCoachCareerService.AcceptJobOffer(
+                        _currentDynasty,
+                        selectedOffer.OfferId,
+                        _teamsByName);
+                RenderCurrentDynasty();
+                ShowSection(AppSection.Program);
+            };
+
+            declineButton.Clicked += (_, _) =>
+            {
+                if (_currentDynasty is null)
+                    return;
+
+                _currentDynasty =
+                    UserCoachCareerService.DeclineJobOffer(
+                        _currentDynasty,
+                        selectedOffer.OfferId);
+                RenderCurrentDynasty();
+            };
+
+            var actions = new HorizontalStackLayout
+            {
+                Spacing = 6,
+                Children =
+                {
+                    acceptButton,
+                    declineButton
+                }
+            };
+
+            _programList.Children.Add(new Border
+            {
+                StrokeThickness = 1,
+                Padding = 9,
+                Content = new VerticalStackLayout
+                {
+                    Spacing = 3,
+                    Children =
+                    {
+                        new Label
+                        {
+                            Text =
+                                $"{offer.TeamName} • Prestige {offer.ProgramPrestige} • " +
+                                $"{offer.ContractYears}y • Fit {offer.FitScore}",
+                            FontAttributes =
+                                FontAttributes.Bold
+                        },
+                        new Label
+                        {
+                            Text = offer.Reason,
+                            FontSize = 11
+                        },
+                        actions
+                    }
+                }
+            });
         }
     }
 
