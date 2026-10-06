@@ -73,6 +73,8 @@ public sealed class FoundationPage : ContentPage
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
     private readonly Switch _recruitingAssistanceSwitch;
+    private readonly Slider _recruitingAssistanceWorkloadSlider;
+    private readonly Label _recruitingAssistanceWorkloadLabel;
     private readonly Label _rollingAutosaveStatus;
     private readonly Label _offseasonRosterStatus;
     private readonly VerticalStackLayout _transferPortalList;
@@ -203,6 +205,38 @@ public sealed class FoundationPage : ContentPage
             _currentDynasty = _currentDynasty with
             {
                 RecruitingAssistanceEnabled = args.Value
+            };
+        };
+
+        _recruitingAssistanceWorkloadLabel = new Label
+        {
+            Text = GetRecruitingAssistanceWorkloadText(50),
+            FontAttributes = FontAttributes.Bold,
+            FontSize = 12
+        };
+
+        _recruitingAssistanceWorkloadSlider = new Slider
+        {
+            Minimum = 0,
+            Maximum = 100,
+            Value = 50
+        };
+        _recruitingAssistanceWorkloadSlider.ValueChanged += (_, args) =>
+        {
+            var workload = Math.Clamp(
+                (int)Math.Round(args.NewValue / 10.0) * 10,
+                0,
+                100);
+
+            _recruitingAssistanceWorkloadLabel.Text =
+                GetRecruitingAssistanceWorkloadText(workload);
+
+            if (_currentDynasty is null)
+                return;
+
+            _currentDynasty = _currentDynasty with
+            {
+                RecruitingAssistanceWorkloadPercent = workload
             };
         };
 
@@ -844,15 +878,17 @@ public sealed class FoundationPage : ContentPage
                         _recruitingAssistanceSwitch,
                         new Label
                         {
-                            Text = "CPU suggests weekly targets and offers",
+                            Text = "Staff can run recruiting for you",
                             VerticalTextAlignment = TextAlignment.Center,
                             FontAttributes = FontAttributes.Bold
                         }
                     }
                 },
+                _recruitingAssistanceWorkloadLabel,
+                _recruitingAssistanceWorkloadSlider,
                 new Label
                 {
-                    Text = "Enabled by default. Assistance adds realistic need-based targets and scholarship offers to your board each recruiting week. Walk-ons fill any remaining roster shortages.",
+                    Text = "0% = manual only. 100% = full delegation. Staff can use the selected share of recruiting points for realistic targets, scholarship offers, scouting, and pitches. Your manually managed prospects are not overwritten.",
                     FontSize = 12
                 },
                 new BoxView { HeightRequest = 1 },
@@ -1003,6 +1039,12 @@ public sealed class FoundationPage : ContentPage
                 Phase = SeasonPhase.Preseason,
                 RecruitingAssistanceEnabled =
                     _recruitingAssistanceSwitch.IsToggled,
+                RecruitingAssistanceWorkloadPercent =
+                    Math.Clamp(
+                        (int)Math.Round(
+                            _recruitingAssistanceWorkloadSlider.Value / 10.0) * 10,
+                        0,
+                        100),
                 Schedule = schedule,
                 ActiveRoster = activeRoster,
                 HighSchoolRecruitingPool =
@@ -1657,6 +1699,14 @@ public sealed class FoundationPage : ContentPage
         _currentDynasty = state;
         _recruitingAssistanceSwitch.IsToggled =
             state.RecruitingAssistanceEnabled;
+        _recruitingAssistanceWorkloadSlider.Value =
+            Math.Clamp(
+                state.RecruitingAssistanceWorkloadPercent,
+                0,
+                100);
+        _recruitingAssistanceWorkloadLabel.Text =
+            GetRecruitingAssistanceWorkloadText(
+                state.RecruitingAssistanceWorkloadPercent);
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
         ShowSection(AppSection.Home);
@@ -3169,6 +3219,17 @@ public sealed class FoundationPage : ContentPage
                 SeasonPhase.TransferPortal or SeasonPhase.Recruiting or
                 SeasonPhase.RegularSeason;
     }
+
+    private static string GetRecruitingAssistanceWorkloadText(
+        int workload) =>
+        Math.Clamp(workload, 0, 100) switch
+        {
+            0 => "WORKLOAD 0% • Manual recruiting",
+            <= 30 => $"WORKLOAD {workload}% • Light help",
+            <= 60 => $"WORKLOAD {workload}% • Shared recruiting",
+            <= 90 => $"WORKLOAD {workload}% • Staff-led recruiting",
+            _ => "WORKLOAD 100% • Full Auto"
+        };
 
     private static string FormatScoutAssignment(ScoutAssignment assignment) =>
         assignment.Scope switch
