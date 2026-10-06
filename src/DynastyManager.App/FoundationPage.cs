@@ -1338,6 +1338,10 @@ public sealed class FoundationPage : ContentPage
                 .EnsurePhaseInitialized(
                     _currentDynasty,
                     weeklyRecruitingTeam);
+            _currentDynasty = CpuRecruitingService
+                .ApplyWeeklyUserAssistance(
+                    _currentDynasty,
+                    weeklyRecruitingTeam);
         }
 
         if (phaseBeforeAdvance == SeasonPhase.RegularSeason &&
@@ -1615,6 +1619,14 @@ public sealed class FoundationPage : ContentPage
                 .EnsurePhaseInitialized(
                     state,
                     phaseTeam);
+
+            if (state.Phase == SeasonPhase.Recruiting)
+            {
+                state = CpuRecruitingService
+                    .ApplyWeeklyUserAssistance(
+                        state,
+                        phaseTeam);
+            }
         }
 
         if (state.Phase == SeasonPhase.RosterManagement)
@@ -2408,8 +2420,12 @@ public sealed class FoundationPage : ContentPage
 
         var offerMarker =
             interaction.ScholarshipOffered
-                ? "OFFER • "
-                : string.Empty;
+                ? interaction.WasCpuAssisted
+                    ? "CPU ASSIST • OFFER • "
+                    : "OFFER • "
+                : interaction.WasCpuAssisted
+                    ? "CPU ASSIST • "
+                    : string.Empty;
 
         var nationalRank = GetProspectNationalRank(prospect);
 
