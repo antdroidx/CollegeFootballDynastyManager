@@ -86,7 +86,8 @@ public static class InteractiveRecruitingService
     public static DynastyState Scout(
         DynastyState state,
         RecruitingSource source,
-        Guid prospectId)
+        Guid prospectId,
+        bool cpuAssisted = false)
     {
         if (state.RecruitingPointsRemaining < ScoutCost)
             return state;
@@ -105,6 +106,7 @@ public static class InteractiveRecruitingService
         interaction = interaction with
         {
             IsOnTargetBoard = true,
+            WasCpuAssisted = cpuAssisted,
             ScoutingPercent = Math.Min(
                 100,
                 interaction.ScoutingPercent + ScoutStep)
@@ -122,7 +124,8 @@ public static class InteractiveRecruitingService
     public static DynastyState ToggleScholarship(
         DynastyState state,
         RecruitingSource source,
-        Guid prospectId)
+        Guid prospectId,
+        bool cpuAssisted = false)
     {
         var interaction = GetOrCreateInteraction(
             state,
@@ -135,7 +138,7 @@ public static class InteractiveRecruitingService
         interaction = interaction with
         {
             IsOnTargetBoard = true,
-            WasCpuAssisted = false,
+            WasCpuAssisted = cpuAssisted,
             ScholarshipOffered =
                 !interaction.ScholarshipOffered,
             UserInterest =
@@ -151,20 +154,23 @@ public static class InteractiveRecruitingService
         DynastyState state,
         Team userTeam,
         RecruitingSource source,
-        Guid prospectId) =>
+        Guid prospectId,
+        bool cpuAssisted = false) =>
         Pitch(
             state,
             userTeam,
             source,
             prospectId,
-            RecruitPitchType.ProgramPrestige);
+            RecruitPitchType.ProgramPrestige,
+            cpuAssisted);
 
     public static DynastyState Pitch(
         DynastyState state,
         Team userTeam,
         RecruitingSource source,
         Guid prospectId,
-        RecruitPitchType pitchType)
+        RecruitPitchType pitchType,
+        bool cpuAssisted = false)
     {
         ArgumentNullException.ThrowIfNull(userTeam);
 
@@ -232,6 +238,7 @@ public static class InteractiveRecruitingService
         interaction = interaction with
         {
             IsOnTargetBoard = true,
+            WasCpuAssisted = cpuAssisted,
             LastPitchType = pitchType,
             UserInterest =
                 interaction.UserInterest + gain
