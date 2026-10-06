@@ -164,8 +164,17 @@ public static class UserCoachCareerService
               securityAfter < 50));
 
         if (!fired &&
-            updatedCoach.ContractYearsRemaining <= 1 &&
-            securityAfter >= 58)
+            updatedCoach.ContractYearsRemaining == 0 &&
+            securityAfter >= 50)
+        {
+            updatedCoach = updatedCoach with
+            {
+                ContractYearsRemaining = 3
+            };
+        }
+        else if (!fired &&
+                 updatedCoach.ContractYearsRemaining <= 1 &&
+                 securityAfter >= 58)
         {
             updatedCoach = updatedCoach with
             {
