@@ -189,9 +189,13 @@ public static class CpuRecruitingService
 
         foreach (var team in teams)
         {
-            if (!assistUserTeam && team.Name.Equals(
-                    state.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase))
+            var isUserTeam = team.Name.Equals(
+                state.UserTeamName,
+                StringComparison.OrdinalIgnoreCase);
+
+            if ((!assistUserTeam && isUserTeam) ||
+                (isUserTeam &&
+                 source == RecruitingSource.HighSchool))
             {
                 continue;
             }
