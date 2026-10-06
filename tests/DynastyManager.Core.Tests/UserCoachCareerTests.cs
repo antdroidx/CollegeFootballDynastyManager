@@ -67,7 +67,17 @@ public sealed class UserCoachCareerTests
                     conferenceChampion: true,
                     playoff: true,
                     finalRank: 6,
-                    recruitingAverage: 84)
+                    recruitingAverage: 84),
+                Season(
+                    "Rival",
+                    4,
+                    8,
+                    recruitingAverage: 72),
+                Season(
+                    "Rebuild",
+                    3,
+                    9,
+                    recruitingAverage: 70)
             },
             ProgramPrestigeHistory = new[]
             {
