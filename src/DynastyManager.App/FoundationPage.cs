@@ -697,6 +697,9 @@ public sealed class FoundationPage : ContentPage
             AppSection.More => "Dynasty & Saves",
             _ => section.ToString()
         };
+
+        if (_currentDynasty is not null)
+            RenderSection(section);
     }
 
     private View BuildHomeSection()
@@ -1932,14 +1935,47 @@ public sealed class FoundationPage : ContentPage
             $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
-        RenderOffseasonRoster();
-        RenderRecruitingScreen();
-        RenderHomeScreen();
-        RenderProgramScreen();
-        RenderNationalRankings();
-        RenderPostseason();
-        RenderConferenceRace();
-        RenderUserSchedule();
+        RenderSection(_activeSection);
+    }
+
+    private void RenderSection(AppSection section)
+    {
+        switch (section)
+        {
+            case AppSection.Home:
+                RenderHomeScreen();
+                break;
+
+            case AppSection.Schedule:
+                RenderUserSchedule();
+                break;
+
+            case AppSection.Roster:
+                RenderOffseasonRoster();
+                break;
+
+            case AppSection.Teams:
+                RenderTeamBrowser();
+                break;
+
+            case AppSection.Recruiting:
+                RenderRecruitingScreen();
+                break;
+
+            case AppSection.Rankings:
+                RenderNationalRankings();
+                RenderConferenceRace();
+                RenderPostseason();
+                break;
+
+            case AppSection.Program:
+                RenderProgramScreen();
+                break;
+
+            case AppSection.More:
+            default:
+                break;
+        }
     }
 
     private void RenderOffseasonRoster()
@@ -3489,10 +3525,7 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
-        var rankings = NationalRankingService.Build(
-            _currentDynasty,
-            _teamsByName,
-            BuildCurrentSimulationProfiles());
+        var rankings = BuildCurrentNationalRankings();
 
         var userRanking = rankings.FirstOrDefault(ranking =>
             ranking.TeamName.Equals(
@@ -4868,9 +4901,374 @@ public sealed class FoundationPage : ContentPage
             return _simulationProfiles;
         }
 
-        return DynastyRosterSimulationProfileBuilder.Build(
-            _currentDynasty,
-            _teamsByName.Values);
+        if (_cachedCurrentProfiles is not null &&
+            ReferenceEquals(
+                _cachedProfileRoster,
+                _currentDynasty.ActiveRoster) &&
+            ReferenceEquals(
+                _cachedProfileStaff,
+                _currentDynasty.Staff) &&
+            ReferenceEquals(
+                _cachedProfileUserCoach,
+                _currentDynasty.UserHeadCoach) &&
+            ReferenceEquals(
+                _cachedProfilePrestige,
+                _currentDynasty.ProgramPrestigeHistory))
+        {
+            return _cachedCurrentProfiles;
+        }
+
+        _cachedCurrentProfiles =
+            DynastyRosterSimulationProfileBuilder.Build(
+                _currentDynasty,
+                _teamsByName.Values);
+
+        _cachedProfileRoster =
+            _currentDynasty.ActiveRoster;
+        _cachedProfileStaff =
+            _currentDynasty.Staff;
+        _cachedProfileUserCoach =
+            _currentDynasty.UserHeadCoach;
+        _cachedProfilePrestige =
+            _currentDynasty.ProgramPrestigeHistory;
+
+        _cachedNationalRankings = null;
+
+        return _cachedCurrentProfiles;
+    }
+
+    private IReadOnlyList<NationalRanking>
+        BuildCurrentNationalRankings()
+    {
+        if (_currentDynasty is null)
+            return Array.Empty<NationalRanking>();
+
+        var profiles =
+            BuildCurrentSimulationProfiles();
+
+        if (_cachedNationalRankings is not null &&
+            ReferenceEquals(
+                _cachedRankingSchedule,
+                _currentDynasty.Schedule) &&
+            ReferenceEquals(
+                _cachedRankingConferenceHistory,
+                _currentDynasty
+                    .ConferenceChampionshipHistory) &&
+            ReferenceEquals(
+                _cachedRankingNationalHistory,
+                _currentDynasty
+                    .NationalChampionshipHistory) &&
+            ReferenceEquals(
+                _cachedRankingProfiles,
+                profiles))
+        {
+            return _cachedNationalRankings;
+        }
+
+        _cachedNationalRankings =
+            NationalRankingService.Build(
+                _currentDynasty,
+                _teamsByName,
+                profiles);
+
+        _cachedRankingSchedule =
+            _currentDynasty.Schedule;
+        _cachedRankingConferenceHistory =
+            _currentDynasty
+                .ConferenceChampionshipHistory;
+        _cachedRankingNationalHistory =
+            _currentDynasty
+                .NationalChampionshipHistory;
+        _cachedRankingProfiles =
+            profiles;
+
+        return _cachedNationalRankings;
+    }
+
+    private void RenderTeamBrowser()
+    {
+        _teamBrowserList.Children.Clear();
+
+        if (_currentDynasty is null ||
+            _teamsByName.Count == 0)
+        {
+            _teamBrowserStatus.Text =
+                "No team information is available.";
+            return;
+        }
+
+        var selectedTeamName =
+            _teamBrowserPicker.SelectedItem
+                as string;
+
+        if (string.IsNullOrWhiteSpace(
+                selectedTeamName) ||
+            !_teamsByName.ContainsKey(
+                selectedTeamName))
+        {
+            selectedTeamName =
+                _currentDynasty.UserTeamName;
+
+            var selectedIndex =
+                _teamNames
+                    .Select((name, index) =>
+                        new
+                        {
+                            Name = name,
+                            Index = index
+                        })
+                    .FirstOrDefault(item =>
+                        item.Name.Equals(
+                            selectedTeamName,
+                            StringComparison
+                                .OrdinalIgnoreCase))
+                    ?.Index ?? -1;
+
+            if (selectedIndex >= 0 &&
+                _teamBrowserPicker.SelectedIndex !=
+                    selectedIndex)
+            {
+                _teamBrowserPicker.SelectedIndex =
+                    selectedIndex;
+            }
+        }
+
+        if (!_teamsByName.TryGetValue(
+                selectedTeamName,
+                out var team))
+        {
+            _teamBrowserStatus.Text =
+                "Program not found.";
+            return;
+        }
+
+        var playedGames =
+            _currentDynasty.Schedule
+                .Where(game =>
+                    game.SeasonYear ==
+                        _currentDynasty.SeasonYear &&
+                    game.HasPlayed &&
+                    game.InvolvesTeam(team.Name))
+                .ToArray();
+
+        var wins = playedGames.Count(game =>
+            game.WinnerTeamName?.Equals(
+                team.Name,
+                StringComparison.OrdinalIgnoreCase) ==
+            true);
+        var losses =
+            playedGames.Length - wins;
+
+        var conferenceGames =
+            playedGames.Where(game =>
+                game.GameType ==
+                    ScheduledGameType.Conference)
+                .ToArray();
+        var conferenceWins =
+            conferenceGames.Count(game =>
+                game.WinnerTeamName?.Equals(
+                    team.Name,
+                    StringComparison.OrdinalIgnoreCase) ==
+                true);
+        var conferenceLosses =
+            conferenceGames.Length -
+            conferenceWins;
+
+        var rank =
+            BuildCurrentNationalRankings()
+                .FirstOrDefault(item =>
+                    item.TeamName.Equals(
+                        team.Name,
+                        StringComparison
+                            .OrdinalIgnoreCase))
+                ?.Rank;
+
+        var prestige =
+            ProgramPrestigeService
+                .GetCurrentPrestige(
+                    _currentDynasty,
+                    team);
+
+        var profile =
+            BuildCurrentSimulationProfiles()
+                .TryGetValue(
+                    team.Name,
+                    out var teamProfile)
+                ? teamProfile
+                : null;
+
+        var roster =
+            _currentDynasty.ActiveRoster
+                .Where(player =>
+                    player.TeamName.Equals(
+                        team.Name,
+                        StringComparison
+                            .OrdinalIgnoreCase))
+                .ToArray();
+
+        var commitments =
+            _currentDynasty
+                .RecruitingCommitments
+                .Where(item =>
+                    item.SeasonYear ==
+                        _currentDynasty.SeasonYear &&
+                    item.TeamName.Equals(
+                        team.Name,
+                        StringComparison
+                            .OrdinalIgnoreCase))
+                .ToArray();
+
+        _teamBrowserStatus.Text =
+            $"{(rank is <= 25 ? $"#{rank} " : string.Empty)}" +
+            $"{team.Name} • {wins}-{losses} " +
+            $"({conferenceWins}-{conferenceLosses} conf) • " +
+            $"Prestige {prestige} • {team.ConferenceName}\n" +
+            $"{roster.Length}/{DynastyRosterRules.MaximumRosterSize} players • " +
+            $"{commitments.Length} current recruiting commits";
+
+        if (profile is not null)
+        {
+            _teamBrowserList.Children.Add(
+                new Label
+                {
+                    Text =
+                        $"TEAM RATINGS • OFF {profile.OffenseRating:0.0} • " +
+                        $"DEF {profile.DefenseRating:0.0} • " +
+                        $"ST {profile.SpecialTeamsRating:0.0}",
+                    FontAttributes =
+                        FontAttributes.Bold
+                });
+        }
+
+        _teamBrowserList.Children.Add(
+            new Label
+            {
+                Text = "COACHING STAFF",
+                FontAttributes =
+                    FontAttributes.Bold,
+                Margin =
+                    new Thickness(0, 8, 0, 0)
+            });
+
+        foreach (var role in new[]
+                 {
+                     StaffRole.HeadCoach,
+                     StaffRole.OffensiveCoordinator,
+                     StaffRole.DefensiveCoordinator,
+                     StaffRole.SpecialTeamsCoordinator,
+                     StaffRole.ChiefScout,
+                     StaffRole.MedicalTrainingDirector,
+                     StaffRole.StrengthConditioningDirector
+                 })
+        {
+            var staff =
+                StaffManagementService.GetStaff(
+                    _currentDynasty,
+                    team.Name,
+                    role);
+
+            if (staff is null)
+                continue;
+
+            _teamBrowserList.Children.Add(
+                new Label
+                {
+                    Text =
+                        $"{FormatStaffRole(role)} • " +
+                        $"{staff.FullName} • OVR {staff.OverallRating}",
+                    FontSize = 11
+                });
+        }
+
+        var injuries =
+            roster.Where(player =>
+                    player.CurrentInjury is not null)
+                .ToArray();
+
+        if (injuries.Length > 0)
+        {
+            _teamBrowserList.Children.Add(
+                new Label
+                {
+                    Text =
+                        $"INJURIES • {injuries.Length}",
+                    FontAttributes =
+                        FontAttributes.Bold,
+                    TextColor =
+                        NegativeChangeColor,
+                    Margin =
+                        new Thickness(0, 8, 0, 0)
+                });
+        }
+
+        _teamBrowserList.Children.Add(
+            new Label
+            {
+                Text = "ROSTER",
+                FontAttributes =
+                    FontAttributes.Bold,
+                Margin =
+                    new Thickness(0, 10, 0, 0)
+            });
+
+        foreach (var position in
+                 Enum.GetValues<Position>())
+        {
+            var players =
+                roster
+                    .Where(player =>
+                        player.Position == position)
+                    .OrderBy(player =>
+                        player.DepthChartOrder > 0
+                            ? player.DepthChartOrder
+                            : int.MaxValue)
+                    .ThenByDescending(player =>
+                        player.OverallRating)
+                    .ToArray();
+
+            if (players.Length == 0)
+                continue;
+
+            _teamBrowserList.Children.Add(
+                new Label
+                {
+                    Text =
+                        $"{position} ({players.Length})",
+                    FontAttributes =
+                        FontAttributes.Bold,
+                    FontSize = 12,
+                    Margin =
+                        new Thickness(0, 6, 0, 0)
+                });
+
+            foreach (var player in players)
+            {
+                var injuryText =
+                    player.CurrentInjury is null
+                        ? string.Empty
+                        : $" • INJ {player.CurrentInjury.Severity} " +
+                          $"{player.CurrentInjury.WeeksRemaining}w";
+
+                _teamBrowserList.Children.Add(
+                    new Label
+                    {
+                        Text =
+                            $"{(player.DepthChartOrder > 0 ? $"#{player.DepthChartOrder} " : string.Empty)}" +
+                            $"{player.FullName} • OVR {player.OverallRating} • " +
+                            $"POT {FormatPotentialStars(player.PotentialRating)} • " +
+                            $"Y{player.ClassYear}" +
+                            (player.IsRedshirted
+                                ? " • RS"
+                                : string.Empty) +
+                            injuryText,
+                        FontSize = 11,
+                        TextColor =
+                            player.CurrentInjury is null
+                                ? Colors.White
+                                : NegativeChangeColor
+                    });
+            }
+        }
     }
 
     private void RenderNationalRankings()
@@ -4884,10 +5282,7 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
-        var rankings = NationalRankingService.Build(
-            _currentDynasty,
-            _teamsByName,
-            BuildCurrentSimulationProfiles());
+        var rankings = BuildCurrentNationalRankings();
 
         var userRanking = rankings.FirstOrDefault(ranking =>
             ranking.TeamName.Equals(
@@ -5078,11 +5473,7 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
-        var nationalRanks = NationalRankingService
-            .Build(
-                _currentDynasty,
-                _teamsByName,
-                BuildCurrentSimulationProfiles())
+        var nationalRanks = BuildCurrentNationalRankings()
             .ToDictionary(
                 ranking => ranking.TeamName,
                 ranking => ranking.Rank,
