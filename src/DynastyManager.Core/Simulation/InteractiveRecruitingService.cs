@@ -497,6 +497,29 @@ public static class InteractiveRecruitingService
                     state.UserTeamName,
                     StringComparison.OrdinalIgnoreCase))
             {
+                if (roster.Count(candidate =>
+                        candidate.TeamName.Equals(
+                            resolvedTeam,
+                            StringComparison.OrdinalIgnoreCase)) <
+                    DynastyRosterRules.MaximumRosterSize)
+                {
+                    roster.Add(player);
+                }
+
+                commitments.Add(new RecruitingCommitmentRecord
+                {
+                    SeasonYear = state.SeasonYear,
+                    JoinSeasonYear =
+                        state.SeasonYear + 1,
+                    CommittedWeek = state.Week,
+                    ProspectId = interaction.ProspectId,
+                    Source = interaction.Source,
+                    PlayerName = player.FullName,
+                    TeamName = resolvedTeam,
+                    Position = player.Position,
+                    OverallRating = player.OverallRating,
+                    WasCpuAssisted = true
+                });
                 continue;
             }
 
