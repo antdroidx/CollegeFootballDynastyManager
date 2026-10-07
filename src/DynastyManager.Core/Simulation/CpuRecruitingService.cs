@@ -51,26 +51,43 @@ public static class CpuRecruitingService
             0,
             DynastyRosterRules.MaximumRosterSize - rosterCount);
 
+        var workloadFactor =
+            0.35 + workload / 100.0 * 0.65;
+
+        var targetSource = state.Phase == SeasonPhase.Recruiting
+            ? RecruitingSource.HighSchool
+            : RecruitingSource.TransferPortal;
+
         var currentOffers = state.RecruitingInteractions.Count(item =>
             item.SeasonYear == state.SeasonYear &&
-            sources.Contains(item.Source) &&
+            item.Source == targetSource &&
             item.CommittedTeamName is null &&
             item.ScholarshipOffered);
 
-        var offerMultiplier =
-            0.75 + workload / 100.0 * 0.75;
-        var desiredOpenOffers = openSlots == 0
-            ? 0
-            : Math.Max(
-                Math.Min(3, openSlots),
-                (int)Math.Ceiling(
-                    openSlots * offerMultiplier));
+        var baseDesiredOffers = targetSource ==
+            RecruitingSource.HighSchool
+                ? Math.Max(
+                    12,
+                    (int)Math.Ceiling(
+                        Math.Max(4, openSlots) * 2.25))
+                : Math.Max(
+                    6,
+                    (int)Math.Ceiling(
+                        Math.Max(4, openSlots) * 0.85));
+
+        var desiredOpenOffers =
+            (int)Math.Ceiling(
+                baseDesiredOffers * workloadFactor);
 
         var additionsNeeded = Math.Max(
             0,
             desiredOpenOffers - currentOffers);
 
-        var availableCandidates = sources
+        var acquisitionSources = state.Phase == SeasonPhase.Recruiting
+            ? new[] { RecruitingSource.HighSchool }
+            : sources;
+
+        var availableCandidates = acquisitionSources
             .SelectMany(source =>
                 GetCandidates(state, source)
                     .Select(candidate =>
@@ -97,15 +114,12 @@ public static class CpuRecruitingService
                     return false;
                 }
 
-                var threshold =
-                    Math.Clamp(38 - workload / 8, 24, 38);
-                return RecruitPreferenceService
-                    .GetAttainabilityScore(
-                        state,
-                        userTeam,
-                        item.Source,
-                        item.Candidate.ProspectId) >=
-                    threshold;
+                return IsReasonableUserAssistanceTarget(
+                    state,
+                    userTeam,
+                    item.Source,
+                    item.Candidate,
+                    workload);
             })
             .OrderByDescending(item =>
                 GetUserAssistanceScore(
@@ -812,6 +826,118 @@ public static class CpuRecruitingService
                     item.Candidate))
             .ToArray();
 
+    private static bool IsReasonableUserAssistanceTarget(
+        DynastyState state,
+        Team userTeam,
+        RecruitingSource source,
+        Candidate candidate,
+        int workload)
+    {
+        var attainability =
+            RecruitPreferenceService.GetAttainabilityScore(
+                state,
+                userTeam,
+                source,
+                candidate.ProspectId);
+
+        var baseThreshold = Math.Clamp(
+            38 - workload / 8,
+            24,
+            38);
+
+        if (source == RecruitingSource.TransferPortal)
+            return attainability >= Math.Max(20, baseThreshold - 4);
+
+        var recruit = state.HighSchoolRecruitingPool
+            .FirstOrDefault(item =>
+                item.RecruitId == candidate.ProspectId);
+        if (recruit is null)
+            return attainability >= baseThreshold;
+
+        var regional =
+            RecruitGeography.GetRegion(recruit) ==
+            Math.Clamp(userTeam.LegacyRegionId, 0, 4);
+        var specificallyAssigned =
+            state.ScoutAssignments.Any(assignment =>
+                assignment.Scope == ScoutAssignmentScope.Region &&
+                int.TryParse(assignment.Target, out var region) &&
+                region == RecruitGeography.GetRegion(recruit)) ||
+            state.ScoutAssignments.Any(assignment =>
+                assignment.Scope == ScoutAssignmentScope.State &&
+                int.TryParse(assignment.Target, out var stateIndex) &&
+                stateIndex == RecruitGeography.GetStateIndex(recruit));
+
+        var threshold = baseThreshold;
+
+        if (regional && recruit.StarRating >= 3)
+            threshold -= recruit.StarRating >= 4 ? 8 : 5;
+
+        if (specificallyAssigned && recruit.StarRating >= 3)
+            threshold -= 4;
+
+        threshold = Math.Max(18, threshold);
+
+        if (recruit.StarRating >= 5)
+        {
+            var interaction =
+                InteractiveRecruitingService.GetInteraction(
+                    state,
+                    source,
+                    candidate.ProspectId);
+
+            return attainability >= Math.Max(30, threshold) ||
+                   interaction.UserInterest >= 60;
+        }
+
+        return attainability >= threshold;
+    }
+
+    private static int GetGeographyRecruitingBonus(
+        DynastyState state,
+        Team userTeam,
+        RecruitingSource source,
+        Candidate candidate)
+    {
+        if (source != RecruitingSource.HighSchool)
+            return 0;
+
+        var recruit = state.HighSchoolRecruitingPool
+            .FirstOrDefault(item =>
+                item.RecruitId == candidate.ProspectId);
+        if (recruit is null)
+            return 0;
+
+        var bonus = 0;
+        var region =
+            RecruitGeography.GetRegion(recruit);
+        var stateIndex =
+            RecruitGeography.GetStateIndex(recruit);
+
+        if (region ==
+            Math.Clamp(userTeam.LegacyRegionId, 0, 4))
+        {
+            bonus += 180 + recruit.StarRating * 55;
+        }
+
+        if (state.ScoutAssignments.Any(assignment =>
+                assignment.Scope == ScoutAssignmentScope.Region &&
+                int.TryParse(assignment.Target, out var assignedRegion) &&
+                assignedRegion == region))
+        {
+            bonus += 100;
+        }
+
+        if (state.ScoutAssignments.Any(assignment =>
+                assignment.Scope == ScoutAssignmentScope.State &&
+                int.TryParse(assignment.Target, out var assignedState) &&
+                assignedState == stateIndex))
+        {
+            bonus += 150;
+        }
+
+        return bonus;
+    }
+
     private static int GetUserAssistanceScore(
         DynastyState state,
         Team userTeam,
@@ -882,6 +1008,11 @@ public static class CpuRecruitingService
                need * 260 +
                publicQuality +
                sourceBalance +
+               GetGeographyRecruitingBonus(
+                   state,
+                   userTeam,
+                   source,
+                   candidate) +
                scoutKnowledge * 3 +
                (recruitingStaff - 60) * 18 +
                (scoutQuality - 60) * 10 +
