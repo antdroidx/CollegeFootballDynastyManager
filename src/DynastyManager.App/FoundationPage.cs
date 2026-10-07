@@ -20,6 +20,7 @@ public sealed class FoundationPage : ContentPage
         Home,
         Schedule,
         Roster,
+        Teams,
         Recruiting,
         Rankings,
         Program,
@@ -110,6 +111,9 @@ public sealed class FoundationPage : ContentPage
     private readonly ProgressBar _advanceOverlayProgress;
     private readonly Label _programStatus;
     private readonly VerticalStackLayout _programList;
+    private readonly Label _teamBrowserStatus;
+    private readonly Picker _teamBrowserPicker;
+    private readonly VerticalStackLayout _teamBrowserList;
     private readonly Dictionary<AppSection, Button> _navButtons = new();
     private readonly Dictionary<AppSection, View> _sectionViews = new();
     private AppSection _activeSection = AppSection.Home;
@@ -125,6 +129,16 @@ public sealed class FoundationPage : ContentPage
     private IReadOnlyList<ImportedPlayerRow> _legacyRosterRows =
         Array.Empty<ImportedPlayerRow>();
     private IReadOnlyList<string> _teamNames = Array.Empty<string>();
+    private IReadOnlyList<DynastyPlayer>? _cachedProfileRoster;
+    private IReadOnlyList<StaffMember>? _cachedProfileStaff;
+    private StaffMember? _cachedProfileUserCoach;
+    private IReadOnlyList<ProgramPrestigeSnapshot>? _cachedProfilePrestige;
+    private IReadOnlyDictionary<string, TeamSimulationProfile>? _cachedCurrentProfiles;
+    private IReadOnlyList<ScheduledGame>? _cachedRankingSchedule;
+    private IReadOnlyList<ConferenceChampionRecord>? _cachedRankingConferenceHistory;
+    private IReadOnlyList<NationalChampionRecord>? _cachedRankingNationalHistory;
+    private IReadOnlyDictionary<string, TeamSimulationProfile>? _cachedRankingProfiles;
+    private IReadOnlyList<NationalRanking>? _cachedNationalRankings;
     private bool _loaded;
     private bool _isAdvancing;
 
@@ -518,6 +532,24 @@ public sealed class FoundationPage : ContentPage
             Spacing = 8
         };
 
+        _teamBrowserStatus = new Label
+        {
+            Text = "Choose a program to view its roster and current information.",
+            FontSize = 13
+        };
+
+        _teamBrowserPicker = new Picker
+        {
+            Title = "Choose program"
+        };
+        _teamBrowserPicker.SelectedIndexChanged += (_, _) =>
+            RenderTeamBrowser();
+
+        _teamBrowserList = new VerticalStackLayout
+        {
+            Spacing = 5
+        };
+
         var navigation = new HorizontalStackLayout
         {
             Spacing = 6,
@@ -533,6 +565,7 @@ public sealed class FoundationPage : ContentPage
                 {
                     AppSection.Recruiting => "Recruit",
                     AppSection.Rankings => "Ranks",
+                    AppSection.Teams => "Teams",
                     _ => section.ToString()
                 },
                 FontSize = 11,
@@ -566,6 +599,7 @@ public sealed class FoundationPage : ContentPage
                 AppSection.Home => BuildHomeSection(),
                 AppSection.Schedule => BuildScheduleSection(),
                 AppSection.Roster => BuildRosterSection(),
+                AppSection.Teams => BuildTeamsSection(),
                 AppSection.Recruiting => BuildRecruitingSection(),
                 AppSection.Rankings => BuildRankingsSection(),
                 AppSection.Program => BuildProgramSection(),
@@ -656,6 +690,7 @@ public sealed class FoundationPage : ContentPage
             AppSection.Home => "Dynasty Home",
             AppSection.Schedule => "Schedule",
             AppSection.Roster => "Roster & Depth Chart",
+            AppSection.Teams => "Teams & Rosters",
             AppSection.Recruiting => "Recruiting",
             AppSection.Rankings => "Rankings & Postseason",
             AppSection.Program => "Program",
@@ -725,6 +760,23 @@ public sealed class FoundationPage : ContentPage
             {
                 _offseasonRosterStatus,
                 _transferPortalList
+            }
+        };
+
+    private View BuildTeamsSection() =>
+        new VerticalStackLayout
+        {
+            Spacing = 10,
+            Children =
+            {
+                new Label
+                {
+                    Text = "Browse any program's current roster, ratings, staff, record, and recruiting class.",
+                    FontSize = 13
+                },
+                _teamBrowserPicker,
+                _teamBrowserStatus,
+                _teamBrowserList
             }
         };
 
@@ -966,6 +1018,7 @@ public sealed class FoundationPage : ContentPage
                 .ToArray();
 
             _teamPicker.ItemsSource = _teamNames.ToList();
+            _teamBrowserPicker.ItemsSource = _teamNames.ToList();
 
             _importStatus.Text =
                 $"Legacy data ready: {universe.Conferences.Count:N0} conferences • " +
