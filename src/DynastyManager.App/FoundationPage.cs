@@ -1204,6 +1204,16 @@ public sealed class FoundationPage : ContentPage
             }
 
             if (phaseBeforeAdvance ==
+                SeasonPhase.Recruiting)
+            {
+                _currentDynasty =
+                    CpuRecruitingService
+                        .AdvanceCpuRecruitingWeek(
+                            _currentDynasty,
+                            _teamsByName);
+            }
+
+            if (phaseBeforeAdvance ==
                     SeasonPhase.TransferPortal ||
                 finalRecruitingWeek)
             {
