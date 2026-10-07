@@ -1,0 +1,168 @@
+name: C# / MAUI CI
+run-name: Build ${{ github.run_number }} • ${{ github.head_ref || github.ref_name }}
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      run_emulator:
+        description: Run Android launch validation after uploading the APK
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: csharp-maui-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check packaged resources
+        run: python3 build/check-packaged-resources.py
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up .NET 10
+        id: dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ steps.dotnet.outputs.dotnet-version }}-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', '**/NuGet.Config', '**/nuget.config', 'global.json', '.github/workflows/csharp-ci.yml') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-${{ runner.arch }}-${{ steps.dotnet.outputs.dotnet-version }}-
+
+      - name: Install .NET MAUI Android workload
+        run: dotnet workload install maui-android --version 10.0.301.1
+
+      - name: Restore
+        run: dotnet restore CollegeFootballDynastyManager.sln
+
+      - name: Run core tests
+        run: dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore
+
+      - name: Ensure Android SDK dependencies
+        run: >
+          dotnet build src/DynastyManager.App/DynastyManager.App.csproj
+          -t:InstallAndroidDependencies
+          --no-restore
+          -f net10.0-android
+          -p:AndroidSdkDirectory="$ANDROID_SDK_ROOT"
+          -p:JavaSdkDirectory="$JAVA_HOME"
+          -p:AcceptAndroidSDKLicenses=True
+
+      - name: Set CI Android version metadata
+        shell: bash
+        run: |
+          echo "APP_VERSION_CODE=$((400 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "APP_DISPLAY_VERSION=2.0.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+
+      - name: Build Android debug APK
+        run: >
+          timeout 8m dotnet build src/DynastyManager.App/DynastyManager.App.csproj
+          -f net10.0-android
+          -c Debug
+          --no-restore
+          -p:AndroidPackageFormats=apk
+          -p:ApplicationVersion="$APP_VERSION_CODE"
+          -p:ApplicationDisplayVersion="$APP_DISPLAY_VERSION"
+          -bl:android-build.binlog
+
+      - name: Upload Android build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: android-build.binlog
+          if-no-files-found: ignore
+
+      - name: Select signed APK
+        shell: bash
+        run: |
+          APK_PATH="$(find src/DynastyManager.App/bin/Debug/net10.0-android -name '*-Signed.apk' -print -quit)"
+          if [ -z "$APK_PATH" ]; then
+            APK_PATH="$(find src/DynastyManager.App/bin/Debug/net10.0-android -name '*.apk' -print -quit)"
+          fi
+          test -n "$APK_PATH"
+          echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
+          echo "Using $APK_PATH"
+
+      - name: Upload APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dynasty-manager-build-${{ github.run_number }}
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error
+          compression-level: 0
+
+  android-launch:
+    needs: build-test-android
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download built APK
+        uses: actions/download-artifact@v4
+        with:
+          name: dynasty-manager-build-${{ github.run_number }}
+          path: apk
+
+      - name: Select APK
+        shell: bash
+        run: |
+          APK_PATH="$(find apk -name '*.apk' -print -quit)"
+          test -n "$APK_PATH"
+          echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
+
+      - name: Enable KVM access
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+
+      - name: Android launch smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r "$APK_PATH"
+            adb logcat -c
+            adb shell monkey -p antdroid.cfbcoach.dev -c android.intent.category.LAUNCHER 1
+            sleep 8
+            adb logcat -d > android-logcat.txt
+            adb shell pidof antdroid.cfbcoach.dev
+            echo "App survived launch."
+
+      - name: Upload runtime log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-launch-log
+          path: android-logcat.txt
+          if-no-files-found: ignore
