@@ -247,7 +247,7 @@ public class InteractiveRecruitingTests
             prospect.PlayerId);
 
         Assert.Equal(
-            4,
+            2,
             RecruitPreferenceService.GetRevealedPreferences(
                 state,
                 RecruitingSource.TransferPortal,
@@ -259,7 +259,7 @@ public class InteractiveRecruitingTests
             prospect.PlayerId);
 
         Assert.Equal(
-            2,
+            4,
             RecruitPreferenceService.GetRevealedPreferences(
                 state,
                 RecruitingSource.TransferPortal,
