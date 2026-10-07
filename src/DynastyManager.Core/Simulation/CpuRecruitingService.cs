@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Seasons;
 
 namespace DynastyManager.Core.Simulation;
 
@@ -333,6 +334,178 @@ public static class CpuRecruitingService
         };
     }
 
+    public static DynastyState AdvanceCpuRecruitingWeek(
+        DynastyState state,
+        IReadOnlyDictionary<string, Team> teamsByName)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(teamsByName);
+
+        if (state.Phase != SeasonPhase.Recruiting ||
+            (state.CpuRecruitingProcessedSeasonYear ==
+                 state.SeasonYear &&
+             state.CpuRecruitingProcessedWeek == state.Week))
+        {
+            return state;
+        }
+
+        var recruitingWeek =
+            SeasonProgression.GetRecruitingWeekNumber(state);
+        if (recruitingWeek <= 0)
+            return state;
+
+        var weeklyRate = recruitingWeek switch
+        {
+            1 => 0.16,
+            2 => 0.20,
+            3 => 0.25,
+            4 => 0.33,
+            5 => 0.45,
+            _ => 1.00
+        };
+
+        var roster = state.ActiveRoster.ToList();
+        var commitments =
+            state.RecruitingCommitments.ToList();
+
+        var usedProspectIds = commitments
+            .Where(record =>
+                record.SeasonYear == state.SeasonYear)
+            .Select(record => record.ProspectId)
+            .Concat(roster.Select(player =>
+                player.PlayerId))
+            .ToHashSet();
+
+        var protectedUserTargets =
+            state.RecruitingInteractions
+                .Where(interaction =>
+                    interaction.SeasonYear ==
+                        state.SeasonYear &&
+                    interaction.Source ==
+                        RecruitingSource.HighSchool &&
+                    interaction.CommittedTeamName is null &&
+                    (interaction.IsOnTargetBoard ||
+                     interaction.ScholarshipOffered))
+                .Select(interaction =>
+                    interaction.ProspectId)
+                .ToHashSet();
+
+        var available = GetCandidates(
+                state,
+                RecruitingSource.HighSchool)
+            .Where(candidate =>
+                !usedProspectIds.Contains(
+                    candidate.ProspectId) &&
+                !protectedUserTargets.Contains(
+                    candidate.ProspectId))
+            .ToDictionary(candidate =>
+                candidate.ProspectId);
+
+        foreach (var team in teamsByName.Values
+                     .Where(team =>
+                         !team.Name.Equals(
+                             state.UserTeamName,
+                             StringComparison.OrdinalIgnoreCase))
+                     .OrderByDescending(team =>
+                         ProgramPrestigeService
+                             .GetCurrentPrestige(
+                                 state,
+                                 team))
+                     .ThenBy(team => team.Name,
+                         StringComparer.OrdinalIgnoreCase))
+        {
+            var capacity = Math.Max(
+                0,
+                DynastyRosterRules.MaximumRosterSize -
+                CountTeamRoster(
+                    roster,
+                    team.Name));
+
+            if (capacity == 0 ||
+                available.Count == 0)
+            {
+                continue;
+            }
+
+            var additions = recruitingWeek >=
+                SeasonProgression.RecruitingWeekCount
+                    ? capacity
+                    : Math.Max(
+                        1,
+                        (int)Math.Ceiling(
+                            capacity * weeklyRate));
+
+            for (var addition = 0;
+                 addition < additions &&
+                 available.Count > 0 &&
+                 CountTeamRoster(
+                     roster,
+                     team.Name) <
+                 DynastyRosterRules.MaximumRosterSize;
+                 addition++)
+            {
+                var position =
+                    SelectMostNeededPosition(
+                        roster,
+                        team.Name);
+
+                var candidate = SelectBestCandidate(
+                    state,
+                    team,
+                    RecruitingSource.HighSchool,
+                    position,
+                    available.Values);
+
+                if (candidate is null)
+                    break;
+
+                roster.Add(
+                    candidate.ToPlayer(
+                        team.Name));
+
+                commitments.Add(
+                    new RecruitingCommitmentRecord
+                    {
+                        SeasonYear =
+                            state.SeasonYear,
+                        JoinSeasonYear =
+                            state.SeasonYear + 1,
+                        CommittedWeek =
+                            state.Week,
+                        ProspectId =
+                            candidate.ProspectId,
+                        Source =
+                            RecruitingSource.HighSchool,
+                        PlayerName =
+                            candidate.FullName,
+                        TeamName =
+                            team.Name,
+                        Position =
+                            candidate.Position,
+                        OverallRating =
+                            candidate.OverallRating,
+                        WasCpuAssisted = true
+                    });
+
+                available.Remove(
+                    candidate.ProspectId);
+                usedProspectIds.Add(
+                    candidate.ProspectId);
+            }
+        }
+
+        return state with
+        {
+            ActiveRoster = roster,
+            RecruitingCommitments =
+                commitments,
+            CpuRecruitingProcessedSeasonYear =
+                state.SeasonYear,
+            CpuRecruitingProcessedWeek =
+                state.Week
+        };
+    }
+
     public static DynastyState ApplyPhaseAssistance(
         DynastyState state,
         IReadOnlyDictionary<string, Team> teamsByName,
@@ -509,6 +682,7 @@ public static class CpuRecruitingService
             {
                 SeasonYear = state.SeasonYear,
                 JoinSeasonYear = state.SeasonYear + 1,
+                CommittedWeek = state.Week,
                 ProspectId = candidate.ProspectId,
                 Source = source,
                 PlayerName = candidate.FullName,
