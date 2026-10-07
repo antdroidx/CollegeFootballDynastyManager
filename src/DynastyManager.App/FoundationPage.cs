@@ -210,7 +210,7 @@ public sealed class FoundationPage : ContentPage
 
         _recruitingAssistanceWorkloadLabel = new Label
         {
-            Text = GetRecruitingAssistanceWorkloadText(50),
+            Text = GetRecruitingAssistanceWorkloadText(100),
             FontAttributes = FontAttributes.Bold,
             FontSize = 12
         };
@@ -219,7 +219,7 @@ public sealed class FoundationPage : ContentPage
         {
             Minimum = 0,
             Maximum = 100,
-            Value = 50
+            Value = 100
         };
         _recruitingAssistanceWorkloadSlider.ValueChanged += (_, args) =>
         {
@@ -2967,7 +2967,11 @@ public sealed class FoundationPage : ContentPage
         var potentialRange = InteractiveRecruitingService
             .GetScoutedPotentialRange(_currentDynasty, source,
                 prospect.ProspectId);
-        var potText = interaction.ScoutingPercent >= 50
+        var potentialVisible =
+            source == RecruitingSource.TransferPortal
+                ? interaction.ScoutingPercent >= 25
+                : interaction.ScoutingPercent >= 50;
+        var potText = potentialVisible
             ? $" • POT {potentialRange.Minimum}-{potentialRange.Maximum} est."
             : " • POT unknown";
 
