@@ -1,5 +1,6 @@
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
+using DynastyManager.Core.Seasons;
 using Xunit;
 
 namespace DynastyManager.Core.Tests;
@@ -149,6 +150,104 @@ public class CpuRecruitingAndWalkOnTests
             commitment =>
                 commitment.TeamName == user.Name &&
                 commitment.WasCpuAssisted);
+    }
+
+    [Fact]
+    public void CpuTeamsMakeRecruitingCommitmentsEveryWeek()
+    {
+        var user = Team("User", 80);
+        var rival = Team("Rival", 70);
+        var teams = new[] { user, rival }
+            .ToDictionary(
+                team => team.Name,
+                StringComparer.OrdinalIgnoreCase);
+
+        var state = new DynastyState
+        {
+            DynastyId = Guid.Parse(
+                "23232323-3434-4545-5656-676767676767"),
+            DynastyName = "Weekly CPU Recruiting",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week =
+                SeasonProgression.FirstRecruitingWeek,
+            Phase = SeasonPhase.Recruiting,
+            ActiveRoster =
+                BuildRoster(user.Name, 85)
+                    .Concat(
+                        BuildRoster(rival.Name, 60))
+                    .ToArray(),
+            HighSchoolRecruitingPool =
+                BuildRecruitPool(120)
+        };
+
+        var weekOne =
+            CpuRecruitingService
+                .AdvanceCpuRecruitingWeek(
+                    state,
+                    teams);
+
+        var firstWeekCommitments =
+            weekOne.RecruitingCommitments
+                .Where(item =>
+                    item.TeamName == rival.Name &&
+                    item.Source ==
+                        RecruitingSource.HighSchool)
+                .ToArray();
+
+        Assert.NotEmpty(firstWeekCommitments);
+        Assert.All(
+            firstWeekCommitments,
+            item => Assert.Equal(
+                state.Week,
+                item.CommittedWeek));
+
+        var sameWeek =
+            CpuRecruitingService
+                .AdvanceCpuRecruitingWeek(
+                    weekOne,
+                    teams);
+
+        Assert.Equal(
+            firstWeekCommitments.Length,
+            sameWeek.RecruitingCommitments.Count(
+                item =>
+                    item.TeamName ==
+                        rival.Name &&
+                    item.Source ==
+                        RecruitingSource.HighSchool));
+
+        var weekTwo =
+            CpuRecruitingService
+                .AdvanceCpuRecruitingWeek(
+                    sameWeek with
+                    {
+                        Week = state.Week + 1
+                    },
+                    teams);
+
+        Assert.True(
+            weekTwo.RecruitingCommitments.Count(
+                item =>
+                    item.TeamName ==
+                        rival.Name &&
+                    item.Source ==
+                        RecruitingSource.HighSchool) >
+            firstWeekCommitments.Length);
+    }
+
+    [Fact]
+    public void NewDynastyDefaultsToFullRecruitingAssistance()
+    {
+        var state = new DynastyState
+        {
+            DynastyName = "Default Assistance",
+            UserTeamName = "User"
+        };
+
+        Assert.Equal(
+            100,
+            state.RecruitingAssistanceWorkloadPercent);
     }
 
     [Fact]
