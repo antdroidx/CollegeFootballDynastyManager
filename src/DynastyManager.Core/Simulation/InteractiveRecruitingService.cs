@@ -103,13 +103,17 @@ public static class InteractiveRecruitingService
             return state;
         }
 
+        var scoutStep = source == RecruitingSource.TransferPortal
+            ? 50
+            : ScoutStep;
+
         interaction = interaction with
         {
             IsOnTargetBoard = true,
             WasCpuAssisted = cpuAssisted,
             ScoutingPercent = Math.Min(
                 100,
-                interaction.ScoutingPercent + ScoutStep)
+                interaction.ScoutingPercent + scoutStep)
         };
 
         return ReplaceInteraction(
@@ -427,6 +431,7 @@ public static class InteractiveRecruitingService
                     SeasonYear = state.SeasonYear,
                     JoinSeasonYear =
                         state.SeasonYear + 1,
+                    CommittedWeek = state.Week,
                     ProspectId = interaction.ProspectId,
                     Source = RecruitingSource.TransferPortal,
                     PlayerName = player.FullName,
@@ -469,6 +474,7 @@ public static class InteractiveRecruitingService
                     SeasonYear = state.SeasonYear,
                     JoinSeasonYear =
                         state.SeasonYear + 1,
+                    CommittedWeek = state.Week,
                     ProspectId = interaction.ProspectId,
                     Source = RecruitingSource.TransferPortal,
                     PlayerName = player.FullName,
@@ -502,6 +508,7 @@ public static class InteractiveRecruitingService
                 SeasonYear = state.SeasonYear,
                 JoinSeasonYear =
                     state.SeasonYear + 1,
+                CommittedWeek = state.Week,
                 ProspectId = interaction.ProspectId,
                 Source = interaction.Source,
                 PlayerName = player.FullName,
@@ -548,28 +555,42 @@ public static class InteractiveRecruitingService
             source,
             prospectId);
 
-        var uncertainty = interaction.ScoutingPercent switch
-        {
-            >= 100 => 1,
-            >= 75 => 3,
-            >= 50 => 5,
-            >= 25 => 7,
-            _ => 10
-        };
+        var uncertainty = source == RecruitingSource.TransferPortal
+            ? interaction.ScoutingPercent switch
+            {
+                >= 75 => 0,
+                >= 50 => 1,
+                >= 25 => 2,
+                _ => 4
+            }
+            : interaction.ScoutingPercent switch
+            {
+                >= 100 => 1,
+                >= 75 => 3,
+                >= 50 => 5,
+                >= 25 => 7,
+                _ => 10
+            };
 
         var evaluator = state.ScoutingStaff.Count == 0
             ? 65
             : (int)state.ScoutingStaff.Average(item => item.TalentEvaluation);
-        uncertainty = Math.Max(1, uncertainty - Math.Max(0, evaluator - 70) / 15);
+        var minimumUncertainty =
+            source == RecruitingSource.TransferPortal ? 0 : 1;
+        uncertainty = Math.Max(
+            minimumUncertainty,
+            uncertainty - Math.Max(0, evaluator - 70) / 15);
         var errorSpan = Math.Max(1, uncertainty);
         var estimate = overall +
             SimulationSeed.Create(state.DynastyId, state.SeasonYear,
                 interaction.ScoutingPercent, prospectId.ToString("N"),
                 "overall-estimate") % (errorSpan * 2 + 1) - errorSpan;
 
-        return (
-            Math.Max(40, estimate - uncertainty),
-            Math.Min(99, estimate + uncertainty));
+        return uncertainty == 0
+            ? (overall, overall)
+            : (
+                Math.Max(40, estimate - uncertainty),
+                Math.Min(99, estimate + uncertainty));
     }
 
     public static (int Minimum, int Maximum) GetScoutedPotentialRange(
@@ -586,11 +607,26 @@ public static class InteractiveRecruitingService
         var evaluator = state.ScoutingStaff.Count == 0
             ? 65
             : (int)state.ScoutingStaff.Average(item => item.PotentialEvaluation);
-        var uncertainty = interaction.ScoutingPercent switch
-        {
-            >= 100 => 2, >= 75 => 4, >= 50 => 7, >= 25 => 10, _ => 14
-        };
-        uncertainty = Math.Max(2, uncertainty - Math.Max(0, evaluator - 70) / 12);
+        var uncertainty = source == RecruitingSource.TransferPortal
+            ? interaction.ScoutingPercent switch
+            {
+                >= 100 => 1,
+                >= 75 => 2,
+                >= 50 => 3,
+                >= 25 => 4,
+                _ => 6
+            }
+            : interaction.ScoutingPercent switch
+            {
+                >= 100 => 2,
+                >= 75 => 4,
+                >= 50 => 7,
+                >= 25 => 10,
+                _ => 14
+            };
+        uncertainty = Math.Max(
+            source == RecruitingSource.TransferPortal ? 1 : 2,
+            uncertainty - Math.Max(0, evaluator - 70) / 12);
         var estimate = potential +
             SimulationSeed.Create(state.DynastyId, state.SeasonYear,
                 interaction.ScoutingPercent, prospectId.ToString("N"),
@@ -678,15 +714,52 @@ public static class InteractiveRecruitingService
             interaction.UserInterest,
             interaction.RivalInterest);
 
+        if (interaction.Source == RecruitingSource.TransferPortal)
+        {
+            var transferThreshold = Math.Max(
+                55,
+                76 - (recruitingWeek - 1) * 5);
+            if (leaderInterest < transferThreshold)
+                return false;
+
+            var transferChance = Math.Clamp(
+                45 +
+                recruitingWeek * 7 +
+                Math.Max(0, leaderInterest - transferThreshold) * 2,
+                45,
+                95);
+
+            var transferRoll = SimulationSeed.Create(
+                state.DynastyId,
+                state.SeasonYear,
+                state.Week,
+                interaction.ProspectId.ToString("N"),
+                "weekly-transfer-commit") % 100;
+
+            return transferRoll < transferChance;
+        }
+
         var threshold = Math.Max(
-            92,
-            150 - (recruitingWeek - 1) * 14);
+            62,
+            92 - (recruitingWeek - 1) * 7);
 
         if (leaderInterest < threshold)
             return false;
 
-        var commitChance =
-            18 + recruitingWeek * 12;
+        if (leaderInterest >= 125)
+            return true;
+
+        var lead = Math.Abs(
+            interaction.UserInterest -
+            interaction.RivalInterest);
+
+        var commitChance = Math.Clamp(
+            12 +
+            recruitingWeek * 11 +
+            Math.Max(0, leaderInterest - threshold) * 2 +
+            Math.Min(20, lead / 2),
+            18,
+            92);
 
         var roll = SimulationSeed.Create(
             state.DynastyId,
