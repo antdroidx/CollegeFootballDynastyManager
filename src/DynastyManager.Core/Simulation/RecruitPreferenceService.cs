@@ -178,6 +178,173 @@ public static class RecruitPreferenceService
         return Math.Clamp(score, 0, 100);
     }
 
+    public static int GetHighSchoolAttainabilityScore(
+        DynastyState state,
+        Team team,
+        HighSchoolRecruit recruit,
+        RecruitingInteraction interaction)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(team);
+        ArgumentNullException.ThrowIfNull(recruit);
+        ArgumentNullException.ThrowIfNull(interaction);
+
+        var prestige =
+            ProgramPrestigeService.GetCurrentPrestige(
+                state,
+                team);
+
+        var qualityFloor = recruit.StarRating switch
+        {
+            >= 5 => 78,
+            4 => 64,
+            3 => 48,
+            2 => 32,
+            _ => 20
+        };
+
+        var preferences = GetPreferences(
+            state,
+            RecruitingSource.HighSchool,
+            recruit.RecruitId)
+            .Take(4)
+            .ToArray();
+
+        var weightedFit = preferences.Length == 0
+            ? 60
+            : (int)Math.Round(
+                preferences.Sum(item =>
+                    item.Importance *
+                    GetKnownHighSchoolProgramGrade(
+                        state,
+                        team,
+                        recruit,
+                        item.Type,
+                        prestige)) /
+                Math.Max(
+                    1.0,
+                    preferences.Sum(item =>
+                        item.Importance)));
+
+        var score =
+            45 +
+            (prestige - qualityFloor) +
+            (int)Math.Round(
+                (weightedFit - 55) * .45) +
+            (int)Math.Round(
+                Math.Clamp(
+                    interaction.UserInterest,
+                    0,
+                    100) * .35);
+
+        return Math.Clamp(score, 0, 100);
+    }
+
+    private static int GetKnownHighSchoolProgramGrade(
+        DynastyState state,
+        Team team,
+        HighSchoolRecruit recruit,
+        RecruitPitchType pitchType,
+        int prestige) =>
+        pitchType switch
+        {
+            RecruitPitchType.PlayingTime =>
+                GetPlayingTimeGrade(
+                    state,
+                    team.Name,
+                    recruit.Position),
+
+            RecruitPitchType.ProgramPrestige =>
+                Math.Clamp(prestige, 35, 99),
+
+            RecruitPitchType.ProPotential =>
+                Math.Clamp(
+                    42 + prestige * 3 / 5,
+                    40,
+                    99),
+
+            RecruitPitchType.Development =>
+                Math.Clamp(
+                    48 + prestige / 2,
+                    40,
+                    99),
+
+            RecruitPitchType.SchemeFit =>
+                52 + SimulationSeed.Create(
+                    state.DynastyId,
+                    state.SeasonYear,
+                    prestige,
+                    team.Name,
+                    $"scheme-{recruit.RecruitId:N}") % 44,
+
+            RecruitPitchType.Proximity =>
+                GetKnownHighSchoolProximityGrade(
+                    state,
+                    team,
+                    recruit),
+
+            RecruitPitchType.Facilities =>
+                Math.Clamp(
+                    45 + prestige / 2,
+                    40,
+                    99),
+
+            RecruitPitchType.Academics =>
+                52 + SimulationSeed.Create(
+                    state.DynastyId,
+                    0,
+                    team.LegacyRegionId,
+                    team.Name,
+                    "academics") % 44,
+
+            _ => 60
+        };
+
+    private static int GetKnownHighSchoolProximityGrade(
+        DynastyState state,
+        Team team,
+        HighSchoolRecruit recruit)
+    {
+        var homeRegion =
+            RecruitGeography.GetRegion(recruit);
+
+        if (homeRegion ==
+            Math.Clamp(
+                team.LegacyRegionId,
+                0,
+                4))
+        {
+            return 88 + SimulationSeed.Create(
+                state.DynastyId,
+                state.SeasonYear,
+                team.LegacyRegionId,
+                team.Name,
+                $"home-proximity-{recruit.RecruitId:N}") % 12;
+        }
+
+        if (Math.Abs(
+                homeRegion -
+                Math.Clamp(
+                    team.LegacyRegionId,
+                    0,
+                    4)) == 1)
+        {
+            return 64 + SimulationSeed.Create(
+                state.DynastyId,
+                state.SeasonYear,
+                team.LegacyRegionId,
+                team.Name,
+                $"near-proximity-{recruit.RecruitId:N}") % 25;
+        }
+
+        return 42 + SimulationSeed.Create(
+            state.DynastyId,
+            homeRegion,
+            team.LegacyRegionId,
+            team.Name,
+            $"proximity-{recruit.RecruitId:N}") % 40;
+    }
+
     public static string GetAttainabilityLabel(int score) =>
         score switch
         {
