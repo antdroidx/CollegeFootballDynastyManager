@@ -187,50 +187,188 @@ public static class ScoutingDepartmentService
         }
 
         state = EnsureDepartment(state, userTeam);
-        var interactions = state.RecruitingInteractions.ToList();
+
+        var interactions =
+            state.RecruitingInteractions.ToList();
+
+        var interactionByRecruit =
+            interactions
+                .Where(item =>
+                    item.SeasonYear ==
+                        state.SeasonYear &&
+                    item.Source ==
+                        RecruitingSource.HighSchool)
+                .GroupBy(item => item.ProspectId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Last());
+
+        var positionNeeds =
+            Enum.GetValues<Position>()
+                .ToDictionary(
+                    position => position,
+                    position =>
+                        GetPositionNeed(
+                            state,
+                            position));
+
+        var attainabilityCache =
+            new Dictionary<Guid, int>();
+
+        RecruitingInteraction GetCachedInteraction(
+            HighSchoolRecruit recruit)
+        {
+            if (interactionByRecruit.TryGetValue(
+                    recruit.RecruitId,
+                    out var interaction))
+            {
+                return interaction;
+            }
+
+            return new RecruitingInteraction
+            {
+                ProspectId = recruit.RecruitId,
+                Source = RecruitingSource.HighSchool,
+                SeasonYear = state.SeasonYear
+            };
+        }
+
+        int GetCachedAttainability(
+            HighSchoolRecruit recruit)
+        {
+            if (attainabilityCache.TryGetValue(
+                    recruit.RecruitId,
+                    out var score))
+            {
+                return score;
+            }
+
+            score =
+                RecruitPreferenceService
+                    .GetHighSchoolAttainabilityScore(
+                        state,
+                        userTeam,
+                        recruit,
+                        GetCachedInteraction(
+                            recruit));
+
+            attainabilityCache[
+                recruit.RecruitId] = score;
+
+            return score;
+        }
 
         foreach (var scout in state.ScoutingStaff)
         {
-            var assignment = state.ScoutAssignments.First(item =>
-                item.ScoutId == scout.ScoutId);
-            var capacity = 8 + scout.WorkRate / 7;
-            var candidates = GetAssignedCandidates(state, assignment)
-                .Where(recruit =>
-                    IsAutoScoutCandidate(
-                        state,
-                        userTeam,
-                        recruit))
-                .OrderByDescending(recruit =>
-                    GetPriorityScore(
-                        state,
-                        userTeam,
-                        recruit))
-                .ThenBy(recruit => recruit.RecruitId)
-                .Take(capacity);
+            var assignment =
+                state.ScoutAssignments.First(item =>
+                    item.ScoutId ==
+                    scout.ScoutId);
 
-            foreach (var recruit in candidates)
-            {
-                var existing = interactions.FirstOrDefault(item =>
-                    item.SeasonYear == state.SeasonYear &&
-                    item.Source == RecruitingSource.HighSchool &&
-                    item.ProspectId == recruit.RecruitId) ??
-                    InteractiveRecruitingService.GetInteraction(
-                        state, RecruitingSource.HighSchool, recruit.RecruitId);
+            var capacity =
+                8 + scout.WorkRate / 7;
 
-                var gain = 5 + scout.WorkRate / 18 +
-                           scout.TalentEvaluation / 25 +
-                           (MatchesGeography(assignment, recruit)
-                               ? scout.RegionalKnowledge / 25
-                               : 0) +
-                           (existing.IsPriorityScout ? 10 : 0);
-                var updated = existing with
+            var candidates =
+                GetAssignedCandidates(
+                    state,
+                    assignment)
+                .Select(recruit =>
                 {
-                    ScoutingPercent = Math.Min(100, existing.ScoutingPercent + gain)
-                };
-                var index = interactions.FindIndex(item =>
-                    item.SeasonYear == updated.SeasonYear &&
-                    item.Source == updated.Source &&
-                    item.ProspectId == updated.ProspectId);
+                    var interaction =
+                        GetCachedInteraction(
+                            recruit);
+                    var attainability =
+                        GetCachedAttainability(
+                            recruit);
+                    var need =
+                        positionNeeds[
+                            recruit.Position];
+
+                    return new
+                    {
+                        Recruit = recruit,
+                        Interaction =
+                            interaction,
+                        Attainability =
+                            attainability,
+                        Need = need
+                    };
+                })
+                .Where(item =>
+                    IsAutoScoutCandidate(
+                        userTeam,
+                        assignment,
+                        item.Recruit,
+                        item.Interaction,
+                        item.Attainability))
+                .OrderByDescending(item =>
+                    GetPriorityScore(
+                        userTeam,
+                        assignment,
+                        item.Recruit,
+                        item.Interaction,
+                        item.Attainability,
+                        item.Need))
+                .ThenBy(item =>
+                    item.Recruit.RecruitId)
+                .Take(capacity)
+                .ToArray();
+
+            foreach (var item in candidates)
+            {
+                var recruit =
+                    item.Recruit;
+
+                var existing =
+                    interactionByRecruit.TryGetValue(
+                        recruit.RecruitId,
+                        out var persisted)
+                        ? persisted
+                        : InteractiveRecruitingService
+                            .GetInteraction(
+                                state,
+                                RecruitingSource
+                                    .HighSchool,
+                                recruit.RecruitId);
+
+                var gain =
+                    5 +
+                    scout.WorkRate / 18 +
+                    scout.TalentEvaluation / 25 +
+                    (MatchesGeography(
+                        assignment,
+                        recruit)
+                        ? scout.RegionalKnowledge /
+                          25
+                        : 0) +
+                    (existing.IsPriorityScout
+                        ? 10
+                        : 0);
+
+                var updated =
+                    existing with
+                    {
+                        ScoutingPercent =
+                            Math.Min(
+                                100,
+                                existing
+                                    .ScoutingPercent +
+                                gain)
+                    };
+
+                interactionByRecruit[
+                    recruit.RecruitId] =
+                    updated;
+
+                var index =
+                    interactions.FindIndex(item =>
+                        item.SeasonYear ==
+                            updated.SeasonYear &&
+                        item.Source ==
+                            updated.Source &&
+                        item.ProspectId ==
+                            updated.ProspectId);
+
                 if (index >= 0)
                     interactions[index] = updated;
                 else
@@ -238,7 +376,11 @@ public static class ScoutingDepartmentService
             }
         }
 
-        return state with { RecruitingInteractions = interactions };
+        return state with
+        {
+            RecruitingInteractions =
+                interactions
+        };
     }
 
     public static DynastyState GenerateRecommendationReport(
@@ -386,15 +528,12 @@ public static class ScoutingDepartmentService
     }
 
     private static bool IsAutoScoutCandidate(
-        DynastyState state,
         Team userTeam,
-        HighSchoolRecruit recruit)
+        ScoutAssignment assignment,
+        HighSchoolRecruit recruit,
+        RecruitingInteraction interaction,
+        int attainability)
     {
-        var interaction = InteractiveRecruitingService.GetInteraction(
-            state,
-            RecruitingSource.HighSchool,
-            recruit.RecruitId);
-
         if (interaction.IsPriorityScout ||
             interaction.IsOnTargetBoard ||
             interaction.ScoutingPercent > 0)
@@ -402,39 +541,84 @@ public static class ScoutingDepartmentService
             return true;
         }
 
-        return RecruitPreferenceService.GetAttainabilityScore(
-            state,
-            userTeam,
-            RecruitingSource.HighSchool,
-            recruit.RecruitId) >= 28;
+        var regional =
+            RecruitGeography.GetRegion(recruit) ==
+            Math.Clamp(
+                userTeam.LegacyRegionId,
+                0,
+                4);
+
+        var assignedGeography =
+            MatchesGeography(
+                assignment,
+                recruit);
+
+        if (recruit.StarRating >= 3 &&
+            (regional ||
+             assignedGeography))
+        {
+            return true;
+        }
+
+        return attainability >= 28;
     }
 
     private static int GetPriorityScore(
-        DynastyState state,
         Team userTeam,
-        HighSchoolRecruit recruit)
+        ScoutAssignment assignment,
+        HighSchoolRecruit recruit,
+        RecruitingInteraction interaction,
+        int attainability,
+        int need)
     {
-        var interaction = InteractiveRecruitingService.GetInteraction(
-            state, RecruitingSource.HighSchool, recruit.RecruitId);
         if (interaction.ScoutingPercent >= 100)
             return -10000;
 
-        var attainability =
-            RecruitPreferenceService.GetAttainabilityScore(
-                state,
-                userTeam,
-                RecruitingSource.HighSchool,
-                recruit.RecruitId);
         var progressBonus =
-            interaction.ScoutingPercent > 0 ? 2500 : 0;
+            interaction.ScoutingPercent > 0
+                ? 2500
+                : 0;
 
-        return (interaction.IsPriorityScout ? 10000 : 0) +
-               (interaction.IsOnTargetBoard ? 4000 : 0) +
-               progressBonus +
-               GetPositionNeed(state, recruit.Position) * 200 +
-               attainability * 70 +
-               recruit.StarRating * 80 -
-               interaction.ScoutingPercent * 3;
+        var regional =
+            RecruitGeography.GetRegion(recruit) ==
+            Math.Clamp(
+                userTeam.LegacyRegionId,
+                0,
+                4);
+
+        var geographyBonus =
+            MatchesGeography(
+                assignment,
+                recruit)
+                ? recruit.StarRating * 325
+                : regional &&
+                  recruit.StarRating >= 3
+                    ? recruit.StarRating * 225
+                    : 0;
+
+        var upsideScoutBonus =
+            recruit.StarRating >= 4 &&
+            (regional ||
+             MatchesGeography(
+                 assignment,
+                 recruit))
+                ? 650
+                : 0;
+
+        return
+            (interaction.IsPriorityScout
+                ? 10000
+                : 0) +
+            (interaction.IsOnTargetBoard
+                ? 4000
+                : 0) +
+            progressBonus +
+            need * 200 +
+            attainability * 55 +
+            recruit.StarRating * 140 +
+            geographyBonus +
+            upsideScoutBonus -
+            interaction.ScoutingPercent * 3;
     }
 
     private static bool MatchesGeography(ScoutAssignment assignment, HighSchoolRecruit recruit) =>
