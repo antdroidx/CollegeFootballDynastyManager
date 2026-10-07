@@ -155,6 +155,71 @@ public class ScoutingDepartmentTests
     }
 
     [Fact]
+    public void LowPrestigeProgramStillScoutsHigherRatedRegionalProspects()
+    {
+        var regionalFourStar = new HighSchoolRecruit
+        {
+            RecruitId = Guid.Parse(
+                "cccccccc-1111-2222-3333-444444444444"),
+            SeasonYear = 2027,
+            FullName = "Regional Four Star",
+            Position = Position.WR,
+            StarRating = 4,
+            TrueOverallRating = 80,
+            PotentialRating = 92,
+            HomeState = 12,
+            HomeRegion = 1
+        };
+
+        var filler = Enumerable.Range(1, 80)
+            .Select(index => new HighSchoolRecruit
+            {
+                RecruitId = Guid.NewGuid(),
+                SeasonYear = 2027,
+                FullName = $"Filler {index}",
+                Position = Position.RB,
+                StarRating = 1 + index % 2,
+                TrueOverallRating = 58 + index % 8,
+                PotentialRating = 70 + index % 10,
+                HomeState = index % 50,
+                HomeRegion = index % 5
+            })
+            .ToArray();
+
+        var team = new Team
+        {
+            Name = "User",
+            Abbreviation = "USR",
+            ConferenceName = "Test",
+            Prestige = 25,
+            LegacyRegionId = 1
+        };
+
+        var state = State(0) with
+        {
+            HighSchoolRecruitingPool =
+                new[] { regionalFourStar }
+                    .Concat(filler)
+                    .ToArray()
+        };
+
+        var updated =
+            ScoutingDepartmentService
+                .AdvanceRegularSeasonWeek(
+                    state,
+                    team);
+
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                updated,
+                RecruitingSource.HighSchool,
+                regionalFourStar.RecruitId);
+
+        Assert.True(
+            interaction.ScoutingPercent > 0);
+    }
+
+    [Fact]
     public void FullyScoutedRatingStillHasSmallUncertainty()
     {
         var state = State(1);
