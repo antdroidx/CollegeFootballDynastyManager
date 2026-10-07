@@ -35,7 +35,7 @@ public class InteractiveRecruitingTests
                 prospect.PlayerId);
 
         Assert.Equal(
-            InteractiveRecruitingService.ScoutStep,
+            50,
             interaction.ScoutingPercent);
 
         var reloaded =
@@ -246,11 +246,12 @@ public class InteractiveRecruitingTests
             RecruitingSource.TransferPortal,
             prospect.PlayerId);
 
-        Assert.Single(
+        Assert.Equal(
+            4,
             RecruitPreferenceService.GetRevealedPreferences(
                 state,
                 RecruitingSource.TransferPortal,
-                prospect.PlayerId));
+                prospect.PlayerId).Count);
 
         state = InteractiveRecruitingService.Scout(
             state,
@@ -263,6 +264,115 @@ public class InteractiveRecruitingTests
                 state,
                 RecruitingSource.TransferPortal,
                 prospect.PlayerId).Count);
+    }
+
+    [Fact]
+    public void TransferScoutingStartsMorePreciseAndConvergesQuickly()
+    {
+        var prospect = PortalPlayer(
+            "Known College Player",
+            "Old School",
+            Position.CB,
+            84);
+
+        var state = PortalState(prospect) with
+        {
+            RecruitingPointsRemaining = 200
+        };
+
+        var initial =
+            InteractiveRecruitingService
+                .GetScoutedOverallRange(
+                    state,
+                    RecruitingSource.TransferPortal,
+                    prospect.PlayerId);
+        Assert.True(
+            initial.Maximum - initial.Minimum <= 8);
+
+        state = InteractiveRecruitingService.Scout(
+            state,
+            RecruitingSource.TransferPortal,
+            prospect.PlayerId);
+
+        var afterOneScout =
+            InteractiveRecruitingService
+                .GetScoutedOverallRange(
+                    state,
+                    RecruitingSource.TransferPortal,
+                    prospect.PlayerId);
+
+        Assert.True(
+            afterOneScout.Maximum -
+            afterOneScout.Minimum <= 2);
+        Assert.Equal(
+            50,
+            InteractiveRecruitingService.GetInteraction(
+                state,
+                RecruitingSource.TransferPortal,
+                prospect.PlayerId).ScoutingPercent);
+    }
+
+    [Fact]
+    public void HighInterestRecruitCanCommitBeforeFinalWeek()
+    {
+        var user = Team("User", 80);
+        var rival = Team("Rival", 70);
+        var recruit = Recruit(
+            "Early Commit",
+            3,
+            74,
+            88,
+            Position.WR,
+            1);
+
+        var state = new DynastyState
+        {
+            DynastyId = Guid.Parse(
+                "12121212-1212-3434-5656-787878787878"),
+            DynastyName = "Early Commitment",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = DynastyManager.Core.Seasons
+                .SeasonProgression.FirstRecruitingWeek,
+            Phase = SeasonPhase.Recruiting,
+            HighSchoolRecruitingPool =
+                new[] { recruit },
+            RecruitingInteractions = new[]
+            {
+                new RecruitingInteraction
+                {
+                    ProspectId = recruit.RecruitId,
+                    Source =
+                        RecruitingSource.HighSchool,
+                    SeasonYear = 2027,
+                    IsOnTargetBoard = true,
+                    ScholarshipOffered = true,
+                    UserInterest = 130,
+                    RivalInterest = 55
+                }
+            }
+        };
+
+        var resolved =
+            InteractiveRecruitingService
+                .ResolveCurrentPhase(
+                    state,
+                    user,
+                    new[] { user, rival }
+                        .ToDictionary(
+                            team => team.Name,
+                            StringComparer.OrdinalIgnoreCase));
+
+        var commitment =
+            Assert.Single(
+                resolved.RecruitingCommitments);
+
+        Assert.Equal(
+            user.Name,
+            commitment.TeamName);
+        Assert.Equal(
+            state.Week,
+            commitment.CommittedWeek);
     }
 
     [Fact]
