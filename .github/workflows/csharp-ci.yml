@@ -50,7 +50,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ steps.dotnet.outputs.dotnet-version }}-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', '**/NuGet.Config', '**/nuget.config', 'global.json', '.github/workflows/csharp-ci.yml') }}
+          key: nuget-${{ runner.os }}-${{ runner.arch }}-${{ steps.dotnet.outputs.dotnet-version }}-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', '**/NuGet.Config', '**/nuget.config', 'global.json') }}
           restore-keys: |
             nuget-${{ runner.os }}-${{ runner.arch }}-${{ steps.dotnet.outputs.dotnet-version }}-
 
@@ -91,12 +91,13 @@ jobs:
           -bl:android-build.binlog
 
       - name: Upload Android build log
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: android-build-log
           path: android-build.binlog
           if-no-files-found: ignore
+          retention-days: 1
 
       - name: Select signed APK
         shell: bash
@@ -117,6 +118,7 @@ jobs:
           path: ${{ env.APK_PATH }}
           if-no-files-found: error
           compression-level: 0
+          retention-days: 3
 
   android-launch:
     needs: build-test-android
@@ -160,9 +162,10 @@ jobs:
             echo "App survived launch."
 
       - name: Upload runtime log
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: android-launch-log
           path: android-logcat.txt
           if-no-files-found: ignore
+          retention-days: 1
