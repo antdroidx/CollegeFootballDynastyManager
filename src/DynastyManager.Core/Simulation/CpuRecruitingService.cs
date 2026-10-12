@@ -88,6 +88,28 @@ public static class CpuRecruitingService
             (int)Math.Ceiling(
                 baseDesiredOffers * workloadFactor);
 
+        if (targetSource ==
+            RecruitingSource.TransferPortal)
+        {
+            var assistedTransferCommits =
+                state.RecruitingCommitments.Count(item =>
+                    item.SeasonYear ==
+                        state.SeasonYear &&
+                    item.TeamName.Equals(
+                        state.UserTeamName,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    item.Source ==
+                        RecruitingSource.TransferPortal &&
+                    item.WasCpuAssisted);
+
+            desiredOpenOffers = Math.Min(
+                desiredOpenOffers,
+                Math.Max(
+                    0,
+                    MaximumCpuTransferAdditionsPerTeam -
+                    assistedTransferCommits));
+        }
+
         var additionsNeeded = Math.Max(
             0,
             desiredOpenOffers - currentOffers);
