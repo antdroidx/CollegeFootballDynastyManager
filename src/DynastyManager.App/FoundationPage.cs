@@ -2755,33 +2755,88 @@ public sealed class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return 0;
 
-        IEnumerable<Guid> rankedIds = prospect.Source ==
-            RecruitingSource.HighSchool
-            ? _currentDynasty.HighSchoolRecruitingPool
-                .Where(recruit => recruit.SeasonYear == 0 ||
-                    recruit.SeasonYear == _currentDynasty.SeasonYear)
-                .OrderByDescending(recruit => recruit.StarRating)
-                .ThenByDescending(recruit => recruit.TrueOverallRating)
-                .ThenByDescending(recruit => recruit.PotentialRating)
-                .ThenBy(recruit => recruit.FullName,
-                    StringComparer.OrdinalIgnoreCase)
-                .Select(recruit => recruit.RecruitId)
-            : _currentDynasty.TransferPortalEntries
-                .OrderByDescending(entry => entry.Player.OverallRating)
-                .ThenByDescending(entry => entry.Player.PotentialRating)
-                .ThenBy(entry => entry.Player.FullName,
-                    StringComparer.OrdinalIgnoreCase)
-                .Select(entry => entry.Player.PlayerId);
-
-        var rank = 1;
-        foreach (var id in rankedIds)
+        if (prospect.Source ==
+            RecruitingSource.HighSchool)
         {
-            if (id == prospect.ProspectId)
-                return rank;
-            rank++;
+            var target = _currentDynasty
+                .HighSchoolRecruitingPool
+                .FirstOrDefault(recruit =>
+                    recruit.RecruitId ==
+                    prospect.ProspectId);
+
+            if (target is null)
+                return 0;
+
+            var targetRating =
+                RecruitingRankingService
+                    .GetHighSchoolRating(target);
+
+            return 1 +
+                _currentDynasty
+                    .HighSchoolRecruitingPool
+                    .Where(recruit =>
+                        recruit.SeasonYear == 0 ||
+                        recruit.SeasonYear ==
+                            _currentDynasty.SeasonYear)
+                    .Count(recruit =>
+                    {
+                        var rating =
+                            RecruitingRankingService
+                                .GetHighSchoolRating(
+                                    recruit);
+
+                        return rating >
+                                   targetRating ||
+                               (Math.Abs(
+                                    rating -
+                                    targetRating) <
+                                0.001 &&
+                                string.Compare(
+                                    recruit.FullName,
+                                    target.FullName,
+                                    StringComparison
+                                        .OrdinalIgnoreCase) <
+                                0);
+                    });
         }
 
-        return rank;
+        var targetTransfer =
+            _currentDynasty.TransferPortalEntries
+                .FirstOrDefault(entry =>
+                    entry.Player.PlayerId ==
+                    prospect.ProspectId);
+
+        if (targetTransfer is null)
+            return 0;
+
+        var targetTransferRating =
+            RecruitingRankingService
+                .GetTransferRating(
+                    targetTransfer.Player);
+
+        return 1 +
+            _currentDynasty.TransferPortalEntries
+                .Count(entry =>
+                {
+                    var rating =
+                        RecruitingRankingService
+                            .GetTransferRating(
+                                entry.Player);
+
+                    return rating >
+                               targetTransferRating ||
+                           (Math.Abs(
+                                rating -
+                                targetTransferRating) <
+                            0.001 &&
+                            string.Compare(
+                                entry.Player.FullName,
+                                targetTransfer.Player
+                                    .FullName,
+                                StringComparison
+                                    .OrdinalIgnoreCase) <
+                            0);
+                });
     }
 
     private void RenderSelectedRecruitDetail()
@@ -3082,6 +3137,14 @@ public sealed class FoundationPage : ContentPage
         var potText = potentialVisible
             ? $" • POT {potentialRange.Minimum}-{potentialRange.Maximum} est."
             : " • POT unknown";
+        var publicRecruitRating =
+            RecruitingRankingService.GetProspectRating(
+                _currentDynasty,
+                source,
+                prospect.ProspectId);
+        var publicRecruitStars =
+            RecruitingRankingService.GetStars(
+                publicRecruitRating);
 
         var evaluationText = string.Empty;
         if (source == RecruitingSource.HighSchool &&
@@ -3122,6 +3185,8 @@ public sealed class FoundationPage : ContentPage
                         new Label
                         {
                             Text =
+                                $"{publicRecruitStars}★ • " +
+                                $"247-style {publicRecruitRating:0.00} • " +
                                 $"{prospect.Subtitle} • Year {prospect.ClassYear}",
                             FontSize = 11
                         },
