@@ -73,10 +73,12 @@ public static class CpuRecruitingService
 
         var baseDesiredOffers = targetSource ==
             RecruitingSource.HighSchool
-                ? Math.Max(
-                    minimumHighSchoolBoard,
-                    (int)Math.Ceiling(
-                        Math.Max(4, openSlots) * 2.5))
+                ? Math.Min(
+                    40,
+                    Math.Max(
+                        minimumHighSchoolBoard,
+                        (int)Math.Ceiling(
+                            Math.Max(4, openSlots) * 2.5)))
                 : Math.Max(
                     6,
                     (int)Math.Ceiling(
@@ -168,21 +170,42 @@ public static class CpuRecruitingService
                     StaffRole.ChiefScout);
             var scoutQuality =
                 GetScoutQuality(state, chiefScout);
-            var scoutingShare = Math.Clamp(
-                0.20 +
-                (scoutQuality - 50) / 200.0,
-                0.18,
-                0.42);
+            var highSchoolRecruitingPhase =
+                state.Phase == SeasonPhase.Recruiting;
+
+            var scoutingShare = highSchoolRecruitingPhase
+                ? Math.Clamp(
+                    0.10 +
+                    (scoutQuality - 50) / 300.0,
+                    0.08,
+                    0.22)
+                : Math.Clamp(
+                    0.20 +
+                    (scoutQuality - 50) / 200.0,
+                    0.18,
+                    0.42);
+
             var scoutingBudget =
                 (int)Math.Floor(
                     pointBudget * scoutingShare);
-            var targetScoutPercent = workload switch
-            {
-                >= 90 => 100,
-                >= 60 => 75,
-                _ => 50
-            };
-            if (scoutQuality >= 85)
+
+            var targetScoutPercent =
+                highSchoolRecruitingPhase
+                    ? workload switch
+                    {
+                        >= 90 => 75,
+                        >= 60 => 50,
+                        _ => 25
+                    }
+                    : workload switch
+                    {
+                        >= 90 => 100,
+                        >= 60 => 75,
+                        _ => 50
+                    };
+
+            if (!highSchoolRecruitingPhase &&
+                scoutQuality >= 85)
             {
                 targetScoutPercent = Math.Min(
                     100,
