@@ -64,12 +64,19 @@ public static class CpuRecruitingService
             item.CommittedTeamName is null &&
             item.ScholarshipOffered);
 
+        var minimumHighSchoolBoard = workload switch
+        {
+            >= 90 => 18,
+            >= 60 => 14,
+            _ => 10
+        };
+
         var baseDesiredOffers = targetSource ==
             RecruitingSource.HighSchool
                 ? Math.Max(
-                    12,
+                    minimumHighSchoolBoard,
                     (int)Math.Ceiling(
-                        Math.Max(4, openSlots) * 2.25))
+                        Math.Max(4, openSlots) * 2.5))
                 : Math.Max(
                     6,
                     (int)Math.Ceiling(
@@ -787,7 +794,7 @@ public static class CpuRecruitingService
         !interaction.WasCpuAssisted &&
         (interaction.IsOnTargetBoard ||
          interaction.ScholarshipOffered ||
-         interaction.ScoutingPercent > 0 ||
+         interaction.IsPriorityScout ||
          interaction.LastPitchType is not null ||
          interaction.UserInterest > 0);
 
@@ -867,6 +874,12 @@ public static class CpuRecruitingService
                 int.TryParse(assignment.Target, out var stateIndex) &&
                 stateIndex == RecruitGeography.GetStateIndex(recruit));
 
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                state,
+                source,
+                candidate.ProspectId);
+
         var threshold = baseThreshold;
 
         if (regional && recruit.StarRating >= 3)
@@ -875,18 +888,27 @@ public static class CpuRecruitingService
         if (specificallyAssigned && recruit.StarRating >= 3)
             threshold -= 4;
 
-        threshold = Math.Max(18, threshold);
+        if (workload >= 90 &&
+            interaction.ScoutingPercent >= 50 &&
+            recruit.StarRating is >= 3 and <= 4)
+        {
+            threshold -= interaction.ScoutingPercent >= 75 ? 6 : 3;
+        }
+
+        threshold = Math.Max(14, threshold);
 
         if (recruit.StarRating >= 5)
         {
-            var interaction =
-                InteractiveRecruitingService.GetInteraction(
-                    state,
-                    source,
-                    candidate.ProspectId);
-
             return attainability >= Math.Max(30, threshold) ||
                    interaction.UserInterest >= 60;
+        }
+
+        if (workload >= 90 &&
+            interaction.ScoutingPercent >= 50 &&
+            (regional || specificallyAssigned) &&
+            recruit.StarRating >= 3)
+        {
+            return attainability >= Math.Max(14, threshold - 2);
         }
 
         return attainability >= threshold;
@@ -990,7 +1012,14 @@ public static class CpuRecruitingService
                 .Recommendations.Any(item =>
                     item.ProspectId ==
                     candidate.ProspectId) == true
-                ? 250
+                ? 450
+                : 0;
+
+        var scoutedDiscoveryBonus =
+            source == RecruitingSource.HighSchool &&
+            interaction.ScoutingPercent >= 50
+                ? interaction.ScoutingPercent * 5 +
+                  Math.Max(0, candidate.TalentLevel - 4) * 90
                 : 0;
 
         var publicQuality = source ==
@@ -1017,6 +1046,7 @@ public static class CpuRecruitingService
                (recruitingStaff - 60) * 18 +
                (scoutQuality - 60) * 10 +
                recommended +
+               scoutedDiscoveryBonus +
                SimulationSeed.Create(
                    state.DynastyId,
                    state.SeasonYear,
