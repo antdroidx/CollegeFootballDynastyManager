@@ -643,6 +643,143 @@ public class InteractiveRecruitingTests
     }
 
     [Fact]
+    public void FullAutoCanTargetProspectScoutedByStaff()
+    {
+        var user = Team("User", 45) with
+        {
+            LegacyRegionId = 1
+        };
+        var scouted = Recruit(
+            "Scouted Regional Upside",
+            4,
+            79,
+            92,
+            Position.WR,
+            1);
+        var filler = Enumerable.Range(1, 30)
+            .Select(index =>
+                Recruit(
+                    $"Filler {index}",
+                    2 + index % 2,
+                    64 + index % 8,
+                    76 + index % 10,
+                    Enum.GetValues<Position>()[
+                        index % Enum.GetValues<Position>().Length],
+                    1))
+            .ToArray();
+
+        var state = new DynastyState
+        {
+            DynastyId = Guid.Parse(
+                "45454545-5656-6767-7878-898989898989"),
+            DynastyName = "Staff Discovery Handoff",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100,
+            RecruitingPointsRemaining = 500,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
+            HighSchoolRecruitingPool =
+                new[] { scouted }
+                    .Concat(filler)
+                    .ToArray(),
+            RecruitingInteractions = new[]
+            {
+                new RecruitingInteraction
+                {
+                    ProspectId = scouted.RecruitId,
+                    Source = RecruitingSource.HighSchool,
+                    SeasonYear = 2027,
+                    ScoutingPercent = 75,
+                    WasCpuAssisted = false
+                }
+            }
+        };
+
+        var assisted =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                state,
+                user);
+
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                assisted,
+                RecruitingSource.HighSchool,
+                scouted.RecruitId);
+
+        Assert.True(interaction.IsOnTargetBoard);
+        Assert.True(interaction.ScholarshipOffered);
+        Assert.True(interaction.WasCpuAssisted);
+    }
+
+    [Fact]
+    public void FullAutoKeepsDeeperHighSchoolBoard()
+    {
+        var user = Team("User", 65) with
+        {
+            LegacyRegionId = 1
+        };
+
+        var recruits = Enumerable.Range(1, 40)
+            .Select(index =>
+                Recruit(
+                    $"Regional Target {index}",
+                    2 + index % 3,
+                    65 + index % 12,
+                    80 + index % 12,
+                    Enum.GetValues<Position>()[
+                        index % Enum.GetValues<Position>().Length],
+                    1))
+            .ToArray();
+
+        var state = new DynastyState
+        {
+            DynastyId = Guid.Parse(
+                "56565656-6767-7878-8989-909090909090"),
+            DynastyName = "Deep Full Auto Board",
+            UserTeamName = user.Name,
+            SeasonYear = 2027,
+            Week = 20,
+            Phase = SeasonPhase.Recruiting,
+            RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100,
+            RecruitingPointsRemaining = 700,
+            RecruitingPointsPhase = SeasonPhase.Recruiting,
+            RecruitingPointsWeek = 20,
+            ActiveRoster = Enumerable.Range(1, 81)
+                .Select(index => new DynastyPlayer
+                {
+                    PlayerId = Guid.NewGuid(),
+                    FullName = $"Roster {index}",
+                    TeamName = user.Name,
+                    Position = Enum.GetValues<Position>()[
+                        index % Enum.GetValues<Position>().Length],
+                    ClassYear = 1 + index % 4,
+                    TalentLevel = 5,
+                    OverallRating = 70,
+                    PotentialRating = 82
+                })
+                .ToArray(),
+            HighSchoolRecruitingPool = recruits
+        };
+
+        var assisted =
+            CpuRecruitingService.ApplyWeeklyUserAssistance(
+                state,
+                user);
+
+        Assert.True(
+            assisted.RecruitingInteractions.Count(item =>
+                item.Source == RecruitingSource.HighSchool &&
+                item.WasCpuAssisted &&
+                item.ScholarshipOffered &&
+                item.CommittedTeamName is null) >= 18);
+    }
+
+    [Fact]
     public void LowPrestigeAssistanceAvoidsUnrealisticFiveStarReach()
     {
         var user = Team("User", 25);
