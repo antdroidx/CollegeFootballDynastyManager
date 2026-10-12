@@ -439,9 +439,11 @@ public static class InteractiveRecruitingService
                     Position = player.Position,
                     OverallRating = player.OverallRating,
                     WasCpuAssisted =
-                        !resolvedTeam.Equals(
+                        resolvedTeam.Equals(
                             state.UserTeamName,
                             StringComparison.OrdinalIgnoreCase)
+                            ? interaction.WasCpuAssisted
+                            : true
                 });
 
                 portalEntries.RemoveAll(entry =>
@@ -482,9 +484,11 @@ public static class InteractiveRecruitingService
                     Position = player.Position,
                     OverallRating = player.OverallRating,
                     WasCpuAssisted =
-                        !resolvedTeam.Equals(
+                        resolvedTeam.Equals(
                             state.UserTeamName,
                             StringComparison.OrdinalIgnoreCase)
+                            ? interaction.WasCpuAssisted
+                            : true
                 });
 
                 portalEntries.RemoveAll(entry =>
