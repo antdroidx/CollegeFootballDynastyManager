@@ -386,9 +386,8 @@ public static class RecruitPreferenceService
             >= 10 => 4,
             >= 8 => 2,
             >= 6 => 1,
-            <= 3 => -3,
-            <= 5 => -1,
-            _ => 0
+            >= 4 => -1,
+            _ => -3
         };
 
         bonus += season.FinalRanking switch
