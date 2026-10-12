@@ -2600,6 +2600,14 @@ public sealed class FoundationPage : ContentPage
                     : string.Empty;
 
         var nationalRank = GetProspectNationalRank(prospect);
+        var recruitRating =
+            RecruitingRankingService.GetProspectRating(
+                _currentDynasty,
+                prospect.Source,
+                prospect.ProspectId);
+        var recruitStars =
+            RecruitingRankingService.GetStars(
+                recruitRating);
 
         var interest =
             interaction.CommittedTeamName is not null
@@ -2678,8 +2686,9 @@ public sealed class FoundationPage : ContentPage
                 new Label
                 {
                     Text =
-                        $"#{nationalRank} {prospect.Source} • {overallText} • " +
-                        $"{prospect.Subtitle} • " +
+                        $"#{nationalRank} {prospect.Source} • " +
+                        $"{recruitStars}★ • 247-style {recruitRating:0.00} • " +
+                        $"{overallText} • {prospect.Subtitle} • " +
                         $"Scout {interaction.ScoutingPercent}%",
                     FontSize = 11,
                     Opacity = 0.82
@@ -3396,39 +3405,36 @@ public sealed class FoundationPage : ContentPage
             : $"{allCommitments.Length:N0} national commitments • " +
               $"{userCommitments.Length:N0} to your team";
 
-        var classRankings = allCommitments
-            .GroupBy(record => record.TeamName,
-                StringComparer.OrdinalIgnoreCase)
-            .Select(group => new
-            {
-                TeamName = group.Key,
-                Count = group.Count(),
-                PortalCount = group.Count(record =>
-                    record.Source == RecruitingSource.TransferPortal),
-                Score = group.Sum(record =>
-                    record.OverallRating * record.OverallRating / 10.0)
-            })
-            .OrderByDescending(item => item.Score)
-            .ThenByDescending(item => item.Count)
-            .ThenBy(item => item.TeamName,
-                StringComparer.OrdinalIgnoreCase)
+        var classRankings =
+            RecruitingRankingService.BuildTeamRankings(
+                _currentDynasty,
+                _teamNames)
             .ToArray();
 
         _recruitingList.Children.Add(new Label
         {
-            Text = "RECRUITING CLASS RANKINGS",
+            Text = "247-STYLE OVERALL CLASS RANKINGS",
             FontAttributes = FontAttributes.Bold
         });
+        _recruitingList.Children.Add(new Label
+        {
+            Text =
+                "Best recruits carry the most weight; later commits receive diminishing Gaussian value.",
+            FontSize = 11,
+            Opacity = 0.75
+        });
 
-        foreach (var item in classRankings.Take(25).Select((item, index) =>
-                     new { Item = item, Rank = index + 1 }))
+        foreach (var item in classRankings.Take(25))
         {
             _recruitingList.Children.Add(new Label
             {
-                Text = $"#{item.Rank} {item.Item.TeamName} • " +
-                       $"{item.Item.Count} commits • " +
-                       $"{item.Item.PortalCount} transfers",
-                FontAttributes = item.Item.TeamName.Equals(
+                Text =
+                    $"#{item.Rank} {item.TeamName} • " +
+                    $"{item.TeamScore:0.00} pts • " +
+                    $"Avg {item.AverageRecruitRating:0.00} • " +
+                    $"{item.CommitCount} commits " +
+                    $"({item.HighSchoolCount} HS / {item.TransferCount} portal)",
+                FontAttributes = item.TeamName.Equals(
                     _currentDynasty.UserTeamName,
                     StringComparison.OrdinalIgnoreCase)
                     ? FontAttributes.Bold
@@ -3436,16 +3442,21 @@ public sealed class FoundationPage : ContentPage
             });
         }
 
-        var userRank = Array.FindIndex(classRankings, item =>
-            item.TeamName.Equals(_currentDynasty.UserTeamName,
+        var userClass = classRankings.FirstOrDefault(item =>
+            item.TeamName.Equals(
+                _currentDynasty.UserTeamName,
                 StringComparison.OrdinalIgnoreCase));
-        if (userRank >= 25)
+        if (userClass is not null &&
+            userClass.Rank > 25)
         {
-            var item = classRankings[userRank];
             _recruitingList.Children.Add(new Label
             {
-                Text = $"#{userRank + 1} {item.TeamName} • " +
-                       $"{item.Count} commits • {item.PortalCount} transfers",
+                Text =
+                    $"#{userClass.Rank} {userClass.TeamName} • " +
+                    $"{userClass.TeamScore:0.00} pts • " +
+                    $"Avg {userClass.AverageRecruitRating:0.00} • " +
+                    $"{userClass.CommitCount} commits " +
+                    $"({userClass.HighSchoolCount} HS / {userClass.TransferCount} portal)",
                 FontAttributes = FontAttributes.Bold
             });
         }
@@ -3486,6 +3497,13 @@ public sealed class FoundationPage : ContentPage
             ? $" • joins {commitment.JoinSeasonYear}"
             : string.Empty;
         var teamText = showTeam ? $" • {commitment.TeamName}" : string.Empty;
+        var recruitRating =
+            RecruitingRankingService.GetCommitmentRating(
+                _currentDynasty!,
+                commitment);
+        var recruitStars =
+            RecruitingRankingService.GetStars(
+                recruitRating);
 
         _recruitingList.Children.Add(new Border
         {
@@ -3494,6 +3512,7 @@ public sealed class FoundationPage : ContentPage
             Content = new Label
             {
                 Text = $"{commitment.Position} {commitment.PlayerName} • " +
+                       $"{recruitStars}★ • 247-style {recruitRating:0.00} • " +
                        $"OVR {commitment.OverallRating} • {commitment.Source}" +
                        teamText + joinText +
                        (commitment.WasCpuAssisted ? " • CPU ASSIST" : string.Empty),
