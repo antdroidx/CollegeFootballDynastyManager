@@ -2608,6 +2608,10 @@ public sealed class FoundationPage : ContentPage
         var recruitStars =
             RecruitingRankingService.GetStars(
                 recruitRating);
+        var publicRatingText =
+            prospect.Source == RecruitingSource.HighSchool
+                ? $"247-style {recruitRating:0.00}"
+                : $"{recruitStars}★ • 247-style {recruitRating:0.00}";
 
         var interest =
             interaction.CommittedTeamName is not null
@@ -2687,7 +2691,7 @@ public sealed class FoundationPage : ContentPage
                 {
                     Text =
                         $"#{nationalRank} {prospect.Source} • " +
-                        $"{recruitStars}★ • 247-style {recruitRating:0.00} • " +
+                        $"{publicRatingText} • " +
                         $"{overallText} • {prospect.Subtitle} • " +
                         $"Scout {interaction.ScoutingPercent}%",
                     FontSize = 11,
@@ -3145,6 +3149,10 @@ public sealed class FoundationPage : ContentPage
         var publicRecruitStars =
             RecruitingRankingService.GetStars(
                 publicRecruitRating);
+        var publicRecruitRatingText =
+            source == RecruitingSource.HighSchool
+                ? $"247-style {publicRecruitRating:0.00}"
+                : $"{publicRecruitStars}★ • 247-style {publicRecruitRating:0.00}";
 
         var evaluationText = string.Empty;
         if (source == RecruitingSource.HighSchool &&
@@ -3185,8 +3193,7 @@ public sealed class FoundationPage : ContentPage
                         new Label
                         {
                             Text =
-                                $"{publicRecruitStars}★ • " +
-                                $"247-style {publicRecruitRating:0.00} • " +
+                                $"{publicRecruitRatingText} • " +
                                 $"{prospect.Subtitle} • Year {prospect.ClassYear}",
                             FontSize = 11
                         },
