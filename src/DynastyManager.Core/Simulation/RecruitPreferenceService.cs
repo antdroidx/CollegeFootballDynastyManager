@@ -70,6 +70,10 @@ public static class RecruitPreferenceService
             source,
             prospectId);
         var prestige = ProgramPrestigeService.GetCurrentPrestige(state, team);
+        var recruitingPrestige = Math.Clamp(
+            prestige + GetRecentSuccessBonus(state, team),
+            35,
+            99);
 
         return pitchType switch
         {
@@ -80,7 +84,7 @@ public static class RecruitPreferenceService
                     position),
 
             RecruitPitchType.ProgramPrestige =>
-                Math.Clamp(prestige, 35, 99),
+                recruitingPrestige,
 
             RecruitPitchType.ProPotential =>
                 Math.Clamp(
@@ -136,9 +140,15 @@ public static class RecruitPreferenceService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(team);
 
-        var prestige = ProgramPrestigeService.GetCurrentPrestige(
-            state,
-            team);
+        var prestige = Math.Clamp(
+            ProgramPrestigeService.GetCurrentPrestige(
+                state,
+                team) +
+            GetRecentSuccessBonus(
+                state,
+                team),
+            35,
+            99);
         var interaction = InteractiveRecruitingService.GetInteraction(
             state,
             source,
@@ -189,10 +199,15 @@ public static class RecruitPreferenceService
         ArgumentNullException.ThrowIfNull(recruit);
         ArgumentNullException.ThrowIfNull(interaction);
 
-        var prestige =
+        var prestige = Math.Clamp(
             ProgramPrestigeService.GetCurrentPrestige(
                 state,
-                team);
+                team) +
+            GetRecentSuccessBonus(
+                state,
+                team),
+            35,
+            99);
 
         var qualityFloor = recruit.StarRating switch
         {
@@ -343,6 +358,59 @@ public static class RecruitPreferenceService
             team.LegacyRegionId,
             team.Name,
             $"proximity-{recruit.RecruitId:N}") % 40;
+    }
+
+    public static int GetRecentSuccessBonus(
+        DynastyState state,
+        Team team)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(team);
+
+        var season = state.TeamSeasonHistory
+            .Where(item =>
+                item.TeamName.Equals(
+                    team.Name,
+                    StringComparison.OrdinalIgnoreCase) &&
+                item.SeasonYear == state.SeasonYear)
+            .OrderByDescending(item =>
+                item.SeasonYear)
+            .FirstOrDefault();
+
+        if (season is null)
+            return 0;
+
+        var bonus = season.Wins switch
+        {
+            >= 12 => 5,
+            >= 10 => 4,
+            >= 8 => 2,
+            >= 6 => 1,
+            <= 3 => -3,
+            <= 5 => -1,
+            _ => 0
+        };
+
+        bonus += season.FinalRanking switch
+        {
+            1 => 6,
+            > 1 and <= 5 => 5,
+            > 5 and <= 10 => 4,
+            > 10 and <= 25 => 2,
+            _ => 0
+        };
+
+        if (season.ConferenceChampion)
+            bonus += 2;
+        if (season.PlayoffParticipant)
+            bonus += 3;
+        if (season.NationalChampion)
+            bonus += 5;
+
+        return Math.Clamp(
+            bonus,
+            -4,
+            10);
     }
 
     public static string GetAttainabilityLabel(int score) =>
