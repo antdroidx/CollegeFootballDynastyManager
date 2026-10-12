@@ -372,7 +372,7 @@ public static class RecruitPreferenceService
                 item.TeamName.Equals(
                     team.Name,
                     StringComparison.OrdinalIgnoreCase) &&
-                item.SeasonYear == state.SeasonYear)
+                item.SeasonYear <= state.SeasonYear)
             .OrderByDescending(item =>
                 item.SeasonYear)
             .FirstOrDefault();
