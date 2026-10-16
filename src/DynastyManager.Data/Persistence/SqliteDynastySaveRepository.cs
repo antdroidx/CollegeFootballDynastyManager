@@ -112,6 +112,31 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
                     .ToArray()
             };
         }
+        if (state is not null &&
+            record.SchemaVersion < 17)
+        {
+            state = state with
+            {
+                RecruitingInteractions =
+                    state.RecruitingInteractions
+                        .Select(interaction =>
+                            interaction with
+                            {
+                                UserInterest =
+                                    Math.Clamp(
+                                        interaction.UserInterest,
+                                        0,
+                                        100),
+                                RivalInterest =
+                                    Math.Clamp(
+                                        interaction.RivalInterest,
+                                        0,
+                                        100)
+                            })
+                        .ToArray()
+            };
+        }
+
         return state is null
             ? null
             : state with
