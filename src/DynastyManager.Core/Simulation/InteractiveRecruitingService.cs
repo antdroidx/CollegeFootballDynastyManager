@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Seasons;
 
@@ -5,6 +6,15 @@ namespace DynastyManager.Core.Simulation;
 
 public static class InteractiveRecruitingService
 {
+    private static readonly ConditionalWeakTable<IReadOnlyList<RecruitingCommitmentRecord>,
+        Dictionary<(int Season, RecruitingSource Source, Guid Id), string>> CommitmentIndexes = new();
+
+    private static string? GetCommittedTeam(DynastyState state, RecruitingSource source, Guid prospectId) =>
+        CommitmentIndexes.GetValue(state.RecruitingCommitments, records => records
+            .GroupBy(item => (item.SeasonYear, item.Source, item.ProspectId))
+            .ToDictionary(group => group.Key, group => group.First().TeamName))
+            .GetValueOrDefault((state.SeasonYear, source, prospectId));
+
     public const int ScoutCost = 25;
     public const int PitchCost = 50;
     public const int ScoutStep = 25;
@@ -334,10 +344,16 @@ public static class InteractiveRecruitingService
         var isMidseasonPortal =
             state.Phase == SeasonPhase.RegularSeason;
 
+        var occupiedIds = state.ActiveRoster.Select(player => player.PlayerId)
+            .Concat(state.PendingTransferCommitments.Select(item => item.ProspectId))
+            .Concat(state.RecruitingCommitments.Where(item => item.SeasonYear == state.SeasonYear)
+                .Select(item => item.ProspectId)).ToHashSet();
+
         var current = state.RecruitingInteractions
             .Where(interaction =>
                 interaction.SeasonYear == state.SeasonYear &&
                 sources.Contains(interaction.Source) &&
+                !occupiedIds.Contains(interaction.ProspectId) &&
                 interaction.CommittedTeamName is null &&
                 (state.Phase != SeasonPhase.Recruiting ||
                  (interaction.ScholarshipOffered &&
@@ -377,6 +393,8 @@ public static class InteractiveRecruitingService
         foreach (var interaction in current
                      .OrderByDescending(item => item.UserInterest))
         {
+            if (!occupiedIds.Add(interaction.ProspectId)) continue;
+
             var deferTransfer =
                 isMidseasonPortal &&
                 interaction.Source ==
@@ -606,6 +624,7 @@ public static class InteractiveRecruitingService
 
         return interaction with
         {
+            CommittedTeamName = GetCommittedTeam(state, source, prospectId) ?? interaction.CommittedTeamName,
             UserInterest = Math.Clamp(
                 interaction.UserInterest,
                 0,
@@ -713,14 +732,8 @@ public static class InteractiveRecruitingService
     }
 
     private static RecruitingInteraction GetOrCreateInteraction(
-        DynastyState state,
-        RecruitingSource source,
-        Guid prospectId) =>
-        state.RecruitingInteractions.FirstOrDefault(interaction =>
-            interaction.SeasonYear == state.SeasonYear &&
-            interaction.Source == source &&
-            interaction.ProspectId == prospectId) ??
-        CreateInteraction(state, source, prospectId);
+        DynastyState state, RecruitingSource source, Guid prospectId) =>
+        GetInteraction(state, source, prospectId);
 
     private static RecruitingInteraction CreateInteraction(
         DynastyState state,

@@ -94,6 +94,11 @@ public static class CpuRecruitingService
             ? new[] { RecruitingSource.HighSchool }
             : sources;
 
+        var unavailableIds = state.ActiveRoster.Select(player => player.PlayerId)
+            .Concat(state.PendingTransferCommitments.Select(item => item.ProspectId))
+            .Concat(state.RecruitingCommitments.Where(item => item.SeasonYear == state.SeasonYear)
+                .Select(item => item.ProspectId)).ToHashSet();
+
         var availableCandidates = acquisitionSources
             .SelectMany(source =>
                 GetCandidates(state, source)
@@ -101,6 +106,7 @@ public static class CpuRecruitingService
                         new AssistanceCandidate(
                             source,
                             candidate)))
+            .Where(item => !unavailableIds.Contains(item.Candidate.ProspectId))
             .Where(item =>
                 item.Source != RecruitingSource.TransferPortal ||
                 !item.Candidate.OriginTeamName.Equals(
