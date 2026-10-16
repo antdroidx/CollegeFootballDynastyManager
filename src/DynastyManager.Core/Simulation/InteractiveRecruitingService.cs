@@ -127,10 +127,13 @@ public static class InteractiveRecruitingService
 
     public static DynastyState ToggleScholarship(
         DynastyState state,
+        Team userTeam,
         RecruitingSource source,
         Guid prospectId,
         bool cpuAssisted = false)
     {
+        ArgumentNullException.ThrowIfNull(userTeam);
+
         var interaction = GetOrCreateInteraction(
             state,
             source,
@@ -139,16 +142,27 @@ public static class InteractiveRecruitingService
         if (interaction.CommittedTeamName is not null)
             return state;
 
+        var currentInterest =
+            RecruitPreferenceService.GetCurrentUserInterest(
+                state,
+                userTeam,
+                source,
+                prospectId,
+                interaction);
+
+        var addingOffer =
+            !interaction.ScholarshipOffered;
+
         interaction = interaction with
         {
             IsOnTargetBoard = true,
             WasCpuAssisted = cpuAssisted,
-            ScholarshipOffered =
-                !interaction.ScholarshipOffered,
-            UserInterest =
-                !interaction.ScholarshipOffered
-                    ? interaction.UserInterest + 15
-                    : Math.Max(0, interaction.UserInterest - 15)
+            ScholarshipOffered = addingOffer,
+            UserInterest = Math.Clamp(
+                currentInterest +
+                (addingOffer ? 15 : -15),
+                0,
+                100)
         };
 
         return ReplaceInteraction(state, interaction);
@@ -217,11 +231,19 @@ public static class InteractiveRecruitingService
                 prospectId,
                 pitchType);
 
+        var currentInterest =
+            RecruitPreferenceService.GetCurrentUserInterest(
+                state,
+                userTeam,
+                source,
+                prospectId,
+                interaction);
+
         var deterministicBonus =
             SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
-                interaction.UserInterest,
+                currentInterest,
                 prospectId.ToString("N"),
                 $"recruiting-pitch-{pitchType}") % 8;
 
@@ -244,8 +266,10 @@ public static class InteractiveRecruitingService
             IsOnTargetBoard = true,
             WasCpuAssisted = cpuAssisted,
             LastPitchType = pitchType,
-            UserInterest =
-                interaction.UserInterest + gain
+            UserInterest = Math.Clamp(
+                currentInterest + gain,
+                0,
+                100)
         };
 
         return ReplaceInteraction(
@@ -319,12 +343,20 @@ public static class InteractiveRecruitingService
                  (interaction.ScholarshipOffered &&
                   ShouldResolveRecruitingTarget(
                       state,
+                      userTeam,
+                      teamsByName,
                       interaction))) &&
                 (!isMidseasonPortal ||
                  interaction.Source !=
                     RecruitingSource.TransferPortal ||
                  (interaction.ScholarshipOffered &&
-                  interaction.UserInterest >= 60)))
+                  RecruitPreferenceService
+                      .GetCurrentUserInterest(
+                          state,
+                          userTeam,
+                          interaction.Source,
+                          interaction.ProspectId,
+                          interaction) >= 60)))
             .ToArray();
 
         if (current.Length == 0)
@@ -560,12 +592,30 @@ public static class InteractiveRecruitingService
     public static RecruitingInteraction GetInteraction(
         DynastyState state,
         RecruitingSource source,
-        Guid prospectId) =>
-        state.RecruitingInteractions.FirstOrDefault(interaction =>
-            interaction.SeasonYear == state.SeasonYear &&
-            interaction.Source == source &&
-            interaction.ProspectId == prospectId) ??
-        CreateInteraction(state, source, prospectId);
+        Guid prospectId)
+    {
+        var interaction =
+            state.RecruitingInteractions.FirstOrDefault(item =>
+                item.SeasonYear == state.SeasonYear &&
+                item.Source == source &&
+                item.ProspectId == prospectId) ??
+            CreateInteraction(
+                state,
+                source,
+                prospectId);
+
+        return interaction with
+        {
+            UserInterest = Math.Clamp(
+                interaction.UserInterest,
+                0,
+                100),
+            RivalInterest = Math.Clamp(
+                interaction.RivalInterest,
+                0,
+                100)
+        };
+    }
 
     public static (int Minimum, int Maximum) GetScoutedOverallRange(
         DynastyState state,
@@ -682,15 +732,17 @@ public static class InteractiveRecruitingService
             source,
             prospectId);
 
-        var rivalInterest =
-            45 +
-            overall / 2 +
+        var rivalInterest = Math.Clamp(
+            35 +
+            overall / 3 +
             SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
                 overall,
                 prospectId.ToString("N"),
-                "rival-interest") % 31;
+                "rival-interest") % 21,
+            5,
+            95);
 
         return new RecruitingInteraction
         {
@@ -726,6 +778,8 @@ public static class InteractiveRecruitingService
 
     private static bool ShouldResolveRecruitingTarget(
         DynastyState state,
+        Team userTeam,
+        IReadOnlyDictionary<string, Team> teamsByName,
         RecruitingInteraction interaction)
     {
         if (state.Phase != SeasonPhase.Recruiting)
@@ -737,9 +791,28 @@ public static class InteractiveRecruitingService
         var recruitingWeek =
             SeasonProgression.GetRecruitingWeekNumber(state);
 
+        var userInterest =
+            RecruitPreferenceService.GetCurrentUserInterest(
+                state,
+                userTeam,
+                interaction.Source,
+                interaction.ProspectId,
+                interaction);
+        var rivalInterest = Math.Max(
+            Math.Clamp(
+                interaction.RivalInterest,
+                0,
+                100),
+            RecruitPreferenceService.GetBestRivalInterest(
+                state,
+                userTeam,
+                teamsByName,
+                interaction.Source,
+                interaction.ProspectId));
+
         var leaderInterest = Math.Max(
-            interaction.UserInterest,
-            interaction.RivalInterest);
+            userInterest,
+            rivalInterest);
 
         if (interaction.Source == RecruitingSource.TransferPortal)
         {
@@ -773,12 +846,15 @@ public static class InteractiveRecruitingService
         if (leaderInterest < threshold)
             return false;
 
-        if (leaderInterest >= 125)
-            return true;
-
         var lead = Math.Abs(
-            interaction.UserInterest -
-            interaction.RivalInterest);
+            userInterest -
+            rivalInterest);
+
+        if (leaderInterest >= 98 &&
+            lead >= 12)
+        {
+            return true;
+        }
 
         var commitChance = Math.Clamp(
             12 +
@@ -817,9 +893,23 @@ public static class InteractiveRecruitingService
             state, interaction.Source, interaction.ProspectId);
         var userStaffBonus = GetRecruitingStaffBonus(
             state, userTeam.Name, position);
+        var currentUserInterest =
+            RecruitPreferenceService.GetCurrentUserInterest(
+                state,
+                userTeam,
+                interaction.Source,
+                interaction.ProspectId,
+                interaction);
+        var bestRivalInterest =
+            RecruitPreferenceService.GetBestRivalInterest(
+                state,
+                userTeam,
+                teamsByName,
+                interaction.Source,
+                interaction.ProspectId);
 
         var userScore =
-            interaction.UserInterest +
+            currentUserInterest +
             userPrestige / 4 +
             userStaffBonus * 2 +
             RecruitPreferenceService.GetProgramGrade(
@@ -828,11 +918,11 @@ public static class InteractiveRecruitingService
             SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
-                interaction.UserInterest,
+                currentUserInterest,
                 interaction.ProspectId.ToString("N"),
                 "user-commitment") % 21;
 
-        return userScore >= interaction.RivalInterest
+        return userScore >= bestRivalInterest
             ? state.UserTeamName
             : ResolveRivalTeam(
                 state,
@@ -850,21 +940,25 @@ public static class InteractiveRecruitingService
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(team =>
-                ProgramPrestigeService.GetCurrentPrestige(state, team) +
+                RecruitPreferenceService.GetInitialSchoolInterest(
+                    state,
+                    team,
+                    interaction.Source,
+                    interaction.ProspectId) * 3 +
+                ProgramPrestigeService.GetCurrentPrestige(state, team) / 3 +
                 GetRecruitingStaffBonus(
                     state,
                     team.Name,
-                    GetProspectPosition(state, interaction.Source, interaction.ProspectId)) * 2 +
-                RecruitPreferenceService.GetProgramGrade(
-                    state, team, interaction.Source,
-                    interaction.ProspectId,
-                    RecruitPitchType.Proximity) / 5 +
+                    GetProspectPosition(
+                        state,
+                        interaction.Source,
+                        interaction.ProspectId)) * 2 +
                 SimulationSeed.Create(
                     state.DynastyId,
                     state.SeasonYear,
                     ProgramPrestigeService.GetCurrentPrestige(state, team),
                     interaction.ProspectId.ToString("N"),
-                    $"rival-{team.Name}") % 31)
+                    $"rival-{team.Name}") % 11)
             .ThenBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
             .First()
             .Name;
