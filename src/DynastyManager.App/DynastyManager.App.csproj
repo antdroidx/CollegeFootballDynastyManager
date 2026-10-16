@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>DynastyManager.App</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <ApplicationTitle>College Football Dynasty Manager</ApplicationTitle>
+    <ApplicationId>antdroid.cfbcoach</ApplicationId>
+    <ApplicationDisplayVersion>2.0</ApplicationDisplayVersion>
+    <ApplicationVersion>400</ApplicationVersion>
+    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <ApplicationTitle>CF Dynasty Manager Dev</ApplicationTitle>
+    <ApplicationId>antdroid.cfbcoach.dev</ApplicationId>
+
+    <!-- GitHub/standalone debug APKs are sideloaded without Visual Studio Fast Deployment. -->
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+
+    <!-- Keep CI/dev APKs signed with one stable development certificate so updates install in-place. -->
+    <AndroidKeyStore>true</AndroidKeyStore>
+    <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)..\..\build\keys\cfdm-dev.keystore</AndroidSigningKeyStore>
+    <AndroidSigningStorePass>cfdm-dev</AndroidSigningStorePass>
+    <AndroidSigningKeyAlias>cfdmdev</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>cfdm-dev</AndroidSigningKeyPass>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MauiIcon Include="Resources\AppIcon\appicon_cfdm.png" BaseSize="256,256" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg"
+                      Color="#10243E"
+                      BaseSize="128,128" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DynastyManager.Core\DynastyManager.Core.csproj" />
+    <ProjectReference Include="..\DynastyManager.Data\DynastyManager.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiAsset Include="..\main\assets\universe.csv" LogicalName="legacy_universe.csv" />
+    <MauiAsset Include="..\main\assets\roster.csv" LogicalName="legacy_roster.csv" />
+    <MauiAsset Include="..\main\assets\coach.csv" LogicalName="legacy_coach.csv" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DynastyManager.Core\DynastyManager.Core.csproj" />
+    <ProjectReference Include="..\..\src\DynastyManager.Data\DynastyManager.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\src\main\assets\universe.csv" Link="TestData\universe.csv" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\main\assets\roster.csv" Link="TestData\roster.csv" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\main\assets\coach.csv" Link="TestData\coach.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
