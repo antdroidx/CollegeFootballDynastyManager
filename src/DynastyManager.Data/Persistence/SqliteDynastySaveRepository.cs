@@ -127,11 +127,7 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
                                         interaction.UserInterest,
                                         0,
                                         100),
-                                RivalInterest =
-                                    Math.Clamp(
-                                        interaction.RivalInterest,
-                                        0,
-                                        100)
+                                RivalInterest = 0
                             })
                         .ToArray()
             };
