@@ -140,6 +140,15 @@ public static class RecruitPreferenceService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(team);
 
+        if (source == RecruitingSource.TransferPortal &&
+            IsTransferOriginTeam(
+                state,
+                prospectId,
+                team.Name))
+        {
+            return 0;
+        }
+
         var preferences = GetPreferences(
             state,
             source,
@@ -516,6 +525,21 @@ public static class RecruitPreferenceService
             team.LegacyRegionId,
             team.Name,
             $"proximity-{recruit.RecruitId:N}") % 40;
+    }
+
+    private static bool IsTransferOriginTeam(
+        DynastyState state,
+        Guid prospectId,
+        string teamName)
+    {
+        var entry = state.TransferPortalEntries
+            .FirstOrDefault(item =>
+                item.Player.PlayerId == prospectId);
+
+        return entry is not null &&
+               entry.OriginTeamName.Equals(
+                   teamName,
+                   StringComparison.OrdinalIgnoreCase);
     }
 
     public static int GetRecentSuccessBonus(
