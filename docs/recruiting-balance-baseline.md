@@ -1,5 +1,7 @@
 # Recruiting balance and dynasty health: first baseline
 
+Historical Build 203 baseline, before the shared competing-offer engine. See build-204-competing-offers.md for the new engine and its validation.
+
 This begins roadmap priorities 2 and 3. Neither milestone is complete.
 
 ## Method

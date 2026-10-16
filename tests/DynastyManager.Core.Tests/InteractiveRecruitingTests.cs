@@ -178,7 +178,10 @@ public class InteractiveRecruitingTests
                 team => team.Name,
                 StringComparer.OrdinalIgnoreCase));
 
-        Assert.Empty(state.RecruitingCommitments);
+        Assert.DoesNotContain(state.RecruitingCommitments, item => item.TeamName == user.Name);
+        Assert.All(state.RecruitingCommitments, item => Assert.Contains(state.RecruitingOffers,
+            offer => offer.TeamName == item.TeamName && offer.ProspectId == item.ProspectId &&
+                offer.Status == RecruitingOfferStatus.Signed));
 
         var interaction =
             InteractiveRecruitingService.GetInteraction(
@@ -186,7 +189,7 @@ public class InteractiveRecruitingTests
                 RecruitingSource.HighSchool,
                 recruit.RecruitId);
 
-        Assert.Null(interaction.CommittedTeamName);
+        Assert.NotEqual(user.Name, interaction.CommittedTeamName);
         Assert.Equal(
             InteractiveRecruitingService.ScoutStep,
             interaction.ScoutingPercent);
@@ -371,7 +374,9 @@ public class InteractiveRecruitingTests
             if (resolved.RecruitingCommitments.Count > 0)
             {
                 earlyCommits++;
-                Assert.Equal(user.Name, Assert.Single(resolved.RecruitingCommitments).TeamName);
+                var commitment = Assert.Single(resolved.RecruitingCommitments);
+                Assert.Contains(resolved.RecruitingOffers, offer => offer.TeamName == commitment.TeamName &&
+                    offer.ProspectId == commitment.ProspectId && offer.Status == RecruitingOfferStatus.Signed);
             }
         }
         Assert.InRange(earlyCommits, 1, 99);

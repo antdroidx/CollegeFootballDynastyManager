@@ -4,7 +4,7 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 
 | Priority | Area | Current status | Next exit criteria |
 |---|---|---|---|
-| 1 | Recruiting fixes | Interest/preferences/scouting baseline working; duplicate-signing guard added after five-cycle testing | Keep current save compatibility and single ownership across recruiting paths |
+| 1 | Recruiting fixes | Shared multi-school HS/portal offer engine implemented; interest, effort, withdrawals and capacity drive decisions | Keep current save compatibility and single ownership across recruiting paths |
 | 2 | Recruiting balance | Started: five annual cycles at prestige 35, 65 and 90 with full assistance; measurements in recruiting-balance-baseline.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
 | 3 | Long-term dynasty health | Started: annual portal, recruiting, progression, depth, uniqueness and save/load checks | Longer careers with games, deferred transfers, position age distributions and save recovery |
 | 4 | Interface polish | Recruit loading overlay and background list preparation added | Device check; clearer targeting reasons, comparisons, development summaries and consistent layouts |
@@ -24,4 +24,4 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 2. Investigate low-prestige walk-on dependence and age/position bottlenecks from those measurements; preserve organic commitment timing and roster-based portal decisions.
 3. Continue interface clarity once the recruiting and dynasty-health checks are dependable.
 
-The current rival-interest model still does not maintain an explicit offer list for each CPU school. A full multi-school recruiting market is a separate deeper feature; the loading screen and this diagnostic pass do not implement it.
+Competing offers are now a core engine feature (Build 204). CPU and user schools share persisted offers and one decision resolver. CPU direct signings and protected user targets have been removed. The next balance baseline must use this shared market; the original Build 203 report is historical.

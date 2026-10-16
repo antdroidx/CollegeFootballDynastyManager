@@ -1223,13 +1223,18 @@ public sealed class FoundationPage : ContentPage
             SeasonPhase.TransferPortal or SeasonPhase.Recruiting)
         {
             await ShowAdvanceProgressAsync("Resolving recruiting and portal activity...", 0.22);
+            var marketProgress = new Progress<(int Completed, int Total, string TeamName)>(item =>
+            {
+                _advanceOverlayStatus.Text = $"Recruiting offers: {item.TeamName} ({item.Completed}/{item.Total})...";
+                _advanceOverlayProgress.Progress = 0.22 + 0.07 * item.Completed / item.Total;
+            });
             if (_teamsByName.TryGetValue(
                     _currentDynasty.UserTeamName,
                     out var recruitingTeam))
             {
                 var decisionState = _currentDynasty;
                 _currentDynasty = await Task.Run(() => InteractiveRecruitingService
-                    .ResolveCurrentPhase(decisionState, recruitingTeam, _teamsByName));
+                    .ResolveCurrentPhase(decisionState, recruitingTeam, _teamsByName, marketProgress));
             }
 
             if (phaseBeforeAdvance ==
@@ -2081,6 +2086,12 @@ public sealed class FoundationPage : ContentPage
                 _recruitingLoadingIndicator.IsRunning = _recruitingLoadingOverlay.IsVisible;
                 // Give Android a frame to paint the loading screen before preparing data.
                 await Task.Delay(16, cancellation.Token);
+                var marketInput = _currentDynasty;
+                var marketTeams = _teamsByName;
+                var market = await Task.Run(() => CompetingRecruitingService.AdvanceOffers(marketInput, marketTeams), cancellation.Token);
+                cancellation.Token.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(marketInput, _currentDynasty)) return;
+                _currentDynasty = market;
             }
             _recruitingList.Children.Clear();
             _recruitingMetrics.Children.Clear();
@@ -2732,27 +2743,12 @@ public sealed class FoundationPage : ContentPage
                 0,
                 100);
 
-        var currentRivalInterest = hasUserTeam
-            ? Math.Max(
-                Math.Clamp(
-                    interaction.RivalInterest,
-                    0,
-                    100),
-                RecruitPreferenceService.GetBestRivalInterest(
-                    state,
-                    userTeamForInterest!,
-                    teams,
-                    prospect.Source,
-                    prospect.ProspectId))
-            : Math.Clamp(
-                interaction.RivalInterest,
-                0,
-                100);
-
-        var interest =
-            interaction.CommittedTeamName is not null
-                ? $"Committed: {interaction.CommittedTeamName}"
-                : $"{offerMarker}Your interest {currentUserInterest}% • Best rival {currentRivalInterest}%";
+        var activeOffers = CompetingRecruitingService.GetOffers(state, prospect.Source, prospect.ProspectId, activeOnly: true);
+        var leadingOffer = activeOffers.FirstOrDefault();
+        var interest = interaction.CommittedTeamName is not null
+            ? $"Committed: {interaction.CommittedTeamName}"
+            : $"{offerMarker}Your interest {currentUserInterest}% - {activeOffers.Count} offers" +
+                (leadingOffer is null ? "" : $" - Leader: {leadingOffer.TeamName} {leadingOffer.Interest}%");
 
         return new(prospect, interaction,
             $"{boardMarker}{prospect.Position} {prospect.FullName}",
@@ -3042,22 +3038,20 @@ public sealed class FoundationPage : ContentPage
                 0,
                 100);
 
-        var currentRivalInterest = hasDetailUserTeam
-            ? Math.Max(
-                Math.Clamp(
-                    interaction.RivalInterest,
-                    0,
-                    100),
-                RecruitPreferenceService.GetBestRivalInterest(
-                    _currentDynasty,
-                    detailUserTeam!,
-                    _teamsByName,
-                    source,
-                    prospect.ProspectId))
-            : Math.Clamp(
-                interaction.RivalInterest,
-                0,
-                100);
+        var currentRivalInterest = hasDetailUserTeam ? RecruitPreferenceService.GetBestRivalInterest(
+            _currentDynasty, detailUserTeam!, _teamsByName, source, prospect.ProspectId) : 0;
+        var scholarshipOffers = CompetingRecruitingService.GetOffers(_currentDynasty, source, prospect.ProspectId);
+        var offerList = new VerticalStackLayout { Spacing = 2 };
+        if (scholarshipOffers.Count == 0)
+            offerList.Children.Add(new Label { Text = "No scholarship offers yet.", FontSize = 11 });
+        foreach (var offer in scholarshipOffers)
+            offerList.Children.Add(new Label
+            {
+                Text = $"{offer.TeamName}: {offer.Interest}% - {offer.Status}" +
+                    (offer.LastContactWeek >= 0 ? $" - last contact W{offer.LastContactWeek}" : ""),
+                FontSize = 11,
+                Opacity = offer.Status == RecruitingOfferStatus.Active || offer.Status == RecruitingOfferStatus.Signed ? 1 : 0.65
+            });
 
         var preRecruitFavorites =
             RecruitPreferenceService.GetInitialTopSchools(
@@ -3406,7 +3400,7 @@ public sealed class FoundationPage : ContentPage
                             Text =
                                 $"OVR {(range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum} est.")}{potText} • " +
                                 $"Scout {interaction.ScoutingPercent}% • " +
-                                $"Your interest {currentUserInterest}% • Best rival {currentRivalInterest}%" +
+                                $"Your interest {currentUserInterest}% • Best offered rival {currentRivalInterest}%" +
                                 evaluationText +
                                 lastPitchText,
                             FontSize = 12
@@ -3418,6 +3412,12 @@ public sealed class FoundationPage : ContentPage
                                 : "Recruiting actions are closed in the current phase.",
                             FontSize = 10,
                             Opacity = 0.72
+                        },
+                        new Label { Text = "SCHOLARSHIP OFFERS", FontSize = 11, FontAttributes = FontAttributes.Bold },
+                        new ScrollView
+                        {
+                            HeightRequest = Math.Min(120, Math.Max(25, scholarshipOffers.Count * 22)),
+                            Content = offerList
                         },
                         new Label
                         {

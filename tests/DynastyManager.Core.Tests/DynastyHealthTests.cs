@@ -62,6 +62,10 @@ public class DynastyHealthTests(ITestOutputHelper output)
                     state = SeasonProgression.Advance(state);
                 }
                 Assert.Equal(SeasonPhase.RosterManagement, state.Phase);
+                Assert.All(state.RecruitingCommitments.Where(item => item.SeasonYear == state.SeasonYear), commitment =>
+                    Assert.Contains(state.RecruitingOffers, offer => offer.SeasonYear == commitment.SeasonYear &&
+                        offer.Source == commitment.Source && offer.ProspectId == commitment.ProspectId &&
+                        offer.TeamName == commitment.TeamName && offer.Status == RecruitingOfferStatus.Signed));
                 var rankings = RecruitingRankingService.BuildTeamRankings(state, teams.Keys);
                 var rank = rankings.Single(item => item.TeamName == user.Name);
                 state = WalkOnRosterService.FillAllTeams(state, teams);

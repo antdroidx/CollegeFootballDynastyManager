@@ -39,7 +39,7 @@ public class PortalProcessingTests(ITestOutputHelper output)
         };
         var progress = new RecordingProgress();
         var timer = Stopwatch.StartNew();
-        var resolved = InteractiveRecruitingService.ResolveCurrentPhase(state, teams[state.UserTeamName], teams);
+        var resolved = InteractiveRecruitingService.ResolveCurrentPhase(state, teams[state.UserTeamName], teams, progress);
         var result = CpuRecruitingService.ApplyPhaseAssistance(resolved, teams, progress: progress);
         var advanced = DynastyManager.Core.Seasons.SeasonProgression.Advance(result);
         Assert.Equal(SeasonPhase.Recruiting, advanced.Phase);
@@ -54,6 +54,39 @@ public class PortalProcessingTests(ITestOutputHelper output)
         Assert.All(result.ActiveRoster.GroupBy(player => player.TeamName), group => Assert.True(group.Count() <= 85));
         Assert.Equal(result.TransferPortalEntries.Count, result.TransferPortalEntries
             .Select(item => item.Player.PlayerId).Except(result.ActiveRoster.Select(item => item.PlayerId)).Count());
+    }
+
+    [Fact]
+    public void FullLeagueHighSchoolMarketUsesActualCompetingOffers()
+    {
+        var teams = Enumerable.Range(0, 130).Select(index => new Team
+        {
+            Name = $"Team {index:D3}", Abbreviation = $"T{index}", ConferenceName = "Test",
+            Prestige = 40 + index % 50, LegacyRegionId = index % 5
+        }).ToDictionary(team => team.Name);
+        var state = new DynastyState
+        {
+            DynastyId = Guid.Parse("99999999-2222-3333-4444-555555555555"),
+            DynastyName = "FBS offer workload", UserTeamName = "Team 000", SeasonYear = 2027,
+            Phase = SeasonPhase.Recruiting, Week = 20,
+            ActiveRoster = teams.Values.SelectMany((team, teamIndex) => Enumerable.Range(0, 55)
+                .Select(index => Player(teamIndex * 100 + index + 1, team.Name, index, 72))).ToArray(),
+            HighSchoolRecruitingPool = DynastyManager.Data.Import.HighSchoolRecruitingPoolFactory.Create(
+                Guid.Parse("99999999-2222-3333-4444-555555555555"), 2027, 130, [])
+        };
+        var timer = Stopwatch.StartNew();
+        var offered = CompetingRecruitingService.AdvanceOffers(state, teams);
+        var result = CompetingRecruitingService.ResolveWeek(offered, teams);
+        output.WriteLine($"130 teams, 3,250 HS recruits: {timer.Elapsed.TotalSeconds:F2}s; " +
+            $"{offered.RecruitingOffers.Count} offers, {result.RecruitingCommitments.Count} decisions");
+        Assert.True(timer.Elapsed < TimeSpan.FromSeconds(30));
+        Assert.True(offered.RecruitingOffers.Count > 1000);
+        Assert.True(offered.RecruitingOffers.GroupBy(item => item.ProspectId).Count(group => group.Count() > 1) > 100);
+        Assert.All(result.RecruitingCommitments, commitment => Assert.Contains(result.RecruitingOffers,
+            offer => offer.ProspectId == commitment.ProspectId && offer.TeamName == commitment.TeamName &&
+                offer.Status == RecruitingOfferStatus.Signed));
+        Assert.Equal(result.ActiveRoster.Count, result.ActiveRoster.Select(item => item.PlayerId).Distinct().Count());
+        Assert.All(result.ActiveRoster.GroupBy(item => item.TeamName), group => Assert.True(group.Count() <= 85));
     }
 
     [Fact]

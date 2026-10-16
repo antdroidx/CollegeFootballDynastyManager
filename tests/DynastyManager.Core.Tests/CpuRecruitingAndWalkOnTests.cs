@@ -219,16 +219,9 @@ public class CpuRecruitingAndWalkOnTests
             assisted,
             teams);
 
-        Assert.Equal(
-            60,
-            finalized.ActiveRoster.Count(player =>
-                player.TeamName == user.Name));
-
-        Assert.DoesNotContain(
-            finalized.RecruitingCommitments,
-            commitment =>
-                commitment.TeamName == user.Name &&
-                commitment.Source == RecruitingSource.HighSchool);
+        Assert.All(finalized.RecruitingCommitments.Where(item => item.TeamName == user.Name), item =>
+            Assert.Contains(finalized.RecruitingOffers, offer => offer.ProspectId == item.ProspectId &&
+                offer.TeamName == user.Name && offer.Status == RecruitingOfferStatus.Signed));
 
         var filled = WalkOnRosterService.FillAllTeams(
             finalized with
@@ -311,15 +304,13 @@ public class CpuRecruitingAndWalkOnTests
                 assisted,
                 teams);
 
-        Assert.Equal(
-            50,
-            finalized.ActiveRoster.Count(player =>
-                player.TeamName == user.Name));
-        Assert.DoesNotContain(
-            finalized.RecruitingCommitments,
-            commitment =>
-                commitment.TeamName == user.Name &&
-                commitment.WasCpuAssisted);
+        Assert.True(finalized.ActiveRoster.Count(player => player.TeamName == user.Name) >= 50);
+        Assert.All(finalized.RecruitingCommitments.Where(item => item.TeamName == user.Name), item =>
+        {
+            Assert.True(item.WasCpuAssisted);
+            Assert.Contains(finalized.RecruitingOffers, offer => offer.ProspectId == item.ProspectId &&
+                offer.TeamName == user.Name && offer.Status == RecruitingOfferStatus.Signed);
+        });
     }
 
     [Fact]

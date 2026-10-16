@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using DynastyManager.Core.Models;
 
@@ -15,7 +16,12 @@ public static class RecruitPreferenceService
 
     private static Dictionary<Guid, HighSchoolRecruit> GetHighSchoolIndex(DynastyState state) =>
         HighSchoolIndexes.GetValue(state.HighSchoolRecruitingPool,
-            pool => pool.ToDictionary(recruit => recruit.RecruitId));
+            pool => pool.GroupBy(recruit => recruit.RecruitId).ToDictionary(group => group.Key, group => group.First()));
+
+    private static readonly ConditionalWeakTable<DynastyState,
+        ConcurrentDictionary<(RecruitingSource, Guid), IReadOnlyList<RecruitPreference>>> Preferences = new();
+    private static readonly ConditionalWeakTable<DynastyState,
+        Dictionary<string, TeamSeasonHistoryRecord>> RecentSeasons = new();
 
     public static IReadOnlyList<RecruitPreference> GetPreferences(
         DynastyState state,
@@ -24,7 +30,12 @@ public static class RecruitPreferenceService
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        return Enum.GetValues<RecruitPitchType>()
+        return Preferences.GetValue(state, _ => new()).GetOrAdd((source, prospectId), _ =>
+            BuildPreferences(state, source, prospectId));
+    }
+
+    private static IReadOnlyList<RecruitPreference> BuildPreferences(DynastyState state,
+        RecruitingSource source, Guid prospectId) => Enum.GetValues<RecruitPitchType>()
             .Select(type => new RecruitPreference
             {
                 Type = type,
@@ -37,7 +48,7 @@ public static class RecruitPreferenceService
             .OrderByDescending(item => item.Importance)
             .ThenBy(item => item.Type)
             .ToArray();
-    }
+
 
     public static IReadOnlyList<RecruitPreference>
         GetRevealedPreferences(
@@ -257,19 +268,10 @@ public static class RecruitPreferenceService
     {
         ArgumentNullException.ThrowIfNull(teamsByName);
 
-        return teamsByName.Values
-            .Where(team =>
-                !team.Name.Equals(
-                    userTeam.Name,
-                    StringComparison.OrdinalIgnoreCase))
-            .Select(team =>
-                GetInitialSchoolInterest(
-                    state,
-                    team,
-                    source,
-                    prospectId))
-            .DefaultIfEmpty(5)
-            .Max();
+        return CompetingRecruitingService.GetOffers(state, source, prospectId, activeOnly: true)
+            .Where(offer => !offer.TeamName.Equals(userTeam.Name, StringComparison.OrdinalIgnoreCase) &&
+                teamsByName.ContainsKey(offer.TeamName))
+            .Select(offer => Math.Clamp(offer.Interest, 0, 100)).DefaultIfEmpty(0).Max();
     }
 
     public static IReadOnlyList<(string TeamName, int Interest)>
@@ -562,15 +564,11 @@ public static class RecruitPreferenceService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(team);
 
-        var season = state.TeamSeasonHistory
-            .Where(item =>
-                item.TeamName.Equals(
-                    team.Name,
-                    StringComparison.OrdinalIgnoreCase) &&
-                item.SeasonYear <= state.SeasonYear)
-            .OrderByDescending(item =>
-                item.SeasonYear)
-            .FirstOrDefault();
+        var season = RecentSeasons.GetValue(state, snapshot => snapshot.TeamSeasonHistory
+            .Where(item => item.SeasonYear <= snapshot.SeasonYear)
+            .GroupBy(item => item.TeamName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(item => item.SeasonYear).First(),
+                StringComparer.OrdinalIgnoreCase)).GetValueOrDefault(team.Name);
 
         if (season is null)
             return 0;
