@@ -2238,14 +2238,18 @@ public sealed class FoundationPage : ContentPage
         }
 
 
+        var geographyRecruits = _recruitingView == RecruitingView.HighSchool &&
+            (_recruitingStateFilter.SelectedIndex > 0 || _recruitingRegionFilter.SelectedIndex > 0)
+                ? _currentDynasty.HighSchoolRecruitingPool.ToDictionary(item => item.RecruitId)
+                : null;
+
         if (_recruitingView == RecruitingView.HighSchool &&
             _recruitingStateFilter.SelectedIndex > 0)
         {
             var stateIndex = _recruitingStateFilter.SelectedIndex - 1;
             prospects = prospects.Where(prospect =>
             {
-                var recruit = _currentDynasty.HighSchoolRecruitingPool
-                    .First(item => item.RecruitId == prospect.ProspectId);
+                var recruit = geographyRecruits![prospect.ProspectId];
                 return RecruitGeography.GetStateIndex(recruit) == stateIndex;
             }).ToList();
         }
@@ -2256,8 +2260,7 @@ public sealed class FoundationPage : ContentPage
             var regionIndex = _recruitingRegionFilter.SelectedIndex - 1;
             prospects = prospects.Where(prospect =>
             {
-                var recruit = _currentDynasty.HighSchoolRecruitingPool
-                    .First(item => item.RecruitId == prospect.ProspectId);
+                var recruit = geographyRecruits![prospect.ProspectId];
                 return RecruitGeography.GetRegion(recruit) == regionIndex;
             }).ToList();
         }

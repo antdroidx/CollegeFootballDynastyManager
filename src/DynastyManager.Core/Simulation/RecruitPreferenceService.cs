@@ -1,9 +1,22 @@
+using System.Runtime.CompilerServices;
 using DynastyManager.Core.Models;
 
 namespace DynastyManager.Core.Simulation;
 
 public static class RecruitPreferenceService
 {
+    // Pools are immutable snapshots shared by record copies. Weak keys avoid
+    // retaining old seasons and rebuilding an index after every interaction.
+    private static readonly ConditionalWeakTable<IReadOnlyList<HighSchoolRecruit>,
+        Dictionary<Guid, HighSchoolRecruit>> HighSchoolIndexes = new();
+
+    private static readonly ConditionalWeakTable<IReadOnlyList<DynastyPlayer>,
+        Dictionary<(string Team, Position Position), int>> RosterCounts = new();
+
+    private static Dictionary<Guid, HighSchoolRecruit> GetHighSchoolIndex(DynastyState state) =>
+        HighSchoolIndexes.GetValue(state.HighSchoolRecruitingPool,
+            pool => pool.ToDictionary(recruit => recruit.RecruitId));
+
     public static IReadOnlyList<RecruitPreference> GetPreferences(
         DynastyState state,
         RecruitingSource source,
@@ -608,8 +621,7 @@ public static class RecruitPreferenceService
         DynastyState state,
         Guid prospectId)
     {
-        var recruit = state.HighSchoolRecruitingPool
-            .First(item => item.RecruitId == prospectId);
+        var recruit = GetHighSchoolIndex(state)[prospectId];
 
         return recruit.StarRating switch
         {
@@ -710,12 +722,11 @@ public static class RecruitPreferenceService
         string teamName,
         Position position)
     {
-        var count = state.ActiveRoster.Count(player =>
-            player.TeamName.Equals(
-                teamName,
-                StringComparison.OrdinalIgnoreCase) &&
-            player.Position == position &&
-            !player.IsRedshirted);
+        var counts = RosterCounts.GetValue(state.ActiveRoster, roster => roster
+            .Where(player => !player.IsRedshirted)
+            .GroupBy(player => (player.TeamName.ToUpperInvariant(), player.Position))
+            .ToDictionary(group => group.Key, group => group.Count()));
+        var count = counts.GetValueOrDefault((teamName.ToUpperInvariant(), position));
 
         var target =
             DynastyRosterRules.TargetPositionCounts.TryGetValue(
@@ -786,10 +797,7 @@ public static class RecruitPreferenceService
     {
         if (source == RecruitingSource.HighSchool)
         {
-            return state.HighSchoolRecruitingPool
-                .FirstOrDefault(recruit =>
-                    recruit.RecruitId == prospectId)
-                ?.HomeRegion;
+            return GetHighSchoolIndex(state).GetValueOrDefault(prospectId)?.HomeRegion;
         }
 
         var entry = state.TransferPortalEntries
@@ -809,9 +817,7 @@ public static class RecruitPreferenceService
     {
         if (source == RecruitingSource.HighSchool)
         {
-            return state.HighSchoolRecruitingPool
-                .First(recruit =>
-                    recruit.RecruitId == prospectId)
+            return GetHighSchoolIndex(state)[prospectId]
                 .Position;
         }
 

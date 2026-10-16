@@ -8,6 +8,112 @@ namespace DynastyManager.Core.Tests;
 public class CpuRecruitingAndWalkOnTests
 {
     [Fact]
+    public void InterestReadsIndexLargePoolOnceAndRefreshWhenPoolChanges()
+    {
+        var user = Team("User", 80);
+        var recruits = BuildRecruitPool(10000);
+        var pool = new CountingRecruitPool(recruits);
+        var state = new DynastyState { DynastyName = "Lookup regression", UserTeamName = user.Name,
+            SeasonYear = 2027, HighSchoolRecruitingPool = pool };
+        foreach (var recruit in recruits)
+        {
+            var interest = RecruitPreferenceService.GetInitialSchoolInterest(
+                state, user, RecruitingSource.HighSchool, recruit.RecruitId);
+            Assert.InRange(interest, 5, 95);
+        }
+        Assert.Equal(1, pool.EnumerationCount);
+        var changedPool = new CountingRecruitPool(recruits.Select(recruit =>
+            recruit with { StarRating = 1 }).ToArray());
+        var changed = state with { HighSchoolRecruitingPool = changedPool };
+        var prospect = recruits[0];
+        var before = RecruitPreferenceService.GetInitialSchoolInterest(
+            state, user, RecruitingSource.HighSchool, prospect.RecruitId);
+        var after = RecruitPreferenceService.GetInitialSchoolInterest(
+            changed, user, RecruitingSource.HighSchool, prospect.RecruitId);
+        Assert.True(after > before);
+        Assert.Equal(1, changedPool.EnumerationCount);
+        var crowded = state with { ActiveRoster = Enumerable.Range(0, 20)
+            .Select(index => Player($"Player {index}", user.Name, prospect.Position, 2, 80))
+            .ToArray() };
+        var openGrade = RecruitPreferenceService.GetProgramGrade(state, user,
+            RecruitingSource.HighSchool, prospect.RecruitId, RecruitPitchType.PlayingTime);
+        var crowdedGrade = RecruitPreferenceService.GetProgramGrade(crowded, user,
+            RecruitingSource.HighSchool, prospect.RecruitId, RecruitPitchType.PlayingTime);
+        Assert.True(crowdedGrade < openGrade);
+    }
+
+    private sealed class CountingRecruitPool(IReadOnlyList<HighSchoolRecruit> items)
+        : IReadOnlyList<HighSchoolRecruit>
+    {
+        public int EnumerationCount { get; private set; }
+        public int Count => items.Count;
+        public HighSchoolRecruit this[int index] => items[index];
+        public IEnumerator<HighSchoolRecruit> GetEnumerator()
+        {
+            EnumerationCount++;
+            return items.GetEnumerator();
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    [Fact]
+    public void AssistedHighSchoolSigningsFollowCpuCadenceAcrossSixWeeks()
+    {
+        var user = Team("User", 99);
+        var teams = new[] { user }.ToDictionary(team => team.Name);
+        var pool = BuildRecruitPool(80);
+        var state = new DynastyState
+        {
+            DynastyName = "Cadence regression",
+            DynastyId = Guid.Parse("10101010-2020-3030-4040-505050505050"),
+            UserTeamName = user.Name, SeasonYear = 2027,
+            Phase = SeasonPhase.Recruiting,
+            ActiveRoster = BuildRoster(user.Name, 47),
+            HighSchoolRecruitingPool = pool,
+            RecruitingInteractions = pool.Select(recruit => new RecruitingInteraction
+            {
+                SeasonYear = 2027, Source = RecruitingSource.HighSchool,
+                ProspectId = recruit.RecruitId, ScholarshipOffered = true,
+                IsOnTargetBoard = true, WasCpuAssisted = true, UserInterest = 100
+            }).ToArray()
+        };
+        var rates = new[] { .16, .20, .25, .33, .45, 1.0 };
+        for (var week = 0; week < 6; week++)
+        {
+            state = state with { Week = SeasonProgression.FirstRecruitingWeek + week };
+            var before = state.ActiveRoster.Count;
+            var limit = (int)Math.Ceiling((85 - before) * rates[week]);
+            state = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
+            Assert.InRange(state.ActiveRoster.Count - before, 1, limit);
+            var repeated = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
+            Assert.Equal(state.ActiveRoster.Count, repeated.ActiveRoster.Count);
+        }
+        Assert.Equal(85, state.ActiveRoster.Count);
+    }
+
+    [Fact]
+    public void ManualHighSchoolSigningsAreNotLimitedByAssistanceCadence()
+    {
+        var user = Team("User", 99);
+        var pool = BuildRecruitPool(38);
+        var state = new DynastyState
+        {
+            DynastyName = "Manual regression",
+            UserTeamName = user.Name, SeasonYear = 2027,
+            Phase = SeasonPhase.Recruiting, Week = SeasonProgression.FirstRecruitingWeek,
+            ActiveRoster = BuildRoster(user.Name, 47), HighSchoolRecruitingPool = pool,
+            RecruitingInteractions = pool.Select(recruit => new RecruitingInteraction
+            {
+                SeasonYear = 2027, Source = RecruitingSource.HighSchool,
+                ProspectId = recruit.RecruitId, ScholarshipOffered = true, UserInterest = 100
+            }).ToArray()
+        };
+        var result = InteractiveRecruitingService.ResolveCurrentPhase(
+            state, user, new[] { user }.ToDictionary(team => team.Name));
+        Assert.Equal(85, result.ActiveRoster.Count);
+    }
+
+    [Fact]
     public void SkippingManualRecruitingUsesVisibleAssistanceThenWalkOns()
     {
         var user = Team("User", 80);

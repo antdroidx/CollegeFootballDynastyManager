@@ -374,6 +374,17 @@ public static class InteractiveRecruitingService
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase));
 
+        // Include this week's signings when reconstructing capacity so resolving
+        // twice (or saving/loading midweek) cannot grant another weekly allowance.
+        var assistedHsThisWeek = commitments.Count(item =>
+            item.SeasonYear == state.SeasonYear && item.CommittedWeek == state.Week &&
+            item.Source == RecruitingSource.HighSchool && item.WasCpuAssisted &&
+            item.TeamName.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase));
+        var assistedHsRemaining = Math.Max(0,
+            CpuRecruitingService.GetWeeklyHighSchoolCommitmentLimit(
+                Math.Max(0, DynastyRosterRules.MaximumRosterSize - userRosterCount) + assistedHsThisWeek,
+                SeasonProgression.GetRecruitingWeekNumber(state)) - assistedHsThisWeek);
+
         foreach (var interaction in current
                      .OrderByDescending(item => item.UserInterest))
         {
@@ -387,6 +398,12 @@ public static class InteractiveRecruitingService
                 userTeam,
                 teamsByName,
                 interaction);
+
+            var assistedUserHs = state.Phase == SeasonPhase.Recruiting &&
+                interaction.Source == RecruitingSource.HighSchool && interaction.WasCpuAssisted &&
+                resolvedTeam.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase);
+            if (assistedUserHs && assistedHsRemaining <= 0)
+                continue;
 
             if (!deferTransfer && roster.Count(candidate =>
                     candidate.TeamName.Equals(resolvedTeam,
@@ -418,6 +435,9 @@ public static class InteractiveRecruitingService
 
             if (player is null)
                 continue;
+
+            if (assistedUserHs)
+                assistedHsRemaining--;
 
             var updatedInteraction = interaction with
             {
