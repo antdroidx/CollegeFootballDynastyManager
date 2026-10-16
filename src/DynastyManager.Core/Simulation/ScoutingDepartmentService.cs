@@ -303,6 +303,7 @@ public static class ScoutingDepartmentService
                         item.Attainability))
                 .OrderByDescending(item =>
                     GetPriorityScore(
+                        state,
                         userTeam,
                         assignment,
                         item.Recruit,
@@ -564,6 +565,7 @@ public static class ScoutingDepartmentService
     }
 
     private static int GetPriorityScore(
+        DynastyState state,
         Team userTeam,
         ScoutAssignment assignment,
         HighSchoolRecruit recruit,
