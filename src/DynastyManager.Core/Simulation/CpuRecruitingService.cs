@@ -483,6 +483,9 @@ public static class CpuRecruitingService
                         (int)Math.Ceiling(
                             capacity * weeklyRate));
 
+            var scorer = CreateCandidateScorer(state, team);
+            var fitScores = available.Values.ToDictionary(item => item.ProspectId, scorer);
+
             for (var addition = 0;
                  addition < additions &&
                  available.Count > 0 &&
@@ -502,7 +505,7 @@ public static class CpuRecruitingService
                     team,
                     RecruitingSource.HighSchool,
                     position,
-                    available.Values);
+                    available.Values, fitScores);
 
                 if (candidate is null)
                     break;
@@ -557,7 +560,8 @@ public static class CpuRecruitingService
     public static DynastyState ApplyPhaseAssistance(
         DynastyState state,
         IReadOnlyDictionary<string, Team> teamsByName,
-        bool assistUserTeam = true)
+        bool assistUserTeam = true,
+        IProgress<(int Completed, int Total, string TeamName)>? progress = null)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
@@ -607,8 +611,10 @@ public static class CpuRecruitingService
             .ThenBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
+        var processedTeams = 0;
         foreach (var team in teams)
         {
+            progress?.Report((++processedTeams, teams.Length, team.Name));
             var isUserTeam = team.Name.Equals(
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase);
@@ -630,6 +636,10 @@ public static class CpuRecruitingService
                 continue;
 
             var phaseLimit = capacity;
+            var scorer = CreateCandidateScorer(state, team);
+            var fitScores = available.Values.ToDictionary(item => item.ProspectId, scorer);
+            var teamCandidates = available.Values.Select(item =>
+                (Candidate: item, Player: item.ToPlayer(team.Name))).ToArray();
 
             for (var addition = 0;
                  addition < phaseLimit && available.Count > 0;
@@ -641,15 +651,15 @@ public static class CpuRecruitingService
 
                 var planningRoster = roster.Where(player => player.TeamName.Equals(
                     team.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
-
+                var plan = source == RecruitingSource.TransferPortal
+                    ? TransferRosterPlanningService.CreatePlan(state, team, planningRoster)
+                    : null;
                 var candidate = SelectBestCandidate(
-                    state,
-                    team,
-                    source.Value,
-                    position,
-                    source == RecruitingSource.TransferPortal
-                        ? available.Values.Where(item => IsUsefulTransfer(state, team, item, planningRoster))
-                        : available.Values);
+                    state, team, source.Value, position,
+                    teamCandidates.Where(item => available.ContainsKey(item.Candidate.ProspectId) &&
+                        (plan is null || plan.GetValue(item.Player) > 0))
+                        .Select(item => item.Candidate),
+                    fitScores);
 
                 if (candidate is null)
                     break;
@@ -752,7 +762,8 @@ public static class CpuRecruitingService
         Team team,
         RecruitingSource source,
         Position preferredPosition,
-        IEnumerable<Candidate> candidates)
+        IEnumerable<Candidate> candidates,
+        IReadOnlyDictionary<Guid, int> fitScores)
     {
         var pool = candidates
             .Where(candidate =>
@@ -790,10 +801,7 @@ public static class CpuRecruitingService
 
         return pool
             .OrderByDescending(candidate =>
-                GetCandidateFitScore(
-                    state,
-                    team,
-                    candidate))
+                fitScores[candidate.ProspectId])
             .ThenByDescending(candidate => candidate.OverallRating)
             .ThenBy(candidate => candidate.FullName, StringComparer.OrdinalIgnoreCase)
             .FirstOrDefault();
@@ -1257,43 +1265,26 @@ public static class CpuRecruitingService
             .Type;
     }
 
-    private static int GetCandidateFitScore(
-        DynastyState state,
-        Team team,
-        Candidate candidate)
+    private static Func<Candidate, int> CreateCandidateScorer(DynastyState state, Team team)
     {
         var prestige = ProgramPrestigeService.GetCurrentPrestige(state, team);
-        var programTarget =
-            58 + prestige / 3;
-
-        var qualityFit =
-            candidate.OverallRating <= programTarget + 8
-                ? candidate.OverallRating * 100
-                : candidate.OverallRating * 100 -
-                  (candidate.OverallRating - programTarget - 8) * 175;
-
-        var coordinatorRole = candidate.Position switch
-        {
-            Position.QB or Position.RB or Position.WR or Position.TE or Position.OL =>
-                StaffRole.OffensiveCoordinator,
-            Position.K => StaffRole.SpecialTeamsCoordinator,
-            _ => StaffRole.DefensiveCoordinator
-        };
+        var programTarget = 58 + prestige / 3;
         var headRecruiting = StaffManagementService.GetStaff(
             state, team.Name, StaffRole.HeadCoach)?.Recruiting ?? 60;
-        var coordinatorRecruiting = StaffManagementService.GetStaff(
-            state, team.Name, coordinatorRole)?.Recruiting ?? 60;
-        var staffFit = (headRecruiting + coordinatorRecruiting - 120) * 7;
-
-        var deterministicFit =
-            SimulationSeed.Create(
-                state.DynastyId,
-                state.SeasonYear,
-                prestige,
-                team.Name,
-                candidate.ProspectId.ToString("N")) % 100;
-
-        return qualityFit + staffFit + deterministicFit;
+        var staffFits = new[] { StaffRole.OffensiveCoordinator, StaffRole.DefensiveCoordinator,
+            StaffRole.SpecialTeamsCoordinator }.ToDictionary(role => role, role =>
+                (headRecruiting + (StaffManagementService.GetStaff(
+                    state, team.Name, role)?.Recruiting ?? 60) - 120) * 7);
+        return candidate =>
+        {
+            var qualityFit = candidate.OverallRating <= programTarget + 8
+                ? candidate.OverallRating * 100
+                : candidate.OverallRating * 100 - (candidate.OverallRating - programTarget - 8) * 175;
+            var role = GetRecruitingCoordinatorRole(candidate.Position);
+            var deterministicFit = SimulationSeed.Create(state.DynastyId, state.SeasonYear,
+                prestige, team.Name, candidate.ProspectId.ToString("N")) % 100;
+            return qualityFit + staffFits[role] + deterministicFit;
+        };
     }
 
     private static Position SelectMostNeededPosition(

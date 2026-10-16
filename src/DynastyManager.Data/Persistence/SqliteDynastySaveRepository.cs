@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
 using SQLite;
 
 namespace DynastyManager.Data.Persistence;
@@ -107,7 +108,7 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
                     .Select(recruit => recruit with
                     {
                         HomeState = Math.Clamp(recruit.HomeRegion, 0, 49),
-                        HomeRegion = Math.Clamp(recruit.HomeRegion / 10, 0, 4)
+                        HomeRegion = RecruitGeography.GetRegionForState(Math.Clamp(recruit.HomeRegion, 0, 49))
                     })
                     .ToArray()
             };
@@ -137,6 +138,8 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
             ? null
             : state with
             {
+                HighSchoolRecruitingPool = state.HighSchoolRecruitingPool.Select(recruit =>
+                    recruit with { HomeRegion = RecruitGeography.GetRegion(recruit) }).ToArray(),
                 SchemaVersion = DynastyState.CurrentSchemaVersion
             };
     }

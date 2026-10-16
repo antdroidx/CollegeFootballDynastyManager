@@ -1181,11 +1181,9 @@ public sealed class FoundationPage : ContentPage
                 out var midseasonRecruitingTeam))
         {
             await ShowAdvanceProgressAsync("Processing recruiting decisions...", 0.14);
-            _currentDynasty = InteractiveRecruitingService
-                .ResolveCurrentPhase(
-                    _currentDynasty,
-                    midseasonRecruitingTeam,
-                    _teamsByName);
+            var decisionState = _currentDynasty;
+            _currentDynasty = await Task.Run(() => InteractiveRecruitingService
+                .ResolveCurrentPhase(decisionState, midseasonRecruitingTeam, _teamsByName));
         }
 
         if (phaseBeforeAdvance is
@@ -1196,21 +1194,17 @@ public sealed class FoundationPage : ContentPage
                     _currentDynasty.UserTeamName,
                     out var recruitingTeam))
             {
-                _currentDynasty = InteractiveRecruitingService
-                    .ResolveCurrentPhase(
-                        _currentDynasty,
-                        recruitingTeam,
-                        _teamsByName);
+                var decisionState = _currentDynasty;
+                _currentDynasty = await Task.Run(() => InteractiveRecruitingService
+                    .ResolveCurrentPhase(decisionState, recruitingTeam, _teamsByName));
             }
 
             if (phaseBeforeAdvance ==
                 SeasonPhase.Recruiting)
             {
-                _currentDynasty =
-                    CpuRecruitingService
-                        .AdvanceCpuRecruitingWeek(
-                            _currentDynasty,
-                            _teamsByName);
+                var weeklyRecruitingState = _currentDynasty;
+                _currentDynasty = await Task.Run(() => CpuRecruitingService
+                    .AdvanceCpuRecruitingWeek(weeklyRecruitingState, _teamsByName));
             }
 
             if (phaseBeforeAdvance ==
@@ -1225,11 +1219,18 @@ public sealed class FoundationPage : ContentPage
                         : "Finalizing recruiting classes…";
 
                 var recruitingState = _currentDynasty;
+                var recruitingProgress = new Progress<(int Completed, int Total, string TeamName)>(item =>
+                {
+                    _advanceOverlayStatus.Text =
+                        $"Resolving recruiting: {item.TeamName} ({item.Completed}/{item.Total})...";
+                    _advanceOverlayProgress.Progress = 0.24 + 0.05 * item.Completed / item.Total;
+                });
                 _currentDynasty = await Task.Run(() =>
                     CpuRecruitingService.ApplyPhaseAssistance(
                         recruitingState,
                         _teamsByName,
-                        recruitingState.RecruitingAssistanceEnabled));
+                        recruitingState.RecruitingAssistanceEnabled,
+                        recruitingProgress));
 
                 _currentDynasty = PlayerRatingService
                     .EnsureProfiles(_currentDynasty);

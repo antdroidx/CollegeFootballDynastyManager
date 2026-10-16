@@ -797,7 +797,8 @@ public static class RecruitPreferenceService
     {
         if (source == RecruitingSource.HighSchool)
         {
-            return GetHighSchoolIndex(state).GetValueOrDefault(prospectId)?.HomeRegion;
+            var recruit = GetHighSchoolIndex(state).GetValueOrDefault(prospectId);
+            return recruit is null ? null : RecruitGeography.GetRegion(recruit);
         }
 
         var entry = state.TransferPortalEntries
