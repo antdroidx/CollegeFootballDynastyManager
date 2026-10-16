@@ -131,6 +131,152 @@ public static class RecruitPreferenceService
         };
     }
 
+    public static int GetInitialSchoolInterest(
+        DynastyState state,
+        Team team,
+        RecruitingSource source,
+        Guid prospectId)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(team);
+
+        var preferences = GetPreferences(
+            state,
+            source,
+            prospectId)
+            .Take(4)
+            .ToArray();
+
+        var weightedFit = preferences.Length == 0
+            ? 60.0
+            : preferences.Sum(item =>
+                    item.Importance *
+                    GetProgramGrade(
+                        state,
+                        team,
+                        source,
+                        prospectId,
+                        item.Type)) /
+              Math.Max(
+                  1.0,
+                  preferences.Sum(item =>
+                      item.Importance));
+
+        var qualityFloor =
+            source == RecruitingSource.HighSchool
+                ? GetHighSchoolPrestigeFloor(
+                    state,
+                    prospectId)
+                : GetTransferPrestigeFloor(
+                    state,
+                    prospectId);
+
+        var effectivePrestige = Math.Clamp(
+            ProgramPrestigeService.GetCurrentPrestige(
+                state,
+                team) +
+            GetRecentSuccessBonus(
+                state,
+                team),
+            35,
+            99);
+
+        var affinity =
+            SimulationSeed.Create(
+                state.DynastyId,
+                state.SeasonYear,
+                effectivePrestige,
+                team.Name,
+                $"initial-interest-{source}-{prospectId:N}") %
+            17 - 8;
+
+        var interest =
+            42.0 +
+            (weightedFit - 55.0) * 0.58 +
+            (effectivePrestige - qualityFloor) * 0.52 +
+            affinity;
+
+        return Math.Clamp(
+            (int)Math.Round(interest),
+            5,
+            95);
+    }
+
+    public static int GetCurrentUserInterest(
+        DynastyState state,
+        Team userTeam,
+        RecruitingSource source,
+        Guid prospectId,
+        RecruitingInteraction interaction)
+    {
+        ArgumentNullException.ThrowIfNull(interaction);
+
+        if (interaction.UserInterest > 0)
+        {
+            return Math.Clamp(
+                interaction.UserInterest,
+                0,
+                100);
+        }
+
+        return GetInitialSchoolInterest(
+            state,
+            userTeam,
+            source,
+            prospectId);
+    }
+
+    public static int GetBestRivalInterest(
+        DynastyState state,
+        Team userTeam,
+        IReadOnlyDictionary<string, Team> teamsByName,
+        RecruitingSource source,
+        Guid prospectId)
+    {
+        ArgumentNullException.ThrowIfNull(teamsByName);
+
+        return teamsByName.Values
+            .Where(team =>
+                !team.Name.Equals(
+                    userTeam.Name,
+                    StringComparison.OrdinalIgnoreCase))
+            .Select(team =>
+                GetInitialSchoolInterest(
+                    state,
+                    team,
+                    source,
+                    prospectId))
+            .DefaultIfEmpty(5)
+            .Max();
+    }
+
+    public static IReadOnlyList<(string TeamName, int Interest)>
+        GetInitialTopSchools(
+            DynastyState state,
+            IReadOnlyDictionary<string, Team> teamsByName,
+            RecruitingSource source,
+            Guid prospectId,
+            int count = 5)
+    {
+        ArgumentNullException.ThrowIfNull(teamsByName);
+
+        return teamsByName.Values
+            .Select(team => (
+                TeamName: team.Name,
+                Interest: GetInitialSchoolInterest(
+                    state,
+                    team,
+                    source,
+                    prospectId)))
+            .OrderByDescending(item =>
+                item.Interest)
+            .ThenBy(item =>
+                item.TeamName,
+                StringComparer.OrdinalIgnoreCase)
+            .Take(Math.Max(1, count))
+            .ToArray();
+    }
+
     public static int GetAttainabilityScore(
         DynastyState state,
         Team team,
@@ -153,6 +299,13 @@ public static class RecruitPreferenceService
             state,
             source,
             prospectId);
+        var currentInterest =
+            GetCurrentUserInterest(
+                state,
+                team,
+                source,
+                prospectId,
+                interaction);
 
         var qualityFloor = source == RecruitingSource.HighSchool
             ? GetHighSchoolPrestigeFloor(state, prospectId)
@@ -183,7 +336,7 @@ public static class RecruitPreferenceService
             (prestige - qualityFloor) +
             (int)Math.Round((weightedFit - 55) * .45) +
             (int)Math.Round(
-                Math.Clamp(interaction.UserInterest, 0, 100) * .35);
+                currentInterest * .35);
 
         return Math.Clamp(score, 0, 100);
     }
@@ -241,16 +394,21 @@ public static class RecruitPreferenceService
                     preferences.Sum(item =>
                         item.Importance)));
 
+        var currentInterest =
+            GetCurrentUserInterest(
+                state,
+                team,
+                RecruitingSource.HighSchool,
+                recruit.RecruitId,
+                interaction);
+
         var score =
             45 +
             (prestige - qualityFloor) +
             (int)Math.Round(
                 (weightedFit - 55) * .45) +
             (int)Math.Round(
-                Math.Clamp(
-                    interaction.UserInterest,
-                    0,
-                    100) * .35);
+                currentInterest * .35);
 
         return Math.Clamp(score, 0, 100);
     }
