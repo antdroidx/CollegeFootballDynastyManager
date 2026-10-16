@@ -586,6 +586,19 @@ public static class ScoutingDepartmentService
                 0,
                 4);
 
+        var naturalInterest =
+            RecruitPreferenceService.GetInitialSchoolInterest(
+                state,
+                userTeam,
+                RecruitingSource.HighSchool,
+                recruit.RecruitId);
+        var highInterestScoutingBonus =
+            interaction.ScoutingPercent < 50 &&
+            naturalInterest >= 65
+                ? (naturalInterest - 50) * 85 +
+                  Math.Max(0, recruit.StarRating - 2) * 225
+                : 0;
+
         var geographyBonus =
             MatchesGeography(
                 assignment,
@@ -617,7 +630,8 @@ public static class ScoutingDepartmentService
             attainability * 55 +
             recruit.StarRating * 140 +
             geographyBonus +
-            upsideScoutBonus -
+            upsideScoutBonus +
+            highInterestScoutingBonus -
             interaction.ScoutingPercent * 3;
     }
 
