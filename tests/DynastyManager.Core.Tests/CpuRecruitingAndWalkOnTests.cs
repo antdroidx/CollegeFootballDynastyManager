@@ -8,6 +8,62 @@ namespace DynastyManager.Core.Tests;
 public class CpuRecruitingAndWalkOnTests
 {
     [Fact]
+    public void CpuCanRecruitMoreThanEightUsefulTransfers()
+    {
+        var cpu = Team("CPU", 80);
+        var state = new DynastyState
+        {
+            DynastyName = "Portal rebuild", UserTeamName = "User", SeasonYear = 2027,
+            Phase = SeasonPhase.TransferPortal,
+            TransferPortalEntries = Enumerable.Range(1, 80).Select(index => new TransferPortalEntry
+            {
+                OriginTeamName = "Other", SeasonYear = 2027,
+                Player = Player($"Transfer {index}", "Other", PositionFor(index), 2, 80)
+            }).ToArray()
+        };
+        var result = CpuRecruitingService.ApplyPhaseAssistance(state,
+            new[] { cpu }.ToDictionary(team => team.Name));
+        Assert.True(result.RecruitingCommitments.Count > 8);
+        var assisted = CpuRecruitingService.ApplyWeeklyUserAssistance(state with
+        {
+            UserTeamName = cpu.Name, RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100
+        }, cpu);
+        Assert.True(assisted.RecruitingInteractions.Count(item => item.ScholarshipOffered) > 8);
+        Assert.InRange(result.ActiveRoster.Count, 9, 85);
+        Assert.Equal(result.ActiveRoster.Count, result.ActiveRoster.Select(item => item.PlayerId).Distinct().Count());
+    }
+
+    [Fact]
+    public void TransferPlanningProtectsYoungTalentAndRespondsToCoachPreference()
+    {
+        var team = Team("CPU", 80);
+        var candidate = Player("Senior", "Other", Position.QB, 4, 80);
+        var state = new DynastyState
+        {
+            DynastyName = "Future planning", UserTeamName = team.Name,
+            ActiveRoster = Enumerable.Range(0, 4).Select(index =>
+                Player($"Young QB {index}", team.Name, Position.QB, 1, 78) with
+                { PotentialRating = 95 }).ToArray()
+        };
+        Assert.True(TransferRosterPlanningService.GetValue(state, team, candidate) < 0);
+        Assert.True(TransferRosterPlanningService.GetValue(state with { ActiveRoster = [] }, team, candidate) > 0);
+        var head = new StaffMember { FullName = "Coach", TeamName = team.Name,
+            Role = StaffRole.HeadCoach, Recruiting = 100, PlayerDevelopment = 40 };
+        var aggressive = state with { UserHeadCoach = head };
+        var developmental = state with { UserHeadCoach = head with { Recruiting = 40, PlayerDevelopment = 100 } };
+        Assert.True(TransferRosterPlanningService.GetValue(aggressive, team, candidate) >
+            TransferRosterPlanningService.GetValue(developmental, team, candidate));
+        var pending = state with { ActiveRoster = [], PendingTransferCommitments = new[]
+        {
+            new PendingTransferCommitment { TeamName = team.Name, OriginTeamName = "Other",
+                Player = Player("Incoming", team.Name, Position.QB, 1, 90), ProspectId = Guid.NewGuid() }
+        } };
+        Assert.True(TransferRosterPlanningService.GetValue(pending, team, candidate) <
+            TransferRosterPlanningService.GetValue(state with { ActiveRoster = [] }, team, candidate));
+    }
+
+    [Fact]
     public void InterestReadsIndexLargePoolOnceAndRefreshWhenPoolChanges()
     {
         var user = Team("User", 80);

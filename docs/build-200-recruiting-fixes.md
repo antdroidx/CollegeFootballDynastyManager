@@ -19,3 +19,11 @@ Readiness is derived from the dynasty, season and prospect ID, so saving/reloadi
 - 148 core/data tests pass in Release, including new six-week progression, same-week repeat, manual/assisted timing parity, large-pool and cache-refresh regressions.
 - Packaged resource check passes.
 - Debug Android build passes after the organic timing revision: zero errors, five existing obsolete-API warnings. No emulator/device validation was performed.
+
+## Transfer roster planning
+
+Removed the eight-transfer maximum for CPU teams and user assistance. Each automated transfer decision now considers positional depth, immediate starter improvement, remaining eligibility, promising young competition, pending incoming transfers, and graduation concentration. A head coach's recruiting versus player-development strengths shift willingness to use the portal. This is an inferred preference from existing attributes, not a new editable coaching trait.
+
+CPU teams reassess against the roster after each signing. Assisted offers account for other outstanding offers, and staff stop spending on targets that no longer improve the plan. Manual transfer recruiting remains under user control. The overall 85-player roster maximum remains; there is no annual transfer quota.
+
+150 tests pass, including signing more than eight useful transfers, protecting young players, pending arrivals and coach preference differences. Long-term balance still needs multi-season gameplay observation.

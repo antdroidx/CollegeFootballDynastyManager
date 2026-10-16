@@ -12,8 +12,6 @@ namespace DynastyManager.Core.Simulation;
 /// </summary>
 public static class CpuRecruitingService
 {
-    public const int MaximumCpuTransferAdditionsPerTeam = 8;
-
     public static DynastyState ApplyWeeklyUserAssistance(
         DynastyState state,
         Team userTeam)
@@ -88,28 +86,6 @@ public static class CpuRecruitingService
             (int)Math.Ceiling(
                 baseDesiredOffers * workloadFactor);
 
-        if (targetSource ==
-            RecruitingSource.TransferPortal)
-        {
-            var assistedTransferCommits =
-                state.RecruitingCommitments.Count(item =>
-                    item.SeasonYear ==
-                        state.SeasonYear &&
-                    item.TeamName.Equals(
-                        state.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase) &&
-                    item.Source ==
-                        RecruitingSource.TransferPortal &&
-                    item.WasCpuAssisted);
-
-            desiredOpenOffers = Math.Min(
-                desiredOpenOffers,
-                Math.Max(
-                    0,
-                    MaximumCpuTransferAdditionsPerTeam -
-                    assistedTransferCommits));
-        }
-
         var additionsNeeded = Math.Max(
             0,
             desiredOpenOffers - currentOffers);
@@ -165,9 +141,14 @@ public static class CpuRecruitingService
                 StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        foreach (var candidate in availableCandidates
-                     .Take(additionsNeeded))
+        var offersAdded = 0;
+        foreach (var candidate in availableCandidates)
         {
+            if (offersAdded >= additionsNeeded) break;
+            if (candidate.Source == RecruitingSource.TransferPortal &&
+                !IsUsefulTransfer(state, userTeam, candidate.Candidate, includeOffers: true))
+                continue;
+            offersAdded++;
             state = InteractiveRecruitingService
                 .ToggleScholarship(
                     state,
@@ -648,11 +629,7 @@ public static class CpuRecruitingService
             if (capacity == 0)
                 continue;
 
-            var phaseLimit = source == RecruitingSource.TransferPortal
-                ? Math.Min(
-                    capacity,
-                    MaximumCpuTransferAdditionsPerTeam)
-                : capacity;
+            var phaseLimit = capacity;
 
             for (var addition = 0;
                  addition < phaseLimit && available.Count > 0;
@@ -662,12 +639,17 @@ public static class CpuRecruitingService
                     roster,
                     team.Name);
 
+                var planningRoster = roster.Where(player => player.TeamName.Equals(
+                    team.Name, StringComparison.OrdinalIgnoreCase)).ToArray();
+
                 var candidate = SelectBestCandidate(
                     state,
                     team,
                     source.Value,
                     position,
-                    available.Values);
+                    source == RecruitingSource.TransferPortal
+                        ? available.Values.Where(item => IsUsefulTransfer(state, team, item, planningRoster))
+                        : available.Values);
 
                 if (candidate is null)
                     break;
@@ -871,6 +853,8 @@ public static class CpuRecruitingService
             })
             .Where(item => item is not null)
             .Select(item => item!)
+            .Where(item => item.Source != RecruitingSource.TransferPortal ||
+                IsUsefulTransfer(state, userTeam, item.Candidate))
             .OrderByDescending(item =>
                 GetUserAssistanceScore(
                     state,
@@ -878,6 +862,25 @@ public static class CpuRecruitingService
                     item.Source,
                     item.Candidate))
             .ToArray();
+
+    private static bool IsUsefulTransfer(DynastyState state, Team team, Candidate candidate,
+        IEnumerable<DynastyPlayer>? roster = null, bool includeOffers = false)
+    {
+        var plannedRoster = roster ?? state.ActiveRoster;
+        if (includeOffers)
+        {
+            var offered = state.RecruitingInteractions.Where(item =>
+                item.SeasonYear == state.SeasonYear &&
+                item.Source == RecruitingSource.TransferPortal &&
+                item.ScholarshipOffered && item.CommittedTeamName is null &&
+                item.ProspectId != candidate.ProspectId).Select(item => item.ProspectId).ToHashSet();
+            plannedRoster = plannedRoster.Concat(state.TransferPortalEntries
+                .Where(item => offered.Contains(item.Player.PlayerId))
+                .Select(item => item.Player with { TeamName = team.Name }));
+        }
+        return TransferRosterPlanningService.GetValue(state, team,
+            candidate.ToPlayer(team.Name), plannedRoster) > 0;
+    }
 
     private static bool IsReasonableUserAssistanceTarget(
         DynastyState state,
@@ -899,7 +902,8 @@ public static class CpuRecruitingService
             38);
 
         if (source == RecruitingSource.TransferPortal)
-            return attainability >= Math.Max(20, baseThreshold - 4);
+            return attainability >= Math.Max(20, baseThreshold - 4) &&
+                IsUsefulTransfer(state, userTeam, candidate);
 
         var recruit = state.HighSchoolRecruitingPool
             .FirstOrDefault(item =>
