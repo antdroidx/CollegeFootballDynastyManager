@@ -727,29 +727,12 @@ public static class InteractiveRecruitingService
         RecruitingSource source,
         Guid prospectId)
     {
-        var overall = GetTrueOverall(
-            state,
-            source,
-            prospectId);
-
-        var rivalInterest = Math.Clamp(
-            35 +
-            overall / 3 +
-            SimulationSeed.Create(
-                state.DynastyId,
-                state.SeasonYear,
-                overall,
-                prospectId.ToString("N"),
-                "rival-interest") % 21,
-            5,
-            95);
-
         return new RecruitingInteraction
         {
             ProspectId = prospectId,
             Source = source,
             SeasonYear = state.SeasonYear,
-            RivalInterest = rivalInterest
+            RivalInterest = 0
         };
     }
 
@@ -888,11 +871,14 @@ public static class InteractiveRecruitingService
                 interaction);
         }
 
-        var userPrestige = ProgramPrestigeService.GetCurrentPrestige(state, userTeam);
         var position = GetProspectPosition(
-            state, interaction.Source, interaction.ProspectId);
+            state,
+            interaction.Source,
+            interaction.ProspectId);
         var userStaffBonus = GetRecruitingStaffBonus(
-            state, userTeam.Name, position);
+            state,
+            userTeam.Name,
+            position);
         var currentUserInterest =
             RecruitPreferenceService.GetCurrentUserInterest(
                 state,
@@ -910,19 +896,24 @@ public static class InteractiveRecruitingService
 
         var userScore =
             currentUserInterest +
-            userPrestige / 4 +
             userStaffBonus * 2 +
-            RecruitPreferenceService.GetProgramGrade(
-                state, userTeam, interaction.Source,
-                interaction.ProspectId, RecruitPitchType.Proximity) / 9 +
             SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
                 currentUserInterest,
                 interaction.ProspectId.ToString("N"),
-                "user-commitment") % 21;
+                "user-commitment") % 11;
 
-        return userScore >= bestRivalInterest
+        var rivalScore =
+            bestRivalInterest +
+            SimulationSeed.Create(
+                state.DynastyId,
+                state.SeasonYear,
+                bestRivalInterest,
+                interaction.ProspectId.ToString("N"),
+                "rival-commitment") % 11;
+
+        return userScore >= rivalScore
             ? state.UserTeamName
             : ResolveRivalTeam(
                 state,
