@@ -12,17 +12,6 @@ namespace DynastyManager.Core.Simulation;
 /// </summary>
 public static class CpuRecruitingService
 {
-    internal static int GetWeeklyHighSchoolCommitmentLimit(int capacity, int week)
-    {
-        if (capacity <= 0 || week <= 0) return 0;
-        var rate = week switch
-        {
-            1 => 0.16, 2 => 0.20, 3 => 0.25,
-            4 => 0.33, 5 => 0.45, _ => 1.0
-        };
-        return (int)Math.Ceiling(capacity * rate);
-    }
-
     public const int MaximumCpuTransferAdditionsPerTeam = 8;
 
     public static DynastyState ApplyWeeklyUserAssistance(
@@ -432,6 +421,16 @@ public static class CpuRecruitingService
         if (recruitingWeek <= 0)
             return state;
 
+        var weeklyRate = recruitingWeek switch
+        {
+            1 => 0.16,
+            2 => 0.20,
+            3 => 0.25,
+            4 => 0.33,
+            5 => 0.45,
+            _ => 1.00
+        };
+
         var roster = state.ActiveRoster.ToList();
         var commitments =
             state.RecruitingCommitments.ToList();
@@ -495,7 +494,13 @@ public static class CpuRecruitingService
                 continue;
             }
 
-            var additions = GetWeeklyHighSchoolCommitmentLimit(capacity, recruitingWeek);
+            var additions = recruitingWeek >=
+                SeasonProgression.RecruitingWeekCount
+                    ? capacity
+                    : Math.Max(
+                        1,
+                        (int)Math.Ceiling(
+                            capacity * weeklyRate));
 
             for (var addition = 0;
                  addition < additions &&

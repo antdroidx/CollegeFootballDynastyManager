@@ -354,26 +354,27 @@ public class InteractiveRecruitingTests
             }
         };
 
-        var resolved =
-            InteractiveRecruitingService
-                .ResolveCurrentPhase(
-                    state,
-                    user,
-                    new[] { user, rival }
-                        .ToDictionary(
-                            team => team.Name,
-                            StringComparer.OrdinalIgnoreCase));
-
-        var commitment =
-            Assert.Single(
-                resolved.RecruitingCommitments);
-
-        Assert.Equal(
-            user.Name,
-            commitment.TeamName);
-        Assert.Equal(
-            state.Week,
-            commitment.CommittedWeek);
+        var teams = new[] { user, rival }.ToDictionary(team => team.Name);
+        var earlyCommits = 0;
+        for (var index = 1; index <= 100; index++)
+        {
+            var bytes = new byte[16];
+            BitConverter.GetBytes(index).CopyTo(bytes, 0);
+            var prospectId = new Guid(bytes);
+            var scenario = state with
+            {
+                HighSchoolRecruitingPool = new[] { recruit with { RecruitId = prospectId } },
+                RecruitingInteractions = state.RecruitingInteractions.Select(item =>
+                    item with { ProspectId = prospectId }).ToArray()
+            };
+            var resolved = InteractiveRecruitingService.ResolveCurrentPhase(scenario, user, teams);
+            if (resolved.RecruitingCommitments.Count > 0)
+            {
+                earlyCommits++;
+                Assert.Equal(user.Name, Assert.Single(resolved.RecruitingCommitments).TeamName);
+            }
+        }
+        Assert.InRange(earlyCommits, 1, 99);
     }
 
     [Fact]

@@ -57,7 +57,7 @@ public class CpuRecruitingAndWalkOnTests
     }
 
     [Fact]
-    public void AssistedHighSchoolSigningsFollowCpuCadenceAcrossSixWeeks()
+    public void HighInterestAssistedSigningsDevelopAcrossSixWeeksWithoutQuotas()
     {
         var user = Team("User", 99);
         var teams = new[] { user }.ToDictionary(team => team.Name);
@@ -77,14 +77,15 @@ public class CpuRecruitingAndWalkOnTests
                 IsOnTargetBoard = true, WasCpuAssisted = true, UserInterest = 100
             }).ToArray()
         };
-        var rates = new[] { .16, .20, .25, .33, .45, 1.0 };
+
         for (var week = 0; week < 6; week++)
         {
             state = state with { Week = SeasonProgression.FirstRecruitingWeek + week };
             var before = state.ActiveRoster.Count;
-            var limit = (int)Math.Ceiling((85 - before) * rates[week]);
+
             state = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
-            Assert.InRange(state.ActiveRoster.Count - before, 1, limit);
+            if (week == 0)
+                Assert.InRange(state.ActiveRoster.Count - before, 8, 37);
             var repeated = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
             Assert.Equal(state.ActiveRoster.Count, repeated.ActiveRoster.Count);
         }
@@ -92,7 +93,7 @@ public class CpuRecruitingAndWalkOnTests
     }
 
     [Fact]
-    public void ManualHighSchoolSigningsAreNotLimitedByAssistanceCadence()
+    public void ManualAndAssistedRecruitsHaveIdenticalDecisionTiming()
     {
         var user = Team("User", 99);
         var pool = BuildRecruitPool(38);
@@ -108,9 +109,16 @@ public class CpuRecruitingAndWalkOnTests
                 ProspectId = recruit.RecruitId, ScholarshipOffered = true, UserInterest = 100
             }).ToArray()
         };
-        var result = InteractiveRecruitingService.ResolveCurrentPhase(
-            state, user, new[] { user }.ToDictionary(team => team.Name));
-        Assert.Equal(85, result.ActiveRoster.Count);
+        var teams = new[] { user }.ToDictionary(team => team.Name);
+        var result = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
+        var assisted = InteractiveRecruitingService.ResolveCurrentPhase(state with
+        {
+            RecruitingInteractions = state.RecruitingInteractions.Select(item =>
+                item with { WasCpuAssisted = true }).ToArray()
+        }, user, teams);
+        Assert.Equal(result.RecruitingCommitments.Select(item => item.ProspectId),
+            assisted.RecruitingCommitments.Select(item => item.ProspectId));
+        Assert.InRange(result.ActiveRoster.Count, 48, 84);
     }
 
     [Fact]

@@ -374,17 +374,6 @@ public static class InteractiveRecruitingService
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase));
 
-        // Include this week's signings when reconstructing capacity so resolving
-        // twice (or saving/loading midweek) cannot grant another weekly allowance.
-        var assistedHsThisWeek = commitments.Count(item =>
-            item.SeasonYear == state.SeasonYear && item.CommittedWeek == state.Week &&
-            item.Source == RecruitingSource.HighSchool && item.WasCpuAssisted &&
-            item.TeamName.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase));
-        var assistedHsRemaining = Math.Max(0,
-            CpuRecruitingService.GetWeeklyHighSchoolCommitmentLimit(
-                Math.Max(0, DynastyRosterRules.MaximumRosterSize - userRosterCount) + assistedHsThisWeek,
-                SeasonProgression.GetRecruitingWeekNumber(state)) - assistedHsThisWeek);
-
         foreach (var interaction in current
                      .OrderByDescending(item => item.UserInterest))
         {
@@ -398,12 +387,6 @@ public static class InteractiveRecruitingService
                 userTeam,
                 teamsByName,
                 interaction);
-
-            var assistedUserHs = state.Phase == SeasonPhase.Recruiting &&
-                interaction.Source == RecruitingSource.HighSchool && interaction.WasCpuAssisted &&
-                resolvedTeam.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase);
-            if (assistedUserHs && assistedHsRemaining <= 0)
-                continue;
 
             if (!deferTransfer && roster.Count(candidate =>
                     candidate.TeamName.Equals(resolvedTeam,
@@ -435,9 +418,6 @@ public static class InteractiveRecruitingService
 
             if (player is null)
                 continue;
-
-            if (assistedUserHs)
-                assistedHsRemaining--;
 
             var updatedInteraction = interaction with
             {
@@ -842,39 +822,25 @@ public static class InteractiveRecruitingService
             return transferRoll < transferChance;
         }
 
-        var threshold = Math.Max(
-            62,
-            92 - (recruitingWeek - 1) * 7);
-
-        if (leaderInterest < threshold)
-            return false;
-
-        var lead = Math.Abs(
-            userInterest -
-            rivalInterest);
-
-        if (leaderInterest >= 98 &&
-            lead >= 12)
+        // Readiness is personal and stable across reloads. Interest and a clear
+        // favorite can bring a decision forward, without making 100% interest
+        // an automatic instant commitment for the entire class.
+        var readiness = SimulationSeed.Create(
+            state.DynastyId, state.SeasonYear, 0,
+            interaction.ProspectId.ToString("N"), "hs-decision-readiness") % 100;
+        var timeline = recruitingWeek switch
         {
-            return true;
-        }
-
-        var commitChance = Math.Clamp(
-            12 +
-            recruitingWeek * 11 +
-            Math.Max(0, leaderInterest - threshold) * 2 +
-            Math.Min(20, lead / 2),
-            18,
-            92);
-
-        var roll = SimulationSeed.Create(
-            state.DynastyId,
-            state.SeasonYear,
-            state.Week,
-            interaction.ProspectId.ToString("N"),
-            "weekly-recruit-commit") % 100;
-
-        return roll < commitChance;
+            <= 0 => 0,
+            1 => 10,
+            2 => 25,
+            3 => 43,
+            4 => 63,
+            _ => 82
+        };
+        var confidence = (leaderInterest - 80) / 3 +
+            Math.Min(8, Math.Abs(userInterest - rivalInterest) / 8);
+        var threshold = Math.Max(50, 78 - (recruitingWeek - 1) * 5);
+        return leaderInterest >= threshold && readiness < timeline + confidence;
     }
 
     private static string ResolveCommitment(

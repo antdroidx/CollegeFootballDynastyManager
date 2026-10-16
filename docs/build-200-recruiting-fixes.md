@@ -10,12 +10,12 @@ The 10,000-recruit regression test checks one pool enumeration across all intere
 
 ## Assisted commitment timing
 
-CPU teams and assisted user HS signings now share the same weekly maximum: 16%, 20%, 25%, 33%, 45%, then 100% of remaining roster capacity (rounded up). With 38 openings and enough successful recruits this gives 7, 7, 6, 6, 6, 6 signings. Existing interest, competition, targeting, scouting, pitch and workload rules still determine who signs; the allowance is a ceiling, not guaranteed signings. Manual recruits and transfers keep their existing behavior.
+HS commitment timing now uses a stable personal readiness percentile for each prospect. As the six-week window progresses, more recruits become ready; strong interest and a clear favorite can advance the decision. High interest no longer forces an instant commitment. Manual and assisted prospects use identical rules. There are no new team signing quotas or weekly class-size limits. CPU recruiting retains its Build 200 implementation.
 
-Commitment records reconstruct the current week's used allowance, including after repeated resolution or save/reload. No new state fields are required. Existing early commitments are not undone.
+Readiness is derived from the dynasty, season and prospect ID, so saving/reloading does not reroll it. Existing interest, targeting, scouting, pitch, workload and school-selection behavior remains. The final week resolves outstanding offers as before. Existing early commitments are not undone. No save-format change.
 
 ## Validation
 
-- 148 core/data tests pass in Release, including new six-week cadence, same-week repeat, manual recruiting, large-pool and cache-refresh regressions.
+- 148 core/data tests pass in Release, including new six-week progression, same-week repeat, manual/assisted timing parity, large-pool and cache-refresh regressions.
 - Packaged resource check passes.
-- Debug Android build succeeds with zero errors and five existing obsolete-API warnings. No emulator/device validation was performed.
+- Debug Android build passes after the organic timing revision: zero errors, five existing obsolete-API warnings. No emulator/device validation was performed.
