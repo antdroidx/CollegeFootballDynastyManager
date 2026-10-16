@@ -171,6 +171,7 @@ public static class CpuRecruitingService
             state = InteractiveRecruitingService
                 .ToggleScholarship(
                     state,
+                    userTeam,
                     candidate.Source,
                     candidate.Candidate.ProspectId,
                     cpuAssisted: true);
@@ -944,8 +945,16 @@ public static class CpuRecruitingService
 
         if (recruit.StarRating >= 5)
         {
+            var currentInterest =
+                RecruitPreferenceService.GetCurrentUserInterest(
+                    state,
+                    userTeam,
+                    source,
+                    candidate.ProspectId,
+                    interaction);
+
             return attainability >= Math.Max(30, threshold) ||
-                   interaction.UserInterest >= 60;
+                   currentInterest >= 60;
         }
 
         if (workload >= 90 &&
