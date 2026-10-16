@@ -2513,13 +2513,7 @@ public sealed class FoundationPage : ContentPage
             {
                 RecruitingSort.Interest =>
                     prospects.OrderByDescending(
-                            prospect =>
-                                InteractiveRecruitingService
-                                    .GetInteraction(
-                                        _currentDynasty,
-                                        prospect.Source,
-                                        prospect.ProspectId)
-                                    .UserInterest)
+                            GetRecruitingDisplayInterest)
                         .ThenByDescending(
                             prospect =>
                                 prospect.OverallRating),
@@ -2548,6 +2542,32 @@ public sealed class FoundationPage : ContentPage
             };
 
         return query.ToList();
+    }
+
+    private int GetRecruitingDisplayInterest(
+        RecruitingProspectDisplay prospect)
+    {
+        if (_currentDynasty is null ||
+            !_teamsByName.TryGetValue(
+                _currentDynasty.UserTeamName,
+                out var userTeam))
+        {
+            return 0;
+        }
+
+        var interaction =
+            InteractiveRecruitingService.GetInteraction(
+                _currentDynasty,
+                prospect.Source,
+                prospect.ProspectId);
+
+        return RecruitPreferenceService
+            .GetCurrentUserInterest(
+                _currentDynasty,
+                userTeam,
+                prospect.Source,
+                prospect.ProspectId,
+                interaction);
     }
 
     private string GetEmptyRecruitingMessage() =>
@@ -2613,10 +2633,43 @@ public sealed class FoundationPage : ContentPage
                 ? $"247-style {recruitRating:0.00}"
                 : $"{recruitStars}★ • 247-style {recruitRating:0.00}";
 
+        var hasUserTeam = _teamsByName.TryGetValue(
+            _currentDynasty.UserTeamName,
+            out var userTeamForInterest);
+
+        var currentUserInterest = hasUserTeam
+            ? RecruitPreferenceService.GetCurrentUserInterest(
+                _currentDynasty,
+                userTeamForInterest!,
+                prospect.Source,
+                prospect.ProspectId,
+                interaction)
+            : Math.Clamp(
+                interaction.UserInterest,
+                0,
+                100);
+
+        var currentRivalInterest = hasUserTeam
+            ? Math.Max(
+                Math.Clamp(
+                    interaction.RivalInterest,
+                    0,
+                    100),
+                RecruitPreferenceService.GetBestRivalInterest(
+                    _currentDynasty,
+                    userTeamForInterest!,
+                    _teamsByName,
+                    prospect.Source,
+                    prospect.ProspectId))
+            : Math.Clamp(
+                interaction.RivalInterest,
+                0,
+                100);
+
         var interest =
             interaction.CommittedTeamName is not null
                 ? $"Committed: {interaction.CommittedTeamName}"
-                : $"{offerMarker}Interest {interaction.UserInterest} / {interaction.RivalInterest}";
+                : $"{offerMarker}Your interest {currentUserInterest}% • Best rival {currentRivalInterest}%";
 
         var viewButton = new Button
         {
@@ -2666,11 +2719,20 @@ public sealed class FoundationPage : ContentPage
         };
         quickOfferButton.Clicked += (_, _) =>
         {
-            if (_currentDynasty is null)
+            if (_currentDynasty is null ||
+                !_teamsByName.TryGetValue(
+                    _currentDynasty.UserTeamName,
+                    out var userTeam))
+            {
                 return;
+            }
 
-            _currentDynasty = InteractiveRecruitingService.ToggleScholarship(
-                _currentDynasty, prospect.Source, prospect.ProspectId);
+            _currentDynasty =
+                InteractiveRecruitingService.ToggleScholarship(
+                    _currentDynasty,
+                    userTeam,
+                    prospect.Source,
+                    prospect.ProspectId);
             RenderCurrentDynasty();
         };
 
@@ -2876,6 +2938,55 @@ public sealed class FoundationPage : ContentPage
                 source,
                 prospect.ProspectId);
 
+        var hasDetailUserTeam =
+            _teamsByName.TryGetValue(
+                _currentDynasty.UserTeamName,
+                out var detailUserTeam);
+
+        var currentUserInterest = hasDetailUserTeam
+            ? RecruitPreferenceService.GetCurrentUserInterest(
+                _currentDynasty,
+                detailUserTeam!,
+                source,
+                prospect.ProspectId,
+                interaction)
+            : Math.Clamp(
+                interaction.UserInterest,
+                0,
+                100);
+
+        var currentRivalInterest = hasDetailUserTeam
+            ? Math.Max(
+                Math.Clamp(
+                    interaction.RivalInterest,
+                    0,
+                    100),
+                RecruitPreferenceService.GetBestRivalInterest(
+                    _currentDynasty,
+                    detailUserTeam!,
+                    _teamsByName,
+                    source,
+                    prospect.ProspectId))
+            : Math.Clamp(
+                interaction.RivalInterest,
+                0,
+                100);
+
+        var preRecruitFavorites =
+            RecruitPreferenceService.GetInitialTopSchools(
+                _currentDynasty,
+                _teamsByName,
+                source,
+                prospect.ProspectId,
+                5);
+
+        var favoritesText =
+            "PRE-RECRUIT FAVORITES • " +
+            string.Join(
+                " • ",
+                preRecruitFavorites.Select(item =>
+                    $"{item.TeamName} {item.Interest}%"));
+
         var recruitingOpen = IsRecruitingOpen(source);
 
         var range =
@@ -2974,13 +3085,19 @@ public sealed class FoundationPage : ContentPage
 
         offerButton.Clicked += (_, _) =>
         {
-            if (_currentDynasty is null)
+            if (_currentDynasty is null ||
+                !_teamsByName.TryGetValue(
+                    _currentDynasty.UserTeamName,
+                    out var userTeam))
+            {
                 return;
+            }
 
             _currentDynasty =
                 InteractiveRecruitingService
                     .ToggleScholarship(
                         _currentDynasty,
+                        userTeam,
                         source,
                         prospect.ProspectId);
 
@@ -3202,7 +3319,7 @@ public sealed class FoundationPage : ContentPage
                             Text =
                                 $"OVR {(range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum} est.")}{potText} • " +
                                 $"Scout {interaction.ScoutingPercent}% • " +
-                                $"Interest {interaction.UserInterest} vs {interaction.RivalInterest}" +
+                                $"Your interest {currentUserInterest}% • Best rival {currentRivalInterest}%" +
                                 evaluationText +
                                 lastPitchText,
                             FontSize = 12
@@ -3214,6 +3331,13 @@ public sealed class FoundationPage : ContentPage
                                 : "Recruiting actions are closed in the current phase.",
                             FontSize = 10,
                             Opacity = 0.72
+                        },
+                        new Label
+                        {
+                            Text = favoritesText,
+                            FontAttributes =
+                                FontAttributes.Bold,
+                            FontSize = 11
                         },
                         new Label
                         {
@@ -3354,11 +3478,21 @@ public sealed class FoundationPage : ContentPage
                 };
                 offerButton.Clicked += (_, _) =>
                 {
-                    if (_currentDynasty is null)
+                    if (_currentDynasty is null ||
+                        !_teamsByName.TryGetValue(
+                            _currentDynasty.UserTeamName,
+                            out var userTeam))
+                    {
                         return;
-                    _currentDynasty = InteractiveRecruitingService
-                        .ToggleScholarship(_currentDynasty, item.Source,
-                            item.ProspectId);
+                    }
+
+                    _currentDynasty =
+                        InteractiveRecruitingService
+                            .ToggleScholarship(
+                                _currentDynasty,
+                                userTeam,
+                                item.Source,
+                                item.ProspectId);
                     RenderCurrentDynasty();
                 };
 
