@@ -64,6 +64,7 @@ public class InteractiveRecruitingTests
 
         state = InteractiveRecruitingService.ToggleScholarship(
             state,
+            user,
             RecruitingSource.TransferPortal,
             prospect.PlayerId);
 
@@ -447,6 +448,7 @@ public class InteractiveRecruitingTests
 
         state = InteractiveRecruitingService.ToggleScholarship(
             state,
+            user,
             RecruitingSource.HighSchool,
             recruit.RecruitId);
 
