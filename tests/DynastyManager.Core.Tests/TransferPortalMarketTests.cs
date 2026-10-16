@@ -92,6 +92,7 @@ public class TransferPortalMarketTests
 
         state = InteractiveRecruitingService.ToggleScholarship(
             state,
+            user,
             RecruitingSource.TransferPortal,
             prospect.PlayerId);
 
