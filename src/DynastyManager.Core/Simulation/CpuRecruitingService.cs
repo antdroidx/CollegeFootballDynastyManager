@@ -1037,6 +1037,18 @@ public static class CpuRecruitingService
                 candidate.Position);
         var scoutKnowledge =
             interaction.ScoutingPercent;
+        var naturalInterest =
+            RecruitPreferenceService.GetInitialSchoolInterest(
+                state,
+                userTeam,
+                source,
+                candidate.ProspectId);
+        var highInterestDiscoveryBonus =
+            interaction.ScoutingPercent < 50 &&
+            naturalInterest >= 65
+                ? (naturalInterest - 50) * 35 +
+                  Math.Max(0, candidate.TalentLevel - 4) * 100
+                : 0;
         var coordinator =
             StaffManagementService.GetStaff(
                 state,
@@ -1101,6 +1113,7 @@ public static class CpuRecruitingService
                (scoutQuality - 60) * 10 +
                recommended +
                scoutedDiscoveryBonus +
+               highInterestDiscoveryBonus +
                SimulationSeed.Create(
                    state.DynastyId,
                    state.SeasonYear,
