@@ -861,6 +861,11 @@ public sealed partial class FoundationPage : ContentPage
                 _recruitingDetailHost, _recruitingResultsStatus, _recruitingList
             } }
         };
+        _recruitingDetailHost.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(ContentView.Content) && _recruitingDetailHost.Content is not null)
+                _ = results.ScrollToAsync(0, 0, false);
+        };
         var root = new Grid
         {
             RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star) },
