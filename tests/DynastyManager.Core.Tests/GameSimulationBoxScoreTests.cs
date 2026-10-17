@@ -38,7 +38,7 @@ public class GameSimulationBoxScoreTests
             homeProfile,
             awayProfile);
 
-        Assert.Equal(first, second);
+        Assert.Equivalent(first, second, strict: true);
         Assert.True(first.HasPlayed);
         Assert.NotEqual(first.HomeScore, first.AwayScore);
 

@@ -157,6 +157,8 @@ public static class CollegeFootballPlayoffService
             }
 
             changed = true;
+            homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
+            awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
             return DeterministicGameSimulator.Simulate(
                 game, homeTeam, awayTeam, homeProfile, awayProfile);
         }).ToArray();

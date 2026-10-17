@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
 
 namespace DynastyManager.Data.Import;
 
@@ -104,16 +105,14 @@ public static class LegacyDynastyRosterFactory
                 namePool);
         }
 
-        if (teamArray.Length == 0)
+        var roster = teamArray.Length == 0
+            ? playersByTeam.Values.SelectMany(players => players).ToArray()
+            : teamArray.SelectMany(team => playersByTeam[team.Name]).ToArray();
+        return PlayerRatingService.EnsureProfiles(new DynastyState
         {
-            return playersByTeam.Values
-                .SelectMany(teamPlayers => teamPlayers)
-                .ToArray();
-        }
-
-        return teamArray
-            .SelectMany(team => playersByTeam[team.Name])
-            .ToArray();
+            DynastyId = dynastyId, DynastyName = "Generated roster", UserTeamName = "",
+            SeasonYear = seasonYear, ActiveRoster = roster
+        }).ActiveRoster;
     }
 
     private static DynastyPlayer CreateImportedPlayer(

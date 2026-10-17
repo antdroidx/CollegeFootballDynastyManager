@@ -20,6 +20,8 @@ public class PlayerDevelopmentAndInjuryTests
             SeasonPhase.Offseason,
             new[] { player });
 
+        state = PlayerRatingService.EnsureProfiles(state);
+        player = state.ActiveRoster[0];
         state = RosterManagementService.NormalizeAllDepthCharts(state);
 
         var updated =

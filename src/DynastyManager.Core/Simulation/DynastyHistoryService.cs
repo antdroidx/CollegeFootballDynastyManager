@@ -80,12 +80,25 @@ public static class DynastyHistoryService
             });
         }
 
+        var careers = state.PlayerCareerHistory.ToDictionary(item => item.PlayerId);
+        foreach (var player in state.ActiveRoster)
+        {
+            careers.TryGetValue(player.PlayerId, out var previous);
+            careers[player.PlayerId] = new PlayerCareerRecord
+            {
+                PlayerId = player.PlayerId, PlayerName = player.FullName, Position = player.Position,
+                OriginalRecruitingStars = previous?.OriginalRecruitingStars ?? player.OriginalRecruitingStars,
+                FirstRecordedSeason = previous?.FirstRecordedSeason ?? state.SeasonYear,
+                LastRecordedSeason = state.SeasonYear
+            };
+        }
         var playerStats = BuildPlayerStats(state);
         var awards = BuildAwards(state, playerStats);
 
-        return state with
+        return CoachCareerService.RecordCompletedSeason(state with
         {
             TeamSeasonHistory = teamHistory,
+            PlayerCareerHistory = careers.Values.OrderBy(item => item.PlayerId).ToArray(),
             PlayerSeasonStats = state.PlayerSeasonStats
                 .Where(item => item.SeasonYear != state.SeasonYear)
                 .Concat(playerStats)
@@ -93,7 +106,7 @@ public static class DynastyHistoryService
             PlayerAwardHistory = state.PlayerAwardHistory
                 .Concat(awards)
                 .ToArray()
-        };
+        });
     }
 
     private static IReadOnlyList<PlayerSeasonStatLine> BuildPlayerStats(DynastyState state)
@@ -139,6 +152,7 @@ public static class DynastyHistoryService
                 {
                     SeasonYear = state.SeasonYear,
                     PlayerId = qb.PlayerId,
+                    OriginalRecruitingStars = qb.OriginalRecruitingStars,
                     PlayerName = qb.FullName,
                     TeamName = qb.TeamName,
                     Position = qb.Position,
@@ -164,6 +178,7 @@ public static class DynastyHistoryService
                 {
                     SeasonYear = state.SeasonYear,
                     PlayerId = player.PlayerId,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars,
                     PlayerName = player.FullName,
                     TeamName = player.TeamName,
                     Position = player.Position,

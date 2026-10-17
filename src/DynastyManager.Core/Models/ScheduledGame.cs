@@ -15,6 +15,11 @@ public sealed record ScheduledGame
     public bool IsNeutralSite { get; init; }
     public string? BowlName { get; init; }
     public int SimulationSeed { get; init; }
+    public TeamGamePlan? HomeGamePlan { get; init; }
+    public TeamGamePlan? AwayGamePlan { get; init; }
+    public IReadOnlyList<GameDriveSummary> Drives { get; init; } = Array.Empty<GameDriveSummary>();
+    public double? HomePregameRating { get; init; }
+    public double? AwayPregameRating { get; init; }
     public bool HasPlayed { get; init; }
     public int? HomeScore { get; init; }
     public int? AwayScore { get; init; }

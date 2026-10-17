@@ -16,3 +16,7 @@ local.properties
 Thumbs.db
 .idea/
 .vscode/
+
+# Local Android visual QA output
+artifacts/qa-build-*/
+__pycache__/

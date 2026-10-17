@@ -1,17 +1,20 @@
+using System.Runtime.CompilerServices;
 using DynastyManager.Core.Models;
 
 namespace DynastyManager.Core.Simulation;
 
 public static class ProgramPrestigeService
 {
+    private static readonly ConditionalWeakTable<IReadOnlyList<ProgramPrestigeSnapshot>,
+        Dictionary<string, int>> PrestigeIndexes = new();
+
     public static int GetCurrentPrestige(DynastyState state, Team team)
     {
-        var latest = state.ProgramPrestigeHistory
-            .Where(item => item.TeamName.Equals(team.Name, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(item => item.SeasonYear)
-            .FirstOrDefault();
-
-        return latest?.EndingPrestige ?? Math.Clamp(team.Prestige, 35, 99);
+        return PrestigeIndexes.GetValue(state.ProgramPrestigeHistory, history => history
+            .GroupBy(item => item.TeamName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(item => item.SeasonYear)
+                .First().EndingPrestige, StringComparer.OrdinalIgnoreCase))
+            .GetValueOrDefault(team.Name, Math.Clamp(team.Prestige, 35, 99));
     }
 
     public static DynastyState EnsureInitialPrestige(

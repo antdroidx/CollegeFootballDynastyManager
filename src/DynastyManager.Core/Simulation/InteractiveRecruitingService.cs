@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Seasons;
 
@@ -5,6 +6,15 @@ namespace DynastyManager.Core.Simulation;
 
 public static class InteractiveRecruitingService
 {
+    private static readonly ConditionalWeakTable<IReadOnlyList<RecruitingCommitmentRecord>,
+        Dictionary<(int Season, RecruitingSource Source, Guid Id), string>> CommitmentIndexes = new();
+
+    private static string? GetCommittedTeam(DynastyState state, RecruitingSource source, Guid prospectId) =>
+        CommitmentIndexes.GetValue(state.RecruitingCommitments, records => records
+            .GroupBy(item => (item.SeasonYear, item.Source, item.ProspectId))
+            .ToDictionary(group => group.Key, group => group.First().TeamName))
+            .GetValueOrDefault((state.SeasonYear, source, prospectId));
+
     public const int ScoutCost = 25;
     public const int PitchCost = 50;
     public const int ScoutStep = 25;
@@ -278,7 +288,7 @@ public static class InteractiveRecruitingService
                 RecruitingPointsRemaining =
                     state.RecruitingPointsRemaining - PitchCost
             },
-            interaction);
+            interaction, PitchCost);
     }
 
     public static DynastyState ToggleTargetBoard(
@@ -305,289 +315,9 @@ public static class InteractiveRecruitingService
     }
 
     public static DynastyState ResolveCurrentPhase(
-        DynastyState state,
-        Team userTeam,
-        IReadOnlyDictionary<string, Team> teamsByName)
-    {
-        ArgumentNullException.ThrowIfNull(userTeam);
-        ArgumentNullException.ThrowIfNull(teamsByName);
-
-        var sources = state.Phase switch
-        {
-            SeasonPhase.TransferPortal =>
-                new[] { RecruitingSource.TransferPortal },
-            SeasonPhase.Recruiting =>
-                new[]
-                {
-                    RecruitingSource.HighSchool,
-                    RecruitingSource.TransferPortal
-                },
-            SeasonPhase.RegularSeason
-                when state.TransferPortalEntries.Count > 0 =>
-                new[] { RecruitingSource.TransferPortal },
-            _ => Array.Empty<RecruitingSource>()
-        };
-
-        if (sources.Length == 0)
-            return state;
-
-        var isMidseasonPortal =
-            state.Phase == SeasonPhase.RegularSeason;
-
-        var current = state.RecruitingInteractions
-            .Where(interaction =>
-                interaction.SeasonYear == state.SeasonYear &&
-                sources.Contains(interaction.Source) &&
-                interaction.CommittedTeamName is null &&
-                (state.Phase != SeasonPhase.Recruiting ||
-                 (interaction.ScholarshipOffered &&
-                  ShouldResolveRecruitingTarget(
-                      state,
-                      userTeam,
-                      teamsByName,
-                      interaction))) &&
-                (!isMidseasonPortal ||
-                 interaction.Source !=
-                    RecruitingSource.TransferPortal ||
-                 (interaction.ScholarshipOffered &&
-                  RecruitPreferenceService
-                      .GetCurrentUserInterest(
-                          state,
-                          userTeam,
-                          interaction.Source,
-                          interaction.ProspectId,
-                          interaction) >= 60)))
-            .ToArray();
-
-        if (current.Length == 0)
-            return state;
-
-        var roster = state.ActiveRoster.ToList();
-        var commitments = state.RecruitingCommitments.ToList();
-        var pendingTransfers =
-            state.PendingTransferCommitments.ToList();
-        var interactions = state.RecruitingInteractions.ToList();
-        var portalEntries = state.TransferPortalEntries.ToList();
-
-        var userRosterCount = roster.Count(player =>
-            player.TeamName.Equals(
-                state.UserTeamName,
-                StringComparison.OrdinalIgnoreCase));
-
-        foreach (var interaction in current
-                     .OrderByDescending(item => item.UserInterest))
-        {
-            var deferTransfer =
-                isMidseasonPortal &&
-                interaction.Source ==
-                    RecruitingSource.TransferPortal;
-
-            var resolvedTeam = ResolveCommitment(
-                state,
-                userTeam,
-                teamsByName,
-                interaction);
-
-            if (!deferTransfer && roster.Count(candidate =>
-                    candidate.TeamName.Equals(resolvedTeam,
-                        StringComparison.OrdinalIgnoreCase)) >=
-                DynastyRosterRules.MaximumRosterSize)
-            {
-                var availableTeam = teamsByName.Values
-                    .Where(team => roster.Count(candidate =>
-                        candidate.TeamName.Equals(team.Name,
-                            StringComparison.OrdinalIgnoreCase)) <
-                        DynastyRosterRules.MaximumRosterSize)
-                    .OrderByDescending(team => team.Prestige +
-                        SimulationSeed.Create(state.DynastyId,
-                            state.SeasonYear, team.Prestige,
-                            interaction.ProspectId.ToString("N"),
-                            $"capacity-{team.Name}") % 21)
-                    .FirstOrDefault();
-
-                if (availableTeam is null)
-                    continue;
-
-                resolvedTeam = availableTeam.Name;
-            }
-
-            var player = CreateCommittedPlayer(
-                state,
-                interaction,
-                resolvedTeam);
-
-            if (player is null)
-                continue;
-
-            var updatedInteraction = interaction with
-            {
-                CommittedTeamName = resolvedTeam
-            };
-
-            var index = interactions.FindIndex(item =>
-                item.ProspectId == interaction.ProspectId &&
-                item.Source == interaction.Source &&
-                item.SeasonYear == interaction.SeasonYear);
-
-            if (index >= 0)
-                interactions[index] = updatedInteraction;
-
-            if (deferTransfer)
-            {
-                var originTeamName = portalEntries
-                    .First(entry =>
-                        entry.Player.PlayerId ==
-                        interaction.ProspectId)
-                    .OriginTeamName;
-
-                pendingTransfers.Add(
-                    new PendingTransferCommitment
-                    {
-                        ProspectId = interaction.ProspectId,
-                        CommittedSeasonYear =
-                            state.SeasonYear,
-                        CommittedWeek = state.Week,
-                        JoinSeasonYear =
-                            state.SeasonYear + 1,
-                        TeamName = resolvedTeam,
-                        OriginTeamName = originTeamName,
-                        Player = player,
-                        WasUserCommitment =
-                            resolvedTeam.Equals(
-                                state.UserTeamName,
-                                StringComparison.OrdinalIgnoreCase)
-                    });
-
-                commitments.Add(new RecruitingCommitmentRecord
-                {
-                    SeasonYear = state.SeasonYear,
-                    JoinSeasonYear =
-                        state.SeasonYear + 1,
-                    CommittedWeek = state.Week,
-                    ProspectId = interaction.ProspectId,
-                    Source = RecruitingSource.TransferPortal,
-                    PlayerName = player.FullName,
-                    TeamName = resolvedTeam,
-                    Position = player.Position,
-                    OverallRating = player.OverallRating,
-                    WasCpuAssisted =
-                        resolvedTeam.Equals(
-                            state.UserTeamName,
-                            StringComparison.OrdinalIgnoreCase)
-                            ? interaction.WasCpuAssisted
-                            : true
-                });
-
-                portalEntries.RemoveAll(entry =>
-                    entry.Player.PlayerId ==
-                    interaction.ProspectId);
-                continue;
-            }
-
-            if (interaction.Source ==
-                RecruitingSource.TransferPortal)
-            {
-                if (roster.Count(candidate =>
-                        candidate.TeamName.Equals(
-                            resolvedTeam,
-                            StringComparison.OrdinalIgnoreCase)) <
-                    DynastyRosterRules.MaximumRosterSize)
-                {
-                    roster.Add(player);
-
-                    if (resolvedTeam.Equals(
-                            state.UserTeamName,
-                            StringComparison.OrdinalIgnoreCase))
-                    {
-                        userRosterCount++;
-                    }
-                }
-
-                commitments.Add(new RecruitingCommitmentRecord
-                {
-                    SeasonYear = state.SeasonYear,
-                    JoinSeasonYear =
-                        state.SeasonYear + 1,
-                    CommittedWeek = state.Week,
-                    ProspectId = interaction.ProspectId,
-                    Source = RecruitingSource.TransferPortal,
-                    PlayerName = player.FullName,
-                    TeamName = resolvedTeam,
-                    Position = player.Position,
-                    OverallRating = player.OverallRating,
-                    WasCpuAssisted =
-                        resolvedTeam.Equals(
-                            state.UserTeamName,
-                            StringComparison.OrdinalIgnoreCase)
-                            ? interaction.WasCpuAssisted
-                            : true
-                });
-
-                portalEntries.RemoveAll(entry =>
-                    entry.Player.PlayerId ==
-                    interaction.ProspectId);
-                continue;
-            }
-
-            if (!resolvedTeam.Equals(
-                    state.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase))
-            {
-                if (roster.Count(candidate =>
-                        candidate.TeamName.Equals(
-                            resolvedTeam,
-                            StringComparison.OrdinalIgnoreCase)) <
-                    DynastyRosterRules.MaximumRosterSize)
-                {
-                    roster.Add(player);
-                }
-
-                commitments.Add(new RecruitingCommitmentRecord
-                {
-                    SeasonYear = state.SeasonYear,
-                    JoinSeasonYear =
-                        state.SeasonYear + 1,
-                    CommittedWeek = state.Week,
-                    ProspectId = interaction.ProspectId,
-                    Source = interaction.Source,
-                    PlayerName = player.FullName,
-                    TeamName = resolvedTeam,
-                    Position = player.Position,
-                    OverallRating = player.OverallRating,
-                    WasCpuAssisted = true
-                });
-                continue;
-            }
-
-            roster.Add(player);
-            userRosterCount++;
-
-            commitments.Add(new RecruitingCommitmentRecord
-            {
-                SeasonYear = state.SeasonYear,
-                JoinSeasonYear =
-                    state.SeasonYear + 1,
-                CommittedWeek = state.Week,
-                ProspectId = interaction.ProspectId,
-                Source = interaction.Source,
-                PlayerName = player.FullName,
-                TeamName = state.UserTeamName,
-                Position = player.Position,
-                OverallRating = player.OverallRating,
-                WasCpuAssisted = interaction.WasCpuAssisted
-            });
-        }
-
-        return state with
-        {
-            ActiveRoster = roster,
-            TransferPortalEntries = portalEntries,
-            PendingTransferCommitments =
-                pendingTransfers,
-            RecruitingInteractions = interactions,
-            RecruitingCommitments = commitments
-        };
-    }
+        DynastyState state, Team userTeam, IReadOnlyDictionary<string, Team> teamsByName,
+        IProgress<(int Completed, int Total, string TeamName)>? progress = null) =>
+        CompetingRecruitingService.ResolveWeek(state, teamsByName, progress);
 
     public static RecruitingInteraction GetInteraction(
         DynastyState state,
@@ -604,10 +334,16 @@ public static class InteractiveRecruitingService
                 source,
                 prospectId);
 
+        var userOffer = CompetingRecruitingService.GetOffers(state, source, prospectId).FirstOrDefault(item =>
+            item.TeamName.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase));
         return interaction with
         {
+            CommittedTeamName = GetCommittedTeam(state, source, prospectId) ?? interaction.CommittedTeamName,
+            ScholarshipOffered = userOffer is null ? interaction.ScholarshipOffered :
+                userOffer.Status == RecruitingOfferStatus.Active,
+            WasCpuAssisted = userOffer?.WasCpuAssisted ?? interaction.WasCpuAssisted,
             UserInterest = Math.Clamp(
-                interaction.UserInterest,
+                userOffer?.Interest ?? interaction.UserInterest,
                 0,
                 100),
             RivalInterest = Math.Clamp(
@@ -713,14 +449,8 @@ public static class InteractiveRecruitingService
     }
 
     private static RecruitingInteraction GetOrCreateInteraction(
-        DynastyState state,
-        RecruitingSource source,
-        Guid prospectId) =>
-        state.RecruitingInteractions.FirstOrDefault(interaction =>
-            interaction.SeasonYear == state.SeasonYear &&
-            interaction.Source == source &&
-            interaction.ProspectId == prospectId) ??
-        CreateInteraction(state, source, prospectId);
+        DynastyState state, RecruitingSource source, Guid prospectId) =>
+        GetInteraction(state, source, prospectId);
 
     private static RecruitingInteraction CreateInteraction(
         DynastyState state,
@@ -738,7 +468,7 @@ public static class InteractiveRecruitingService
 
     private static DynastyState ReplaceInteraction(
         DynastyState state,
-        RecruitingInteraction interaction)
+        RecruitingInteraction interaction, int effort = 0)
     {
         var interactions =
             state.RecruitingInteractions.ToList();
@@ -753,254 +483,10 @@ public static class InteractiveRecruitingService
         else
             interactions.Add(interaction);
 
-        return state with
+        return CompetingRecruitingService.SyncUserOffer(state with
         {
             RecruitingInteractions = interactions
-        };
-    }
-
-    private static bool ShouldResolveRecruitingTarget(
-        DynastyState state,
-        Team userTeam,
-        IReadOnlyDictionary<string, Team> teamsByName,
-        RecruitingInteraction interaction)
-    {
-        if (state.Phase != SeasonPhase.Recruiting)
-            return true;
-
-        if (SeasonProgression.IsFinalRecruitingWeek(state))
-            return true;
-
-        var recruitingWeek =
-            SeasonProgression.GetRecruitingWeekNumber(state);
-
-        var userInterest =
-            RecruitPreferenceService.GetCurrentUserInterest(
-                state,
-                userTeam,
-                interaction.Source,
-                interaction.ProspectId,
-                interaction);
-        var rivalInterest = Math.Max(
-            Math.Clamp(
-                interaction.RivalInterest,
-                0,
-                100),
-            RecruitPreferenceService.GetBestRivalInterest(
-                state,
-                userTeam,
-                teamsByName,
-                interaction.Source,
-                interaction.ProspectId));
-
-        var leaderInterest = Math.Max(
-            userInterest,
-            rivalInterest);
-
-        if (interaction.Source == RecruitingSource.TransferPortal)
-        {
-            var transferThreshold = Math.Max(
-                55,
-                76 - (recruitingWeek - 1) * 5);
-            if (leaderInterest < transferThreshold)
-                return false;
-
-            var transferChance = Math.Clamp(
-                45 +
-                recruitingWeek * 7 +
-                Math.Max(0, leaderInterest - transferThreshold) * 2,
-                45,
-                95);
-
-            var transferRoll = SimulationSeed.Create(
-                state.DynastyId,
-                state.SeasonYear,
-                state.Week,
-                interaction.ProspectId.ToString("N"),
-                "weekly-transfer-commit") % 100;
-
-            return transferRoll < transferChance;
-        }
-
-        var threshold = Math.Max(
-            62,
-            92 - (recruitingWeek - 1) * 7);
-
-        if (leaderInterest < threshold)
-            return false;
-
-        var lead = Math.Abs(
-            userInterest -
-            rivalInterest);
-
-        if (leaderInterest >= 98 &&
-            lead >= 12)
-        {
-            return true;
-        }
-
-        var commitChance = Math.Clamp(
-            12 +
-            recruitingWeek * 11 +
-            Math.Max(0, leaderInterest - threshold) * 2 +
-            Math.Min(20, lead / 2),
-            18,
-            92);
-
-        var roll = SimulationSeed.Create(
-            state.DynastyId,
-            state.SeasonYear,
-            state.Week,
-            interaction.ProspectId.ToString("N"),
-            "weekly-recruit-commit") % 100;
-
-        return roll < commitChance;
-    }
-
-    private static string ResolveCommitment(
-        DynastyState state,
-        Team userTeam,
-        IReadOnlyDictionary<string, Team> teamsByName,
-        RecruitingInteraction interaction)
-    {
-        if (!interaction.ScholarshipOffered)
-        {
-            return ResolveRivalTeam(
-                state,
-                teamsByName,
-                interaction);
-        }
-
-        var position = GetProspectPosition(
-            state,
-            interaction.Source,
-            interaction.ProspectId);
-        var userStaffBonus = GetRecruitingStaffBonus(
-            state,
-            userTeam.Name,
-            position);
-        var currentUserInterest =
-            RecruitPreferenceService.GetCurrentUserInterest(
-                state,
-                userTeam,
-                interaction.Source,
-                interaction.ProspectId,
-                interaction);
-        var bestRivalInterest =
-            RecruitPreferenceService.GetBestRivalInterest(
-                state,
-                userTeam,
-                teamsByName,
-                interaction.Source,
-                interaction.ProspectId);
-
-        var userScore =
-            currentUserInterest +
-            userStaffBonus * 2 +
-            SimulationSeed.Create(
-                state.DynastyId,
-                state.SeasonYear,
-                currentUserInterest,
-                interaction.ProspectId.ToString("N"),
-                "user-commitment") % 11;
-
-        var rivalScore =
-            bestRivalInterest +
-            SimulationSeed.Create(
-                state.DynastyId,
-                state.SeasonYear,
-                bestRivalInterest,
-                interaction.ProspectId.ToString("N"),
-                "rival-commitment") % 11;
-
-        return userScore >= rivalScore
-            ? state.UserTeamName
-            : ResolveRivalTeam(
-                state,
-                teamsByName,
-                interaction);
-    }
-
-    private static string ResolveRivalTeam(
-        DynastyState state,
-        IReadOnlyDictionary<string, Team> teamsByName,
-        RecruitingInteraction interaction)
-    {
-        return teamsByName.Values
-            .Where(team => !team.Name.Equals(
-                state.UserTeamName,
-                StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(team =>
-                RecruitPreferenceService.GetInitialSchoolInterest(
-                    state,
-                    team,
-                    interaction.Source,
-                    interaction.ProspectId) * 3 +
-                ProgramPrestigeService.GetCurrentPrestige(state, team) / 3 +
-                GetRecruitingStaffBonus(
-                    state,
-                    team.Name,
-                    GetProspectPosition(
-                        state,
-                        interaction.Source,
-                        interaction.ProspectId)) * 2 +
-                SimulationSeed.Create(
-                    state.DynastyId,
-                    state.SeasonYear,
-                    ProgramPrestigeService.GetCurrentPrestige(state, team),
-                    interaction.ProspectId.ToString("N"),
-                    $"rival-{team.Name}") % 11)
-            .ThenBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
-            .First()
-            .Name;
-    }
-
-    private static DynastyPlayer? CreateCommittedPlayer(
-        DynastyState state,
-        RecruitingInteraction interaction,
-        string teamName)
-    {
-        if (interaction.Source ==
-            RecruitingSource.TransferPortal)
-        {
-            var portal = state.TransferPortalEntries
-                .FirstOrDefault(entry =>
-                    entry.Player.PlayerId ==
-                    interaction.ProspectId);
-
-            if (portal is null)
-                return null;
-
-            return portal.Player with
-            {
-                TeamName = teamName
-            };
-        }
-
-        var recruit = state.HighSchoolRecruitingPool
-            .FirstOrDefault(player =>
-                player.RecruitId ==
-                interaction.ProspectId);
-
-        if (recruit is null)
-            return null;
-
-        return new DynastyPlayer
-        {
-            PlayerId = recruit.RecruitId,
-            FullName = recruit.FullName,
-            TeamName = teamName,
-            Position = recruit.Position,
-            ClassYear = 1,
-            TalentLevel = Math.Clamp(
-                recruit.StarRating * 2,
-                1,
-                10),
-            OverallRating =
-                recruit.TrueOverallRating,
-            PotentialRating =
-                recruit.PotentialRating
-        };
+        }, interaction, effort);
     }
 
     private static Position GetProspectPosition(

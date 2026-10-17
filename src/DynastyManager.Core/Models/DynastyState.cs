@@ -2,11 +2,14 @@ namespace DynastyManager.Core.Models;
 
 public sealed record DynastyState
 {
-    public const int CurrentSchemaVersion = 17;
+    public const int CurrentSchemaVersion = 23;
 
     public Guid DynastyId { get; init; } = Guid.NewGuid();
     public required string DynastyName { get; init; }
     public required string UserTeamName { get; init; }
+    public IReadOnlyList<Team> LeagueTeams { get; init; } = Array.Empty<Team>();
+    public IReadOnlyList<TeamGamePlan> TeamGamePlans { get; init; } = Array.Empty<TeamGamePlan>();
+    public string LeagueName { get; init; } = "Legacy FBS";
     public int SeasonYear { get; init; }
     public int Week { get; init; }
     public SeasonPhase Phase { get; init; } = SeasonPhase.Preseason;
@@ -38,6 +41,13 @@ public sealed record DynastyState
         Array.Empty<HighSchoolRecruit>();
     public IReadOnlyList<RecruitingInteraction> RecruitingInteractions { get; init; } =
         Array.Empty<RecruitingInteraction>();
+    public IReadOnlyList<RecruitingOffer> RecruitingOffers { get; init; } = Array.Empty<RecruitingOffer>();
+    public int RecruitingOffersProcessedSeasonYear { get; init; }
+    public int RecruitingOffersProcessedWeek { get; init; } = -1;
+    public SeasonPhase? RecruitingOffersProcessedPhase { get; init; }
+    public int RecruitingResolutionProcessedSeasonYear { get; init; }
+    public int RecruitingResolutionProcessedWeek { get; init; } = -1;
+    public SeasonPhase? RecruitingResolutionProcessedPhase { get; init; }
     public IReadOnlyList<RecruitingCommitmentRecord> RecruitingCommitments { get; init; } =
         Array.Empty<RecruitingCommitmentRecord>();
     public IReadOnlyList<StaffMember> Staff { get; init; } =
@@ -62,6 +72,9 @@ public sealed record DynastyState
         Array.Empty<ProgramPrestigeSnapshot>();
     public IReadOnlyList<TeamSeasonHistoryRecord> TeamSeasonHistory { get; init; } =
         Array.Empty<TeamSeasonHistoryRecord>();
+    public int CoachHistoryLastRecordedSeasonYear { get; init; }
+    public IReadOnlyList<CoachSeasonRecord> CoachSeasonHistory { get; init; } = Array.Empty<CoachSeasonRecord>();
+    public IReadOnlyList<PlayerCareerRecord> PlayerCareerHistory { get; init; } = Array.Empty<PlayerCareerRecord>();
     public IReadOnlyList<PlayerSeasonStatLine> PlayerSeasonStats { get; init; } =
         Array.Empty<PlayerSeasonStatLine>();
     public IReadOnlyList<PlayerAwardRecord> PlayerAwardHistory { get; init; } =

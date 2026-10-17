@@ -168,7 +168,7 @@ public class ScoutingDepartmentTests
             TrueOverallRating = 80,
             PotentialRating = 92,
             HomeState = 12,
-            HomeRegion = 1
+            HomeRegion = 2
         };
 
         var filler = Enumerable.Range(1, 80)
@@ -192,7 +192,7 @@ public class ScoutingDepartmentTests
             Abbreviation = "USR",
             ConferenceName = "Test",
             Prestige = 25,
-            LegacyRegionId = 1
+            LegacyRegionId = 2
         };
 
         var state = State(0) with
