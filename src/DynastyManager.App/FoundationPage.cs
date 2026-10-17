@@ -67,6 +67,13 @@ public sealed class FoundationPage : ContentPage
     private readonly Label _importStatus;
     private readonly Entry _dynastyNameEntry;
     private readonly Picker _teamPicker;
+    private readonly Picker _leaguePicker = new()
+    {
+        Title = "League structure", ItemsSource = new[] { "Modern FBS (2026) - 138 teams", "Legacy FBS - 130 teams" },
+        SelectedIndex = 0
+    };
+    private IReadOnlyList<Team> _legacyTeams = Array.Empty<Team>();
+    private IReadOnlyList<Team> _newDynastyTeams = Array.Empty<Team>();
     private readonly Button _newDynastyButton;
     private readonly Label _currentDynastyLabel;
     private readonly Button _advanceWeekButton;
@@ -153,7 +160,7 @@ public sealed class FoundationPage : ContentPage
 
         _importStatus = new Label
         {
-            Text = "Loading legacy universe…",
+            Text = "Loading league presets…",
             FontSize = 14
         };
 
@@ -167,6 +174,8 @@ public sealed class FoundationPage : ContentPage
         {
             Title = "Choose your team"
         };
+
+        _leaguePicker.SelectedIndexChanged += (_, _) => UpdateNewDynastyTeams();
 
         _newDynastyButton = new Button
         {
@@ -938,6 +947,28 @@ public sealed class FoundationPage : ContentPage
             }
         };
 
+    private static string FormatOriginalRecruitingStars(DynastyPlayer player) =>
+        player.OriginalRecruitingStars is int stars ? $"HS recruit: {stars} stars"
+            : player.IsWalkOn ? "Walk-on" : "HS recruit: unknown";
+
+    private Button CreateCareerStatsButton(DynastyPlayer player)
+    {
+        var button = new Button { Text = "Career stats", FontSize = 12 };
+        button.Clicked += async (_, _) =>
+        {
+            var seasons = _currentDynasty?.PlayerSeasonStats.Where(line => line.PlayerId == player.PlayerId)
+                .OrderBy(line => line.SeasonYear).ToArray() ?? [];
+            var detail = FormatOriginalRecruitingStars(player) + "\n\n";
+            detail += seasons.Length == 0 ? "No completed-season stats recorded."
+                : string.Join("\n", seasons.Select(line =>
+                    $"{line.SeasonYear} - {line.TeamName}: {line.PassYards:N0} pass yds, {line.RushYards:N0} rush yds, {line.Touchdowns} TD")) +
+                    $"\n\nCareer: {seasons.Sum(line => line.PassYards):N0} pass yds, {seasons.Sum(line => line.RushYards):N0} rush yds, {seasons.Sum(line => line.Touchdowns)} TD";
+            detail += "\n\nCurrent history uses simplified QB/rushing allocations; other position stats are not yet recorded.";
+            await DisplayAlertAsync(player.FullName, detail, "Close");
+        };
+        return button;
+    }
+
     private View BuildMoreSection() =>
         new VerticalStackLayout
         {
@@ -950,6 +981,7 @@ public sealed class FoundationPage : ContentPage
                     FontAttributes = FontAttributes.Bold
                 },
                 _dynastyNameEntry,
+                _leaguePicker,
                 _teamPicker,
                 _newDynastyButton,
                 new BoxView { HeightRequest = 1 },
@@ -1053,13 +1085,12 @@ public sealed class FoundationPage : ContentPage
                 .OrderBy(name => name)
                 .ToArray();
 
-            _teamPicker.ItemsSource = _teamNames.ToList();
+            _legacyTeams = universe.Teams;
+            UpdateNewDynastyTeams();
             _teamBrowserPicker.ItemsSource = _teamNames.ToList();
 
             _importStatus.Text =
-                $"Legacy data ready: {universe.Conferences.Count:N0} conferences • " +
-                $"{universe.Teams.Count:N0} teams • {roster.Players.Count:N0} players • " +
-                $"{coaches.Count:N0} coaches • {_simulationProfiles.Count:N0} sim profiles";
+                "League presets ready: Modern FBS (138 teams) or Legacy FBS (130 teams).";
 
             var databasePath = Path.Combine(
                 FileSystem.Current.AppDataDirectory,
@@ -1081,16 +1112,35 @@ public sealed class FoundationPage : ContentPage
         }
     }
 
+    private void UpdateNewDynastyTeams()
+    {
+        if (_legacyTeams.Count == 0) return;
+        var previous = _teamPicker.SelectedItem as string;
+        _newDynastyTeams = _leaguePicker.SelectedIndex == 0
+            ? ModernFbsUniverseFactory.Create(_legacyTeams) : _legacyTeams;
+        _teamPicker.ItemsSource = _newDynastyTeams.Select(team => team.Name)
+            .OrderBy(name => name).ToList();
+        if (previous is not null) _teamPicker.SelectedItem = previous;
+    }
+
+    private void ConfigureLeague(IReadOnlyList<Team> teams)
+    {
+        _teamsByName = teams.ToDictionary(team => team.Name, StringComparer.OrdinalIgnoreCase);
+        _teamNames = teams.Select(team => team.Name).OrderBy(name => name).ToArray();
+        _teamBrowserPicker.ItemsSource = _teamNames.ToList();
+        _cachedCurrentProfiles = null;
+        _cachedNationalRankings = null;
+    }
+
     private async void CreateNewDynasty(object? sender, EventArgs e)
     {
-        if (_teamPicker.SelectedIndex < 0 ||
-            _teamPicker.SelectedIndex >= _teamNames.Count)
+        if (_teamPicker.SelectedItem is not string teamName ||
+            !_newDynastyTeams.Any(team => team.Name == teamName))
         {
             _currentDynastyLabel.Text = "Choose a team before creating a dynasty.";
             return;
         }
-
-        var teamName = _teamNames[_teamPicker.SelectedIndex];
+        ConfigureLeague(_newDynastyTeams);
         var dynastyName = string.IsNullOrWhiteSpace(_dynastyNameEntry.Text)
             ? $"{teamName} Dynasty"
             : _dynastyNameEntry.Text.Trim();
@@ -1122,6 +1172,8 @@ public sealed class FoundationPage : ContentPage
             {
                 DynastyId = dynastyId,
                 DynastyName = dynastyName,
+                LeagueTeams = _newDynastyTeams.ToArray(),
+                LeagueName = _leaguePicker.SelectedIndex == 0 ? "Modern FBS (2026)" : "Legacy FBS",
                 UserTeamName = teamName,
                 SeasonYear = startingYear,
                 Week = 0,
@@ -1667,6 +1719,8 @@ public sealed class FoundationPage : ContentPage
         if (state is null)
             return;
 
+        ConfigureLeague(state.LeagueTeams.Count > 0 ? state.LeagueTeams : _legacyTeams);
+
         if (state.Schedule.Count == 0 && _teamsByName.Count > 1)
         {
             SetDynastyControlsEnabled(false);
@@ -1982,6 +2036,7 @@ public sealed class FoundationPage : ContentPage
             $"{_currentDynasty.UserTeamName} • Record {wins}-{losses} • " +
             $"Conf {conferenceWins}-{conferenceLosses}\n" +
             $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
+            $"{_currentDynasty.LeagueName} • {_teamsByName.Count} teams\n" +
             $"Dynasty ID: {_currentDynasty.DynastyId}";
 
         RenderSection(_activeSection);
@@ -5033,7 +5088,8 @@ public sealed class FoundationPage : ContentPage
                     {
                         Text =
                             $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
-                            $"POT {FormatPotentialStars(player.PotentialRating)} • Year {player.ClassYear}" +
+                            $"POT {FormatPotentialStars(player.PotentialRating)} • Year {player.ClassYear} • " +
+                            FormatOriginalRecruitingStars(player) +
                             (status.Count > 0
                                 ? $" • {string.Join(" • ", status)}"
                                 : string.Empty),
@@ -5050,6 +5106,7 @@ public sealed class FoundationPage : ContentPage
                             $"TECH {player.TechniqueRating} • DUR {player.DurabilityRating}",
                         FontSize = 12
                     },
+                    CreateCareerStatsButton(player),
                     new Label
                     {
                         Text = development is null
@@ -5958,6 +6015,7 @@ public sealed class FoundationPage : ContentPage
         _newDynastyButton.IsEnabled = enabled;
         _dynastyNameEntry.IsEnabled = enabled;
         _teamPicker.IsEnabled = enabled;
+        _leaguePicker.IsEnabled = enabled;
     }
 
     private void SetDynastyControlsEnabled(bool enabled)

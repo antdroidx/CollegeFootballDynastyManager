@@ -6,6 +6,7 @@ public sealed record PlayerSeasonStatLine
     public Guid PlayerId { get; init; }
     public required string PlayerName { get; init; }
     public required string TeamName { get; init; }
+    public int? OriginalRecruitingStars { get; init; }
     public Position Position { get; init; }
     public int Games { get; init; }
     public int PassAttempts { get; init; }

@@ -347,6 +347,7 @@ public static class CompetingRecruitingService
             {
                 PlayerId = item.RecruitId, FullName = item.FullName, Position = item.Position, TeamName = "",
                 ClassYear = 1, OverallRating = item.TrueOverallRating, PotentialRating = item.PotentialRating,
+                OriginalRecruitingStars = item.StarRating,
                 TalentLevel = Math.Clamp(item.StarRating * 2, 1, 10)
             }, "", RecruitGeography.GetRegion(item)))
             .Concat(state.TransferPortalEntries.Where(item => item.Player.ClassYear <= 4)

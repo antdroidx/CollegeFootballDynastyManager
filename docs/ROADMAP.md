@@ -25,3 +25,5 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 3. Continue interface clarity once the recruiting and dynasty-health checks are dependable.
 
 Competing offers are now a core engine feature (Build 204). CPU and user schools share persisted offers and one decision resolver. CPU direct signings and protected user targets have been removed. The next balance baseline must use this shared market; the original Build 203 report is historical.
+
+Build 206 adds a selectable 138-team 2026 FBS structure with saved league configuration, modern conference game counts, original HS recruiting stars and a roster career-stats view. See build-206-modern-fbs-careers.md for limitations and validation.

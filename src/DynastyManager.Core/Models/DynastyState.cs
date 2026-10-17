@@ -2,11 +2,13 @@ namespace DynastyManager.Core.Models;
 
 public sealed record DynastyState
 {
-    public const int CurrentSchemaVersion = 18;
+    public const int CurrentSchemaVersion = 19;
 
     public Guid DynastyId { get; init; } = Guid.NewGuid();
     public required string DynastyName { get; init; }
     public required string UserTeamName { get; init; }
+    public IReadOnlyList<Team> LeagueTeams { get; init; } = Array.Empty<Team>();
+    public string LeagueName { get; init; } = "Legacy FBS";
     public int SeasonYear { get; init; }
     public int Week { get; init; }
     public SeasonPhase Phase { get; init; } = SeasonPhase.Preseason;
@@ -69,6 +71,7 @@ public sealed record DynastyState
         Array.Empty<ProgramPrestigeSnapshot>();
     public IReadOnlyList<TeamSeasonHistoryRecord> TeamSeasonHistory { get; init; } =
         Array.Empty<TeamSeasonHistoryRecord>();
+    public IReadOnlyList<PlayerCareerRecord> PlayerCareerHistory { get; init; } = Array.Empty<PlayerCareerRecord>();
     public IReadOnlyList<PlayerSeasonStatLine> PlayerSeasonStats { get; init; } =
         Array.Empty<PlayerSeasonStatLine>();
     public IReadOnlyList<PlayerAwardRecord> PlayerAwardHistory { get; init; } =

@@ -81,7 +81,7 @@ public class CompetingRecruitingTests
         var state = State() with { HighSchoolRecruitingPool = new[] { Recruit(1), Recruit(1) } };
         var result = CompetingRecruitingService.ResolveWeek(state, Teams());
         Assert.Single(result.RecruitingCommitments);
-        Assert.Single(result.ActiveRoster);
+        Assert.Equal(state.HighSchoolRecruitingPool[0].StarRating, Assert.Single(result.ActiveRoster).OriginalRecruitingStars);
         Assert.Equal(result.RecruitingOffers.Count, result.RecruitingOffers.Select(item => item.TeamName).Distinct().Count());
     }
 
@@ -252,7 +252,7 @@ public class CompetingRecruitingTests
             var state = CompetingRecruitingService.AdvanceOffers(State(), teams);
             var save = await repository.SaveAsync(state, SaveKind.Manual);
             var loaded = (await repository.LoadAsync(save))!;
-            Assert.Equal(18, loaded.SchemaVersion);
+            Assert.Equal(DynastyState.CurrentSchemaVersion, loaded.SchemaVersion);
             Assert.Equal(state.RecruitingOffers, loaded.RecruitingOffers);
             Assert.Equal(state.RecruitingOffers, CompetingRecruitingService.AdvanceOffers(loaded, teams).RecruitingOffers);
             var expected = CompetingRecruitingService.ResolveWeek(state, teams);
