@@ -168,6 +168,29 @@ public class ScheduleSimulationTests
             game => Assert.False(game.HasPlayed));
     }
 
+    [Fact]
+    public void WeeklySimulationLeavesOtherSeasonGamesUntouched()
+    {
+        var teams = CreateTeams(2).ToDictionary(team => team.Name);
+        var current = new ScheduledGame
+        {
+            GameId = "current", SeasonYear = 2026, Week = 1,
+            HomeTeamName = "Team 01", AwayTeamName = "Team 02"
+        };
+        var historical = current with { GameId = "historical", SeasonYear = 2025 };
+        var future = current with { GameId = "future", SeasonYear = 2027 };
+        var state = new DynastyState
+        {
+            DynastyName = "Season isolation", UserTeamName = "Team 01",
+            SeasonYear = 2026, Week = 1, Phase = SeasonPhase.RegularSeason,
+            Schedule = [historical, current, future]
+        };
+        var result = WeekSimulation.SimulateCurrentRegularSeasonWeek(state, teams);
+        Assert.Equal(historical, result.Schedule[0]);
+        Assert.True(result.Schedule[1].HasPlayed);
+        Assert.Equal(future, result.Schedule[2]);
+    }
+
     private static Team[] CreateTeams(int count) =>
         Enumerable.Range(1, count)
             .Select(index => CreateTeam(

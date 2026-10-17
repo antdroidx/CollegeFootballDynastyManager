@@ -19,7 +19,7 @@ public static class WeekSimulation
         var schedule = state.Schedule
             .Select(game =>
             {
-                if (game.Week != state.Week || game.HasPlayed)
+                if (game.SeasonYear != state.SeasonYear || game.Week != state.Week || game.HasPlayed)
                     return game;
 
                 if (!teamsByName.TryGetValue(game.HomeTeamName, out var homeTeam))

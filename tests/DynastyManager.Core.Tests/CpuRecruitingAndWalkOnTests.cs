@@ -434,6 +434,11 @@ public class CpuRecruitingAndWalkOnTests
         var updated = CpuRecruitingService.ApplyPhaseAssistance(
             state, teams, state.RecruitingAssistanceEnabled);
 
+        Assert.Contains(updated.RecruitingOffers, offer => offer.TeamName == rival.Name);
+        for (var week = 21; week <= 25; week++)
+            updated = CpuRecruitingService.ApplyPhaseAssistance(
+                updated with { Week = week }, teams, false);
+
         Assert.Equal(60, updated.ActiveRoster.Count(player =>
             player.TeamName == user.Name));
         Assert.True(updated.ActiveRoster.Count(player =>

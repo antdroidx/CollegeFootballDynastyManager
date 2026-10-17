@@ -5,8 +5,8 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 | Priority | Area | Current status | Next exit criteria |
 |---|---|---|---|
 | 1 | Recruiting fixes | Shared multi-school HS/portal offer engine implemented; interest, effort, withdrawals and capacity drive decisions | Keep current save compatibility and single ownership across recruiting paths |
-| 2 | Recruiting balance | Started: five annual cycles at prestige 35, 65 and 90 with full assistance; measurements in recruiting-balance-baseline.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
-| 3 | Long-term dynasty health | Started: annual portal, recruiting, progression, depth, uniqueness and save/load checks | Longer careers with games, deferred transfers, position age distributions and save recovery |
+| 2 | Recruiting balance | Expanded: six seeded careers, including 130-team leagues, games and prestige movement; see build-205-career-validation.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
+| 3 | Long-term dynasty health | Expanded: five/ten-year careers with weekly portal decisions, games, age/depth checks and annual save/load | Longer careers with games, deferred transfers, position age distributions and save recovery |
 | 4 | Interface polish | Recruit loading overlay and background list preparation added | Device check; clearer targeting reasons, comparisons, development summaries and consistent layouts |
 | 5 | Game-day control | Future | Live watching and play calling built on shared simulation events |
 | 6 | Broader modernization | Future | Remaining position detail, CSV workflows, faces and presentation |

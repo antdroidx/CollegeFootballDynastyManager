@@ -11,20 +11,23 @@ namespace DynastyManager.Core.Tests;
 public class DynastyHealthTests(ITestOutputHelper output)
 {
     [Theory]
-    [InlineData(0)]
-    [InlineData(6)]
-    [InlineData(11)]
-    public async Task FiveRecruitingCyclesPreserveDynastyHealth(int userIndex)
+    [InlineData(0, 12, 5, 1)]
+    [InlineData(6, 12, 5, 2)]
+    [InlineData(11, 12, 5, 3)]
+    [InlineData(0, 130, 10, 4)]
+    [InlineData(6, 130, 10, 5)]
+    [InlineData(11, 130, 10, 6)]
+    public async Task CareersPreserveDynastyHealth(int userIndex, int teamCount, int years, int seed)
     {
-        var teams = Enumerable.Range(0, 12).Select(index => new Team
+        var teams = Enumerable.Range(0, teamCount).Select(index => new Team
         {
-            Name = $"Program {index:D2}", Abbreviation = $"P{index}", ConferenceName = "Test",
-            Prestige = 35 + index * 5, LegacyRegionId = index % 5
+            Name = $"Program {index:D2}", Abbreviation = $"P{index}", ConferenceName = teamCount <= 12 ? "Test" : $"Conference {index / 10}",
+            Prestige = 35 + index % 12 * 5, LegacyRegionId = index % 5
         }).ToDictionary(team => team.Name);
         var user = teams[$"Program {userIndex:D2}"];
         var state = new DynastyState
         {
-            DynastyId = Guid.Parse("77777777-2222-3333-4444-555555555555"),
+            DynastyId = new Guid(seed, 2222, 3333, 4, 4, 5, 5, 5, 5, 5, 5),
             DynastyName = "Five year health", UserTeamName = user.Name, SeasonYear = 2026,
             Phase = SeasonPhase.RegularSeason, RecruitingAssistanceEnabled = true,
             RecruitingAssistanceWorkloadPercent = 100,
@@ -35,8 +38,29 @@ public class DynastyHealthTests(ITestOutputHelper output)
         try
         {
             await using var repository = new SqliteDynastySaveRepository(path);
-            for (var cycle = 0; cycle < 5; cycle++)
+            for (var cycle = 0; cycle < years; cycle++)
             {
+                state = state with
+                {
+                    Phase = SeasonPhase.RegularSeason,
+                    Schedule = CareerSchedule(teams.Keys.ToArray(), state.SeasonYear)
+                };
+                for (var gameWeek = 0; gameWeek <= 13; gameWeek++)
+                {
+                    state = state with { Week = gameWeek };
+                    var profiles = DynastyRosterSimulationProfileBuilder.Build(state, teams.Values);
+                    state = WeekSimulation.SimulateCurrentRegularSeasonWeek(state, teams, profiles);
+                    state = TransferPortalMarketService.AdvanceRegularSeasonWeek(state);
+                    state = InteractiveRecruitingService.EnsurePhaseInitialized(state, user);
+                    state = CpuRecruitingService.ApplyWeeklyUserAssistance(state, user);
+                    state = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
+                    if (gameWeek == 6) state = PlayerDevelopmentService.ApplyMidseasonDevelopment(state);
+                }
+                Assert.All(state.Schedule, game => Assert.True(game.HasPlayed));
+                Assert.Equal(state.PendingTransferCommitments.Count,
+                    state.PendingTransferCommitments.Select(item => item.Player.PlayerId).Distinct().Count());
+                state = DynastyHistoryService.FinalizeSeason(state, teams);
+                state = ProgramPrestigeService.ApplySeasonResults(state, teams);
                 state = state with { Phase = SeasonPhase.TransferPortal, Week = 19 };
                 state = OffseasonPlayerLifecycleService.EnterTransferPortal(state);
                 state = TransferPortalMarketService.MaterializePendingCommitments(state);
@@ -75,15 +99,16 @@ public class DynastyHealthTests(ITestOutputHelper output)
                 var cpuAverage = state.ActiveRoster.Where(player => player.TeamName != user.Name)
                     .Average(player => player.OverallRating);
                 var peers = teams.Values.Where(team => team.Name != user.Name &&
-                    Math.Abs(team.Prestige - user.Prestige) <= 5).Select(team => team.Name).ToHashSet();
+                    Math.Abs(ProgramPrestigeService.GetCurrentPrestige(state, team) -
+                        ProgramPrestigeService.GetCurrentPrestige(state, user)) <= 10).Select(team => team.Name).ToHashSet();
                 var peerAverage = state.ActiveRoster.Where(player => peers.Contains(player.TeamName))
                     .Average(player => player.OverallRating);
                 Assert.True(roster.Average(player => player.OverallRating) >= peerAverage - 10,
                     "Assistance fell more than ten OVR behind similar-prestige CPU programs");
                 Assert.True(roster.Count(player => !player.IsWalkOn) >= 50,
                     "Assistance left too much of the roster dependent on walk-ons");
-                output.WriteLine($"prestige={user.Prestige} year={state.SeasonYear} HS={rank.HighSchoolCount} " +
-                    $"portal={rank.TransferCount} rank={rank.Rank}/12 walkons={roster.Count(player => player.IsWalkOn)} " +
+                output.WriteLine($"seed={seed} teams={teamCount} prestige={ProgramPrestigeService.GetCurrentPrestige(state, user)} year={state.SeasonYear} HS={rank.HighSchoolCount} " +
+                    $"portal={rank.TransferCount} rank={rank.Rank}/{teamCount} walkons={roster.Count(player => player.IsWalkOn)} " +
                     $"userOVR={roster.Average(player => player.OverallRating):F1} CPUOVR={cpuAverage:F1} peerOVR={peerAverage:F1} " +
                     $"weeklyHS={string.Join(',', weekly)}");
 
@@ -92,6 +117,9 @@ public class DynastyHealthTests(ITestOutputHelper output)
                 Assert.NotNull(loaded);
                 Assert.Equal(state.ActiveRoster.Select(player => player.PlayerId), loaded.ActiveRoster.Select(player => player.PlayerId));
                 Assert.Equal(state.RecruitingCommitments.Count, loaded.RecruitingCommitments.Count);
+                Assert.Equal(state.ProgramPrestigeHistory.Count, loaded.ProgramPrestigeHistory.Count);
+                Assert.Equal(state.TeamSeasonHistory.Count, loaded.TeamSeasonHistory.Count);
+                Assert.Equal(state.RecruitingOffers.Count, loaded.RecruitingOffers.Count);
                 state = loaded;
                 state = SeasonProgression.Advance(state);
                 state = PlayerDevelopmentService.ApplyOffseasonDevelopment(state);
@@ -104,13 +132,7 @@ public class DynastyHealthTests(ITestOutputHelper output)
                 state = ScoutingDepartmentService.EnsureDepartment(state, user);
                 state = SeasonProgression.Advance(state);
                 Assert.Equal(SeasonPhase.RegularSeason, state.Phase);
-                for (var week = 1; week <= 13; week++)
-                {
-                    state = state with { Week = week };
-                    state = TransferPortalMarketService.AdvanceRegularSeasonWeek(state);
-                    state = ScoutingDepartmentService.AdvanceRegularSeasonWeek(state, user);
-                    if (week == 6) state = PlayerDevelopmentService.ApplyMidseasonDevelopment(state);
-                }
+
             }
         }
         finally
@@ -118,6 +140,27 @@ public class DynastyHealthTests(ITestOutputHelper output)
             foreach (var suffix in new[] { "", "-wal", "-shm" })
                 if (File.Exists(path + suffix)) File.Delete(path + suffix);
         }
+    }
+
+    // Fixed round-robin fixtures keep the career stress test focused on season and roster
+    // evolution; randomized calendar construction has its own scheduling tests.
+    private static IReadOnlyList<ScheduledGame> CareerSchedule(string[] teams, int year)
+    {
+        var rotation = teams.ToList();
+        var games = new List<ScheduledGame>();
+        for (var round = 0; round < Math.Min(12, teams.Length - 1); round++)
+        {
+            for (var pair = 0; pair < teams.Length / 2; pair++)
+                games.Add(new ScheduledGame
+                {
+                    GameId = $"{year}-{round}-{pair}", SeasonYear = year, Week = round + 1,
+                    HomeTeamName = rotation[pair], AwayTeamName = rotation[^(pair + 1)]
+                });
+            var last = rotation[^1];
+            rotation.RemoveAt(rotation.Count - 1);
+            rotation.Insert(1, last);
+        }
+        return games;
     }
 
     private static void AssertHealthy(DynastyState state, IReadOnlyDictionary<string, Team> teams)
@@ -131,6 +174,7 @@ public class DynastyHealthTests(ITestOutputHelper output)
         {
             var roster = state.ActiveRoster.Where(player => player.TeamName == team.Name).ToArray();
             Assert.Equal(85, roster.Length);
+            Assert.All(roster, player => Assert.InRange(player.ClassYear, 1, 4));
             foreach (var need in DynastyRosterRules.StarterPositionCounts)
                 Assert.True(roster.Count(player => player.Position == need.Key) >= need.Value,
                     $"{team.Name} lacks starting depth at {need.Key}");
