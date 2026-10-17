@@ -16,9 +16,9 @@ public sealed partial class FoundationPage
     {
         var grid = new Grid { ColumnSpacing = 12, RowSpacing = 4,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
-            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto) } };
         var items = new[] { (AppSection.Schedule, "Schedule & results"), (AppSection.Teams, "Teams & rosters"),
-            (AppSection.Rankings, "Rankings & postseason"), (AppSection.Program, "Program & staff") };
+            (AppSection.Rankings, "Rankings & postseason"), (AppSection.Stats, "Player statistics"), (AppSection.Program, "Program & staff") };
         for (var index = 0; index < items.Length; index++)
         {
             var (section, text) = items[index];
