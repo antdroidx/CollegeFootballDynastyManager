@@ -1,4 +1,4 @@
-# Build 215: actionable Overview, Season center, headlines and profiles
+# Builds 215–216: actionable Overview, Season center, headlines and profiles
 
 The primary tabs are Overview, Roster, Coach, Recruit and Season. Season holds statistics, national/conference/postseason rankings, schedules, every school's roster/staff, injury reports and headlines. Settings is a separate header destination for recruiting assistance and save preferences. Program/staff management is accessible from Coach. The save library remains separate from an active career. Back navigation restores the previous in-career section before returning to the save library.
 
@@ -13,5 +13,17 @@ Player names open reusable profiles from user/team rosters, statistics and injur
 ## Validation
 
 - 210 focused Release tests passed, including factual/deterministic news, neutral-site and tied results, preview/commitment/injury reports, recovery, numeric sorting, stable ties and global ordering before paging.
-- Android packaging and on-device navigation, sorting and profile validation are being completed before delivery.
+- Build 216 passed GitHub tests, Android APK packaging and emulator smoke validation. The downloaded APK reports version 2.0.216 and its crash buffer remained empty.
+- Isolated emulator checks passed for Overview links, conference/national destinations, matchup preparation, Settings, back navigation, league injuries, stories, player/coach profiles, the user head coach in staff listings, numeric roster sorting and ascending/descending global statistics sorting across 73 players. Portrait and landscape layouts were inspected.
 - Save schema and simulation rules are unchanged. News is derived from existing records; no monetary mechanics or fabricated historical player attributes were added.
+
+On-device validation uses an explicitly named disposable navigation fixture with sample results, two injuries, a recruiting commitment and 73 recorded player careers. These events are QA data and are not shipped in the APK.
+
+## Screenshots
+
+Screenshots use the disposable sample dynasty described above.
+
+- [Overview](ui/build-216-overview-final.png)
+- [Season center](ui/build-216-season-final.png)
+- [Coach profile](ui/build-216-coach-profile.png)
+- [Sortable roster](ui/build-216-roster-sort-descending.png)
