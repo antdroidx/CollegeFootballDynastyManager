@@ -129,7 +129,8 @@ public sealed partial class FoundationPage
 
     private View TeamStaffTable(string school) => DataTable(
         [("Role", 160), ("Coach", 175), ("OVR", 55), ("Age", 45), ("Recruit", 65), ("Develop", 70)],
-        (_currentDynasty?.Staff.Where(coach => coach.TeamName == school) ?? []).OrderBy(coach => coach.Role).Select(coach => new View[]
+        (_currentDynasty is null ? Enumerable.Empty<StaffMember>() : Enum.GetValues<StaffRole>()
+            .Select(role => StaffManagementService.GetStaff(_currentDynasty, school, role)).OfType<StaffMember>()).OrderBy(coach => coach.Role).Select(coach => new View[]
         {
             TableText(FormatStaffRole(coach.Role)), CoachLink(coach), RatingCell(coach.OverallRating), TableText(coach.Age.ToString()),
             TableText(coach.Recruiting.ToString()), TableText(coach.PlayerDevelopment.ToString())

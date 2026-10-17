@@ -19,6 +19,12 @@ public sealed partial class FoundationPage
     private readonly Stack<AppSection> _sectionTrail = new();
     private bool _restoringSection;
 
+    private static string PhaseLabel(SeasonPhase phase) => phase switch
+    {
+        SeasonPhase.RegularSeason => "Regular season", SeasonPhase.ConferenceChampionship => "Conference championships",
+        SeasonPhase.TransferPortal => "Transfer portal", SeasonPhase.RosterManagement => "Roster management", _ => phase.ToString()
+    };
+
     private void RememberSection(AppSection next)
     {
         if (next == AppSection.Home) { _sectionTrail.Clear(); return; }
@@ -105,7 +111,7 @@ public sealed partial class FoundationPage
         var next = state.Schedule.Where(g => g.SeasonYear == state.SeasonYear && !g.HasPlayed && g.InvolvesTeam(state.UserTeamName)).OrderBy(g => g.Week).FirstOrDefault();
         var opponent = next is null ? "No upcoming game" : next.HomeTeamName == state.UserTeamName ? next.AwayTeamName : next.HomeTeamName;
         var injuries = state.ActiveRoster.Count(p => p.TeamName == state.UserTeamName && p.CurrentInjury is not null);
-        _overviewBanner.Content = SchoolBanner(state.UserTeamName, $"{state.DynastyName} · {state.SeasonYear} · {state.Phase}");
+        _overviewBanner.Content = SchoolBanner(state.UserTeamName, $"{state.DynastyName} · {state.SeasonYear} · {PhaseLabel(state.Phase)}");
         var cards = new Grid { ColumnSpacing = 10, RowSpacing = 10,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
             RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
@@ -121,7 +127,7 @@ public sealed partial class FoundationPage
         if (state.UserCoachIsFired)
             _homeHighlights.Children.Add(NavigationCard("ACTION REQUIRED", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
         else if (state.Phase is SeasonPhase.TransferPortal or SeasonPhase.Recruiting or SeasonPhase.RosterManagement)
-            _homeHighlights.Children.Add(NavigationCard("OFFSEASON", state.Phase.ToString(), "Review your roster and recruiting ›", "#4C432A",
+            _homeHighlights.Children.Add(NavigationCard("OFFSEASON", PhaseLabel(state.Phase), "Review your roster and recruiting ›", "#4C432A",
                 () => ShowSection(state.Phase == SeasonPhase.RosterManagement ? AppSection.Roster : AppSection.Recruiting)));
         var all = new Button { Text = "News & headlines ›", TextColor = Color.FromArgb("#E8C979"), BackgroundColor = Colors.Transparent };
         all.Clicked += (_, _) => ShowSection(AppSection.News);
