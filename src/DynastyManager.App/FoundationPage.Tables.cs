@@ -69,7 +69,12 @@ public sealed partial class FoundationPage
         var heading = new BoxView { Color = Color.FromArgb("#253E59") };
         grid.Add(heading, 0, 0); Grid.SetColumnSpan(heading, columns.Length);
         for (var column = 0; column < columns.Length; column++)
-            grid.Add(TableText(columns[column].Title.ToUpperInvariant(), true, Color.FromArgb("#B8D8FA")), column, 0);
+        {
+            var label = TableText(columns[column].Title.ToUpperInvariant(), true, Color.FromArgb("#B8D8FA"));
+            label.FontSize = 10;
+            label.Margin = new Thickness(8, 8);
+            grid.Add(label, column, 0);
+        }
         var index = 1;
         foreach (var cells in rows)
         {
