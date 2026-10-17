@@ -95,7 +95,7 @@ public static class DynastyHistoryService
         var playerStats = BuildPlayerStats(state);
         var awards = BuildAwards(state, playerStats);
 
-        return state with
+        return CoachCareerService.RecordCompletedSeason(state with
         {
             TeamSeasonHistory = teamHistory,
             PlayerCareerHistory = careers.Values.OrderBy(item => item.PlayerId).ToArray(),
@@ -106,7 +106,7 @@ public static class DynastyHistoryService
             PlayerAwardHistory = state.PlayerAwardHistory
                 .Concat(awards)
                 .ToArray()
-        };
+        });
     }
 
     private static IReadOnlyList<PlayerSeasonStatLine> BuildPlayerStats(DynastyState state)

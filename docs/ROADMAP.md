@@ -10,6 +10,7 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 | 4 | Interface polish | Shared dark theme, dashboard cards, fixed navigation and Coaching Hub added in Build 207 | Device verification and extend the layout system to deeper recruiting, roster and staff screens |
 | 5 | Game-day control | Started: saved playbooks, opening drive call sheets and persisted drive reports | Shared snap events with field position, downs and clock, then live watching and per-play calls |
 | 6 | Broader modernization | Future | Remaining position detail, CSV workflows, faces and presentation |
+| 7 | NIL and coaching budgets | Later; design backlog only | Separate NIL resources and coaching/staff budgets, sustainable multi-year commitments and recruiting/carousel integration |
 
 ## Current delivery
 
@@ -29,3 +30,9 @@ Competing offers are now a core engine feature (Build 204). CPU and user schools
 Build 206 adds a selectable 138-team 2026 FBS structure with saved league configuration, modern conference game counts, original HS recruiting stars and a roster career-stats view. See build-206-modern-fbs-careers.md for limitations and validation.
 
 Build 207 starts UI modernization and coaching controls. Drive-level playbooks and opening call sheets now affect the shared simulation. Full live per-play calling follows the snap-event layer; see build-207-coaching-ui.md.
+
+## Later economy additions
+
+NIL and coaching budgets are deferred while the UI, playcalling and career-history layers develop. Plan for separate NIL resources and school coaching/staff budgets, coach salaries/contracts/buyouts, multi-year affordability forecasts, and recruiting/transfer offer integration. Coaching preferences should influence spending. Avoid hard transfer/recruit signing caps or a money-only recruiting winner; preserve competition, player preferences and long-term roster health. This is a game-design backlog, not an implemented economy or a model of current NIL regulations.
+
+Build 208 adds coach career histories and an archive: user/CPU head coaches and other staff retain season results by identity through moves and departures. Head-coaching records are separate from team results earned in other staff roles.

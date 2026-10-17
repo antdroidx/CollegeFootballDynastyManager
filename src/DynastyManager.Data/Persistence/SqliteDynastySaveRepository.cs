@@ -134,6 +134,7 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
             };
         }
 
+        if (state is not null) state = CoachCareerService.RestoreUserHistory(state);
         return state is null
             ? null
             : state with

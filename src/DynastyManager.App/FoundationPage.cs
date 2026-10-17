@@ -4180,6 +4180,8 @@ public sealed partial class FoundationPage : ContentPage
             FontSize = 11
         });
 
+        _programList.Children.Add(CreateCoachCareerButton(coach));
+
         var latest = career
             .OrderByDescending(item => item.SeasonYear)
             .FirstOrDefault();
@@ -4416,6 +4418,8 @@ public sealed partial class FoundationPage : ContentPage
                     }
                 }
             };
+
+            if (staff is not null) info.Children.Add(CreateCoachCareerButton(staff));
 
             var row = new Grid
             {
@@ -5565,6 +5569,7 @@ public sealed partial class FoundationPage : ContentPage
                         $"{staff.FullName} • OVR {staff.OverallRating}",
                     FontSize = 11
                 });
+            _teamBrowserList.Children.Add(CreateCoachCareerButton(staff));
         }
 
         var injuries =

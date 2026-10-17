@@ -54,6 +54,9 @@ public sealed partial class FoundationPage
             _gamePlanHost.Children.Add(new Label { Text = "Create or load a dynasty to build your game plan." });
             return;
         }
+        if (_currentDynasty.UserHeadCoach is not null)
+            _gamePlanHost.Children.Add(CreateCoachCareerButton(_currentDynasty.UserHeadCoach));
+        _gamePlanHost.Children.Add(CreateCoachArchiveShortcut());
         var dynastyId = _currentDynasty.DynastyId;
         var teamName = _currentDynasty.UserTeamName;
         var profiles = BuildCurrentSimulationProfiles();
