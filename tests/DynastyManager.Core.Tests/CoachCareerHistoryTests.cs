@@ -80,10 +80,10 @@ public class CoachCareerHistoryTests
     }
 
     [Fact]
-    public async Task OldUserHistoryMigratesAndArchivedCareersSurviveReload()
+    public async Task RecordedCoachCareersSurviveReloadAndDeparture()
     {
         var user = Coach(1, "CPU", StaffRole.HeadCoach);
-        var state = State() with { SchemaVersion = 20, UserHeadCoach = user, UserTeamName = "CPU",
+        var state = State() with { UserHeadCoach = user, UserTeamName = "CPU",
             Staff = [Coach(2, "User", StaffRole.HeadCoach)], UserCoachCareerHistory =
             [ Legacy(2024, "User", 8, 5) with { ConferenceChampion = true }, Legacy(2025, "CPU", 11, 2) with { PlayoffParticipant = true } ],
             TeamSeasonHistory = [Season(2024, "User", 8, 5) with { ConferenceWins = 5, ConferenceLosses = 3, FinalRanking = 19, WonBowl = true }] };
@@ -91,12 +91,8 @@ public class CoachCareerHistoryTests
         try
         {
             await using var repository = new SqliteDynastySaveRepository(path);
+            state = CoachCareerService.RestoreUserHistory(state);
             var id = await repository.SaveAsync(state, SaveKind.Manual);
-            var oldJson = JsonNode.Parse(JsonSerializer.Serialize(state))!.AsObject();
-            oldJson.Remove("CoachSeasonHistory"); oldJson.Remove("CoachHistoryLastRecordedSeasonYear");
-            using (var database = new SQLiteConnection(path))
-                database.Execute("UPDATE dynasty_saves SET schema_version = ?, snapshot_json = ? WHERE save_id = ?",
-                    20, oldJson.ToJsonString(), id.ToString("D"));
             var loaded = await repository.LoadAsync(id);
             Assert.NotNull(loaded);
             Assert.Equal(DynastyState.CurrentSchemaVersion, loaded.SchemaVersion);

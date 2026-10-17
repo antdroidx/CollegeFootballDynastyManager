@@ -252,7 +252,7 @@ public static class CompetingRecruitingService
                 offers[item.Index] = item.Offer with { Status = RecruitingOfferStatus.Withdrawn };
             if (eligible.Length == 0 || !Ready(state, prospect, eligible.Select(item => item.Offer).ToArray())) continue;
             var winning = eligible[0].Offer;
-            var player = prospect.Player with { TeamName = winning.TeamName };
+            var player = PlayerRatingService.EnsureInitialized(state, prospect.Player with { TeamName = winning.TeamName });
             planned[winning.TeamName].Add(player);
             plans.Remove(winning.TeamName);
             if (state.Phase == SeasonPhase.RegularSeason)

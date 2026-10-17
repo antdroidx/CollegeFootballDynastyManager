@@ -213,7 +213,7 @@ public static class PlayerDevelopmentService
         var developed = ApplyAttributeDevelopment(
             state,
             player,
-            targetChange);
+            targetChange, midseason);
 
         if (!midseason)
         {
@@ -223,15 +223,14 @@ public static class PlayerDevelopmentService
             };
         }
 
-        if (developed.OverallRating >
-            developed.PotentialRating + 1)
+        while (developed.OverallRating >
+            developed.PotentialRating + 1 && developed.OverallRating > 40)
         {
             developed = ReduceToPotential(
                 developed,
                 developed.PotentialRating + 1);
         }
 
-        developed = developed with { Skills = PlayerSkillService.Develop(player, developed) };
         return PlayerRatingService.RecalculateOverall(
             developed);
     }
@@ -239,7 +238,7 @@ public static class PlayerDevelopmentService
     private static DynastyPlayer ApplyAttributeDevelopment(
         DynastyState state,
         DynastyPlayer player,
-        int targetChange)
+        int targetChange, bool midseason)
     {
         if (targetChange == 0)
             return player;
@@ -304,11 +303,11 @@ public static class PlayerDevelopmentService
                 player.AwarenessRating + awarenessChange),
             TechniqueRating = Clamp(
                 player.TechniqueRating + techniqueChange),
+            Skills = PlayerSkillService.Train(state, player, targetChange, midseason),
             DurabilityRating = Clamp(
                 player.DurabilityRating + durabilityChange)
         };
 
-        developed = developed with { Skills = PlayerSkillService.Develop(player, developed) };
         return PlayerRatingService.RecalculateOverall(
             developed);
     }
@@ -406,7 +405,7 @@ public static class PlayerDevelopmentService
                 player.DurabilityRating - difference)
         };
 
-        reduced = reduced with { Skills = PlayerSkillService.Develop(player, reduced) };
+        reduced = reduced with { Skills = PlayerSkillService.Shift(player.Skills!, -difference) };
         return PlayerRatingService.RecalculateOverall(
             reduced);
     }

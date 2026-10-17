@@ -44,3 +44,5 @@ Builds 212–214 add school-color palettes for all 138 schools and organized gri
 Builds 215–216 reorganize the active-career tabs as Overview / Roster / Coach / Recruit / Season, separate Settings, connect Overview cards to their reports, add factual generated headlines, sortable grid headings and reusable league-wide player/coach profiles. Initials avatars are placeholders; real portraits and live snap-by-snap viewing remain future work. See build-215-navigation-news-profiles.md.
 
 Build 217 adds persistent position-sensitive football skills, player-card ratings and aggregate passing/rushing simulation integration, plus upset/streak/shutout/blowout/postseason news from recorded outcomes. Detailed individual fatigue, penalties, catch/fumble events and snap-level effects remain work for the play-by-play engine. See build-217-skills-notable-news.md.
+
+Build 218 establishes the fresh-game boundary (schema 23): independent detailed skills drive position overall and passing/rushing performance directly; player creation and practice use the new model. Prior save formats require a new dynasty. See build-218-fresh-game-ratings.md.

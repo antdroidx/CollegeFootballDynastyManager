@@ -16,11 +16,12 @@ public sealed class DetailedSkillsAndNewsTests
         GameId = id, SeasonYear = 2026, Week = week, HomeTeamName = "A", AwayTeamName = "B", HasPlayed = true, HomeScore = home, AwayScore = away };
 
     [Fact]
-    public void OldProfilesGainStablePositionSkillsWithoutChangingExistingRatings()
+    public void GeneratedSkillsDetermineOverallAndRemainStableAcrossYearsAndTransfers()
     {
         var state = State(); var original = Player();
         var player = PlayerRatingService.EnsureInitialized(state, original);
-        Assert.Equal(original, player with { Skills = null });
+        Assert.Equal(PlayerRatingService.CalculateOverall(player), player.OverallRating);
+        Assert.Equal(original.SpeedRating, player.SpeedRating);
         Assert.Equal(player, PlayerRatingService.EnsureInitialized(state with { SeasonYear = 2030 }, player));
         Assert.Equal(player.Skills, PlayerSkillService.EnsureInitialized(original with { TeamName = "Transferred" }).Skills);
         Assert.True(player.Skills!.PassingAccuracy > PlayerSkillService.EnsureInitialized(Player(Position.OL)).Skills!.PassingAccuracy);
@@ -46,10 +47,10 @@ public sealed class DetailedSkillsAndNewsTests
     }
 
     [Fact]
-    public void TechnicalAndPhysicalGrowthCarryToSkillsButPersonalityRemainsStable()
+    public void InjuryAttributeChangesCarryToRelatedSkills()
     {
         var player = PlayerSkillService.EnsureInitialized(Player());
-        var updated = PlayerSkillService.Develop(player, player with { TechniqueRating = 80, SpeedRating = 78, StrengthRating = 77 });
+        var updated = PlayerSkillService.ApplyInjuryRegression(player, player with { TechniqueRating = 80, SpeedRating = 78, StrengthRating = 77 });
         Assert.Equal(player.Skills!.PassingAccuracy + 5, updated!.PassingAccuracy);
         Assert.Equal(player.Skills.Acceleration + 3, updated.Acceleration);
         Assert.Equal(player.Skills.PassingPower + 2, updated.PassingPower);
@@ -121,6 +122,46 @@ public sealed class DetailedSkillsAndNewsTests
         Assert.Equal(65d, played.HomePregameRating);
         Assert.Equal(85d, played.AwayPregameRating);
         Assert.Equal(played, DeterministicGameSimulator.Simulate(played, home, away));
+    }
+
+    [Theory]
+    [InlineData(Position.QB)]
+    [InlineData(Position.OL)]
+    [InlineData(Position.CB)]
+    [InlineData(Position.K)]
+    public void RelevantSkillsDriveOverallWithoutDependingOnStoredOverall(Position position)
+    {
+        var player = PlayerRatingService.EnsureInitialized(State(), Player(position));
+        var skills = player.Skills!;
+        PlayerSkillRatings Set(int value) => position switch
+        {
+            Position.QB => skills with { PassingAccuracy = value },
+            Position.OL => skills with { PassBlocking = value },
+            Position.CB => skills with { ManCoverage = value },
+            _ => skills with { KickAccuracy = value }
+        };
+        Assert.True(PlayerRatingService.CalculateOverall(player with { Skills = Set(95) }) >
+            PlayerRatingService.CalculateOverall(player with { Skills = Set(30) }));
+        Assert.Equal(PlayerRatingService.CalculateOverall(player with { OverallRating = 1 }),
+            PlayerRatingService.CalculateOverall(player with { OverallRating = 99 }));
+        Assert.Equal(PlayerSkillService.GameRating(player with { OverallRating = 1 }),
+            PlayerSkillService.GameRating(player with { OverallRating = 99 }));
+    }
+
+    [Fact]
+    public void PracticeIsIndependentRepeatableAndPositionFocused()
+    {
+        var qb = PlayerRatingService.EnsureInitialized(State(), Player());
+        var trained = PlayerSkillService.Train(State() with { DynastyId = Guid.Empty }, qb, 3, false);
+        Assert.Equal(trained, PlayerSkillService.Train(State() with { DynastyId = Guid.Empty }, qb, 3, false));
+        var deltas = typeof(PlayerSkillRatings).GetProperties().Select(property =>
+            (int)property.GetValue(trained)! - (int)property.GetValue(qb.Skills)!).ToArray();
+        Assert.True(deltas.Distinct().Count() > 1);
+        Assert.True(trained.PassingAccuracy > qb.Skills!.PassingAccuracy);
+        Assert.InRange(trained.ManCoverage - qb.Skills.ManCoverage, 0, 2);
+        var midseason = PlayerSkillService.Train(State(), qb, 1, true);
+        Assert.Equal(qb.Skills.Leadership, midseason.Leadership);
+        Assert.Equal(qb.Skills.Discipline, midseason.Discipline);
     }
 
 }

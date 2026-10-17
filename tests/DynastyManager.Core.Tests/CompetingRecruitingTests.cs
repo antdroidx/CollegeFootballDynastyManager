@@ -270,14 +270,17 @@ public class CompetingRecruitingTests
         }
     }
 
-    [Fact]
-    public async Task Schema17SaveKeepsExistingCommitmentsAndStartsOffersAtUpgradeWeek()
+    [Theory]
+    [InlineData(17)]
+    [InlineData(22)]
+    [InlineData(24)]
+    public async Task DifferentSaveFormatsRequireANewDynastyWithoutDeletingTheSave(int schema)
     {
         var path = Path.Combine(Path.GetTempPath(), $"legacy-offers-{Guid.NewGuid():N}.db");
         try
         {
             await using var repository = new SqliteDynastySaveRepository(path);
-            var state = State() with { SchemaVersion = 17, Week = 23,
+            var state = State() with { SchemaVersion = schema, Week = 23,
                 HighSchoolRecruitingPool = new[] { Recruit(1), Recruit(99) },
                 ActiveRoster = new[] { Player(99, "CPU A", 1) },
                 RecruitingCommitments = new[] { new RecruitingCommitmentRecord
@@ -288,13 +291,9 @@ public class CompetingRecruitingTests
                     ScholarshipOffered = true, UserInterest = 82 } }
             };
             var save = await repository.SaveAsync(state, SaveKind.Manual);
-            var loaded = (await repository.LoadAsync(save))!;
-            var market = CompetingRecruitingService.AdvanceOffers(loaded, Teams());
-            Assert.Equal(state.RecruitingCommitments, market.RecruitingCommitments);
-            Assert.Equal(PlayerRatingService.EnsureProfiles(state).ActiveRoster, market.ActiveRoster);
-            Assert.DoesNotContain(market.RecruitingOffers, item => item.ProspectId == GuidFor(99));
-            Assert.All(market.RecruitingOffers, item => Assert.Equal(23, item.OfferedWeek));
-            Assert.Contains(market.RecruitingOffers, item => item.TeamName == "User" && item.Interest == 82);
+            var error = await Assert.ThrowsAsync<NotSupportedException>(() => repository.LoadAsync(save));
+            Assert.Contains("Start a new dynasty", error.Message);
+            Assert.Single(await repository.ListAsync());
         }
         finally
         {

@@ -92,57 +92,10 @@ public sealed class SqliteDynastySaveRepository : IDynastySaveRepository
         if (record is null)
             return null;
 
-        if (record.SchemaVersion > DynastyState.CurrentSchemaVersion)
-        {
-            throw new NotSupportedException(
-                $"Save schema {record.SchemaVersion} is newer than this app supports ({DynastyState.CurrentSchemaVersion}).");
-        }
+        if (record.SchemaVersion != DynastyState.CurrentSchemaVersion)
+            throw new NotSupportedException("This save belongs to an earlier or different game format. Start a new dynasty.");
 
-        var state = JsonSerializer.Deserialize<DynastyState>(
-            record.SnapshotJson, JsonOptions);
-        if (state is not null && record.SchemaVersion < 9)
-        {
-            state = state with
-            {
-                HighSchoolRecruitingPool = state.HighSchoolRecruitingPool
-                    .Select(recruit => recruit with
-                    {
-                        HomeState = Math.Clamp(recruit.HomeRegion, 0, 49),
-                        HomeRegion = RecruitGeography.GetRegionForState(Math.Clamp(recruit.HomeRegion, 0, 49))
-                    })
-                    .ToArray()
-            };
-        }
-        if (state is not null &&
-            record.SchemaVersion < 17)
-        {
-            state = state with
-            {
-                RecruitingInteractions =
-                    state.RecruitingInteractions
-                        .Select(interaction =>
-                            interaction with
-                            {
-                                UserInterest =
-                                    Math.Clamp(
-                                        interaction.UserInterest,
-                                        0,
-                                        100),
-                                RivalInterest = 0
-                            })
-                        .ToArray()
-            };
-        }
-
-        if (state is not null) state = PlayerRatingService.EnsureProfiles(CoachCareerService.RestoreUserHistory(state));
-        return state is null
-            ? null
-            : state with
-            {
-                HighSchoolRecruitingPool = state.HighSchoolRecruitingPool.Select(recruit =>
-                    recruit with { HomeRegion = RecruitGeography.GetRegion(recruit) }).ToArray(),
-                SchemaVersion = DynastyState.CurrentSchemaVersion
-            };
+        return JsonSerializer.Deserialize<DynastyState>(record.SnapshotJson, JsonOptions);
     }
 
     public async Task<IReadOnlyList<DynastySaveInfo>> ListAsync()

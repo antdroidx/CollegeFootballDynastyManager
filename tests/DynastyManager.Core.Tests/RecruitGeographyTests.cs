@@ -37,7 +37,7 @@ public class RecruitGeographyTests
     [Theory]
     [InlineData(17)]
     [InlineData(8)]
-    public async Task LoadingSaveRepairsRegionsWithoutReplacingRecruits(int schema)
+    public async Task OldGeographyFormatsRequireANewDynasty(int schema)
     {
         var path = Path.Combine(Path.GetTempPath(), $"geography-{Guid.NewGuid():N}.db");
         try
@@ -47,12 +47,7 @@ public class RecruitGeographyTests
             var state = new DynastyState { DynastyName = "Geography", UserTeamName = "Washington",
                 SchemaVersion = schema, HighSchoolRecruitingPool = new[] { recruit } };
             var save = await repository.SaveAsync(state, SaveKind.Manual);
-            var loaded = await repository.LoadAsync(save);
-            var restored = Assert.Single(loaded!.HighSchoolRecruitingPool);
-            Assert.Equal(recruit.RecruitId, restored.RecruitId);
-            Assert.Equal("Georgia", RecruitGeography.GetStateName(restored));
-            Assert.Equal("South", RecruitGeography.GetRegionName(restored));
-            Assert.Equal(4, restored.HomeRegion);
+            await Assert.ThrowsAsync<NotSupportedException>(() => repository.LoadAsync(save));
         }
         finally
         {

@@ -31,7 +31,7 @@ public static class PlayerRatingService
             player.TechniqueRating > 0 &&
             player.DurabilityRating > 0)
         {
-            return PlayerSkillService.EnsureInitialized(player);
+            return RecalculateOverall(PlayerSkillService.EnsureInitialized(player));
         }
 
         var target = Math.Clamp(player.OverallRating, 50, 99);
@@ -62,19 +62,6 @@ public static class PlayerRatingService
             DurabilityRating = durability
         };
 
-        var calculated = CalculateOverall(initialized);
-        var correction = target - calculated;
-
-        initialized = initialized with
-        {
-            SpeedRating = ClampRating(initialized.SpeedRating + correction),
-            StrengthRating = ClampRating(initialized.StrengthRating + correction),
-            AgilityRating = ClampRating(initialized.AgilityRating + correction),
-            AwarenessRating = ClampRating(initialized.AwarenessRating + correction),
-            TechniqueRating = ClampRating(initialized.TechniqueRating + correction),
-            DurabilityRating = ClampRating(initialized.DurabilityRating + correction)
-        };
-
         var potential = player.PotentialRating > 0
             ? player.PotentialRating
             : Math.Clamp(
@@ -86,40 +73,30 @@ public static class PlayerRatingService
                 target,
                 99);
 
-        return PlayerSkillService.EnsureInitialized(initialized with
-        {
-            OverallRating = CalculateOverall(initialized),
-            PotentialRating = Math.Max(
-                CalculateOverall(initialized),
-                potential)
-        });
+        initialized = PlayerSkillService.EnsureInitialized(initialized);
+        var overall = CalculateOverall(initialized);
+        return initialized with { OverallRating = overall, PotentialRating = Math.Max(overall, potential) };
     }
 
     public static int CalculateOverall(DynastyPlayer player)
     {
         ArgumentNullException.ThrowIfNull(player);
-
-        var weights = Weights(player.Position);
-
-        var rating =
-            player.SpeedRating * weights.Speed +
-            player.StrengthRating * weights.Strength +
-            player.AgilityRating * weights.Agility +
-            player.AwarenessRating * weights.Awareness +
-            player.TechniqueRating * weights.Technique +
-            player.DurabilityRating * weights.Durability;
-
-        return Math.Clamp(
-            (int)Math.Round(rating, MidpointRounding.AwayFromZero),
-            40,
-            99);
+        var passingWeight = player.Position switch
+        {
+            Position.QB or Position.WR => .85,
+            Position.RB => .20,
+            Position.TE => .55,
+            Position.DE or Position.DT or Position.MLB => .35,
+            Position.CB => .80,
+            Position.FS or Position.SS => .65,
+            _ => .50
+        };
+        return Math.Clamp((int)Math.Round(PlayerSkillService.GameRating(player, true) * passingWeight +
+            PlayerSkillService.GameRating(player, false) * (1 - passingWeight), MidpointRounding.AwayFromZero), 40, 99);
     }
 
     public static DynastyPlayer RecalculateOverall(DynastyPlayer player) =>
-        player with
-        {
-            OverallRating = CalculateOverall(player)
-        };
+        player with { OverallRating = CalculateOverall(player) };
 
     private static int Offset(
         DynastyState state,
@@ -207,30 +184,4 @@ public static class PlayerRatingService
             _ => 0
         };
 
-    private static RatingWeights Weights(Position position) =>
-        position switch
-        {
-            Position.QB => new(.10, .10, .10, .25, .35, .10),
-            Position.RB => new(.25, .15, .25, .10, .15, .10),
-            Position.WR => new(.25, .10, .20, .10, .25, .10),
-            Position.TE => new(.15, .20, .10, .15, .25, .15),
-            Position.OL => new(.00, .35, .05, .15, .30, .15),
-            Position.K => new(.05, .10, .05, .20, .45, .15),
-            Position.DE => new(.15, .25, .15, .10, .25, .10),
-            Position.DT => new(.05, .35, .05, .10, .25, .20),
-            Position.OLB => new(.20, .15, .20, .15, .20, .10),
-            Position.MLB => new(.10, .20, .15, .25, .20, .10),
-            Position.CB => new(.30, .02, .25, .15, .20, .08),
-            Position.FS => new(.20, .05, .20, .25, .20, .10),
-            Position.SS => new(.18, .10, .18, .24, .20, .10),
-            _ => new(.15, .15, .15, .20, .25, .10)
-        };
-
-    private sealed record RatingWeights(
-        double Speed,
-        double Strength,
-        double Agility,
-        double Awareness,
-        double Technique,
-        double Durability);
 }
