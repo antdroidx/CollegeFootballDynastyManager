@@ -693,7 +693,7 @@ public sealed partial class FoundationPage : ContentPage
         };
 
         _libraryButton.Clicked += async (_, _) => await ReturnToLibraryAsync();
-        var heading = new VerticalStackLayout { Spacing = 2, Children = { _screenTitle, _headerContext } };
+        var heading = new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { _screenTitle, _headerContext } };
         var header = new Grid { Padding = new Thickness(14, 10, 14, 4),
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star) } };
         header.Add(_libraryButton, 0, 0); header.Add(heading, 1, 0);
@@ -840,62 +840,52 @@ public sealed partial class FoundationPage : ContentPage
             Content = filterStrip
         };
 
-        var listScroll = new ScrollView
-        {
-            Content = _recruitingList
-        };
-
-        var root = new Grid
-        {
-            RowDefinitions =
-            {
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Star }
-            },
-            RowSpacing = 7
-        };
-
-        root.Add(_recruitingMetrics);
-        Grid.SetRow(_recruitingMetrics, 0);
-
-        root.Add(_recruitingStatus);
-        Grid.SetRow(_recruitingStatus, 1);
-
         var tabScroller = new ScrollView
         {
             Orientation = ScrollOrientation.Horizontal,
-            HorizontalScrollBarVisibility =
-                ScrollBarVisibility.Never,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
             Content = _recruitingTabs
         };
-
-        root.Add(tabScroller);
-        Grid.SetRow(tabScroller, 2);
-
-        root.Add(_recruitingSearch);
-        Grid.SetRow(_recruitingSearch, 3);
-
-        root.Add(_recruitingFilterScroller);
-        Grid.SetRow(_recruitingFilterScroller, 4);
-
-        root.Add(_recruitingDetailHost);
-        Grid.SetRow(_recruitingDetailHost, 5);
-
-        root.Add(_recruitingResultsStatus);
-        Grid.SetRow(_recruitingResultsStatus, 6);
-
-        root.Add(listScroll);
-        Grid.SetRow(listScroll, 7);
-
-        root.Add(_recruitingLoadingOverlay);
-        Grid.SetRow(_recruitingLoadingOverlay, 0);
-        Grid.SetRowSpan(_recruitingLoadingOverlay, 8);
+        var controls = new ScrollView
+        {
+            Content = new VerticalStackLayout { Spacing = 7, Children =
+            {
+                _recruitingMetrics, _recruitingStatus, tabScroller,
+                _recruitingSearch, _recruitingFilterScroller
+            } }
+        };
+        var results = new ScrollView
+        {
+            Content = new VerticalStackLayout { Spacing = 7, Children =
+            {
+                _recruitingDetailHost, _recruitingResultsStatus, _recruitingList
+            } }
+        };
+        var root = new Grid
+        {
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star) },
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(0) },
+            RowSpacing = 7, ColumnSpacing = 0
+        };
+        root.Add(controls, 0, 0);
+        root.Add(results, 0, 1);
+        root.Add(_recruitingLoadingOverlay, 0, 0);
+        Grid.SetRowSpan(_recruitingLoadingOverlay, 2);
+        Grid.SetColumnSpan(_recruitingLoadingOverlay, 2);
+        bool? sideBySide = null;
+        root.SizeChanged += (_, _) =>
+        {
+            var wide = root.Width >= 650 && root.Height < 420;
+            if (sideBySide == wide) return;
+            sideBySide = wide;
+            root.ColumnSpacing = wide ? 14 : 0;
+            root.ColumnDefinitions[0].Width = wide ? new GridLength(260) : GridLength.Star;
+            root.ColumnDefinitions[1].Width = wide ? GridLength.Star : new GridLength(0);
+            root.RowDefinitions[0].Height = wide ? GridLength.Star : GridLength.Auto;
+            root.RowDefinitions[1].Height = wide ? new GridLength(0) : GridLength.Star;
+            Grid.SetColumn(results, wide ? 1 : 0);
+            Grid.SetRow(results, wide ? 0 : 1);
+        };
         return root;
     }
 
