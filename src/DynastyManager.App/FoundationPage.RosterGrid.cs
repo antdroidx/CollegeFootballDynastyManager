@@ -18,7 +18,11 @@ public sealed partial class FoundationPage
     {
         _rosterSearch.TextChanged += (_, _) => RenderCurrentDynasty();
         _rosterPosition.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
-        _rosterSort.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
+        _rosterSort.SelectedIndexChanged += (_, _) =>
+        {
+            foreach (var key in _tableOrders.Keys.Where(key => key.StartsWith("Pos/Player/OVR/Details/", StringComparison.Ordinal)).ToArray()) _tableOrders.Remove(key);
+            RenderCurrentDynasty();
+        };
         var filters = new Grid { ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(120) } };
         filters.Add(_rosterSearch, 0, 0); filters.Add(_rosterPosition, 1, 0);
         var stats = new Button { Text = "Player statistics", TextColor = DynastyTheme.Accent, BackgroundColor = Colors.Transparent };
@@ -69,7 +73,7 @@ public sealed partial class FoundationPage
             };
             var status = player.CurrentInjury is not null ? $"Injured {player.CurrentInjury.WeeksRemaining}w"
                 : player.IsRedshirted ? "Redshirt" : player.IsWalkOn ? "Walk-on" : RosterManagementService.IsStarter(player) ? "Starter" : "Depth";
-            rows.Add([TableText(player.Position.ToString()), TableText(player.FullName, RosterManagementService.IsStarter(player)),
+            rows.Add([TableText(player.Position.ToString()), PlayerLink(player),
                 RatingCell(player.OverallRating), details, TableText(player.IsRedshirted ? "RS" : player.DepthChartOrder.ToString()),
                 TableText($"Y{player.ClassYear}"), TableText(FormatPotentialStars(player.PotentialRating), color: Color.FromArgb("#E9C76C")),
                 TableText(player.OriginalRecruitingStars is int stars ? $"{stars}★" : "—"),

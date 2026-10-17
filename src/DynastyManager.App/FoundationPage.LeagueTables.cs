@@ -40,16 +40,17 @@ public sealed partial class FoundationPage
             var button = new Button { Text = name, HorizontalOptions = LayoutOptions.Fill, FontSize = 12,
                 BackgroundColor = index == 0 ? Color.FromArgb("#31597D") : Color.FromArgb("#253342") };
             buttons.Add(button);
-            button.Clicked += (_, _) =>
-            {
-                for (var item = 0; item < panels.Length; item++)
-                {
-                    panels[item].IsVisible = item == index;
-                    buttons[item].BackgroundColor = Color.FromArgb(item == index ? "#31597D" : "#253342");
-                }
-            };
+            button.Clicked += (_, _) => _selectRankingsPanel?.Invoke(index);
             tabs.Add(button, index, 0);
         }
+        _selectRankingsPanel = index =>
+        {
+            for (var item = 0; item < panels.Length; item++)
+            {
+                panels[item].IsVisible = item == index;
+                buttons[item].BackgroundColor = Color.FromArgb(item == index ? "#31597D" : "#253342");
+            }
+        };
         return new VerticalStackLayout { Spacing = 12, Children = { tabs, panels[0], panels[1], panels[2] } };
     }
 
@@ -88,10 +89,10 @@ public sealed partial class FoundationPage
     }
 
     private View CreateTeamRosterTable(IEnumerable<DynastyPlayer> roster) => DataTable(
-        [("Pos", 45), ("Player", 172), ("OVR", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Stats", 100)],
+        [("Pos", 45), ("Player", 172), ("OVR", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Profile", 110)],
         roster.OrderBy(p => p.Position).ThenBy(p => p.DepthChartOrder).Select(player => new View[]
         {
-            TableText(player.Position.ToString()), TableText(player.FullName), RatingCell(player.OverallRating),
+            TableText(player.Position.ToString()), PlayerLink(player), RatingCell(player.OverallRating),
             TableText($"Y{player.ClassYear}"), TableText(FormatPotentialStars(player.PotentialRating)),
             TableText(player.OriginalRecruitingStars is int stars ? $"{stars}★" : "—"), CreateCareerStatsButton(player)
         }));

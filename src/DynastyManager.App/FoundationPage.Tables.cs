@@ -1,4 +1,5 @@
 using DynastyManager.Data.Branding;
+using DynastyManager.Data.Presentation;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
@@ -6,6 +7,17 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
+    private static readonly BindableProperty TableValueProperty = BindableProperty.CreateAttached("TableValue", typeof(string), typeof(FoundationPage), null);
+    private readonly Dictionary<string, (int Column, bool Descending)> _tableOrders = new();
+
+    private static string? TableValue(View view) => view.GetValue(TableValueProperty) as string ?? view switch
+    {
+        Label label => label.Text,
+        Button button => button.Text,
+        Border { Content: View content } => TableValue(content),
+        _ => null
+    };
+
     private static Color BrandInk(Color color)
     {
         static double Linear(double value) => value <= .04045 ? value / 12.92 : Math.Pow((value + .055) / 1.055, 2.4);
@@ -32,6 +44,11 @@ public sealed partial class FoundationPage
         var row = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(42), new(GridLength.Star) },
             ColumnSpacing = 4, Padding = new Thickness(6, 4) };
         row.Add(badge, 0, 0); row.Add(TableText(name, name == _currentDynasty?.UserTeamName), 1, 0);
+        row.SetValue(TableValueProperty, name);
+        var open = new TapGestureRecognizer();
+        open.Tapped += (_, _) => OpenSchool(name);
+        row.GestureRecognizers.Add(open);
+        SemanticProperties.SetDescription(row, "View " + name);
         return row;
     }
 
@@ -60,32 +77,61 @@ public sealed partial class FoundationPage
             Content = new Label { Text = rating.ToString(), FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = color } };
     }
 
-    private static View DataTable((string Title, double Width)[] columns, IEnumerable<View[]> rows)
+    private View DataTable((string Title, double Width)[] columns, IEnumerable<View[]> rows,
+        Action<int, bool>? sortRequested = null, int initialSortColumn = -1, bool initialDescending = false)
     {
+        var materialized = rows.ToArray();
+        var key = string.Join("/", columns.Select(column => column.Title));
+        var order = sortRequested is null && _tableOrders.TryGetValue(key, out var saved)
+            ? saved : (Column: initialSortColumn, Descending: initialDescending);
         var grid = new Grid { RowSpacing = 1, ColumnSpacing = 0,
             WidthRequest = columns.Sum(column => column.Width), BackgroundColor = Color.FromArgb("#2D3A4B") };
         foreach (var column in columns) grid.ColumnDefinitions.Add(new ColumnDefinition(column.Width));
-        grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        var heading = new BoxView { Color = Color.FromArgb("#253E59") };
-        grid.Add(heading, 0, 0); Grid.SetColumnSpan(heading, columns.Length);
-        for (var column = 0; column < columns.Length; column++)
+        Button[] headers = [];
+        headers = columns.Select((column, index) =>
         {
-            var label = TableText(columns[column].Title.ToUpperInvariant(), true, Color.FromArgb("#B8D8FA"));
-            label.FontSize = 10;
-            label.Margin = new Thickness(8, 8);
-            grid.Add(label, column, 0);
-        }
-        var index = 1;
-        foreach (var cells in rows)
+            var button = new Button { Text = column.Title, FontSize = 10, FontAttributes = FontAttributes.Bold,
+                BackgroundColor = Colors.Transparent, TextColor = Color.FromArgb("#B8D8FA"),
+                HorizontalOptions = LayoutOptions.Fill, VerticalOptions = LayoutOptions.Fill,
+                Padding = new Thickness(5, 6), CornerRadius = 0, MinimumHeightRequest = 34,
+                IsEnabled = column.Title is not ("Details" or "Stats" or "Profile") };
+            SemanticProperties.SetDescription(button, "Sort " + column.Title);
+            button.Clicked += (_, _) =>
+            {
+                order = (index, order.Column == index && !order.Descending);
+                if (sortRequested is not null) { sortRequested(index, order.Descending); return; }
+                _tableOrders[key] = order;
+                Render();
+            };
+            return button;
+        }).ToArray();
+        void Render()
         {
+            grid.Children.Clear(); grid.RowDefinitions.Clear();
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            var background = new BoxView { Color = Color.FromArgb(index % 2 == 0 ? "#1E2936" : "#17212D"), MinimumHeightRequest = 42 };
-            grid.Add(background, 0, index); Grid.SetColumnSpan(background, columns.Length);
-            for (var column = 0; column < cells.Length; column++) grid.Add(cells[column], column, index);
-            index++;
+            var heading = new BoxView { Color = Color.FromArgb("#253E59") };
+            grid.Add(heading, 0, 0); Grid.SetColumnSpan(heading, columns.Length);
+            for (var column = 0; column < headers.Length; column++)
+            {
+                headers[column].Text = columns[column].Title + (order.Column == column ? order.Descending ? " ↓" : " ↑" : "");
+                headers[column].BackgroundColor = order.Column == column ? Color.FromArgb("#31597D") : Colors.Transparent;
+                grid.Add(headers[column], column, 0);
+            }
+            var ordered = order.Column >= 0 && sortRequested is null
+                ? TableOrdering.Sort(materialized, cells => TableValue(cells[order.Column]), order.Descending) : materialized;
+            var index = 1;
+            foreach (var cells in ordered)
+            {
+                grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                var user = cells.Any(cell => TableValue(cell) == _currentDynasty?.UserTeamName);
+                var background = new BoxView { Color = Color.FromArgb(user ? "#203D50" : index % 2 == 0 ? "#1E2936" : "#17212D"), MinimumHeightRequest = 42 };
+                grid.Add(background, 0, index); Grid.SetColumnSpan(background, columns.Length);
+                for (var column = 0; column < cells.Length; column++) grid.Add(cells[column], column, index);
+                index++;
+            }
         }
-        return new ScrollView { Orientation = ScrollOrientation.Horizontal, HorizontalScrollBarVisibility = ScrollBarVisibility.Always,
-            Content = grid };
+        Render();
+        return new ScrollView { Orientation = ScrollOrientation.Horizontal, HorizontalScrollBarVisibility = ScrollBarVisibility.Always, Content = grid };
     }
 
     private static View SectionTitle(string title, string description) => new VerticalStackLayout { Spacing = 3, Children =

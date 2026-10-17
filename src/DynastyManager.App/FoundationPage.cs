@@ -28,7 +28,11 @@ public sealed partial class FoundationPage : ContentPage
         Rankings,
         Stats,
         Program,
-        More
+        Season,
+        Settings,
+        GameDay,
+        News,
+        Injuries
     }
 
     private enum RecruitingView
@@ -217,7 +221,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _autosaveButton = new Button
         {
-            Text = "Quick save",
+            Text = "Save settings & dynasty",
             TextColor = Colors.White,
             IsEnabled = false
         };
@@ -596,7 +600,7 @@ public sealed partial class FoundationPage : ContentPage
             ColumnDefinitions = new ColumnDefinitionCollection
             { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
 
-        foreach (var section in new[] { AppSection.Dynasty, AppSection.Recruiting, AppSection.Playbook, AppSection.Roster, AppSection.More })
+        foreach (var section in new[] { AppSection.Dynasty, AppSection.Roster, AppSection.Playbook, AppSection.Recruiting, AppSection.Season })
         {
             var captured = section;
             var button = new Button
@@ -608,7 +612,7 @@ public sealed partial class FoundationPage : ContentPage
                     AppSection.Teams => "Teams",
                     AppSection.Playbook => "Coach",
                     AppSection.Dynasty => "Overview",
-                    AppSection.More => "Manage",
+                    AppSection.Season => "Season",
                     _ => section.ToString()
                 },
                 FontSize = 12,
@@ -650,7 +654,11 @@ public sealed partial class FoundationPage : ContentPage
                 AppSection.Stats => BuildStatisticsSection(),
                 AppSection.Program => BuildProgramSection(),
                 AppSection.Playbook => BuildGamePlanSection(),
-                AppSection.More => BuildMoreSection(),
+                AppSection.Season => BuildSeasonHub(),
+                AppSection.Settings => BuildMoreSection(),
+                AppSection.GameDay => BuildMatchupHub(),
+                AppSection.News => BuildNewsSection(),
+                AppSection.Injuries => BuildInjurySection(),
                 _ => BuildHomeSection()
             };
 
@@ -696,9 +704,11 @@ public sealed partial class FoundationPage : ContentPage
 
         _libraryButton.Clicked += async (_, _) => await ReturnToLibraryAsync();
         var heading = new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { _screenTitle, _headerContext } };
+        _settingsButton.Clicked += (_, _) => ShowSection(AppSection.Settings);
         var header = new Grid { Padding = new Thickness(14, 10, 14, 4),
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star) } };
-        header.Add(_libraryButton, 0, 0); header.Add(heading, 1, 0);
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
+        _screenTitle.LineBreakMode = LineBreakMode.TailTruncation;
+        header.Add(_libraryButton, 0, 0); header.Add(heading, 1, 0); header.Add(_settingsButton, 2, 0);
         root.Add(header, 0, 0);
 
         root.Add(pages);
@@ -719,6 +729,7 @@ public sealed partial class FoundationPage : ContentPage
     private void ShowSection(AppSection section)
     {
         if (_currentDynasty is null && section is not (AppSection.Home or AppSection.NewDynasty)) section = AppSection.Home;
+        RememberSection(section);
         _activeSection = section;
         UpdateShellContext();
         if (section != AppSection.Recruiting)
@@ -731,10 +742,10 @@ public sealed partial class FoundationPage : ContentPage
         foreach (var pair in _navButtons)
         {
             pair.Value.FontAttributes =
-                pair.Key == section || (pair.Key == AppSection.More && !_navButtons.ContainsKey(section))
+                pair.Key == PrimarySection(section)
                     ? FontAttributes.Bold
                     : FontAttributes.None;
-            var selected = pair.Key == section || (pair.Key == AppSection.More && !_navButtons.ContainsKey(section));
+            var selected = pair.Key == PrimarySection(section);
             pair.Value.Opacity = 1.0;
             pair.Value.BackgroundColor = Colors.Transparent;
             pair.Value.TextColor = selected ? DynastyTheme.Accent : DynastyTheme.Muted;
@@ -757,7 +768,11 @@ public sealed partial class FoundationPage : ContentPage
             AppSection.Stats => "Player statistics",
             AppSection.Program => "Program",
             AppSection.Playbook => "Coaching Hub",
-            AppSection.More => "Manage dynasty",
+            AppSection.Season => "Season center",
+            AppSection.Settings => "Settings",
+            AppSection.GameDay => "Next game",
+            AppSection.News => "News & headlines",
+            AppSection.Injuries => "Injury report",
             _ => section.ToString()
         };
 
@@ -765,17 +780,7 @@ public sealed partial class FoundationPage : ContentPage
             RenderSection(section);
     }
 
-    private View BuildHomeSection()
-    {
-        _advanceWeekButton.BackgroundColor = DynastyTheme.Accent;
-        _advanceWeekButton.TextColor = DynastyTheme.Background;
-        _manualSaveButton.Text = "Save";
-        var actions = new HorizontalStackLayout { Spacing = 8, Children = { _advanceWeekButton, _manualSaveButton } };
-        return new VerticalStackLayout { Spacing = 12, Children =
-        {
-            _currentDynastyLabel, actions, _homeStatus, _homeHighlights
-        } };
-    }
+    private View BuildHomeSection() => BuildOverviewSection();
 
     private View BuildScheduleSection() => BuildOrganizedScheduleSection();
 
@@ -894,8 +899,8 @@ public sealed partial class FoundationPage : ContentPage
 
     private Button CreateCareerStatsButton(DynastyPlayer player)
     {
-        var button = new Button { Text = "Career stats", FontSize = 12 };
-        button.Clicked += async (_, _) => await ShowPlayerStatisticsAsync(player);
+        var button = new Button { Text = "Player profile", FontSize = 12 };
+        button.Clicked += async (_, _) => await ShowPlayerProfileAsync(player.PlayerId);
         return button;
     }
 
@@ -905,7 +910,6 @@ public sealed partial class FoundationPage : ContentPage
             Spacing = 12,
             Children =
             {
-                CreateModuleLinks(),
                 new Label
                 {
                     Text = "Preferences",
@@ -1954,7 +1958,19 @@ public sealed partial class FoundationPage : ContentPage
                 RenderGamePlanScreen();
                 break;
 
-            case AppSection.More:
+            case AppSection.Season:
+                RenderSeasonHub();
+                break;
+            case AppSection.GameDay:
+                RenderMatchupHub();
+                break;
+            case AppSection.News:
+                RenderNews();
+                break;
+            case AppSection.Injuries:
+                RenderInjuryReport();
+                break;
+            case AppSection.Settings:
             default:
                 break;
         }
@@ -3770,114 +3786,7 @@ public sealed partial class FoundationPage : ContentPage
             _ => type.ToString()
         };
 
-    private void RenderHomeScreen()
-    {
-        _homeHighlights.Children.Clear();
-
-        if (_currentDynasty is null)
-        {
-            _homeStatus.Text = "Create or load a dynasty to begin.";
-            return;
-        }
-
-        var rankings = BuildCurrentNationalRankings();
-
-        var userRanking = rankings.FirstOrDefault(ranking =>
-            ranking.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase));
-
-        var nextGame = _currentDynasty.Schedule
-            .Where(game =>
-                game.SeasonYear == _currentDynasty.SeasonYear &&
-                game.InvolvesTeam(_currentDynasty.UserTeamName) &&
-                !game.HasPlayed)
-            .OrderBy(game => game.Week)
-            .FirstOrDefault();
-
-        var injuries = _currentDynasty.ActiveRoster
-            .Where(player =>
-                player.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase) &&
-                player.CurrentInjury is not null)
-            .ToArray();
-
-        _homeStatus.Text =
-            $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • " +
-            (userRanking is null
-                ? "Unranked"
-                : userRanking.Rank <= 25
-                    ? $"#{userRanking.Rank} nationally"
-                    : $"NR ({userRanking.Rank})");
-
-        _homeHighlights.Children.Add(new Border
-        {
-            StrokeThickness = 1,
-            Padding = 12,
-            Content = new Label
-            {
-                Text = nextGame is null
-                    ? "NEXT GAME\nNo upcoming game currently scheduled."
-                    : $"NEXT GAME\nWeek {nextGame.Week}: " +
-                      $"{(nextGame.HomeTeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase) ? "vs" : "@")} " +
-                      $"{(nextGame.HomeTeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase) ? nextGame.AwayTeamName : nextGame.HomeTeamName)}",
-                FontAttributes = FontAttributes.Bold
-            }
-        });
-
-        _homeHighlights.Children.Add(new Border
-        {
-            StrokeThickness = 1,
-            Padding = 12,
-            Content = new Label
-            {
-                Text = injuries.Length == 0
-                    ? "INJURIES\nNo current injuries."
-                    : $"INJURIES\n{injuries.Length} active • " +
-                      string.Join(
-                          " • ",
-                          injuries.Take(3).Select(player =>
-                              $"{player.Position} {player.FullName} " +
-                              $"{player.CurrentInjury!.WeeksRemaining}wk"))
-            }
-        });
-
-        if (_currentDynasty.UserCoachIsFired)
-        {
-            _homeHighlights.Children.Add(new Border
-            {
-                StrokeThickness = 1,
-                Padding = 12,
-                Content = new Label
-                {
-                    Text =
-                        "ACTION REQUIRED\nYou were fired. Open Program and accept a new head-coaching job.",
-                    FontAttributes = FontAttributes.Bold,
-                    TextColor = NegativeChangeColor
-                }
-            });
-        }
-
-        if (_currentDynasty.Phase is
-            SeasonPhase.TransferPortal or
-            SeasonPhase.Recruiting or
-            SeasonPhase.RosterManagement)
-        {
-            _homeHighlights.Children.Add(new Border
-            {
-                StrokeThickness = 1,
-                Padding = 12,
-                Content = new Label
-                {
-                    Text =
-                        $"ACTION REQUIRED\n{_currentDynasty.Phase}: " +
-                        "open Recruiting or Roster to review the offseason before advancing.",
-                    FontAttributes = FontAttributes.Bold
-                }
-            });
-        }
-    }
+    private void RenderHomeScreen() => RenderOverviewDashboard();
 
     private void RenderProgramScreen()
     {
@@ -5326,36 +5235,7 @@ public sealed partial class FoundationPage : ContentPage
                     new Thickness(0, 8, 0, 0)
             });
 
-        foreach (var role in new[]
-                 {
-                     StaffRole.HeadCoach,
-                     StaffRole.OffensiveCoordinator,
-                     StaffRole.DefensiveCoordinator,
-                     StaffRole.SpecialTeamsCoordinator,
-                     StaffRole.ChiefScout,
-                     StaffRole.MedicalTrainingDirector,
-                     StaffRole.StrengthConditioningDirector
-                 })
-        {
-            var staff =
-                StaffManagementService.GetStaff(
-                    _currentDynasty,
-                    team.Name,
-                    role);
-
-            if (staff is null)
-                continue;
-
-            _teamBrowserList.Children.Add(
-                new Label
-                {
-                    Text =
-                        $"{FormatStaffRole(role)} • " +
-                        $"{staff.FullName} • OVR {staff.OverallRating}",
-                    FontSize = 11
-                });
-            _teamBrowserList.Children.Add(CreateCoachCareerButton(staff));
-        }
+        _teamBrowserList.Children.Add(TeamStaffTable(team.Name));
 
         var injuries =
             roster.Where(player =>

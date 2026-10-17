@@ -49,6 +49,7 @@ public sealed partial class FoundationPage
         _libraryButton.IsVisible = _activeSection != AppSection.Home;
         _libraryButton.Text = _activeSection == AppSection.NewDynasty ? "‹ Cancel" : "‹ Saves";
         _headerContext.IsVisible = !library && _currentDynasty is not null;
+        _settingsButton.IsVisible = !library && _currentDynasty is not null && _activeSection != AppSection.Settings;
         if (_currentDynasty is not null)
             _headerContext.Text = $"{_currentDynasty.UserTeamName} · {_currentDynasty.SeasonYear} · Week {_currentDynasty.Week}";
     }
@@ -73,6 +74,7 @@ public sealed partial class FoundationPage
     {
         if (_advanceOverlay.IsVisible || _isAdvancing) return true;
         if (_activeSection == AppSection.Home) return base.OnBackButtonPressed();
+        if (_activeSection != AppSection.NewDynasty && RestorePreviousSection()) return true;
         _ = ReturnToLibraryAsync();
         return true;
     }

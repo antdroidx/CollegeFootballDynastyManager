@@ -9,11 +9,11 @@ public sealed partial class FoundationPage
 {
     private Button CreateCoachCareerButton(StaffMember coach)
     {
-        var button = new Button { Text = "Coaching career", FontSize = 12 };
+        var button = new Button { Text = "Coach profile", FontSize = 12 };
         button.Clicked += async (_, _) =>
         {
             if (_currentDynasty is not null)
-                await ShowCoachCareerAsync(CoachCareerService.RestoreUserHistory(_currentDynasty), coach.StaffId, coach.FullName, this);
+                await ShowCoachProfileAsync(coach);
         };
         return button;
     }

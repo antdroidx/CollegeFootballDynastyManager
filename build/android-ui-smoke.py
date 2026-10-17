@@ -32,7 +32,7 @@ def tap(root, text):
 
 home = capture("launch")
 assert {"Your dynasties", "New dynasty"} <= texts(home), "Launch must open the save library"
-assert not {"Advance Week", "Recruit", "Coach", "Manage"} & texts(home), "Career controls leaked onto Home"
+assert not {"Advance Week", "Overview", "Roster", "Coach", "Recruit", "Season", "Settings"} & texts(home), "Career controls leaked onto Home"
 tap(home, "New dynasty")
 create = capture("new-dynasty")
 assert {"Start a dynasty", "Dynasty name", "League structure", "Your school", "Start dynasty"} <= texts(create)
