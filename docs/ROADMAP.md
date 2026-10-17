@@ -7,7 +7,7 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 | 1 | Recruiting fixes | Shared multi-school HS/portal offer engine implemented; interest, effort, withdrawals and capacity drive decisions | Keep current save compatibility and single ownership across recruiting paths |
 | 2 | Recruiting balance | Expanded: six seeded careers, including 130-team leagues, games and prestige movement; see build-205-career-validation.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
 | 3 | Long-term dynasty health | Expanded: five/ten-year careers with weekly portal decisions, games, age/depth checks and annual save/load | Longer careers with games, deferred transfers, position age distributions and save recovery |
-| 4 | Interface polish | Builds 209–211 replace the initial layout with a save-only Home, separate setup and career overview, compact controls and responsive recruiting; emulator flow/layout checks added | Continue refining deeper roster/staff screens and game-day presentation using device feedback |
+| 4 | Interface polish | Save-only Home and responsive recruiting in Builds 209–211; school-colored roster/ranking/schedule/stat grids in Builds 212–214; emulator checks added | Continue refining deeper roster/staff screens and game-day presentation using device feedback |
 | 5 | Game-day control | Started: saved playbooks, opening drive call sheets and persisted drive reports | Shared snap events with field position, downs and clock, then live watching and per-play calls |
 | 6 | Broader modernization | Future | Remaining position detail, CSV workflows, faces and presentation |
 | 7 | NIL and coaching budgets | Later; design backlog only | Separate NIL resources and coaching/staff budgets, sustainable multi-year commitments and recruiting/carousel integration |
@@ -38,3 +38,5 @@ NIL and coaching budgets are deferred while the UI, playcalling and career-histo
 Build 208 adds coach career histories and an archive: user/CPU head coaches and other staff retain season results by identity through moves and departures. Head-coaching records are separate from team results earned in other staff roles.
 
 Builds 209–211 revise the initial UI after feedback: Home starts/loads careers, active dynasty navigation is separate, saves are grouped by dynasty, and short landscape windows keep recruiting controls beside the list. This remains an iterative UI, not a final visual design. See build-209-save-library-ui.md for scope and device validation.
+
+Builds 212–214 add school-color palettes for all 138 schools and organized grids for rankings, standings, postseason, schedules, rosters and recorded player statistics. Roster filters and player-detail controls, season/career statistics with paging, and responsive wide-screen headers continue the UI revision. See build-212-organized-team-grids.md.
