@@ -21,8 +21,8 @@ public sealed partial class FoundationPage
         _statisticsSort.SelectedIndexChanged += (_, _) => RenderStatistics();
         return new VerticalStackLayout { Spacing = 10, Children =
         {
-            SectionTitle("Player statistics", "Compare recorded seasons or career totals across schools."),
-            new HorizontalStackLayout { Spacing = 8, Children = { _statisticsSeason, _statisticsScope, _statisticsSort } },
+            ResponsiveTableHeader(SectionTitle("Player statistics", "Compare recorded seasons or career totals across schools."),
+                new HorizontalStackLayout { Spacing = 8, Children = { _statisticsSeason, _statisticsScope, _statisticsSort } }),
             _statisticsRows
         } };
     }

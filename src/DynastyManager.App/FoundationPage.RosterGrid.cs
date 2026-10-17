@@ -25,8 +25,10 @@ public sealed partial class FoundationPage
         stats.Clicked += (_, _) => ShowSection(AppSection.Stats);
         return new VerticalStackLayout { Spacing = 10, Children =
         {
-            _rosterBanner, _offseasonRosterStatus, filters,
-            new HorizontalStackLayout { Spacing = 8, Children = { _rosterSort, stats } },
+            ResponsiveTableHeader(
+                new VerticalStackLayout { Spacing = 8, Children = { _rosterBanner, _offseasonRosterStatus } },
+                new VerticalStackLayout { Spacing = 8, Children = { filters,
+                    new HorizontalStackLayout { Spacing = 8, Children = { _rosterSort, stats } } } }),
             _rosterDetail, _transferPortalList
         } };
     }

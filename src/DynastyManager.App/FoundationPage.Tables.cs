@@ -93,4 +93,25 @@ public sealed partial class FoundationPage
         new Label { Text = title, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#A9CEF3") },
         new Label { Text = description, FontSize = 11, TextColor = DynastyTheme.Muted }
     } };
+
+    private static View ResponsiveTableHeader(View summary, View controls)
+    {
+        var grid = new Grid { RowSpacing = 10,
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) },
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(0) } };
+        grid.Add(summary, 0, 0); grid.Add(controls, 0, 1);
+        bool? previous = null;
+        grid.SizeChanged += (_, _) =>
+        {
+            var wide = grid.Width >= 650;
+            if (previous == wide) return;
+            previous = wide;
+            grid.ColumnDefinitions[1].Width = wide ? GridLength.Star : new GridLength(0);
+            grid.ColumnSpacing = wide ? 14 : 0;
+            grid.RowSpacing = wide ? 0 : 10;
+            Grid.SetColumn(controls, wide ? 1 : 0);
+            Grid.SetRow(controls, wide ? 0 : 1);
+        };
+        return grid;
+    }
 }
