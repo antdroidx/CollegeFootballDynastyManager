@@ -47,7 +47,7 @@ public sealed partial class FoundationPage
         var library = _activeSection is AppSection.Home or AppSection.NewDynasty;
         _navigationBar.IsVisible = !library && _currentDynasty is not null;
         _libraryButton.IsVisible = _activeSection != AppSection.Home;
-        _libraryButton.Text = _activeSection == AppSection.NewDynasty ? "‹ Cancel" : "‹ Saves";
+        _libraryButton.Text = _activeSection == AppSection.NewDynasty ? "‹ Cancel" : "‹ Exit Dynasty";
         _headerContext.IsVisible = !library && _currentDynasty is not null;
         _settingsButton.IsVisible = !library && _currentDynasty is not null && _activeSection != AppSection.Settings;
         if (_currentDynasty is not null)

@@ -137,7 +137,7 @@ public sealed partial class FoundationPage : ContentPage
     private readonly Dictionary<AppSection, Button> _navButtons = new();
     private readonly Dictionary<AppSection, BoxView> _navIndicators = new();
     private Border _navigationBar = null!;
-    private readonly Button _libraryButton = new() { Text = "‹ Saves", FontSize = 12, Padding = new Thickness(0, 2, 12, 2), BackgroundColor = Colors.Transparent };
+    private readonly Button _libraryButton = new() { Text = "‹ Exit Dynasty", FontSize = 12, Padding = new Thickness(0, 2, 12, 2), BackgroundColor = Colors.Transparent };
     private readonly Label _headerContext = new() { FontSize = 11, TextColor = DynastyTheme.Muted };
     private readonly Dictionary<AppSection, View> _sectionViews = new();
     private AppSection _activeSection = AppSection.Home;
@@ -2494,7 +2494,8 @@ public sealed partial class FoundationPage : ContentPage
         };
 
     private sealed record RecruitingRowPresentation(RecruitingProspectDisplay Prospect,
-        RecruitingInteraction Interaction, string Title, string Detail, string Interest);
+        RecruitingInteraction Interaction, string Title, string Ranking, string Projection,
+        string Origin, string Scouting, string UserStatus, string MarketStatus);
 
     private static RecruitingRowPresentation PrepareRecruitingRow(DynastyState state,
         IReadOnlyDictionary<string, Team> teams, RecruitingProspectDisplay prospect)
@@ -2520,15 +2521,6 @@ public sealed partial class FoundationPage : ContentPage
             interaction.IsOnTargetBoard
                 ? "★ "
                 : string.Empty;
-
-        var offerMarker =
-            interaction.ScholarshipOffered
-                ? interaction.WasCpuAssisted
-                    ? "CPU ASSIST • OFFER • "
-                    : "OFFER • "
-                : interaction.WasCpuAssisted
-                    ? "CPU ASSIST • "
-                    : string.Empty;
 
         var nationalRank = GetProspectNationalRank(state, prospect);
         var recruitRating =
@@ -2562,15 +2554,20 @@ public sealed partial class FoundationPage : ContentPage
 
         var activeOffers = CompetingRecruitingService.GetOffers(state, prospect.Source, prospect.ProspectId, activeOnly: true);
         var leadingOffer = activeOffers.FirstOrDefault();
-        var interest = interaction.CommittedTeamName is not null
-            ? $"Committed: {interaction.CommittedTeamName}"
-            : $"{offerMarker}Your interest {currentUserInterest}% - {activeOffers.Count} offers" +
-                (leadingOffer is null ? "" : $" - Leader: {leadingOffer.TeamName} {leadingOffer.Interest}%");
+        var userStatus = interaction.CommittedTeamName is not null
+            ? $"Committed to {interaction.CommittedTeamName}"
+            : $"Your interest: {currentUserInterest}%" +
+              (interaction.ScholarshipOffered ? interaction.WasCpuAssisted ? " · CPU-assisted offer" : " · Scholarship offered" : "");
+        var marketStatus = interaction.CommittedTeamName is not null
+            ? "Recruitment closed"
+            : activeOffers.Count == 0 ? "No active scholarship offers"
+            : $"{activeOffers.Count} active offer{(activeOffers.Count == 1 ? "" : "s")}" +
+              (leadingOffer is null ? "" : $" · Leader: {leadingOffer.TeamName} ({leadingOffer.Interest}%)");
 
         return new(prospect, interaction,
             $"{boardMarker}{prospect.Position} {prospect.FullName}",
-            $"#{nationalRank} nationally  •  {publicRatingText}  •  {overallText}\n{prospect.Subtitle}  •  Scouted {interaction.ScoutingPercent}%",
-            interest);
+            $"#{nationalRank} nationally · {publicRatingText}", overallText,
+            prospect.Subtitle, $"{interaction.ScoutingPercent}% complete", userStatus, marketStatus);
     }
 
     private void AddRecruitingCompactRow(RecruitingRowPresentation presentation)
@@ -2642,9 +2639,32 @@ public sealed partial class FoundationPage : ContentPage
             RenderCurrentDynasty();
         };
 
+        static View Metric(string label, string value) => new Border
+        {
+            StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#182630"),
+            Content = new VerticalStackLayout { Spacing = 2, Children =
+            {
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
+                new Label { Text = value, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap, TextColor = Color.FromArgb("#E6EBF1") }
+            } }
+        };
+        var metrics = new Grid { ColumnSpacing = 7, RowSpacing = 7,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
+        metrics.Add(Metric("RANK & RATING", presentation.Ranking), 0, 0);
+        metrics.Add(Metric("SCOUTED PROJECTION", presentation.Projection), 1, 0);
+        metrics.Add(Metric("ORIGIN", presentation.Origin), 0, 1);
+        metrics.Add(Metric("SCOUTING", presentation.Scouting), 1, 1);
+        var statusPanel = new Border { StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#1B3039"),
+            Content = new VerticalStackLayout { Spacing = 3, Children =
+            {
+                new Label { Text = presentation.UserStatus, FontSize = 12, FontAttributes = FontAttributes.Bold,
+                    TextColor = interaction.CommittedTeamName is not null ? Color.FromArgb("#E8C979") : Color.FromArgb("#83D6B6") },
+                new Label { Text = presentation.MarketStatus, FontSize = 11, TextColor = Color.FromArgb("#BDE5F5"), LineBreakMode = LineBreakMode.WordWrap }
+            } } };
         var info = new VerticalStackLayout
         {
-            Spacing = 5,
+            Spacing = 8,
             Children =
             {
                 new Label
@@ -2654,26 +2674,7 @@ public sealed partial class FoundationPage : ContentPage
                     FontAttributes =
                         FontAttributes.Bold,
                     FontSize = 16
-                },
-                new Label
-                {
-                    Text =
-                        presentation.Detail,
-                    FontSize = 12,
-                    TextColor = DynastyTheme.Muted,
-                    LineBreakMode = LineBreakMode.WordWrap
-                },
-                new Label
-                {
-                    Text = presentation.Interest,
-                    FontSize = 12,
-                    FontAttributes = FontAttributes.Bold,
-                    TextColor = interaction.CommittedTeamName is not null
-                        ? Color.FromArgb("#E8C979")
-                        : interaction.ScholarshipOffered
-                            ? Color.FromArgb("#83D6B6")
-                            : Color.FromArgb("#BDE5F5")
-                }
+                }, metrics, statusPanel
             }
         };
         var actions = new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.End,

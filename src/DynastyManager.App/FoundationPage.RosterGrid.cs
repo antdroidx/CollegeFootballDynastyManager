@@ -136,7 +136,7 @@ public sealed partial class FoundationPage
                 up.Clicked += (_, _) => MoveDepthPlayer(player.PlayerId, -1);
                 down.Clicked += (_, _) => MoveDepthPlayer(player.PlayerId, 1);
                 var row = new Grid { Padding = new Thickness(8, 5), ColumnSpacing = 8,
-                    ColumnDefinitions = new ColumnDefinitionCollection { new(32), new(38), new(GridLength.Star), new(55), new(GridLength.Auto), new(GridLength.Auto) } };
+                    ColumnDefinitions = new ColumnDefinitionCollection { new(32), new(38), new(GridLength.Star), new(42), new(55), new(GridLength.Auto), new(GridLength.Auto) } };
                 var handle = new Label { Text = "☰", FontSize = 20, VerticalTextAlignment = TextAlignment.Center,
                     TextColor = DynastyTheme.Accent };
                 SemanticProperties.SetDescription(handle, $"Drag {player.FullName}");
@@ -144,7 +144,9 @@ public sealed partial class FoundationPage
                 row.Add(new Label { Text = player.DepthChartOrder.ToString(), FontAttributes = FontAttributes.Bold,
                     VerticalTextAlignment = TextAlignment.Center }, 1, 0);
                 row.Add(new Label { Text = player.FullName, VerticalTextAlignment = TextAlignment.Center }, 2, 0);
-                row.Add(RatingCell(player.OverallRating), 3, 0); row.Add(up, 4, 0); row.Add(down, 5, 0);
+                row.Add(new Label { Text = $"Y{player.ClassYear}", FontSize = 11, TextColor = DynastyTheme.Muted,
+                    VerticalTextAlignment = TextAlignment.Center }, 3, 0);
+                row.Add(RatingCell(player.OverallRating), 4, 0); row.Add(up, 5, 0); row.Add(down, 6, 0);
                 var card = new Border { BackgroundColor = Color.FromArgb(RosterManagementService.IsStarter(player) ? "#244B45" : "#243542"),
                     Stroke = Color.FromArgb("#527185"), Content = row };
                 var drag = new DragGestureRecognizer { CanDrag = true };

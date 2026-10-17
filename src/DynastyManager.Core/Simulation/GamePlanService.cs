@@ -8,11 +8,13 @@ public static class GamePlanService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(plan.TeamName);
         if (!Enum.IsDefined(plan.Offense) || !Enum.IsDefined(plan.Defense) || !Enum.IsDefined(plan.Approach) ||
-            plan.OpeningScript.Count > 12 || plan.OpeningScript.Any(call => !Enum.IsDefined(call)))
+            !Enum.IsDefined(plan.OffensiveFormation) || !Enum.IsDefined(plan.DefensiveFormation) ||
+            plan.OpeningScript.Count > 12 || plan.OpeningScript.Any(call => !Enum.IsDefined(call)) ||
+            plan.FavoritePlayIds.Count > 20 || plan.FavoritePlayIds.Any(id => !PlaybookCatalog.Contains(id)))
             throw new ArgumentException("Invalid game plan.", nameof(plan));
         return state with { TeamGamePlans = state.TeamGamePlans.Where(item =>
             !item.TeamName.Equals(plan.TeamName, StringComparison.OrdinalIgnoreCase))
-            .Append(plan with { OpeningScript = plan.OpeningScript.ToArray() }).ToArray() };
+            .Append(plan with { OpeningScript = plan.OpeningScript.ToArray(), FavoritePlayIds = plan.FavoritePlayIds.Distinct().ToArray() }).ToArray() };
     }
 
     public static TeamGamePlan GetPlan(DynastyState state, TeamSimulationProfile profile)
@@ -41,6 +43,9 @@ public static class GamePlanService
         Offense = Enum.IsDefined(plan.Offense) ? plan.Offense : OffensivePlaybook.Balanced,
         Defense = Enum.IsDefined(plan.Defense) ? plan.Defense : DefensivePlaybook.Balanced,
         Approach = Enum.IsDefined(plan.Approach) ? plan.Approach : DefensiveApproach.Balanced,
+        OffensiveFormation = Enum.IsDefined(plan.OffensiveFormation) ? plan.OffensiveFormation : OffensiveFormation.ShotgunSpread,
+        DefensiveFormation = Enum.IsDefined(plan.DefensiveFormation) ? plan.DefensiveFormation : DefensiveFormation.FourThree,
+        FavoritePlayIds = plan.FavoritePlayIds.Where(PlaybookCatalog.Contains).Distinct().Take(20).ToArray(),
         OpeningScript = plan.OpeningScript.Take(12).Select(call => Enum.IsDefined(call) ? call : OffensiveConcept.Automatic).ToArray()
     };
 
@@ -67,6 +72,14 @@ public static class GamePlanService
     { DefensiveApproach.StopRun => "Stop the run", DefensiveApproach.ProtectPass => "Protect the pass", _ => approach.ToString() };
     public static string Label(OffensiveConcept concept) => concept switch
     { OffensiveConcept.InsideRun => "Inside run", OffensiveConcept.OutsideRun => "Outside run", OffensiveConcept.QuickPass => "Quick pass", OffensiveConcept.PlayAction => "Play action", OffensiveConcept.DeepPass => "Deep pass", _ => "Use playbook" };
+    public static string Label(OffensiveFormation formation) => formation switch
+    { OffensiveFormation.ShotgunSpread => "Shotgun Spread", OffensiveFormation.IForm => "I-Formation", _ => formation.ToString() };
+    public static string Label(DefensiveFormation formation) => formation switch
+    { DefensiveFormation.FourThree => "4-3", DefensiveFormation.ThreeFour => "3-4", DefensiveFormation.GoalLine => "Goal Line", _ => formation.ToString() };
+    public static string Label(OffensivePersonnel personnel) => personnel switch
+    { OffensivePersonnel.Ten => "10 personnel", OffensivePersonnel.Eleven => "11 personnel", OffensivePersonnel.Twelve => "12 personnel", OffensivePersonnel.TwentyOne => "21 personnel", _ => "Empty" };
+    public static string Label(DefensivePersonnel personnel) => personnel switch
+    { DefensivePersonnel.BaseFourThree => "4-3 base", DefensivePersonnel.BaseThreeFour => "3-4 base", DefensivePersonnel.GoalLine => "Goal line", _ => personnel.ToString() };
     public static string Describe(OffensivePlaybook book) => book switch
     {
         OffensivePlaybook.Spread => "Space the defense with quick throws and outside runs. Best with strong passing personnel.",

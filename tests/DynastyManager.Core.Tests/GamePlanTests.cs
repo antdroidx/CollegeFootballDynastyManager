@@ -22,6 +22,36 @@ public class GamePlanTests
     }
 
     [Fact]
+    public void FormationAndFavoritePlaysPersistAsThePlaybookEditorFoundation()
+    {
+        var plan = Plan("Home", OffensivePlaybook.Spread) with
+        {
+            OffensiveFormation = OffensiveFormation.Pistol,
+            DefensiveFormation = DefensiveFormation.Nickel,
+            FavoritePlayIds = ["off-pistol-read", "def-nickel-two", "off-pistol-read"]
+        };
+        var saved = GamePlanService.GetPlan(GamePlanService.SetPlan(State(), plan), Profile("Home"));
+
+        Assert.Equal(OffensiveFormation.Pistol, saved.OffensiveFormation);
+        Assert.Equal(DefensiveFormation.Nickel, saved.DefensiveFormation);
+        Assert.Equal(new[] { "off-pistol-read", "def-nickel-two" }, saved.FavoritePlayIds);
+        Assert.Throws<ArgumentException>(() => GamePlanService.SetPlan(State(), plan with { FavoritePlayIds = ["unknown-play"] }));
+        Assert.Contains(PlaybookCatalog.OffensivePlays, play => play.Formation == OffensiveFormation.Pistol && play.Personnel == OffensivePersonnel.Eleven);
+    }
+
+    [Fact]
+    public void InitialPlayCatalogHasUniqueIdsAndEveryFormation()
+    {
+        var ids = PlaybookCatalog.OffensivePlays.Select(play => play.Id)
+            .Concat(PlaybookCatalog.DefensivePlays.Select(play => play.Id)).ToArray();
+        Assert.Equal(ids.Length, ids.Distinct(StringComparer.Ordinal).Count());
+        Assert.All(Enum.GetValues<OffensiveFormation>(), formation =>
+            Assert.Contains(PlaybookCatalog.OffensivePlays, play => play.Formation == formation));
+        Assert.All(Enum.GetValues<DefensiveFormation>(), formation =>
+            Assert.Contains(PlaybookCatalog.DefensivePlays, play => play.Formation == formation));
+    }
+
+    [Fact]
     public void DriveReportReconcilesBoxScoreAndCapturesOpeningCalls()
     {
         var script = new[] { OffensiveConcept.DeepPass, OffensiveConcept.InsideRun, OffensiveConcept.QuickPass };

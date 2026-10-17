@@ -82,7 +82,7 @@ public sealed partial class FoundationPage
                 ("Speed", player.SpeedRating), ("Acceleration", player.Skills.Acceleration),
                 ("Agility", player.AgilityRating), ("Strength", player.StrengthRating),
                 ("Jumping", player.Skills.Jumping), ("Stamina", player.Skills.Stamina),
-                ("Durability", player.DurabilityRating), ("Injury proneness", 100 - player.DurabilityRating)));
+                ("Durability", player.DurabilityRating)));
             content.Children.Add(AttributeGroup("Skill traits", "Position technique and football execution",
                 ("Technique", player.TechniqueRating), ("Passing power", player.Skills.PassingPower),
                 ("Passing accuracy", player.Skills.PassingAccuracy), ("Catching", player.Skills.Catching),
@@ -91,7 +91,7 @@ public sealed partial class FoundationPage
                 ("Pass blocking", player.Skills.PassBlocking), ("Man coverage", player.Skills.ManCoverage),
                 ("Zone coverage", player.Skills.ZoneCoverage), ("Kick power", player.Skills.KickPower),
                 ("Kick accuracy", player.Skills.KickAccuracy)));
-            content.Children.Add(new Label { Text = "Injury proneness: higher means more injury risk. Other ratings: higher is better.", FontSize = 11, TextColor = DynastyTheme.Muted });
+            content.Children.Add(new Label { Text = "Higher ratings are better. Durability represents resistance to injury and wear.", FontSize = 11, TextColor = DynastyTheme.Muted });
             content.Children.Add(new Label { Text = player.CurrentInjury is null ? "Status: healthy" :
                 $"Status: {player.CurrentInjury.Severity} {player.CurrentInjury.BodyArea} injury · {player.CurrentInjury.WeeksRemaining} weeks remaining",
                 TextColor = player.CurrentInjury is null ? Color.FromArgb("#83D6B6") : Color.FromArgb("#E5A1B7"), FontSize = 12 });
@@ -108,13 +108,19 @@ public sealed partial class FoundationPage
         await Navigation.PushModalAsync(new ContentPage { Content = new ScrollView { Content = content } });
     }
 
-    private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes) =>
-        new VerticalStackLayout { Spacing = 6, Children =
+    private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes)
+    {
+        var rows = new Grid { ColumnSpacing = 12, RowSpacing = 6,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(64) } };
+        for (var index = 0; index < attributes.Length; index++)
         {
-            SectionTitle(title, subtitle),
-            DataTable([("Attribute", 220), ("Rating", 70)], attributes.Select(attribute =>
-                new View[] { TableText(attribute.Name), RatingCell(attribute.Rating) }))
-        } };
+            rows.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            rows.Add(new Label { Text = attributes[index].Name, FontSize = 12,
+                VerticalTextAlignment = TextAlignment.Center, Margin = new Thickness(4, 3) }, 0, index);
+            rows.Add(RatingCell(attributes[index].Rating), 1, index);
+        }
+        return new VerticalStackLayout { Spacing = 6, Children = { SectionTitle(title, subtitle), rows } };
+    }
 
     private async Task ShowCoachProfileAsync(StaffMember coach)
     {
