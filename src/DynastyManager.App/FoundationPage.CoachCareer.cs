@@ -106,7 +106,7 @@ public sealed partial class FoundationPage
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         var layout = new Grid { RowSpacing = 10, RowDefinitions = new RowDefinitionCollection
             { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
-        layout.Add(new Label { Text = "Coach career archive", FontSize = 24, FontAttributes = FontAttributes.Bold }, 0, 0);
+        layout.Add(new Label { Text = "Coach career archive", FontSize = 18, FontAttributes = FontAttributes.Bold }, 0, 0);
         layout.Add(search, 0, 1); layout.Add(filter, 0, 2); layout.Add(count, 0, 3);
         layout.Add(list, 0, 4); layout.Add(close, 0, 5);
         page.Content = layout;

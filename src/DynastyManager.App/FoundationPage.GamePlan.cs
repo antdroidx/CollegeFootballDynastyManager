@@ -8,40 +8,33 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
-    private readonly VerticalStackLayout _gamePlanHost = new() { Spacing = 16 };
+    private readonly VerticalStackLayout _gamePlanHost = new() { Spacing = 12 };
 
     private View BuildGamePlanSection() => _gamePlanHost;
 
-    private View CreateCoachingShortcut()
-    {
-        var button = new Button { Text = "Coaching Hub  /  Playbooks & call sheet" };
-        button.Clicked += (_, _) => ShowSection(AppSection.Playbook);
-        return button;
-    }
-
     private View CreateModuleLinks()
     {
-        var layout = new VerticalStackLayout { Spacing = 8 };
-        layout.Children.Add(new Label { Text = "EXPLORE YOUR DYNASTY", TextColor = DynastyTheme.Accent,
-            FontAttributes = FontAttributes.Bold, CharacterSpacing = 1.5, FontSize = 12 });
-        foreach (var (section, text) in new[]
+        var grid = new Grid { ColumnSpacing = 12, RowSpacing = 4,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
+        var items = new[] { (AppSection.Schedule, "Schedule & results"), (AppSection.Teams, "Teams & rosters"),
+            (AppSection.Rankings, "Rankings & postseason"), (AppSection.Program, "Program & staff") };
+        for (var index = 0; index < items.Length; index++)
         {
-            (AppSection.Schedule, "Schedule & results"), (AppSection.Teams, "Teams & rosters"),
-            (AppSection.Rankings, "Rankings & postseason"), (AppSection.Program, "Program & staff")
-        })
-        {
-            var button = new Button { Text = text, HorizontalOptions = LayoutOptions.Fill };
+            var (section, text) = items[index];
+            var button = new Button { Text = text, FontSize = 12, BackgroundColor = Microsoft.Maui.Graphics.Colors.Transparent,
+                TextColor = DynastyTheme.Accent, Padding = new Thickness(0, 5) };
             button.Clicked += (_, _) => ShowSection(section);
-            layout.Children.Add(button);
+            grid.Add(button, index % 2, index / 2);
         }
-        return new Border { Content = layout };
+        return grid;
     }
 
     private static View CoachingCard(string title, params View[] content)
     {
         var layout = new VerticalStackLayout { Spacing = 10 };
-        layout.Children.Add(new Label { Text = title, TextColor = DynastyTheme.Accent,
-            FontSize = 12, CharacterSpacing = 1.5, FontAttributes = FontAttributes.Bold });
+        layout.Children.Add(new Label { Text = title, TextColor = DynastyTheme.Muted,
+            FontSize = 12, CharacterSpacing = 0, FontAttributes = FontAttributes.Bold });
         foreach (var view in content) layout.Children.Add(view);
         return new Border { Content = layout };
     }
@@ -54,16 +47,29 @@ public sealed partial class FoundationPage
             _gamePlanHost.Children.Add(new Label { Text = "Create or load a dynasty to build your game plan." });
             return;
         }
+        var careerTools = new HorizontalStackLayout { Spacing = 8 };
         if (_currentDynasty.UserHeadCoach is not null)
-            _gamePlanHost.Children.Add(CreateCoachCareerButton(_currentDynasty.UserHeadCoach));
-        _gamePlanHost.Children.Add(CreateCoachArchiveShortcut());
+        {
+            var career = CreateCoachCareerButton(_currentDynasty.UserHeadCoach);
+            career.BackgroundColor = Microsoft.Maui.Graphics.Colors.Transparent;
+            career.TextColor = DynastyTheme.Accent;
+            careerTools.Children.Add(career);
+        }
+        var archive = CreateCoachArchiveShortcut();
+        if (archive is Button archiveButton)
+        {
+            archiveButton.BackgroundColor = Microsoft.Maui.Graphics.Colors.Transparent;
+            archiveButton.TextColor = DynastyTheme.Accent;
+        }
+        careerTools.Children.Add(archive);
+        _gamePlanHost.Children.Add(careerTools);
         var dynastyId = _currentDynasty.DynastyId;
         var teamName = _currentDynasty.UserTeamName;
         var profiles = BuildCurrentSimulationProfiles();
         if (!profiles.TryGetValue(teamName, out var profile)) return;
         var plan = GamePlanService.GetPlan(_currentDynasty, profile);
         _gamePlanHost.Children.Add(CoachingCard("PROGRAM IDENTITY",
-            new Label { Text = teamName, FontSize = 24, FontAttributes = FontAttributes.Bold },
+            new Label { Text = teamName, FontSize = 16, FontAttributes = FontAttributes.Bold },
             new Label { Text = $"PASS {profile.PassOffenseRating:F0}  /  RUN {profile.RushOffenseRating:F0}  /  DEF {profile.DefenseRating:F0}",
                 TextColor = DynastyTheme.Muted },
             new Label { Text = "Build around your personnel. Playbooks change tendencies; player ratings still decide matchups." }));

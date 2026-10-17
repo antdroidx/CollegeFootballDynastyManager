@@ -127,6 +127,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Checkout UI smoke test
+        uses: actions/checkout@v4
+
       - name: Download built APK
         uses: actions/download-artifact@v4
         with:
@@ -160,11 +163,7 @@ jobs:
             sleep 8
             adb logcat -d > android-logcat.txt
             adb shell pidof antdroid.cfbcoach.dev
-            adb shell screencap -p /sdcard/dynasty-launch.png
-            adb pull /sdcard/dynasty-launch.png android-launch.png
-            adb shell uiautomator dump /sdcard/dynasty-launch.xml
-            adb pull /sdcard/dynasty-launch.xml android-launch.xml
-            echo "App survived launch."
+            python3 build/android-ui-smoke.py
 
       - name: Upload launch UI evidence
         if: always()
@@ -172,8 +171,8 @@ jobs:
         with:
           name: android-launch-ui-${{ github.run_number }}
           path: |
-            android-launch.png
-            android-launch.xml
+            android-*.png
+            android-*.xml
           if-no-files-found: ignore
           retention-days: 3
 

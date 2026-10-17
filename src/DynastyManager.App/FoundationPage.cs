@@ -18,6 +18,8 @@ public sealed partial class FoundationPage : ContentPage
     private enum AppSection
     {
         Home,
+        NewDynasty,
+        Dynasty,
         Schedule,
         Roster,
         Teams,
@@ -128,6 +130,10 @@ public sealed partial class FoundationPage : ContentPage
     private readonly Picker _teamBrowserPicker;
     private readonly VerticalStackLayout _teamBrowserList;
     private readonly Dictionary<AppSection, Button> _navButtons = new();
+    private readonly Dictionary<AppSection, BoxView> _navIndicators = new();
+    private Border _navigationBar = null!;
+    private readonly Button _libraryButton = new() { Text = "‹ Saves", FontSize = 12, Padding = new Thickness(0, 2, 12, 2), BackgroundColor = Colors.Transparent };
+    private readonly Label _headerContext = new() { FontSize = 11, TextColor = DynastyTheme.Muted };
     private readonly Dictionary<AppSection, View> _sectionViews = new();
     private AppSection _activeSection = AppSection.Home;
     private RecruitingView _recruitingView = RecruitingView.HighSchool;
@@ -181,7 +187,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _newDynastyButton = new Button
         {
-            Text = "Create New Dynasty",
+            Text = "Start dynasty",
             TextColor = Colors.White
         };
         _newDynastyButton.Clicked += CreateNewDynasty;
@@ -189,7 +195,7 @@ public sealed partial class FoundationPage : ContentPage
         _currentDynastyLabel = new Label
         {
             Text = "No dynasty loaded.",
-            FontSize = 17
+            FontSize = 14
         };
 
         _advanceWeekButton = new Button
@@ -335,7 +341,7 @@ public sealed partial class FoundationPage : ContentPage
         _screenTitle = new Label
         {
             Text = "Home",
-            FontSize = 23,
+            FontSize = 18,
             FontAttributes = FontAttributes.Bold
         };
 
@@ -527,7 +533,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             Text = "Preparing weekly advance...",
             TextColor = Colors.White,
-            FontSize = 16,
+            FontSize = 14,
             FontAttributes = FontAttributes.Bold,
             HorizontalTextAlignment = TextAlignment.Center
         };
@@ -585,11 +591,11 @@ public sealed partial class FoundationPage : ContentPage
             Spacing = 5
         };
 
-        var navigation = new Grid { ColumnSpacing = 2, Padding = new Thickness(6, 8),
+        var navigation = new Grid { ColumnSpacing = 2, Padding = new Thickness(6, 3),
             ColumnDefinitions = new ColumnDefinitionCollection
             { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
 
-        foreach (var section in new[] { AppSection.Home, AppSection.Recruiting, AppSection.Playbook, AppSection.Roster, AppSection.More })
+        foreach (var section in new[] { AppSection.Dynasty, AppSection.Recruiting, AppSection.Playbook, AppSection.Roster, AppSection.More })
         {
             var captured = section;
             var button = new Button
@@ -600,19 +606,26 @@ public sealed partial class FoundationPage : ContentPage
                     AppSection.Rankings => "Ranks",
                     AppSection.Teams => "Teams",
                     AppSection.Playbook => "Coach",
+                    AppSection.Dynasty => "Overview",
+                    AppSection.More => "Manage",
                     _ => section.ToString()
                 },
-                FontSize = 11,
-                Padding = new Thickness(2, 8),
+                FontSize = 12,
+                Padding = new Thickness(2, 5),
+                HorizontalOptions = LayoutOptions.Fill,
                 TextColor = Colors.White
             };
 
             button.Clicked += (_, _) => ShowSection(captured);
             _navButtons[section] = button;
-            navigation.Add(button, _navButtons.Count - 1, 0);
+            var indicator = new BoxView { HeightRequest = 2, Color = DynastyTheme.Accent, IsVisible = false };
+            _navIndicators[section] = indicator;
+            var tab = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
+            tab.Add(button, 0, 0); tab.Add(indicator, 0, 1);
+            navigation.Add(tab, _navButtons.Count - 1, 0);
         }
 
-        var navigationBar = new Border
+        _navigationBar = new Border
         {
             StrokeThickness = 1,
             Padding = 0,
@@ -625,7 +638,9 @@ public sealed partial class FoundationPage : ContentPage
         {
             View sectionContent = section switch
             {
-                AppSection.Home => BuildHomeSection(),
+                AppSection.Home => BuildLibrarySection(),
+                AppSection.NewDynasty => BuildNewDynastySection(),
+                AppSection.Dynasty => BuildHomeSection(),
                 AppSection.Schedule => BuildScheduleSection(),
                 AppSection.Roster => BuildRosterSection(),
                 AppSection.Teams => BuildTeamsSection(),
@@ -642,7 +657,7 @@ public sealed partial class FoundationPage : ContentPage
             if (section == AppSection.Recruiting)
             {
                 sectionContent.Margin =
-                    new Thickness(16, 6, 16, 10);
+                    new Thickness(14, 6, 14, 10);
                 sectionContent.IsVisible = false;
                 page = sectionContent;
             }
@@ -653,8 +668,8 @@ public sealed partial class FoundationPage : ContentPage
                     IsVisible = false,
                     Content = new VerticalStackLayout
                     {
-                        Padding = new Thickness(16, 10, 16, 24),
-                        Spacing = 14,
+                        Padding = new Thickness(14, 8, 14, 16),
+                        Spacing = 12,
                         Children =
                         {
                             sectionContent
@@ -677,15 +692,18 @@ public sealed partial class FoundationPage : ContentPage
             }
         };
 
-        root.Add(_screenTitle);
-        Grid.SetRow(_screenTitle, 0);
-        _screenTitle.Margin = new Thickness(16, 12, 16, 4);
+        _libraryButton.Clicked += async (_, _) => await ReturnToLibraryAsync();
+        var heading = new VerticalStackLayout { Spacing = 2, Children = { _screenTitle, _headerContext } };
+        var header = new Grid { Padding = new Thickness(14, 10, 14, 4),
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star) } };
+        header.Add(_libraryButton, 0, 0); header.Add(heading, 1, 0);
+        root.Add(header, 0, 0);
 
         root.Add(pages);
         Grid.SetRow(pages, 1);
 
-        root.Add(navigationBar);
-        Grid.SetRow(navigationBar, 2);
+        root.Add(_navigationBar);
+        Grid.SetRow(_navigationBar, 2);
 
         var shell = new Grid();
         shell.Children.Add(root);
@@ -698,7 +716,9 @@ public sealed partial class FoundationPage : ContentPage
 
     private void ShowSection(AppSection section)
     {
+        if (_currentDynasty is null && section is not (AppSection.Home or AppSection.NewDynasty)) section = AppSection.Home;
         _activeSection = section;
+        UpdateShellContext();
         if (section != AppSection.Recruiting)
         {
             _recruitingLoadCancellation?.Cancel();
@@ -714,8 +734,9 @@ public sealed partial class FoundationPage : ContentPage
                     : FontAttributes.None;
             var selected = pair.Key == section || (pair.Key == AppSection.More && !_navButtons.ContainsKey(section));
             pair.Value.Opacity = 1.0;
-            pair.Value.BackgroundColor = selected ? DynastyTheme.Accent : Colors.Transparent;
-            pair.Value.TextColor = selected ? DynastyTheme.Background : DynastyTheme.Muted;
+            pair.Value.BackgroundColor = Colors.Transparent;
+            pair.Value.TextColor = selected ? DynastyTheme.Accent : DynastyTheme.Muted;
+            _navIndicators[pair.Key].IsVisible = selected;
         }
 
         foreach (var pair in _sectionViews)
@@ -723,7 +744,9 @@ public sealed partial class FoundationPage : ContentPage
 
         _screenTitle.Text = section switch
         {
-            AppSection.Home => "Dynasty Home",
+            AppSection.Home => "College Football",
+            AppSection.NewDynasty => "Start a dynasty",
+            AppSection.Dynasty => "Overview",
             AppSection.Schedule => "Schedule",
             AppSection.Roster => "Roster & Depth Chart",
             AppSection.Teams => "Teams & Rosters",
@@ -731,7 +754,7 @@ public sealed partial class FoundationPage : ContentPage
             AppSection.Rankings => "Rankings & Postseason",
             AppSection.Program => "Program",
             AppSection.Playbook => "Coaching Hub",
-            AppSection.More => "Dynasty & Saves",
+            AppSection.More => "Manage dynasty",
             _ => section.ToString()
         };
 
@@ -741,43 +764,14 @@ public sealed partial class FoundationPage : ContentPage
 
     private View BuildHomeSection()
     {
-        var dynastyManagerButton = new Button
-        {
-            Text = "Create / Load Dynasty",
-            TextColor = Colors.White
-        };
-        dynastyManagerButton.Clicked += (_, _) =>
-            ShowSection(AppSection.More);
-
-        Grid.SetColumn(_autosaveButton, 1);
         _advanceWeekButton.BackgroundColor = DynastyTheme.Accent;
         _advanceWeekButton.TextColor = DynastyTheme.Background;
-        return new VerticalStackLayout
+        _manualSaveButton.Text = "Save";
+        var actions = new HorizontalStackLayout { Spacing = 8, Children = { _advanceWeekButton, _manualSaveButton } };
+        return new VerticalStackLayout { Spacing = 12, Children =
         {
-            Spacing = 14,
-            Children =
-            {
-                new Border
-                {
-                    Content = new VerticalStackLayout { Spacing = 10, Children =
-                    {
-                        new Label { Text = "YOUR PROGRAM", TextColor = DynastyTheme.Accent,
-                            FontSize = 12, CharacterSpacing = 2, FontAttributes = FontAttributes.Bold },
-                        _currentDynastyLabel
-                    } }
-                },
-                _advanceWeekButton,
-                new Grid
-                {
-                    ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
-                    Children = { _manualSaveButton, _autosaveButton }
-                },
-                CreateCoachingShortcut(),
-                dynastyManagerButton,
-                _homeStatus,
-                _homeHighlights
-            }
-        };
+            _currentDynastyLabel, actions, _homeStatus, _homeHighlights
+        } };
     }
 
     private View BuildScheduleSection() =>
@@ -979,14 +973,10 @@ public sealed partial class FoundationPage : ContentPage
                 CreateModuleLinks(),
                 new Label
                 {
-                    Text = "NEW DYNASTY",
+                    Text = "Preferences",
                     FontAttributes = FontAttributes.Bold
                 },
-                _dynastyNameEntry,
-                _leaguePicker,
-                _teamPicker,
-                _newDynastyButton,
-                new BoxView { HeightRequest = 1 },
+
                 new Label
                 {
                     Text = "RECRUITING ASSISTANCE",
@@ -1035,19 +1025,8 @@ public sealed partial class FoundationPage : ContentPage
                 },
                 _rollingAutosaveStatus,
                 new BoxView { HeightRequest = 1 },
-                new Label
-                {
-                    Text = "SAVE SLOTS",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _saveList,
-                new BoxView { HeightRequest = 1 },
-                new Label
-                {
-                    Text = "DATA STATUS",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _importStatus
+                _autosaveButton,
+
             }
         };
 
@@ -1107,6 +1086,7 @@ public sealed partial class FoundationPage : ContentPage
         catch (Exception ex)
         {
             _importStatus.Text = $"Startup failed: {ex.Message}";
+            _libraryStatus.Text = $"Could not load dynasty data: {ex.Message}";
         }
         finally
         {
@@ -1139,9 +1119,10 @@ public sealed partial class FoundationPage : ContentPage
         if (_teamPicker.SelectedItem is not string teamName ||
             !_newDynastyTeams.Any(team => team.Name == teamName))
         {
-            _currentDynastyLabel.Text = "Choose a team before creating a dynasty.";
+            _newDynastyStatus.Text = "Choose a school before starting your dynasty.";
             return;
         }
+        _newDynastyStatus.Text = "";
         ConfigureLeague(_newDynastyTeams);
         var dynastyName = string.IsNullOrWhiteSpace(_dynastyNameEntry.Text)
             ? $"{teamName} Dynasty"
@@ -1215,12 +1196,12 @@ public sealed partial class FoundationPage : ContentPage
             await ShowAdvanceProgressAsync("Dynasty ready", 1.0);
             SetDynastyControlsEnabled(true);
             RenderCurrentDynasty();
-            ShowSection(AppSection.Home);
+            ShowSection(AppSection.Dynasty);
         }
         catch (Exception ex)
         {
             _currentDynasty = null;
-            _currentDynastyLabel.Text =
+            _newDynastyStatus.Text =
                 $"Schedule generation failed: {ex.Message}";
             _scheduleList.Children.Clear();
         }
@@ -1877,7 +1858,7 @@ public sealed partial class FoundationPage : ContentPage
                 state.RecruitingAssistanceWorkloadPercent);
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
-        ShowSection(AppSection.Home);
+        ShowSection(AppSection.Dynasty);
         await ShowAdvanceProgressAsync("Dynasty loaded", 1.0);
         }
         finally
@@ -1909,68 +1890,31 @@ public sealed partial class FoundationPage : ContentPage
         {
             _saveList.Children.Add(new Label
             {
-                Text = "No saves yet."
+                Text = "No saved dynasties yet. Start a new dynasty to begin.", FontSize = 13, TextColor = DynastyTheme.Muted
             });
             return;
         }
 
-        foreach (var save in saves)
+        foreach (var career in saves.GroupBy(save => save.DynastyId).OrderByDescending(group => group.Max(save => save.UpdatedUtc)))
         {
-            var loadButton = new Button
+            var versions = career.OrderByDescending(save => save.UpdatedUtc).ToArray();
+            var latest = versions[0];
+            var load = new Button { Text = "Load", FontSize = 12 };
+            load.Clicked += async (_, _) => await LoadSaveAsync(latest.SaveId);
+            var manage = new Button { Text = "Versions", FontSize = 12, BackgroundColor = Colors.Transparent,
+                TextColor = DynastyTheme.Muted, Padding = new Thickness(8, 5) };
+            manage.Clicked += async (_, _) => await OpenSaveVersionsAsync(versions);
+            var info = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children =
             {
-                Text = "Load",
-                TextColor = Colors.White
-            };
-            loadButton.Clicked += async (_, _) => await LoadSaveAsync(save.SaveId);
-
-            var deleteButton = new Button
-            {
-                Text = "Delete",
-                TextColor = Colors.White
-            };
-            deleteButton.Clicked += async (_, _) => await DeleteSaveAsync(save.SaveId);
-
-            var card = new VerticalStackLayout
-            {
-                Padding = new Thickness(12),
-                Spacing = 6,
-                Children =
-                {
-                    new Label
-                    {
-                        Text = save.DynastyName,
-                        FontAttributes = FontAttributes.Bold,
-                        FontSize = 17
-                    },
-                    new Label
-                    {
-                        Text =
-                            $"{save.UserTeamName} • {save.SeasonYear} • " +
-                            $"{FormatWeek(save)} • {RollingAutosavePolicy.GetDisplayName(save.Kind)}"
-                    },
-                    new Label
-                    {
-                        Text = $"Updated {save.UpdatedUtc.ToLocalTime():g}",
-                        FontSize = 12
-                    },
-                    new HorizontalStackLayout
-                    {
-                        Spacing = 10,
-                        Children =
-                        {
-                            loadButton,
-                            deleteButton
-                        }
-                    }
-                }
-            };
-
-            _saveList.Children.Add(new Border
-            {
-                StrokeThickness = 1,
-                Padding = 0,
-                Content = card
-            });
+                new Label { Text = latest.DynastyName, FontSize = 14, FontAttributes = FontAttributes.Bold },
+                new Label { Text = $"{latest.UserTeamName} · {latest.SeasonYear} · {FormatWeek(latest)}", FontSize = 12 },
+                new Label { Text = $"Last saved {latest.UpdatedUtc.ToLocalTime():g}", FontSize = 11, TextColor = DynastyTheme.Muted }
+            } };
+            var actions = new HorizontalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { load, manage } };
+            var row = new Grid { ColumnSpacing = 10,
+                ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
+            row.Add(info, 0, 0); row.Add(actions, 1, 0);
+            _saveList.Children.Add(new Border { Content = row, Padding = new Thickness(12, 10) });
         }
     }
 
@@ -2026,22 +1970,12 @@ public sealed partial class FoundationPage : ContentPage
         var conferenceLosses =
             conferenceGames.Length - conferenceWins;
 
-        var weekLabel = _currentDynasty.Phase switch
-        {
-            SeasonPhase.Preseason => "Preseason",
-            SeasonPhase.Recruiting =>
-                $"Recruiting Week {SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)} " +
-                $"of {SeasonProgression.RecruitingWeekCount}",
-            _ => $"Week {_currentDynasty.Week}"
-        };
-
         _currentDynastyLabel.Text =
             $"{_currentDynasty.DynastyName}\n" +
-            $"{_currentDynasty.UserTeamName} • Record {wins}-{losses} • " +
-            $"Conf {conferenceWins}-{conferenceLosses}\n" +
-            $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
-            $"{_currentDynasty.LeagueName} • {_teamsByName.Count} teams";
+            $"Record {wins}-{losses} · Conference {conferenceWins}-{conferenceLosses}\n" +
+            $"{_currentDynasty.LeagueName} · {_teamsByName.Count} teams";
 
+        UpdateShellContext();
         RenderSection(_activeSection);
     }
 
@@ -2049,7 +1983,7 @@ public sealed partial class FoundationPage : ContentPage
     {
         switch (section)
         {
-            case AppSection.Home:
+            case AppSection.Dynasty:
                 RenderHomeScreen();
                 break;
 
@@ -2532,7 +2466,7 @@ public sealed partial class FoundationPage : ContentPage
                             Text = value,
                             FontAttributes =
                                 FontAttributes.Bold,
-                            FontSize = 15
+                            FontSize = 14
                         }
                     }
                 }
@@ -3447,7 +3381,7 @@ public sealed partial class FoundationPage : ContentPage
                                 $"{prospect.Position} {prospect.FullName}",
                             FontAttributes =
                                 FontAttributes.Bold,
-                            FontSize = 17
+                            FontSize = 14
                         },
                         new Label
                         {
@@ -3555,7 +3489,7 @@ public sealed partial class FoundationPage : ContentPage
                         {
                             Text = scout.FullName,
                             FontAttributes = FontAttributes.Bold,
-                            FontSize = 15
+                            FontSize = 14
                         },
                         new Label
                         {
