@@ -73,11 +73,35 @@ public sealed partial class FoundationPage
         } };
         if (active is not null)
         {
+            player = PlayerRatingService.EnsureInitialized(state, player);
             content.Children.Add(SectionTitle("Player attributes", $"OVR {player.OverallRating} · Potential {FormatPotentialStars(player.PotentialRating)} · Depth {player.DepthChartOrder}"));
-            content.Children.Add(DataTable([("Attribute", 165), ("Rating", 70)],
-                new[] { ("Speed", player.SpeedRating), ("Strength", player.StrengthRating), ("Agility", player.AgilityRating),
-                    ("Awareness", player.AwarenessRating), ("Technique", player.TechniqueRating), ("Durability", player.DurabilityRating) }
+            content.Children.Add(DataTable([("Attribute", 220), ("Rating", 70)],
+                new[] { ("Speed", player.SpeedRating),
+                    ("Strength", player.StrengthRating),
+                    ("Agility", player.AgilityRating),
+                    ("Awareness", player.AwarenessRating),
+                    ("Technique", player.TechniqueRating),
+                    ("Durability", player.DurabilityRating),
+                    ("Injury proneness", 100 - player.DurabilityRating),
+                    ("Passing power", player.Skills!.PassingPower),
+                    ("Passing accuracy", player.Skills!.PassingAccuracy),
+                    ("Catching", player.Skills!.Catching),
+                    ("Break tackle", player.Skills!.BreakTackle),
+                    ("Tackling", player.Skills!.Tackling),
+                    ("Run blocking", player.Skills!.RunBlocking),
+                    ("Pass blocking", player.Skills!.PassBlocking),
+                    ("Ball carrying", player.Skills!.BallCarrying),
+                    ("Acceleration", player.Skills!.Acceleration),
+                    ("Stamina", player.Skills!.Stamina),
+                    ("Leadership", player.Skills!.Leadership),
+                    ("Discipline", player.Skills!.Discipline),
+                    ("Jumping", player.Skills!.Jumping),
+                    ("Man defensive awareness", player.Skills!.ManCoverage),
+                    ("Zone defensive awareness", player.Skills!.ZoneCoverage),
+                    ("Kick power", player.Skills!.KickPower),
+                    ("Kick accuracy", player.Skills!.KickAccuracy) }
                 .Select(attribute => new View[] { TableText(attribute.Item1), RatingCell(attribute.Item2) })));
+            content.Children.Add(new Label { Text = "Injury proneness: higher means more injury risk. Other ratings: higher is better.", FontSize = 11, TextColor = DynastyTheme.Muted });
             content.Children.Add(new Label { Text = player.CurrentInjury is null ? "Status: healthy" :
                 $"Status: {player.CurrentInjury.Severity} {player.CurrentInjury.BodyArea} injury · {player.CurrentInjury.WeeksRemaining} weeks remaining",
                 TextColor = player.CurrentInjury is null ? Color.FromArgb("#83D6B6") : Color.FromArgb("#E5A1B7"), FontSize = 12 });

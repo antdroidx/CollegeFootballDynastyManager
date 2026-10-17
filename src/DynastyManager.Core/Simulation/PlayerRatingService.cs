@@ -31,7 +31,7 @@ public static class PlayerRatingService
             player.TechniqueRating > 0 &&
             player.DurabilityRating > 0)
         {
-            return player;
+            return PlayerSkillService.EnsureInitialized(player);
         }
 
         var target = Math.Clamp(player.OverallRating, 50, 99);
@@ -86,13 +86,13 @@ public static class PlayerRatingService
                 target,
                 99);
 
-        return initialized with
+        return PlayerSkillService.EnsureInitialized(initialized with
         {
             OverallRating = CalculateOverall(initialized),
             PotentialRating = Math.Max(
                 CalculateOverall(initialized),
                 potential)
-        };
+        });
     }
 
     public static int CalculateOverall(DynastyPlayer player)

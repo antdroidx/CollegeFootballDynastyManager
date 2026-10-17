@@ -122,10 +122,10 @@ public static class DynastyRosterSimulationProfileBuilder
                     rb * .05 +
                     offenseModifier,
                 RushOffenseRating =
-                    rb * .35 +
-                    ol * .40 +
-                    qb * .10 +
-                    te * .15 +
+                    AverageDepth(roster, fallback, Position.RB, false) * .35 +
+                    AverageDepth(roster, fallback, Position.OL, false) * .40 +
+                    AverageDepth(roster, fallback, Position.QB, false) * .10 +
+                    AverageDepth(roster, fallback, Position.TE, false) * .15 +
                     offenseModifier,
                 PassDefenseRating =
                     cb * .30 +
@@ -136,12 +136,12 @@ public static class DynastyRosterSimulationProfileBuilder
                     mlb * .10 +
                     defenseModifier,
                 RushDefenseRating =
-                    dt * .20 +
-                    de * .15 +
-                    mlb * .25 +
-                    olb * .20 +
-                    safety * .15 +
-                    cb * .05 +
+                    AverageDepth(roster, fallback, Position.DT, false) * .20 +
+                    AverageDepth(roster, fallback, Position.DE, false) * .15 +
+                    AverageDepth(roster, fallback, Position.MLB, false) * .25 +
+                    AverageDepth(roster, fallback, Position.OLB, false) * .20 +
+                    (AverageDepth(roster, fallback, Position.FS, false) + AverageDepth(roster, fallback, Position.SS, false)) / 2 * .15 +
+                    AverageDepth(roster, fallback, Position.CB, false) * .05 +
                     defenseModifier,
                 SpecialTeamsRating =
                     kicker * .85 +
@@ -158,7 +158,7 @@ public static class DynastyRosterSimulationProfileBuilder
     private static double AverageDepth(
         IReadOnlyCollection<DynastyPlayer> roster,
         double fallback,
-        Position position)
+        Position position, bool passing = true)
     {
         var count =
             DynastyRosterRules.StarterPositionCounts.TryGetValue(
@@ -178,7 +178,7 @@ public static class DynastyRosterSimulationProfileBuilder
                 player.OverallRating)
             .Take(count)
             .Select(player =>
-                (double)player.OverallRating)
+                PlayerSkillService.GameRating(player, passing))
             .ToArray();
 
         return values.Length == 0

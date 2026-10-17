@@ -291,7 +291,7 @@ public class CompetingRecruitingTests
             var loaded = (await repository.LoadAsync(save))!;
             var market = CompetingRecruitingService.AdvanceOffers(loaded, Teams());
             Assert.Equal(state.RecruitingCommitments, market.RecruitingCommitments);
-            Assert.Equal(state.ActiveRoster, market.ActiveRoster);
+            Assert.Equal(PlayerRatingService.EnsureProfiles(state).ActiveRoster, market.ActiveRoster);
             Assert.DoesNotContain(market.RecruitingOffers, item => item.ProspectId == GuidFor(99));
             Assert.All(market.RecruitingOffers, item => Assert.Equal(23, item.OfferedWeek));
             Assert.Contains(market.RecruitingOffers, item => item.TeamName == "User" && item.Interest == 82);

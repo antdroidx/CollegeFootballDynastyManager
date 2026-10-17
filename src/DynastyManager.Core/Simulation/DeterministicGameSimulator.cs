@@ -77,6 +77,8 @@ public static class DeterministicGameSimulator
         return game with
         {
             HasPlayed = true,
+            HomePregameRating = (homeProfile.OffenseRating + homeProfile.DefenseRating) / 2,
+            AwayPregameRating = (awayProfile.OffenseRating + awayProfile.DefenseRating) / 2,
             HomeGamePlan = homeProfile.GamePlan, AwayGamePlan = awayProfile.GamePlan, Drives = drives,
             HomeScore = homeScore,
             AwayScore = awayScore,

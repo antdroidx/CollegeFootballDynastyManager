@@ -212,6 +212,7 @@ public static class InjuryService
             }
         };
 
+        updated = updated with { Skills = PlayerSkillService.Develop(player, updated) };
         updated = PlayerRatingService.RecalculateOverall(
             updated);
 

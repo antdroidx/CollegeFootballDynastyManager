@@ -17,6 +17,7 @@ public sealed record DynastyPlayer
     public int AwarenessRating { get; init; }
     public int TechniqueRating { get; init; }
     public int DurabilityRating { get; init; }
+    public PlayerSkillRatings? Skills { get; init; }
     public PlayerInjury? CurrentInjury { get; init; }
     public bool IsWalkOn { get; init; }
     public int DepthChartOrder { get; init; }

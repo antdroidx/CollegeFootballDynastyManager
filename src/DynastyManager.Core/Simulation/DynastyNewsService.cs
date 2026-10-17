@@ -25,10 +25,40 @@ public static class DynastyNewsService
             var loser = homeWon ? game.AwayTeamName : game.HomeTeamName;
             var high = Math.Max(game.HomeScore!.Value, game.AwayScore!.Value);
             var low = Math.Min(game.HomeScore.Value, game.AwayScore.Value);
-            var verb = low == 0 ? "shuts out" : high - low <= 7 ? "edges" : "beats";
-            stories.Add(new($"game/{game.GameId}", "Results", $"{winner} {verb} {loser}, {high}–{low}",
+            var earlier = state.Schedule.Where(g => g.SeasonYear == game.SeasonYear && g.Week < game.Week &&
+                g.HasPlayed && g.HomeScore.HasValue && g.AwayScore.HasValue).ToArray();
+            var winnerBefore = earlier.Where(g => g.InvolvesTeam(winner)).ToArray();
+            var loserBefore = earlier.Where(g => g.InvolvesTeam(loser)).ToArray();
+            var winnerRating = homeWon ? game.HomePregameRating : game.AwayPregameRating;
+            var loserRating = homeWon ? game.AwayPregameRating : game.HomePregameRating;
+            var strengthUpset = winnerRating.HasValue && loserRating.HasValue && loserRating - winnerRating >= 8;
+            var recordUpset = !winnerRating.HasValue && !loserRating.HasValue && winnerBefore.Length >= 3 && loserBefore.Length >= 3 &&
+                loserBefore.Count(g => g.HomeScore != g.AwayScore && g.WinnerTeamName == loser) / (double)loserBefore.Length >= .75 &&
+                winnerBefore.Count(g => g.HomeScore != g.AwayScore && g.WinnerTeamName == winner) / (double)winnerBefore.Length <= .5;
+            var upset = strengthUpset || recordUpset;
+            var streak = winnerBefore.OrderByDescending(g => g.Week).TakeWhile(g => g.HomeScore != g.AwayScore && g.WinnerTeamName == winner).Count() + 1;
+            var endedStreak = loserBefore.OrderByDescending(g => g.Week).TakeWhile(g => g.HomeScore != g.AwayScore && g.WinnerTeamName == loser).Count();
+            var category = upset ? "Upsets" : low == 0 ? "Shutouts" : high - low >= 28 ? "Blowouts" : "Results";
+            var verb = upset ? "upsets" : low == 0 ? "shuts out" : high - low >= 28 ? "rolls past" : high - low <= 7 ? "edges" : "beats";
+            var headline = $"{winner} {verb} {loser}, {high}–{low}";
+            var notable = strengthUpset ? $"The winner entered with a recorded team strength of {winnerRating:F1}, compared with {loserRating:F1} for {loser}. " :
+                recordUpset ? "The winner entered at .500 or below against an opponent winning at least 75% of its earlier games. " : "";
+            if (endedStreak >= 4) notable += $"The result ends {loser}'s {endedStreak}-game winning streak. ";
+            if (streak >= 5)
+            {
+                notable += $"{winner} has won {streak} consecutive games this season. ";
+                if (!upset && low != 0 && high - low < 28) { category = "Streaks"; headline = $"{winner} wins {streak} straight, beats {loser} {high}–{low}"; }
+            }
+            if (game.GameType == ScheduledGameType.ConferenceChampionship)
+            { category = "Championships"; headline = $"{winner} wins conference title over {loser}, {high}–{low}"; }
+            else if (game.GameType == ScheduledGameType.CollegeFootballPlayoff)
+            { category = "Playoff"; headline = game.PostseasonRound == PostseasonRound.NationalChampionship ?
+                $"{winner} wins national championship, beats {loser} {high}–{low}" : $"{winner} advances in playoff, beats {loser} {high}–{low}"; }
+            else if (game.GameType == ScheduledGameType.Bowl)
+            { category = "Bowls"; headline = $"{winner} wins {game.BowlName ?? "bowl matchup"}, beats {loser} {high}–{low}"; }
+            stories.Add(new($"game/{game.GameId}", category, headline,
                 $"{game.SeasonYear} · Week {game.Week}\n\n{winner} defeated {loser} {high}–{low}. " +
-                (game.IsNeutralSite ? "The matchup was played at a neutral site. " : $"The game was hosted by {game.HomeTeamName}. ") +
+                notable + (game.IsNeutralSite ? "The matchup was played at a neutral site. " : $"The game was hosted by {game.HomeTeamName}. ") +
                 (game.HomeStats is not null && game.AwayStats is not null ? $"{game.HomeTeamName} recorded {game.HomeStats.TotalYards} yards; {game.AwayTeamName} recorded {game.AwayStats.TotalYards}." : "The result is now recorded in the season schedule."),
                 game.InvolvesTeam(state.UserTeamName) ? state.UserTeamName : winner, game.SeasonYear, game.Week));
         }
@@ -56,7 +86,9 @@ public static class DynastyNewsService
                 state.UserTeamName, state.SeasonYear, state.Week));
         }
         return stories.OrderByDescending(s => s.SeasonYear).ThenByDescending(s => s.Week)
-            .ThenByDescending(s => s.TeamName == state.UserTeamName).ThenBy(s => s.Id, StringComparer.Ordinal)
+            .ThenByDescending(s => s.Category is "Championships" or "Playoff" or "Upsets" or "Streaks" or "Shutouts" or "Blowouts" or "Bowls")
+            .ThenByDescending(s => s.TeamName == state.UserTeamName)
+            .ThenBy(s => s.Id, StringComparer.Ordinal)
             .DistinctBy(s => s.Id).Take(Math.Max(0, limit)).ToArray();
     }
 }

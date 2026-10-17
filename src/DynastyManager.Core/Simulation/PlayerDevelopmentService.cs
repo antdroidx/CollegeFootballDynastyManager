@@ -231,6 +231,7 @@ public static class PlayerDevelopmentService
                 developed.PotentialRating + 1);
         }
 
+        developed = developed with { Skills = PlayerSkillService.Develop(player, developed) };
         return PlayerRatingService.RecalculateOverall(
             developed);
     }
@@ -307,6 +308,7 @@ public static class PlayerDevelopmentService
                 player.DurabilityRating + durabilityChange)
         };
 
+        developed = developed with { Skills = PlayerSkillService.Develop(player, developed) };
         return PlayerRatingService.RecalculateOverall(
             developed);
     }
@@ -404,6 +406,7 @@ public static class PlayerDevelopmentService
                 player.DurabilityRating - difference)
         };
 
+        reduced = reduced with { Skills = PlayerSkillService.Develop(player, reduced) };
         return PlayerRatingService.RecalculateOverall(
             reduced);
     }
