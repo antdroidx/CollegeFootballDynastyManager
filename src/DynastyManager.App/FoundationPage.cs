@@ -1645,144 +1645,6 @@ public sealed partial class FoundationPage : ContentPage
 
         ConfigureLeague(state.LeagueTeams.Count > 0 ? state.LeagueTeams : _legacyTeams);
 
-        if (state.Schedule.Count == 0 && _teamsByName.Count > 1)
-        {
-            SetDynastyControlsEnabled(false);
-            _currentDynastyLabel.Text =
-                "Generating schedule for this older save…";
-
-            try
-            {
-                await ShowAdvanceProgressAsync("Rebuilding missing schedule...", 0.24);
-                state = state with
-                {
-                    Schedule = await GenerateScheduleAsync(
-                        state.DynastyId,
-                        state.SeasonYear)
-                };
-            }
-            catch (Exception ex)
-            {
-                _currentDynastyLabel.Text =
-                    $"Schedule generation failed: {ex.Message}";
-                return;
-            }
-        }
-
-        if (state.ActiveRoster.Count == 0 &&
-            _legacyRosterRows.Count > 0)
-        {
-            await ShowAdvanceProgressAsync("Restoring team rosters...", 0.38);
-            state = state with
-            {
-                ActiveRoster = LegacyDynastyRosterFactory.Create(
-                    _legacyRosterRows,
-                    _teamsByName.Values,
-                    state.DynastyId,
-                    state.SeasonYear)
-            };
-        }
-
-        await ShowAdvanceProgressAsync("Checking players and depth charts...", 0.54);
-        state = PlayerRatingService.EnsureProfiles(state);
-        state = RosterManagementService
-            .NormalizeAllDepthCharts(state);
-        state = ProgramPrestigeService.EnsureInitialPrestige(
-            state, _teamsByName.Values);
-        state = StaffManagementService.EnsureLeagueStaff(
-            state,
-            _teamsByName.Values,
-            state.StaffMarketSeasonYear == state.SeasonYear
-                ? state.UserTeamName
-                : null);
-
-        if ((state.Phase is
-                 SeasonPhase.TransferPortal or
-                 SeasonPhase.Recruiting or
-                 SeasonPhase.RosterManagement or
-                 SeasonPhase.Offseason) &&
-            state.TeamSeasonHistory.Any(item =>
-                item.SeasonYear == state.SeasonYear))
-        {
-            state = UserCoachCareerService
-                .EvaluateCompletedSeason(
-                    state,
-                    _teamsByName);
-            state = StaffManagementService.AdvanceSeason(state);
-            state = StaffMarketService.EnsureMarket(
-                state, _teamsByName);
-            state = StaffMarketService.RunCpuCarousel(
-                state, _teamsByName);
-        }
-
-        if (state.Phase == SeasonPhase.TransferPortal &&
-            state.TransferPortalEntryWindowSeasonYear !=
-                state.SeasonYear)
-        {
-            if (state.TransferPortalEntries.Any(entry =>
-                    entry.SeasonYear == state.SeasonYear))
-            {
-                state = state with
-                {
-                    TransferPortalEntryWindowSeasonYear =
-                        state.SeasonYear
-                };
-            }
-            else
-            {
-                state = OffseasonPlayerLifecycleService
-                    .EnterTransferPortal(state);
-            }
-        }
-
-        if (state.Phase <= SeasonPhase.Recruiting &&
-            (state.HighSchoolRecruitingPool.Count == 0 ||
-             state.HighSchoolRecruitingPool.Any(recruit =>
-                 recruit.SeasonYear != state.SeasonYear)))
-        {
-            state = state with
-            {
-                HighSchoolRecruitingPool =
-                    HighSchoolRecruitingPoolFactory.Create(
-                        state.DynastyId,
-                        state.SeasonYear,
-                        _teamsByName.Count,
-                        _legacyRosterRows)
-            };
-        }
-
-        if (_teamsByName.TryGetValue(state.UserTeamName, out var scoutingTeam))
-        {
-            await ShowAdvanceProgressAsync("Restoring scouting department...", 0.72);
-            state = ScoutingDepartmentService.EnsureDepartment(
-                state, scoutingTeam);
-        }
-
-        if ((state.Phase is
-                 SeasonPhase.TransferPortal or SeasonPhase.Recruiting ||
-             (state.Phase == SeasonPhase.RegularSeason &&
-              state.TransferPortalEntries.Count > 0)) &&
-            _teamsByName.TryGetValue(
-                state.UserTeamName,
-                out var phaseTeam))
-        {
-            state = InteractiveRecruitingService
-                .EnsurePhaseInitialized(
-                    state,
-                    phaseTeam);
-
-            state = CpuRecruitingService
-                .ApplyWeeklyUserAssistance(
-                    state,
-                    phaseTeam);
-        }
-
-        if (state.Phase == SeasonPhase.RosterManagement)
-        {
-            state = RosterManagementService
-                .NormalizeAllDepthCharts(state);
-        }
-
         await ShowAdvanceProgressAsync("Preparing dynasty screen...", 0.90);
         _currentDynasty = state;
         _recruitingAssistanceSwitch.IsToggled =
@@ -1799,6 +1661,12 @@ public sealed partial class FoundationPage : ContentPage
         RenderCurrentDynasty();
         ShowSection(AppSection.Dynasty);
         await ShowAdvanceProgressAsync("Dynasty loaded", 1.0);
+        }
+        catch (Exception error)
+        {
+            _advanceOverlay.IsVisible = false;
+            _libraryStatus.Text = error.Message;
+            await DisplayAlertAsync("Could not load dynasty", error.Message, "Close");
         }
         finally
         {

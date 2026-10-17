@@ -1,6 +1,6 @@
-# Build 218: fresh-game ratings foundation
+# Builds 218–219: fresh-game ratings foundation
 
-This build starts a new save format (schema 23). Other save formats show an explicit start-new-dynasty message. They are not deleted. The save loader no longer migrates geography, recruiting interactions, player ratings or coach history, and current-format saves deserialize without repair passes.
+This build starts a new save format (schema 23). Other save formats show an explicit start-new-dynasty message. They are not deleted. The app no longer rebuilds schedules/rosters, reruns recruiting assistance or replays offseason actions while loading a save. Unsupported saves show a handled dialog. The save loader no longer migrates geography, recruiting interactions, player ratings or coach history, and current-format saves deserialize without repair passes.
 
 Initial rosters, signees and walk-ons receive complete detailed profiles at creation. Input talent/quality seeds independent skill draws rather than an overall to preserve. Relevant position skills have higher baselines and non-specialist skills lower baselines; individual skill spread is independent of the old broad Technique rating. Generated identities retain their recorded attributes through saves and transfers.
 
