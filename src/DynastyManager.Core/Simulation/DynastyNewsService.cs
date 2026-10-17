@@ -8,6 +8,28 @@ public sealed record DynastyNewsStory(string Id, string Category, string Headlin
 /// <summary>Deterministic stories derived from recorded events; no invented interviews or outcomes.</summary>
 public static class DynastyNewsService
 {
+    private static int Variant(string value) => value.Aggregate(0, (total, character) => total + character) % 3;
+
+    public static IReadOnlyList<DynastyNewsStory> BuildOverview(DynastyState state, int limit = 3)
+    {
+        if (limit <= 0) return [];
+        var stories = Build(state, 48);
+        var selected = new List<DynastyNewsStory>();
+        void Add(DynastyNewsStory? story)
+        {
+            if (story is not null && selected.All(item => item.Id != story.Id)) selected.Add(story);
+        }
+
+        Add(stories.FirstOrDefault(story => story.Category is "Championships" or "Playoff" or "Upsets" or "Streaks" or "Shutouts" or "Blowouts" or "Bowls"));
+        Add(stories.FirstOrDefault(story => story.TeamName == state.UserTeamName && story.Category != "Injuries"));
+        foreach (var story in stories.Where(story => story.Category != "Injuries" || selected.All(item => item.Category != "Injuries")))
+        {
+            Add(story);
+            if (selected.Count >= limit) break;
+        }
+        return selected.Take(limit).ToArray();
+    }
+
     public static IReadOnlyList<DynastyNewsStory> Build(DynastyState state, int limit = 24)
     {
         var stories = new List<DynastyNewsStory>();
@@ -41,6 +63,13 @@ public static class DynastyNewsService
             var category = upset ? "Upsets" : low == 0 ? "Shutouts" : high - low >= 28 ? "Blowouts" : "Results";
             var verb = upset ? "upsets" : low == 0 ? "shuts out" : high - low >= 28 ? "rolls past" : high - low <= 7 ? "edges" : "beats";
             var headline = $"{winner} {verb} {loser}, {high}–{low}";
+            if (upset)
+                headline = Variant(game.GameId) switch
+                {
+                    0 => $"{winner} shocks {loser}, {high}–{low}",
+                    1 => $"Upset alert: {winner} takes down {loser}, {high}–{low}",
+                    _ => $"{winner} stuns {loser} in {high}–{low} upset"
+                };
             var notable = strengthUpset ? $"The winner entered with a recorded team strength of {winnerRating:F1}, compared with {loserRating:F1} for {loser}. " :
                 recordUpset ? "The winner entered at .500 or below against an opponent winning at least 75% of its earlier games. " : "";
             if (endedStreak >= 4) notable += $"The result ends {loser}'s {endedStreak}-game winning streak. ";
@@ -65,8 +94,14 @@ public static class DynastyNewsService
         foreach (var player in state.ActiveRoster.Where(p => p.CurrentInjury is not null))
         {
             var injury = player.CurrentInjury!;
-            stories.Add(new($"injury/{state.SeasonYear}/{state.Week}/{player.PlayerId}", "Injuries",
-                $"{player.TeamName} monitors {player.FullName}'s recovery",
+            var injuryId = $"injury/{state.SeasonYear}/{state.Week}/{player.PlayerId}";
+            var injuryHeadline = Variant(injuryId) switch
+            {
+                0 => $"{player.TeamName} monitors {player.FullName}'s recovery",
+                1 => $"{player.FullName} works toward return for {player.TeamName}",
+                _ => $"{player.TeamName} adjusts while {player.FullName} recovers"
+            };
+            stories.Add(new(injuryId, "Injuries", injuryHeadline,
                 $"{player.Position} {player.FullName} is listed with a {injury.Severity.ToString().ToLowerInvariant()} {injury.BodyArea} injury. " +
                 $"The current estimate is {injury.WeeksRemaining} week(s) remaining. Check the injury report for the latest roster status.",
                 player.TeamName, state.SeasonYear, state.Week, player.PlayerId));

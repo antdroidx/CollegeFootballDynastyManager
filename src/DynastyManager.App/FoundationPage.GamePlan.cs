@@ -31,7 +31,9 @@ public sealed partial class FoundationPage
         }
         var program = new Button { Text = "Program & staff", BackgroundColor = Color.FromArgb("#493D65") };
         program.Clicked += (_, _) => ShowSection(AppSection.Program);
-        _gamePlanHost.Children.Add(program);
+        var depthChart = new Button { Text = "Manage depth chart", BackgroundColor = Color.FromArgb("#315D59") };
+        depthChart.Clicked += (_, _) => { _showDepthChartOrganizer = true; ShowSection(AppSection.Roster); };
+        _gamePlanHost.Children.Add(new HorizontalStackLayout { Spacing = 8, Children = { program, depthChart } });
         var careerTools = new HorizontalStackLayout { Spacing = 8 };
         if (_currentDynasty.UserHeadCoach is not null)
         {

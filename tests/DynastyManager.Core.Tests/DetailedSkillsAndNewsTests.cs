@@ -79,7 +79,7 @@ public sealed class DetailedSkillsAndNewsTests
     {
         var state = State() with { Schedule = [Game("upset") with { HomePregameRating = 65, AwayPregameRating = 85 }] };
         var story = Assert.Single(DynastyNewsService.Build(state));
-        Assert.Equal("Upsets", story.Category); Assert.Contains("A upsets B", story.Headline); Assert.Contains("65.0", story.Body);
+        Assert.Equal("Upsets", story.Category); Assert.Contains("A", story.Headline); Assert.Contains("B", story.Headline); Assert.Contains("65.0", story.Body);
         Assert.Equal(story, Assert.Single(DynastyNewsService.Build(state with { ActiveRoster = [Player() with { OverallRating = 99 }] })));
         Assert.Equal(story, Assert.Single(DynastyNewsService.Build(JsonSerializer.Deserialize<DynastyState>(JsonSerializer.Serialize(state))!)));
         Assert.Equal("Results", Assert.Single(DynastyNewsService.Build(State() with { Schedule = [Game("ordinary")] })).Category);

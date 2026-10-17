@@ -132,8 +132,8 @@ public sealed partial class FoundationPage
         var all = new Button { Text = "News & headlines ›", TextColor = Color.FromArgb("#E8C979"), BackgroundColor = Colors.Transparent };
         all.Clicked += (_, _) => ShowSection(AppSection.News);
         _homeHighlights.Children.Add(all);
-        var stories = DynastyNewsService.Build(state);
-        foreach (var story in stories.Take(3)) _homeHighlights.Children.Add(NewsCard(story));
+        var stories = DynastyNewsService.BuildOverview(state);
+        foreach (var story in stories) _homeHighlights.Children.Add(NewsCard(story));
         if (stories.Count == 0) _homeHighlights.Children.Add(new Label { Text = "Results, recruiting and injury updates will appear as your dynasty develops.", TextColor = DynastyTheme.Muted });
     }
 

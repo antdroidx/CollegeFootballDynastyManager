@@ -75,32 +75,22 @@ public sealed partial class FoundationPage
         {
             player = PlayerRatingService.EnsureInitialized(state, player);
             content.Children.Add(SectionTitle("Player attributes", $"OVR {player.OverallRating} · Potential {FormatPotentialStars(player.PotentialRating)} · Depth {player.DepthChartOrder}"));
-            content.Children.Add(DataTable([("Attribute", 220), ("Rating", 70)],
-                new[] { ("Speed", player.SpeedRating),
-                    ("Strength", player.StrengthRating),
-                    ("Agility", player.AgilityRating),
-                    ("Awareness", player.AwarenessRating),
-                    ("Technique", player.TechniqueRating),
-                    ("Durability", player.DurabilityRating),
-                    ("Injury proneness", 100 - player.DurabilityRating),
-                    ("Passing power", player.Skills!.PassingPower),
-                    ("Passing accuracy", player.Skills!.PassingAccuracy),
-                    ("Catching", player.Skills!.Catching),
-                    ("Break tackle", player.Skills!.BreakTackle),
-                    ("Tackling", player.Skills!.Tackling),
-                    ("Run blocking", player.Skills!.RunBlocking),
-                    ("Pass blocking", player.Skills!.PassBlocking),
-                    ("Ball carrying", player.Skills!.BallCarrying),
-                    ("Acceleration", player.Skills!.Acceleration),
-                    ("Stamina", player.Skills!.Stamina),
-                    ("Leadership", player.Skills!.Leadership),
-                    ("Discipline", player.Skills!.Discipline),
-                    ("Jumping", player.Skills!.Jumping),
-                    ("Man defensive awareness", player.Skills!.ManCoverage),
-                    ("Zone defensive awareness", player.Skills!.ZoneCoverage),
-                    ("Kick power", player.Skills!.KickPower),
-                    ("Kick accuracy", player.Skills!.KickAccuracy) }
-                .Select(attribute => new View[] { TableText(attribute.Item1), RatingCell(attribute.Item2) })));
+            content.Children.Add(AttributeGroup("Character traits", "Decision-making and team influence",
+                ("Awareness", player.AwarenessRating), ("Leadership", player.Skills!.Leadership),
+                ("Discipline", player.Skills.Discipline)));
+            content.Children.Add(AttributeGroup("Physical traits", "Athletic ability, endurance and availability",
+                ("Speed", player.SpeedRating), ("Acceleration", player.Skills.Acceleration),
+                ("Agility", player.AgilityRating), ("Strength", player.StrengthRating),
+                ("Jumping", player.Skills.Jumping), ("Stamina", player.Skills.Stamina),
+                ("Durability", player.DurabilityRating), ("Injury proneness", 100 - player.DurabilityRating)));
+            content.Children.Add(AttributeGroup("Skill traits", "Position technique and football execution",
+                ("Technique", player.TechniqueRating), ("Passing power", player.Skills.PassingPower),
+                ("Passing accuracy", player.Skills.PassingAccuracy), ("Catching", player.Skills.Catching),
+                ("Break tackle", player.Skills.BreakTackle), ("Ball carrying", player.Skills.BallCarrying),
+                ("Tackling", player.Skills.Tackling), ("Run blocking", player.Skills.RunBlocking),
+                ("Pass blocking", player.Skills.PassBlocking), ("Man coverage", player.Skills.ManCoverage),
+                ("Zone coverage", player.Skills.ZoneCoverage), ("Kick power", player.Skills.KickPower),
+                ("Kick accuracy", player.Skills.KickAccuracy)));
             content.Children.Add(new Label { Text = "Injury proneness: higher means more injury risk. Other ratings: higher is better.", FontSize = 11, TextColor = DynastyTheme.Muted });
             content.Children.Add(new Label { Text = player.CurrentInjury is null ? "Status: healthy" :
                 $"Status: {player.CurrentInjury.Severity} {player.CurrentInjury.BodyArea} injury · {player.CurrentInjury.WeeksRemaining} weeks remaining",
@@ -117,6 +107,14 @@ public sealed partial class FoundationPage
         content.Children.Add(school);
         await Navigation.PushModalAsync(new ContentPage { Content = new ScrollView { Content = content } });
     }
+
+    private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes) =>
+        new VerticalStackLayout { Spacing = 6, Children =
+        {
+            SectionTitle(title, subtitle),
+            DataTable([("Attribute", 220), ("Rating", 70)], attributes.Select(attribute =>
+                new View[] { TableText(attribute.Name), RatingCell(attribute.Rating) }))
+        } };
 
     private async Task ShowCoachProfileAsync(StaffMember coach)
     {

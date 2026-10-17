@@ -2569,7 +2569,7 @@ public sealed partial class FoundationPage : ContentPage
 
         return new(prospect, interaction,
             $"{boardMarker}{prospect.Position} {prospect.FullName}",
-            $"#{nationalRank} {prospect.Source} • {publicRatingText} • {overallText} • {prospect.Subtitle} • Scout {interaction.ScoutingPercent}%",
+            $"#{nationalRank} nationally  •  {publicRatingText}  •  {overallText}\n{prospect.Subtitle}  •  Scouted {interaction.ScoutingPercent}%",
             interest);
     }
 
@@ -2644,7 +2644,7 @@ public sealed partial class FoundationPage : ContentPage
 
         var info = new VerticalStackLayout
         {
-            Spacing = 1,
+            Spacing = 5,
             Children =
             {
                 new Label
@@ -2653,68 +2653,42 @@ public sealed partial class FoundationPage : ContentPage
                         presentation.Title,
                     FontAttributes =
                         FontAttributes.Bold,
-                    FontSize = 14
+                    FontSize = 16
                 },
                 new Label
                 {
                     Text =
                         presentation.Detail,
-                    FontSize = 11,
-                    Opacity = 0.82
+                    FontSize = 12,
+                    TextColor = DynastyTheme.Muted,
+                    LineBreakMode = LineBreakMode.WordWrap
                 },
                 new Label
                 {
                     Text = presentation.Interest,
-                    FontSize = 11,
-                    Opacity = 0.82
+                    FontSize = 12,
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = interaction.CommittedTeamName is not null
+                        ? Color.FromArgb("#E8C979")
+                        : interaction.ScholarshipOffered
+                            ? Color.FromArgb("#83D6B6")
+                            : Color.FromArgb("#BDE5F5")
                 }
             }
         };
-
-        var row = new Grid
-        {
-            ColumnDefinitions =
-            {
-                new ColumnDefinition
-                {
-                    Width = GridLength.Star
-                },
-                new ColumnDefinition
-                {
-                    Width = GridLength.Auto
-                },
-                new ColumnDefinition
-                {
-                    Width = GridLength.Auto
-                },
-                new ColumnDefinition
-                {
-                    Width = GridLength.Auto
-                }
-            },
-            ColumnSpacing = 8
-        };
-
-        row.Add(info);
-        Grid.SetColumn(info, 0);
-
-        row.Add(viewButton);
-        Grid.SetColumn(viewButton, 1);
-        row.Add(boardButton);
-        Grid.SetColumn(boardButton, 2);
-
-        if (_recruitingView == RecruitingView.Board)
-        {
-            row.Add(quickOfferButton);
-            Grid.SetColumn(quickOfferButton, 3);
-        }
+        var actions = new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.End,
+            Children = { viewButton, boardButton } };
+        if (_recruitingView == RecruitingView.Board) actions.Children.Add(quickOfferButton);
+        var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions } };
 
         _recruitingList.Children.Add(
             new Border
             {
+                BackgroundColor = Color.FromArgb(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
+                Stroke = Color.FromArgb(interaction.ScholarshipOffered ? "#5A9B83" : "#486677"),
                 StrokeThickness = 1,
-                Padding = new Thickness(10, 7),
-                Content = row
+                Padding = new Thickness(12, 10),
+                Content = cardContent
             });
     }
 

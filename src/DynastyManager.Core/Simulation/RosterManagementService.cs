@@ -119,6 +119,51 @@ public static class RosterManagementService
             });
     }
 
+    public static DynastyState MovePlayerToOrder(
+        DynastyState state,
+        string teamName,
+        Guid playerId,
+        int targetOrder)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        state = NormalizeAllDepthCharts(state);
+        var player = state.ActiveRoster.FirstOrDefault(candidate =>
+            candidate.PlayerId == playerId &&
+            candidate.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+
+        if (player is null || player.IsRedshirted)
+            return state;
+
+        var positionPlayers = state.ActiveRoster
+            .Where(candidate =>
+                candidate.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
+                candidate.Position == player.Position &&
+                !candidate.IsRedshirted)
+            .OrderBy(candidate => candidate.DepthChartOrder)
+            .ToList();
+        var oldIndex = positionPlayers.FindIndex(candidate => candidate.PlayerId == playerId);
+        if (oldIndex < 0)
+            return state;
+
+        var newIndex = Math.Clamp(targetOrder - 1, 0, positionPlayers.Count - 1);
+        if (oldIndex == newIndex)
+            return state;
+
+        positionPlayers.RemoveAt(oldIndex);
+        positionPlayers.Insert(newIndex, player);
+        var orders = positionPlayers.Select((candidate, index) => (candidate.PlayerId, Order: index + 1))
+            .ToDictionary(item => item.PlayerId, item => item.Order);
+
+        return NormalizeAllDepthCharts(state with
+        {
+            ActiveRoster = state.ActiveRoster.Select(candidate =>
+                orders.TryGetValue(candidate.PlayerId, out var order)
+                    ? candidate with { DepthChartOrder = order }
+                    : candidate).ToArray()
+        });
+    }
+
     public static DynastyState ToggleRedshirt(
         DynastyState state,
         string teamName,

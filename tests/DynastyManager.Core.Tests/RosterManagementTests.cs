@@ -60,6 +60,26 @@ public class RosterManagementTests
     }
 
     [Fact]
+    public void MovePlayerToOrderSupportsDirectDepthChartReordering()
+    {
+        var first = Player("First", Position.WR, 90);
+        var second = Player("Second", Position.WR, 85);
+        var third = Player("Third", Position.WR, 80);
+        var quarterback = Player("Quarterback", Position.QB, 95);
+        var state = RosterManagementService.NormalizeAllDepthCharts(
+            State(new[] { first, second, third, quarterback }));
+
+        state = RosterManagementService.MovePlayerToOrder(state, "Test", third.PlayerId, 1);
+
+        Assert.Equal(new[] { "Third", "First", "Second" }, state.ActiveRoster
+            .Where(player => player.Position == Position.WR)
+            .OrderBy(player => player.DepthChartOrder)
+            .Select(player => player.FullName));
+        Assert.Equal(1, state.ActiveRoster.Single(player => player.PlayerId == quarterback.PlayerId).DepthChartOrder);
+        Assert.True(RosterManagementService.IsStarter(state.ActiveRoster.Single(player => player.PlayerId == third.PlayerId)));
+    }
+
+    [Fact]
     public void RedshirtRemovesPlayerFromPlayableDepthAndCanOnlyBeUsedOnce()
     {
         var first = Player("QB One", Position.QB, 90);
