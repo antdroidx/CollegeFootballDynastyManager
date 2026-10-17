@@ -8,4 +8,10 @@ The drive simulator's passing/rushing team profiles combine 70% existing overall
 
 News recognizes upsets (at least an eight-point recorded pregame strength disadvantage), shutouts, 28-point blowouts, five-game winning streaks, broken winning streaks of four or more, conference titles, playoff advancement/national titles and bowl wins. New simulated games retain the actual pregame strength profiles so later roster changes cannot rewrite the upset classification. Old games without strength snapshots can qualify from earlier same-season results only: at least three prior games per team, winner at or below .500, opponent at or above .750. No historical rank is invented. Ties break win streaks; future results are excluded. Notable stories precede routine stories within the same week.
 
-Validation in progress: focused regressions pass; complete career simulations, Android packaging and isolated emulator checks are running. The QA screenshots use a labeled synthetic fixture, never shipped game data.
+Validation: all 224 Release tests passed, including 218 focused regressions and all six multi-year career health simulations, Android Debug APK packaging passed, packaged resources passed, and the installed APK loaded an older save with all detailed skills visible. Portrait/landscape upset-article navigation, pregame explanation and full player-card scrolling passed with an empty crash buffer. GitHub Build 217 is still running its independent validation before APK upload. The QA screenshots use a labeled synthetic fixture, never shipped game data.
+
+## Screenshots
+
+- [Player attributes](ui/build-217-player-attributes-top.png)
+- [Additional football skills](ui/build-217-player-attributes-lower.png)
+- [Upset story](ui/build-217-upset-story.png)
