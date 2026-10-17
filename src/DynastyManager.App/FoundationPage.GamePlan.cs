@@ -1,0 +1,141 @@
+using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
+using DynastyManager.Data.Persistence;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+
+namespace DynastyManager.App;
+
+public sealed partial class FoundationPage
+{
+    private readonly VerticalStackLayout _gamePlanHost = new() { Spacing = 16 };
+
+    private View BuildGamePlanSection() => _gamePlanHost;
+
+    private View CreateCoachingShortcut()
+    {
+        var button = new Button { Text = "Coaching Hub  /  Playbooks & call sheet" };
+        button.Clicked += (_, _) => ShowSection(AppSection.Playbook);
+        return button;
+    }
+
+    private View CreateModuleLinks()
+    {
+        var layout = new VerticalStackLayout { Spacing = 8 };
+        layout.Children.Add(new Label { Text = "EXPLORE YOUR DYNASTY", TextColor = DynastyTheme.Accent,
+            FontAttributes = FontAttributes.Bold, CharacterSpacing = 1.5, FontSize = 12 });
+        foreach (var (section, text) in new[]
+        {
+            (AppSection.Schedule, "Schedule & results"), (AppSection.Teams, "Teams & rosters"),
+            (AppSection.Rankings, "Rankings & postseason"), (AppSection.Program, "Program & staff")
+        })
+        {
+            var button = new Button { Text = text, HorizontalOptions = LayoutOptions.Fill };
+            button.Clicked += (_, _) => ShowSection(section);
+            layout.Children.Add(button);
+        }
+        return new Border { Content = layout };
+    }
+
+    private static View CoachingCard(string title, params View[] content)
+    {
+        var layout = new VerticalStackLayout { Spacing = 10 };
+        layout.Children.Add(new Label { Text = title, TextColor = DynastyTheme.Accent,
+            FontSize = 12, CharacterSpacing = 1.5, FontAttributes = FontAttributes.Bold });
+        foreach (var view in content) layout.Children.Add(view);
+        return new Border { Content = layout };
+    }
+
+    private void RenderGamePlanScreen()
+    {
+        _gamePlanHost.Children.Clear();
+        if (_currentDynasty is null)
+        {
+            _gamePlanHost.Children.Add(new Label { Text = "Create or load a dynasty to build your game plan." });
+            return;
+        }
+        var dynastyId = _currentDynasty.DynastyId;
+        var teamName = _currentDynasty.UserTeamName;
+        var profiles = BuildCurrentSimulationProfiles();
+        if (!profiles.TryGetValue(teamName, out var profile)) return;
+        var plan = GamePlanService.GetPlan(_currentDynasty, profile);
+        _gamePlanHost.Children.Add(CoachingCard("PROGRAM IDENTITY",
+            new Label { Text = teamName, FontSize = 24, FontAttributes = FontAttributes.Bold },
+            new Label { Text = $"PASS {profile.PassOffenseRating:F0}  /  RUN {profile.RushOffenseRating:F0}  /  DEF {profile.DefenseRating:F0}",
+                TextColor = DynastyTheme.Muted },
+            new Label { Text = "Build around your personnel. Playbooks change tendencies; player ratings still decide matchups." }));
+        var next = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
+            !game.HasPlayed && game.InvolvesTeam(teamName)).OrderBy(game => game.Week).FirstOrDefault();
+        if (next is not null)
+        {
+            var opponent = next.HomeTeamName == teamName ? next.AwayTeamName : next.HomeTeamName;
+            var notes = profiles.TryGetValue(opponent, out var rival)
+                ? $"Opponent pass defense {rival.PassDefenseRating:F0} / run defense {rival.RushDefenseRating:F0}" : "Prepare your call sheet.";
+            _gamePlanHost.Children.Add(CoachingCard("NEXT MATCHUP",
+                new Label { Text = $"Week {next.Week} / {teamName} vs {opponent}", FontAttributes = FontAttributes.Bold },
+                new Label { Text = notes, TextColor = DynastyTheme.Muted }));
+        }
+        var offenseValues = Enum.GetValues<OffensivePlaybook>();
+        var defenseValues = Enum.GetValues<DefensivePlaybook>();
+        var approachValues = Enum.GetValues<DefensiveApproach>();
+        var conceptValues = Enum.GetValues<OffensiveConcept>();
+        var offense = new Picker { Title = "Offensive playbook", ItemsSource = offenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offenseValues, plan.Offense) };
+        var defense = new Picker { Title = "Defensive playbook", ItemsSource = defenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defenseValues, plan.Defense) };
+        var approach = new Picker { Title = "Defensive approach", ItemsSource = approachValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(approachValues, plan.Approach) };
+        var description = new Label { Text = GamePlanService.Describe(plan.Offense), TextColor = DynastyTheme.Muted };
+        offense.SelectedIndexChanged += (_, _) => { if (offense.SelectedIndex >= 0) description.Text = GamePlanService.Describe(offenseValues[offense.SelectedIndex]); };
+        _gamePlanHost.Children.Add(CoachingCard("PLAYBOOKS", new Label { Text = "Offense", FontAttributes = FontAttributes.Bold }, offense, description,
+            new Label { Text = "Defense", FontAttributes = FontAttributes.Bold }, defense, approach,
+            new Label { Text = "4-3 strengthens the run front; Nickel helps coverage. Run/pass focus gives up strength elsewhere. Pressure creates takeaways but risks bigger gains.", TextColor = DynastyTheme.Muted }));
+        var script = new VerticalStackLayout { Spacing = 8 };
+        var calls = new List<Picker>();
+        for (var index = 0; index < 3; index++)
+        {
+            script.Children.Add(new Label { Text = $"Drive {index + 1} priority", FontAttributes = FontAttributes.Bold });
+            var picker = new Picker { Title = $"Drive {index + 1}", ItemsSource = conceptValues.Select(GamePlanService.Label).ToList(),
+                SelectedIndex = Array.IndexOf(conceptValues, plan.OpeningScript.ElementAtOrDefault(index)) };
+            calls.Add(picker);
+            script.Children.Add(picker);
+        }
+        _gamePlanHost.Children.Add(CoachingCard("OPENING CALL SHEET",
+            new Label { Text = "Guide your first three offensive possessions. Each choice sets a drive's emphasis; the playbook takes over afterward. This sheet repeats each game until you change it." },
+            script, new Label { Text = "Deep throws offer more yards with more turnover risk. Quick throws trade some explosiveness for control. This first version simulates drives; live snap-by-snap calls are next.", TextColor = DynastyTheme.Muted }));
+        var status = new Label { TextColor = DynastyTheme.Muted };
+        var save = new Button { Text = "Apply & save game plan", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
+        save.Clicked += async (_, _) =>
+        {
+            if (_currentDynasty is null || _isAdvancing || _currentDynasty.DynastyId != dynastyId || _currentDynasty.UserTeamName != teamName) return;
+            save.IsEnabled = false;
+            try
+            {
+                _currentDynasty = GamePlanService.SetPlan(_currentDynasty, new TeamGamePlan
+                {
+                    TeamName = teamName, Offense = offenseValues[Math.Max(0, offense.SelectedIndex)],
+                    Defense = defenseValues[Math.Max(0, defense.SelectedIndex)], Approach = approachValues[Math.Max(0, approach.SelectedIndex)],
+                    OpeningScript = calls.Select(picker => conceptValues[Math.Max(0, picker.SelectedIndex)]).ToArray()
+                });
+                _cachedCurrentProfiles = null;
+                _cachedNationalRankings = null;
+                await SaveCurrentAsync(SaveKind.AutosaveCurrent);
+                status.Text = "Game plan saved. It applies to future games, including the postseason.";
+            }
+            catch (Exception ex) { status.Text = $"Plan applied, but saving failed: {ex.Message}"; }
+            finally { save.IsEnabled = true; }
+        };
+        _gamePlanHost.Children.Add(save);
+        _gamePlanHost.Children.Add(status);
+        var last = _currentDynasty.Schedule.Where(game => game.HasPlayed && game.InvolvesTeam(teamName))
+            .OrderByDescending(game => game.SeasonYear).ThenByDescending(game => game.Week).FirstOrDefault();
+        if (last is null) return;
+        var driveRows = new VerticalStackLayout { Spacing = 10 };
+        var ownPlan = last.HomeTeamName == teamName ? last.HomeGamePlan : last.AwayGamePlan;
+        driveRows.Children.Add(new Label { Text = $"{last.SeasonYear} Week {last.Week} / {last.AwayTeamName} {last.AwayScore} - {last.HomeScore} {last.HomeTeamName}", FontAttributes = FontAttributes.Bold });
+        if (ownPlan is not null) driveRows.Children.Add(new Label { Text = $"Played with {GamePlanService.Label(ownPlan.Offense)} / {GamePlanService.Label(ownPlan.Defense)}", TextColor = DynastyTheme.Muted });
+        var drives = last.Drives.Where(drive => drive.TeamName == teamName).OrderBy(drive => drive.PossessionNumber).ToArray();
+        if (drives.Length == 0) driveRows.Children.Add(new Label { Text = "Drive reports are available for games played with this version." });
+        foreach (var drive in drives)
+            driveRows.Children.Add(new Label { Text = drive.IsOvertime ? $"OT / {drive.Outcome} / +{drive.Points} points"
+                : $"Drive {drive.PossessionNumber} / {GamePlanService.Label(drive.Concept)} / {drive.Outcome}\n{drive.PassAttempts} passes, {drive.RushAttempts} runs / {drive.PassYards + drive.RushYards} yards / +{drive.Points} points" });
+        _gamePlanHost.Children.Add(CoachingCard("LAST GAME / DRIVE REPORT", driveRows));
+    }
+}

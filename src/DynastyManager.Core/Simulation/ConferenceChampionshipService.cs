@@ -149,6 +149,8 @@ public static class ConferenceChampionshipService
                 }
 
                 changed = true;
+                homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
+                awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
                 return DeterministicGameSimulator.Simulate(
                     game,
                     homeTeam,

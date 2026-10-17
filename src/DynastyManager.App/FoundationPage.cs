@@ -10,7 +10,7 @@ using Microsoft.Maui.Storage;
 
 namespace DynastyManager.App;
 
-public sealed class FoundationPage : ContentPage
+public sealed partial class FoundationPage : ContentPage
 {
     private static readonly Color PositiveChangeColor = Color.FromArgb("#22C55E");
     private static readonly Color NegativeChangeColor = Color.FromArgb("#EF4444");
@@ -22,6 +22,7 @@ public sealed class FoundationPage : ContentPage
         Roster,
         Teams,
         Recruiting,
+        Playbook,
         Rankings,
         Program,
         More
@@ -141,6 +142,7 @@ public sealed class FoundationPage : ContentPage
     private IReadOnlyList<ImportedPlayerRow> _legacyRosterRows =
         Array.Empty<ImportedPlayerRow>();
     private IReadOnlyList<string> _teamNames = Array.Empty<string>();
+    private IReadOnlyList<TeamGamePlan>? _cachedProfileGamePlans;
     private IReadOnlyList<DynastyPlayer>? _cachedProfileRoster;
     private IReadOnlyList<StaffMember>? _cachedProfileStaff;
     private StaffMember? _cachedProfileUserCoach;
@@ -200,7 +202,7 @@ public sealed class FoundationPage : ContentPage
 
         _manualSaveButton = new Button
         {
-            Text = "Manual Save",
+            Text = "Manual save",
             TextColor = Colors.White,
             IsEnabled = false
         };
@@ -208,7 +210,7 @@ public sealed class FoundationPage : ContentPage
 
         _autosaveButton = new Button
         {
-            Text = "Autosave Current",
+            Text = "Quick save",
             TextColor = Colors.White,
             IsEnabled = false
         };
@@ -583,13 +585,11 @@ public sealed class FoundationPage : ContentPage
             Spacing = 5
         };
 
-        var navigation = new HorizontalStackLayout
-        {
-            Spacing = 6,
-            Padding = new Thickness(8, 6)
-        };
+        var navigation = new Grid { ColumnSpacing = 2, Padding = new Thickness(6, 8),
+            ColumnDefinitions = new ColumnDefinitionCollection
+            { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
 
-        foreach (var section in Enum.GetValues<AppSection>())
+        foreach (var section in new[] { AppSection.Home, AppSection.Recruiting, AppSection.Playbook, AppSection.Roster, AppSection.More })
         {
             var captured = section;
             var button = new Button
@@ -599,28 +599,24 @@ public sealed class FoundationPage : ContentPage
                     AppSection.Recruiting => "Recruit",
                     AppSection.Rankings => "Ranks",
                     AppSection.Teams => "Teams",
+                    AppSection.Playbook => "Coach",
                     _ => section.ToString()
                 },
                 FontSize = 11,
-                Padding = new Thickness(11, 8),
+                Padding = new Thickness(2, 8),
                 TextColor = Colors.White
             };
 
             button.Clicked += (_, _) => ShowSection(captured);
             _navButtons[section] = button;
-            navigation.Children.Add(button);
+            navigation.Add(button, _navButtons.Count - 1, 0);
         }
 
         var navigationBar = new Border
         {
             StrokeThickness = 1,
             Padding = 0,
-            Content = new ScrollView
-            {
-                Orientation = ScrollOrientation.Horizontal,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
-                Content = navigation
-            }
+            Content = navigation
         };
 
         var pages = new Grid();
@@ -636,6 +632,7 @@ public sealed class FoundationPage : ContentPage
                 AppSection.Recruiting => BuildRecruitingSection(),
                 AppSection.Rankings => BuildRankingsSection(),
                 AppSection.Program => BuildProgramSection(),
+                AppSection.Playbook => BuildGamePlanSection(),
                 AppSection.More => BuildMoreSection(),
                 _ => BuildHomeSection()
             };
@@ -712,13 +709,13 @@ public sealed class FoundationPage : ContentPage
         foreach (var pair in _navButtons)
         {
             pair.Value.FontAttributes =
-                pair.Key == section
+                pair.Key == section || (pair.Key == AppSection.More && !_navButtons.ContainsKey(section))
                     ? FontAttributes.Bold
                     : FontAttributes.None;
-            pair.Value.Opacity =
-                pair.Key == section
-                    ? 1.0
-                    : 0.72;
+            var selected = pair.Key == section || (pair.Key == AppSection.More && !_navButtons.ContainsKey(section));
+            pair.Value.Opacity = 1.0;
+            pair.Value.BackgroundColor = selected ? DynastyTheme.Accent : Colors.Transparent;
+            pair.Value.TextColor = selected ? DynastyTheme.Background : DynastyTheme.Muted;
         }
 
         foreach (var pair in _sectionViews)
@@ -733,11 +730,12 @@ public sealed class FoundationPage : ContentPage
             AppSection.Recruiting => "Recruiting",
             AppSection.Rankings => "Rankings & Postseason",
             AppSection.Program => "Program",
+            AppSection.Playbook => "Coaching Hub",
             AppSection.More => "Dynasty & Saves",
             _ => section.ToString()
         };
 
-        if (_currentDynasty is not null)
+        if (_currentDynasty is not null || section == AppSection.Playbook)
             RenderSection(section);
     }
 
@@ -751,27 +749,30 @@ public sealed class FoundationPage : ContentPage
         dynastyManagerButton.Clicked += (_, _) =>
             ShowSection(AppSection.More);
 
+        Grid.SetColumn(_autosaveButton, 1);
+        _advanceWeekButton.BackgroundColor = DynastyTheme.Accent;
+        _advanceWeekButton.TextColor = DynastyTheme.Background;
         return new VerticalStackLayout
         {
             Spacing = 14,
             Children =
             {
-                new Label
+                new Border
                 {
-                    Text = "CURRENT DYNASTY",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _currentDynastyLabel,
-                new HorizontalStackLayout
-                {
-                    Spacing = 8,
-                    Children =
+                    Content = new VerticalStackLayout { Spacing = 10, Children =
                     {
-                        _advanceWeekButton,
-                        _manualSaveButton,
-                        _autosaveButton
-                    }
+                        new Label { Text = "YOUR PROGRAM", TextColor = DynastyTheme.Accent,
+                            FontSize = 12, CharacterSpacing = 2, FontAttributes = FontAttributes.Bold },
+                        _currentDynastyLabel
+                    } }
                 },
+                _advanceWeekButton,
+                new Grid
+                {
+                    ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
+                    Children = { _manualSaveButton, _autosaveButton }
+                },
+                CreateCoachingShortcut(),
                 dynastyManagerButton,
                 _homeStatus,
                 _homeHighlights
@@ -975,6 +976,7 @@ public sealed class FoundationPage : ContentPage
             Spacing = 12,
             Children =
             {
+                CreateModuleLinks(),
                 new Label
                 {
                     Text = "NEW DYNASTY",
@@ -1686,22 +1688,24 @@ public sealed class FoundationPage : ContentPage
 
     private async Task SaveCurrentAsync(SaveKind kind)
     {
-        if (_currentDynasty is null || _saveRepository is null)
+        var snapshot = _currentDynasty;
+        var repository = _saveRepository;
+        if (snapshot is null || repository is null)
             return;
 
         Guid? saveId = null;
 
         if (kind != SaveKind.Manual)
         {
-            var existing = (await _saveRepository.ListAsync())
+            var existing = (await repository.ListAsync())
                 .FirstOrDefault(slot =>
-                    slot.DynastyId == _currentDynasty.DynastyId &&
+                    slot.DynastyId == snapshot.DynastyId &&
                     slot.Kind == kind);
 
             saveId = existing?.SaveId;
         }
 
-        await _saveRepository.SaveAsync(_currentDynasty, kind, saveId);
+        await repository.SaveAsync(snapshot, kind, saveId);
         await RefreshSaveSlotsAsync();
     }
 
@@ -2036,8 +2040,7 @@ public sealed class FoundationPage : ContentPage
             $"{_currentDynasty.UserTeamName} • Record {wins}-{losses} • " +
             $"Conf {conferenceWins}-{conferenceLosses}\n" +
             $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
-            $"{_currentDynasty.LeagueName} • {_teamsByName.Count} teams\n" +
-            $"Dynasty ID: {_currentDynasty.DynastyId}";
+            $"{_currentDynasty.LeagueName} • {_teamsByName.Count} teams";
 
         RenderSection(_activeSection);
     }
@@ -2074,6 +2077,9 @@ public sealed class FoundationPage : ContentPage
 
             case AppSection.Program:
                 RenderProgramScreen();
+                break;
+            case AppSection.Playbook:
+                RenderGamePlanScreen();
                 break;
 
             case AppSection.More:
@@ -5281,6 +5287,7 @@ public sealed class FoundationPage : ContentPage
         }
 
         if (_cachedCurrentProfiles is not null &&
+            ReferenceEquals(_cachedProfileGamePlans, _currentDynasty.TeamGamePlans) &&
             ReferenceEquals(
                 _cachedProfileRoster,
                 _currentDynasty.ActiveRoster) &&
@@ -5302,6 +5309,7 @@ public sealed class FoundationPage : ContentPage
                 _currentDynasty,
                 _teamsByName.Values);
 
+        _cachedProfileGamePlans = _currentDynasty.TeamGamePlans;
         _cachedProfileRoster =
             _currentDynasty.ActiveRoster;
         _cachedProfileStaff =

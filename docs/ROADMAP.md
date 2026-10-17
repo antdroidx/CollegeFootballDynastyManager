@@ -7,8 +7,8 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 | 1 | Recruiting fixes | Shared multi-school HS/portal offer engine implemented; interest, effort, withdrawals and capacity drive decisions | Keep current save compatibility and single ownership across recruiting paths |
 | 2 | Recruiting balance | Expanded: six seeded careers, including 130-team leagues, games and prestige movement; see build-205-career-validation.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
 | 3 | Long-term dynasty health | Expanded: five/ten-year careers with weekly portal decisions, games, age/depth checks and annual save/load | Longer careers with games, deferred transfers, position age distributions and save recovery |
-| 4 | Interface polish | Recruit loading overlay and background list preparation added | Device check; clearer targeting reasons, comparisons, development summaries and consistent layouts |
-| 5 | Game-day control | Future | Live watching and play calling built on shared simulation events |
+| 4 | Interface polish | Shared dark theme, dashboard cards, fixed navigation and Coaching Hub added in Build 207 | Device verification and extend the layout system to deeper recruiting, roster and staff screens |
+| 5 | Game-day control | Started: saved playbooks, opening drive call sheets and persisted drive reports | Shared snap events with field position, downs and clock, then live watching and per-play calls |
 | 6 | Broader modernization | Future | Remaining position detail, CSV workflows, faces and presentation |
 
 ## Current delivery
@@ -27,3 +27,5 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 Competing offers are now a core engine feature (Build 204). CPU and user schools share persisted offers and one decision resolver. CPU direct signings and protected user targets have been removed. The next balance baseline must use this shared market; the original Build 203 report is historical.
 
 Build 206 adds a selectable 138-team 2026 FBS structure with saved league configuration, modern conference game counts, original HS recruiting stars and a roster career-stats view. See build-206-modern-fbs-careers.md for limitations and validation.
+
+Build 207 starts UI modernization and coaching controls. Drive-level playbooks and opening call sheets now affect the shared simulation. Full live per-play calling follows the snap-event layer; see build-207-coaching-ui.md.

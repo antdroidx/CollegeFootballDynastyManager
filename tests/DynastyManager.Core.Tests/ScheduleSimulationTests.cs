@@ -121,7 +121,7 @@ public class ScheduleSimulationTests
         var first = DeterministicGameSimulator.Simulate(game, home, away);
         var second = DeterministicGameSimulator.Simulate(game, home, away);
 
-        Assert.Equal(first, second);
+        Assert.Equivalent(first, second, strict: true);
         Assert.True(first.HasPlayed);
         Assert.NotNull(first.HomeScore);
         Assert.NotNull(first.AwayScore);

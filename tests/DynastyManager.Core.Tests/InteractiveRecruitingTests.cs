@@ -797,7 +797,7 @@ public class InteractiveRecruitingTests
             90,
             98,
             Position.QB,
-            4);
+            4) with { RecruitId = Guid.Parse("11111111-2222-3333-4444-555555555555") };
         var realistic = Enumerable.Range(1, 8)
             .Select(index =>
                 Recruit(
@@ -806,7 +806,7 @@ public class InteractiveRecruitingTests
                     59 + index,
                     75 + index,
                     Position.RB,
-                    1))
+                    1) with { RecruitId = new Guid(index, 2222, 3333, 4, 4, 5, 5, 5, 5, 5, 5) })
             .ToArray();
 
         var state = new DynastyState

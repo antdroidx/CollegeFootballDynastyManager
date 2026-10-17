@@ -8,6 +8,7 @@ public sealed record TeamSimulationProfile
     public double PassDefenseRating { get; init; }
     public double RushDefenseRating { get; init; }
     public double SpecialTeamsRating { get; init; }
+    public TeamGamePlan? GamePlan { get; init; }
     public int RosterSize { get; init; }
 
     public double OffenseRating =>

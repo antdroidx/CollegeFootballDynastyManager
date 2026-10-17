@@ -160,7 +160,22 @@ jobs:
             sleep 8
             adb logcat -d > android-logcat.txt
             adb shell pidof antdroid.cfbcoach.dev
+            adb shell screencap -p /sdcard/dynasty-launch.png
+            adb pull /sdcard/dynasty-launch.png android-launch.png
+            adb shell uiautomator dump /sdcard/dynasty-launch.xml
+            adb pull /sdcard/dynasty-launch.xml android-launch.xml
             echo "App survived launch."
+
+      - name: Upload launch UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-launch-ui-${{ github.run_number }}
+          path: |
+            android-launch.png
+            android-launch.xml
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Upload runtime log
         if: failure()

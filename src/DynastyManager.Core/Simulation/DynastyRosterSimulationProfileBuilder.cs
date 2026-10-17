@@ -149,6 +149,7 @@ public static class DynastyRosterSimulationProfileBuilder
                     specialTeamsModifier,
                 RosterSize = roster.Length
             };
+            profiles[team.Name] = profiles[team.Name] with { GamePlan = GamePlanService.GetPlan(state, profiles[team.Name]) };
         }
 
         return profiles;

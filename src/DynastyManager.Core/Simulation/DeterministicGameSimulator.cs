@@ -40,6 +40,8 @@ public static class DeterministicGameSimulator
         homeProfile ??= FallbackProfile(homeTeam);
         awayProfile ??= FallbackProfile(awayTeam);
 
+        homeProfile = homeProfile with { GamePlan = GamePlanService.Normalize(homeProfile.GamePlan ?? new TeamGamePlan { TeamName = homeTeam.Name }) };
+        awayProfile = awayProfile with { GamePlan = GamePlanService.Normalize(awayProfile.GamePlan ?? new TeamGamePlan { TeamName = awayTeam.Name }) };
         var random = new Random(game.SimulationSeed);
 
         var home = SimulateSide(
@@ -57,19 +59,25 @@ public static class DeterministicGameSimulator
         var homeScore = home.Score;
         var awayScore = away.Score;
 
+        var drives = home.Drives.Concat(away.Drives).ToList();
         if (homeScore == awayScore)
         {
-            // Temporary deterministic OT resolution. The later possession-level
-            // overtime port can replace this without altering saved game shape.
-            if (random.Next(2) == 0)
-                homeScore += random.Next(2) == 0 ? 3 : 7;
-            else
-                awayScore += random.Next(2) == 0 ? 3 : 7;
+            // Temporary deterministic OT scoring; full overtime possessions are a later layer.
+            var homeWins = random.Next(2) == 0;
+            var points = random.Next(2) == 0 ? 3 : 7;
+            if (homeWins) homeScore += points; else awayScore += points;
+            drives.Add(new GameDriveSummary
+            {
+                TeamName = homeWins ? homeTeam.Name : awayTeam.Name, PossessionNumber = 13,
+                IsOvertime = true, Points = points,
+                Outcome = points == 7 ? DriveOutcome.Touchdown : DriveOutcome.FieldGoal
+            });
         }
 
         return game with
         {
             HasPlayed = true,
+            HomeGamePlan = homeProfile.GamePlan, AwayGamePlan = awayProfile.GamePlan, Drives = drives,
             HomeScore = homeScore,
             AwayScore = awayScore,
             HomeStats = home.Stats,
@@ -83,15 +91,24 @@ public static class DeterministicGameSimulator
         Random random,
         double homeFieldBonus)
     {
-        var passAdvantage =
-            offense.PassOffenseRating -
-            defense.PassDefenseRating +
-            homeFieldBonus;
-
-        var rushAdvantage =
-            offense.RushOffenseRating -
-            defense.RushDefenseRating +
-            homeFieldBonus;
+        var plan = offense.GamePlan!;
+        var defensePlan = defense.GamePlan!;
+        var (passDefenseShift, rushDefenseShift) = defensePlan.Defense switch
+        {
+            DefensivePlaybook.FourThree => (-2.0, 3.0),
+            DefensivePlaybook.ThreeFour => (-1.0, 1.0),
+            DefensivePlaybook.Nickel => (3.0, -2.0),
+            _ => (0.0, 0.0)
+        };
+        var (passFocus, rushFocus) = defensePlan.Approach switch
+        {
+            DefensiveApproach.StopRun => (-3.0, 5.0),
+            DefensiveApproach.ProtectPass => (5.0, -3.0),
+            DefensiveApproach.Pressure => (2.0, -1.0),
+            _ => (0.0, 0.0)
+        };
+        var passAdvantage = offense.PassOffenseRating - defense.PassDefenseRating - passDefenseShift - passFocus + homeFieldBonus;
+        var rushAdvantage = offense.RushOffenseRating - defense.RushDefenseRating - rushDefenseShift - rushFocus + homeFieldBonus;
 
         var overallAdvantage =
             passAdvantage * 0.55 +
@@ -126,11 +143,27 @@ public static class DeterministicGameSimulator
         var rushYards = 0;
         var turnovers = 0;
 
+        var drives = new List<GameDriveSummary>();
         for (var possession = 0; possession < PossessionsPerTeam; possession++)
         {
+            var concept = GamePlanService.GetConcept(plan, possession);
+            var (shareShift, passGain, rushGain, turnoverShift, scoringShift) = concept switch
+            {
+                OffensiveConcept.InsideRun => (-0.30, 0.0, 0.25, -0.020, 0.0),
+                OffensiveConcept.OutsideRun => (-0.26, 0.0, 0.45, -0.010, 0.0),
+                OffensiveConcept.QuickPass => (0.22, -0.5, 0.0, -0.018, -0.010),
+                OffensiveConcept.PlayAction => (0.12, 0.8, 0.0, 0.012, 0.010),
+                OffensiveConcept.DeepPass => (0.28, 2.2, 0.0, 0.045, 0.025),
+                _ => (0.0, 0.0, 0.0, 0.0, 0.0)
+            };
+            var driveShare = Math.Clamp(passShare + shareShift, 0.12, 0.90);
+            var pressure = defensePlan.Approach == DefensiveApproach.Pressure;
+            var driveTurnoverChance = Math.Clamp(turnoverChance + turnoverShift + (pressure ? 0.025 : 0), 0.02, 0.30);
+            var driveTouchdownChance = Math.Clamp(touchdownChance + scoringShift +
+                (driveShare - passShare) * (passAdvantage - rushAdvantage) * .010 + (pressure ? .01 : 0), .04, .55);
             var plays = random.Next(5, 10);
             var drivePassAttempts = Math.Clamp(
-                (int)Math.Round(plays * passShare) + random.Next(-1, 2),
+                (int)Math.Round(plays * driveShare) + random.Next(-1, 2),
                 1,
                 Math.Max(1, plays - 1));
             var driveRushAttempts = plays - drivePassAttempts;
@@ -140,34 +173,38 @@ public static class DeterministicGameSimulator
 
             var passPerAttempt =
                 5.8 +
-                passAdvantage * 0.075 +
+                passAdvantage * 0.075 + passGain + (pressure ? 1.2 : 0) +
                 CenteredNoise(random, 1.8);
 
             var rushPerAttempt =
                 4.2 +
-                rushAdvantage * 0.055 +
+                rushAdvantage * 0.055 + rushGain +
                 CenteredNoise(random, 1.1);
 
-            passYards += Math.Max(
-                0,
-                (int)Math.Round(drivePassAttempts * passPerAttempt));
-
-            rushYards += Math.Max(
-                0,
-                (int)Math.Round(driveRushAttempts * rushPerAttempt));
-
-            if (random.NextDouble() < turnoverChance)
+            var drivePassYards = Math.Max(0, (int)Math.Round(drivePassAttempts * passPerAttempt));
+            var driveRushYards = Math.Max(0, (int)Math.Round(driveRushAttempts * rushPerAttempt));
+            passYards += drivePassYards;
+            rushYards += driveRushYards;
+            var outcome = DriveOutcome.Punt;
+            var points = 0;
+            if (random.NextDouble() < driveTurnoverChance)
             {
                 turnovers++;
-                continue;
+                outcome = DriveOutcome.Turnover;
             }
-
-            var scoringRoll = random.NextDouble();
-
-            if (scoringRoll < touchdownChance)
-                score += 7;
-            else if (scoringRoll < touchdownChance + fieldGoalChance)
-                score += 3;
+            else
+            {
+                var scoringRoll = random.NextDouble();
+                if (scoringRoll < driveTouchdownChance) { points = 7; outcome = DriveOutcome.Touchdown; }
+                else if (scoringRoll < driveTouchdownChance + fieldGoalChance) { points = 3; outcome = DriveOutcome.FieldGoal; }
+            }
+            score += points;
+            drives.Add(new GameDriveSummary
+            {
+                TeamName = offense.TeamName, PossessionNumber = possession + 1, Concept = concept,
+                DefenseFaced = defensePlan.Approach, PassAttempts = drivePassAttempts, RushAttempts = driveRushAttempts,
+                PassYards = drivePassYards, RushYards = driveRushYards, Outcome = outcome, Points = points
+            });
         }
 
         return new SimulatedSide(
@@ -180,7 +217,7 @@ public static class DeterministicGameSimulator
                 PassYards = passYards,
                 RushYards = rushYards,
                 Turnovers = turnovers
-            });
+            }, drives);
     }
 
     private static TeamSimulationProfile FallbackProfile(Team team)
@@ -205,5 +242,5 @@ public static class DeterministicGameSimulator
     private static double CenteredNoise(Random random, double scale) =>
         (random.NextDouble() + random.NextDouble() - 1.0) * scale;
 
-    private sealed record SimulatedSide(int Score, GameTeamStats Stats);
+    private sealed record SimulatedSide(int Score, GameTeamStats Stats, IReadOnlyList<GameDriveSummary> Drives);
 }

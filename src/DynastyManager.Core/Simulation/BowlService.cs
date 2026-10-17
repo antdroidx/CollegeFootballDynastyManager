@@ -134,6 +134,8 @@ public static class BowlService
                 profilesByTeam.TryGetValue(game.AwayTeamName, out awayProfile);
             }
 
+            homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
+            awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
             var played = DeterministicGameSimulator.Simulate(
                 game,
                 homeTeam,
