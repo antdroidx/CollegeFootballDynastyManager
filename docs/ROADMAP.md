@@ -45,4 +45,4 @@ Builds 215–216 reorganize the active-career tabs as Overview / Roster / Coach 
 
 Build 217 adds persistent position-sensitive football skills, player-card ratings and aggregate passing/rushing simulation integration, plus upset/streak/shutout/blowout/postseason news from recorded outcomes. Detailed individual fatigue, penalties, catch/fumble events and snap-level effects remain work for the play-by-play engine. See build-217-skills-notable-news.md.
 
-Build 218 establishes the fresh-game boundary (schema 23): independent detailed skills drive position overall and passing/rushing performance directly; player creation and practice use the new model. Prior save formats require a new dynasty. See build-218-fresh-game-ratings.md.
+Builds 218–219 establish the fresh-game boundary (schema 23): independent detailed skills drive position overall and passing/rushing performance directly; player creation and practice use the new model. Prior save formats require a new dynasty. See build-218-fresh-game-ratings.md.

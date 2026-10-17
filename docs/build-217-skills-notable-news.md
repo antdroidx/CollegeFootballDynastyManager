@@ -1,5 +1,7 @@
 # Detailed football skills and notable news
 
+Historical Build 217 notes: the save-migration and overall-blending approach below is superseded by the fresh-game model in [Builds 218–219](build-218-fresh-game-ratings.md).
+
 Player cards add passing power/accuracy, catching, break tackle, tackling, run/pass blocking, ball carrying, acceleration, stamina, leadership, discipline, jumping, man/zone defensive awareness and kick power/accuracy. Speed, strength, agility, awareness, technique and durability remain. Injury proneness is explicitly the inverse of durability (higher means more risk), not a second independent injury roll.
 
 Skill ratings persist with player identity, including transfers. Older saves initialize missing skills deterministically from their existing ratings and position; existing initialized broad ratings and skills remain intact. Schema 22 stores the new skill object and nullable pregame strength snapshots. Skills develop/regress with the corresponding physical or technical rating; leadership and discipline remain stable. The legacy overall calculation is retained to preserve existing roster/potential balance.

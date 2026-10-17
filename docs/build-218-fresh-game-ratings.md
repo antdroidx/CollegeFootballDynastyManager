@@ -10,4 +10,11 @@ Practice produces deterministic but independent changes by skill, year and midse
 
 This remains a drive-level engine. Individual snap events for fatigue, penalties, catching and fumbles are still future work. Technique remains a broad training/injury attribute displayed on the profile; it is no longer the substitute for position skills in overall or team performance.
 
-Validation is in progress: focused regressions pass; full career health, Android packaging and fresh-dynasty emulator checks are running.
+Validation: all 231 Release tests passed, including 225 focused regressions and six multi-year career simulations. Android Debug APK 2.0.219 (code 619) and packaged-resource checks passed. On the isolated emulator, a new 138-team Modern FBS dynasty generated and persisted all 11,730 complete player profiles. The entire JSON dynasty snapshot was identical after load, player-card viewing and re-save. The corrected unsupported-save dialog displayed and dismissed normally, with the app alive and the final crash buffer empty. GitHub Build 219 is running independent tests, packaging and emulator smoke validation.
+
+The initial Build 218 manual load-boundary check caught an uncaught unsupported-save exception in the UI; Build 219 handles that exception and removes load-time reconstruction/replay. Its corrected path was explicitly retested. The test dynasty/database was disposable and the emulator's original database was restored afterward.
+
+## Screenshots
+
+- [Fresh player profile](ui/build-219-fresh-player-card.png)
+- [Retired format message](ui/build-219-final-retired-save-dialog.png)
