@@ -92,14 +92,14 @@ public sealed partial class FoundationPage
             fieldPlayers.AbortAnimation("snap-movement");
             fieldPlayers.Children.Clear();
             fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance;
-            fieldArt.HomeColor = TeamColor(game.HomeTeamName); fieldLines.Invalidate();
+            fieldArt.HomeColor = TeamColor(game.HomeTeamName);
             var offenseColor = TeamColor(snap.OffenseTeamName);
             var defenseColor = TeamColor(snap.DefenseTeamName);
             var direction = (snap.OffenseTeamName == game.HomeTeamName ? 1 : -1) * (snap.Quarter % 2 == 0 ? -1 : 1);
             double Project(double yard) => direction == 1 ? yard / 100d : 1 - yard / 100d;
             var line = Math.Clamp(Project(snap.StartYardLine), .06, .94);
             var destination = Math.Clamp(Project(snap.StartYardLine + snap.Yards), .04, .96);
-            fieldArt.Direction = direction;
+            fieldArt.Direction = direction; fieldLines.Invalidate();
             var movements = new List<(View View, Rect From, Rect To)>();
             // Use the personnel's football roles, not their arbitrary list order.
             // Coordinates are proportional to the field; the line of scrimmage is X.
@@ -118,6 +118,7 @@ public sealed partial class FoundationPage
             var lineIndex = 0;
             var receiverIndex = 0;
             var backIndex = 0;
+            Rect? qbFrom = null, qbTo = null, runnerFrom = null, runnerTo = null, receiverFrom = null, receiverTo = null;
             for (var index = 0; index < offense.Length; index++)
             {
                 var player = offense[index];
@@ -156,7 +157,12 @@ public sealed partial class FoundationPage
                 if (player is not null && (snap.BallCarrierId == player.PlayerId ||
                     snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown && snap.TargetId == player.PlayerId))
                 { view.Stroke = Colors.Yellow; view.StrokeThickness = 3; }
-                AddMovement(view, new Rect(x, y, 19, 19), new Rect(endX, endY, 19, 19), movements, fieldPlayers);
+                var from = new Rect(x, y, 19, 19);
+                var to = new Rect(endX, endY, 19, 19);
+                if (player?.PlayerId == snap.QuarterbackId) { qbFrom = from; qbTo = to; }
+                if (player?.PlayerId == snap.BallCarrierId) { runnerFrom = from; runnerTo = to; }
+                if (player?.PlayerId == snap.TargetId) { receiverFrom = from; receiverTo = to; }
+                AddMovement(view, from, to, movements, fieldPlayers);
             }
             var defensiveLine = 0;
             var linebackers = 0;
@@ -192,17 +198,56 @@ public sealed partial class FoundationPage
                 var endX = Math.Clamp(x + (destination - line) * .72, .025, .96);
                 var endY = Math.Clamp(y + ((index % 3) - 1) * .025, .07, .93);
                 var view = Marker(player, defenseColor);
-                AddMovement(view, new Rect(x, y, 27, 27), new Rect(endX, endY, 27, 27), movements, fieldPlayers);
+                AddMovement(view, new Rect(x, y, 19, 19), new Rect(endX, endY, 19, 19), movements, fieldPlayers);
             }
             var ball = new Border { WidthRequest = 14, HeightRequest = 9, BackgroundColor = Color.FromArgb("#8B4D24"),
                 Stroke = Color.FromArgb("#F5D8B5"), StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 5 } };
-            AddMovement(ball, new Rect(Math.Clamp(line - .025, .03, .96), .72, 14, 9),
-                new Rect(destination, snap.Outcome == SnapOutcome.Incompletion ? .26 : .48, 14, 9), movements, fieldPlayers);
+            // Ball starts on the center, goes to the QB, then follows the handoff
+            // or pass target. Its position is computed from the same player movement.
+            var center = movements.Where(m => m.From.Y >= .35 && m.From.Y <= .65 &&
+                Math.Abs(m.From.X - (line - direction * .016)) < .01)
+                .OrderBy(m => Math.Abs(m.From.Y - .50)).FirstOrDefault();
+            var centerPoint = center.View is null ? new Rect(line, .50, 14, 9) : center.From;
+            Rect BallAt(Rect player) => new(Math.Clamp(player.X + .006, .02, .97),
+                Math.Clamp(player.Y + .006, .02, .97), 14, 9);
+            var isPass = snap.TargetId.HasValue && !snap.BallCarrierId.HasValue;
+            var caught = snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown;
+            var isKick = snap.Outcome is SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal;
+            var ballStart = BallAt(centerPoint);
+            AbsoluteLayout.SetLayoutFlags(ball, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(ball, ballStart);
+            fieldPlayers.Add(ball);
             var completion = new TaskCompletionSource();
             var animation = new Animation(progress =>
             {
                 foreach (var movement in movements)
                     AbsoluteLayout.SetLayoutBounds(movement.View, Interpolate(movement.From, movement.To, progress));
+                Rect Track(Rect? from, Rect? to, double fraction) =>
+                    from is Rect a && to is Rect b ? Interpolate(a, b, fraction) : centerPoint;
+                Rect currentBall;
+                if (progress < .13)
+                    currentBall = Interpolate(ballStart, BallAt(Track(qbFrom, qbTo, 0)), progress / .13);
+                else if (isKick)
+                    currentBall = Interpolate(BallAt(Track(qbFrom, qbTo, 0)),
+                        new Rect(destination, .5, 14, 9), (progress - .13) / .87);
+                else if (isPass && progress < .53)
+                    currentBall = BallAt(Track(qbFrom, qbTo, (progress - .13) / .87));
+                else if (isPass && receiverFrom.HasValue)
+                {
+                    var receiver = Track(receiverFrom, receiverTo, progress);
+                    currentBall = caught
+                        ? progress < .67
+                            ? Interpolate(BallAt(Track(qbFrom, qbTo, .45)), BallAt(receiver), (progress - .53) / .14)
+                            : BallAt(receiver)
+                        : Interpolate(BallAt(Track(qbFrom, qbTo, .45)),
+                            new Rect(destination, .25, 14, 9), (progress - .53) / .47);
+                }
+                else if (runnerFrom.HasValue)
+                    currentBall = progress < .25
+                        ? Interpolate(BallAt(Track(qbFrom, qbTo, 0)), BallAt(Track(runnerFrom, runnerTo, .25)), (progress - .13) / .12)
+                        : BallAt(Track(runnerFrom, runnerTo, progress));
+                else currentBall = BallAt(Track(qbFrom, qbTo, progress));
+                AbsoluteLayout.SetLayoutBounds(ball, currentBall);
             });
             animation.Commit(fieldPlayers, "snap-movement", 16, session.Mode == GameDayMode.Watch ? 2800u : 2200u,
                 Easing.CubicInOut, (_, _) => completion.TrySetResult());
