@@ -62,25 +62,98 @@ public static class GamePlanService
         var deviationChance = Math.Clamp((70 - offensiveGameManagement) / 150d, .02, .30);
         if (source == PlayCallSource.Cpu && !scriptedConcept && random.NextDouble() < deviationChance)
             desiredConcept = Enum.GetValues<OffensiveConcept>()[random.Next(1, Enum.GetValues<OffensiveConcept>().Length)];
-        var offensivePool = PlaybookCatalog.OffensivePlays.Where(play =>
-            play.Formation == offense.OffensiveFormation || offense.FavoritePlayIds.Contains(play.Id)).ToArray();
-        if (offensivePool.Length == 0) offensivePool = PlaybookCatalog.OffensivePlays.ToArray();
+        var offensivePool = AvailableOffensivePlays(offense).ToArray();
         var conceptFallback = desiredConcept == OffensiveConcept.Automatic
             ? offensivePool
-            : PlaybookCatalog.OffensivePlays.Where(play => play.Concept == desiredConcept).ToArray();
+            : offensivePool.Where(play => play.Concept == desiredConcept).ToArray();
+        if (conceptFallback.Length == 0) conceptFallback = offensivePool;
         var calledOffense = scriptedId is not null
             ? PlaybookCatalog.OffensivePlays.Single(play => play.Id == scriptedId)
-            : Pick(offensivePool.Where(play => desiredConcept == OffensiveConcept.Automatic || play.Concept == desiredConcept).ToArray(), conceptFallback, random);
+            : Pick(offensivePool.Where(play => play.Formation == offense.OffensiveFormation &&
+                (desiredConcept == OffensiveConcept.Automatic || play.Concept == desiredConcept)).ToArray(), conceptFallback, random);
 
-        var defensivePool = PlaybookCatalog.DefensivePlays.Where(play =>
-            play.Formation == defense.DefensiveFormation || defense.FavoritePlayIds.Contains(play.Id)).ToArray();
-        if (defensivePool.Length == 0) defensivePool = PlaybookCatalog.DefensivePlays.ToArray();
+        var defensivePool = AvailableDefensivePlays(defense).ToArray();
         var anticipatedApproach = random.Next(100) < Math.Clamp(defensiveGameManagement, 25, 95)
             ? defense.Approach : DefensiveApproach.Balanced;
-        var preferredDefense = defensivePool.Where(play => play.Approach == anticipatedApproach).ToArray();
+        var preferredDefense = defensivePool.Where(play => play.Formation == defense.DefensiveFormation &&
+            play.Approach == anticipatedApproach).ToArray();
         var calledDefense = Pick(preferredDefense, defensivePool, random);
         return new ResolvedPlayCall(calledOffense, calledDefense, source);
     }
+
+    public static IReadOnlyList<OffensivePlayDefinition> AvailableOffensivePlays(TeamGamePlan plan)
+    {
+        var formations = plan.Offense switch
+        {
+            OffensivePlaybook.Spread => new[] { OffensiveFormation.ShotgunSpread, OffensiveFormation.Pistol, OffensiveFormation.Empty },
+            OffensivePlaybook.AirRaid => new[] { OffensiveFormation.Empty, OffensiveFormation.ShotgunSpread, OffensiveFormation.Pistol },
+            OffensivePlaybook.PowerRun => new[] { OffensiveFormation.IForm, OffensiveFormation.Singleback, OffensiveFormation.Pistol },
+            OffensivePlaybook.Option => new[] { OffensiveFormation.Pistol, OffensiveFormation.ShotgunSpread, OffensiveFormation.IForm },
+            _ => new[] { plan.OffensiveFormation, OffensiveFormation.ShotgunSpread, OffensiveFormation.Singleback, OffensiveFormation.Pistol }
+        };
+        var orderedFormations = new[] { plan.OffensiveFormation }.Concat(formations).Distinct().Take(3).ToArray();
+        var preferred = PreferredConcepts(plan.Offense);
+        IEnumerable<OffensivePlayDefinition> Curated(OffensiveFormation formation, int limit)
+        {
+            var formationPlays = PlaybookCatalog.OffensivePlays.Where(play => play.Formation == formation).ToArray();
+            var conceptMix = formationPlays.GroupBy(play => play.Concept).Select(group => group.OrderBy(play => play.Id).First());
+            var preferredOrder = formationPlays.OrderBy(play =>
+                    Array.IndexOf(preferred, play.Concept) is var rank && rank >= 0 ? rank : preferred.Length)
+                .ThenBy(play => play.Id);
+            return conceptMix.Concat(preferredOrder).DistinctBy(play => play.Id).Take(limit);
+        }
+        var selected = orderedFormations.SelectMany((formation, formationIndex) =>
+            Curated(formation, formationIndex == 0 ? 7 : 5));
+        return selected.Concat(PlaybookCatalog.OffensivePlays.Where(play => plan.FavoritePlayIds.Contains(play.Id)))
+            .DistinctBy(play => play.Id).ToArray();
+    }
+
+    public static IReadOnlyList<DefensivePlayDefinition> AvailableDefensivePlays(TeamGamePlan plan)
+    {
+        var formations = plan.Defense switch
+        {
+            DefensivePlaybook.FourThree => new[] { DefensiveFormation.FourThree, DefensiveFormation.Nickel, DefensiveFormation.GoalLine },
+            DefensivePlaybook.ThreeFour => new[] { DefensiveFormation.ThreeFour, DefensiveFormation.Nickel, DefensiveFormation.Dime },
+            DefensivePlaybook.Nickel => new[] { DefensiveFormation.Nickel, DefensiveFormation.Dime, DefensiveFormation.FourThree },
+            _ => new[] { plan.DefensiveFormation, DefensiveFormation.Nickel, DefensiveFormation.Dime, DefensiveFormation.FourThree }
+        };
+        var orderedFormations = new[] { plan.DefensiveFormation }.Concat(formations).Distinct().Take(3).ToArray();
+        var selected = orderedFormations.SelectMany((formation, formationIndex) => PlaybookCatalog.DefensivePlays
+            .Where(play => play.Formation == formation)
+            .OrderBy(play => play.Approach == plan.Approach ? 0 : 1)
+            .ThenBy(play => play.Id)
+            .Take(formationIndex == 0 ? 6 : 4));
+        return selected.Concat(PlaybookCatalog.DefensivePlays.Where(play => plan.FavoritePlayIds.Contains(play.Id)))
+            .DistinctBy(play => play.Id).ToArray();
+    }
+
+    public static OffensivePlayDefinition RecommendOffensivePlay(TeamGamePlan plan, int down, int distance, int yardLine)
+    {
+        var available = AvailableOffensivePlays(plan);
+        var preferred = distance <= 2 ? new[] { OffensiveConcept.InsideRun, OffensiveConcept.OutsideRun, OffensiveConcept.PlayAction }
+            : down >= 3 && distance >= 7 ? new[] { OffensiveConcept.QuickPass, OffensiveConcept.DeepPass, OffensiveConcept.PlayAction }
+            : yardLine >= 80 ? new[] { OffensiveConcept.InsideRun, OffensiveConcept.QuickPass, OffensiveConcept.PlayAction }
+            : PreferredConcepts(plan.Offense);
+        return available.OrderBy(play => Array.IndexOf(preferred, play.Concept) is var rank && rank >= 0 ? rank : preferred.Length)
+            .ThenBy(play => play.Formation == plan.OffensiveFormation ? 0 : 1).ThenBy(play => play.Id).First();
+    }
+
+    public static DefensivePlayDefinition RecommendDefensivePlay(TeamGamePlan plan, int down, int distance)
+    {
+        var desired = distance <= 2 ? DefensiveApproach.StopRun
+            : down >= 3 && distance >= 7 ? DefensiveApproach.ProtectPass : plan.Approach;
+        return AvailableDefensivePlays(plan).OrderBy(play => play.Approach == desired ? 0 : 1)
+            .ThenBy(play => play.Formation == plan.DefensiveFormation ? 0 : 1).ThenBy(play => play.Id).First();
+    }
+
+    private static OffensiveConcept[] PreferredConcepts(OffensivePlaybook playbook) => playbook switch
+    {
+        OffensivePlaybook.Spread => [OffensiveConcept.QuickPass, OffensiveConcept.OutsideRun, OffensiveConcept.DeepPass, OffensiveConcept.InsideRun],
+        OffensivePlaybook.AirRaid => [OffensiveConcept.QuickPass, OffensiveConcept.DeepPass, OffensiveConcept.PlayAction, OffensiveConcept.InsideRun],
+        OffensivePlaybook.PowerRun => [OffensiveConcept.InsideRun, OffensiveConcept.OutsideRun, OffensiveConcept.PlayAction, OffensiveConcept.QuickPass],
+        OffensivePlaybook.Option => [OffensiveConcept.OutsideRun, OffensiveConcept.InsideRun, OffensiveConcept.PlayAction, OffensiveConcept.QuickPass],
+        _ => [OffensiveConcept.InsideRun, OffensiveConcept.QuickPass, OffensiveConcept.OutsideRun, OffensiveConcept.PlayAction, OffensiveConcept.DeepPass]
+    };
 
     private static T Pick<T>(T[] preferred, T[] fallback, Random random) =>
         (preferred.Length > 0 ? preferred : fallback)[random.Next(preferred.Length > 0 ? preferred.Length : fallback.Length)];

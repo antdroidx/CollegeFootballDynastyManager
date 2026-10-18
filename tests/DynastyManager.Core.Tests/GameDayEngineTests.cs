@@ -24,13 +24,41 @@ public class GameDayEngineTests
     [Fact]
     public void SkipToEndCompletesARegulationGame()
     {
-        var session = Session(GameDayMode.Watch);
+        var session = Session(GameDayMode.Watch, includeOpeningKickoff: true);
         GameDayEngine.SimulateToEnd(session);
 
         Assert.True(session.IsComplete);
         Assert.NotEmpty(session.Events);
         Assert.InRange(session.Events.Count, 1, 180);
         Assert.NotEqual(session.HomeScore, session.AwayScore);
+    }
+
+    [Fact]
+    public void OpeningKickoffNamesTheKickerAndReturnerAndStartsTheDrive()
+    {
+        var session = Session(GameDayMode.Watch, includeOpeningKickoff: true);
+
+        var kickoff = GameDayEngine.Step(session);
+
+        Assert.Equal(SnapOutcome.Kickoff, kickoff.Outcome);
+        Assert.NotNull(kickoff.KickerId);
+        Assert.NotNull(kickoff.ReturnerId);
+        Assert.Equal(kickoff.BallEndYardLine, session.YardLine);
+        Assert.Equal(11, kickoff.OffensePersonnel.Count);
+        Assert.Equal(11, kickoff.DefensePersonnel.Count);
+    }
+
+    [Fact]
+    public void UserCanCallDefenseWhileCpuCallsOffense()
+    {
+        var session = Session(GameDayMode.Play);
+        var defensiveCall = GamePlanService.AvailableDefensivePlays(session.AwayProfile.GamePlan!).First();
+
+        var snap = GameDayEngine.Step(session, userDefensivePlayId: defensiveCall.Id);
+
+        Assert.Equal(defensiveCall.Id, snap.DefensivePlayId);
+        Assert.Equal(PlayCallSource.User, snap.DefensiveCallSource);
+        Assert.Equal(PlayCallSource.Cpu, snap.CallSource);
     }
 
     [Fact]
@@ -44,9 +72,30 @@ public class GameDayEngineTests
 
         Assert.Equal(SnapOutcome.Punt, punt.Outcome);
         Assert.Equal(PlayCallSource.User, punt.CallSource);
-        Assert.InRange(punt.BallEndYardLine, 76, 92);
+        Assert.InRange(punt.BallEndYardLine, 64, 92);
         Assert.Equal("Away", session.PossessionTeamName);
         Assert.Equal(2, session.PossessionNumber);
+        Assert.NotNull(punt.KickerId);
+        Assert.NotNull(punt.ReturnerId);
+        Assert.Equal(11, punt.OffensePersonnel.Count);
+        Assert.Equal(11, punt.DefensePersonnel.Count);
+    }
+
+    [Fact]
+    public void FinishedBoxScoreRetainsKickAndPuntReturns()
+    {
+        var session = Session(GameDayMode.Watch, includeOpeningKickoff: true);
+        GameDayEngine.SimulateToEnd(session);
+
+        var game = GameDayEngine.Finish(session);
+        var homeKickoffs = session.Events.Where(play => play.Outcome == SnapOutcome.Kickoff && play.OffenseTeamName == "Home").ToArray();
+        var awayPuntReturns = session.Events.Where(play => play.Outcome == SnapOutcome.Punt && play.DefenseTeamName == "Away" && play.ReturnerId.HasValue).ToArray();
+
+        Assert.Equal(homeKickoffs.Length, game.HomeStats!.KickReturns);
+        Assert.Equal(homeKickoffs.Sum(play => play.ReturnYards), game.HomeStats.KickReturnYards);
+        Assert.Equal(awayPuntReturns.Length, game.AwayStats!.PuntReturns);
+        Assert.Equal(awayPuntReturns.Sum(play => play.ReturnYards), game.AwayStats.PuntReturnYards);
+        Assert.Contains(session.Events, play => play.Quarter == 3 && play.Outcome == SnapOutcome.Kickoff);
     }
 
     [Fact]
@@ -85,14 +134,16 @@ public class GameDayEngineTests
         Assert.Equal(1, GameDayAnimationPlanner.PursuitProgress(1, true));
     }
 
-    private static GameDaySession Session(GameDayMode mode)
+    private static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false)
     {
         var homePlan = new TeamGamePlan { TeamName = "Home", Offense = OffensivePlaybook.Spread,
             OffensiveFormation = OffensiveFormation.ShotgunSpread, DefensiveFormation = DefensiveFormation.Nickel };
         var awayPlan = homePlan with { TeamName = "Away" };
-        return GameDayEngine.Start(new ScheduledGame { GameId = "game-day", SeasonYear = 2026, Week = 1,
+        var session = GameDayEngine.Start(new ScheduledGame { GameId = "game-day", SeasonYear = 2026, Week = 1,
                 HomeTeamName = "Home", AwayTeamName = "Away", SimulationSeed = 7123 },
             Profile("Home", homePlan), Profile("Away", awayPlan), Roster(), mode);
+        session.KickoffPending = includeOpeningKickoff;
+        return session;
     }
 
     private static TeamSimulationProfile Profile(string team, TeamGamePlan plan) => new()

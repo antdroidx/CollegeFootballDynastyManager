@@ -19,26 +19,42 @@ public static class GameDayEngine
             PlayersById = gameRoster.ToDictionary(player => player.PlayerId),
             HomeDepthChart = PersonnelRotationService.BuildDepthChart(homeRoster, game.HomeTeamName),
             AwayDepthChart = PersonnelRotationService.BuildDepthChart(awayRoster, game.AwayTeamName),
-            Mode = mode, Random = new Random(game.SimulationSeed), PossessionTeamName = game.HomeTeamName
+            Mode = mode, Random = new Random(game.SimulationSeed), PossessionTeamName = game.HomeTeamName,
+            KickoffTeamName = game.AwayTeamName, KickoffPending = true
         };
     }
 
-    public static GameSnapEvent Step(GameDaySession session, string? userPlayId = null)
+    public static GameSnapEvent Step(GameDaySession session, string? userPlayId = null,
+        string? userDefensivePlayId = null)
     {
         if (session.IsComplete) throw new InvalidOperationException("The game is complete.");
+        if (session.KickoffPending) return ResolveKickoff(session);
         var homeOnOffense = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var offense = homeOnOffense ? session.HomeProfile : session.AwayProfile;
         var defense = homeOnOffense ? session.AwayProfile : session.HomeProfile;
+        var offenseFatigue = homeOnOffense ? session.HomeFatigue : session.AwayFatigue;
+        var defenseFatigue = homeOnOffense ? session.AwayFatigue : session.HomeFatigue;
+        var offenseRoster = homeOnOffense ? session.HomeRoster : session.AwayRoster;
+        var defenseRoster = homeOnOffense ? session.AwayRoster : session.HomeRoster;
+        var offenseDepthChart = homeOnOffense ? session.HomeDepthChart : session.AwayDepthChart;
+        var defenseDepthChart = homeOnOffense ? session.AwayDepthChart : session.HomeDepthChart;
         var offensePlan = GamePlanService.Normalize(offense.GamePlan ?? new TeamGamePlan { TeamName = offense.TeamName });
         var defensePlan = GamePlanService.Normalize(defense.GamePlan ?? new TeamGamePlan { TeamName = defense.TeamName });
         var requestedSpecial = userPlayId is "special-punt" or "special-field-goal" ? userPlayId : null;
         if (!string.IsNullOrWhiteSpace(userPlayId) && requestedSpecial is null)
             offensePlan = offensePlan with { OpeningPlayIds = [userPlayId] };
-        var offensivePossessionIndex = session.Events.Count;
+        var offensivePossessionIndex = session.Events.Count(item => item.Outcome != SnapOutcome.Kickoff);
         var call = GamePlanService.ResolvePlayCall(offensePlan, defensePlan,
             string.IsNullOrWhiteSpace(userPlayId) ? offensivePossessionIndex : 0, session.Random,
             (offense.HeadCoachGameManagement + offense.OffensiveCoordinatorGameManagement) / 2,
             (defense.HeadCoachGameManagement + defense.DefensiveCoordinatorGameManagement) / 2);
+        if (!string.IsNullOrWhiteSpace(userDefensivePlayId))
+        {
+            var calledDefense = GamePlanService.AvailableDefensivePlays(defensePlan)
+                .SingleOrDefault(play => play.Id == userDefensivePlayId)
+                ?? throw new ArgumentException("Defensive play is not in this team's playbook.", nameof(userDefensivePlayId));
+            call = call with { Defense = calledDefense };
+        }
 
         // A coach can choose a kick on fourth down before a normal offensive snap.
         // CPU decisions are situational rather than always running the same play.
@@ -55,9 +71,12 @@ public static class GameDayEngine
                 session.Random.NextDouble() < Math.Clamp(.92 - Math.Max(0, kickDistance - 30) * .018, .12, .95);
             var puntLanding = special == "special-punt"
                 ? Math.Min(95, kickStart + session.Random.Next(34, 51)) : 100;
+            var returnYards = special == "special-punt" && puntLanding < 95 ? session.Random.Next(0, 13) : 0;
             var newSpot = made ? 25 : special == "special-punt"
-                ? Math.Clamp(100 - puntLanding, 5, 80)
+                ? Math.Clamp(100 - puntLanding + returnYards, 5, 80)
                 : Math.Clamp(100 - Math.Max(20, kickStart - 7), 10, 80);
+            var kicker = Kicker(offenseRoster);
+            var returner = Returner(defenseRoster);
             var kick = new GameSnapEvent
             {
                 Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
@@ -65,8 +84,13 @@ public static class GameDayEngine
                 OffenseTeamName = offense.TeamName, DefenseTeamName = defense.TeamName,
                 OffensivePlayId = call.Offense.Id, DefensivePlayId = call.Defense.Id,
                 CallSource = requestedSpecial is null ? call.Source : PlayCallSource.User,
+                DefensiveCallSource = string.IsNullOrWhiteSpace(userDefensivePlayId) ? PlayCallSource.Cpu : PlayCallSource.User,
                 Down = session.Down, Distance = session.Distance, StartYardLine = kickStart,
-                BallEndYardLine = special == "special-punt" ? puntLanding : 100, Yards = 0,
+                BallEndYardLine = special == "special-punt" ? 100 - newSpot : 100,
+                Yards = 0, ReturnYards = returnYards,
+                KickerId = kicker?.PlayerId, ReturnerId = special == "special-punt" ? returner?.PlayerId : null,
+                OffensePersonnel = SpecialTeam(offenseRoster, kicker).Select(player => player.PlayerId).ToArray(),
+                DefensePersonnel = SpecialTeam(defenseRoster, returner).Select(player => player.PlayerId).ToArray(),
                 Outcome = special == "special-punt" ? SnapOutcome.Punt :
                     made ? SnapOutcome.FieldGoal : SnapOutcome.MissedFieldGoal
             };
@@ -74,16 +98,11 @@ public static class GameDayEngine
             session.ClockSeconds -= session.Random.Next(5, 13);
             if (made) { if (homeOnOffense) session.HomeScore += 3; else session.AwayScore += 3; }
             ChangePossession(session, newSpot);
+            if (made) QueueKickoff(session, offense.TeamName);
             AdvanceQuarter(session);
             return kick;
         }
 
-        var offenseFatigue = homeOnOffense ? session.HomeFatigue : session.AwayFatigue;
-        var defenseFatigue = homeOnOffense ? session.AwayFatigue : session.HomeFatigue;
-        var offenseRoster = homeOnOffense ? session.HomeRoster : session.AwayRoster;
-        var defenseRoster = homeOnOffense ? session.AwayRoster : session.HomeRoster;
-        var offenseDepthChart = homeOnOffense ? session.HomeDepthChart : session.AwayDepthChart;
-        var defenseDepthChart = homeOnOffense ? session.AwayDepthChart : session.HomeDepthChart;
         var offensePersonnel = PersonnelRotationService.SelectOffense(offenseDepthChart, offense.TeamName,
             call.Offense.Personnel, offenseFatigue, session.Random);
         var defensePersonnel = PersonnelRotationService.SelectDefense(defenseDepthChart, defense.TeamName,
@@ -109,7 +128,8 @@ public static class GameDayEngine
         var defender = Pick(defensePlayers.Where(player => player.Position != Position.K).ToArray(), session.Random);
         var start = session.YardLine;
         var touchdown = !turnover && start + yards >= 100;
-        var outcome = turnover ? SnapOutcome.Turnover : sack ? SnapOutcome.Sack : touchdown ? SnapOutcome.Touchdown :
+        var outcome = turnover ? isPass ? SnapOutcome.Interception : SnapOutcome.Fumble :
+            sack ? SnapOutcome.Sack : touchdown ? SnapOutcome.Touchdown :
             isPass ? complete ? SnapOutcome.Completion : SnapOutcome.Incompletion : SnapOutcome.Run;
         var snap = new GameSnapEvent
         {
@@ -117,6 +137,7 @@ public static class GameDayEngine
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
             OffenseTeamName = offense.TeamName, DefenseTeamName = defense.TeamName,
             OffensivePlayId = call.Offense.Id, DefensivePlayId = call.Defense.Id, CallSource = call.Source,
+            DefensiveCallSource = string.IsNullOrWhiteSpace(userDefensivePlayId) ? PlayCallSource.Cpu : PlayCallSource.User,
             Down = session.Down, Distance = session.Distance, StartYardLine = start,
             BallEndYardLine = Math.Clamp(start + yards, 0, 100), Yards = yards, Outcome = outcome,
             QuarterbackId = qb?.PlayerId, BallCarrierId = carrier?.PlayerId, TargetId = target?.PlayerId,
@@ -153,13 +174,14 @@ public static class GameDayEngine
     }
 
     private static IReadOnlyList<GameDriveSummary> BuildDrives(GameDaySession session) => session.Events
+        .Where(item => item.Outcome != SnapOutcome.Kickoff)
         .GroupBy(item => (item.OffenseTeamName, item.PossessionNumber))
         .Select(group =>
         {
             var first = group.First();
             var last = group.Last();
             var concept = PlaybookCatalog.OffensivePlays.First(play => play.Id == first.OffensivePlayId).Concept;
-            var turnover = group.Any(item => item.Outcome == SnapOutcome.Turnover);
+            var turnover = group.Any(item => IsTurnover(item.Outcome));
             var touchdown = group.Any(item => item.Outcome == SnapOutcome.Touchdown);
             var fieldGoal = group.Any(item => item.Outcome == SnapOutcome.FieldGoal);
             var points = touchdown ? 7 : fieldGoal ? 3 : 0;
@@ -195,7 +217,29 @@ public static class GameDayEngine
         void Save(PlayerSeasonStatLine line) => lines[line.PlayerId] = line;
         foreach (var snap in session.Events)
         {
-            if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.Punt or SnapOutcome.MissedFieldGoal) continue;
+            if (snap.Outcome == SnapOutcome.Kickoff)
+            {
+                if (snap.ReturnerId is Guid kickoffReturnerId)
+                {
+                    var returner = Line(kickoffReturnerId);
+                    Save(returner with { KickReturns = returner.KickReturns + 1,
+                        KickReturnYards = returner.KickReturnYards + snap.ReturnYards,
+                        KickReturnTouchdowns = returner.KickReturnTouchdowns +
+                            (snap.BallEndYardLine >= 100 ? 1 : 0) });
+                }
+                continue;
+            }
+            if (snap.Outcome == SnapOutcome.Punt)
+            {
+                if (snap.ReturnerId is Guid puntReturnerId && snap.ReturnYards > 0)
+                {
+                    var returner = Line(puntReturnerId);
+                    Save(returner with { PuntReturns = returner.PuntReturns + 1,
+                        PuntReturnYards = returner.PuntReturnYards + snap.ReturnYards });
+                }
+                continue;
+            }
+            if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal) continue;
             var concept = PlaybookCatalog.OffensivePlays.First(play => play.Id == snap.OffensivePlayId).Concept;
             var pass = concept is OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
             if (snap.QuarterbackId is Guid qbId)
@@ -207,8 +251,8 @@ public static class GameDayEngine
                     PassCompletions = qb.PassCompletions + (snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? 1 : 0),
                     PassYards = qb.PassYards + (snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? Math.Max(0, snap.Yards) : 0),
                     PassingTouchdowns = qb.PassingTouchdowns + (snap.Outcome == SnapOutcome.Touchdown ? 1 : 0),
-                    InterceptionsThrown = qb.InterceptionsThrown + (snap.Outcome == SnapOutcome.Turnover ? 1 : 0),
-                    Turnovers = qb.Turnovers + (snap.Outcome == SnapOutcome.Turnover ? 1 : 0)
+                    InterceptionsThrown = qb.InterceptionsThrown + (snap.Outcome is SnapOutcome.Turnover or SnapOutcome.Interception ? 1 : 0),
+                    Turnovers = qb.Turnovers + (snap.Outcome is SnapOutcome.Turnover or SnapOutcome.Interception ? 1 : 0)
                 };
                 Save(qb);
             }
@@ -219,10 +263,10 @@ public static class GameDayEngine
                     RushAttempts = Line(carrierId).RushAttempts + 1,
                     RushYards = Line(carrierId).RushYards + snap.Yards,
                     RushingTouchdowns = Line(carrierId).RushingTouchdowns + (snap.Outcome == SnapOutcome.Touchdown ? 1 : 0),
-                    RushingFumbles = Line(carrierId).RushingFumbles + (snap.Outcome == SnapOutcome.Turnover ? 1 : 0),
+                    RushingFumbles = Line(carrierId).RushingFumbles + (snap.Outcome is SnapOutcome.Turnover or SnapOutcome.Fumble ? 1 : 0),
                     Rushing20Plus = Line(carrierId).Rushing20Plus + (snap.Yards >= 20 ? 1 : 0),
                     Touchdowns = Line(carrierId).Touchdowns + (snap.Outcome == SnapOutcome.Touchdown ? 1 : 0),
-                    Turnovers = Line(carrierId).Turnovers + (snap.Outcome == SnapOutcome.Turnover ? 1 : 0)
+                    Turnovers = Line(carrierId).Turnovers + (snap.Outcome is SnapOutcome.Turnover or SnapOutcome.Fumble ? 1 : 0)
                 };
                 Save(carrier);
             }
@@ -247,8 +291,8 @@ public static class GameDayEngine
                     Tackles = Line(defenderId).Tackles + 1,
                     TacklesForLoss = Line(defenderId).TacklesForLoss + (snap.Yards < 0 && snap.Outcome != SnapOutcome.Sack ? 1 : 0),
                     Sacks = Line(defenderId).Sacks + (snap.Outcome == SnapOutcome.Sack ? 1 : 0),
-                    Interceptions = Line(defenderId).Interceptions + (pass && snap.Outcome == SnapOutcome.Turnover ? 1 : 0),
-                    FumbleRecoveries = Line(defenderId).FumbleRecoveries + (!pass && snap.Outcome == SnapOutcome.Turnover ? 1 : 0)
+                    Interceptions = Line(defenderId).Interceptions + (snap.Outcome == SnapOutcome.Interception || pass && snap.Outcome == SnapOutcome.Turnover ? 1 : 0),
+                    FumbleRecoveries = Line(defenderId).FumbleRecoveries + (snap.Outcome == SnapOutcome.Fumble || !pass && snap.Outcome == SnapOutcome.Turnover ? 1 : 0)
                 };
                 Save(defender);
             }
@@ -275,7 +319,12 @@ public static class GameDayEngine
 
     private static GameTeamStats BuildStats(GameDaySession session, string teamName)
     {
-        var snaps = session.Events.Where(item => item.OffenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var snaps = session.Events.Where(item => item.OffenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
+            item.Outcome != SnapOutcome.Kickoff).ToArray();
+        var kickReturns = session.Events.Where(item => item.Outcome == SnapOutcome.Kickoff &&
+            item.OffenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var puntReturns = session.Events.Where(item => item.Outcome == SnapOutcome.Punt &&
+            item.DefenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) && item.ReturnerId.HasValue).ToArray();
         var scrimmage = snaps.Where(item => item.Outcome is not (SnapOutcome.FieldGoal or SnapOutcome.Punt or SnapOutcome.MissedFieldGoal)).ToArray();
         var passes = scrimmage.Where(item => PlaybookCatalog.OffensivePlays.First(play => play.Id == item.OffensivePlayId).Concept is
             OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass).ToArray();
@@ -289,19 +338,23 @@ public static class GameDayEngine
             RushAttempts = runs.Length, RushYards = runs.Sum(item => item.Yards),
             PassingTouchdowns = passes.Count(item => item.Outcome == SnapOutcome.Touchdown),
             RushingTouchdowns = runs.Count(item => item.Outcome == SnapOutcome.Touchdown),
-            InterceptionsThrown = passes.Count(item => item.Outcome == SnapOutcome.Turnover),
-            FumblesLost = runs.Count(item => item.Outcome == SnapOutcome.Turnover),
-            Turnovers = snaps.Count(item => item.Outcome == SnapOutcome.Turnover),
+            InterceptionsThrown = passes.Count(item => item.Outcome is SnapOutcome.Turnover or SnapOutcome.Interception),
+            FumblesLost = runs.Count(item => item.Outcome is SnapOutcome.Turnover or SnapOutcome.Fumble),
+            Turnovers = snaps.Count(item => IsTurnover(item.Outcome)),
             ExplosivePasses20 = passes.Count(item => item.Yards >= 20),
             ExplosiveRuns20 = runs.Count(item => item.Yards >= 20),
             SacksAllowed = passes.Count(item => item.Outcome == SnapOutcome.Sack),
             FieldGoalsMade = snaps.Count(item => item.Outcome == SnapOutcome.FieldGoal),
-            FieldGoalsAttempted = snaps.Count(item => item.Outcome == SnapOutcome.FieldGoal),
+            FieldGoalsAttempted = snaps.Count(item => item.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal),
             ExtraPointsMade = snaps.Count(item => item.Outcome == SnapOutcome.Touchdown),
             ExtraPointsAttempted = snaps.Count(item => item.Outcome == SnapOutcome.Touchdown),
             Punts = snaps.Count(item => item.Outcome == SnapOutcome.Punt),
             PuntYards = snaps.Count(item => item.Outcome == SnapOutcome.Punt) * 40,
-            LongPunt = snaps.Any(item => item.Outcome == SnapOutcome.Punt) ? 40 : 0
+            LongPunt = snaps.Any(item => item.Outcome == SnapOutcome.Punt) ? 40 : 0,
+            KickReturns = kickReturns.Length,
+            KickReturnYards = kickReturns.Sum(item => item.ReturnYards),
+            PuntReturns = puntReturns.Length,
+            PuntReturnYards = puntReturns.Sum(item => item.ReturnYards)
         };
     }
 
@@ -312,6 +365,7 @@ public static class GameDayEngine
         {
             if (homeOnOffense) session.HomeScore += 7; else session.AwayScore += 7;
             ChangePossession(session, 25);
+            QueueKickoff(session, homeOnOffense ? session.Game.HomeTeamName : session.Game.AwayTeamName);
         }
         else if (turnover) ChangePossession(session, Math.Clamp(100 - session.YardLine, 10, 90));
         else
@@ -320,19 +374,7 @@ public static class GameDayEngine
             if (yards >= session.Distance) { session.Down = 1; session.Distance = Math.Min(10, 100 - session.YardLine); }
             else { session.Distance -= yards; session.Down++; }
             if (session.Down > 4)
-            {
-                if (session.YardLine >= 65 && session.Random.NextDouble() < .7)
-                {
-                    session.Events[^1] = session.Events[^1] with { Outcome = SnapOutcome.FieldGoal, Yards = 0 };
-                    if (homeOnOffense) session.HomeScore += 3; else session.AwayScore += 3;
-                    ChangePossession(session, 25);
-                }
-                else
-                {
-                    session.Events[^1] = session.Events[^1] with { Outcome = SnapOutcome.Punt, Yards = 0 };
-                    ChangePossession(session, Math.Clamp(100 - Math.Min(95, session.YardLine + 40), 5, 80));
-                }
-            }
+                ChangePossession(session, Math.Clamp(100 - session.YardLine, 1, 99));
         }
         AdvanceQuarter(session);
     }
@@ -342,7 +384,16 @@ public static class GameDayEngine
         if (session.ClockSeconds <= 0)
         {
             if (session.Quarter >= 4) session.IsComplete = session.HomeScore != session.AwayScore;
-            if (!session.IsComplete) { session.Quarter++; session.ClockSeconds = 900; }
+            if (!session.IsComplete)
+            {
+                session.Quarter++; session.ClockSeconds = 900;
+                if (session.Quarter == 3)
+                {
+                    session.PossessionTeamName = session.Game.AwayTeamName;
+                    session.PossessionNumber++;
+                    QueueKickoff(session, session.Game.HomeTeamName);
+                }
+            }
         }
         if (session.Events.Count >= 180)
         {
@@ -360,6 +411,62 @@ public static class GameDayEngine
             ? session.Game.AwayTeamName : session.Game.HomeTeamName;
         session.PossessionNumber++; session.Down = 1; session.Distance = 10; session.YardLine = yardLine;
     }
+
+    private static GameSnapEvent ResolveKickoff(GameDaySession session)
+    {
+        var receivingHome = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
+        var receivingRoster = receivingHome ? session.HomeRoster : session.AwayRoster;
+        var kickingRoster = receivingHome ? session.AwayRoster : session.HomeRoster;
+        var kicker = Kicker(kickingRoster);
+        var returner = Returner(receivingRoster);
+        var kickoffRandom = new Random(HashCode.Combine(session.Game.SimulationSeed, session.PossessionNumber,
+            session.Quarter, 0x4B1C));
+        var returnYards = kickoffRandom.Next(16, 34);
+        var start = 65;
+        var end = Math.Clamp(kickoffRandom.Next(1, 8) + returnYards, 15, 40);
+        var kickoff = new GameSnapEvent
+        {
+            Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
+            Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
+            OffenseTeamName = session.PossessionTeamName, DefenseTeamName = session.KickoffTeamName,
+            OffensivePlayId = string.Empty, DefensivePlayId = string.Empty,
+            Down = 0, Distance = 0, StartYardLine = start, BallEndYardLine = end,
+            Yards = 0, ReturnYards = returnYards, Outcome = SnapOutcome.Kickoff,
+            KickerId = kicker?.PlayerId, ReturnerId = returner?.PlayerId, BallCarrierId = returner?.PlayerId,
+            OffensePersonnel = SpecialTeam(receivingRoster, returner).Select(player => player.PlayerId).ToArray(),
+            DefensePersonnel = SpecialTeam(kickingRoster, kicker).Select(player => player.PlayerId).ToArray()
+        };
+        session.Events.Add(kickoff);
+        session.YardLine = end; session.Down = 1; session.Distance = Math.Min(10, 100 - end);
+        session.KickoffPending = false;
+        return kickoff;
+    }
+
+    private static void QueueKickoff(GameDaySession session, string kickingTeamName)
+    {
+        session.KickoffPending = true;
+        session.KickoffTeamName = kickingTeamName;
+        session.YardLine = 25; session.Down = 1; session.Distance = 10;
+    }
+
+    private static DynastyPlayer? Kicker(IReadOnlyList<DynastyPlayer> roster) => roster
+        .Where(player => player.CurrentInjury is null && !player.IsRedshirted)
+        .OrderBy(player => player.Position == Position.K ? 0 : 1)
+        .ThenByDescending(player => player.OverallRating).FirstOrDefault();
+
+    private static DynastyPlayer? Returner(IReadOnlyList<DynastyPlayer> roster) => roster
+        .Where(player => player.CurrentInjury is null && !player.IsRedshirted)
+        .OrderBy(player => player.Position is Position.WR or Position.RB ? 0 : 1)
+        .ThenByDescending(player => player.SpeedRating).ThenByDescending(player => player.AgilityRating).FirstOrDefault();
+
+    private static IReadOnlyList<DynastyPlayer> SpecialTeam(IReadOnlyList<DynastyPlayer> roster, DynastyPlayer? featured) =>
+        roster.Where(player => player.CurrentInjury is null && !player.IsRedshirted)
+            .OrderBy(player => featured is not null && player.PlayerId == featured.PlayerId ? 0 : 1)
+            .ThenByDescending(player => player.SpeedRating + player.AwarenessRating)
+            .Take(11).ToArray();
+
+    private static bool IsTurnover(SnapOutcome outcome) =>
+        outcome is SnapOutcome.Turnover or SnapOutcome.Interception or SnapOutcome.Fumble;
 
     private static double MatchupShift(OffensiveConcept offense, DefensiveApproach defense) => (offense, defense) switch
     {

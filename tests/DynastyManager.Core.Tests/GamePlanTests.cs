@@ -8,6 +8,27 @@ namespace DynastyManager.Core.Tests;
 public class GamePlanTests
 {
     [Fact]
+    public void CoachPlaybooksExposeACuratedFormationMix()
+    {
+        var plan = Plan("Home", OffensivePlaybook.PowerRun) with
+        {
+            OffensiveFormation = OffensiveFormation.IForm,
+            Defense = DefensivePlaybook.ThreeFour,
+            DefensiveFormation = DefensiveFormation.ThreeFour
+        };
+
+        var offense = GamePlanService.AvailableOffensivePlays(plan);
+        var defense = GamePlanService.AvailableDefensivePlays(plan);
+
+        Assert.True(offense.Count < PlaybookCatalog.OffensivePlays.Count);
+        Assert.InRange(offense.Select(play => play.Formation).Distinct().Count(), 2, 3);
+        Assert.Contains(offense, play => play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun);
+        Assert.Contains(offense, play => play.Concept is OffensiveConcept.QuickPass or OffensiveConcept.DeepPass or OffensiveConcept.PlayAction);
+        Assert.True(defense.Count < PlaybookCatalog.DefensivePlays.Count);
+        Assert.InRange(defense.Select(play => play.Formation).Distinct().Count(), 2, 3);
+    }
+
+    [Fact]
     public void SavedPlansOwnTheirCallSheetAndStayWithTheirSchool()
     {
         var calls = new List<OffensiveConcept> { OffensiveConcept.DeepPass, OffensiveConcept.InsideRun };

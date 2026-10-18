@@ -1,7 +1,11 @@
 namespace DynastyManager.Core.Models;
 
 public enum GameDayMode { Simulate, Watch, Play }
-public enum SnapOutcome { Run, Completion, Incompletion, Sack, Turnover, Touchdown, FieldGoal, Punt, MissedFieldGoal }
+public enum SnapOutcome
+{
+    Run, Completion, Incompletion, Sack, Turnover, Touchdown, FieldGoal, Punt, MissedFieldGoal,
+    Interception, Fumble, Kickoff
+}
 
 public sealed record GameSnapEvent
 {
@@ -19,11 +23,15 @@ public sealed record GameSnapEvent
     public int StartYardLine { get; init; }
     public int BallEndYardLine { get; init; }
     public int Yards { get; init; }
+    public int ReturnYards { get; init; }
     public SnapOutcome Outcome { get; init; }
     public Guid? QuarterbackId { get; init; }
     public Guid? BallCarrierId { get; init; }
     public Guid? TargetId { get; init; }
     public Guid? PrimaryDefenderId { get; init; }
+    public Guid? KickerId { get; init; }
+    public Guid? ReturnerId { get; init; }
+    public PlayCallSource DefensiveCallSource { get; init; }
     public IReadOnlyList<Guid> OffensePersonnel { get; init; } = Array.Empty<Guid>();
     public IReadOnlyList<Guid> DefensePersonnel { get; init; } = Array.Empty<Guid>();
 }
@@ -56,5 +64,7 @@ public sealed class GameDaySession
     public int Distance { get; set; } = 10;
     public int YardLine { get; set; } = 25;
     public int PossessionNumber { get; set; } = 1;
+    public bool KickoffPending { get; set; } = true;
+    public string KickoffTeamName { get; set; } = string.Empty;
     public bool IsComplete { get; set; }
 }
