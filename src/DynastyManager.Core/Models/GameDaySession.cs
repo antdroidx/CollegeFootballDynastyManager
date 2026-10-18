@@ -1,7 +1,7 @@
 namespace DynastyManager.Core.Models;
 
 public enum GameDayMode { Simulate, Watch, Play }
-public enum SnapOutcome { Run, Completion, Incompletion, Sack, Turnover, Touchdown, FieldGoal, Punt }
+public enum SnapOutcome { Run, Completion, Incompletion, Sack, Turnover, Touchdown, FieldGoal, Punt, MissedFieldGoal }
 
 public sealed record GameSnapEvent
 {
