@@ -33,11 +33,45 @@ public static class GameDayEngine
         var defensePlan = GamePlanService.Normalize(defense.GamePlan ?? new TeamGamePlan { TeamName = defense.TeamName });
         if (!string.IsNullOrWhiteSpace(userPlayId))
             offensePlan = offensePlan with { OpeningPlayIds = [userPlayId] };
-        var offensivePossessionIndex = (session.PossessionNumber - 1) / 2;
+        var offensivePossessionIndex = session.Events.Count;
         var call = GamePlanService.ResolvePlayCall(offensePlan, defensePlan,
             string.IsNullOrWhiteSpace(userPlayId) ? offensivePossessionIndex : 0, session.Random,
             (offense.HeadCoachGameManagement + offense.OffensiveCoordinatorGameManagement) / 2,
             (defense.HeadCoachGameManagement + defense.DefensiveCoordinatorGameManagement) / 2);
+
+        // A coach can choose a kick on fourth down before a normal offensive snap.
+        // CPU decisions are situational rather than always running the same play.
+        var special = userPlayId is "special-punt" or "special-field-goal"
+            ? userPlayId
+            : session.Down == 4 && string.IsNullOrWhiteSpace(userPlayId)
+                ? (session.YardLine >= 65 ? "special-field-goal" : "special-punt")
+                : null;
+        if (special is not null)
+        {
+            var start = session.YardLine;
+            var kickDistance = 100 - start + 17;
+            var made = special == "special-field-goal" &&
+                session.Random.NextDouble() < Math.Clamp(.92 - Math.Max(0, kickDistance - 30) * .018, .12, .95);
+            var kick = new GameSnapEvent
+            {
+                Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
+                Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
+                OffenseTeamName = offense.TeamName, DefenseTeamName = defense.TeamName,
+                OffensivePlayId = call.Offense.Id, DefensivePlayId = call.Defense.Id, CallSource = call.Source,
+                Down = session.Down, Distance = session.Distance, StartYardLine = start, Yards = 0,
+                Outcome = special == "special-punt" ? SnapOutcome.Punt :
+                    made ? SnapOutcome.FieldGoal : SnapOutcome.MissedFieldGoal
+            };
+            session.Events.Add(kick);
+            session.ClockSeconds -= session.Random.Next(5, 13);
+            if (made) { if (homeOnOffense) session.HomeScore += 3; else session.AwayScore += 3; }
+            var newSpot = made ? 25 : special == "special-punt"
+                ? Math.Clamp(100 - Math.Min(95, start + session.Random.Next(34, 51)), 5, 80)
+                : Math.Clamp(100 - Math.Max(20, start - 7), 10, 80);
+            ChangePossession(session, newSpot);
+            AdvanceQuarter(session);
+            return kick;
+        }
 
         var offenseFatigue = homeOnOffense ? session.HomeFatigue : session.AwayFatigue;
         var defenseFatigue = homeOnOffense ? session.AwayFatigue : session.HomeFatigue;
@@ -155,7 +189,7 @@ public static class GameDayEngine
         void Save(PlayerSeasonStatLine line) => lines[line.PlayerId] = line;
         foreach (var snap in session.Events)
         {
-            if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.Punt) continue;
+            if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.Punt or SnapOutcome.MissedFieldGoal) continue;
             var concept = PlaybookCatalog.OffensivePlays.First(play => play.Id == snap.OffensivePlayId).Concept;
             var pass = concept is OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
             if (snap.QuarterbackId is Guid qbId)
@@ -236,7 +270,7 @@ public static class GameDayEngine
     private static GameTeamStats BuildStats(GameDaySession session, string teamName)
     {
         var snaps = session.Events.Where(item => item.OffenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)).ToArray();
-        var scrimmage = snaps.Where(item => item.Outcome is not (SnapOutcome.FieldGoal or SnapOutcome.Punt)).ToArray();
+        var scrimmage = snaps.Where(item => item.Outcome is not (SnapOutcome.FieldGoal or SnapOutcome.Punt or SnapOutcome.MissedFieldGoal)).ToArray();
         var passes = scrimmage.Where(item => PlaybookCatalog.OffensivePlays.First(play => play.Id == item.OffensivePlayId).Concept is
             OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass).ToArray();
         var runs = scrimmage.Except(passes).ToArray();
@@ -294,6 +328,11 @@ public static class GameDayEngine
                 }
             }
         }
+        AdvanceQuarter(session);
+    }
+
+    private static void AdvanceQuarter(GameDaySession session)
+    {
         if (session.ClockSeconds <= 0)
         {
             if (session.Quarter >= 4) session.IsComplete = session.HomeScore != session.AwayScore;
