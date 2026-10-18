@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - fix-live-field-formations
+      - game-day-2-test
   pull_request:
     branches:
       - main
