@@ -46,9 +46,11 @@ public class GamePlanTests
             .Concat(PlaybookCatalog.DefensivePlays.Select(play => play.Id)).ToArray();
         Assert.Equal(ids.Length, ids.Distinct(StringComparer.Ordinal).Count());
         Assert.All(Enum.GetValues<OffensiveFormation>(), formation =>
-            Assert.Contains(PlaybookCatalog.OffensivePlays, play => play.Formation == formation));
+            Assert.True(PlaybookCatalog.OffensivePlays.Count(play => play.Formation == formation) >= 8,
+                $"{formation} needs at least eight offensive calls."));
         Assert.All(Enum.GetValues<DefensiveFormation>(), formation =>
-            Assert.Contains(PlaybookCatalog.DefensivePlays, play => play.Formation == formation));
+            Assert.True(PlaybookCatalog.DefensivePlays.Count(play => play.Formation == formation) >= 6,
+                $"{formation} needs at least six defensive calls."));
     }
 
     [Fact]

@@ -7,8 +7,8 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 | 1 | Recruiting fixes | Shared multi-school HS/portal offer engine implemented; interest, effort, withdrawals and capacity drive decisions | Keep current save compatibility and single ownership across recruiting paths |
 | 2 | Recruiting balance | Expanded: six seeded careers, including 130-team leagues, games and prestige movement; see build-205-career-validation.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
 | 3 | Long-term dynasty health | Expanded: five/ten-year careers with weekly portal decisions, games, age/depth checks and annual save/load | Longer careers with games, deferred transfers, position age distributions and save recovery |
-| 4 | Interface polish | Build 220 adds organized player traits, roster role filters, direct depth-chart reordering, clearer recruit cards and mixed Overview headlines | Continue refining staff screens and game-day presentation using device feedback |
-| 5 | Game-day control | Build 221 adds saved primary formations, personnel-tagged offensive/defensive play catalogs and working-playbook favorites on top of the existing drive call sheet | Visual assignment editor, then shared snap events with field position, downs and clock |
+| 4 | Interface polish | Build 222 removes generic border separators, cleans coach traits and standardizes FR/SO/JR/SR/GR with persistent -RS history | Continue refining presentation using device feedback |
+| 5 | Game-day control | Build 222 expands the saved play library to 40 offensive and 30 defensive calls across every current formation | Visual assignment editor, then shared snap events with field position, downs and clock |
 | 6 | Broader modernization | Future | Remaining position detail, CSV workflows, faces and presentation |
 | 7 | NIL and coaching budgets | Later; design backlog only | Separate NIL resources and coaching/staff budgets, sustainable multi-year commitments and recruiting/carousel integration |
 
@@ -50,3 +50,5 @@ Builds 218–219 establish the fresh-game boundary (schema 23): independent deta
 Build 220 organizes player profiles into character, physical and skill traits; adds starter/role roster filters and a drag-and-drop depth-chart organizer with button controls; links the Coaching Hub to that organizer; improves recruit-card hierarchy; and curates varied Overview headlines so injury reports do not crowd out notable results. See build-220-roster-recruit-news-polish.md.
 
 Build 221 removes the redundant injury-proneness display, adds class year to the depth organizer, clarifies the Exit Dynasty action, simplifies trait layouts and rebuilds recruit cards as scannable metric/status blocks. It also begins the next game-day milestone with persistent offensive/defensive formations, personnel-aware play definitions and a saved working playbook. See build-221-playbook-foundation-ui-polish.md.
+
+Build 222 expands every offensive formation to at least eight calls and every defensive formation to at least six calls, for 40 offensive and 30 defensive definitions. It removes generic border/table separators, applies the clean trait layout to coach profiles, and standardizes player class labels including permanent redshirt-history suffixes. See build-222-expanded-playbooks-class-labels.md.

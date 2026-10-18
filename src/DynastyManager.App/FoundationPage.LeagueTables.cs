@@ -93,7 +93,7 @@ public sealed partial class FoundationPage
         roster.OrderBy(p => p.Position).ThenBy(p => p.DepthChartOrder).Select(player => new View[]
         {
             TableText(player.Position.ToString()), PlayerLink(player), RatingCell(player.OverallRating),
-            TableText($"Y{player.ClassYear}"), TableText(FormatPotentialStars(player.PotentialRating)),
+            TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating)),
             TableText(player.OriginalRecruitingStars is int stars ? $"{stars}★" : "—"), CreateCareerStatsButton(player)
         }));
 }

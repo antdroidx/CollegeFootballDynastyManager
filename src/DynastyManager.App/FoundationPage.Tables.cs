@@ -84,8 +84,8 @@ public sealed partial class FoundationPage
         var key = string.Join("/", columns.Select(column => column.Title));
         var order = sortRequested is null && _tableOrders.TryGetValue(key, out var saved)
             ? saved : (Column: initialSortColumn, Descending: initialDescending);
-        var grid = new Grid { RowSpacing = 1, ColumnSpacing = 0,
-            WidthRequest = columns.Sum(column => column.Width), BackgroundColor = Color.FromArgb("#2D3A4B") };
+        var grid = new Grid { RowSpacing = 0, ColumnSpacing = 0,
+            WidthRequest = columns.Sum(column => column.Width), BackgroundColor = Colors.Transparent };
         foreach (var column in columns) grid.ColumnDefinitions.Add(new ColumnDefinition(column.Width));
         Button[] headers = [];
         headers = columns.Select((column, index) =>

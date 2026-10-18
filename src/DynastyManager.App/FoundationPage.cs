@@ -69,6 +69,7 @@ public sealed partial class FoundationPage : ContentPage
         Position Position,
         string Subtitle,
         int ClassYear,
+        bool HasRedshirted,
         int? Potential,
         int? StarRating,
         int OverallRating);
@@ -632,7 +633,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _navigationBar = new Border
         {
-            StrokeThickness = 1,
+            StrokeThickness = 0,
             Padding = 0,
             Content = navigation
         };
@@ -896,6 +897,9 @@ public sealed partial class FoundationPage : ContentPage
     private static string FormatOriginalRecruitingStars(DynastyPlayer player) =>
         player.OriginalRecruitingStars is int stars ? $"HS recruit: {stars} stars"
             : player.IsWalkOn ? "Walk-on" : "HS recruit: unknown";
+
+    private static string FormatClassYear(int classYear, bool redshirted = false)
+        => PlayerClassYearService.Format(classYear, redshirted);
 
     private Button CreateCareerStatsButton(DynastyPlayer player)
     {
@@ -2270,7 +2274,7 @@ public sealed partial class FoundationPage : ContentPage
         _recruitingMetrics.Children.Add(
             new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = new Thickness(10, 5),
                 Content = new VerticalStackLayout
                 {
@@ -2315,6 +2319,7 @@ public sealed partial class FoundationPage : ContentPage
                         recruit.Position,
                         $"{recruit.StarRating}★ • {RecruitGeography.GetStateName(recruit)} • {RecruitGeography.GetRegionName(recruit)}",
                         1,
+                        false,
                         recruit.PotentialRating,
                         recruit.StarRating,
                         recruit.TrueOverallRating))
@@ -2338,6 +2343,7 @@ public sealed partial class FoundationPage : ContentPage
                         entry.Player.Position,
                         $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
                         entry.Player.ClassYear,
+                        entry.Player.IsRedshirted || entry.Player.HasRedshirted,
                         entry.Player.PotentialRating > 0
                             ? entry.Player.PotentialRating
                             : null,
@@ -2394,6 +2400,7 @@ public sealed partial class FoundationPage : ContentPage
                     recruit.Position,
                     $"{recruit.StarRating}★ • {RecruitGeography.GetStateName(recruit)} • {RecruitGeography.GetRegionName(recruit)}",
                     1,
+                    false,
                     recruit.PotentialRating,
                     recruit.StarRating,
                     recruit.TrueOverallRating);
@@ -2414,6 +2421,7 @@ public sealed partial class FoundationPage : ContentPage
                 entry.Player.Position,
                 $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
                 entry.Player.ClassYear,
+                entry.Player.IsRedshirted || entry.Player.HasRedshirted,
                 entry.Player.PotentialRating > 0
                     ? entry.Player.PotentialRating
                     : null,
@@ -2687,7 +2695,7 @@ public sealed partial class FoundationPage : ContentPage
             {
                 BackgroundColor = Color.FromArgb(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
                 Stroke = Color.FromArgb(interaction.ScholarshipOffered ? "#5A9B83" : "#486677"),
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = new Thickness(12, 10),
                 Content = cardContent
             });
@@ -3165,7 +3173,7 @@ public sealed partial class FoundationPage : ContentPage
         _recruitingDetailHost.Content =
             new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = 10,
                 Content = new VerticalStackLayout
                 {
@@ -3184,7 +3192,7 @@ public sealed partial class FoundationPage : ContentPage
                         {
                             Text =
                                 $"{publicRecruitRatingText} • " +
-                                $"{prospect.Subtitle} • Year {prospect.ClassYear}",
+                                $"{prospect.Subtitle} • {FormatClassYear(prospect.ClassYear, prospect.HasRedshirted)}",
                             FontSize = 11
                         },
                         new Label
@@ -3275,7 +3283,7 @@ public sealed partial class FoundationPage : ContentPage
 
             _recruitingList.Children.Add(new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = new Thickness(10, 8),
                 Content = new VerticalStackLayout
                 {
@@ -3382,7 +3390,7 @@ public sealed partial class FoundationPage : ContentPage
                 };
                 _recruitingList.Children.Add(new Border
                 {
-                    StrokeThickness = 1,
+                    StrokeThickness = 0,
                     Padding = new Thickness(10, 7),
                     Content = new VerticalStackLayout
                     {
@@ -3592,7 +3600,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _recruitingList.Children.Add(new Border
         {
-            StrokeThickness = 1,
+            StrokeThickness = 0,
             Padding = new Thickness(10, 7),
             Content = new Label
             {
@@ -3830,7 +3838,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             _programList.Children.Add(new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = 10,
                 Margin = new Thickness(0, 6, 0, 4),
                 Content = new Label
@@ -3935,7 +3943,7 @@ public sealed partial class FoundationPage : ContentPage
 
             _programList.Children.Add(new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = 9,
                 Content = new VerticalStackLayout
                 {
@@ -4622,7 +4630,7 @@ public sealed partial class FoundationPage : ContentPage
 
         return new Border
         {
-            StrokeThickness = 1,
+            StrokeThickness = 0,
             Padding = 8,
             Content = new VerticalStackLayout
             {
@@ -4634,7 +4642,7 @@ public sealed partial class FoundationPage : ContentPage
                     {
                         Text =
                             $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
-                            $"POT {FormatPotentialStars(player.PotentialRating)} • Year {player.ClassYear} • " +
+                            $"POT {FormatPotentialStars(player.PotentialRating)} • {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} • " +
                             FormatOriginalRecruitingStars(player) +
                             (status.Count > 0
                                 ? $" • {string.Join(" • ", status)}"

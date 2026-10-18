@@ -68,7 +68,7 @@ public sealed partial class FoundationPage
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
         {
-            close, IdentityHeader(player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : $"Year {player.ClassYear}")}"),
+            close, IdentityHeader(player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}"),
             new Label { Text = FormatOriginalRecruitingStars(player), TextColor = Color.FromArgb("#E8C979") }
         } };
         if (active is not null)
@@ -132,13 +132,11 @@ public sealed partial class FoundationPage
         {
             close, IdentityHeader(coach.FullName, coach.TeamName, FormatStaffRole(coach.Role)),
             SectionTitle("Coach profile", $"Age {coach.Age} · OVR {coach.OverallRating} · {coach.CareerYears} career years · {coach.ContractYearsRemaining} contract years"),
-            DataTable([("Attribute", 165), ("Rating", 70)], new[]
-            {
+            AttributeGroup("Coaching traits", "Leadership, strategy, development and program management",
                 ("Leadership", coach.Leadership), ("Recruiting", coach.Recruiting), ("Player development", coach.PlayerDevelopment),
                 ("Game management", coach.GameManagement), ("Scheme", coach.Scheme), ("Special teams", coach.SpecialTeams),
                 ("Medical", coach.Medical), ("Conditioning", coach.Conditioning), ("Talent evaluation", coach.TalentEvaluation),
-                ("Potential evaluation", coach.PotentialEvaluation), ("Regional knowledge", coach.RegionalKnowledge), ("Staff management", coach.StaffManagement)
-            }.Select(attribute => new View[] { TableText(attribute.Item1), RatingCell(attribute.Item2) })),
+                ("Potential evaluation", coach.PotentialEvaluation), ("Regional knowledge", coach.RegionalKnowledge), ("Staff management", coach.StaffManagement)),
             SectionTitle("Head-coaching career", $"{summary.HeadCoachWins}–{summary.HeadCoachLosses} · {summary.HeadCoachSeasons} seasons · {summary.ConferenceTitles} conference titles · {summary.NationalTitles} national titles")
         } };
         if (summary.Seasons.Count == 0) content.Children.Add(new Label { Text = "No completed seasons recorded yet." });

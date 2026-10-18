@@ -29,8 +29,8 @@ public static class DynastyTheme
             new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 36.0 } } },
         new Style(typeof(Border)) { Setters = {
             new Setter { Property = VisualElement.BackgroundColorProperty, Value = Surface },
-            new Setter { Property = Border.StrokeProperty, Value = new SolidColorBrush(Color.FromArgb("#303B49")) },
-            new Setter { Property = Border.StrokeThicknessProperty, Value = 1.0 },
+            new Setter { Property = Border.StrokeProperty, Value = new SolidColorBrush(Colors.Transparent) },
+            new Setter { Property = Border.StrokeThicknessProperty, Value = 0.0 },
             new Setter { Property = Border.StrokeShapeProperty, Value = new RoundRectangle { CornerRadius = 6 } },
             new Setter { Property = Border.PaddingProperty, Value = new Thickness(10) } } },
         new Style(typeof(Picker)) { Setters = {

@@ -90,7 +90,7 @@ public sealed partial class FoundationPage
                 : player.IsRedshirted ? "Redshirt" : player.IsWalkOn ? "Walk-on" : RosterManagementService.IsStarter(player) ? "Starter" : "Depth";
             rows.Add([TableText(player.Position.ToString()), PlayerLink(player),
                 RatingCell(player.OverallRating), details, TableText(player.IsRedshirted ? "RS" : player.DepthChartOrder.ToString()),
-                TableText($"Y{player.ClassYear}"), TableText(FormatPotentialStars(player.PotentialRating), color: Color.FromArgb("#E9C76C")),
+                TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating), color: Color.FromArgb("#E9C76C")),
                 TableText(player.OriginalRecruitingStars is int stars ? $"{stars}★" : "—"),
                 TableText(status, color: player.CurrentInjury is not null ? NegativeChangeColor : player.IsRedshirted ? Color.FromArgb("#D6A3EB") : DynastyTheme.Muted)]);
         }
@@ -144,7 +144,7 @@ public sealed partial class FoundationPage
                 row.Add(new Label { Text = player.DepthChartOrder.ToString(), FontAttributes = FontAttributes.Bold,
                     VerticalTextAlignment = TextAlignment.Center }, 1, 0);
                 row.Add(new Label { Text = player.FullName, VerticalTextAlignment = TextAlignment.Center }, 2, 0);
-                row.Add(new Label { Text = $"Y{player.ClassYear}", FontSize = 11, TextColor = DynastyTheme.Muted,
+                row.Add(new Label { Text = FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted), FontSize = 11, TextColor = DynastyTheme.Muted,
                     VerticalTextAlignment = TextAlignment.Center }, 3, 0);
                 row.Add(RatingCell(player.OverallRating), 4, 0); row.Add(up, 5, 0); row.Add(down, 6, 0);
                 var card = new Border { BackgroundColor = Color.FromArgb(RosterManagementService.IsStarter(player) ? "#244B45" : "#243542"),

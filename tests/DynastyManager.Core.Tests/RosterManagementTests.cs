@@ -6,6 +6,18 @@ namespace DynastyManager.Core.Tests;
 
 public class RosterManagementTests
 {
+    [Theory]
+    [InlineData(1, false, "FR")]
+    [InlineData(2, true, "SO-RS")]
+    [InlineData(3, true, "JR-RS")]
+    [InlineData(4, false, "SR")]
+    [InlineData(5, false, "GR")]
+    [InlineData(5, true, "GR-RS")]
+    public void ClassYearUsesFootballLabelsAndRetainsRedshirtHistory(int year, bool redshirted, string expected)
+    {
+        Assert.Equal(expected, PlayerClassYearService.Format(year, redshirted));
+    }
+
     [Fact]
     public void NormalizeDepthChartOrdersPlayersByRatingAndIdentifiesStarter()
     {
