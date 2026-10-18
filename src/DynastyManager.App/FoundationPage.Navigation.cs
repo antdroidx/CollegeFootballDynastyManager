@@ -9,6 +9,7 @@ public sealed partial class FoundationPage
 {
     private readonly Button _settingsButton = new() { Text = "Settings", FontSize = 11, BackgroundColor = Colors.Transparent, Padding = new Thickness(7, 5) };
     private readonly ContentView _overviewBanner = new();
+    private readonly ContentView _overviewGameActions = new();
     private readonly VerticalStackLayout _seasonHub = new() { Spacing = 12 };
     private readonly VerticalStackLayout _matchupHub = new() { Spacing = 12 };
     private readonly VerticalStackLayout _newsRows = new() { Spacing = 10 };
@@ -61,7 +62,8 @@ public sealed partial class FoundationPage
         _manualSaveButton.Text = "Save";
         return new VerticalStackLayout { Spacing = 12, Children =
         {
-            _overviewBanner, new HorizontalStackLayout { Spacing = 8, Children = { _advanceWeekButton, _manualSaveButton } }, _homeHighlights
+            _overviewBanner, new HorizontalStackLayout { Spacing = 8, Children = { _advanceWeekButton, _manualSaveButton } },
+            _overviewGameActions, _homeHighlights
         } };
     }
 
@@ -112,6 +114,7 @@ public sealed partial class FoundationPage
         var opponent = next is null ? "No upcoming game" : next.HomeTeamName == state.UserTeamName ? next.AwayTeamName : next.HomeTeamName;
         var injuries = state.ActiveRoster.Count(p => p.TeamName == state.UserTeamName && p.CurrentInjury is not null);
         _overviewBanner.Content = SchoolBanner(state.UserTeamName, $"{state.DynastyName} · {state.SeasonYear} · {PhaseLabel(state.Phase)}");
+        RenderOverviewGameActions(next);
         var cards = new Grid { ColumnSpacing = 10, RowSpacing = 10,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
             RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
@@ -170,28 +173,92 @@ public sealed partial class FoundationPage
 
     private View BuildMatchupHub() => _matchupHub;
 
+    private void RenderOverviewGameActions(ScheduledGame? game)
+    {
+        if (_currentDynasty is null || game is null)
+        {
+            _overviewGameActions.Content = null;
+            _overviewGameActions.IsVisible = false;
+            return;
+        }
+        var title = new Label { Text = $"WEEK {game.Week} GAME DAY · {game.AwayTeamName} at {game.HomeTeamName}",
+            FontSize = 11, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#E8C979") };
+        var simulate = GameModeButton("Sim game", DynastyTheme.Accent, async () => await OpenGameDayAsync(game, GameDayMode.Simulate));
+        simulate.TextColor = DynastyTheme.Background;
+        var watch = GameModeButton("Watch game", Color.FromArgb("#315D59"), async () => await OpenGameDayAsync(game, GameDayMode.Watch));
+        var play = GameModeButton("Play game", Color.FromArgb("#8A6234"), async () => await OpenGameDayAsync(game, GameDayMode.Play));
+        _overviewGameActions.Content = new Border { StrokeThickness = 0, Padding = 10,
+            BackgroundColor = Color.FromArgb("#172733"), Content = new VerticalStackLayout { Spacing = 8, Children =
+            {
+                title, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+            } } };
+        _overviewGameActions.IsVisible = true;
+    }
+
     private void RenderMatchupHub()
     {
         _matchupHub.Children.Clear();
         if (_currentDynasty is null) return;
-        var game = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear && !g.HasPlayed && g.InvolvesTeam(_currentDynasty.UserTeamName)).OrderBy(g => g.Week).FirstOrDefault();
-        if (game is null) { _matchupHub.Children.Add(new Label { Text = "No upcoming game is scheduled." }); return; }
-        _matchupHub.Children.Add(SectionTitle($"Week {game.Week} matchup", $"{game.AwayTeamName} at {game.HomeTeamName}"));
-        _matchupHub.Children.Add(SchoolBanner(game.AwayTeamName, "Away team"));
-        _matchupHub.Children.Add(SchoolBanner(game.HomeTeamName, "Home team"));
+        var unplayed = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear && !g.HasPlayed)
+            .OrderBy(g => g.Week).ThenBy(g => g.AwayTeamName).ToArray();
+        if (unplayed.Length == 0) { _matchupHub.Children.Add(new Label { Text = "No upcoming game is scheduled." }); return; }
+        var week = unplayed.FirstOrDefault(g => g.Week == _currentDynasty.Week)?.Week ?? unplayed[0].Week;
+        var games = unplayed.Where(g => g.Week == week)
+            .OrderByDescending(g => g.InvolvesTeam(_currentDynasty.UserTeamName)).ThenBy(g => g.AwayTeamName).ToArray();
+        var userGame = games.FirstOrDefault(g => g.InvolvesTeam(_currentDynasty.UserTeamName));
+        _matchupHub.Children.Add(SectionTitle($"Week {week} Game Day", "Sim, watch, or take control of any league matchup"));
+        if (userGame is not null)
+        {
+            _matchupHub.Children.Add(SchoolBanner(userGame.AwayTeamName, "Your matchup · away"));
+            _matchupHub.Children.Add(SchoolBanner(userGame.HomeTeamName, "Your matchup · home"));
+        }
         var schedule = new Button { Text = "View schedule & results" };
         schedule.Clicked += (_, _) => ShowSection(AppSection.Schedule);
         var prep = new Button { Text = "Prepare game plan", BackgroundColor = Color.FromArgb("#315D59") };
         prep.Clicked += (_, _) => ShowSection(AppSection.Playbook);
-        var simulate = new Button { Text = "Sim game", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
-        simulate.Clicked += async (_, _) => await OpenGameDayAsync(game, GameDayMode.Simulate);
-        var watch = new Button { Text = "Watch game", BackgroundColor = Color.FromArgb("#315D59") };
-        watch.Clicked += async (_, _) => await OpenGameDayAsync(game, GameDayMode.Watch);
-        var play = new Button { Text = "Play game", BackgroundColor = Color.FromArgb("#8A6234") };
-        play.Clicked += async (_, _) => await OpenGameDayAsync(game, GameDayMode.Play);
-        _matchupHub.Children.Add(prep); _matchupHub.Children.Add(schedule);
-        _matchupHub.Children.Add(new Label { Text = "All three modes use the same play, personnel, fatigue and coaching engine. Advance the week afterward to process the remaining league games.", FontSize = 12, TextColor = DynastyTheme.Muted });
-        _matchupHub.Children.Add(new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } });
+        if (userGame is not null) _matchupHub.Children.Add(prep);
+        _matchupHub.Children.Add(schedule);
+        _matchupHub.Children.Add(new Label { Text = "Completed games are saved immediately. Advance the week afterward to process any matchups you did not open.", FontSize = 12, TextColor = DynastyTheme.Muted });
+        foreach (var game in games) _matchupHub.Children.Add(MatchupGameCard(game));
+    }
+
+    private View MatchupGameCard(ScheduledGame game)
+    {
+        var userGame = _currentDynasty?.UserTeamName is { } user && game.InvolvesTeam(user);
+        var matchup = new Label { Text = $"{game.AwayTeamName}  at  {game.HomeTeamName}",
+            FontSize = 15, FontAttributes = FontAttributes.Bold };
+        var note = new Label { Text = userGame ? "YOUR GAME" : "CPU vs CPU · choose either school in Play mode",
+            FontSize = 10, TextColor = userGame ? Color.FromArgb("#E8C979") : DynastyTheme.Muted };
+        var simulate = GameModeButton("Sim", DynastyTheme.Accent, async () => await OpenGameDayAsync(game, GameDayMode.Simulate));
+        simulate.TextColor = DynastyTheme.Background;
+        var watch = GameModeButton("Watch", Color.FromArgb("#315D59"), async () => await OpenGameDayAsync(game, GameDayMode.Watch));
+        var play = GameModeButton("Play", Color.FromArgb("#8A6234"), async () => await OpenPlayModeAsync(game));
+        return new Border { StrokeThickness = 0, Padding = 11, BackgroundColor = Color.FromArgb("#1B2B37"),
+            Content = new VerticalStackLayout { Spacing = 7, Children =
+            {
+                matchup, note, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+            } } };
+    }
+
+    private async Task OpenPlayModeAsync(ScheduledGame game)
+    {
+        if (_currentDynasty is null) return;
+        var controlled = game.InvolvesTeam(_currentDynasty.UserTeamName) ? _currentDynasty.UserTeamName :
+            await DisplayActionSheetAsync("Choose team to control", "Cancel", null, game.AwayTeamName, game.HomeTeamName);
+        if (string.IsNullOrWhiteSpace(controlled) || controlled == "Cancel") return;
+        await OpenGameDayAsync(game, GameDayMode.Play, controlled);
+    }
+
+    private static Button GameModeButton(string text, Color color, Func<Task> open)
+    {
+        var button = new Button { Text = text, BackgroundColor = color, Padding = new Thickness(12, 8) };
+        button.Clicked += async (_, _) =>
+        {
+            button.IsEnabled = false;
+            try { await open(); }
+            finally { button.IsEnabled = true; }
+        };
+        return button;
     }
 
     private View BuildNewsSection() => _newsRows;

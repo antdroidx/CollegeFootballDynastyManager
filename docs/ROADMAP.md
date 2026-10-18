@@ -8,7 +8,7 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 | 2 | Recruiting balance | Expanded: six seeded careers, including 130-team leagues, games and prestige movement; see build-205-career-validation.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
 | 3 | Long-term dynasty health | Expanded: five/ten-year careers with weekly portal decisions, games, age/depth checks and annual save/load | Longer careers with games, deferred transfers, position age distributions and save recovery |
 | 4 | Interface polish | Build 223 flattens remaining Android control/scroll dividers, restructures recruit detail and allows every conference to be viewed | Continue refining presentation using device feedback |
-| 5 | Game-day control | Build 225 introduces the shared snap engine, Sim/Watch/Play modes, live field markers, play selection, fatigue rotation and recorded player game logs | Continue visual polish, situational playcalling, special-teams depth and richer animation |
+| 5 | Game-day control | Build 232 adds animated player/ball movement, visual play-call cards, Overview shortcuts and control of any league matchup | Continue animation polish, situational playcalling and special-teams depth |
 | 6 | Broader modernization | Future | Remaining position detail, CSV workflows, faces and presentation |
 | 7 | NIL and coaching budgets | Later; design backlog only | Separate NIL resources and coaching/staff budgets, sustainable multi-year commitments and recruiting/carousel integration |
 
@@ -56,3 +56,5 @@ Build 222 expands every offensive formation to at least eight calls and every de
 Build 223 follows device feedback: standings can switch among every conference, table scrollbars and Android picker/search underlines no longer appear as heavy dividers, recruit detail uses a metric-and-market layout, and every playbook call has readable field art. See build-223-recruit-standings-play-art.md.
 
 Build 225 moves regular-season, conference-title, bowl, playoff and interactive user games onto one snap engine. Sim Game, Watch Game and Play Game share playbooks, coaching, personnel packages, fatigue rotation and player event recording. See build-225-game-day-snap-engine.md.
+
+Build 232 animates every viewed snap, shows play art in the live call sheet, places Sim/Watch/Play beside the user's Overview matchup, and allows any CPU-versus-CPU game to be watched or played from either sideline. See build-232-animated-game-day.md.
