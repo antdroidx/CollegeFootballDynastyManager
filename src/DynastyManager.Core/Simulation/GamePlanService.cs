@@ -55,9 +55,12 @@ public static class GamePlanService
         int possession, Random random, int offensiveGameManagement = 60, int defensiveGameManagement = 60)
     {
         var scriptedId = possession < offense.OpeningPlayIds.Count ? offense.OpeningPlayIds[possession] : null;
+        var scriptedConcept = possession < offense.OpeningScript.Count &&
+            offense.OpeningScript[possession] != OffensiveConcept.Automatic;
         var source = scriptedId is null ? PlayCallSource.Cpu : PlayCallSource.User;
         var desiredConcept = scriptedId is null ? GetConcept(offense, possession) : OffensiveConcept.Automatic;
-        if (source == PlayCallSource.Cpu && random.Next(100) > Math.Clamp(offensiveGameManagement, 25, 95))
+        var deviationChance = Math.Clamp((70 - offensiveGameManagement) / 200d, .02, .225);
+        if (source == PlayCallSource.Cpu && !scriptedConcept && random.NextDouble() < deviationChance)
             desiredConcept = Enum.GetValues<OffensiveConcept>()[random.Next(1, Enum.GetValues<OffensiveConcept>().Length)];
         var offensivePool = PlaybookCatalog.OffensivePlays.Where(play =>
             play.Formation == offense.OffensiveFormation || offense.FavoritePlayIds.Contains(play.Id)).ToArray();

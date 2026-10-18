@@ -7,7 +7,10 @@ public static class GameDayEngine
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
         TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode) => new()
     {
-        Game = game, HomeProfile = home, AwayProfile = away, Roster = roster, Mode = mode,
+        Game = game, HomeProfile = home, AwayProfile = away,
+        Roster = roster.Where(player => player.TeamName.Equals(game.HomeTeamName, StringComparison.OrdinalIgnoreCase) ||
+            player.TeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase)).ToArray(),
+        Mode = mode,
         Random = new Random(game.SimulationSeed), PossessionTeamName = game.HomeTeamName
     };
 
@@ -21,16 +24,25 @@ public static class GameDayEngine
         var defensePlan = GamePlanService.Normalize(defense.GamePlan ?? new TeamGamePlan { TeamName = defense.TeamName });
         if (!string.IsNullOrWhiteSpace(userPlayId))
             offensePlan = offensePlan with { OpeningPlayIds = [userPlayId] };
+        var priorTeamPossessions = session.Events
+            .Where(item => item.OffenseTeamName.Equals(offense.TeamName, StringComparison.OrdinalIgnoreCase))
+            .Select(item => item.PossessionNumber).Distinct().ToArray();
+        var offensivePossessionIndex = priorTeamPossessions.Contains(session.PossessionNumber)
+            ? priorTeamPossessions.Length - 1 : priorTeamPossessions.Length;
         var call = GamePlanService.ResolvePlayCall(offensePlan, defensePlan,
-            string.IsNullOrWhiteSpace(userPlayId) ? session.PossessionNumber : 0, session.Random,
+            string.IsNullOrWhiteSpace(userPlayId) ? offensivePossessionIndex : 0, session.Random,
             (offense.HeadCoachGameManagement + offense.OffensiveCoordinatorGameManagement) / 2,
             (defense.HeadCoachGameManagement + defense.DefensiveCoordinatorGameManagement) / 2);
 
         var offenseFatigue = homeOnOffense ? session.HomeFatigue : session.AwayFatigue;
         var defenseFatigue = homeOnOffense ? session.AwayFatigue : session.HomeFatigue;
-        var offensePersonnel = PersonnelRotationService.SelectOffense(session.Roster, offense.TeamName,
+        var offenseRoster = session.Roster.Where(player =>
+            player.TeamName.Equals(offense.TeamName, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var defenseRoster = session.Roster.Where(player =>
+            player.TeamName.Equals(defense.TeamName, StringComparison.OrdinalIgnoreCase)).ToArray();
+        var offensePersonnel = PersonnelRotationService.SelectOffense(offenseRoster, offense.TeamName,
             call.Offense.Personnel, offenseFatigue, session.Random);
-        var defensePersonnel = PersonnelRotationService.SelectDefense(session.Roster, defense.TeamName,
+        var defensePersonnel = PersonnelRotationService.SelectDefense(defenseRoster, defense.TeamName,
             call.Defense.Personnel, defenseFatigue, session.Random);
         var offensePlayers = Players(session, offensePersonnel);
         var defensePlayers = Players(session, defensePersonnel);
@@ -67,8 +79,8 @@ public static class GameDayEngine
             DefensePersonnel = defensePersonnel.PlayerIds
         };
         session.Events.Add(snap);
-        PersonnelRotationService.ApplySnap(offenseFatigue, offensePlayers, offensePersonnel, Math.Abs(yards) >= 20);
-        PersonnelRotationService.ApplySnap(defenseFatigue, defensePlayers, defensePersonnel, Math.Abs(yards) >= 20);
+        PersonnelRotationService.ApplySnap(offenseFatigue, offenseRoster, offensePersonnel, Math.Abs(yards) >= 20);
+        PersonnelRotationService.ApplySnap(defenseFatigue, defenseRoster, defensePersonnel, Math.Abs(yards) >= 20);
         AdvanceState(session, homeOnOffense, yards, turnover, touchdown);
         return session.Events[^1];
     }

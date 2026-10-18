@@ -79,7 +79,7 @@ public class GamePlanTests
             if (GamePlanService.ResolvePlayCall(offense, defense, seed % 12, new Random(seed), 25, 25).Offense.Concept == expected)
                 weakMatches++;
         }
-        Assert.True(strongMatches > weakMatches + 100, $"Strong {strongMatches}, weak {weakMatches}");
+        Assert.True(strongMatches > weakMatches + 40, $"Strong {strongMatches}, weak {weakMatches}");
 
         var explicitCall = offense with { OpeningPlayIds = ["off-spread-verts"] };
         Assert.Equal("off-spread-verts",
