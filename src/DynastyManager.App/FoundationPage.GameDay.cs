@@ -94,23 +94,90 @@ public sealed partial class FoundationPage
             var line = Math.Clamp(snap.StartYardLine / 100d, .06, .94);
             var destination = Math.Clamp((snap.StartYardLine + snap.Yards) / 100d, .04, .96);
             var movements = new List<(View View, Rect From, Rect To)>();
-            for (var index = 0; index < snap.OffensePersonnel.Count; index++)
+            // Use the personnel's football roles, not their arbitrary list order.
+            // Coordinates are proportional to the field; the line of scrimmage is X.
+            var offense = snap.OffensePersonnel.Select(id =>
             {
-                session.PlayersById.TryGetValue(snap.OffensePersonnel[index], out var player);
-                var y = .64 + (index % 6) * .052;
-                var x = Math.Clamp(line - .018 - (index / 6) * .025, .03, .96);
-                var endY = Math.Clamp(y + RouteLane(player, index, snap), .12, .91);
-                var endX = Math.Clamp(x + Math.Max(.012, destination - line) * RouteShare(player, snap), .03, .96);
+                session.PlayersById.TryGetValue(id, out var player);
+                return player;
+            }).ToArray();
+            var defense = snap.DefensePersonnel.Select(id =>
+            {
+                session.PlayersById.TryGetValue(id, out var player);
+                return player;
+            }).ToArray();
+            var lineSlots = new[] { .36, .43, .50, .57, .64 };
+            var receiverSlots = new[] { .10, .23, .77, .90, .84, .16 };
+            var lineIndex = 0;
+            var receiverIndex = 0;
+            var backIndex = 0;
+            for (var index = 0; index < offense.Length; index++)
+            {
+                var player = offense[index];
+                double x, y;
+                switch (player?.Position)
+                {
+                    case Position.OL:
+                        x = line - .016;
+                        y = lineSlots[Math.Min(lineIndex++, lineSlots.Length - 1)];
+                        break;
+                    case Position.QB:
+                        x = line - .065;
+                        y = .50;
+                        break;
+                    case Position.RB:
+                        x = line - .095 - backIndex * .023;
+                        y = backIndex++ % 2 == 0 ? .59 : .41;
+                        break;
+                    case Position.WR:
+                        x = line - .018;
+                        y = receiverSlots[Math.Min(receiverIndex++, receiverSlots.Length - 1)];
+                        break;
+                    case Position.TE:
+                        x = line - .022;
+                        y = receiverIndex++ % 2 == 0 ? .69 : .31;
+                        break;
+                    default:
+                        x = line - .04 - (index % 3) * .02;
+                        y = .20 + (index % 7) * .10;
+                        break;
+                }
+                x = Math.Clamp(x, .025, .96);
+                var endY = Math.Clamp(y + RouteLane(player, index, snap) * .35, .07, .93);
+                var endX = Math.Clamp(x + Math.Max(.012, destination - line) * RouteShare(player, snap), .025, .96);
                 var view = Marker(player, offenseColor);
                 AddMovement(view, new Rect(x, y, 27, 27), new Rect(endX, endY, 27, 27), movements, fieldPlayers);
             }
-            for (var index = 0; index < snap.DefensePersonnel.Count; index++)
+            var defensiveLine = 0;
+            var linebackers = 0;
+            var secondary = 0;
+            for (var index = 0; index < defense.Length; index++)
             {
-                session.PlayersById.TryGetValue(snap.DefensePersonnel[index], out var player);
-                var y = .35 - (index % 6) * .045;
-                var x = Math.Clamp(line + .025 + (index / 6) * .03, .03, .96);
-                var endX = Math.Clamp(x + (destination - line) * .72, .03, .96);
-                var endY = Math.Clamp(y + ((index % 3) - 1) * .045, .08, .58);
+                var player = defense[index];
+                double x, y;
+                switch (player?.Position)
+                {
+                    case Position.DL:
+                        x = line + .025;
+                        y = .34 + (defensiveLine++ % 5) * .08;
+                        break;
+                    case Position.LB:
+                        x = line + .075;
+                        y = .28 + (linebackers++ % 5) * .11;
+                        break;
+                    case Position.CB:
+                    case Position.S:
+                        x = line + (player.Position == Position.S ? .19 : .12);
+                        y = secondary++ % 2 == 0 ? .15 + (secondary / 2) * .09 : .85 - (secondary / 2) * .09;
+                        break;
+                    default:
+                        x = line + .10;
+                        y = .20 + (index % 7) * .10;
+                        break;
+                }
+                x = Math.Clamp(x, .025, .96);
+                var endX = Math.Clamp(x + (destination - line) * .72, .025, .96);
+                var endY = Math.Clamp(y + ((index % 3) - 1) * .025, .07, .93);
                 var view = Marker(player, defenseColor);
                 AddMovement(view, new Rect(x, y, 27, 27), new Rect(endX, endY, 27, 27), movements, fieldPlayers);
             }
