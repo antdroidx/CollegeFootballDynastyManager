@@ -191,8 +191,8 @@ public static class DeterministicGameSimulator
             var plays = random.Next(5, 10);
             var drivePassAttempts = Math.Clamp(
                 (int)Math.Round(plays * driveShare) + random.Next(-1, 2),
-                1,
-                Math.Max(1, plays - 1));
+                0,
+                plays);
             var driveRushAttempts = plays - drivePassAttempts;
 
             passAttempts += drivePassAttempts;

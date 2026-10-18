@@ -59,15 +59,18 @@ public static class GamePlanService
             offense.OpeningScript[possession] != OffensiveConcept.Automatic;
         var source = scriptedId is null ? PlayCallSource.Cpu : PlayCallSource.User;
         var desiredConcept = scriptedId is null ? GetConcept(offense, possession) : OffensiveConcept.Automatic;
-        var deviationChance = Math.Clamp((70 - offensiveGameManagement) / 200d, .02, .225);
+        var deviationChance = Math.Clamp((70 - offensiveGameManagement) / 150d, .02, .30);
         if (source == PlayCallSource.Cpu && !scriptedConcept && random.NextDouble() < deviationChance)
             desiredConcept = Enum.GetValues<OffensiveConcept>()[random.Next(1, Enum.GetValues<OffensiveConcept>().Length)];
         var offensivePool = PlaybookCatalog.OffensivePlays.Where(play =>
             play.Formation == offense.OffensiveFormation || offense.FavoritePlayIds.Contains(play.Id)).ToArray();
         if (offensivePool.Length == 0) offensivePool = PlaybookCatalog.OffensivePlays.ToArray();
+        var conceptFallback = desiredConcept == OffensiveConcept.Automatic
+            ? offensivePool
+            : PlaybookCatalog.OffensivePlays.Where(play => play.Concept == desiredConcept).ToArray();
         var calledOffense = scriptedId is not null
             ? PlaybookCatalog.OffensivePlays.Single(play => play.Id == scriptedId)
-            : Pick(offensivePool.Where(play => desiredConcept == OffensiveConcept.Automatic || play.Concept == desiredConcept).ToArray(), offensivePool, random);
+            : Pick(offensivePool.Where(play => desiredConcept == OffensiveConcept.Automatic || play.Concept == desiredConcept).ToArray(), conceptFallback, random);
 
         var defensivePool = PlaybookCatalog.DefensivePlays.Where(play =>
             play.Formation == defense.DefensiveFormation || defense.FavoritePlayIds.Contains(play.Id)).ToArray();
