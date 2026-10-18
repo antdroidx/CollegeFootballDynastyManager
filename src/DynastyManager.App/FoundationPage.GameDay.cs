@@ -64,10 +64,13 @@ public sealed partial class FoundationPage
         SelectPlay(selectedPlay);
 
         var call = new Button { Text = "Call play", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
-        var watch = new Button { Text = "Switch to Watch" };
+        var watch = new Button { Text = "Watch / Pause" };
+        var takeover = new Button { Text = "Take over", IsVisible = false };
+        var punt = new Button { Text = "Punt", IsVisible = false };
+        var kick = new Button { Text = "Field goal", IsVisible = false };
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
-        var controls = new HorizontalStackLayout { Spacing = 8, Children = { call, watch, skip, close } };
+        var controls = new HorizontalStackLayout { Spacing = 8, Children = { call, punt, kick, watch, takeover, skip, close } };
         page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 10, Children =
         {
             score, situation, possession, field, result, playCard, controls
@@ -76,10 +79,10 @@ public sealed partial class FoundationPage
         Color TeamColor(string teamName) => Color.FromArgb(TeamBrandCatalog.Get(teamName).Primary);
         Border Marker(DynastyPlayer? player, Color color)
         {
-            var marker = new Border { WidthRequest = 27, HeightRequest = 27,
-                StrokeShape = new RoundRectangle { CornerRadius = 14 }, BackgroundColor = color,
+            var marker = new Border { WidthRequest = 19, HeightRequest = 19,
+                StrokeShape = new RoundRectangle { CornerRadius = 10 }, BackgroundColor = color,
                 Stroke = Colors.White, StrokeThickness = 1.4,
-                Content = new Label { Text = player?.Position.ToString() ?? "•", FontSize = 8, FontAttributes = FontAttributes.Bold,
+                Content = new Label { Text = player?.Position.ToString() ?? "•", FontSize = 6, FontAttributes = FontAttributes.Bold,
                     TextColor = Colors.White, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center } };
             if (player is not null) SemanticProperties.SetDescription(marker, $"{player.Position} {player.FullName}");
             return marker;
@@ -88,11 +91,15 @@ public sealed partial class FoundationPage
         {
             fieldPlayers.AbortAnimation("snap-movement");
             fieldPlayers.Children.Clear();
-            fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance; fieldLines.Invalidate();
+            fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance;
+            fieldArt.HomeColor = TeamColor(game.HomeTeamName); fieldLines.Invalidate();
             var offenseColor = TeamColor(snap.OffenseTeamName);
             var defenseColor = TeamColor(snap.DefenseTeamName);
-            var line = Math.Clamp(snap.StartYardLine / 100d, .06, .94);
-            var destination = Math.Clamp((snap.StartYardLine + snap.Yards) / 100d, .04, .96);
+            var direction = (snap.OffenseTeamName == game.HomeTeamName ? 1 : -1) * (snap.Quarter % 2 == 0 ? -1 : 1);
+            double Project(double yard) => direction == 1 ? yard / 100d : 1 - yard / 100d;
+            var line = Math.Clamp(Project(snap.StartYardLine), .06, .94);
+            var destination = Math.Clamp(Project(snap.StartYardLine + snap.Yards), .04, .96);
+            fieldArt.Direction = direction;
             var movements = new List<(View View, Rect From, Rect To)>();
             // Use the personnel's football roles, not their arbitrary list order.
             // Coordinates are proportional to the field; the line of scrimmage is X.
@@ -118,35 +125,38 @@ public sealed partial class FoundationPage
                 switch (player?.Position)
                 {
                     case Position.OL:
-                        x = line - .016;
+                        x = line - direction * .016;
                         y = lineSlots[Math.Min(lineIndex++, lineSlots.Length - 1)];
                         break;
                     case Position.QB:
-                        x = line - .065;
+                        x = line - direction * .065;
                         y = .50;
                         break;
                     case Position.RB:
-                        x = line - .095 - backIndex * .023;
+                        x = line - direction * (.095 + backIndex * .023);
                         y = backIndex++ % 2 == 0 ? .59 : .41;
                         break;
                     case Position.WR:
-                        x = line - .018;
+                        x = line - direction * .018;
                         y = receiverSlots[Math.Min(receiverIndex++, receiverSlots.Length - 1)];
                         break;
                     case Position.TE:
-                        x = line - .022;
+                        x = line - direction * .022;
                         y = receiverIndex++ % 2 == 0 ? .69 : .31;
                         break;
                     default:
-                        x = line - .04 - (index % 3) * .02;
+                        x = line - direction * (.04 + (index % 3) * .02);
                         y = .20 + (index % 7) * .10;
                         break;
                 }
                 x = Math.Clamp(x, .025, .96);
                 var endY = Math.Clamp(y + RouteLane(player, index, snap) * .35, .07, .93);
-                var endX = Math.Clamp(x + Math.Max(.012, destination - line) * RouteShare(player, snap), .025, .96);
+                var endX = Math.Clamp(x + (destination - line + direction * .045) * RouteShare(player, snap), .025, .96);
                 var view = Marker(player, offenseColor);
-                AddMovement(view, new Rect(x, y, 27, 27), new Rect(endX, endY, 27, 27), movements, fieldPlayers);
+                if (player is not null && (snap.BallCarrierId == player.PlayerId ||
+                    snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown && snap.TargetId == player.PlayerId))
+                { view.Stroke = Colors.Yellow; view.StrokeThickness = 3; }
+                AddMovement(view, new Rect(x, y, 19, 19), new Rect(endX, endY, 19, 19), movements, fieldPlayers);
             }
             var defensiveLine = 0;
             var linebackers = 0;
@@ -159,22 +169,22 @@ public sealed partial class FoundationPage
                 {
                     case Position.DE:
                     case Position.DT:
-                        x = line + .025;
+                        x = line + direction * .025;
                         y = .34 + (defensiveLine++ % 5) * .08;
                         break;
                     case Position.OLB:
                     case Position.MLB:
-                        x = line + .075;
+                        x = line + direction * .075;
                         y = .28 + (linebackers++ % 5) * .11;
                         break;
                     case Position.CB:
                     case Position.FS:
                     case Position.SS:
-                        x = line + (player.Position is Position.FS or Position.SS ? .19 : .12);
+                        x = line + direction * (player.Position is Position.FS or Position.SS ? .19 : .12);
                         y = secondary++ % 2 == 0 ? .15 + (secondary / 2) * .09 : .85 - (secondary / 2) * .09;
                         break;
                     default:
-                        x = line + .10;
+                        x = line + direction * .10;
                         y = .20 + (index % 7) * .10;
                         break;
                 }
@@ -194,7 +204,7 @@ public sealed partial class FoundationPage
                 foreach (var movement in movements)
                     AbsoluteLayout.SetLayoutBounds(movement.View, Interpolate(movement.From, movement.To, progress));
             });
-            animation.Commit(fieldPlayers, "snap-movement", 16, session.Mode == GameDayMode.Watch ? 620u : 480u,
+            animation.Commit(fieldPlayers, "snap-movement", 16, session.Mode == GameDayMode.Watch ? 2800u : 2200u,
                 Easing.CubicInOut, (_, _) => completion.TrySetResult());
             await completion.Task;
         }
@@ -208,12 +218,16 @@ public sealed partial class FoundationPage
             if (snap is not null)
             {
                 var play = PlaybookCatalog.OffensivePlays.First(item => item.Id == snap.OffensivePlayId);
-                result.Text = $"{play.Name}: {snap.Outcome} · {(snap.Yards >= 0 ? "+" : string.Empty)}{snap.Yards} yards";
+                var displayName = snap.Outcome is SnapOutcome.Punt ? "Punt" : snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal ? "Field goal" : play.Name;
+                result.Text = $"{displayName}: {snap.Outcome} · {(snap.Yards >= 0 ? "+" : string.Empty)}{snap.Yards} yards";
             }
             var controlledOnOffense = session.PossessionTeamName.Equals(controlledTeamName, StringComparison.OrdinalIgnoreCase);
             call.IsVisible = session.Mode == GameDayMode.Play && controlledOnOffense && !session.IsComplete;
             playCard.IsVisible = call.IsVisible;
-            watch.IsVisible = session.Mode == GameDayMode.Play && !session.IsComplete;
+            watch.IsVisible = !session.IsComplete;
+            watch.Text = session.Mode == GameDayMode.Watch ? "Pause watch" : "Watch CPU";
+            takeover.IsVisible = session.Mode == GameDayMode.Watch && !session.IsComplete;
+            punt.IsVisible = kick.IsVisible = call.IsVisible && session.Down == 4;
             skip.IsVisible = !session.IsComplete;
             close.IsVisible = session.IsComplete;
         }
@@ -251,7 +265,16 @@ public sealed partial class FoundationPage
             try { await ShowSnapAsync(GameDayEngine.Step(session, selectedPlay.Id)); await RunOpponentPossession(); }
             finally { call.IsEnabled = true; }
         };
-        watch.Clicked += async (_, _) => { session.Mode = GameDayMode.Watch; Refresh(); await WatchLoop(); };
+        watch.Clicked += async (_, _) =>
+        {
+            session.Mode = session.Mode == GameDayMode.Watch ? GameDayMode.Play : GameDayMode.Watch;
+            Refresh();
+            if (session.Mode == GameDayMode.Watch) await WatchLoop();
+            else await RunOpponentPossession();
+        };
+        takeover.Clicked += async (_, _) => { session.Mode = GameDayMode.Play; Refresh(); await RunOpponentPossession(); };
+        punt.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-punt")); await RunOpponentPossession(); };
+        kick.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-field-goal")); await RunOpponentPossession(); };
         skip.Clicked += async (_, _) => { GameDayEngine.SimulateToEnd(session); await FinishIfNeeded(); };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         Refresh();
@@ -345,11 +368,13 @@ public sealed partial class FoundationPage
     {
         public int YardLine { get; set; } = 25;
         public int Distance { get; set; } = 10;
+        public int Direction { get; set; } = 1;
+        public Color HomeColor { get; set; } = Colors.DarkBlue;
 
         public void Draw(ICanvas canvas, RectF rect)
         {
             canvas.FillColor = Color.FromArgb("#245B38"); canvas.FillRectangle(rect);
-            canvas.FillColor = Color.FromArgb("#1B4930");
+            canvas.FillColor = HomeColor;
             canvas.FillRectangle(0, 0, rect.Width * .05f, rect.Height);
             canvas.FillRectangle(rect.Width * .95f, 0, rect.Width * .05f, rect.Height);
             canvas.StrokeColor = Color.FromArgb("#A8CBB5"); canvas.StrokeSize = 1;
@@ -360,6 +385,8 @@ public sealed partial class FoundationPage
                 canvas.FontColor = Color.FromArgb("#D5E6DB"); canvas.FontSize = 11;
                 canvas.DrawString((yard <= 50 ? yard : 100 - yard).ToString(), x - 10, 8, 24, 18,
                     HorizontalAlignment.Center, VerticalAlignment.Center);
+                canvas.DrawString((yard <= 50 ? yard : 100 - yard).ToString(), x - 10, rect.Height - 26, 24, 18,
+                    HorizontalAlignment.Center, VerticalAlignment.Center);
             }
             canvas.StrokeColor = Color.FromArgb("#D5E6DB"); canvas.StrokeSize = 1;
             for (var yard = 5; yard < 100; yard += 5)
@@ -368,8 +395,12 @@ public sealed partial class FoundationPage
                 canvas.DrawLine(x, rect.Height * .25f, x, rect.Height * .29f);
                 canvas.DrawLine(x, rect.Height * .71f, x, rect.Height * .75f);
             }
-            var line = rect.Width * YardLine / 100f;
-            var gain = rect.Width * Math.Min(100, YardLine + Distance) / 100f;
+            canvas.FontSize = 24; canvas.FontColor = HomeColor;
+            canvas.DrawString("CFDM", rect.Width * .40f, rect.Height * .40f, rect.Width * .20f, rect.Height * .20f,
+                HorizontalAlignment.Center, VerticalAlignment.Center);
+            var line = rect.Width * (Direction == 1 ? YardLine : 100 - YardLine) / 100f;
+            var gain = rect.Width * (Direction == 1 ? Math.Min(100, YardLine + Distance) :
+                100 - Math.Min(100, YardLine + Distance)) / 100f;
             canvas.StrokeColor = Color.FromArgb("#4FA8FF"); canvas.StrokeSize = 3; canvas.DrawLine(line, 0, line, rect.Height);
             canvas.StrokeColor = Color.FromArgb("#E7C45B"); canvas.StrokeSize = 3; canvas.DrawLine(gain, 0, gain, rect.Height);
         }
