@@ -33,6 +33,14 @@ public sealed class GameDaySession
     public required TeamSimulationProfile HomeProfile { get; init; }
     public required TeamSimulationProfile AwayProfile { get; init; }
     public required IReadOnlyList<DynastyPlayer> Roster { get; init; }
+    public IReadOnlyList<DynastyPlayer> HomeRoster { get; init; } = Array.Empty<DynastyPlayer>();
+    public IReadOnlyList<DynastyPlayer> AwayRoster { get; init; } = Array.Empty<DynastyPlayer>();
+    public IReadOnlyDictionary<Guid, DynastyPlayer> PlayersById { get; init; } =
+        new Dictionary<Guid, DynastyPlayer>();
+    public IReadOnlyDictionary<Position, IReadOnlyList<DynastyPlayer>> HomeDepthChart { get; init; } =
+        new Dictionary<Position, IReadOnlyList<DynastyPlayer>>();
+    public IReadOnlyDictionary<Position, IReadOnlyList<DynastyPlayer>> AwayDepthChart { get; init; } =
+        new Dictionary<Position, IReadOnlyList<DynastyPlayer>>();
     public GameDayMode Mode { get; set; }
     public required Random Random { get; init; }
     public GameFatigueState HomeFatigue { get; } = new();

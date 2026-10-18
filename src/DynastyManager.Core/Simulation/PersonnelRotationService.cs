@@ -7,11 +7,30 @@ public static class PersonnelRotationService
 {
     public static SnapPersonnel SelectOffense(IReadOnlyList<DynastyPlayer> roster, string teamName,
         OffensivePersonnel package, GameFatigueState fatigue, Random random) =>
-        Select(roster, teamName, OffensiveNeeds(package), fatigue, random);
+        Select(BuildDepthChart(roster, teamName), teamName, OffensiveNeeds(package), fatigue, random);
 
     public static SnapPersonnel SelectDefense(IReadOnlyList<DynastyPlayer> roster, string teamName,
         DefensivePersonnel package, GameFatigueState fatigue, Random random) =>
-        Select(roster, teamName, DefensiveNeeds(package), fatigue, random);
+        Select(BuildDepthChart(roster, teamName), teamName, DefensiveNeeds(package), fatigue, random);
+
+    public static SnapPersonnel SelectOffense(
+        IReadOnlyDictionary<Position, IReadOnlyList<DynastyPlayer>> depthChart, string teamName,
+        OffensivePersonnel package, GameFatigueState fatigue, Random random) =>
+        Select(depthChart, teamName, OffensiveNeeds(package), fatigue, random);
+
+    public static SnapPersonnel SelectDefense(
+        IReadOnlyDictionary<Position, IReadOnlyList<DynastyPlayer>> depthChart, string teamName,
+        DefensivePersonnel package, GameFatigueState fatigue, Random random) =>
+        Select(depthChart, teamName, DefensiveNeeds(package), fatigue, random);
+
+    public static IReadOnlyDictionary<Position, IReadOnlyList<DynastyPlayer>> BuildDepthChart(
+        IReadOnlyList<DynastyPlayer> roster, string teamName) => roster
+        .Where(player => player.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
+            !player.IsRedshirted && player.CurrentInjury is null)
+        .GroupBy(player => player.Position)
+        .ToDictionary(group => group.Key, group => (IReadOnlyList<DynastyPlayer>)group
+            .OrderBy(player => player.DepthChartOrder <= 0 ? int.MaxValue : player.DepthChartOrder)
+            .ThenByDescending(player => player.OverallRating).ToArray());
 
     public static void ApplySnap(GameFatigueState fatigue, IReadOnlyList<DynastyPlayer> roster,
         SnapPersonnel active, bool longPlay)
@@ -39,23 +58,22 @@ public static class PersonnelRotationService
         }
     }
 
-    private static SnapPersonnel Select(IReadOnlyList<DynastyPlayer> roster, string teamName,
+    private static SnapPersonnel Select(IReadOnlyDictionary<Position, IReadOnlyList<DynastyPlayer>> depthChart,
+        string teamName,
         IReadOnlyList<(Position Position, int Count)> needs, GameFatigueState fatigue, Random random)
     {
         var selected = new List<Guid>(11);
         var substitutes = new List<Guid>();
         foreach (var (position, count) in needs)
         {
-            var pool = roster.Where(player => player.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
-                    player.Position == position && !player.IsRedshirted && player.CurrentInjury is null)
-                .OrderBy(player => player.DepthChartOrder <= 0 ? int.MaxValue : player.DepthChartOrder)
-                .ThenByDescending(player => player.OverallRating).ToArray();
-            for (var slot = 0; slot < Math.Min(count, pool.Length); slot++)
+            var pool = depthChart.TryGetValue(position, out var players)
+                ? players : Array.Empty<DynastyPlayer>();
+            for (var slot = 0; slot < Math.Min(count, pool.Count); slot++)
             {
-                var starter = pool[Math.Min(slot, pool.Length - 1)];
+                var starter = pool[Math.Min(slot, pool.Count - 1)];
                 var choice = starter;
                 var nextIndex = slot + count;
-                if (nextIndex < pool.Length && ShouldRotate(starter, fatigue.Energy(starter.PlayerId), random))
+                if (nextIndex < pool.Count && ShouldRotate(starter, fatigue.Energy(starter.PlayerId), random))
                     choice = pool[nextIndex];
                 selected.Add(choice.PlayerId);
                 if (choice.PlayerId != starter.PlayerId) substitutes.Add(choice.PlayerId);
