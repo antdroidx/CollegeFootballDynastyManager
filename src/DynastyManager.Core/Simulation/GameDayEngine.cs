@@ -48,8 +48,8 @@ public static class GameDayEngine
                 : null;
         if (special is not null)
         {
-            var start = session.YardLine;
-            var kickDistance = 100 - start + 17;
+            var kickStart = session.YardLine;
+            var kickDistance = 100 - kickStart + 17;
             var made = special == "special-field-goal" &&
                 session.Random.NextDouble() < Math.Clamp(.92 - Math.Max(0, kickDistance - 30) * .018, .12, .95);
             var kick = new GameSnapEvent
@@ -58,7 +58,7 @@ public static class GameDayEngine
                 Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
                 OffenseTeamName = offense.TeamName, DefenseTeamName = defense.TeamName,
                 OffensivePlayId = call.Offense.Id, DefensivePlayId = call.Defense.Id, CallSource = call.Source,
-                Down = session.Down, Distance = session.Distance, StartYardLine = start, Yards = 0,
+                Down = session.Down, Distance = session.Distance, StartYardLine = kickStart, Yards = 0,
                 Outcome = special == "special-punt" ? SnapOutcome.Punt :
                     made ? SnapOutcome.FieldGoal : SnapOutcome.MissedFieldGoal
             };
@@ -66,8 +66,8 @@ public static class GameDayEngine
             session.ClockSeconds -= session.Random.Next(5, 13);
             if (made) { if (homeOnOffense) session.HomeScore += 3; else session.AwayScore += 3; }
             var newSpot = made ? 25 : special == "special-punt"
-                ? Math.Clamp(100 - Math.Min(95, start + session.Random.Next(34, 51)), 5, 80)
-                : Math.Clamp(100 - Math.Max(20, start - 7), 10, 80);
+                ? Math.Clamp(100 - Math.Min(95, kickStart + session.Random.Next(34, 51)), 5, 80)
+                : Math.Clamp(100 - Math.Max(20, kickStart - 7), 10, 80);
             ChangePossession(session, newSpot);
             AdvanceQuarter(session);
             return kick;
