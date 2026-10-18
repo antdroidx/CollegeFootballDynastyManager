@@ -17,6 +17,7 @@ public sealed record GameSnapEvent
     public int Down { get; init; }
     public int Distance { get; init; }
     public int StartYardLine { get; init; }
+    public int BallEndYardLine { get; init; }
     public int Yards { get; init; }
     public SnapOutcome Outcome { get; init; }
     public Guid? QuarterbackId { get; init; }

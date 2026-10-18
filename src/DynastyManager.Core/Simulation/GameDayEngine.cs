@@ -31,7 +31,8 @@ public static class GameDayEngine
         var defense = homeOnOffense ? session.AwayProfile : session.HomeProfile;
         var offensePlan = GamePlanService.Normalize(offense.GamePlan ?? new TeamGamePlan { TeamName = offense.TeamName });
         var defensePlan = GamePlanService.Normalize(defense.GamePlan ?? new TeamGamePlan { TeamName = defense.TeamName });
-        if (!string.IsNullOrWhiteSpace(userPlayId))
+        var requestedSpecial = userPlayId is "special-punt" or "special-field-goal" ? userPlayId : null;
+        if (!string.IsNullOrWhiteSpace(userPlayId) && requestedSpecial is null)
             offensePlan = offensePlan with { OpeningPlayIds = [userPlayId] };
         var offensivePossessionIndex = session.Events.Count;
         var call = GamePlanService.ResolvePlayCall(offensePlan, defensePlan,
@@ -41,8 +42,8 @@ public static class GameDayEngine
 
         // A coach can choose a kick on fourth down before a normal offensive snap.
         // CPU decisions are situational rather than always running the same play.
-        var special = userPlayId is "special-punt" or "special-field-goal"
-            ? userPlayId
+        var special = requestedSpecial is not null
+            ? requestedSpecial
             : session.Down == 4 && string.IsNullOrWhiteSpace(userPlayId)
                 ? (session.YardLine >= 65 ? "special-field-goal" : "special-punt")
                 : null;
@@ -52,22 +53,26 @@ public static class GameDayEngine
             var kickDistance = 100 - kickStart + 17;
             var made = special == "special-field-goal" &&
                 session.Random.NextDouble() < Math.Clamp(.92 - Math.Max(0, kickDistance - 30) * .018, .12, .95);
+            var puntLanding = special == "special-punt"
+                ? Math.Min(95, kickStart + session.Random.Next(34, 51)) : 100;
+            var newSpot = made ? 25 : special == "special-punt"
+                ? Math.Clamp(100 - puntLanding, 5, 80)
+                : Math.Clamp(100 - Math.Max(20, kickStart - 7), 10, 80);
             var kick = new GameSnapEvent
             {
                 Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
                 Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
                 OffenseTeamName = offense.TeamName, DefenseTeamName = defense.TeamName,
-                OffensivePlayId = call.Offense.Id, DefensivePlayId = call.Defense.Id, CallSource = call.Source,
-                Down = session.Down, Distance = session.Distance, StartYardLine = kickStart, Yards = 0,
+                OffensivePlayId = call.Offense.Id, DefensivePlayId = call.Defense.Id,
+                CallSource = requestedSpecial is null ? call.Source : PlayCallSource.User,
+                Down = session.Down, Distance = session.Distance, StartYardLine = kickStart,
+                BallEndYardLine = special == "special-punt" ? puntLanding : 100, Yards = 0,
                 Outcome = special == "special-punt" ? SnapOutcome.Punt :
                     made ? SnapOutcome.FieldGoal : SnapOutcome.MissedFieldGoal
             };
             session.Events.Add(kick);
             session.ClockSeconds -= session.Random.Next(5, 13);
             if (made) { if (homeOnOffense) session.HomeScore += 3; else session.AwayScore += 3; }
-            var newSpot = made ? 25 : special == "special-punt"
-                ? Math.Clamp(100 - Math.Min(95, kickStart + session.Random.Next(34, 51)), 5, 80)
-                : Math.Clamp(100 - Math.Max(20, kickStart - 7), 10, 80);
             ChangePossession(session, newSpot);
             AdvanceQuarter(session);
             return kick;
@@ -112,7 +117,8 @@ public static class GameDayEngine
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
             OffenseTeamName = offense.TeamName, DefenseTeamName = defense.TeamName,
             OffensivePlayId = call.Offense.Id, DefensivePlayId = call.Defense.Id, CallSource = call.Source,
-            Down = session.Down, Distance = session.Distance, StartYardLine = start, Yards = yards, Outcome = outcome,
+            Down = session.Down, Distance = session.Distance, StartYardLine = start,
+            BallEndYardLine = Math.Clamp(start + yards, 0, 100), Yards = yards, Outcome = outcome,
             QuarterbackId = qb?.PlayerId, BallCarrierId = carrier?.PlayerId, TargetId = target?.PlayerId,
             PrimaryDefenderId = defender?.PlayerId, OffensePersonnel = offensePersonnel.PlayerIds,
             DefensePersonnel = defensePersonnel.PlayerIds

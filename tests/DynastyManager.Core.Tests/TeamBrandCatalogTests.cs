@@ -6,6 +6,15 @@ namespace DynastyManager.Core.Tests;
 
 public sealed class TeamBrandCatalogTests
 {
+    [Theory]
+    [InlineData("Washington", "W")]
+    [InlineData(" USC ", "U")]
+    [InlineData("", "?")]
+    public void MidfieldInitialUsesTheHomeSchoolName(string school, string expected)
+    {
+        Assert.Equal(expected, TeamBrandCatalog.Initial(school));
+    }
+
     [Fact]
     public void EveryLegacyAndModernSchoolHasAValidOfflinePalette()
     {

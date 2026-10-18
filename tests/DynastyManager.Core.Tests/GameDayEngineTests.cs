@@ -33,6 +33,58 @@ public class GameDayEngineTests
         Assert.NotEqual(session.HomeScore, session.AwayScore);
     }
 
+    [Fact]
+    public void UserPuntBypassesNormalPlayLookupAndChangesPossession()
+    {
+        var session = Session(GameDayMode.Play);
+        session.Down = 4;
+        session.YardLine = 42;
+
+        var punt = GameDayEngine.Step(session, "special-punt");
+
+        Assert.Equal(SnapOutcome.Punt, punt.Outcome);
+        Assert.Equal(PlayCallSource.User, punt.CallSource);
+        Assert.InRange(punt.BallEndYardLine, 76, 92);
+        Assert.Equal("Away", session.PossessionTeamName);
+        Assert.Equal(2, session.PossessionNumber);
+    }
+
+    [Fact]
+    public void UserFieldGoalBypassesNormalPlayLookup()
+    {
+        var session = Session(GameDayMode.Play);
+        session.Down = 4;
+        session.YardLine = 72;
+
+        var kick = GameDayEngine.Step(session, "special-field-goal");
+
+        Assert.True(kick.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal);
+        Assert.Equal(PlayCallSource.User, kick.CallSource);
+        Assert.Equal(100, kick.BallEndYardLine);
+        Assert.Equal("Away", session.PossessionTeamName);
+    }
+
+    [Fact]
+    public void PursuitMeetsCarrierBehindTheLineOnATackleForLoss()
+    {
+        var snap = new GameSnapEvent
+        {
+            OffenseTeamName = "Home", DefenseTeamName = "Away",
+            OffensivePlayId = "off-spread-zone", DefensivePlayId = "def-43-cover2",
+            StartYardLine = 50, BallEndYardLine = 46, Yards = -4, Outcome = SnapOutcome.Run
+        };
+
+        var contact = GameDayAnimationPlanner.ContactPoint(snap, 1, .58);
+        var tackler = GameDayAnimationPlanner.PursuitTarget(contact, 4, true);
+        var support = GameDayAnimationPlanner.PursuitTarget(contact, 5, false);
+
+        Assert.True(contact.X < .50);
+        Assert.Equal(contact, tackler);
+        Assert.InRange(Math.Abs(support.X - contact.X), 0, .01);
+        Assert.InRange(Math.Abs(support.Y - contact.Y), 0, .025);
+        Assert.Equal(1, GameDayAnimationPlanner.PursuitProgress(1, true));
+    }
+
     private static GameDaySession Session(GameDayMode mode)
     {
         var homePlan = new TeamGamePlan { TeamName = "Home", Offense = OffensivePlaybook.Spread,
