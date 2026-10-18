@@ -98,22 +98,25 @@ public static class DynastyRosterSimulationProfileBuilder
             var safety =
                 (fs + ss) / 2.0;
 
-            var headCoach = StaffManagementService.GetRoleRating(
-                state, team.Name, StaffRole.HeadCoach);
-            var offenseStaff = StaffManagementService.GetRoleRating(
-                state, team.Name, StaffRole.OffensiveCoordinator);
-            var defenseStaff = StaffManagementService.GetRoleRating(
-                state, team.Name, StaffRole.DefensiveCoordinator);
-            var specialTeamsStaff = StaffManagementService.GetRoleRating(
-                state, team.Name, StaffRole.SpecialTeamsCoordinator);
-            var headCoachModifier = Math.Clamp((headCoach - 60) * .035, -1.5, 1.5);
-            var offenseModifier = Math.Clamp((offenseStaff - 60) * .075, -3.0, 3.0) + headCoachModifier;
-            var defenseModifier = Math.Clamp((defenseStaff - 60) * .075, -3.0, 3.0) + headCoachModifier;
-            var specialTeamsModifier = Math.Clamp((specialTeamsStaff - 60) * .085, -3.0, 3.0) + headCoachModifier * .5;
+            var headCoach = StaffManagementService.GetStaff(state, team.Name, StaffRole.HeadCoach);
+            var offensiveCoordinator = StaffManagementService.GetStaff(state, team.Name, StaffRole.OffensiveCoordinator);
+            var defensiveCoordinator = StaffManagementService.GetStaff(state, team.Name, StaffRole.DefensiveCoordinator);
+            var specialTeamsCoordinator = StaffManagementService.GetStaff(state, team.Name, StaffRole.SpecialTeamsCoordinator);
+            var headCoachModifier = Math.Clamp(((headCoach?.Leadership ?? 60) - 60) * .025 +
+                ((headCoach?.GameManagement ?? 60) - 60) * .015, -1.5, 1.5);
+            var offenseModifier = Math.Clamp(((offensiveCoordinator?.Scheme ?? 60) - 60) * .075, -3.0, 3.0) + headCoachModifier;
+            var defenseModifier = Math.Clamp(((defensiveCoordinator?.Scheme ?? 60) - 60) * .075, -3.0, 3.0) + headCoachModifier;
+            var specialTeamsModifier = Math.Clamp(((specialTeamsCoordinator?.SpecialTeams ?? 60) - 60) * .085, -3.0, 3.0) + headCoachModifier * .5;
 
             profiles[team.Name] = new TeamSimulationProfile
             {
                 TeamName = team.Name,
+                HeadCoachLeadership = headCoach?.Leadership ?? 60,
+                HeadCoachGameManagement = headCoach?.GameManagement ?? 60,
+                OffensiveCoordinatorScheme = offensiveCoordinator?.Scheme ?? 60,
+                OffensiveCoordinatorGameManagement = offensiveCoordinator?.GameManagement ?? 60,
+                DefensiveCoordinatorScheme = defensiveCoordinator?.Scheme ?? 60,
+                DefensiveCoordinatorGameManagement = defensiveCoordinator?.GameManagement ?? 60,
                 PassOffenseRating =
                     qb * .30 +
                     wr * .25 +
@@ -122,10 +125,10 @@ public static class DynastyRosterSimulationProfileBuilder
                     rb * .05 +
                     offenseModifier,
                 RushOffenseRating =
-                    rb * .35 +
-                    ol * .40 +
-                    qb * .10 +
-                    te * .15 +
+                    AverageDepth(roster, fallback, Position.RB, false) * .35 +
+                    AverageDepth(roster, fallback, Position.OL, false) * .40 +
+                    AverageDepth(roster, fallback, Position.QB, false) * .10 +
+                    AverageDepth(roster, fallback, Position.TE, false) * .15 +
                     offenseModifier,
                 PassDefenseRating =
                     cb * .30 +
@@ -136,12 +139,12 @@ public static class DynastyRosterSimulationProfileBuilder
                     mlb * .10 +
                     defenseModifier,
                 RushDefenseRating =
-                    dt * .20 +
-                    de * .15 +
-                    mlb * .25 +
-                    olb * .20 +
-                    safety * .15 +
-                    cb * .05 +
+                    AverageDepth(roster, fallback, Position.DT, false) * .20 +
+                    AverageDepth(roster, fallback, Position.DE, false) * .15 +
+                    AverageDepth(roster, fallback, Position.MLB, false) * .25 +
+                    AverageDepth(roster, fallback, Position.OLB, false) * .20 +
+                    (AverageDepth(roster, fallback, Position.FS, false) + AverageDepth(roster, fallback, Position.SS, false)) / 2 * .15 +
+                    AverageDepth(roster, fallback, Position.CB, false) * .05 +
                     defenseModifier,
                 SpecialTeamsRating =
                     kicker * .85 +
@@ -149,6 +152,7 @@ public static class DynastyRosterSimulationProfileBuilder
                     specialTeamsModifier,
                 RosterSize = roster.Length
             };
+            profiles[team.Name] = profiles[team.Name] with { GamePlan = GamePlanService.GetPlan(state, profiles[team.Name]) };
         }
 
         return profiles;
@@ -157,7 +161,7 @@ public static class DynastyRosterSimulationProfileBuilder
     private static double AverageDepth(
         IReadOnlyCollection<DynastyPlayer> roster,
         double fallback,
-        Position position)
+        Position position, bool passing = true)
     {
         var count =
             DynastyRosterRules.StarterPositionCounts.TryGetValue(
@@ -177,7 +181,7 @@ public static class DynastyRosterSimulationProfileBuilder
                 player.OverallRating)
             .Take(count)
             .Select(player =>
-                (double)player.OverallRating)
+                PlayerSkillService.GameRating(player, passing))
             .ToArray();
 
         return values.Length == 0

@@ -10,7 +10,7 @@ using Microsoft.Maui.Storage;
 
 namespace DynastyManager.App;
 
-public sealed class FoundationPage : ContentPage
+public sealed partial class FoundationPage : ContentPage
 {
     private static readonly Color PositiveChangeColor = Color.FromArgb("#22C55E");
     private static readonly Color NegativeChangeColor = Color.FromArgb("#EF4444");
@@ -18,13 +18,21 @@ public sealed class FoundationPage : ContentPage
     private enum AppSection
     {
         Home,
+        NewDynasty,
+        Dynasty,
         Schedule,
         Roster,
         Teams,
         Recruiting,
+        Playbook,
         Rankings,
+        Stats,
         Program,
-        More
+        Season,
+        Settings,
+        GameDay,
+        News,
+        Injuries
     }
 
     private enum RecruitingView
@@ -61,12 +69,20 @@ public sealed class FoundationPage : ContentPage
         Position Position,
         string Subtitle,
         int ClassYear,
+        bool HasRedshirted,
         int? Potential,
         int? StarRating,
         int OverallRating);
     private readonly Label _importStatus;
     private readonly Entry _dynastyNameEntry;
     private readonly Picker _teamPicker;
+    private readonly Picker _leaguePicker = new()
+    {
+        Title = "League structure", ItemsSource = new[] { "Modern FBS (2026) - 138 teams", "Legacy FBS - 130 teams" },
+        SelectedIndex = 0
+    };
+    private IReadOnlyList<Team> _legacyTeams = Array.Empty<Team>();
+    private IReadOnlyList<Team> _newDynastyTeams = Array.Empty<Team>();
     private readonly Button _newDynastyButton;
     private readonly Label _currentDynastyLabel;
     private readonly Button _advanceWeekButton;
@@ -106,6 +122,11 @@ public sealed class FoundationPage : ContentPage
     private readonly Label _recruitingResultsStatus;
     private readonly ContentView _recruitingDetailHost;
     private readonly VerticalStackLayout _recruitingList;
+    private readonly Grid _recruitingLoadingOverlay;
+    private readonly ActivityIndicator _recruitingLoadingIndicator;
+    private readonly Label _recruitingLoadingStatus;
+    private CancellationTokenSource? _recruitingLoadCancellation;
+    private int _recruitingLoadVersion;
     private readonly Grid _advanceOverlay;
     private readonly Label _advanceOverlayStatus;
     private readonly ProgressBar _advanceOverlayProgress;
@@ -115,6 +136,10 @@ public sealed class FoundationPage : ContentPage
     private readonly Picker _teamBrowserPicker;
     private readonly VerticalStackLayout _teamBrowserList;
     private readonly Dictionary<AppSection, Button> _navButtons = new();
+    private readonly Dictionary<AppSection, BoxView> _navIndicators = new();
+    private Border _navigationBar = null!;
+    private readonly Button _libraryButton = new() { Text = "‹ Exit Dynasty", FontSize = 12, Padding = new Thickness(0, 2, 12, 2), BackgroundColor = Colors.Transparent };
+    private readonly Label _headerContext = new() { FontSize = 11, TextColor = DynastyTheme.Muted };
     private readonly Dictionary<AppSection, View> _sectionViews = new();
     private AppSection _activeSection = AppSection.Home;
     private RecruitingView _recruitingView = RecruitingView.HighSchool;
@@ -129,6 +154,7 @@ public sealed class FoundationPage : ContentPage
     private IReadOnlyList<ImportedPlayerRow> _legacyRosterRows =
         Array.Empty<ImportedPlayerRow>();
     private IReadOnlyList<string> _teamNames = Array.Empty<string>();
+    private IReadOnlyList<TeamGamePlan>? _cachedProfileGamePlans;
     private IReadOnlyList<DynastyPlayer>? _cachedProfileRoster;
     private IReadOnlyList<StaffMember>? _cachedProfileStaff;
     private StaffMember? _cachedProfileUserCoach;
@@ -148,7 +174,7 @@ public sealed class FoundationPage : ContentPage
 
         _importStatus = new Label
         {
-            Text = "Loading legacy universe…",
+            Text = "Loading league presets…",
             FontSize = 14
         };
 
@@ -163,9 +189,11 @@ public sealed class FoundationPage : ContentPage
             Title = "Choose your team"
         };
 
+        _leaguePicker.SelectedIndexChanged += (_, _) => UpdateNewDynastyTeams();
+
         _newDynastyButton = new Button
         {
-            Text = "Create New Dynasty",
+            Text = "Start dynasty",
             TextColor = Colors.White
         };
         _newDynastyButton.Clicked += CreateNewDynasty;
@@ -173,7 +201,7 @@ public sealed class FoundationPage : ContentPage
         _currentDynastyLabel = new Label
         {
             Text = "No dynasty loaded.",
-            FontSize = 17
+            FontSize = 14
         };
 
         _advanceWeekButton = new Button
@@ -186,7 +214,7 @@ public sealed class FoundationPage : ContentPage
 
         _manualSaveButton = new Button
         {
-            Text = "Manual Save",
+            Text = "Manual save",
             TextColor = Colors.White,
             IsEnabled = false
         };
@@ -194,7 +222,7 @@ public sealed class FoundationPage : ContentPage
 
         _autosaveButton = new Button
         {
-            Text = "Autosave Current",
+            Text = "Save settings & dynasty",
             TextColor = Colors.White,
             IsEnabled = false
         };
@@ -319,7 +347,7 @@ public sealed class FoundationPage : ContentPage
         _screenTitle = new Label
         {
             Text = "Home",
-            FontSize = 23,
+            FontSize = 18,
             FontAttributes = FontAttributes.Bold
         };
 
@@ -488,11 +516,30 @@ public sealed class FoundationPage : ContentPage
             Spacing = 4
         };
 
+        _recruitingLoadingIndicator = new ActivityIndicator { Color = Colors.White };
+        _recruitingLoadingStatus = new Label
+        {
+            Text = "Loading recruits…", TextColor = Colors.White, FontSize = 18,
+            HorizontalTextAlignment = TextAlignment.Center
+        };
+        _recruitingLoadingOverlay = new Grid
+        {
+            IsVisible = false, BackgroundColor = Color.FromArgb("#F010243E"), Padding = 24,
+            Children =
+            {
+                new VerticalStackLayout
+                {
+                    VerticalOptions = LayoutOptions.Center, Spacing = 12,
+                    Children = { _recruitingLoadingIndicator, _recruitingLoadingStatus }
+                }
+            }
+        };
+
         _advanceOverlayStatus = new Label
         {
             Text = "Preparing weekly advance...",
             TextColor = Colors.White,
-            FontSize = 16,
+            FontSize = 14,
             FontAttributes = FontAttributes.Bold,
             HorizontalTextAlignment = TextAlignment.Center
         };
@@ -550,13 +597,11 @@ public sealed class FoundationPage : ContentPage
             Spacing = 5
         };
 
-        var navigation = new HorizontalStackLayout
-        {
-            Spacing = 6,
-            Padding = new Thickness(8, 6)
-        };
+        var navigation = new Grid { ColumnSpacing = 2, Padding = new Thickness(6, 3),
+            ColumnDefinitions = new ColumnDefinitionCollection
+            { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
 
-        foreach (var section in Enum.GetValues<AppSection>())
+        foreach (var section in new[] { AppSection.Dynasty, AppSection.Roster, AppSection.Playbook, AppSection.Recruiting, AppSection.Season })
         {
             var captured = section;
             var button = new Button
@@ -566,28 +611,31 @@ public sealed class FoundationPage : ContentPage
                     AppSection.Recruiting => "Recruit",
                     AppSection.Rankings => "Ranks",
                     AppSection.Teams => "Teams",
+                    AppSection.Playbook => "Coach",
+                    AppSection.Dynasty => "Overview",
+                    AppSection.Season => "Season",
                     _ => section.ToString()
                 },
-                FontSize = 11,
-                Padding = new Thickness(11, 8),
+                FontSize = 12,
+                Padding = new Thickness(2, 5),
+                HorizontalOptions = LayoutOptions.Fill,
                 TextColor = Colors.White
             };
 
             button.Clicked += (_, _) => ShowSection(captured);
             _navButtons[section] = button;
-            navigation.Children.Add(button);
+            var indicator = new BoxView { HeightRequest = 2, Color = DynastyTheme.Accent, IsVisible = false };
+            _navIndicators[section] = indicator;
+            var tab = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
+            tab.Add(button, 0, 0); tab.Add(indicator, 0, 1);
+            navigation.Add(tab, _navButtons.Count - 1, 0);
         }
 
-        var navigationBar = new Border
+        _navigationBar = new Border
         {
-            StrokeThickness = 1,
+            StrokeThickness = 0,
             Padding = 0,
-            Content = new ScrollView
-            {
-                Orientation = ScrollOrientation.Horizontal,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
-                Content = navigation
-            }
+            Content = navigation
         };
 
         var pages = new Grid();
@@ -596,14 +644,22 @@ public sealed class FoundationPage : ContentPage
         {
             View sectionContent = section switch
             {
-                AppSection.Home => BuildHomeSection(),
+                AppSection.Home => BuildLibrarySection(),
+                AppSection.NewDynasty => BuildNewDynastySection(),
+                AppSection.Dynasty => BuildHomeSection(),
                 AppSection.Schedule => BuildScheduleSection(),
                 AppSection.Roster => BuildRosterSection(),
                 AppSection.Teams => BuildTeamsSection(),
                 AppSection.Recruiting => BuildRecruitingSection(),
                 AppSection.Rankings => BuildRankingsSection(),
+                AppSection.Stats => BuildStatisticsSection(),
                 AppSection.Program => BuildProgramSection(),
-                AppSection.More => BuildMoreSection(),
+                AppSection.Playbook => BuildGamePlanSection(),
+                AppSection.Season => BuildSeasonHub(),
+                AppSection.Settings => BuildMoreSection(),
+                AppSection.GameDay => BuildMatchupHub(),
+                AppSection.News => BuildNewsSection(),
+                AppSection.Injuries => BuildInjurySection(),
                 _ => BuildHomeSection()
             };
 
@@ -612,7 +668,7 @@ public sealed class FoundationPage : ContentPage
             if (section == AppSection.Recruiting)
             {
                 sectionContent.Margin =
-                    new Thickness(16, 6, 16, 10);
+                    new Thickness(14, 6, 14, 10);
                 sectionContent.IsVisible = false;
                 page = sectionContent;
             }
@@ -623,8 +679,8 @@ public sealed class FoundationPage : ContentPage
                     IsVisible = false,
                     Content = new VerticalStackLayout
                     {
-                        Padding = new Thickness(16, 10, 16, 24),
-                        Spacing = 14,
+                        Padding = new Thickness(14, 8, 14, 16),
+                        Spacing = 12,
                         Children =
                         {
                             sectionContent
@@ -647,15 +703,20 @@ public sealed class FoundationPage : ContentPage
             }
         };
 
-        root.Add(_screenTitle);
-        Grid.SetRow(_screenTitle, 0);
-        _screenTitle.Margin = new Thickness(16, 12, 16, 4);
+        _libraryButton.Clicked += async (_, _) => await ReturnToLibraryAsync();
+        var heading = new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { _screenTitle, _headerContext } };
+        _settingsButton.Clicked += (_, _) => ShowSection(AppSection.Settings);
+        var header = new Grid { Padding = new Thickness(14, 10, 14, 4),
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
+        _screenTitle.LineBreakMode = LineBreakMode.TailTruncation;
+        header.Add(_libraryButton, 0, 0); header.Add(heading, 1, 0); header.Add(_settingsButton, 2, 0);
+        root.Add(header, 0, 0);
 
         root.Add(pages);
         Grid.SetRow(pages, 1);
 
-        root.Add(navigationBar);
-        Grid.SetRow(navigationBar, 2);
+        root.Add(_navigationBar);
+        Grid.SetRow(_navigationBar, 2);
 
         var shell = new Grid();
         shell.Children.Add(root);
@@ -668,18 +729,28 @@ public sealed class FoundationPage : ContentPage
 
     private void ShowSection(AppSection section)
     {
+        if (_currentDynasty is null && section is not (AppSection.Home or AppSection.NewDynasty)) section = AppSection.Home;
+        RememberSection(section);
         _activeSection = section;
+        UpdateShellContext();
+        if (section != AppSection.Recruiting)
+        {
+            _recruitingLoadCancellation?.Cancel();
+            _recruitingLoadingOverlay.IsVisible = false;
+            _recruitingLoadingIndicator.IsRunning = false;
+        }
 
         foreach (var pair in _navButtons)
         {
             pair.Value.FontAttributes =
-                pair.Key == section
+                pair.Key == PrimarySection(section)
                     ? FontAttributes.Bold
                     : FontAttributes.None;
-            pair.Value.Opacity =
-                pair.Key == section
-                    ? 1.0
-                    : 0.72;
+            var selected = pair.Key == PrimarySection(section);
+            pair.Value.Opacity = 1.0;
+            pair.Value.BackgroundColor = Colors.Transparent;
+            pair.Value.TextColor = selected ? DynastyTheme.Accent : DynastyTheme.Muted;
+            _navIndicators[pair.Key].IsVisible = selected;
         }
 
         foreach (var pair in _sectionViews)
@@ -687,84 +758,34 @@ public sealed class FoundationPage : ContentPage
 
         _screenTitle.Text = section switch
         {
-            AppSection.Home => "Dynasty Home",
+            AppSection.Home => "College Football",
+            AppSection.NewDynasty => "Start a dynasty",
+            AppSection.Dynasty => "Overview",
             AppSection.Schedule => "Schedule",
             AppSection.Roster => "Roster & Depth Chart",
             AppSection.Teams => "Teams & Rosters",
             AppSection.Recruiting => "Recruiting",
             AppSection.Rankings => "Rankings & Postseason",
+            AppSection.Stats => "Player statistics",
             AppSection.Program => "Program",
-            AppSection.More => "Dynasty & Saves",
+            AppSection.Playbook => "Coaching Hub",
+            AppSection.Season => "Season center",
+            AppSection.Settings => "Settings",
+            AppSection.GameDay => "Next game",
+            AppSection.News => "News & headlines",
+            AppSection.Injuries => "Injury report",
             _ => section.ToString()
         };
 
-        if (_currentDynasty is not null)
+        if (_currentDynasty is not null || section == AppSection.Playbook)
             RenderSection(section);
     }
 
-    private View BuildHomeSection()
-    {
-        var dynastyManagerButton = new Button
-        {
-            Text = "Create / Load Dynasty",
-            TextColor = Colors.White
-        };
-        dynastyManagerButton.Clicked += (_, _) =>
-            ShowSection(AppSection.More);
+    private View BuildHomeSection() => BuildOverviewSection();
 
-        return new VerticalStackLayout
-        {
-            Spacing = 14,
-            Children =
-            {
-                new Label
-                {
-                    Text = "CURRENT DYNASTY",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _currentDynastyLabel,
-                new HorizontalStackLayout
-                {
-                    Spacing = 8,
-                    Children =
-                    {
-                        _advanceWeekButton,
-                        _manualSaveButton,
-                        _autosaveButton
-                    }
-                },
-                dynastyManagerButton,
-                _homeStatus,
-                _homeHighlights
-            }
-        };
-    }
+    private View BuildScheduleSection() => BuildOrganizedScheduleSection();
 
-    private View BuildScheduleSection() =>
-        new VerticalStackLayout
-        {
-            Spacing = 10,
-            Children =
-            {
-                new Label
-                {
-                    Text = "Your complete season schedule, results, and postseason games.",
-                    FontSize = 13
-                },
-                _scheduleList
-            }
-        };
-
-    private View BuildRosterSection() =>
-        new VerticalStackLayout
-        {
-            Spacing = 10,
-            Children =
-            {
-                _offseasonRosterStatus,
-                _transferPortalList
-            }
-        };
+    private View BuildRosterSection() => BuildOrganizedRosterSection();
 
     private View BuildTeamsSection() =>
         new VerticalStackLayout
@@ -806,93 +827,61 @@ public sealed class FoundationPage : ContentPage
             Content = filterStrip
         };
 
-        var listScroll = new ScrollView
-        {
-            Content = _recruitingList
-        };
-
-        var root = new Grid
-        {
-            RowDefinitions =
-            {
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Auto },
-                new RowDefinition { Height = GridLength.Star }
-            },
-            RowSpacing = 7
-        };
-
-        root.Add(_recruitingMetrics);
-        Grid.SetRow(_recruitingMetrics, 0);
-
-        root.Add(_recruitingStatus);
-        Grid.SetRow(_recruitingStatus, 1);
-
         var tabScroller = new ScrollView
         {
             Orientation = ScrollOrientation.Horizontal,
-            HorizontalScrollBarVisibility =
-                ScrollBarVisibility.Never,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
             Content = _recruitingTabs
         };
-
-        root.Add(tabScroller);
-        Grid.SetRow(tabScroller, 2);
-
-        root.Add(_recruitingSearch);
-        Grid.SetRow(_recruitingSearch, 3);
-
-        root.Add(_recruitingFilterScroller);
-        Grid.SetRow(_recruitingFilterScroller, 4);
-
-        root.Add(_recruitingDetailHost);
-        Grid.SetRow(_recruitingDetailHost, 5);
-
-        root.Add(_recruitingResultsStatus);
-        Grid.SetRow(_recruitingResultsStatus, 6);
-
-        root.Add(listScroll);
-        Grid.SetRow(listScroll, 7);
-
+        var controls = new ScrollView
+        {
+            Content = new VerticalStackLayout { Spacing = 7, Children =
+            {
+                _recruitingMetrics, _recruitingStatus, tabScroller,
+                _recruitingSearch, _recruitingFilterScroller
+            } }
+        };
+        var results = new ScrollView
+        {
+            Content = new VerticalStackLayout { Spacing = 7, Children =
+            {
+                _recruitingDetailHost, _recruitingResultsStatus, _recruitingList
+            } }
+        };
+        _recruitingDetailHost.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(ContentView.Content) && _recruitingDetailHost.Content is not null)
+                _ = results.ScrollToAsync(0, 0, false);
+        };
+        var root = new Grid
+        {
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star) },
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(0) },
+            RowSpacing = 7, ColumnSpacing = 0
+        };
+        root.Add(controls, 0, 0);
+        root.Add(results, 0, 1);
+        root.Add(_recruitingLoadingOverlay, 0, 0);
+        Grid.SetRowSpan(_recruitingLoadingOverlay, 2);
+        Grid.SetColumnSpan(_recruitingLoadingOverlay, 2);
+        bool? sideBySide = null;
+        root.SizeChanged += (_, _) =>
+        {
+            var wide = root.Width >= 650 && root.Height < 420;
+            if (sideBySide == wide) return;
+            sideBySide = wide;
+            root.ColumnSpacing = wide ? 14 : 0;
+            root.ColumnDefinitions[0].Width = wide ? new GridLength(260) : GridLength.Star;
+            root.ColumnDefinitions[1].Width = wide ? GridLength.Star : new GridLength(0);
+            root.RowDefinitions[0].Height = wide ? GridLength.Star : GridLength.Auto;
+            root.RowDefinitions[1].Height = wide ? new GridLength(0) : GridLength.Star;
+            Grid.SetColumn(results, wide ? 1 : 0);
+            Grid.SetRow(results, wide ? 0 : 1);
+        };
         return root;
     }
 
-    private View BuildRankingsSection() =>
-        new VerticalStackLayout
-        {
-            Spacing = 12,
-            Children =
-            {
-                new Label
-                {
-                    Text = "NATIONAL TOP 25",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _nationalRankingStatus,
-                _nationalRankingsList,
-                new BoxView { HeightRequest = 1 },
-                new Label
-                {
-                    Text = "CONFERENCE RACE",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _conferenceChampionshipStatus,
-                _conferenceStandingsList,
-                new BoxView { HeightRequest = 1 },
-                new Label
-                {
-                    Text = "COLLEGE FOOTBALL PLAYOFF & BOWLS",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _postseasonStatus,
-                _postseasonList
-            }
-        };
+    private View BuildRankingsSection() => BuildOrganizedRankingsSection();
 
     private View BuildProgramSection() =>
         new VerticalStackLayout
@@ -905,6 +894,20 @@ public sealed class FoundationPage : ContentPage
             }
         };
 
+    private static string FormatOriginalRecruitingStars(DynastyPlayer player) =>
+        player.OriginalRecruitingStars is int stars ? $"HS recruit: {stars} stars"
+            : player.IsWalkOn ? "Walk-on" : "HS recruit: unknown";
+
+    private static string FormatClassYear(int classYear, bool redshirted = false)
+        => PlayerClassYearService.Format(classYear, redshirted);
+
+    private Button CreateCareerStatsButton(DynastyPlayer player)
+    {
+        var button = new Button { Text = "Player profile", FontSize = 12 };
+        button.Clicked += async (_, _) => await ShowPlayerProfileAsync(player.PlayerId);
+        return button;
+    }
+
     private View BuildMoreSection() =>
         new VerticalStackLayout
         {
@@ -913,13 +916,10 @@ public sealed class FoundationPage : ContentPage
             {
                 new Label
                 {
-                    Text = "NEW DYNASTY",
+                    Text = "Preferences",
                     FontAttributes = FontAttributes.Bold
                 },
-                _dynastyNameEntry,
-                _teamPicker,
-                _newDynastyButton,
-                new BoxView { HeightRequest = 1 },
+
                 new Label
                 {
                     Text = "RECRUITING ASSISTANCE",
@@ -946,11 +946,11 @@ public sealed class FoundationPage : ContentPage
                     Text = "0% = manual only. 100% = full delegation. Staff can use the selected share of recruiting points for realistic targets, scholarship offers, scouting, and pitches. Your manually managed prospects are not overwritten.",
                     FontSize = 12
                 },
-                new BoxView { HeightRequest = 1 },
                 new Label
                 {
                     Text = "AUTOSAVE",
-                    FontAttributes = FontAttributes.Bold
+                    FontAttributes = FontAttributes.Bold,
+                    Margin = new Thickness(0, 10, 0, 0)
                 },
                 new HorizontalStackLayout
                 {
@@ -967,20 +967,8 @@ public sealed class FoundationPage : ContentPage
                     }
                 },
                 _rollingAutosaveStatus,
-                new BoxView { HeightRequest = 1 },
-                new Label
-                {
-                    Text = "SAVE SLOTS",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _saveList,
-                new BoxView { HeightRequest = 1 },
-                new Label
-                {
-                    Text = "DATA STATUS",
-                    FontAttributes = FontAttributes.Bold
-                },
-                _importStatus
+                _autosaveButton,
+
             }
         };
 
@@ -1020,13 +1008,12 @@ public sealed class FoundationPage : ContentPage
                 .OrderBy(name => name)
                 .ToArray();
 
-            _teamPicker.ItemsSource = _teamNames.ToList();
+            _legacyTeams = universe.Teams;
+            UpdateNewDynastyTeams();
             _teamBrowserPicker.ItemsSource = _teamNames.ToList();
 
             _importStatus.Text =
-                $"Legacy data ready: {universe.Conferences.Count:N0} conferences • " +
-                $"{universe.Teams.Count:N0} teams • {roster.Players.Count:N0} players • " +
-                $"{coaches.Count:N0} coaches • {_simulationProfiles.Count:N0} sim profiles";
+                "League presets ready: Modern FBS (138 teams) or Legacy FBS (130 teams).";
 
             var databasePath = Path.Combine(
                 FileSystem.Current.AppDataDirectory,
@@ -1041,6 +1028,7 @@ public sealed class FoundationPage : ContentPage
         catch (Exception ex)
         {
             _importStatus.Text = $"Startup failed: {ex.Message}";
+            _libraryStatus.Text = $"Could not load dynasty data: {ex.Message}";
         }
         finally
         {
@@ -1048,16 +1036,36 @@ public sealed class FoundationPage : ContentPage
         }
     }
 
+    private void UpdateNewDynastyTeams()
+    {
+        if (_legacyTeams.Count == 0) return;
+        var previous = _teamPicker.SelectedItem as string;
+        _newDynastyTeams = _leaguePicker.SelectedIndex == 0
+            ? ModernFbsUniverseFactory.Create(_legacyTeams) : _legacyTeams;
+        _teamPicker.ItemsSource = _newDynastyTeams.Select(team => team.Name)
+            .OrderBy(name => name).ToList();
+        if (previous is not null) _teamPicker.SelectedItem = previous;
+    }
+
+    private void ConfigureLeague(IReadOnlyList<Team> teams)
+    {
+        _teamsByName = teams.ToDictionary(team => team.Name, StringComparer.OrdinalIgnoreCase);
+        _teamNames = teams.Select(team => team.Name).OrderBy(name => name).ToArray();
+        _teamBrowserPicker.ItemsSource = _teamNames.ToList();
+        _cachedCurrentProfiles = null;
+        _cachedNationalRankings = null;
+    }
+
     private async void CreateNewDynasty(object? sender, EventArgs e)
     {
-        if (_teamPicker.SelectedIndex < 0 ||
-            _teamPicker.SelectedIndex >= _teamNames.Count)
+        if (_teamPicker.SelectedItem is not string teamName ||
+            !_newDynastyTeams.Any(team => team.Name == teamName))
         {
-            _currentDynastyLabel.Text = "Choose a team before creating a dynasty.";
+            _newDynastyStatus.Text = "Choose a school before starting your dynasty.";
             return;
         }
-
-        var teamName = _teamNames[_teamPicker.SelectedIndex];
+        _newDynastyStatus.Text = "";
+        ConfigureLeague(_newDynastyTeams);
         var dynastyName = string.IsNullOrWhiteSpace(_dynastyNameEntry.Text)
             ? $"{teamName} Dynasty"
             : _dynastyNameEntry.Text.Trim();
@@ -1089,6 +1097,8 @@ public sealed class FoundationPage : ContentPage
             {
                 DynastyId = dynastyId,
                 DynastyName = dynastyName,
+                LeagueTeams = _newDynastyTeams.ToArray(),
+                LeagueName = _leaguePicker.SelectedIndex == 0 ? "Modern FBS (2026)" : "Legacy FBS",
                 UserTeamName = teamName,
                 SeasonYear = startingYear,
                 Week = 0,
@@ -1128,12 +1138,12 @@ public sealed class FoundationPage : ContentPage
             await ShowAdvanceProgressAsync("Dynasty ready", 1.0);
             SetDynastyControlsEnabled(true);
             RenderCurrentDynasty();
-            ShowSection(AppSection.Home);
+            ShowSection(AppSection.Dynasty);
         }
         catch (Exception ex)
         {
             _currentDynasty = null;
-            _currentDynastyLabel.Text =
+            _newDynastyStatus.Text =
                 $"Schedule generation failed: {ex.Message}";
             _scheduleList.Children.Clear();
         }
@@ -1181,36 +1191,35 @@ public sealed class FoundationPage : ContentPage
                 out var midseasonRecruitingTeam))
         {
             await ShowAdvanceProgressAsync("Processing recruiting decisions...", 0.14);
-            _currentDynasty = InteractiveRecruitingService
-                .ResolveCurrentPhase(
-                    _currentDynasty,
-                    midseasonRecruitingTeam,
-                    _teamsByName);
+            var decisionState = _currentDynasty;
+            _currentDynasty = await Task.Run(() => InteractiveRecruitingService
+                .ResolveCurrentPhase(decisionState, midseasonRecruitingTeam, _teamsByName));
         }
 
         if (phaseBeforeAdvance is
             SeasonPhase.TransferPortal or SeasonPhase.Recruiting)
         {
             await ShowAdvanceProgressAsync("Resolving recruiting and portal activity...", 0.22);
+            var marketProgress = new Progress<(int Completed, int Total, string TeamName)>(item =>
+            {
+                _advanceOverlayStatus.Text = $"Recruiting offers: {item.TeamName} ({item.Completed}/{item.Total})...";
+                _advanceOverlayProgress.Progress = 0.22 + 0.07 * item.Completed / item.Total;
+            });
             if (_teamsByName.TryGetValue(
                     _currentDynasty.UserTeamName,
                     out var recruitingTeam))
             {
-                _currentDynasty = InteractiveRecruitingService
-                    .ResolveCurrentPhase(
-                        _currentDynasty,
-                        recruitingTeam,
-                        _teamsByName);
+                var decisionState = _currentDynasty;
+                _currentDynasty = await Task.Run(() => InteractiveRecruitingService
+                    .ResolveCurrentPhase(decisionState, recruitingTeam, _teamsByName, marketProgress));
             }
 
             if (phaseBeforeAdvance ==
                 SeasonPhase.Recruiting)
             {
-                _currentDynasty =
-                    CpuRecruitingService
-                        .AdvanceCpuRecruitingWeek(
-                            _currentDynasty,
-                            _teamsByName);
+                var weeklyRecruitingState = _currentDynasty;
+                _currentDynasty = await Task.Run(() => CpuRecruitingService
+                    .AdvanceCpuRecruitingWeek(weeklyRecruitingState, _teamsByName));
             }
 
             if (phaseBeforeAdvance ==
@@ -1225,11 +1234,18 @@ public sealed class FoundationPage : ContentPage
                         : "Finalizing recruiting classes…";
 
                 var recruitingState = _currentDynasty;
+                var recruitingProgress = new Progress<(int Completed, int Total, string TeamName)>(item =>
+                {
+                    _advanceOverlayStatus.Text =
+                        $"Resolving recruiting: {item.TeamName} ({item.Completed}/{item.Total})...";
+                    _advanceOverlayProgress.Progress = 0.24 + 0.05 * item.Completed / item.Total;
+                });
                 _currentDynasty = await Task.Run(() =>
                     CpuRecruitingService.ApplyPhaseAssistance(
                         recruitingState,
                         _teamsByName,
-                        recruitingState.RecruitingAssistanceEnabled));
+                        recruitingState.RecruitingAssistanceEnabled,
+                        recruitingProgress));
 
                 _currentDynasty = PlayerRatingService
                     .EnsureProfiles(_currentDynasty);
@@ -1595,22 +1611,24 @@ public sealed class FoundationPage : ContentPage
 
     private async Task SaveCurrentAsync(SaveKind kind)
     {
-        if (_currentDynasty is null || _saveRepository is null)
+        var snapshot = _currentDynasty;
+        var repository = _saveRepository;
+        if (snapshot is null || repository is null)
             return;
 
         Guid? saveId = null;
 
         if (kind != SaveKind.Manual)
         {
-            var existing = (await _saveRepository.ListAsync())
+            var existing = (await repository.ListAsync())
                 .FirstOrDefault(slot =>
-                    slot.DynastyId == _currentDynasty.DynastyId &&
+                    slot.DynastyId == snapshot.DynastyId &&
                     slot.Kind == kind);
 
             saveId = existing?.SaveId;
         }
 
-        await _saveRepository.SaveAsync(_currentDynasty, kind, saveId);
+        await repository.SaveAsync(snapshot, kind, saveId);
         await RefreshSaveSlotsAsync();
     }
 
@@ -1628,143 +1646,7 @@ public sealed class FoundationPage : ContentPage
         if (state is null)
             return;
 
-        if (state.Schedule.Count == 0 && _teamsByName.Count > 1)
-        {
-            SetDynastyControlsEnabled(false);
-            _currentDynastyLabel.Text =
-                "Generating schedule for this older save…";
-
-            try
-            {
-                await ShowAdvanceProgressAsync("Rebuilding missing schedule...", 0.24);
-                state = state with
-                {
-                    Schedule = await GenerateScheduleAsync(
-                        state.DynastyId,
-                        state.SeasonYear)
-                };
-            }
-            catch (Exception ex)
-            {
-                _currentDynastyLabel.Text =
-                    $"Schedule generation failed: {ex.Message}";
-                return;
-            }
-        }
-
-        if (state.ActiveRoster.Count == 0 &&
-            _legacyRosterRows.Count > 0)
-        {
-            await ShowAdvanceProgressAsync("Restoring team rosters...", 0.38);
-            state = state with
-            {
-                ActiveRoster = LegacyDynastyRosterFactory.Create(
-                    _legacyRosterRows,
-                    _teamsByName.Values,
-                    state.DynastyId,
-                    state.SeasonYear)
-            };
-        }
-
-        await ShowAdvanceProgressAsync("Checking players and depth charts...", 0.54);
-        state = PlayerRatingService.EnsureProfiles(state);
-        state = RosterManagementService
-            .NormalizeAllDepthCharts(state);
-        state = ProgramPrestigeService.EnsureInitialPrestige(
-            state, _teamsByName.Values);
-        state = StaffManagementService.EnsureLeagueStaff(
-            state,
-            _teamsByName.Values,
-            state.StaffMarketSeasonYear == state.SeasonYear
-                ? state.UserTeamName
-                : null);
-
-        if ((state.Phase is
-                 SeasonPhase.TransferPortal or
-                 SeasonPhase.Recruiting or
-                 SeasonPhase.RosterManagement or
-                 SeasonPhase.Offseason) &&
-            state.TeamSeasonHistory.Any(item =>
-                item.SeasonYear == state.SeasonYear))
-        {
-            state = UserCoachCareerService
-                .EvaluateCompletedSeason(
-                    state,
-                    _teamsByName);
-            state = StaffManagementService.AdvanceSeason(state);
-            state = StaffMarketService.EnsureMarket(
-                state, _teamsByName);
-            state = StaffMarketService.RunCpuCarousel(
-                state, _teamsByName);
-        }
-
-        if (state.Phase == SeasonPhase.TransferPortal &&
-            state.TransferPortalEntryWindowSeasonYear !=
-                state.SeasonYear)
-        {
-            if (state.TransferPortalEntries.Any(entry =>
-                    entry.SeasonYear == state.SeasonYear))
-            {
-                state = state with
-                {
-                    TransferPortalEntryWindowSeasonYear =
-                        state.SeasonYear
-                };
-            }
-            else
-            {
-                state = OffseasonPlayerLifecycleService
-                    .EnterTransferPortal(state);
-            }
-        }
-
-        if (state.Phase <= SeasonPhase.Recruiting &&
-            (state.HighSchoolRecruitingPool.Count == 0 ||
-             state.HighSchoolRecruitingPool.Any(recruit =>
-                 recruit.SeasonYear != state.SeasonYear)))
-        {
-            state = state with
-            {
-                HighSchoolRecruitingPool =
-                    HighSchoolRecruitingPoolFactory.Create(
-                        state.DynastyId,
-                        state.SeasonYear,
-                        _teamsByName.Count,
-                        _legacyRosterRows)
-            };
-        }
-
-        if (_teamsByName.TryGetValue(state.UserTeamName, out var scoutingTeam))
-        {
-            await ShowAdvanceProgressAsync("Restoring scouting department...", 0.72);
-            state = ScoutingDepartmentService.EnsureDepartment(
-                state, scoutingTeam);
-        }
-
-        if ((state.Phase is
-                 SeasonPhase.TransferPortal or SeasonPhase.Recruiting ||
-             (state.Phase == SeasonPhase.RegularSeason &&
-              state.TransferPortalEntries.Count > 0)) &&
-            _teamsByName.TryGetValue(
-                state.UserTeamName,
-                out var phaseTeam))
-        {
-            state = InteractiveRecruitingService
-                .EnsurePhaseInitialized(
-                    state,
-                    phaseTeam);
-
-            state = CpuRecruitingService
-                .ApplyWeeklyUserAssistance(
-                    state,
-                    phaseTeam);
-        }
-
-        if (state.Phase == SeasonPhase.RosterManagement)
-        {
-            state = RosterManagementService
-                .NormalizeAllDepthCharts(state);
-        }
+        ConfigureLeague(state.LeagueTeams.Count > 0 ? state.LeagueTeams : _legacyTeams);
 
         await ShowAdvanceProgressAsync("Preparing dynasty screen...", 0.90);
         _currentDynasty = state;
@@ -1780,8 +1662,14 @@ public sealed class FoundationPage : ContentPage
                 state.RecruitingAssistanceWorkloadPercent);
         SetDynastyControlsEnabled(true);
         RenderCurrentDynasty();
-        ShowSection(AppSection.Home);
+        ShowSection(AppSection.Dynasty);
         await ShowAdvanceProgressAsync("Dynasty loaded", 1.0);
+        }
+        catch (Exception error)
+        {
+            _advanceOverlay.IsVisible = false;
+            _libraryStatus.Text = error.Message;
+            await DisplayAlertAsync("Could not load dynasty", error.Message, "Close");
         }
         finally
         {
@@ -1812,68 +1700,31 @@ public sealed class FoundationPage : ContentPage
         {
             _saveList.Children.Add(new Label
             {
-                Text = "No saves yet."
+                Text = "No saved dynasties yet. Start a new dynasty to begin.", FontSize = 13, TextColor = DynastyTheme.Muted
             });
             return;
         }
 
-        foreach (var save in saves)
+        foreach (var career in saves.GroupBy(save => save.DynastyId).OrderByDescending(group => group.Max(save => save.UpdatedUtc)))
         {
-            var loadButton = new Button
+            var versions = career.OrderByDescending(save => save.UpdatedUtc).ToArray();
+            var latest = versions[0];
+            var load = new Button { Text = "Load", FontSize = 12 };
+            load.Clicked += async (_, _) => await LoadSaveAsync(latest.SaveId);
+            var manage = new Button { Text = "Versions", FontSize = 12, BackgroundColor = Colors.Transparent,
+                TextColor = DynastyTheme.Muted, Padding = new Thickness(8, 5) };
+            manage.Clicked += async (_, _) => await OpenSaveVersionsAsync(versions);
+            var info = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children =
             {
-                Text = "Load",
-                TextColor = Colors.White
-            };
-            loadButton.Clicked += async (_, _) => await LoadSaveAsync(save.SaveId);
-
-            var deleteButton = new Button
-            {
-                Text = "Delete",
-                TextColor = Colors.White
-            };
-            deleteButton.Clicked += async (_, _) => await DeleteSaveAsync(save.SaveId);
-
-            var card = new VerticalStackLayout
-            {
-                Padding = new Thickness(12),
-                Spacing = 6,
-                Children =
-                {
-                    new Label
-                    {
-                        Text = save.DynastyName,
-                        FontAttributes = FontAttributes.Bold,
-                        FontSize = 17
-                    },
-                    new Label
-                    {
-                        Text =
-                            $"{save.UserTeamName} • {save.SeasonYear} • " +
-                            $"{FormatWeek(save)} • {RollingAutosavePolicy.GetDisplayName(save.Kind)}"
-                    },
-                    new Label
-                    {
-                        Text = $"Updated {save.UpdatedUtc.ToLocalTime():g}",
-                        FontSize = 12
-                    },
-                    new HorizontalStackLayout
-                    {
-                        Spacing = 10,
-                        Children =
-                        {
-                            loadButton,
-                            deleteButton
-                        }
-                    }
-                }
-            };
-
-            _saveList.Children.Add(new Border
-            {
-                StrokeThickness = 1,
-                Padding = 0,
-                Content = card
-            });
+                new Label { Text = latest.DynastyName, FontSize = 14, FontAttributes = FontAttributes.Bold },
+                new Label { Text = $"{latest.UserTeamName} · {latest.SeasonYear} · {FormatWeek(latest)}", FontSize = 12 },
+                new Label { Text = $"Last saved {latest.UpdatedUtc.ToLocalTime():g}", FontSize = 11, TextColor = DynastyTheme.Muted }
+            } };
+            var actions = new HorizontalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { load, manage } };
+            var row = new Grid { ColumnSpacing = 10,
+                ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
+            row.Add(info, 0, 0); row.Add(actions, 1, 0);
+            _saveList.Children.Add(new Border { Content = row, Padding = new Thickness(12, 10) });
         }
     }
 
@@ -1929,22 +1780,12 @@ public sealed class FoundationPage : ContentPage
         var conferenceLosses =
             conferenceGames.Length - conferenceWins;
 
-        var weekLabel = _currentDynasty.Phase switch
-        {
-            SeasonPhase.Preseason => "Preseason",
-            SeasonPhase.Recruiting =>
-                $"Recruiting Week {SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)} " +
-                $"of {SeasonProgression.RecruitingWeekCount}",
-            _ => $"Week {_currentDynasty.Week}"
-        };
-
         _currentDynastyLabel.Text =
             $"{_currentDynasty.DynastyName}\n" +
-            $"{_currentDynasty.UserTeamName} • Record {wins}-{losses} • " +
-            $"Conf {conferenceWins}-{conferenceLosses}\n" +
-            $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • {weekLabel}\n" +
-            $"Dynasty ID: {_currentDynasty.DynastyId}";
+            $"Record {wins}-{losses} · Conference {conferenceWins}-{conferenceLosses}\n" +
+            $"{_currentDynasty.LeagueName} · {_teamsByName.Count} teams";
 
+        UpdateShellContext();
         RenderSection(_activeSection);
     }
 
@@ -1952,7 +1793,7 @@ public sealed class FoundationPage : ContentPage
     {
         switch (section)
         {
-            case AppSection.Home:
+            case AppSection.Dynasty:
                 RenderHomeScreen();
                 break;
 
@@ -1972,6 +1813,9 @@ public sealed class FoundationPage : ContentPage
                 RenderRecruitingScreen();
                 break;
 
+            case AppSection.Stats:
+                RenderStatistics();
+                break;
             case AppSection.Rankings:
                 RenderNationalRankings();
                 RenderConferenceRace();
@@ -1981,8 +1825,23 @@ public sealed class FoundationPage : ContentPage
             case AppSection.Program:
                 RenderProgramScreen();
                 break;
+            case AppSection.Playbook:
+                RenderGamePlanScreen();
+                break;
 
-            case AppSection.More:
+            case AppSection.Season:
+                RenderSeasonHub();
+                break;
+            case AppSection.GameDay:
+                RenderMatchupHub();
+                break;
+            case AppSection.News:
+                RenderNews();
+                break;
+            case AppSection.Injuries:
+                RenderInjuryReport();
+                break;
+            case AppSection.Settings:
             default:
                 break;
         }
@@ -2032,173 +1891,251 @@ public sealed class FoundationPage : ContentPage
         }
     }
 
-    private void RenderRecruitingScreen()
+    private async void RenderRecruitingScreen()
     {
-        _recruitingList.Children.Clear();
-        _recruitingMetrics.Children.Clear();
-
-        if (_currentDynasty is null)
+        var version = ++_recruitingLoadVersion;
+        _recruitingLoadCancellation?.Cancel();
+        var cancellation = new CancellationTokenSource();
+        _recruitingLoadCancellation = cancellation;
+        try
         {
-            _recruitingStatus.Text =
-                "No recruiting data available.";
-            _recruitingResultsStatus.Text = string.Empty;
-            _recruitingDetailHost.Content = null;
-            _recruitingDetailHost.IsVisible = false;
-            return;
-        }
-
-        NormalizeRecruitingViewForPhase();
-
-        foreach (var pair in _recruitingTabButtons)
-        {
-            pair.Value.FontAttributes =
-                pair.Key == _recruitingView
-                    ? FontAttributes.Bold
-                    : FontAttributes.None;
-            pair.Value.Opacity =
-                pair.Key == _recruitingView
-                    ? 1.0
-                    : 0.68;
-        }
-
-        var showsProspectList = _recruitingView is
-            RecruitingView.Board or RecruitingView.HighSchool or
-            RecruitingView.TransferPortal;
-        _recruitingSearch.IsVisible = showsProspectList;
-        _recruitingFilterScroller.IsVisible = showsProspectList;
-        _recruitingPositionFilter.IsVisible = showsProspectList;
-        _recruitingSortPicker.IsVisible = showsProspectList;
-        _recruitingScoutedFilter.IsVisible = showsProspectList;
-        _recruitingStarFilter.IsVisible =
-            _recruitingView == RecruitingView.HighSchool;
-        _recruitingStateFilter.IsVisible =
-            _recruitingView == RecruitingView.HighSchool;
-        _recruitingRegionFilter.IsVisible =
-            _recruitingView == RecruitingView.HighSchool;
-
-        _recruitingTabButtons[RecruitingView.HighSchool]
-            .IsEnabled =
-            _currentDynasty.HighSchoolRecruitingPool.Count > 0;
-
-        _recruitingTabButtons[RecruitingView.TransferPortal]
-            .IsEnabled =
-            _currentDynasty.TransferPortalEntries.Count > 0;
-
-        var userRosterCount =
-            _currentDynasty.ActiveRoster.Count(player =>
-                player.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase));
-
-        var availablePortal =
-            _currentDynasty.TransferPortalEntries
-                .Where(entry =>
-                    !entry.OriginTeamName.Equals(
-                        _currentDynasty.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-        var boardCount =
-            _currentDynasty.RecruitingInteractions.Count(
-                interaction =>
-                    interaction.SeasonYear ==
-                        _currentDynasty.SeasonYear &&
-                    interaction.IsOnTargetBoard &&
-                    interaction.CommittedTeamName is null);
-
-        var userCommitments =
-            _currentDynasty.RecruitingCommitments.Count(
-                commitment =>
-                    commitment.TeamName.Equals(
-                        _currentDynasty.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase) &&
-                    commitment.SeasonYear ==
-                        _currentDynasty.SeasonYear);
-
-        if (_recruitingView == RecruitingView.Scouting)
-        {
-            var evaluatedCount = _currentDynasty.RecruitingInteractions.Count(
-                interaction => interaction.SeasonYear == _currentDynasty.SeasonYear &&
-                               interaction.ScoutingPercent >= 50);
-            var priorityCount = _currentDynasty.RecruitingInteractions.Count(
-                interaction => interaction.SeasonYear == _currentDynasty.SeasonYear &&
-                               interaction.IsPriorityScout &&
-                               interaction.CommittedTeamName is null);
-            AddRecruitingMetric("SCOUTS",
-                _currentDynasty.ScoutingStaff.Count.ToString());
-            AddRecruitingMetric("EVALUATED", evaluatedCount.ToString("N0"));
-            AddRecruitingMetric("PRIORITY", priorityCount.ToString());
-            AddRecruitingMetric("REPORT",
-                _currentDynasty.ScoutingRecommendationReport?.SeasonYear ==
-                _currentDynasty.SeasonYear ? "READY" : "PENDING");
-        }
-        else
-        {
-            AddRecruitingMetric(
-                "WEEK",
-                _currentDynasty.Phase == SeasonPhase.Recruiting
-                    ? $"{SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)}/{SeasonProgression.RecruitingWeekCount}"
-                    : _currentDynasty.Phase == SeasonPhase.TransferPortal
-                        ? "ENTRY"
-                        : _currentDynasty.Phase == SeasonPhase.RegularSeason
-                            ? $"W{_currentDynasty.Week}"
-                            : "—");
-            AddRecruitingMetric("POINTS",
-                _currentDynasty.RecruitingPointsRemaining.ToString("N0"));
-            AddRecruitingMetric("BOARD", boardCount.ToString());
-            AddRecruitingMetric("COMMITS", userCommitments.ToString());
-        }
-
-        _recruitingStatus.Text =
-            _currentDynasty.Phase switch
+            if (_currentDynasty is not null)
             {
-                SeasonPhase.TransferPortal =>
-                    $"Portal entry window open • " +
-                    $"{availablePortal.Length:N0} available • " +
-                    $"Roster {userRosterCount}/85",
+                _recruitingLoadingStatus.Text = "Loading recruits…";
+                _recruitingLoadingOverlay.IsVisible = _activeSection == AppSection.Recruiting;
+                _recruitingLoadingIndicator.IsRunning = _recruitingLoadingOverlay.IsVisible;
+                // Give Android a frame to paint the loading screen before preparing data.
+                await Task.Delay(16, cancellation.Token);
+                var marketInput = _currentDynasty;
+                var marketTeams = _teamsByName;
+                var market = await Task.Run(() => CompetingRecruitingService.AdvanceOffers(marketInput, marketTeams), cancellation.Token);
+                cancellation.Token.ThrowIfCancellationRequested();
+                if (!ReferenceEquals(marketInput, _currentDynasty)) return;
+                _currentDynasty = market;
+            }
+            _recruitingList.Children.Clear();
+            _recruitingMetrics.Children.Clear();
 
-                SeasonPhase.Recruiting =>
-                    $"Offseason recruiting • " +
-                    $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} HS recruits • " +
-                    $"{availablePortal.Length:N0} unsigned transfers • " +
-                    "weekly points do not roll over",
+            if (_currentDynasty is null)
+            {
+                _recruitingStatus.Text =
+                    "No recruiting data available.";
+                _recruitingResultsStatus.Text = string.Empty;
+                _recruitingDetailHost.Content = null;
+                _recruitingDetailHost.IsVisible = false;
+                return;
+            }
 
-                SeasonPhase.RegularSeason =>
-                    $"Portal entry closed • " +
-                    $"{availablePortal.Length:N0} unsigned transfers remain • " +
-                    $"mid-season commits join {_currentDynasty.SeasonYear + 1}",
+            NormalizeRecruitingViewForPhase();
 
-                _ =>
-                    $"Recruiting currently closed • " +
-                    $"{availablePortal.Length:N0} unsigned transfers remain"
-            };
+            foreach (var pair in _recruitingTabButtons)
+            {
+                pair.Value.FontAttributes =
+                    pair.Key == _recruitingView
+                        ? FontAttributes.Bold
+                        : FontAttributes.None;
+                pair.Value.Opacity =
+                    pair.Key == _recruitingView
+                        ? 1.0
+                        : 0.68;
+            }
 
-        if (_recruitingView == RecruitingView.Scouting)
-        {
-            _recruitingStatus.Text = _currentDynasty.Phase ==
-                SeasonPhase.RegularSeason
-                ? "Scouts are active this week. Assign coverage or mark individual priority prospects."
-                : "Review staff assignments and the latest scouting department recommendations.";
+            var showsProspectList = _recruitingView is
+                RecruitingView.Board or RecruitingView.HighSchool or
+                RecruitingView.TransferPortal;
+            _recruitingSearch.IsVisible = showsProspectList;
+            _recruitingFilterScroller.IsVisible = showsProspectList;
+            _recruitingPositionFilter.IsVisible = showsProspectList;
+            _recruitingSortPicker.IsVisible = showsProspectList;
+            _recruitingScoutedFilter.IsVisible = showsProspectList;
+            _recruitingStarFilter.IsVisible =
+                _recruitingView == RecruitingView.HighSchool;
+            _recruitingStateFilter.IsVisible =
+                _recruitingView == RecruitingView.HighSchool;
+            _recruitingRegionFilter.IsVisible =
+                _recruitingView == RecruitingView.HighSchool;
+
+            _recruitingTabButtons[RecruitingView.HighSchool]
+                .IsEnabled =
+                _currentDynasty.HighSchoolRecruitingPool.Count > 0;
+
+            _recruitingTabButtons[RecruitingView.TransferPortal]
+                .IsEnabled =
+                _currentDynasty.TransferPortalEntries.Count > 0;
+
+            var userRosterCount =
+                _currentDynasty.ActiveRoster.Count(player =>
+                    player.TeamName.Equals(
+                        _currentDynasty.UserTeamName,
+                        StringComparison.OrdinalIgnoreCase));
+
+            var availablePortal =
+                _currentDynasty.TransferPortalEntries
+                    .Where(entry =>
+                        !entry.OriginTeamName.Equals(
+                            _currentDynasty.UserTeamName,
+                            StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
+
+            var boardCount =
+                _currentDynasty.RecruitingInteractions.Count(
+                    interaction =>
+                        interaction.SeasonYear ==
+                            _currentDynasty.SeasonYear &&
+                        interaction.IsOnTargetBoard &&
+                        interaction.CommittedTeamName is null);
+
+            var userCommitments =
+                _currentDynasty.RecruitingCommitments.Count(
+                    commitment =>
+                        commitment.TeamName.Equals(
+                            _currentDynasty.UserTeamName,
+                            StringComparison.OrdinalIgnoreCase) &&
+                        commitment.SeasonYear ==
+                            _currentDynasty.SeasonYear);
+
+            if (_recruitingView == RecruitingView.Scouting)
+            {
+                var evaluatedCount = _currentDynasty.RecruitingInteractions.Count(
+                    interaction => interaction.SeasonYear == _currentDynasty.SeasonYear &&
+                                   interaction.ScoutingPercent >= 50);
+                var priorityCount = _currentDynasty.RecruitingInteractions.Count(
+                    interaction => interaction.SeasonYear == _currentDynasty.SeasonYear &&
+                                   interaction.IsPriorityScout &&
+                                   interaction.CommittedTeamName is null);
+                AddRecruitingMetric("SCOUTS",
+                    _currentDynasty.ScoutingStaff.Count.ToString());
+                AddRecruitingMetric("EVALUATED", evaluatedCount.ToString("N0"));
+                AddRecruitingMetric("PRIORITY", priorityCount.ToString());
+                AddRecruitingMetric("REPORT",
+                    _currentDynasty.ScoutingRecommendationReport?.SeasonYear ==
+                    _currentDynasty.SeasonYear ? "READY" : "PENDING");
+            }
+            else
+            {
+                AddRecruitingMetric(
+                    "WEEK",
+                    _currentDynasty.Phase == SeasonPhase.Recruiting
+                        ? $"{SeasonProgression.GetRecruitingWeekNumber(_currentDynasty)}/{SeasonProgression.RecruitingWeekCount}"
+                        : _currentDynasty.Phase == SeasonPhase.TransferPortal
+                            ? "ENTRY"
+                            : _currentDynasty.Phase == SeasonPhase.RegularSeason
+                                ? $"W{_currentDynasty.Week}"
+                                : "—");
+                AddRecruitingMetric("POINTS",
+                    _currentDynasty.RecruitingPointsRemaining.ToString("N0"));
+                AddRecruitingMetric("BOARD", boardCount.ToString());
+                AddRecruitingMetric("COMMITS", userCommitments.ToString());
+            }
+
+            _recruitingStatus.Text =
+                _currentDynasty.Phase switch
+                {
+                    SeasonPhase.TransferPortal =>
+                        $"Portal entry window open • " +
+                        $"{availablePortal.Length:N0} available • " +
+                        $"Roster {userRosterCount}/85",
+
+                    SeasonPhase.Recruiting =>
+                        $"Offseason recruiting • " +
+                        $"{_currentDynasty.HighSchoolRecruitingPool.Count:N0} HS recruits • " +
+                        $"{availablePortal.Length:N0} unsigned transfers • " +
+                        "weekly points do not roll over",
+
+                    SeasonPhase.RegularSeason =>
+                        $"Portal entry closed • " +
+                        $"{availablePortal.Length:N0} unsigned transfers remain • " +
+                        $"mid-season commits join {_currentDynasty.SeasonYear + 1}",
+
+                    _ =>
+                        $"Recruiting currently closed • " +
+                        $"{availablePortal.Length:N0} unsigned transfers remain"
+                };
+
+            if (_recruitingView == RecruitingView.Scouting)
+            {
+                _recruitingStatus.Text = _currentDynasty.Phase ==
+                    SeasonPhase.RegularSeason
+                    ? "Scouts are active this week. Assign coverage or mark individual priority prospects."
+                    : "Review staff assignments and the latest scouting department recommendations.";
+            }
+
+            RenderSelectedRecruitDetail();
+
+            if (_recruitingView ==
+                RecruitingView.Commitments)
+            {
+                RenderRecruitingCommitments();
+                return;
+            }
+
+            if (_recruitingView == RecruitingView.Scouting)
+            {
+                RenderScoutingDepartment();
+                return;
+            }
+
+            var snapshot = _currentDynasty;
+            var teams = _teamsByName;
+            var view = _recruitingView;
+            var search = _recruitingSearch.Text?.Trim();
+            Position? position = _recruitingPositionFilter.SelectedIndex > 0 &&
+                Enum.TryParse<Position>(_recruitingPositionFilter.SelectedItem?.ToString(), out var parsedPosition)
+                    ? parsedPosition : null;
+            var stars = _recruitingStarFilter.SelectedIndex;
+            var stateFilter = _recruitingStateFilter.SelectedIndex;
+            var region = _recruitingRegionFilter.SelectedIndex;
+            var scouting = (ScoutedFilter)Math.Clamp(_recruitingScoutedFilter.SelectedIndex,
+                0, Enum.GetValues<ScoutedFilter>().Length - 1);
+            var sort = (RecruitingSort)Math.Clamp(_recruitingSortPicker.SelectedIndex,
+                0, Enum.GetValues<RecruitingSort>().Length - 1);
+            var result = await Task.Run(() => PrepareRecruitingList(snapshot, teams, view,
+                search, position, stars, stateFilter, region, scouting, sort, cancellation.Token), cancellation.Token);
+            cancellation.Token.ThrowIfCancellationRequested();
+            if (version != _recruitingLoadVersion || !ReferenceEquals(snapshot, _currentDynasty)) return;
+
+            _recruitingResultsStatus.Text = result.Total == 0 ? GetEmptyRecruitingMessage()
+                : result.Total > result.Rows.Length
+                    ? $"Showing {result.Rows.Length} of {result.Total:N0} • use search/filters to narrow the list"
+                    : $"{result.Total:N0} players";
+            for (var index = 0; index < result.Rows.Length; index++)
+            {
+                cancellation.Token.ThrowIfCancellationRequested();
+                AddRecruitingCompactRow(result.Rows[index]);
+                if (index % 8 == 7)
+                {
+                    _recruitingLoadingStatus.Text = $"Displaying recruits… {index + 1}/{result.Rows.Length}";
+                    await Task.Delay(1, cancellation.Token);
+                }
+            }
         }
-
-        RenderSelectedRecruitDetail();
-
-        if (_recruitingView ==
-            RecruitingView.Commitments)
+        catch (OperationCanceledException) { }
+        catch (Exception error)
         {
-            RenderRecruitingCommitments();
-            return;
+            System.Diagnostics.Debug.WriteLine($"Recruit list load failed: {error}");
+            if (version == _recruitingLoadVersion)
+                _recruitingResultsStatus.Text = "Unable to load recruits. Open Recruit again to retry.";
         }
-
-        if (_recruitingView == RecruitingView.Scouting)
+        finally
         {
-            RenderScoutingDepartment();
-            return;
+            if (version == _recruitingLoadVersion)
+            {
+                _recruitingLoadingOverlay.IsVisible = false;
+                _recruitingLoadingIndicator.IsRunning = false;
+                _recruitingLoadCancellation = null;
+            }
+            cancellation.Dispose();
         }
+    }
 
-        var prospects = GetRecruitingProspectsForCurrentView();
+    private static (int Total, RecruitingRowPresentation[] Rows) PrepareRecruitingList(
+        DynastyState state, IReadOnlyDictionary<string, Team> teams, RecruitingView view,
+        string? search, Position? selectedPosition, int starFilter, int stateFilter,
+        int regionFilter, ScoutedFilter scoutedFilter, RecruitingSort sort, CancellationToken cancellation)
+    {
+        teams.TryGetValue(state.UserTeamName, out var userTeam);
+        var prospects = GetRecruitingProspectsForView(state, view);
 
-        var search = _recruitingSearch.Text?.Trim();
         if (!string.IsNullOrWhiteSpace(search))
         {
             prospects = prospects
@@ -2212,10 +2149,7 @@ public sealed class FoundationPage : ContentPage
                 .ToList();
         }
 
-        if (_recruitingPositionFilter.SelectedIndex > 0 &&
-            Enum.TryParse<Position>(
-                _recruitingPositionFilter.SelectedItem?.ToString(),
-                out var selectedPosition))
+        if (selectedPosition is not null)
         {
             prospects = prospects
                 .Where(prospect =>
@@ -2224,12 +2158,12 @@ public sealed class FoundationPage : ContentPage
                 .ToList();
         }
 
-        if (_recruitingView ==
+        if (view ==
                 RecruitingView.HighSchool &&
-            _recruitingStarFilter.SelectedIndex > 0)
+            starFilter > 0)
         {
             var stars =
-                6 - _recruitingStarFilter.SelectedIndex;
+                6 - starFilter;
 
             prospects = prospects
                 .Where(prospect =>
@@ -2238,40 +2172,39 @@ public sealed class FoundationPage : ContentPage
         }
 
 
-        if (_recruitingView == RecruitingView.HighSchool &&
-            _recruitingStateFilter.SelectedIndex > 0)
+        var geographyRecruits = view == RecruitingView.HighSchool &&
+            (stateFilter > 0 || regionFilter > 0)
+                ? state.HighSchoolRecruitingPool.ToDictionary(item => item.RecruitId)
+                : null;
+
+        if (view == RecruitingView.HighSchool &&
+            stateFilter > 0)
         {
-            var stateIndex = _recruitingStateFilter.SelectedIndex - 1;
+            var stateIndex = stateFilter - 1;
             prospects = prospects.Where(prospect =>
             {
-                var recruit = _currentDynasty.HighSchoolRecruitingPool
-                    .First(item => item.RecruitId == prospect.ProspectId);
+                var recruit = geographyRecruits![prospect.ProspectId];
                 return RecruitGeography.GetStateIndex(recruit) == stateIndex;
             }).ToList();
         }
 
-        if (_recruitingView == RecruitingView.HighSchool &&
-            _recruitingRegionFilter.SelectedIndex > 0)
+        if (view == RecruitingView.HighSchool &&
+            regionFilter > 0)
         {
-            var regionIndex = _recruitingRegionFilter.SelectedIndex - 1;
+            var regionIndex = regionFilter - 1;
             prospects = prospects.Where(prospect =>
             {
-                var recruit = _currentDynasty.HighSchoolRecruitingPool
-                    .First(item => item.RecruitId == prospect.ProspectId);
+                var recruit = geographyRecruits![prospect.ProspectId];
                 return RecruitGeography.GetRegion(recruit) == regionIndex;
             }).ToList();
         }
 
-        var scoutedFilter = (ScoutedFilter)Math.Clamp(
-            _recruitingScoutedFilter.SelectedIndex,
-            0,
-            Enum.GetValues<ScoutedFilter>().Length - 1);
         if (scoutedFilter != ScoutedFilter.All)
         {
             prospects = prospects.Where(prospect =>
             {
                 var percent = InteractiveRecruitingService.GetInteraction(
-                    _currentDynasty, prospect.Source,
+                    state, prospect.Source,
                     prospect.ProspectId).ScoutingPercent;
                 return scoutedFilter switch
                 {
@@ -2285,23 +2218,20 @@ public sealed class FoundationPage : ContentPage
             }).ToList();
         }
 
-        prospects = SortRecruitingProspects(
-            prospects);
+        prospects = SortRecruitingProspects(prospects, state, userTeam, sort);
 
         var total = prospects.Count;
         var visible = prospects
             .Take(80)
             .ToArray();
 
-        _recruitingResultsStatus.Text =
-            total == 0
-                ? GetEmptyRecruitingMessage()
-                : total > visible.Length
-                    ? $"Showing {visible.Length} of {total:N0} • use search/filters to narrow the list"
-                    : $"{total:N0} players";
-
+        var rows = new List<RecruitingRowPresentation>(visible.Length);
         foreach (var prospect in visible)
-            AddRecruitingCompactRow(prospect);
+        {
+            cancellation.ThrowIfCancellationRequested();
+            rows.Add(PrepareRecruitingRow(state, teams, prospect));
+        }
+        return (total, rows.ToArray());
     }
 
     private void NormalizeRecruitingViewForPhase()
@@ -2343,7 +2273,7 @@ public sealed class FoundationPage : ContentPage
         _recruitingMetrics.Children.Add(
             new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = new Thickness(10, 5),
                 Content = new VerticalStackLayout
                 {
@@ -2361,28 +2291,25 @@ public sealed class FoundationPage : ContentPage
                             Text = value,
                             FontAttributes =
                                 FontAttributes.Bold,
-                            FontSize = 15
+                            FontSize = 14
                         }
                     }
                 }
             });
     }
 
-    private List<RecruitingProspectDisplay>
-        GetRecruitingProspectsForCurrentView()
+    private static List<RecruitingProspectDisplay>
+        GetRecruitingProspectsForView(DynastyState state, RecruitingView view)
     {
-        if (_currentDynasty is null)
-            return new();
-
-        if (_recruitingView ==
+        if (view ==
             RecruitingView.HighSchool)
         {
-            return _currentDynasty
+            return state
                 .HighSchoolRecruitingPool
                 .Where(recruit =>
                     recruit.SeasonYear == 0 ||
                     recruit.SeasonYear ==
-                        _currentDynasty.SeasonYear)
+                        state.SeasonYear)
                 .Select(recruit =>
                     new RecruitingProspectDisplay(
                         RecruitingSource.HighSchool,
@@ -2391,20 +2318,21 @@ public sealed class FoundationPage : ContentPage
                         recruit.Position,
                         $"{recruit.StarRating}★ • {RecruitGeography.GetStateName(recruit)} • {RecruitGeography.GetRegionName(recruit)}",
                         1,
+                        false,
                         recruit.PotentialRating,
                         recruit.StarRating,
                         recruit.TrueOverallRating))
                 .ToList();
         }
 
-        if (_recruitingView ==
+        if (view ==
             RecruitingView.TransferPortal)
         {
-            return _currentDynasty
+            return state
                 .TransferPortalEntries
                 .Where(entry =>
                     !entry.OriginTeamName.Equals(
-                        _currentDynasty.UserTeamName,
+                        state.UserTeamName,
                         StringComparison.OrdinalIgnoreCase))
                 .Select(entry =>
                     new RecruitingProspectDisplay(
@@ -2414,6 +2342,7 @@ public sealed class FoundationPage : ContentPage
                         entry.Player.Position,
                         $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
                         entry.Player.ClassYear,
+                        entry.Player.IsRedshirted || entry.Player.HasRedshirted,
                         entry.Player.PotentialRating > 0
                             ? entry.Player.PotentialRating
                             : null,
@@ -2425,16 +2354,16 @@ public sealed class FoundationPage : ContentPage
         var board = new List<RecruitingProspectDisplay>();
 
         foreach (var interaction in
-                 _currentDynasty.RecruitingInteractions
+                 state.RecruitingInteractions
                      .Where(interaction =>
                          interaction.SeasonYear ==
-                             _currentDynasty.SeasonYear &&
+                             state.SeasonYear &&
                          interaction.IsOnTargetBoard &&
                          interaction.CommittedTeamName is null))
         {
             var prospect =
                 TryGetRecruitingProspect(
-                    interaction.Source,
+                    state, interaction.Source,
                     interaction.ProspectId);
 
             if (prospect is not null)
@@ -2445,18 +2374,19 @@ public sealed class FoundationPage : ContentPage
     }
 
     private RecruitingProspectDisplay?
+        TryGetRecruitingProspect(RecruitingSource source, Guid prospectId) =>
+        _currentDynasty is null ? null : TryGetRecruitingProspect(_currentDynasty, source, prospectId);
+
+    private static RecruitingProspectDisplay?
         TryGetRecruitingProspect(
-            RecruitingSource source,
+            DynastyState state, RecruitingSource source,
             Guid prospectId)
     {
-        if (_currentDynasty is null)
-            return null;
-
         if (source ==
             RecruitingSource.HighSchool)
         {
             var recruit =
-                _currentDynasty.HighSchoolRecruitingPool
+                state.HighSchoolRecruitingPool
                     .FirstOrDefault(item =>
                         item.RecruitId == prospectId);
 
@@ -2469,13 +2399,14 @@ public sealed class FoundationPage : ContentPage
                     recruit.Position,
                     $"{recruit.StarRating}★ • {RecruitGeography.GetStateName(recruit)} • {RecruitGeography.GetRegionName(recruit)}",
                     1,
+                    false,
                     recruit.PotentialRating,
                     recruit.StarRating,
                     recruit.TrueOverallRating);
         }
 
         var entry =
-            _currentDynasty.TransferPortalEntries
+            state.TransferPortalEntries
                 .FirstOrDefault(item =>
                     item.Player.PlayerId ==
                         prospectId);
@@ -2489,6 +2420,7 @@ public sealed class FoundationPage : ContentPage
                 entry.Player.Position,
                 $"{entry.OriginTeamName} • {entry.WeeksInPortal} wk in portal",
                 entry.Player.ClassYear,
+                entry.Player.IsRedshirted || entry.Player.HasRedshirted,
                 entry.Player.PotentialRating > 0
                     ? entry.Player.PotentialRating
                     : null,
@@ -2496,24 +2428,16 @@ public sealed class FoundationPage : ContentPage
                 entry.Player.OverallRating);
     }
 
-    private List<RecruitingProspectDisplay>
+    private static List<RecruitingProspectDisplay>
         SortRecruitingProspects(
-            List<RecruitingProspectDisplay> prospects)
+            List<RecruitingProspectDisplay> prospects, DynastyState state, Team? userTeam, RecruitingSort sort)
     {
-        if (_currentDynasty is null)
-            return prospects;
-
-        var sort = (RecruitingSort)Math.Clamp(
-            _recruitingSortPicker.SelectedIndex,
-            0,
-            Enum.GetValues<RecruitingSort>().Length - 1);
-
         IEnumerable<RecruitingProspectDisplay> query =
             sort switch
             {
                 RecruitingSort.Interest =>
                     prospects.OrderByDescending(
-                            GetRecruitingDisplayInterest)
+                            prospect => GetRecruitingDisplayInterest(state, userTeam, prospect))
                         .ThenByDescending(
                             prospect =>
                                 prospect.OverallRating),
@@ -2544,26 +2468,20 @@ public sealed class FoundationPage : ContentPage
         return query.ToList();
     }
 
-    private int GetRecruitingDisplayInterest(
-        RecruitingProspectDisplay prospect)
+    private static int GetRecruitingDisplayInterest(
+        DynastyState state, Team? userTeam, RecruitingProspectDisplay prospect)
     {
-        if (_currentDynasty is null ||
-            !_teamsByName.TryGetValue(
-                _currentDynasty.UserTeamName,
-                out var userTeam))
-        {
-            return 0;
-        }
+        if (userTeam is null) return 0;
 
         var interaction =
             InteractiveRecruitingService.GetInteraction(
-                _currentDynasty,
+                state,
                 prospect.Source,
                 prospect.ProspectId);
 
         return RecruitPreferenceService
             .GetCurrentUserInterest(
-                _currentDynasty,
+                state,
                 userTeam,
                 prospect.Source,
                 prospect.ProspectId,
@@ -2582,21 +2500,22 @@ public sealed class FoundationPage : ContentPage
             _ => "No results."
         };
 
-    private void AddRecruitingCompactRow(
-        RecruitingProspectDisplay prospect)
-    {
-        if (_currentDynasty is null)
-            return;
+    private sealed record RecruitingRowPresentation(RecruitingProspectDisplay Prospect,
+        RecruitingInteraction Interaction, string Title, string Ranking, string Projection,
+        string Origin, string Scouting, string UserStatus, string MarketStatus);
 
+    private static RecruitingRowPresentation PrepareRecruitingRow(DynastyState state,
+        IReadOnlyDictionary<string, Team> teams, RecruitingProspectDisplay prospect)
+    {
         var interaction =
             InteractiveRecruitingService.GetInteraction(
-                _currentDynasty,
+                state,
                 prospect.Source,
                 prospect.ProspectId);
 
         var range =
             InteractiveRecruitingService.GetScoutedOverallRange(
-                _currentDynasty,
+                state,
                 prospect.Source,
                 prospect.ProspectId);
 
@@ -2610,19 +2529,10 @@ public sealed class FoundationPage : ContentPage
                 ? "★ "
                 : string.Empty;
 
-        var offerMarker =
-            interaction.ScholarshipOffered
-                ? interaction.WasCpuAssisted
-                    ? "CPU ASSIST • OFFER • "
-                    : "OFFER • "
-                : interaction.WasCpuAssisted
-                    ? "CPU ASSIST • "
-                    : string.Empty;
-
-        var nationalRank = GetProspectNationalRank(prospect);
+        var nationalRank = GetProspectNationalRank(state, prospect);
         var recruitRating =
             RecruitingRankingService.GetProspectRating(
-                _currentDynasty,
+                state,
                 prospect.Source,
                 prospect.ProspectId);
         var recruitStars =
@@ -2633,13 +2543,13 @@ public sealed class FoundationPage : ContentPage
                 ? $"247-style {recruitRating:0.00}"
                 : $"{recruitStars}★ • 247-style {recruitRating:0.00}";
 
-        var hasUserTeam = _teamsByName.TryGetValue(
-            _currentDynasty.UserTeamName,
+        var hasUserTeam = teams.TryGetValue(
+            state.UserTeamName,
             out var userTeamForInterest);
 
         var currentUserInterest = hasUserTeam
             ? RecruitPreferenceService.GetCurrentUserInterest(
-                _currentDynasty,
+                state,
                 userTeamForInterest!,
                 prospect.Source,
                 prospect.ProspectId,
@@ -2649,28 +2559,28 @@ public sealed class FoundationPage : ContentPage
                 0,
                 100);
 
-        var currentRivalInterest = hasUserTeam
-            ? Math.Max(
-                Math.Clamp(
-                    interaction.RivalInterest,
-                    0,
-                    100),
-                RecruitPreferenceService.GetBestRivalInterest(
-                    _currentDynasty,
-                    userTeamForInterest!,
-                    _teamsByName,
-                    prospect.Source,
-                    prospect.ProspectId))
-            : Math.Clamp(
-                interaction.RivalInterest,
-                0,
-                100);
+        var activeOffers = CompetingRecruitingService.GetOffers(state, prospect.Source, prospect.ProspectId, activeOnly: true);
+        var leadingOffer = activeOffers.FirstOrDefault();
+        var userStatus = interaction.CommittedTeamName is not null
+            ? $"Committed to {interaction.CommittedTeamName}"
+            : $"Your interest: {currentUserInterest}%" +
+              (interaction.ScholarshipOffered ? interaction.WasCpuAssisted ? " · CPU-assisted offer" : " · Scholarship offered" : "");
+        var marketStatus = interaction.CommittedTeamName is not null
+            ? "Recruitment closed"
+            : activeOffers.Count == 0 ? "No active scholarship offers"
+            : $"{activeOffers.Count} active offer{(activeOffers.Count == 1 ? "" : "s")}" +
+              (leadingOffer is null ? "" : $" · Leader: {leadingOffer.TeamName} ({leadingOffer.Interest}%)");
 
-        var interest =
-            interaction.CommittedTeamName is not null
-                ? $"Committed: {interaction.CommittedTeamName}"
-                : $"{offerMarker}Your interest {currentUserInterest}% • Best rival {currentRivalInterest}%";
+        return new(prospect, interaction,
+            $"{boardMarker}{prospect.Position} {prospect.FullName}",
+            $"#{nationalRank} nationally · {publicRatingText}", overallText,
+            prospect.Subtitle, $"{interaction.ScoutingPercent}% complete", userStatus, marketStatus);
+    }
 
+    private void AddRecruitingCompactRow(RecruitingRowPresentation presentation)
+    {
+        var prospect = presentation.Prospect;
+        var interaction = presentation.Interaction;
         var viewButton = new Button
         {
             Text = "View",
@@ -2736,95 +2646,67 @@ public sealed class FoundationPage : ContentPage
             RenderCurrentDynasty();
         };
 
+        static View Metric(string label, string value) => new Border
+        {
+            StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#182630"),
+            Content = new VerticalStackLayout { Spacing = 2, Children =
+            {
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
+                new Label { Text = value, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap, TextColor = Color.FromArgb("#E6EBF1") }
+            } }
+        };
+        var metrics = new Grid { ColumnSpacing = 7, RowSpacing = 7,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
+        metrics.Add(Metric("RANK & RATING", presentation.Ranking), 0, 0);
+        metrics.Add(Metric("SCOUTED PROJECTION", presentation.Projection), 1, 0);
+        metrics.Add(Metric("ORIGIN", presentation.Origin), 0, 1);
+        metrics.Add(Metric("SCOUTING", presentation.Scouting), 1, 1);
+        var statusPanel = new Border { StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#1B3039"),
+            Content = new VerticalStackLayout { Spacing = 3, Children =
+            {
+                new Label { Text = presentation.UserStatus, FontSize = 12, FontAttributes = FontAttributes.Bold,
+                    TextColor = interaction.CommittedTeamName is not null ? Color.FromArgb("#E8C979") : Color.FromArgb("#83D6B6") },
+                new Label { Text = presentation.MarketStatus, FontSize = 11, TextColor = Color.FromArgb("#BDE5F5"), LineBreakMode = LineBreakMode.WordWrap }
+            } } };
         var info = new VerticalStackLayout
         {
-            Spacing = 1,
+            Spacing = 8,
             Children =
             {
                 new Label
                 {
                     Text =
-                        $"{boardMarker}{prospect.Position} {prospect.FullName}",
+                        presentation.Title,
                     FontAttributes =
                         FontAttributes.Bold,
-                    FontSize = 14
-                },
-                new Label
-                {
-                    Text =
-                        $"#{nationalRank} {prospect.Source} • " +
-                        $"{publicRatingText} • " +
-                        $"{overallText} • {prospect.Subtitle} • " +
-                        $"Scout {interaction.ScoutingPercent}%",
-                    FontSize = 11,
-                    Opacity = 0.82
-                },
-                new Label
-                {
-                    Text = interest,
-                    FontSize = 11,
-                    Opacity = 0.82
-                }
+                    FontSize = 16
+                }, metrics, statusPanel
             }
         };
-
-        var row = new Grid
-        {
-            ColumnDefinitions =
-            {
-                new ColumnDefinition
-                {
-                    Width = GridLength.Star
-                },
-                new ColumnDefinition
-                {
-                    Width = GridLength.Auto
-                },
-                new ColumnDefinition
-                {
-                    Width = GridLength.Auto
-                },
-                new ColumnDefinition
-                {
-                    Width = GridLength.Auto
-                }
-            },
-            ColumnSpacing = 8
-        };
-
-        row.Add(info);
-        Grid.SetColumn(info, 0);
-
-        row.Add(viewButton);
-        Grid.SetColumn(viewButton, 1);
-        row.Add(boardButton);
-        Grid.SetColumn(boardButton, 2);
-
-        if (_recruitingView == RecruitingView.Board)
-        {
-            row.Add(quickOfferButton);
-            Grid.SetColumn(quickOfferButton, 3);
-        }
+        var actions = new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.End,
+            Children = { viewButton, boardButton } };
+        if (_recruitingView == RecruitingView.Board) actions.Children.Add(quickOfferButton);
+        var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions } };
 
         _recruitingList.Children.Add(
             new Border
             {
-                StrokeThickness = 1,
-                Padding = new Thickness(10, 7),
-                Content = row
+                BackgroundColor = Color.FromArgb(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
+                Stroke = Color.FromArgb(interaction.ScholarshipOffered ? "#5A9B83" : "#486677"),
+                StrokeThickness = 0,
+                Padding = new Thickness(12, 10),
+                Content = cardContent
             });
     }
 
-    private int GetProspectNationalRank(
-        RecruitingProspectDisplay prospect)
+    private static int GetProspectNationalRank(
+        DynastyState state, RecruitingProspectDisplay prospect)
     {
-        if (_currentDynasty is null)
-            return 0;
-
         if (prospect.Source ==
             RecruitingSource.HighSchool)
         {
-            var target = _currentDynasty
+            var target = state
                 .HighSchoolRecruitingPool
                 .FirstOrDefault(recruit =>
                     recruit.RecruitId ==
@@ -2838,12 +2720,12 @@ public sealed class FoundationPage : ContentPage
                     .GetHighSchoolRating(target);
 
             return 1 +
-                _currentDynasty
+                state
                     .HighSchoolRecruitingPool
                     .Where(recruit =>
                         recruit.SeasonYear == 0 ||
                         recruit.SeasonYear ==
-                            _currentDynasty.SeasonYear)
+                            state.SeasonYear)
                     .Count(recruit =>
                     {
                         var rating =
@@ -2867,7 +2749,7 @@ public sealed class FoundationPage : ContentPage
         }
 
         var targetTransfer =
-            _currentDynasty.TransferPortalEntries
+            state.TransferPortalEntries
                 .FirstOrDefault(entry =>
                     entry.Player.PlayerId ==
                     prospect.ProspectId);
@@ -2881,7 +2763,7 @@ public sealed class FoundationPage : ContentPage
                     targetTransfer.Player);
 
         return 1 +
-            _currentDynasty.TransferPortalEntries
+            state.TransferPortalEntries
                 .Count(entry =>
                 {
                     var rating =
@@ -2955,22 +2837,20 @@ public sealed class FoundationPage : ContentPage
                 0,
                 100);
 
-        var currentRivalInterest = hasDetailUserTeam
-            ? Math.Max(
-                Math.Clamp(
-                    interaction.RivalInterest,
-                    0,
-                    100),
-                RecruitPreferenceService.GetBestRivalInterest(
-                    _currentDynasty,
-                    detailUserTeam!,
-                    _teamsByName,
-                    source,
-                    prospect.ProspectId))
-            : Math.Clamp(
-                interaction.RivalInterest,
-                0,
-                100);
+        var currentRivalInterest = hasDetailUserTeam ? RecruitPreferenceService.GetBestRivalInterest(
+            _currentDynasty, detailUserTeam!, _teamsByName, source, prospect.ProspectId) : 0;
+        var scholarshipOffers = CompetingRecruitingService.GetOffers(_currentDynasty, source, prospect.ProspectId);
+        var offerList = new VerticalStackLayout { Spacing = 2 };
+        if (scholarshipOffers.Count == 0)
+            offerList.Children.Add(new Label { Text = "No scholarship offers yet.", FontSize = 11 });
+        foreach (var offer in scholarshipOffers)
+            offerList.Children.Add(new Label
+            {
+                Text = $"{offer.TeamName}: {offer.Interest}% - {offer.Status}" +
+                    (offer.LastContactWeek >= 0 ? $" - last contact W{offer.LastContactWeek}" : ""),
+                FontSize = 11,
+                Opacity = offer.Status == RecruitingOfferStatus.Active || offer.Status == RecruitingOfferStatus.Signed ? 1 : 0.65
+            });
 
         var preRecruitFavorites =
             RecruitPreferenceService.GetInitialTopSchools(
@@ -3255,9 +3135,6 @@ public sealed class FoundationPage : ContentPage
             source == RecruitingSource.TransferPortal
                 ? interaction.ScoutingPercent >= 25
                 : interaction.ScoutingPercent >= 50;
-        var potText = potentialVisible
-            ? $" • POT {potentialRange.Minimum}-{potentialRange.Maximum} est."
-            : " • POT unknown";
         var publicRecruitRating =
             RecruitingRankingService.GetProspectRating(
                 _currentDynasty,
@@ -3289,14 +3166,63 @@ public sealed class FoundationPage : ContentPage
                 ? $" • Last pitch: {FormatPitchType(interaction.LastPitchType.Value)}"
                 : string.Empty;
 
+        static View RecruitMetric(string label, string value, Color? accent = null) => new Border
+        {
+            StrokeThickness = 0,
+            BackgroundColor = Color.FromArgb("#182630"),
+            Padding = new Thickness(10, 8),
+            Content = new VerticalStackLayout { Spacing = 2, Children =
+            {
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
+                new Label { Text = value, FontSize = 13, FontAttributes = FontAttributes.Bold,
+                    TextColor = accent ?? Color.FromArgb("#E6EBF1"), LineBreakMode = LineBreakMode.WordWrap }
+            } }
+        };
+        static View RecruitSection(string title, View content) => new Border
+        {
+            StrokeThickness = 0,
+            BackgroundColor = Color.FromArgb("#17242E"),
+            Padding = new Thickness(10, 8),
+            Content = new VerticalStackLayout { Spacing = 5, Children =
+            {
+                new Label { Text = title, FontSize = 10, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") },
+                content
+            } }
+        };
+
+        var metricGrid = new Grid
+        {
+            ColumnSpacing = 7, RowSpacing = 7,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) }
+        };
+        metricGrid.Add(RecruitMetric("SCOUTED OVR", range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum}"), 0, 0);
+        metricGrid.Add(RecruitMetric("POTENTIAL", potentialVisible ? $"{potentialRange.Minimum}-{potentialRange.Maximum}" : "Unknown"), 1, 0);
+        metricGrid.Add(RecruitMetric("YOUR INTEREST", $"{currentUserInterest}%", Color.FromArgb("#83D6B6")), 0, 1);
+        metricGrid.Add(RecruitMetric("BEST OFFERED RIVAL", $"{currentRivalInterest}%", Color.FromArgb("#E8C979")), 1, 1);
+
+        var marketGrid = new Grid
+        {
+            ColumnSpacing = 8,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) }
+        };
+        marketGrid.Add(RecruitSection("SCHOLARSHIP OFFERS", new ScrollView
+        {
+            HeightRequest = Math.Min(100, Math.Max(30, scholarshipOffers.Count * 22)),
+            VerticalScrollBarVisibility = ScrollBarVisibility.Never,
+            Content = offerList
+        }), 0, 0);
+        marketGrid.Add(RecruitSection("REVEALED PRIORITIES", preferenceLayout), 1, 0);
+
         _recruitingDetailHost.Content =
             new Border
             {
-                StrokeThickness = 1,
-                Padding = 10,
+                StrokeThickness = 0,
+                Padding = new Thickness(12, 10),
+                BackgroundColor = Color.FromArgb("#202B37"),
                 Content = new VerticalStackLayout
                 {
-                    Spacing = 5,
+                    Spacing = 9,
                     Children =
                     {
                         new Label
@@ -3311,42 +3237,25 @@ public sealed class FoundationPage : ContentPage
                         {
                             Text =
                                 $"{publicRecruitRatingText} • " +
-                                $"{prospect.Subtitle} • Year {prospect.ClassYear}",
-                            FontSize = 11
+                                $"{prospect.Subtitle} • {FormatClassYear(prospect.ClassYear, prospect.HasRedshirted)}",
+                            FontSize = 11,
+                            TextColor = Color.FromArgb("#B8D8FA")
                         },
+                        metricGrid,
                         new Label
                         {
-                            Text =
-                                $"OVR {(range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum} est.")}{potText} • " +
-                                $"Scout {interaction.ScoutingPercent}% • " +
-                                $"Your interest {currentUserInterest}% • Best rival {currentRivalInterest}%" +
-                                evaluationText +
-                                lastPitchText,
-                            FontSize = 12
+                            Text = $"SCOUTED {interaction.ScoutingPercent}%{evaluationText}{lastPitchText}",
+                            FontSize = 10, FontAttributes = FontAttributes.Bold,
+                            TextColor = recruitingOpen ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted
                         },
-                        new Label
-                        {
-                            Text = recruitingOpen
-                                ? "Recruiting actions are available."
-                                : "Recruiting actions are closed in the current phase.",
-                            FontSize = 10,
-                            Opacity = 0.72
-                        },
+                        marketGrid,
                         new Label
                         {
                             Text = favoritesText,
-                            FontAttributes =
-                                FontAttributes.Bold,
-                            FontSize = 11
+                            FontSize = 10,
+                            TextColor = DynastyTheme.Muted,
+                            LineBreakMode = LineBreakMode.WordWrap
                         },
-                        new Label
-                        {
-                            Text = "REVEALED PRIORITIES",
-                            FontAttributes =
-                                FontAttributes.Bold,
-                            FontSize = 11
-                        },
-                        preferenceLayout,
                         actions
                     }
                 }
@@ -3396,7 +3305,7 @@ public sealed class FoundationPage : ContentPage
 
             _recruitingList.Children.Add(new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = new Thickness(10, 8),
                 Content = new VerticalStackLayout
                 {
@@ -3407,7 +3316,7 @@ public sealed class FoundationPage : ContentPage
                         {
                             Text = scout.FullName,
                             FontAttributes = FontAttributes.Bold,
-                            FontSize = 15
+                            FontSize = 14
                         },
                         new Label
                         {
@@ -3503,7 +3412,7 @@ public sealed class FoundationPage : ContentPage
                 };
                 _recruitingList.Children.Add(new Border
                 {
-                    StrokeThickness = 1,
+                    StrokeThickness = 0,
                     Padding = new Thickness(10, 7),
                     Content = new VerticalStackLayout
                     {
@@ -3667,20 +3576,22 @@ public sealed class FoundationPage : ContentPage
             });
         }
 
-        _recruitingList.Children.Add(new BoxView { HeightRequest = 1 });
         _recruitingList.Children.Add(new Label
         {
             Text = "YOUR COMMITMENTS",
-            FontAttributes = FontAttributes.Bold
+            FontAttributes = FontAttributes.Bold,
+            TextColor = Color.FromArgb("#9EC6E7"),
+            Margin = new Thickness(0, 8, 0, 2)
         });
         foreach (var commitment in userCommitments)
             AddCommitmentRow(commitment, false);
 
-        _recruitingList.Children.Add(new BoxView { HeightRequest = 1 });
         _recruitingList.Children.Add(new Label
         {
             Text = "AROUND THE NATION",
-            FontAttributes = FontAttributes.Bold
+            FontAttributes = FontAttributes.Bold,
+            TextColor = Color.FromArgb("#9EC6E7"),
+            Margin = new Thickness(0, 10, 0, 2)
         });
         foreach (var commitment in allCommitments
                      .Where(record => !record.TeamName.Equals(
@@ -3713,7 +3624,7 @@ public sealed class FoundationPage : ContentPage
 
         _recruitingList.Children.Add(new Border
         {
-            StrokeThickness = 1,
+            StrokeThickness = 0,
             Padding = new Thickness(10, 7),
             Content = new Label
             {
@@ -3750,114 +3661,7 @@ public sealed class FoundationPage : ContentPage
             _ => type.ToString()
         };
 
-    private void RenderHomeScreen()
-    {
-        _homeHighlights.Children.Clear();
-
-        if (_currentDynasty is null)
-        {
-            _homeStatus.Text = "Create or load a dynasty to begin.";
-            return;
-        }
-
-        var rankings = BuildCurrentNationalRankings();
-
-        var userRanking = rankings.FirstOrDefault(ranking =>
-            ranking.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase));
-
-        var nextGame = _currentDynasty.Schedule
-            .Where(game =>
-                game.SeasonYear == _currentDynasty.SeasonYear &&
-                game.InvolvesTeam(_currentDynasty.UserTeamName) &&
-                !game.HasPlayed)
-            .OrderBy(game => game.Week)
-            .FirstOrDefault();
-
-        var injuries = _currentDynasty.ActiveRoster
-            .Where(player =>
-                player.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase) &&
-                player.CurrentInjury is not null)
-            .ToArray();
-
-        _homeStatus.Text =
-            $"{_currentDynasty.SeasonYear} • {_currentDynasty.Phase} • " +
-            (userRanking is null
-                ? "Unranked"
-                : userRanking.Rank <= 25
-                    ? $"#{userRanking.Rank} nationally"
-                    : $"NR ({userRanking.Rank})");
-
-        _homeHighlights.Children.Add(new Border
-        {
-            StrokeThickness = 1,
-            Padding = 12,
-            Content = new Label
-            {
-                Text = nextGame is null
-                    ? "NEXT GAME\nNo upcoming game currently scheduled."
-                    : $"NEXT GAME\nWeek {nextGame.Week}: " +
-                      $"{(nextGame.HomeTeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase) ? "vs" : "@")} " +
-                      $"{(nextGame.HomeTeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase) ? nextGame.AwayTeamName : nextGame.HomeTeamName)}",
-                FontAttributes = FontAttributes.Bold
-            }
-        });
-
-        _homeHighlights.Children.Add(new Border
-        {
-            StrokeThickness = 1,
-            Padding = 12,
-            Content = new Label
-            {
-                Text = injuries.Length == 0
-                    ? "INJURIES\nNo current injuries."
-                    : $"INJURIES\n{injuries.Length} active • " +
-                      string.Join(
-                          " • ",
-                          injuries.Take(3).Select(player =>
-                              $"{player.Position} {player.FullName} " +
-                              $"{player.CurrentInjury!.WeeksRemaining}wk"))
-            }
-        });
-
-        if (_currentDynasty.UserCoachIsFired)
-        {
-            _homeHighlights.Children.Add(new Border
-            {
-                StrokeThickness = 1,
-                Padding = 12,
-                Content = new Label
-                {
-                    Text =
-                        "ACTION REQUIRED\nYou were fired. Open Program and accept a new head-coaching job.",
-                    FontAttributes = FontAttributes.Bold,
-                    TextColor = NegativeChangeColor
-                }
-            });
-        }
-
-        if (_currentDynasty.Phase is
-            SeasonPhase.TransferPortal or
-            SeasonPhase.Recruiting or
-            SeasonPhase.RosterManagement)
-        {
-            _homeHighlights.Children.Add(new Border
-            {
-                StrokeThickness = 1,
-                Padding = 12,
-                Content = new Label
-                {
-                    Text =
-                        $"ACTION REQUIRED\n{_currentDynasty.Phase}: " +
-                        "open Recruiting or Roster to review the offseason before advancing.",
-                    FontAttributes = FontAttributes.Bold
-                }
-            });
-        }
-    }
+    private void RenderHomeScreen() => RenderOverviewDashboard();
 
     private void RenderProgramScreen()
     {
@@ -4032,6 +3836,8 @@ public sealed class FoundationPage : ContentPage
             FontSize = 11
         });
 
+        _programList.Children.Add(CreateCoachCareerButton(coach));
+
         var latest = career
             .OrderByDescending(item => item.SeasonYear)
             .FirstOrDefault();
@@ -4056,7 +3862,7 @@ public sealed class FoundationPage : ContentPage
         {
             _programList.Children.Add(new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = 10,
                 Margin = new Thickness(0, 6, 0, 4),
                 Content = new Label
@@ -4161,7 +3967,7 @@ public sealed class FoundationPage : ContentPage
 
             _programList.Children.Add(new Border
             {
-                StrokeThickness = 1,
+                StrokeThickness = 0,
                 Padding = 9,
                 Content = new VerticalStackLayout
                 {
@@ -4268,6 +4074,8 @@ public sealed class FoundationPage : ContentPage
                     }
                 }
             };
+
+            if (staff is not null) info.Children.Add(CreateCoachCareerButton(staff));
 
             var row = new Grid
             {
@@ -4706,104 +4514,15 @@ public sealed class FoundationPage : ContentPage
         _ => role.ToString()
     };
 
-    private void RenderRosterManagement(
-        IReadOnlyList<DynastyPlayer> userRoster)
-    {
-        if (_currentDynasty is null)
-            return;
+    private void RenderRosterManagement(IReadOnlyList<DynastyPlayer> userRoster) => RenderRosterGrid(userRoster);
 
-        var warnings = RosterManagementService.GetPositionWarnings(
-            _currentDynasty,
-            _currentDynasty.UserTeamName);
-
-        var redshirts = userRoster.Count(player =>
-            player.IsRedshirted);
-        var walkOns = userRoster.Count(player =>
-            player.IsWalkOn);
-
-        var rosterManagementOpen =
-            _currentDynasty.Phase == SeasonPhase.RosterManagement;
-
-        _offseasonRosterStatus.Text =
-            $"{(rosterManagementOpen ? "ROSTER MANAGEMENT" : "ROSTER")} • {_currentDynasty.UserTeamName}: " +
-            $"{userRoster.Count}/{DynastyRosterRules.MaximumRosterSize} players • " +
-            $"{redshirts} redshirts • {walkOns} walk-ons\n" +
-            (warnings.Count == 0
-                ? "All legacy position minimums are satisfied. "
-                : $"POSITION WARNINGS: {string.Join(" • ", warnings)}\n") +
-            (rosterManagementOpen
-                ? "Use ↑/↓ to set depth order. Redshirted players do not count toward playable minimums. " +
-                  "Cuts are filled with walk-ons when you advance."
-                : "Depth chart changes are available now. Redshirt and Cut controls open during Roster Management.");
-
-        var latestDevelopment = GetLatestUserDevelopmentRecords()
-            .ToDictionary(record => record.PlayerId);
-
-        RenderDevelopmentResults();
-
-        foreach (var position in Enum.GetValues<Position>())
-        {
-            var players = userRoster
-                .Where(player => player.Position == position)
-                .OrderBy(player => player.DepthChartOrder)
-                .ThenByDescending(player => player.OverallRating)
-                .ToArray();
-
-            if (players.Length == 0)
-                continue;
-
-            var playableCount = players.Count(player =>
-                !player.IsRedshirted);
-
-            var target = DynastyRosterRules.TargetPositionCounts.TryGetValue(
-                position,
-                out var targetCount)
-                ? targetCount
-                : 0;
-
-            var minimum = DynastyRosterRules.MinimumPositionCounts.TryGetValue(
-                position,
-                out var minimumCount)
-                ? minimumCount
-                : 0;
-
-            var starters = DynastyRosterRules.StarterPositionCounts.TryGetValue(
-                position,
-                out var starterCount)
-                ? starterCount
-                : 0;
-
-            _transferPortalList.Children.Add(new Label
-            {
-                Text =
-                    $"{position} • {players.Length}/{target} roster • " +
-                    $"{playableCount} playable • min {minimum} • starters {starters}" +
-                    (playableCount < minimum ? " • NEED DEPTH" : string.Empty),
-                FontAttributes = FontAttributes.Bold,
-                Margin = new Thickness(0, 8, 0, 2)
-            });
-
-            foreach (var player in players)
-            {
-                latestDevelopment.TryGetValue(
-                    player.PlayerId,
-                    out var development);
-
-                AddRosterPlayerCard(
-                    player,
-                    playableCount,
-                    development);
-            }
-        }
-    }
-
-    private void AddRosterPlayerCard(
+    private View CreateRosterPlayerDetail(
         DynastyPlayer player,
         int playableCount,
         PlayerDevelopmentRecord? development)
     {
         if (_currentDynasty is null)
-            return;
+            return new ContentView();
 
         var status = new List<string>();
 
@@ -4933,20 +4652,22 @@ public sealed class FoundationPage : ContentPage
             RenderCurrentDynasty();
         };
 
-        _transferPortalList.Children.Add(new Border
+        return new Border
         {
-            StrokeThickness = 1,
+            StrokeThickness = 0,
             Padding = 8,
             Content = new VerticalStackLayout
             {
                 Spacing = 4,
                 Children =
                 {
+                    CloseRosterDetailButton(),
                     new Label
                     {
                         Text =
                             $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
-                            $"POT {FormatPotentialStars(player.PotentialRating)} • Year {player.ClassYear}" +
+                            $"POT {FormatPotentialStars(player.PotentialRating)} • {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} • " +
+                            FormatOriginalRecruitingStars(player) +
                             (status.Count > 0
                                 ? $" • {string.Join(" • ", status)}"
                                 : string.Empty),
@@ -4963,11 +4684,12 @@ public sealed class FoundationPage : ContentPage
                             $"TECH {player.TechniqueRating} • DUR {player.DurabilityRating}",
                         FontSize = 12
                     },
+                    CreateCareerStatsButton(player),
                     new Label
                     {
                         Text = development is null
                             ? string.Empty
-                            : $"Last dev ({development.SeasonYear}→{development.SeasonYear + 1}): " +
+                            : $"{(development.Stage == PlayerDevelopmentStage.Midseason ? $"{development.SeasonYear} midseason" : $"{development.SeasonYear}→{development.SeasonYear + 1} offseason")}: " +
                               $"OVR {development.BeforeOverall}→{development.AfterOverall} " +
                               $"({FormatSigned(development.OverallChange)}) • " +
                               $"POT {FormatPotentialStars(development.BeforePotential)}→" +
@@ -4992,7 +4714,7 @@ public sealed class FoundationPage : ContentPage
                     }
                 }
             }
-        });
+        };
     }
 
     private IReadOnlyList<PlayerDevelopmentRecord>
@@ -5004,17 +4726,6 @@ public sealed class FoundationPage : ContentPage
         var records = PlayerDevelopmentService.GetLatestRecords(
             _currentDynasty.PlayerDevelopmentHistory,
             _currentDynasty.UserTeamName);
-
-        if (records.Count > 0 &&
-            records.All(record =>
-                record.Stage == PlayerDevelopmentStage.Midseason) &&
-            !(_currentDynasty.Phase == SeasonPhase.RegularSeason &&
-              _currentDynasty.Week == 7 &&
-              records.All(record =>
-                  record.SeasonYear == _currentDynasty.SeasonYear)))
-        {
-            return Array.Empty<PlayerDevelopmentRecord>();
-        }
 
         return records;
     }
@@ -5137,6 +4848,7 @@ public sealed class FoundationPage : ContentPage
         }
 
         if (_cachedCurrentProfiles is not null &&
+            ReferenceEquals(_cachedProfileGamePlans, _currentDynasty.TeamGamePlans) &&
             ReferenceEquals(
                 _cachedProfileRoster,
                 _currentDynasty.ActiveRoster) &&
@@ -5158,6 +4870,7 @@ public sealed class FoundationPage : ContentPage
                 _currentDynasty,
                 _teamsByName.Values);
 
+        _cachedProfileGamePlans = _currentDynasty.TeamGamePlans;
         _cachedProfileRoster =
             _currentDynasty.ActiveRoster;
         _cachedProfileStaff =
@@ -5361,6 +5074,7 @@ public sealed class FoundationPage : ContentPage
             $"{roster.Length}/{DynastyRosterRules.MaximumRosterSize} players • " +
             $"{commitments.Length} current recruiting commits";
 
+        _teamBrowserList.Children.Add(SchoolBanner(team.Name, $"{team.ConferenceName} · {wins}-{losses} · Prestige {prestige}"));
         if (profile is not null)
         {
             _teamBrowserList.Children.Add(
@@ -5385,35 +5099,7 @@ public sealed class FoundationPage : ContentPage
                     new Thickness(0, 8, 0, 0)
             });
 
-        foreach (var role in new[]
-                 {
-                     StaffRole.HeadCoach,
-                     StaffRole.OffensiveCoordinator,
-                     StaffRole.DefensiveCoordinator,
-                     StaffRole.SpecialTeamsCoordinator,
-                     StaffRole.ChiefScout,
-                     StaffRole.MedicalTrainingDirector,
-                     StaffRole.StrengthConditioningDirector
-                 })
-        {
-            var staff =
-                StaffManagementService.GetStaff(
-                    _currentDynasty,
-                    team.Name,
-                    role);
-
-            if (staff is null)
-                continue;
-
-            _teamBrowserList.Children.Add(
-                new Label
-                {
-                    Text =
-                        $"{FormatStaffRole(role)} • " +
-                        $"{staff.FullName} • OVR {staff.OverallRating}",
-                    FontSize = 11
-                });
-        }
+        _teamBrowserList.Children.Add(TeamStaffTable(team.Name));
 
         var injuries =
             roster.Where(player =>
@@ -5446,64 +5132,7 @@ public sealed class FoundationPage : ContentPage
                     new Thickness(0, 10, 0, 0)
             });
 
-        foreach (var position in
-                 Enum.GetValues<Position>())
-        {
-            var players =
-                roster
-                    .Where(player =>
-                        player.Position == position)
-                    .OrderBy(player =>
-                        player.DepthChartOrder > 0
-                            ? player.DepthChartOrder
-                            : int.MaxValue)
-                    .ThenByDescending(player =>
-                        player.OverallRating)
-                    .ToArray();
-
-            if (players.Length == 0)
-                continue;
-
-            _teamBrowserList.Children.Add(
-                new Label
-                {
-                    Text =
-                        $"{position} ({players.Length})",
-                    FontAttributes =
-                        FontAttributes.Bold,
-                    FontSize = 12,
-                    Margin =
-                        new Thickness(0, 6, 0, 0)
-                });
-
-            foreach (var player in players)
-            {
-                var injuryText =
-                    player.CurrentInjury is null
-                        ? string.Empty
-                        : $" • INJ {player.CurrentInjury.Severity} " +
-                          $"{player.CurrentInjury.WeeksRemaining}w";
-
-                _teamBrowserList.Children.Add(
-                    new Label
-                    {
-                        Text =
-                            $"{(player.DepthChartOrder > 0 ? $"#{player.DepthChartOrder} " : string.Empty)}" +
-                            $"{player.FullName} • OVR {player.OverallRating} • " +
-                            $"POT {FormatPotentialStars(player.PotentialRating)} • " +
-                            $"Y{player.ClassYear}" +
-                            (player.IsRedshirted
-                                ? " • RS"
-                                : string.Empty) +
-                            injuryText,
-                        FontSize = 11,
-                        TextColor =
-                            player.CurrentInjury is null
-                                ? Colors.White
-                                : NegativeChangeColor
-                    });
-            }
-        }
+        _teamBrowserList.Children.Add(CreateTeamRosterTable(roster));
     }
 
     private void RenderNationalRankings()
@@ -5531,21 +5160,16 @@ public sealed class FoundationPage : ContentPage
                     ? $"Your team: #{userRanking.Rank} {userRanking.TeamName}"
                     : $"Your team: NR ({userRanking.Rank}) {userRanking.TeamName}";
 
-        foreach (var ranking in rankings.Take(25))
-        {
-            _nationalRankingsList.Children.Add(new Label
+        var shown = _rankingsRange.SelectedIndex == 1 ? rankings : rankings.Take(25);
+        _nationalRankingsList.Children.Add(DataTable(
+            [("Rank", 45), ("School", 195), ("W", 38), ("L", 38), ("Conference", 110), ("PPG", 60), ("Opp PPG", 75), ("Score", 70)],
+            shown.Select(ranking => new View[]
             {
-                Text =
-                    $"#{ranking.Rank} {ranking.TeamName} • " +
-                    $"{ranking.Wins}-{ranking.Losses} • " +
-                    $"{ranking.ConferenceName}",
-                FontAttributes = ranking.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase)
-                    ? FontAttributes.Bold
-                    : FontAttributes.None
-            });
-        }
+                TableText($"#{ranking.Rank}", true, ranking.Rank <= 4 ? Color.FromArgb("#F4CC66") : DynastyTheme.Accent),
+                SchoolCell(ranking.TeamName), TableText(ranking.Wins.ToString()), TableText(ranking.Losses.ToString()),
+                TableText(ranking.ConferenceName), TableText(ranking.PointsPerGame.ToString("F1")),
+                TableText(ranking.OpponentPointsPerGame.ToString("F1")), TableText(ranking.Score.ToString("F1"))
+            })));
     }
 
     private void RenderPostseason()
@@ -5588,83 +5212,65 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
-        foreach (var selection in field)
-        {
-            var marker = selection.IsAutomaticBid
-                ? "AUTO"
-                : "AT-LARGE";
-
-            _postseasonList.Children.Add(new Label
-            {
-                Text =
-                    $"{selection.Seed}. {selection.TeamName} • " +
-                    $"#{selection.NationalRank} • {marker}" +
-                    (selection.Seed <= 4 ? " • BYE" : string.Empty),
-                FontAttributes = selection.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase)
-                    ? FontAttributes.Bold
-                    : FontAttributes.None
-            });
-        }
-
-        foreach (var game in _currentDynasty.Schedule
-                     .Where(game =>
-                         game.SeasonYear == _currentDynasty.SeasonYear &&
-                         game.GameType == ScheduledGameType.CollegeFootballPlayoff)
-                     .OrderBy(game => game.Week)
-                     .ThenBy(game => game.PlayoffBracketSlot))
-        {
-            var result = game.HasPlayed &&
-                         game.HomeScore is int homeScore &&
-                         game.AwayScore is int awayScore
-                ? $"{awayScore}-{homeScore}"
-                : "Upcoming";
-
-            _postseasonList.Children.Add(new Label
-            {
-                Text =
-                    $"{FormatPostseasonRound(game.PostseasonRound)}: " +
-                    $"#{game.AwaySeed} {game.AwayTeamName} vs " +
-                    $"#{game.HomeSeed} {game.HomeTeamName} • {result}"
-            });
-        }
-
-        var bowls = _currentDynasty.Schedule
-            .Where(game =>
-                game.SeasonYear == _currentDynasty.SeasonYear &&
-                game.GameType == ScheduledGameType.Bowl)
-            .OrderBy(game => game.Week)
-            .ThenBy(game => game.BowlName, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        if (bowls.Length > 0)
-        {
-            _postseasonList.Children.Add(new Label
-            {
-                Text = "NON-CFP BOWLS",
-                FontAttributes = FontAttributes.Bold,
-                Margin = new Thickness(0, 8, 0, 0)
-            });
-
-            foreach (var game in bowls)
-            {
-                var result = game.HasPlayed &&
-                             game.HomeScore is int homeScore &&
-                             game.AwayScore is int awayScore
-                    ? $"{game.AwayTeamName} {awayScore}, {game.HomeTeamName} {homeScore}"
-                    : $"{game.AwayTeamName} vs {game.HomeTeamName} • Upcoming";
-
-                _postseasonList.Children.Add(new Label
+        if (field.Length > 0)
+            _postseasonList.Children.Add(DataTable([("Seed", 45), ("School", 195), ("Rank", 50), ("Bid", 90), ("Round", 80)],
+                field.Select(selection => new View[]
                 {
-                    Text = $"{game.BowlName}: {result}",
-                    FontAttributes = game.InvolvesTeam(
-                        _currentDynasty.UserTeamName)
-                        ? FontAttributes.Bold
-                        : FontAttributes.None
-                });
-            }
+                    TableText(selection.Seed.ToString(), true), SchoolCell(selection.TeamName), TableText($"#{selection.NationalRank}"),
+                    TableText(selection.IsAutomaticBid ? "Automatic" : "At-large"), TableText(selection.Seed <= 4 ? "Bye" : "First round")
+                })));
+        var playoffGames = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType == ScheduledGameType.CollegeFootballPlayoff)
+            .OrderBy(game => game.Week).ThenBy(game => game.PlayoffBracketSlot).ToArray();
+        if (playoffGames.Length > 0)
+        {
+            _postseasonList.Children.Add(SectionTitle("College Football Playoff", "Bracket progression from the first round through the national championship"));
+            _postseasonList.Children.Add(BuildPlayoffTree(playoffGames));
         }
+        var bowlGames = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType == ScheduledGameType.Bowl)
+            .OrderBy(game => game.Week).ThenBy(game => game.BowlName).ToArray();
+        if (bowlGames.Length > 0)
+        {
+            _postseasonList.Children.Add(SectionTitle("Bowl schedule", "Non-playoff postseason games organized separately"));
+            _postseasonList.Children.Add(DataTable([("Bowl", 180), ("Away", 195), ("Home", 195), ("Score (A–H)", 105)],
+                bowlGames.Select(game => new View[] { TableText(game.BowlName ?? "Bowl"), SchoolCell(game.AwayTeamName),
+                    SchoolCell(game.HomeTeamName), TableText(game.HasPlayed ? $"{game.AwayScore}–{game.HomeScore}" : "Upcoming", true) })));
+        }
+    }
+
+    private View BuildPlayoffTree(IReadOnlyList<ScheduledGame> games)
+    {
+        var rounds = new[] { PostseasonRound.FirstRound, PostseasonRound.Quarterfinal,
+            PostseasonRound.Semifinal, PostseasonRound.NationalChampionship };
+        var tree = new HorizontalStackLayout { Spacing = 10 };
+        foreach (var round in rounds)
+        {
+            var column = new VerticalStackLayout { Spacing = 8, WidthRequest = 235 };
+            column.Children.Add(new Label { Text = FormatPostseasonRound(round).ToUpperInvariant(), FontSize = 11,
+                FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") });
+            var roundGames = games.Where(game => game.PostseasonRound == round).OrderBy(game => game.PlayoffBracketSlot).ToArray();
+            if (roundGames.Length == 0)
+                column.Children.Add(new Label { Text = "Matchups pending", FontSize = 11, TextColor = DynastyTheme.Muted });
+            foreach (var game in roundGames)
+            {
+                var awaySeed = game.AwaySeed is int away ? $"#{away} " : string.Empty;
+                var homeSeed = game.HomeSeed is int home ? $"#{home} " : string.Empty;
+                column.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = 9,
+                    Content = new VerticalStackLayout { Spacing = 5, Children =
+                    {
+                        new Label { Text = $"{awaySeed}{game.AwayTeamName}  {(game.HasPlayed ? game.AwayScore : "—")}",
+                            FontAttributes = game.HasPlayed && game.AwayScore > game.HomeScore ? FontAttributes.Bold : FontAttributes.None },
+                        new Label { Text = $"{homeSeed}{game.HomeTeamName}  {(game.HasPlayed ? game.HomeScore : "—")}",
+                            FontAttributes = game.HasPlayed && game.HomeScore > game.AwayScore ? FontAttributes.Bold : FontAttributes.None },
+                        new Label { Text = game.HasPlayed ? "FINAL" : "UPCOMING", FontSize = 9,
+                            TextColor = game.HasPlayed ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted }
+                    } } });
+            }
+            tree.Children.Add(column);
+        }
+        return new ScrollView { Orientation = ScrollOrientation.Horizontal,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Never, Content = tree };
     }
 
     private static string FormatPostseasonRound(PostseasonRound round) =>
@@ -5691,20 +5297,34 @@ public sealed class FoundationPage : ContentPage
             return;
         }
 
+        var conferences = _teamsByName.Values
+            .Select(team => team.ConferenceName)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var selectedConference = _conferencePicker.SelectedItem as string;
+        if (selectedConference is null || !conferences.Contains(selectedConference, StringComparer.OrdinalIgnoreCase))
+            selectedConference = userTeam.ConferenceName;
+        if (!(_conferencePicker.ItemsSource as IEnumerable<string> ?? []).SequenceEqual(conferences))
+        {
+            _conferencePicker.ItemsSource = conferences;
+            _conferencePicker.SelectedItem = selectedConference;
+        }
+
         var conferenceTeams = _teamsByName.Values
             .Where(team => team.ConferenceName.Equals(
-                userTeam.ConferenceName,
+                selectedConference,
                 StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         if (conferenceTeams.Length <
                 ConferenceChampionshipService.MinimumConferenceTeams ||
-            userTeam.ConferenceName.Equals(
+            selectedConference.Equals(
                 "Independent",
                 StringComparison.OrdinalIgnoreCase))
         {
             _conferenceChampionshipStatus.Text =
-                $"{userTeam.ConferenceName}: no conference championship.";
+                $"{selectedConference}: no conference championship.";
             return;
         }
 
@@ -5717,7 +5337,7 @@ public sealed class FoundationPage : ContentPage
         var standings = ConferenceStandings.Build(
             _currentDynasty,
             _teamsByName,
-            userTeam.ConferenceName,
+            selectedConference,
             nationalRanks);
 
         var titleGame = _currentDynasty.Schedule
@@ -5729,7 +5349,7 @@ public sealed class FoundationPage : ContentPage
                     game.HomeTeamName,
                     out var home) &&
                 home.ConferenceName.Equals(
-                    userTeam.ConferenceName,
+                    selectedConference,
                     StringComparison.OrdinalIgnoreCase));
 
         var champion = _currentDynasty
@@ -5737,7 +5357,7 @@ public sealed class FoundationPage : ContentPage
             .FirstOrDefault(record =>
                 record.SeasonYear == _currentDynasty.SeasonYear &&
                 record.ConferenceName.Equals(
-                    userTeam.ConferenceName,
+                    selectedConference,
                     StringComparison.OrdinalIgnoreCase));
 
         if (champion is not null)
@@ -5751,104 +5371,45 @@ public sealed class FoundationPage : ContentPage
         else if (titleGame is not null)
         {
             _conferenceChampionshipStatus.Text =
-                $"{userTeam.ConferenceName} Championship: " +
+                $"{selectedConference} Championship: " +
                 $"{titleGame.AwayTeamName} @ {titleGame.HomeTeamName}";
         }
         else
         {
             _conferenceChampionshipStatus.Text =
-                $"Top two {userTeam.ConferenceName} teams qualify for the championship.";
+                $"Top two {selectedConference} teams qualify for the championship.";
         }
 
-        for (var index = 0; index < standings.Count; index++)
-        {
-            var standing = standings[index];
-
-            _conferenceStandingsList.Children.Add(new Label
+        _conferenceStandingsList.Children.Add(DataTable(
+            [("Place", 50), ("School", 195), ("Conf W", 65), ("Conf L", 65), ("W", 40), ("L", 40), ("Conf +/-", 80)],
+            standings.Select((standing, index) => new View[]
             {
-                Text =
-                    $"{index + 1}. {standing.TeamName} • " +
-                    $"Conf {standing.ConferenceWins}-{standing.ConferenceLosses} • " +
-                    $"Overall {standing.OverallWins}-{standing.OverallLosses}",
-                FontAttributes = standing.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase)
-                    ? FontAttributes.Bold
-                    : FontAttributes.None
-            });
-        }
-    }
+                TableText((index + 1).ToString(), true), SchoolCell(standing.TeamName),
+                TableText(standing.ConferenceWins.ToString()), TableText(standing.ConferenceLosses.ToString()),
+                TableText(standing.OverallWins.ToString()), TableText(standing.OverallLosses.ToString()),
+                TableText(FormatSigned(standing.ConferencePointDifferential), color: GetChangeColor(standing.ConferencePointDifferential))
+            })));
 
-    private void RenderUserSchedule()
-    {
-        _scheduleList.Children.Clear();
-
-        if (_currentDynasty is null || _currentDynasty.Schedule.Count == 0)
+        var championshipGames = _currentDynasty.Schedule
+            .Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType == ScheduledGameType.ConferenceChampionship)
+            .OrderBy(game => _teamsByName.TryGetValue(game.HomeTeamName, out var home) ? home.ConferenceName : game.HomeTeamName)
+            .ToArray();
+        if (championshipGames.Length > 0)
         {
-            _scheduleList.Children.Add(new Label
-            {
-                Text = "No schedule available."
-            });
-            return;
-        }
-
-        foreach (var game in _currentDynasty.Schedule
-                     .Where(game => game.InvolvesTeam(_currentDynasty.UserTeamName))
-                     .OrderBy(game => game.Week))
-        {
-            var isHome = game.HomeTeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase);
-            var opponent = isHome ? game.AwayTeamName : game.HomeTeamName;
-            var location = isHome ? "vs" : "@";
-            var status = "Upcoming";
-
-            if (game.HasPlayed && game.HomeScore is int homeScore && game.AwayScore is int awayScore)
-            {
-                var userScore = isHome ? homeScore : awayScore;
-                var opponentScore = isHome ? awayScore : homeScore;
-                var result = userScore > opponentScore ? "W" : "L";
-                status = $"{result} {userScore}-{opponentScore}";
-
-                var userStats = isHome ? game.HomeStats : game.AwayStats;
-                var opponentStats = isHome ? game.AwayStats : game.HomeStats;
-
-                if (userStats is not null && opponentStats is not null)
+            _conferenceStandingsList.Children.Add(SectionTitle("Conference championship games", "Every title matchup and result"));
+            _conferenceStandingsList.Children.Add(DataTable(
+                [("Conference", 130), ("Away", 195), ("Home", 195), ("Result", 105)],
+                championshipGames.Select(game => new View[]
                 {
-                    status +=
-                        $" • {userStats.TotalYards}-{opponentStats.TotalYards} yds" +
-                        $" • TO {userStats.Turnovers}-{opponentStats.Turnovers}";
-                }
-            }
-
-            var gameType = game.GameType switch
-            {
-                ScheduledGameType.Conference => "CONF",
-                ScheduledGameType.ConferenceChampionship => "CCG",
-                ScheduledGameType.CollegeFootballPlayoff => "CFP",
-                ScheduledGameType.Bowl => "BOWL",
-                _ => "OOC"
-            };
-
-            var resultColor = game.HasPlayed && game.WinnerTeamName is not null
-                ? game.WinnerTeamName.Equals(
-                    _currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase)
-                    ? PositiveChangeColor
-                    : NegativeChangeColor
-                : NeutralChangeColor;
-
-            _scheduleList.Children.Add(new Label
-            {
-                Text = $"Week {game.Week}: {location} {opponent} • {gameType} • {status}",
-                TextColor = resultColor,
-                FontAttributes =
-                    _currentDynasty.Phase == SeasonPhase.RegularSeason &&
-                    game.Week == _currentDynasty.Week
-                        ? FontAttributes.Bold
-                        : FontAttributes.None
-            });
+                    TableText(_teamsByName.TryGetValue(game.HomeTeamName, out var home) ? home.ConferenceName : "Conference"),
+                    SchoolCell(game.AwayTeamName), SchoolCell(game.HomeTeamName),
+                    TableText(game.HasPlayed ? $"{game.AwayScore}–{game.HomeScore}" : "Upcoming", true)
+                })));
         }
     }
+
+    private void RenderUserSchedule() => RenderScheduleGrid();
 
     private Task<IReadOnlyList<ScheduledGame>> GenerateScheduleAsync(
         Guid dynastyId,
@@ -5871,6 +5432,7 @@ public sealed class FoundationPage : ContentPage
         _newDynastyButton.IsEnabled = enabled;
         _dynastyNameEntry.IsEnabled = enabled;
         _teamPicker.IsEnabled = enabled;
+        _leaguePicker.IsEnabled = enabled;
     }
 
     private void SetDynastyControlsEnabled(bool enabled)

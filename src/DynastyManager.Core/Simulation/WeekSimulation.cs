@@ -19,7 +19,7 @@ public static class WeekSimulation
         var schedule = state.Schedule
             .Select(game =>
             {
-                if (game.Week != state.Week || game.HasPlayed)
+                if (game.SeasonYear != state.SeasonYear || game.Week != state.Week || game.HasPlayed)
                     return game;
 
                 if (!teamsByName.TryGetValue(game.HomeTeamName, out var homeTeam))
@@ -40,12 +40,11 @@ public static class WeekSimulation
                 }
 
                 changed = true;
-                return DeterministicGameSimulator.Simulate(
-                    game,
-                    homeTeam,
-                    awayTeam,
-                    homeProfile,
-                    awayProfile);
+                homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
+                awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
+                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+                GameDayEngine.SimulateToEnd(session);
+                return GameDayEngine.Finish(session);
             })
             .ToArray();
 

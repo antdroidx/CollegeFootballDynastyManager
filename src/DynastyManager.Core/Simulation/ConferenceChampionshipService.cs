@@ -54,8 +54,16 @@ public static class ConferenceChampionshipService
             if (standings.Count < 2)
                 continue;
 
-            var home = standings[0].TeamName;
-            var away = standings[1].TeamName;
+            IReadOnlyList<ConferenceStanding> finalists = standings;
+            var divisions = conference.Select(team => team.DivisionName).Distinct().ToArray();
+            if (conference.All(team => team.ConferenceGamesPerSeason.HasValue) &&
+                divisions.Length == 2 && divisions.All(division => !string.IsNullOrWhiteSpace(division)))
+            {
+                finalists = divisions.OrderBy(division => division).Select(division => standings.First(standing =>
+                    conference.Any(team => team.Name == standing.TeamName && team.DivisionName == division))).ToArray();
+            }
+            var home = finalists[0].TeamName;
+            var away = finalists[1].TeamName;
             var seed = SimulationSeed.Create(
                 state.DynastyId,
                 state.SeasonYear,
@@ -141,12 +149,11 @@ public static class ConferenceChampionshipService
                 }
 
                 changed = true;
-                return DeterministicGameSimulator.Simulate(
-                    game,
-                    homeTeam,
-                    awayTeam,
-                    homeProfile,
-                    awayProfile);
+                homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
+                awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
+                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+                GameDayEngine.SimulateToEnd(session);
+                return GameDayEngine.Finish(session);
             })
             .ToArray();
 

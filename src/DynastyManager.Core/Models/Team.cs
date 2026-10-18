@@ -7,6 +7,7 @@ public sealed record Team
     public required string Abbreviation { get; init; }
     public required string ConferenceName { get; init; }
     public string? DivisionName { get; init; }
+    public int? ConferenceGamesPerSeason { get; init; }
     public int Prestige { get; init; }
     public int LegacyRegionId { get; init; }
 }

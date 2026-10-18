@@ -1,9 +1,28 @@
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using DynastyManager.Core.Models;
 
 namespace DynastyManager.Core.Simulation;
 
 public static class RecruitPreferenceService
 {
+    // Pools are immutable snapshots shared by record copies. Weak keys avoid
+    // retaining old seasons and rebuilding an index after every interaction.
+    private static readonly ConditionalWeakTable<IReadOnlyList<HighSchoolRecruit>,
+        Dictionary<Guid, HighSchoolRecruit>> HighSchoolIndexes = new();
+
+    private static readonly ConditionalWeakTable<IReadOnlyList<DynastyPlayer>,
+        Dictionary<(string Team, Position Position), int>> RosterCounts = new();
+
+    private static Dictionary<Guid, HighSchoolRecruit> GetHighSchoolIndex(DynastyState state) =>
+        HighSchoolIndexes.GetValue(state.HighSchoolRecruitingPool,
+            pool => pool.GroupBy(recruit => recruit.RecruitId).ToDictionary(group => group.Key, group => group.First()));
+
+    private static readonly ConditionalWeakTable<DynastyState,
+        ConcurrentDictionary<(RecruitingSource, Guid), IReadOnlyList<RecruitPreference>>> Preferences = new();
+    private static readonly ConditionalWeakTable<DynastyState,
+        Dictionary<string, TeamSeasonHistoryRecord>> RecentSeasons = new();
+
     public static IReadOnlyList<RecruitPreference> GetPreferences(
         DynastyState state,
         RecruitingSource source,
@@ -11,7 +30,12 @@ public static class RecruitPreferenceService
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        return Enum.GetValues<RecruitPitchType>()
+        return Preferences.GetValue(state, _ => new()).GetOrAdd((source, prospectId), _ =>
+            BuildPreferences(state, source, prospectId));
+    }
+
+    private static IReadOnlyList<RecruitPreference> BuildPreferences(DynastyState state,
+        RecruitingSource source, Guid prospectId) => Enum.GetValues<RecruitPitchType>()
             .Select(type => new RecruitPreference
             {
                 Type = type,
@@ -24,7 +48,7 @@ public static class RecruitPreferenceService
             .OrderByDescending(item => item.Importance)
             .ThenBy(item => item.Type)
             .ToArray();
-    }
+
 
     public static IReadOnlyList<RecruitPreference>
         GetRevealedPreferences(
@@ -244,19 +268,10 @@ public static class RecruitPreferenceService
     {
         ArgumentNullException.ThrowIfNull(teamsByName);
 
-        return teamsByName.Values
-            .Where(team =>
-                !team.Name.Equals(
-                    userTeam.Name,
-                    StringComparison.OrdinalIgnoreCase))
-            .Select(team =>
-                GetInitialSchoolInterest(
-                    state,
-                    team,
-                    source,
-                    prospectId))
-            .DefaultIfEmpty(5)
-            .Max();
+        return CompetingRecruitingService.GetOffers(state, source, prospectId, activeOnly: true)
+            .Where(offer => !offer.TeamName.Equals(userTeam.Name, StringComparison.OrdinalIgnoreCase) &&
+                teamsByName.ContainsKey(offer.TeamName))
+            .Select(offer => Math.Clamp(offer.Interest, 0, 100)).DefaultIfEmpty(0).Max();
     }
 
     public static IReadOnlyList<(string TeamName, int Interest)>
@@ -549,15 +564,11 @@ public static class RecruitPreferenceService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(team);
 
-        var season = state.TeamSeasonHistory
-            .Where(item =>
-                item.TeamName.Equals(
-                    team.Name,
-                    StringComparison.OrdinalIgnoreCase) &&
-                item.SeasonYear <= state.SeasonYear)
-            .OrderByDescending(item =>
-                item.SeasonYear)
-            .FirstOrDefault();
+        var season = RecentSeasons.GetValue(state, snapshot => snapshot.TeamSeasonHistory
+            .Where(item => item.SeasonYear <= snapshot.SeasonYear)
+            .GroupBy(item => item.TeamName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(item => item.SeasonYear).First(),
+                StringComparer.OrdinalIgnoreCase)).GetValueOrDefault(team.Name);
 
         if (season is null)
             return 0;
@@ -608,8 +619,7 @@ public static class RecruitPreferenceService
         DynastyState state,
         Guid prospectId)
     {
-        var recruit = state.HighSchoolRecruitingPool
-            .First(item => item.RecruitId == prospectId);
+        var recruit = GetHighSchoolIndex(state)[prospectId];
 
         return recruit.StarRating switch
         {
@@ -710,12 +720,11 @@ public static class RecruitPreferenceService
         string teamName,
         Position position)
     {
-        var count = state.ActiveRoster.Count(player =>
-            player.TeamName.Equals(
-                teamName,
-                StringComparison.OrdinalIgnoreCase) &&
-            player.Position == position &&
-            !player.IsRedshirted);
+        var counts = RosterCounts.GetValue(state.ActiveRoster, roster => roster
+            .Where(player => !player.IsRedshirted)
+            .GroupBy(player => (player.TeamName.ToUpperInvariant(), player.Position))
+            .ToDictionary(group => group.Key, group => group.Count()));
+        var count = counts.GetValueOrDefault((teamName.ToUpperInvariant(), position));
 
         var target =
             DynastyRosterRules.TargetPositionCounts.TryGetValue(
@@ -786,10 +795,8 @@ public static class RecruitPreferenceService
     {
         if (source == RecruitingSource.HighSchool)
         {
-            return state.HighSchoolRecruitingPool
-                .FirstOrDefault(recruit =>
-                    recruit.RecruitId == prospectId)
-                ?.HomeRegion;
+            var recruit = GetHighSchoolIndex(state).GetValueOrDefault(prospectId);
+            return recruit is null ? null : RecruitGeography.GetRegion(recruit);
         }
 
         var entry = state.TransferPortalEntries
@@ -809,9 +816,7 @@ public static class RecruitPreferenceService
     {
         if (source == RecruitingSource.HighSchool)
         {
-            return state.HighSchoolRecruitingPool
-                .First(recruit =>
-                    recruit.RecruitId == prospectId)
+            return GetHighSchoolIndex(state)[prospectId]
                 .Position;
         }
 

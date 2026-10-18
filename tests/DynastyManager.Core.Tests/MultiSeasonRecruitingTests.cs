@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Seasons;
 using DynastyManager.Core.Simulation;
 using DynastyManager.Data.Import;
 using Xunit;
@@ -7,6 +8,50 @@ namespace DynastyManager.Core.Tests;
 
 public class MultiSeasonRecruitingTests
 {
+    [Fact]
+    public void CpuSignedProspectsAreUnavailableToAssistanceAndStaleManualOffers()
+    {
+        var user = new Team { Name = "User", Abbreviation = "U", ConferenceName = "Test", Prestige = 80 };
+        var rival = user with { Name = "Rival" };
+        var id = Guid.Parse("12345678-1111-2222-3333-444444444444");
+        var state = new DynastyState
+        {
+            DynastyName = "Already signed", UserTeamName = user.Name, SeasonYear = 2027,
+            Phase = SeasonPhase.Recruiting, Week = SeasonProgression.LastRecruitingWeek,
+            RecruitingAssistanceEnabled = true,
+            HighSchoolRecruitingPool = new[] { new HighSchoolRecruit
+            {
+                RecruitId = id, FullName = "Signed Prospect", Position = Position.WR,
+                SeasonYear = 2027, StarRating = 4, TrueOverallRating = 80
+            } },
+            ActiveRoster = new[] { new DynastyPlayer
+            {
+                PlayerId = id, FullName = "Signed Prospect", TeamName = rival.Name,
+                Position = Position.WR, OverallRating = 80, ClassYear = 1
+            } },
+            RecruitingCommitments = new[] { new RecruitingCommitmentRecord
+            {
+                SeasonYear = 2027, ProspectId = id, PlayerName = "Signed Prospect", TeamName = rival.Name,
+                Source = RecruitingSource.HighSchool, Position = Position.WR, OverallRating = 80
+            } }
+        };
+        var assisted = CpuRecruitingService.ApplyWeeklyUserAssistance(state, user);
+        Assert.Empty(assisted.RecruitingInteractions);
+        Assert.Equal(rival.Name, InteractiveRecruitingService.GetInteraction(state, RecruitingSource.HighSchool, id).CommittedTeamName);
+        state = state with { RecruitingInteractions = new[] { new RecruitingInteraction
+        {
+            SeasonYear = 2027, ProspectId = id, Source = RecruitingSource.HighSchool,
+            ScholarshipOffered = true, UserInterest = 100
+        } } };
+        var offered = InteractiveRecruitingService.ToggleScholarship(state, user, RecruitingSource.HighSchool, id);
+        Assert.Same(state, offered);
+        var resolved = InteractiveRecruitingService.ResolveCurrentPhase(state, user,
+            new[] { user, rival }.ToDictionary(team => team.Name));
+        Assert.Single(resolved.ActiveRoster);
+        Assert.Single(resolved.RecruitingCommitments);
+        Assert.Equal(rival.Name, InteractiveRecruitingService.GetInteraction(resolved, RecruitingSource.HighSchool, id).CommittedTeamName);
+    }
+
     [Fact]
     public void RecruitingPoolsAreSeasonSpecific()
     {

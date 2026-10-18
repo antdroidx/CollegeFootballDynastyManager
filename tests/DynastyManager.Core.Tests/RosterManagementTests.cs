@@ -6,6 +6,18 @@ namespace DynastyManager.Core.Tests;
 
 public class RosterManagementTests
 {
+    [Theory]
+    [InlineData(1, false, "FR")]
+    [InlineData(2, true, "SO-RS")]
+    [InlineData(3, true, "JR-RS")]
+    [InlineData(4, false, "SR")]
+    [InlineData(5, false, "GR")]
+    [InlineData(5, true, "GR-RS")]
+    public void ClassYearUsesFootballLabelsAndRetainsRedshirtHistory(int year, bool redshirted, string expected)
+    {
+        Assert.Equal(expected, PlayerClassYearService.Format(year, redshirted));
+    }
+
     [Fact]
     public void NormalizeDepthChartOrdersPlayersByRatingAndIdentifiesStarter()
     {
@@ -57,6 +69,26 @@ public class RosterManagementTests
         Assert.Equal(
             new[] { "First", "Third", "Second" },
             rbs);
+    }
+
+    [Fact]
+    public void MovePlayerToOrderSupportsDirectDepthChartReordering()
+    {
+        var first = Player("First", Position.WR, 90);
+        var second = Player("Second", Position.WR, 85);
+        var third = Player("Third", Position.WR, 80);
+        var quarterback = Player("Quarterback", Position.QB, 95);
+        var state = RosterManagementService.NormalizeAllDepthCharts(
+            State(new[] { first, second, third, quarterback }));
+
+        state = RosterManagementService.MovePlayerToOrder(state, "Test", third.PlayerId, 1);
+
+        Assert.Equal(new[] { "Third", "First", "Second" }, state.ActiveRoster
+            .Where(player => player.Position == Position.WR)
+            .OrderBy(player => player.DepthChartOrder)
+            .Select(player => player.FullName));
+        Assert.Equal(1, state.ActiveRoster.Single(player => player.PlayerId == quarterback.PlayerId).DepthChartOrder);
+        Assert.True(RosterManagementService.IsStarter(state.ActiveRoster.Single(player => player.PlayerId == third.PlayerId)));
     }
 
     [Fact]

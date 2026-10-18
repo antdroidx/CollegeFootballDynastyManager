@@ -136,6 +136,30 @@ public static class SeasonScheduleBuilder
                 .ThenBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
+            if (members.All(team => team.ConferenceGamesPerSeason.HasValue))
+            {
+                // Havel-Hakimi supports odd-sized conferences and mixed game counts
+                // (including the 2026 ACC's eight/nine-game transition).
+                var remaining = members.ToDictionary(team => team.Name, team => Math.Clamp(
+                    team.ConferenceGamesPerSeason!.Value, 0, Math.Min(gamesPerTeam, members.Length - 1)));
+                while (remaining.Values.Any(value => value > 0))
+                {
+                    var home = members.OrderByDescending(team => remaining[team.Name]).First();
+                    var needed = remaining[home.Name];
+                    var opponents = members.Where(team => team.Name != home.Name && remaining[team.Name] > 0)
+                        .OrderByDescending(team => remaining[team.Name]).Take(needed).ToArray();
+                    if (opponents.Length != needed)
+                        throw new InvalidOperationException($"Invalid conference game counts for {conference.Key}.");
+                    remaining[home.Name] = 0;
+                    foreach (var away in opponents)
+                    {
+                        remaining[away.Name]--;
+                        games.Add(new DraftGame(home, away, ScheduledGameType.Conference));
+                    }
+                }
+                continue;
+            }
+
             var targetGames = GetLegacyConferenceGames(
                 members.Length,
                 gamesPerTeam);

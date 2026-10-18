@@ -7,6 +7,7 @@ public sealed record DynastyPlayer
     public required string TeamName { get; init; }
     public required Position Position { get; init; }
     public int ClassYear { get; init; }
+    public int? OriginalRecruitingStars { get; init; }
     public int TalentLevel { get; init; }
     public int OverallRating { get; init; }
     public int PotentialRating { get; init; }
@@ -16,6 +17,7 @@ public sealed record DynastyPlayer
     public int AwarenessRating { get; init; }
     public int TechniqueRating { get; init; }
     public int DurabilityRating { get; init; }
+    public PlayerSkillRatings? Skills { get; init; }
     public PlayerInjury? CurrentInjury { get; init; }
     public bool IsWalkOn { get; init; }
     public int DepthChartOrder { get; init; }

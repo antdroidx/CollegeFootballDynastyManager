@@ -107,10 +107,10 @@ public static class WalkOnRosterService
             }
         }
 
-        return state with
+        return PlayerRatingService.EnsureProfiles(state with
         {
             ActiveRoster = roster
-        };
+        });
     }
 
     private static Position SelectMostNeededPosition(

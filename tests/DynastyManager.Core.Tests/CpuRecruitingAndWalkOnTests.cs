@@ -8,6 +8,176 @@ namespace DynastyManager.Core.Tests;
 public class CpuRecruitingAndWalkOnTests
 {
     [Fact]
+    public void CpuCanRecruitMoreThanEightUsefulTransfers()
+    {
+        var cpu = Team("CPU", 80);
+        var state = new DynastyState
+        {
+            DynastyName = "Portal rebuild", UserTeamName = "User", SeasonYear = 2027,
+            Phase = SeasonPhase.TransferPortal,
+            TransferPortalEntries = Enumerable.Range(1, 80).Select(index => new TransferPortalEntry
+            {
+                OriginTeamName = "Other", SeasonYear = 2027,
+                Player = Player($"Transfer {index}", "Other", PositionFor(index), 2, 80)
+            }).ToArray()
+        };
+        var result = CpuRecruitingService.ApplyPhaseAssistance(state,
+            new[] { cpu }.ToDictionary(team => team.Name));
+        Assert.True(result.RecruitingCommitments.Count > 8);
+        var assisted = CpuRecruitingService.ApplyWeeklyUserAssistance(state with
+        {
+            UserTeamName = cpu.Name, RecruitingAssistanceEnabled = true,
+            RecruitingAssistanceWorkloadPercent = 100
+        }, cpu);
+        Assert.True(assisted.RecruitingInteractions.Count(item => item.ScholarshipOffered) > 8);
+        Assert.InRange(result.ActiveRoster.Count, 9, 85);
+        Assert.Equal(result.ActiveRoster.Count, result.ActiveRoster.Select(item => item.PlayerId).Distinct().Count());
+    }
+
+    [Fact]
+    public void TransferPlanningProtectsYoungTalentAndRespondsToCoachPreference()
+    {
+        var team = Team("CPU", 80);
+        var candidate = Player("Senior", "Other", Position.QB, 4, 80);
+        var state = new DynastyState
+        {
+            DynastyName = "Future planning", UserTeamName = team.Name,
+            ActiveRoster = Enumerable.Range(0, 4).Select(index =>
+                Player($"Young QB {index}", team.Name, Position.QB, 1, 78) with
+                { PotentialRating = 95 }).ToArray()
+        };
+        Assert.True(TransferRosterPlanningService.GetValue(state, team, candidate) < 0);
+        Assert.True(TransferRosterPlanningService.GetValue(state with { ActiveRoster = [] }, team, candidate) > 0);
+        var head = new StaffMember { FullName = "Coach", TeamName = team.Name,
+            Role = StaffRole.HeadCoach, Recruiting = 100, PlayerDevelopment = 40 };
+        var aggressive = state with { UserHeadCoach = head };
+        var developmental = state with { UserHeadCoach = head with { Recruiting = 40, PlayerDevelopment = 100 } };
+        Assert.True(TransferRosterPlanningService.GetValue(aggressive, team, candidate) >
+            TransferRosterPlanningService.GetValue(developmental, team, candidate));
+        var pending = state with { ActiveRoster = [], PendingTransferCommitments = new[]
+        {
+            new PendingTransferCommitment { TeamName = team.Name, OriginTeamName = "Other",
+                Player = Player("Incoming", team.Name, Position.QB, 1, 90), ProspectId = Guid.NewGuid() }
+        } };
+        Assert.True(TransferRosterPlanningService.GetValue(pending, team, candidate) <
+            TransferRosterPlanningService.GetValue(state with { ActiveRoster = [] }, team, candidate));
+    }
+
+    [Fact]
+    public void InterestReadsIndexLargePoolOnceAndRefreshWhenPoolChanges()
+    {
+        var user = Team("User", 80);
+        var recruits = BuildRecruitPool(10000);
+        var pool = new CountingRecruitPool(recruits);
+        var state = new DynastyState { DynastyName = "Lookup regression", UserTeamName = user.Name,
+            SeasonYear = 2027, HighSchoolRecruitingPool = pool };
+        foreach (var recruit in recruits)
+        {
+            var interest = RecruitPreferenceService.GetInitialSchoolInterest(
+                state, user, RecruitingSource.HighSchool, recruit.RecruitId);
+            Assert.InRange(interest, 5, 95);
+        }
+        Assert.Equal(1, pool.EnumerationCount);
+        var changedPool = new CountingRecruitPool(recruits.Select(recruit =>
+            recruit with { StarRating = 1 }).ToArray());
+        var changed = state with { HighSchoolRecruitingPool = changedPool };
+        var prospect = recruits[0];
+        var before = RecruitPreferenceService.GetInitialSchoolInterest(
+            state, user, RecruitingSource.HighSchool, prospect.RecruitId);
+        var after = RecruitPreferenceService.GetInitialSchoolInterest(
+            changed, user, RecruitingSource.HighSchool, prospect.RecruitId);
+        Assert.True(after > before);
+        Assert.Equal(1, changedPool.EnumerationCount);
+        var crowded = state with { ActiveRoster = Enumerable.Range(0, 20)
+            .Select(index => Player($"Player {index}", user.Name, prospect.Position, 2, 80))
+            .ToArray() };
+        var openGrade = RecruitPreferenceService.GetProgramGrade(state, user,
+            RecruitingSource.HighSchool, prospect.RecruitId, RecruitPitchType.PlayingTime);
+        var crowdedGrade = RecruitPreferenceService.GetProgramGrade(crowded, user,
+            RecruitingSource.HighSchool, prospect.RecruitId, RecruitPitchType.PlayingTime);
+        Assert.True(crowdedGrade < openGrade);
+    }
+
+    private sealed class CountingRecruitPool(IReadOnlyList<HighSchoolRecruit> items)
+        : IReadOnlyList<HighSchoolRecruit>
+    {
+        public int EnumerationCount { get; private set; }
+        public int Count => items.Count;
+        public HighSchoolRecruit this[int index] => items[index];
+        public IEnumerator<HighSchoolRecruit> GetEnumerator()
+        {
+            EnumerationCount++;
+            return items.GetEnumerator();
+        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+
+    [Fact]
+    public void HighInterestAssistedSigningsDevelopAcrossSixWeeksWithoutQuotas()
+    {
+        var user = Team("User", 99);
+        var teams = new[] { user }.ToDictionary(team => team.Name);
+        var pool = BuildRecruitPool(80);
+        var state = new DynastyState
+        {
+            DynastyName = "Cadence regression",
+            DynastyId = Guid.Parse("10101010-2020-3030-4040-505050505050"),
+            UserTeamName = user.Name, SeasonYear = 2027,
+            Phase = SeasonPhase.Recruiting,
+            ActiveRoster = BuildRoster(user.Name, 47),
+            HighSchoolRecruitingPool = pool,
+            RecruitingInteractions = pool.Select(recruit => new RecruitingInteraction
+            {
+                SeasonYear = 2027, Source = RecruitingSource.HighSchool,
+                ProspectId = recruit.RecruitId, ScholarshipOffered = true,
+                IsOnTargetBoard = true, WasCpuAssisted = true, UserInterest = 100
+            }).ToArray()
+        };
+
+        for (var week = 0; week < 6; week++)
+        {
+            state = state with { Week = SeasonProgression.FirstRecruitingWeek + week };
+            var before = state.ActiveRoster.Count;
+
+            state = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
+            if (week == 0)
+                Assert.InRange(state.ActiveRoster.Count - before, 8, 37);
+            var repeated = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
+            Assert.Equal(state.ActiveRoster.Count, repeated.ActiveRoster.Count);
+        }
+        Assert.Equal(85, state.ActiveRoster.Count);
+    }
+
+    [Fact]
+    public void ManualAndAssistedRecruitsHaveIdenticalDecisionTiming()
+    {
+        var user = Team("User", 99);
+        var pool = BuildRecruitPool(38);
+        var state = new DynastyState
+        {
+            DynastyName = "Manual regression",
+            UserTeamName = user.Name, SeasonYear = 2027,
+            Phase = SeasonPhase.Recruiting, Week = SeasonProgression.FirstRecruitingWeek,
+            ActiveRoster = BuildRoster(user.Name, 47), HighSchoolRecruitingPool = pool,
+            RecruitingInteractions = pool.Select(recruit => new RecruitingInteraction
+            {
+                SeasonYear = 2027, Source = RecruitingSource.HighSchool,
+                ProspectId = recruit.RecruitId, ScholarshipOffered = true, UserInterest = 100
+            }).ToArray()
+        };
+        var teams = new[] { user }.ToDictionary(team => team.Name);
+        var result = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
+        var assisted = InteractiveRecruitingService.ResolveCurrentPhase(state with
+        {
+            RecruitingInteractions = state.RecruitingInteractions.Select(item =>
+                item with { WasCpuAssisted = true }).ToArray()
+        }, user, teams);
+        Assert.Equal(result.RecruitingCommitments.Select(item => item.ProspectId),
+            assisted.RecruitingCommitments.Select(item => item.ProspectId));
+        Assert.InRange(result.ActiveRoster.Count, 48, 84);
+    }
+
+    [Fact]
     public void SkippingManualRecruitingUsesVisibleAssistanceThenWalkOns()
     {
         var user = Team("User", 80);
@@ -49,16 +219,9 @@ public class CpuRecruitingAndWalkOnTests
             assisted,
             teams);
 
-        Assert.Equal(
-            60,
-            finalized.ActiveRoster.Count(player =>
-                player.TeamName == user.Name));
-
-        Assert.DoesNotContain(
-            finalized.RecruitingCommitments,
-            commitment =>
-                commitment.TeamName == user.Name &&
-                commitment.Source == RecruitingSource.HighSchool);
+        Assert.All(finalized.RecruitingCommitments.Where(item => item.TeamName == user.Name), item =>
+            Assert.Contains(finalized.RecruitingOffers, offer => offer.ProspectId == item.ProspectId &&
+                offer.TeamName == user.Name && offer.Status == RecruitingOfferStatus.Signed));
 
         var filled = WalkOnRosterService.FillAllTeams(
             finalized with
@@ -141,15 +304,13 @@ public class CpuRecruitingAndWalkOnTests
                 assisted,
                 teams);
 
-        Assert.Equal(
-            50,
-            finalized.ActiveRoster.Count(player =>
-                player.TeamName == user.Name));
-        Assert.DoesNotContain(
-            finalized.RecruitingCommitments,
-            commitment =>
-                commitment.TeamName == user.Name &&
-                commitment.WasCpuAssisted);
+        Assert.True(finalized.ActiveRoster.Count(player => player.TeamName == user.Name) >= 50);
+        Assert.All(finalized.RecruitingCommitments.Where(item => item.TeamName == user.Name), item =>
+        {
+            Assert.True(item.WasCpuAssisted);
+            Assert.Contains(finalized.RecruitingOffers, offer => offer.ProspectId == item.ProspectId &&
+                offer.TeamName == user.Name && offer.Status == RecruitingOfferStatus.Signed);
+        });
     }
 
     [Fact]
@@ -272,6 +433,11 @@ public class CpuRecruitingAndWalkOnTests
 
         var updated = CpuRecruitingService.ApplyPhaseAssistance(
             state, teams, state.RecruitingAssistanceEnabled);
+
+        Assert.Contains(updated.RecruitingOffers, offer => offer.TeamName == rival.Name);
+        for (var week = 21; week <= 25; week++)
+            updated = CpuRecruitingService.ApplyPhaseAssistance(
+                updated with { Week = week }, teams, false);
 
         Assert.Equal(60, updated.ActiveRoster.Count(player =>
             player.TeamName == user.Name));

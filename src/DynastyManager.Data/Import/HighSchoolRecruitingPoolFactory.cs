@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
 
 namespace DynastyManager.Data.Import;
 
@@ -75,15 +76,12 @@ public static class HighSchoolRecruitingPoolFactory
                     overall,
                     99),
                 HomeState = homeState,
-                HomeRegion = GetRegionForState(homeState)
+                HomeRegion = RecruitGeography.GetRegionForState(homeState)
             };
         }
 
         return recruits;
     }
-
-    private static int GetRegionForState(int stateIndex) =>
-        Math.Clamp(stateIndex / 10, 0, 4);
 
     private static int GenerateOverall(
         Guid dynastyId,
