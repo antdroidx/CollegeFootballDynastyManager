@@ -31,6 +31,13 @@ def tap(root, text):
 
 
 home = capture("launch")
+for attempt in range(3):
+    system_dialog = texts(home)
+    if "Quickstep isn't responding" not in system_dialog:
+        break
+    tap(home, "Wait")
+    time.sleep(2)
+    home = capture(f"launch-retry-{attempt + 1}")
 assert {"Your dynasties", "New dynasty"} <= texts(home), "Launch must open the save library"
 assert not {"Advance Week", "Overview", "Roster", "Coach", "Recruit", "Season", "Settings"} & texts(home), "Career controls leaked onto Home"
 tap(home, "New dynasty")
