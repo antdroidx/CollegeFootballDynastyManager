@@ -157,17 +157,20 @@ public sealed partial class FoundationPage
                 double x, y;
                 switch (player?.Position)
                 {
-                    case Position.DL:
+                    case Position.DE:
+                    case Position.DT:
                         x = line + .025;
                         y = .34 + (defensiveLine++ % 5) * .08;
                         break;
-                    case Position.LB:
+                    case Position.OLB:
+                    case Position.MLB:
                         x = line + .075;
                         y = .28 + (linebackers++ % 5) * .11;
                         break;
                     case Position.CB:
-                    case Position.S:
-                        x = line + (player.Position == Position.S ? .19 : .12);
+                    case Position.FS:
+                    case Position.SS:
+                        x = line + (player.Position is Position.FS or Position.SS ? .19 : .12);
                         y = secondary++ % 2 == 0 ? .15 + (secondary / 2) * .09 : .85 - (secondary / 2) * .09;
                         break;
                     default:
