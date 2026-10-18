@@ -131,7 +131,12 @@ public sealed partial class FoundationPage
             }
         }
         Render();
-        return new ScrollView { Orientation = ScrollOrientation.Horizontal, HorizontalScrollBarVisibility = ScrollBarVisibility.Always, Content = grid };
+        return new ScrollView
+        {
+            Orientation = ScrollOrientation.Horizontal,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
+            Content = grid
+        };
     }
 
     private static View SectionTitle(string title, string description) => new VerticalStackLayout { Spacing = 3, Children =

@@ -946,11 +946,11 @@ public sealed partial class FoundationPage : ContentPage
                     Text = "0% = manual only. 100% = full delegation. Staff can use the selected share of recruiting points for realistic targets, scholarship offers, scouting, and pitches. Your manually managed prospects are not overwritten.",
                     FontSize = 12
                 },
-                new BoxView { HeightRequest = 1 },
                 new Label
                 {
                     Text = "AUTOSAVE",
-                    FontAttributes = FontAttributes.Bold
+                    FontAttributes = FontAttributes.Bold,
+                    Margin = new Thickness(0, 10, 0, 0)
                 },
                 new HorizontalStackLayout
                 {
@@ -967,7 +967,6 @@ public sealed partial class FoundationPage : ContentPage
                     }
                 },
                 _rollingAutosaveStatus,
-                new BoxView { HeightRequest = 1 },
                 _autosaveButton,
 
             }
@@ -3136,9 +3135,6 @@ public sealed partial class FoundationPage : ContentPage
             source == RecruitingSource.TransferPortal
                 ? interaction.ScoutingPercent >= 25
                 : interaction.ScoutingPercent >= 50;
-        var potText = potentialVisible
-            ? $" • POT {potentialRange.Minimum}-{potentialRange.Maximum} est."
-            : " • POT unknown";
         var publicRecruitRating =
             RecruitingRankingService.GetProspectRating(
                 _currentDynasty,
@@ -3170,14 +3166,63 @@ public sealed partial class FoundationPage : ContentPage
                 ? $" • Last pitch: {FormatPitchType(interaction.LastPitchType.Value)}"
                 : string.Empty;
 
+        static View RecruitMetric(string label, string value, Color? accent = null) => new Border
+        {
+            StrokeThickness = 0,
+            BackgroundColor = Color.FromArgb("#182630"),
+            Padding = new Thickness(10, 8),
+            Content = new VerticalStackLayout { Spacing = 2, Children =
+            {
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
+                new Label { Text = value, FontSize = 13, FontAttributes = FontAttributes.Bold,
+                    TextColor = accent ?? Color.FromArgb("#E6EBF1"), LineBreakMode = LineBreakMode.WordWrap }
+            } }
+        };
+        static View RecruitSection(string title, View content) => new Border
+        {
+            StrokeThickness = 0,
+            BackgroundColor = Color.FromArgb("#17242E"),
+            Padding = new Thickness(10, 8),
+            Content = new VerticalStackLayout { Spacing = 5, Children =
+            {
+                new Label { Text = title, FontSize = 10, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") },
+                content
+            } }
+        };
+
+        var metricGrid = new Grid
+        {
+            ColumnSpacing = 7, RowSpacing = 7,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) }
+        };
+        metricGrid.Add(RecruitMetric("SCOUTED OVR", range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum}"), 0, 0);
+        metricGrid.Add(RecruitMetric("POTENTIAL", potentialVisible ? $"{potentialRange.Minimum}-{potentialRange.Maximum}" : "Unknown"), 1, 0);
+        metricGrid.Add(RecruitMetric("YOUR INTEREST", $"{currentUserInterest}%", Color.FromArgb("#83D6B6")), 0, 1);
+        metricGrid.Add(RecruitMetric("BEST OFFERED RIVAL", $"{currentRivalInterest}%", Color.FromArgb("#E8C979")), 1, 1);
+
+        var marketGrid = new Grid
+        {
+            ColumnSpacing = 8,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) }
+        };
+        marketGrid.Add(RecruitSection("SCHOLARSHIP OFFERS", new ScrollView
+        {
+            HeightRequest = Math.Min(100, Math.Max(30, scholarshipOffers.Count * 22)),
+            VerticalScrollBarVisibility = ScrollBarVisibility.Never,
+            Content = offerList
+        }), 0, 0);
+        marketGrid.Add(RecruitSection("REVEALED PRIORITIES", preferenceLayout), 1, 0);
+
         _recruitingDetailHost.Content =
             new Border
             {
                 StrokeThickness = 0,
-                Padding = 10,
+                Padding = new Thickness(12, 10),
+                BackgroundColor = Color.FromArgb("#202B37"),
                 Content = new VerticalStackLayout
                 {
-                    Spacing = 5,
+                    Spacing = 9,
                     Children =
                     {
                         new Label
@@ -3186,54 +3231,31 @@ public sealed partial class FoundationPage : ContentPage
                                 $"{prospect.Position} {prospect.FullName}",
                             FontAttributes =
                                 FontAttributes.Bold,
-                            FontSize = 14
+                            FontSize = 17
                         },
                         new Label
                         {
                             Text =
                                 $"{publicRecruitRatingText} • " +
                                 $"{prospect.Subtitle} • {FormatClassYear(prospect.ClassYear, prospect.HasRedshirted)}",
-                            FontSize = 11
+                            FontSize = 11,
+                            TextColor = Color.FromArgb("#B8D8FA")
                         },
+                        metricGrid,
                         new Label
                         {
-                            Text =
-                                $"OVR {(range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum} est.")}{potText} • " +
-                                $"Scout {interaction.ScoutingPercent}% • " +
-                                $"Your interest {currentUserInterest}% • Best offered rival {currentRivalInterest}%" +
-                                evaluationText +
-                                lastPitchText,
-                            FontSize = 12
+                            Text = $"SCOUTED {interaction.ScoutingPercent}%{evaluationText}{lastPitchText}",
+                            FontSize = 10, FontAttributes = FontAttributes.Bold,
+                            TextColor = recruitingOpen ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted
                         },
-                        new Label
-                        {
-                            Text = recruitingOpen
-                                ? "Recruiting actions are available."
-                                : "Recruiting actions are closed in the current phase.",
-                            FontSize = 10,
-                            Opacity = 0.72
-                        },
-                        new Label { Text = "SCHOLARSHIP OFFERS", FontSize = 11, FontAttributes = FontAttributes.Bold },
-                        new ScrollView
-                        {
-                            HeightRequest = Math.Min(120, Math.Max(25, scholarshipOffers.Count * 22)),
-                            Content = offerList
-                        },
+                        marketGrid,
                         new Label
                         {
                             Text = favoritesText,
-                            FontAttributes =
-                                FontAttributes.Bold,
-                            FontSize = 11
+                            FontSize = 10,
+                            TextColor = DynastyTheme.Muted,
+                            LineBreakMode = LineBreakMode.WordWrap
                         },
-                        new Label
-                        {
-                            Text = "REVEALED PRIORITIES",
-                            FontAttributes =
-                                FontAttributes.Bold,
-                            FontSize = 11
-                        },
-                        preferenceLayout,
                         actions
                     }
                 }
@@ -3554,20 +3576,22 @@ public sealed partial class FoundationPage : ContentPage
             });
         }
 
-        _recruitingList.Children.Add(new BoxView { HeightRequest = 1 });
         _recruitingList.Children.Add(new Label
         {
             Text = "YOUR COMMITMENTS",
-            FontAttributes = FontAttributes.Bold
+            FontAttributes = FontAttributes.Bold,
+            TextColor = Color.FromArgb("#9EC6E7"),
+            Margin = new Thickness(0, 8, 0, 2)
         });
         foreach (var commitment in userCommitments)
             AddCommitmentRow(commitment, false);
 
-        _recruitingList.Children.Add(new BoxView { HeightRequest = 1 });
         _recruitingList.Children.Add(new Label
         {
             Text = "AROUND THE NATION",
-            FontAttributes = FontAttributes.Bold
+            FontAttributes = FontAttributes.Bold,
+            TextColor = Color.FromArgb("#9EC6E7"),
+            Margin = new Thickness(0, 10, 0, 2)
         });
         foreach (var commitment in allCommitments
                      .Where(record => !record.TeamName.Equals(
@@ -5246,20 +5270,34 @@ public sealed partial class FoundationPage : ContentPage
             return;
         }
 
+        var conferences = _teamsByName.Values
+            .Select(team => team.ConferenceName)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var selectedConference = _conferencePicker.SelectedItem as string;
+        if (selectedConference is null || !conferences.Contains(selectedConference, StringComparer.OrdinalIgnoreCase))
+            selectedConference = userTeam.ConferenceName;
+        if (!(_conferencePicker.ItemsSource as IEnumerable<string> ?? []).SequenceEqual(conferences))
+        {
+            _conferencePicker.ItemsSource = conferences;
+            _conferencePicker.SelectedItem = selectedConference;
+        }
+
         var conferenceTeams = _teamsByName.Values
             .Where(team => team.ConferenceName.Equals(
-                userTeam.ConferenceName,
+                selectedConference,
                 StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         if (conferenceTeams.Length <
                 ConferenceChampionshipService.MinimumConferenceTeams ||
-            userTeam.ConferenceName.Equals(
+            selectedConference.Equals(
                 "Independent",
                 StringComparison.OrdinalIgnoreCase))
         {
             _conferenceChampionshipStatus.Text =
-                $"{userTeam.ConferenceName}: no conference championship.";
+                $"{selectedConference}: no conference championship.";
             return;
         }
 
@@ -5272,7 +5310,7 @@ public sealed partial class FoundationPage : ContentPage
         var standings = ConferenceStandings.Build(
             _currentDynasty,
             _teamsByName,
-            userTeam.ConferenceName,
+            selectedConference,
             nationalRanks);
 
         var titleGame = _currentDynasty.Schedule
@@ -5284,7 +5322,7 @@ public sealed partial class FoundationPage : ContentPage
                     game.HomeTeamName,
                     out var home) &&
                 home.ConferenceName.Equals(
-                    userTeam.ConferenceName,
+                    selectedConference,
                     StringComparison.OrdinalIgnoreCase));
 
         var champion = _currentDynasty
@@ -5292,7 +5330,7 @@ public sealed partial class FoundationPage : ContentPage
             .FirstOrDefault(record =>
                 record.SeasonYear == _currentDynasty.SeasonYear &&
                 record.ConferenceName.Equals(
-                    userTeam.ConferenceName,
+                    selectedConference,
                     StringComparison.OrdinalIgnoreCase));
 
         if (champion is not null)
@@ -5306,13 +5344,13 @@ public sealed partial class FoundationPage : ContentPage
         else if (titleGame is not null)
         {
             _conferenceChampionshipStatus.Text =
-                $"{userTeam.ConferenceName} Championship: " +
+                $"{selectedConference} Championship: " +
                 $"{titleGame.AwayTeamName} @ {titleGame.HomeTeamName}";
         }
         else
         {
             _conferenceChampionshipStatus.Text =
-                $"Top two {userTeam.ConferenceName} teams qualify for the championship.";
+                $"Top two {selectedConference} teams qualify for the championship.";
         }
 
         _conferenceStandingsList.Children.Add(DataTable(

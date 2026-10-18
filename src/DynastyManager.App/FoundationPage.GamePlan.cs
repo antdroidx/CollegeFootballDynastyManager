@@ -97,12 +97,14 @@ public sealed partial class FoundationPage
             playLibrary.Children.Add(new Label { Text = $"OFFENSE · {GamePlanService.Label(selectedOffense)}", FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent });
             foreach (var play in PlaybookCatalog.OffensivePlays.Where(item => item.Formation == selectedOffense))
                 playLibrary.Children.Add(PlayLibraryRow(play.Id, play.Name,
-                    $"{GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Concept)}", play.Description, favoriteIds, RenderPlayLibrary));
+                    $"{GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Concept)}", play.Description,
+                    true, play.Concept.ToString(), favoriteIds, RenderPlayLibrary));
             playLibrary.Children.Add(new Label { Text = $"DEFENSE · {GamePlanService.Label(selectedDefense)}", FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent,
                 Margin = new Thickness(0, 7, 0, 0) });
             foreach (var play in PlaybookCatalog.DefensivePlays.Where(item => item.Formation == selectedDefense))
                 playLibrary.Children.Add(PlayLibraryRow(play.Id, play.Name,
-                    $"{GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Approach)}", play.Description, favoriteIds, RenderPlayLibrary));
+                    $"{GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Approach)}", play.Description,
+                    false, play.Approach.ToString(), favoriteIds, RenderPlayLibrary));
         }
         offensiveFormation.SelectedIndexChanged += (_, _) => RenderPlayLibrary();
         defensiveFormation.SelectedIndexChanged += (_, _) => RenderPlayLibrary();
@@ -166,6 +168,7 @@ public sealed partial class FoundationPage
     }
 
     private static View PlayLibraryRow(string id, string name, string details, string description,
+        bool offense, string styleKey,
         HashSet<string> favorites, Action rerender)
     {
         var favorite = favorites.Contains(id);
@@ -177,15 +180,108 @@ public sealed partial class FoundationPage
             else if (favorites.Count < 20) favorites.Add(id);
             rerender();
         };
-        var grid = new Grid { ColumnSpacing = 8,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
+        var art = new GraphicsView
+        {
+            Drawable = new PlayArtDrawable(id, offense, styleKey),
+            HeightRequest = 92,
+            WidthRequest = 150,
+            BackgroundColor = Color.FromArgb("#102A24")
+        };
+        SemanticProperties.SetDescription(art, $"{name} play diagram");
+        var grid = new Grid { ColumnSpacing = 10, RowSpacing = 6,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(new GridLength(150)), new(GridLength.Star), new(GridLength.Auto) } };
+        grid.Add(art, 0, 0);
         grid.Add(new VerticalStackLayout { Spacing = 3, Children =
         {
             new Label { Text = name, FontAttributes = FontAttributes.Bold, FontSize = 13 },
             new Label { Text = details, FontSize = 10, TextColor = Color.FromArgb("#B8D8FA") },
             new Label { Text = description, FontSize = 11, TextColor = DynastyTheme.Muted, LineBreakMode = LineBreakMode.WordWrap }
-        } }, 0, 0);
-        grid.Add(toggle, 1, 0);
-        return new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = new Thickness(10, 8), Content = grid };
+        } }, 1, 0);
+        grid.Add(toggle, 2, 0);
+        return new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = new Thickness(10, 10), Content = grid };
+    }
+
+    private sealed class PlayArtDrawable(string id, bool offense, string styleKey) : IDrawable
+    {
+        public void Draw(ICanvas canvas, RectF dirtyRect)
+        {
+            var width = dirtyRect.Width;
+            var height = dirtyRect.Height;
+            canvas.StrokeColor = Color.FromArgb("#3E675B");
+            canvas.StrokeSize = 1;
+            for (var yard = 1; yard < 5; yard++)
+            {
+                var y = height * yard / 5f;
+                canvas.DrawLine(0, y, width, y);
+            }
+            canvas.StrokeColor = Color.FromArgb("#D8E5E2");
+            canvas.StrokeSize = 1.5f;
+            canvas.DrawLine(8, height * .58f, width - 8, height * .58f);
+
+            var seed = Math.Abs(StringComparer.Ordinal.GetHashCode(id));
+            if (offense) DrawOffense(canvas, width, height, seed, styleKey);
+            else DrawDefense(canvas, width, height, seed, styleKey);
+        }
+
+        private static void DrawOffense(ICanvas canvas, float width, float height, int seed, string concept)
+        {
+            canvas.FillColor = Color.FromArgb("#F2F5F4");
+            for (var player = 0; player < 5; player++)
+                canvas.FillCircle(width * (.34f + player * .08f), height * .61f, 3);
+            canvas.FillCircle(width * .5f, height * .72f, 3.5f);
+            canvas.FillCircle(width * .5f, height * .84f, 3.5f);
+            canvas.FillCircle(width * .14f, height * .63f, 3.5f);
+            canvas.FillCircle(width * .86f, height * .63f, 3.5f);
+
+            canvas.StrokeColor = Color.FromArgb("#F4CC66");
+            canvas.StrokeSize = 2.2f;
+            var deep = concept.Contains("Deep", StringComparison.OrdinalIgnoreCase) || concept.Contains("PlayAction", StringComparison.OrdinalIgnoreCase);
+            var run = concept.Contains("Run", StringComparison.OrdinalIgnoreCase);
+            if (run)
+            {
+                var targetX = (seed % 2 == 0 ? .38f : .65f) * width;
+                canvas.DrawLine(width * .5f, height * .82f, targetX, height * .48f);
+                canvas.DrawLine(targetX, height * .48f, targetX + (seed % 3 - 1) * 18, height * .34f);
+            }
+            else
+            {
+                var top = deep ? .12f : .32f;
+                DrawRoute(canvas, width * .14f, height * .59f, width * (.18f + (seed % 3) * .08f), height * top);
+                DrawRoute(canvas, width * .86f, height * .59f, width * (.82f - (seed % 4) * .07f), height * (top + .04f));
+                DrawRoute(canvas, width * .42f, height * .58f, width * .58f, height * (deep ? .2f : .39f));
+            }
+        }
+
+        private static void DrawRoute(ICanvas canvas, float x1, float y1, float x2, float y2)
+        {
+            canvas.DrawLine(x1, y1, x2, y2);
+            canvas.DrawLine(x2, y2, x2 - 4, y2 + 7);
+            canvas.DrawLine(x2, y2, x2 + 5, y2 + 5);
+        }
+
+        private static void DrawDefense(ICanvas canvas, float width, float height, int seed, string approach)
+        {
+            canvas.StrokeColor = Color.FromArgb("#7CC6FF");
+            canvas.StrokeSize = 2;
+            var pressure = approach.Contains("Pressure", StringComparison.OrdinalIgnoreCase);
+            var protect = approach.Contains("Protect", StringComparison.OrdinalIgnoreCase);
+            for (var player = 0; player < 4; player++)
+            {
+                var x = width * (.32f + player * .12f);
+                canvas.DrawCircle(x, height * .49f, 4);
+                if (pressure || player < 2) canvas.DrawLine(x, height * .44f, x + (player % 2 == 0 ? -6 : 6), height * .31f);
+            }
+            for (var player = 0; player < 3; player++)
+                canvas.DrawCircle(width * (.3f + player * .2f), height * .34f, 4);
+            canvas.DrawCircle(width * .18f, height * .2f, 4);
+            canvas.DrawCircle(width * .82f, height * .2f, 4);
+            if (protect)
+            {
+                canvas.StrokeColor = Color.FromArgb("#99E0D0");
+                canvas.DrawArc(width * .1f, height * .08f, width * .8f, height * .32f, 190, 160, false, false);
+            }
+            else if (seed % 2 == 0)
+                canvas.DrawLine(width * .3f, height * .3f, width * .48f, height * .6f);
+        }
     }
 }

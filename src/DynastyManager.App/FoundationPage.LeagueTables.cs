@@ -8,6 +8,7 @@ public sealed partial class FoundationPage
 {
     private readonly Picker _rankingsRange = new() { ItemsSource = new[] { "Top 25", "All schools" }, SelectedIndex = 0 };
     private readonly Picker _scheduleVenue = new() { ItemsSource = new[] { "All games", "Home games", "Away games" }, SelectedIndex = 0 };
+    private readonly Picker _conferencePicker = new() { Title = "Conference" };
     private readonly ContentView _scheduleBanner = new();
 
     private View BuildOrganizedScheduleSection()
@@ -25,12 +26,19 @@ public sealed partial class FoundationPage
     private View BuildOrganizedRankingsSection()
     {
         _rankingsRange.SelectedIndexChanged += (_, _) => RenderNationalRankings();
+        _conferencePicker.SelectedIndexChanged += (_, _) => RenderConferenceRace();
         View[] panels =
         [
             new VerticalStackLayout { Spacing = 10, Children = { ResponsiveTableHeader(
                 new VerticalStackLayout { Spacing = 6, Children = { SectionTitle("National rankings", "School colors · records · scoring · ranking score"), _nationalRankingStatus } },
                 _rankingsRange), _nationalRankingsList } },
-            new VerticalStackLayout { Spacing = 10, IsVisible = false, Children = { SectionTitle("Conference race", "Conference record, overall record and conference point differential"), _conferenceChampionshipStatus, _conferenceStandingsList } },
+            new VerticalStackLayout { Spacing = 10, IsVisible = false, Children =
+            {
+                ResponsiveTableHeader(
+                    SectionTitle("Conference race", "Choose any conference · conference record, overall record and point differential"),
+                    _conferencePicker),
+                _conferenceChampionshipStatus, _conferenceStandingsList
+            } },
             new VerticalStackLayout { Spacing = 10, IsVisible = false, Children = { SectionTitle("Postseason", "Playoff field, bracket results and bowl games"), _postseasonStatus, _postseasonList } }
         ];
         var tabs = new Grid { ColumnSpacing = 6, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
