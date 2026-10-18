@@ -183,11 +183,15 @@ public sealed partial class FoundationPage
         schedule.Clicked += (_, _) => ShowSection(AppSection.Schedule);
         var prep = new Button { Text = "Prepare game plan", BackgroundColor = Color.FromArgb("#315D59") };
         prep.Clicked += (_, _) => ShowSection(AppSection.Playbook);
-        var simulate = new Button { Text = "Advance week", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
-        simulate.Clicked += AdvanceWeek;
+        var simulate = new Button { Text = "Sim game", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
+        simulate.Clicked += async (_, _) => await OpenGameDayAsync(game, GameDayMode.Simulate);
+        var watch = new Button { Text = "Watch game", BackgroundColor = Color.FromArgb("#315D59") };
+        watch.Clicked += async (_, _) => await OpenGameDayAsync(game, GameDayMode.Watch);
+        var play = new Button { Text = "Play game", BackgroundColor = Color.FromArgb("#8A6234") };
+        play.Clicked += async (_, _) => await OpenGameDayAsync(game, GameDayMode.Play);
         _matchupHub.Children.Add(prep); _matchupHub.Children.Add(schedule);
-        _matchupHub.Children.Add(new Label { Text = "Advancing processes the current calendar week, including scheduled games and league activity.", FontSize = 12, TextColor = DynastyTheme.Muted });
-        _matchupHub.Children.Add(simulate);
+        _matchupHub.Children.Add(new Label { Text = "All three modes use the same play, personnel, fatigue and coaching engine. Advance the week afterward to process the remaining league games.", FontSize = 12, TextColor = DynastyTheme.Muted });
+        _matchupHub.Children.Add(new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } });
     }
 
     private View BuildNewsSection() => _newsRows;

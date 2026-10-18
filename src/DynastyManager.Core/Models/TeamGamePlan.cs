@@ -8,6 +8,7 @@ public enum OffensiveFormation { ShotgunSpread, Pistol, Singleback, IForm, Empty
 public enum DefensiveFormation { FourThree, ThreeFour, Nickel, Dime, GoalLine }
 public enum OffensivePersonnel { Ten, Eleven, Twelve, TwentyOne, Empty }
 public enum DefensivePersonnel { BaseFourThree, BaseThreeFour, Nickel, Dime, GoalLine }
+public enum PlayCallSource { Cpu, User }
 
 public sealed record OffensivePlayDefinition(string Id, string Name, OffensiveFormation Formation,
     OffensivePersonnel Personnel, OffensiveConcept Concept, string Description);
@@ -23,5 +24,11 @@ public sealed record TeamGamePlan
     public OffensiveFormation OffensiveFormation { get; init; }
     public DefensiveFormation DefensiveFormation { get; init; }
     public IReadOnlyList<string> FavoritePlayIds { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> OpeningPlayIds { get; init; } = Array.Empty<string>();
     public IReadOnlyList<OffensiveConcept> OpeningScript { get; init; } = Array.Empty<OffensiveConcept>();
 }
+
+public sealed record ResolvedPlayCall(
+    OffensivePlayDefinition Offense,
+    DefensivePlayDefinition Defense,
+    PlayCallSource Source);

@@ -7,6 +7,9 @@ public sealed record GameDriveSummary
     public required string TeamName { get; init; }
     public int PossessionNumber { get; init; }
     public OffensiveConcept Concept { get; init; }
+    public string? OffensivePlayId { get; init; }
+    public string? DefensivePlayId { get; init; }
+    public PlayCallSource PlayCallSource { get; init; }
     public DefensiveApproach DefenseFaced { get; init; }
     public int PassAttempts { get; init; }
     public int RushAttempts { get; init; }

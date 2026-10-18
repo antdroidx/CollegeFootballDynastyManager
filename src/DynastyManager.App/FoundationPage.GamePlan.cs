@@ -74,7 +74,6 @@ public sealed partial class FoundationPage
         var offenseValues = Enum.GetValues<OffensivePlaybook>();
         var defenseValues = Enum.GetValues<DefensivePlaybook>();
         var approachValues = Enum.GetValues<DefensiveApproach>();
-        var conceptValues = Enum.GetValues<OffensiveConcept>();
         var offensiveFormationValues = Enum.GetValues<OffensiveFormation>();
         var defensiveFormationValues = Enum.GetValues<DefensiveFormation>();
         var offense = new Picker { Title = "Offensive playbook", ItemsSource = offenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offenseValues, plan.Offense) };
@@ -114,17 +113,22 @@ public sealed partial class FoundationPage
             playLibrary));
         var script = new VerticalStackLayout { Spacing = 8 };
         var calls = new List<Picker>();
+        var callSheetPlays = PlaybookCatalog.OffensivePlays.ToArray();
+        var callSheetLabels = callSheetPlays.Select(play => $"{play.Name} · {GamePlanService.Label(play.Formation)} · {GamePlanService.Label(play.Concept)}").ToList();
         for (var index = 0; index < 3; index++)
         {
-            script.Children.Add(new Label { Text = $"Drive {index + 1} priority", FontAttributes = FontAttributes.Bold });
-            var picker = new Picker { Title = $"Drive {index + 1}", ItemsSource = conceptValues.Select(GamePlanService.Label).ToList(),
-                SelectedIndex = Array.IndexOf(conceptValues, plan.OpeningScript.ElementAtOrDefault(index)) };
+            script.Children.Add(new Label { Text = $"Drive {index + 1} call", FontAttributes = FontAttributes.Bold });
+            var savedId = plan.OpeningPlayIds.ElementAtOrDefault(index);
+            var selected = Array.FindIndex(callSheetPlays, play => play.Id == savedId);
+            if (selected < 0 && index < plan.OpeningScript.Count)
+                selected = Array.FindIndex(callSheetPlays, play => play.Concept == plan.OpeningScript[index]);
+            var picker = new Picker { Title = $"Drive {index + 1}", ItemsSource = callSheetLabels, SelectedIndex = Math.Max(0, selected) };
             calls.Add(picker);
             script.Children.Add(picker);
         }
         _gamePlanHost.Children.Add(CoachingCard("OPENING CALL SHEET",
-            new Label { Text = "Guide your first three offensive possessions. Each choice sets a drive's emphasis; the playbook takes over afterward. This sheet repeats each game until you change it." },
-            script, new Label { Text = "Deep throws offer more yards with more turnover risk. Quick throws trade some explosiveness for control. This first version simulates drives; live snap-by-snap calls are next.", TextColor = DynastyTheme.Muted }));
+            new Label { Text = "Call exact plays for your first three possessions. CPU teams select from the same catalog and both paths use the same matchup resolver." },
+            script, new Label { Text = "The upcoming live Game Day view will use this same resolver on every snap rather than switching to a separate simulation model.", TextColor = DynastyTheme.Muted }));
         var status = new Label { TextColor = DynastyTheme.Muted };
         var save = new Button { Text = "Apply & save game plan", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
         save.Clicked += async (_, _) =>
@@ -140,7 +144,7 @@ public sealed partial class FoundationPage
                     OffensiveFormation = offensiveFormationValues[Math.Max(0, offensiveFormation.SelectedIndex)],
                     DefensiveFormation = defensiveFormationValues[Math.Max(0, defensiveFormation.SelectedIndex)],
                     FavoritePlayIds = favoriteIds.ToArray(),
-                    OpeningScript = calls.Select(picker => conceptValues[Math.Max(0, picker.SelectedIndex)]).ToArray()
+                    OpeningPlayIds = calls.Select(picker => callSheetPlays[Math.Max(0, picker.SelectedIndex)].Id).ToArray()
                 });
                 _cachedCurrentProfiles = null;
                 _cachedNationalRankings = null;
@@ -163,7 +167,7 @@ public sealed partial class FoundationPage
         if (drives.Length == 0) driveRows.Children.Add(new Label { Text = "Drive reports are available for games played with this version." });
         foreach (var drive in drives)
             driveRows.Children.Add(new Label { Text = drive.IsOvertime ? $"OT / {drive.Outcome} / +{drive.Points} points"
-                : $"Drive {drive.PossessionNumber} / {GamePlanService.Label(drive.Concept)} / {drive.Outcome}\n{drive.PassAttempts} passes, {drive.RushAttempts} runs / {drive.PassYards + drive.RushYards} yards / +{drive.Points} points" });
+                : $"Drive {drive.PossessionNumber} / {PlaybookCatalog.OffensivePlays.FirstOrDefault(play => play.Id == drive.OffensivePlayId)?.Name ?? GamePlanService.Label(drive.Concept)} / {drive.Outcome}\n{drive.PassAttempts} passes, {drive.RushAttempts} runs / {drive.PassYards + drive.RushYards} yards / +{drive.Points} points" });
         _gamePlanHost.Children.Add(CoachingCard("LAST GAME / DRIVE REPORT", driveRows));
     }
 

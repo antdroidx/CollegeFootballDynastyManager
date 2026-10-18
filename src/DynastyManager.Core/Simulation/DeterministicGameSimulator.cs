@@ -56,6 +56,9 @@ public static class DeterministicGameSimulator
             random,
             0.0);
 
+        home = home with { Stats = AddReturns(home.Stats, away.Stats, homeProfile.SpecialTeamsRating, random) };
+        away = away with { Stats = AddReturns(away.Stats, home.Stats, awayProfile.SpecialTeamsRating, random) };
+
         var homeScore = home.Score;
         var awayScore = away.Score;
 
@@ -140,15 +143,37 @@ public static class DeterministicGameSimulator
 
         var score = 0;
         var passAttempts = 0;
+        var passCompletions = 0;
         var rushAttempts = 0;
         var passYards = 0;
         var rushYards = 0;
         var turnovers = 0;
+        var passingTouchdowns = 0;
+        var rushingTouchdowns = 0;
+        var interceptions = 0;
+        var fumbles = 0;
+        var explosivePasses = 0;
+        var explosiveRuns = 0;
+        var drops = 0;
+        var yardsAfterCatch = 0;
+        var sacksAllowed = 0;
+        var fieldGoalsMade = 0;
+        var fieldGoalsAttempted = 0;
+        var extraPointsMade = 0;
+        var extraPointsAttempted = 0;
+        var punts = 0;
+        var puntYards = 0;
+        var longPunt = 0;
+        var puntsInside20 = 0;
+        var puntsInside10 = 0;
 
         var drives = new List<GameDriveSummary>();
         for (var possession = 0; possession < PossessionsPerTeam; possession++)
         {
-            var concept = GamePlanService.GetConcept(plan, possession);
+            var playCall = GamePlanService.ResolvePlayCall(plan, defensePlan, possession, random,
+                (offense.HeadCoachGameManagement + offense.OffensiveCoordinatorGameManagement) / 2,
+                (defense.HeadCoachGameManagement + defense.DefensiveCoordinatorGameManagement) / 2);
+            var concept = playCall.Offense.Concept;
             var (shareShift, passGain, rushGain, turnoverShift, scoringShift) = concept switch
             {
                 OffensiveConcept.InsideRun => (-0.30, 0.0, 0.25, -0.020, 0.0),
@@ -173,6 +198,13 @@ public static class DeterministicGameSimulator
             passAttempts += drivePassAttempts;
             rushAttempts += driveRushAttempts;
 
+            var completionRate = Math.Clamp(.61 + passAdvantage * .0035 - (pressure ? .035 : 0) +
+                (concept == OffensiveConcept.QuickPass ? .055 : concept == OffensiveConcept.DeepPass ? -.09 : 0), .42, .78);
+            var driveCompletions = Math.Clamp((int)Math.Round(drivePassAttempts * completionRate + CenteredNoise(random, .7)), 0, drivePassAttempts);
+            passCompletions += driveCompletions;
+            drops += Math.Max(0, Math.Min(drivePassAttempts - driveCompletions, random.Next(0, 2)));
+            if (pressure && random.NextDouble() < .32) sacksAllowed++;
+
             var passPerAttempt =
                 5.8 +
                 passAdvantage * 0.075 + passGain + (pressure ? 1.2 : 0) +
@@ -187,23 +219,51 @@ public static class DeterministicGameSimulator
             var driveRushYards = Math.Max(0, (int)Math.Round(driveRushAttempts * rushPerAttempt));
             passYards += drivePassYards;
             rushYards += driveRushYards;
+            explosivePasses += Math.Max(0, drivePassYards / 70 + (concept == OffensiveConcept.DeepPass && drivePassYards >= 40 ? 1 : 0));
+            explosiveRuns += Math.Max(0, driveRushYards / 65);
+            yardsAfterCatch += Math.Max(0, (int)Math.Round(drivePassYards * (concept == OffensiveConcept.QuickPass ? .48 : .30)));
             var outcome = DriveOutcome.Punt;
             var points = 0;
             if (random.NextDouble() < driveTurnoverChance)
             {
                 turnovers++;
+                if (drivePassAttempts > 0 && random.NextDouble() < driveShare * .78) interceptions++;
+                else fumbles++;
                 outcome = DriveOutcome.Turnover;
             }
             else
             {
                 var scoringRoll = random.NextDouble();
-                if (scoringRoll < driveTouchdownChance) { points = 7; outcome = DriveOutcome.Touchdown; }
-                else if (scoringRoll < driveTouchdownChance + fieldGoalChance) { points = 3; outcome = DriveOutcome.FieldGoal; }
+                if (scoringRoll < driveTouchdownChance)
+                {
+                    extraPointsAttempted++;
+                    var madeExtraPoint = random.NextDouble() < Math.Clamp(.94 + offense.SpecialTeamsRating * .0005, .93, .99);
+                    if (madeExtraPoint) extraPointsMade++;
+                    points = 6 + (madeExtraPoint ? 1 : 0);
+                    if (random.NextDouble() < driveShare) passingTouchdowns++; else rushingTouchdowns++;
+                    outcome = DriveOutcome.Touchdown;
+                }
+                else if (scoringRoll < driveTouchdownChance + fieldGoalChance)
+                {
+                    fieldGoalsAttempted++; fieldGoalsMade++; points = 3; outcome = DriveOutcome.FieldGoal;
+                }
+                else if (scoringRoll < driveTouchdownChance + fieldGoalChance + .045)
+                    fieldGoalsAttempted++;
+                else
+                {
+                    punts++;
+                    var punt = Math.Clamp((int)Math.Round(39 + offense.SpecialTeamsRating * .07 + CenteredNoise(random, 7)), 25, 68);
+                    puntYards += punt; longPunt = Math.Max(longPunt, punt);
+                    if (random.NextDouble() < .34) puntsInside20++;
+                    if (random.NextDouble() < .14) puntsInside10++;
+                }
             }
             score += points;
             drives.Add(new GameDriveSummary
             {
                 TeamName = offense.TeamName, PossessionNumber = possession + 1, Concept = concept,
+                OffensivePlayId = playCall.Offense.Id, DefensivePlayId = playCall.Defense.Id,
+                PlayCallSource = playCall.Source,
                 DefenseFaced = defensePlan.Approach, PassAttempts = drivePassAttempts, RushAttempts = driveRushAttempts,
                 PassYards = drivePassYards, RushYards = driveRushYards, Outcome = outcome, Points = points
             });
@@ -215,11 +275,47 @@ public static class DeterministicGameSimulator
             {
                 Possessions = PossessionsPerTeam,
                 PassAttempts = passAttempts,
+                PassCompletions = passCompletions,
                 RushAttempts = rushAttempts,
                 PassYards = passYards,
                 RushYards = rushYards,
+                PassingTouchdowns = passingTouchdowns,
+                RushingTouchdowns = rushingTouchdowns,
+                InterceptionsThrown = interceptions,
+                FumblesLost = fumbles,
+                ExplosivePasses20 = explosivePasses,
+                ExplosiveRuns20 = explosiveRuns,
+                Drops = drops,
+                YardsAfterCatch = yardsAfterCatch,
+                SacksAllowed = sacksAllowed,
+                FieldGoalsMade = fieldGoalsMade,
+                FieldGoalsAttempted = fieldGoalsAttempted,
+                ExtraPointsMade = extraPointsMade,
+                ExtraPointsAttempted = extraPointsAttempted,
+                Punts = punts,
+                PuntYards = puntYards,
+                LongPunt = longPunt,
+                PuntsInside20 = puntsInside20,
+                PuntsInside10 = puntsInside10,
                 Turnovers = turnovers
             }, drives);
+    }
+
+    private static GameTeamStats AddReturns(GameTeamStats own, GameTeamStats opponent, double specialTeams, Random random)
+    {
+        var kickReturns = Math.Max(0, opponent.PassingTouchdowns + opponent.RushingTouchdowns + opponent.FieldGoalsMade - 1);
+        var kickAverage = Math.Clamp((int)Math.Round(18 + specialTeams * .07 + CenteredNoise(random, 3)), 15, 31);
+        var puntReturns = Math.Max(0, opponent.Punts - opponent.PuntsInside20 / 2);
+        var puntAverage = Math.Clamp((int)Math.Round(5 + specialTeams * .055 + CenteredNoise(random, 2.5)), 2, 18);
+        return own with
+        {
+            KickReturns = kickReturns,
+            KickReturnYards = kickReturns * kickAverage,
+            KickReturnTouchdowns = kickReturns >= 4 && random.NextDouble() < .025 ? 1 : 0,
+            PuntReturns = puntReturns,
+            PuntReturnYards = puntReturns * puntAverage,
+            PuntReturnTouchdowns = puntReturns >= 3 && random.NextDouble() < .018 ? 1 : 0
+        };
     }
 
     private static TeamSimulationProfile FallbackProfile(Team team)

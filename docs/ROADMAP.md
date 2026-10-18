@@ -8,7 +8,7 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 | 2 | Recruiting balance | Expanded: six seeded careers, including 130-team leagues, games and prestige movement; see build-205-career-validation.md | Full-league, multiple-seed comparisons with changing results/coach strength and CPU peers |
 | 3 | Long-term dynasty health | Expanded: five/ten-year careers with weekly portal decisions, games, age/depth checks and annual save/load | Longer careers with games, deferred transfers, position age distributions and save recovery |
 | 4 | Interface polish | Build 223 flattens remaining Android control/scroll dividers, restructures recruit detail and allows every conference to be viewed | Continue refining presentation using device feedback |
-| 5 | Game-day control | Build 224 completes the league scoreboard, current player stats and postseason presentation needed around Game Day | Build 225: shared snap events, simulated live view and user play selection |
+| 5 | Game-day control | Build 225 introduces the shared snap engine, Sim/Watch/Play modes, live field markers, play selection, fatigue rotation and recorded player game logs | Continue visual polish, situational playcalling, special-teams depth and richer animation |
 | 6 | Broader modernization | Future | Remaining position detail, CSV workflows, faces and presentation |
 | 7 | NIL and coaching budgets | Later; design backlog only | Separate NIL resources and coaching/staff budgets, sustainable multi-year commitments and recruiting/carousel integration |
 
@@ -55,4 +55,4 @@ Build 222 expands every offensive formation to at least eight calls and every de
 
 Build 223 follows device feedback: standings can switch among every conference, table scrollbars and Android picker/search underlines no longer appear as heavy dividers, recruit detail uses a metric-and-market layout, and every playbook call has readable field art. See build-223-recruit-standings-play-art.md.
 
-Build 224 restores persistent midseason rating-change labels, exposes current-season player statistics after every played week, adds receiving and defensive career categories, and provides a league-wide weekly scoreboard. Conference title games are shown together, while the postseason is separated into a four-round playoff tree and an organized bowl schedule. The next build now owns the shared snap event model, simulated live view and playcalling option as one Game Day milestone. See build-224-season-center-stats-postseason.md.
+Build 225 moves regular-season, conference-title, bowl, playoff and interactive user games onto one snap engine. Sim Game, Watch Game and Play Game share playbooks, coaching, personnel packages, fatigue rotation and player event recording. See build-225-game-day-snap-engine.md.

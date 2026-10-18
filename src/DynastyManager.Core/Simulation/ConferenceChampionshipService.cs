@@ -151,12 +151,9 @@ public static class ConferenceChampionshipService
                 changed = true;
                 homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
                 awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
-                return DeterministicGameSimulator.Simulate(
-                    game,
-                    homeTeam,
-                    awayTeam,
-                    homeProfile,
-                    awayProfile);
+                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+                GameDayEngine.SimulateToEnd(session);
+                return GameDayEngine.Finish(session);
             })
             .ToArray();
 

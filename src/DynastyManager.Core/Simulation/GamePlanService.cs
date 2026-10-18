@@ -10,11 +10,12 @@ public static class GamePlanService
         if (!Enum.IsDefined(plan.Offense) || !Enum.IsDefined(plan.Defense) || !Enum.IsDefined(plan.Approach) ||
             !Enum.IsDefined(plan.OffensiveFormation) || !Enum.IsDefined(plan.DefensiveFormation) ||
             plan.OpeningScript.Count > 12 || plan.OpeningScript.Any(call => !Enum.IsDefined(call)) ||
+            plan.OpeningPlayIds.Count > 12 || plan.OpeningPlayIds.Any(id => PlaybookCatalog.OffensivePlays.All(play => play.Id != id)) ||
             plan.FavoritePlayIds.Count > 20 || plan.FavoritePlayIds.Any(id => !PlaybookCatalog.Contains(id)))
             throw new ArgumentException("Invalid game plan.", nameof(plan));
         return state with { TeamGamePlans = state.TeamGamePlans.Where(item =>
             !item.TeamName.Equals(plan.TeamName, StringComparison.OrdinalIgnoreCase))
-            .Append(plan with { OpeningScript = plan.OpeningScript.ToArray(), FavoritePlayIds = plan.FavoritePlayIds.Distinct().ToArray() }).ToArray() };
+            .Append(plan with { OpeningScript = plan.OpeningScript.ToArray(), OpeningPlayIds = plan.OpeningPlayIds.ToArray(), FavoritePlayIds = plan.FavoritePlayIds.Distinct().ToArray() }).ToArray() };
     }
 
     public static TeamGamePlan GetPlan(DynastyState state, TeamSimulationProfile profile)
@@ -46,8 +47,37 @@ public static class GamePlanService
         OffensiveFormation = Enum.IsDefined(plan.OffensiveFormation) ? plan.OffensiveFormation : OffensiveFormation.ShotgunSpread,
         DefensiveFormation = Enum.IsDefined(plan.DefensiveFormation) ? plan.DefensiveFormation : DefensiveFormation.FourThree,
         FavoritePlayIds = plan.FavoritePlayIds.Where(PlaybookCatalog.Contains).Distinct().Take(20).ToArray(),
+        OpeningPlayIds = plan.OpeningPlayIds.Where(id => PlaybookCatalog.OffensivePlays.Any(play => play.Id == id)).Take(12).ToArray(),
         OpeningScript = plan.OpeningScript.Take(12).Select(call => Enum.IsDefined(call) ? call : OffensiveConcept.Automatic).ToArray()
     };
+
+    public static ResolvedPlayCall ResolvePlayCall(TeamGamePlan offense, TeamGamePlan defense,
+        int possession, Random random, int offensiveGameManagement = 60, int defensiveGameManagement = 60)
+    {
+        var scriptedId = possession < offense.OpeningPlayIds.Count ? offense.OpeningPlayIds[possession] : null;
+        var source = scriptedId is null ? PlayCallSource.Cpu : PlayCallSource.User;
+        var desiredConcept = scriptedId is null ? GetConcept(offense, possession) : OffensiveConcept.Automatic;
+        if (source == PlayCallSource.Cpu && random.Next(100) > Math.Clamp(offensiveGameManagement, 25, 95))
+            desiredConcept = Enum.GetValues<OffensiveConcept>()[random.Next(1, Enum.GetValues<OffensiveConcept>().Length)];
+        var offensivePool = PlaybookCatalog.OffensivePlays.Where(play =>
+            play.Formation == offense.OffensiveFormation || offense.FavoritePlayIds.Contains(play.Id)).ToArray();
+        if (offensivePool.Length == 0) offensivePool = PlaybookCatalog.OffensivePlays.ToArray();
+        var calledOffense = scriptedId is not null
+            ? PlaybookCatalog.OffensivePlays.Single(play => play.Id == scriptedId)
+            : Pick(offensivePool.Where(play => desiredConcept == OffensiveConcept.Automatic || play.Concept == desiredConcept).ToArray(), offensivePool, random);
+
+        var defensivePool = PlaybookCatalog.DefensivePlays.Where(play =>
+            play.Formation == defense.DefensiveFormation || defense.FavoritePlayIds.Contains(play.Id)).ToArray();
+        if (defensivePool.Length == 0) defensivePool = PlaybookCatalog.DefensivePlays.ToArray();
+        var anticipatedApproach = random.Next(100) < Math.Clamp(defensiveGameManagement, 25, 95)
+            ? defense.Approach : DefensiveApproach.Balanced;
+        var preferredDefense = defensivePool.Where(play => play.Approach == anticipatedApproach).ToArray();
+        var calledDefense = Pick(preferredDefense, defensivePool, random);
+        return new ResolvedPlayCall(calledOffense, calledDefense, source);
+    }
+
+    private static T Pick<T>(T[] preferred, T[] fallback, Random random) =>
+        (preferred.Length > 0 ? preferred : fallback)[random.Next(preferred.Length > 0 ? preferred.Length : fallback.Length)];
 
     public static OffensiveConcept GetConcept(TeamGamePlan plan, int possession)
     {

@@ -127,6 +127,7 @@ public static class DynastyHistoryService
 
             var passAttempts = games.Sum(game =>
                 GetTeamStats(game, teamGroup.Key)?.PassAttempts ?? 0);
+            var passCompletions = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PassCompletions ?? 0);
             var passYards = games.Sum(game =>
                 GetTeamStats(game, teamGroup.Key)?.PassYards ?? 0);
             var rushAttempts = games.Sum(game =>
@@ -135,12 +136,21 @@ public static class DynastyHistoryService
                 GetTeamStats(game, teamGroup.Key)?.RushYards ?? 0);
             var turnovers = games.Sum(game =>
                 GetTeamStats(game, teamGroup.Key)?.Turnovers ?? 0);
+            var passingTouchdowns = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PassingTouchdowns ?? 0);
+            var rushingTouchdowns = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.RushingTouchdowns ?? 0);
+            var interceptionsThrown = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.InterceptionsThrown ?? 0);
+            var fumblesLost = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.FumblesLost ?? 0);
+            var explosivePasses = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExplosivePasses20 ?? 0);
+            var explosiveRuns = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExplosiveRuns20 ?? 0);
+            var drops = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.Drops ?? 0);
+            var yardsAfterCatch = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.YardsAfterCatch ?? 0);
             var opponentPassAttempts = games.Sum(game =>
                 GetOpponentStats(game, teamGroup.Key)?.PassAttempts ?? 0);
             var opponentRushAttempts = games.Sum(game =>
                 GetOpponentStats(game, teamGroup.Key)?.RushAttempts ?? 0);
             var opponentTurnovers = games.Sum(game =>
                 GetOpponentStats(game, teamGroup.Key)?.Turnovers ?? 0);
+            var opponentFumbles = games.Sum(game => GetOpponentStats(game, teamGroup.Key)?.FumblesLost ?? 0);
             var points = games.Sum(game =>
                 GetTeamScore(game, teamGroup.Key));
             var touchdowns = Math.Max(0, points / 7);
@@ -166,9 +176,15 @@ public static class DynastyHistoryService
                     Position = qb.Position,
                     Games = games.Length,
                     PassAttempts = passAttempts,
+                    PassCompletions = passCompletions,
                     PassYards = passYards,
+                    PassingTouchdowns = passingTouchdowns,
+                    InterceptionsThrown = interceptionsThrown,
                     RushAttempts = rushAttempts / 7,
                     RushYards = rushYards / 10,
+                    RushingTouchdowns = Math.Max(0, rushingTouchdowns / 5),
+                    RushingFumbles = Math.Max(0, fumblesLost / 5),
+                    Rushing20Plus = Math.Max(0, explosiveRuns / 6),
                     Touchdowns = Math.Max(0, touchdowns * 3 / 5),
                     Turnovers = Math.Max(0, turnovers * 3 / 4)
                 });
@@ -193,7 +209,10 @@ public static class DynastyHistoryService
                     Games = games.Length,
                     RushAttempts = remainingRushAttempts * weights[i] / 100,
                     RushYards = remainingRushYards * weights[i] / 100,
-                    Touchdowns = Math.Max(0, touchdowns * weights[i] / 220),
+                    RushingTouchdowns = rushingTouchdowns * weights[i] / 100,
+                    RushingFumbles = fumblesLost * weights[i] / 100,
+                    Rushing20Plus = explosiveRuns * weights[i] / 100,
+                    Touchdowns = rushingTouchdowns * weights[i] / 100,
                     Turnovers = Math.Max(0, turnovers * weights[i] / 300)
                 });
             }
@@ -207,9 +226,14 @@ public static class DynastyHistoryService
                     SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
                     OriginalRecruitingStars = player.OriginalRecruitingStars,
                     PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
-                    Games = games.Length, Receptions = passAttempts * receivingWeights[i] / 100,
+                    Games = games.Length, Receptions = passCompletions * receivingWeights[i] / 100,
                     ReceivingYards = passYards * receivingWeights[i] / 100,
-                    Touchdowns = Math.Max(0, touchdowns * 3 * receivingWeights[i] / 500)
+                    ReceivingTouchdowns = passingTouchdowns * receivingWeights[i] / 100,
+                    YardsAfterCatch = yardsAfterCatch * receivingWeights[i] / 100,
+                    Drops = drops * receivingWeights[i] / 100,
+                    ReceivingFumbles = fumblesLost * receivingWeights[i] / 250,
+                    Receiving20Plus = explosivePasses * receivingWeights[i] / 100,
+                    Touchdowns = passingTouchdowns * receivingWeights[i] / 100
                 });
             }
 
@@ -229,11 +253,59 @@ public static class DynastyHistoryService
                     OriginalRecruitingStars = player.OriginalRecruitingStars,
                     PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
                     Games = games.Length, Tackles = estimatedTackles * tackleWeight / 100,
-                    Sacks = player.Position is Position.DE or Position.DT or Position.OLB or Position.MLB && i < 5
+                    TacklesForLoss = Math.Max(0, opponentRushAttempts / 12 * tackleWeight / 100),
+                    Sacks = (player.Position is Position.DE or Position.DT or Position.OLB or Position.MLB) && i < 5
                         ? Math.Max(0, estimatedSacks * (5 - i) / 10) : 0,
-                    Interceptions = player.Position is Position.CB or Position.FS or Position.SS && i < 7
-                        ? Math.Max(0, estimatedInterceptions * (8 - i) / 12) : 0
+                    PassesDefended = player.Position is Position.CB or Position.FS or Position.SS
+                        ? Math.Max(0, opponentPassAttempts * (8 - Math.Min(i, 7)) / 120) : 0,
+                    Interceptions = (player.Position is Position.CB or Position.FS or Position.SS) && i < 7
+                        ? Math.Max(0, estimatedInterceptions * (8 - i) / 12) : 0,
+                    FumbleRecoveries = i < Math.Min(5, defenders.Length) ? Math.Max(0, opponentFumbles * (5 - i) / 15) : 0
                 });
+            }
+
+            var kicker = players.Where(player => player.Position == Position.K)
+                .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).FirstOrDefault();
+            if (kicker is not null)
+            {
+                result.Add(new PlayerSeasonStatLine
+                {
+                    SeasonYear = state.SeasonYear, PlayerId = kicker.PlayerId,
+                    OriginalRecruitingStars = kicker.OriginalRecruitingStars, PlayerName = kicker.FullName,
+                    TeamName = kicker.TeamName, Position = kicker.Position, Games = games.Length,
+                    ExtraPointsMade = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsMade ?? 0),
+                    ExtraPointsAttempted = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsAttempted ?? 0),
+                    FieldGoalsMade = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.FieldGoalsMade ?? 0),
+                    FieldGoalsAttempted = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.FieldGoalsAttempted ?? 0),
+                    Punts = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.Punts ?? 0),
+                    PuntYards = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PuntYards ?? 0),
+                    LongPunt = games.Max(game => GetTeamStats(game, teamGroup.Key)?.LongPunt ?? 0),
+                    PuntsInside20 = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PuntsInside20 ?? 0),
+                    PuntsInside10 = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PuntsInside10 ?? 0)
+                });
+            }
+
+            var returner = players.Where(player => player.Position is Position.RB or Position.WR or Position.CB)
+                .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.SpeedRating).FirstOrDefault();
+            if (returner is not null)
+            {
+                var index = result.FindIndex(line => line.SeasonYear == state.SeasonYear && line.PlayerId == returner.PlayerId);
+                var baseLine = index >= 0 ? result[index] : new PlayerSeasonStatLine
+                {
+                    SeasonYear = state.SeasonYear, PlayerId = returner.PlayerId,
+                    OriginalRecruitingStars = returner.OriginalRecruitingStars, PlayerName = returner.FullName,
+                    TeamName = returner.TeamName, Position = returner.Position, Games = games.Length
+                };
+                var returnLine = baseLine with
+                {
+                    KickReturns = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.KickReturns ?? 0),
+                    KickReturnYards = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.KickReturnYards ?? 0),
+                    KickReturnTouchdowns = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.KickReturnTouchdowns ?? 0),
+                    PuntReturns = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PuntReturns ?? 0),
+                    PuntReturnYards = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PuntReturnYards ?? 0),
+                    PuntReturnTouchdowns = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PuntReturnTouchdowns ?? 0)
+                };
+                if (index >= 0) result[index] = returnLine; else result.Add(returnLine);
             }
 
             var recorded = result.Where(line => line.SeasonYear == state.SeasonYear &&
@@ -244,8 +316,41 @@ public static class DynastyHistoryService
                     TeamName = player.TeamName, Position = player.Position, Games = games.Length });
         }
 
+        var actualRecorded = state.Schedule.Where(game => game.SeasonYear == state.SeasonYear && game.HasPlayed)
+            .SelectMany(game => game.PlayerStats).GroupBy(line => line.PlayerId).Select(group =>
+                group.Aggregate((total, next) => Sum(total, next))).ToArray();
+        if (actualRecorded.Length > 0)
+        {
+            var ids = actualRecorded.Select(line => line.PlayerId).ToHashSet();
+            result.RemoveAll(line => ids.Contains(line.PlayerId));
+            result.AddRange(actualRecorded);
+        }
         return result;
     }
+
+    private static PlayerSeasonStatLine Sum(PlayerSeasonStatLine a, PlayerSeasonStatLine b) => a with
+    {
+        Games = a.Games + b.Games, PassAttempts = a.PassAttempts + b.PassAttempts,
+        PassCompletions = a.PassCompletions + b.PassCompletions, PassYards = a.PassYards + b.PassYards,
+        PassingTouchdowns = a.PassingTouchdowns + b.PassingTouchdowns, InterceptionsThrown = a.InterceptionsThrown + b.InterceptionsThrown,
+        RushAttempts = a.RushAttempts + b.RushAttempts, RushYards = a.RushYards + b.RushYards,
+        RushingTouchdowns = a.RushingTouchdowns + b.RushingTouchdowns, RushingFumbles = a.RushingFumbles + b.RushingFumbles,
+        Rushing20Plus = a.Rushing20Plus + b.Rushing20Plus, Receptions = a.Receptions + b.Receptions,
+        ReceivingYards = a.ReceivingYards + b.ReceivingYards, ReceivingTouchdowns = a.ReceivingTouchdowns + b.ReceivingTouchdowns,
+        YardsAfterCatch = a.YardsAfterCatch + b.YardsAfterCatch, Drops = a.Drops + b.Drops,
+        ReceivingFumbles = a.ReceivingFumbles + b.ReceivingFumbles, Receiving20Plus = a.Receiving20Plus + b.Receiving20Plus,
+        Tackles = a.Tackles + b.Tackles, TacklesForLoss = a.TacklesForLoss + b.TacklesForLoss,
+        Sacks = a.Sacks + b.Sacks, PassesDefended = a.PassesDefended + b.PassesDefended,
+        Interceptions = a.Interceptions + b.Interceptions, FumbleRecoveries = a.FumbleRecoveries + b.FumbleRecoveries,
+        ExtraPointsMade = a.ExtraPointsMade + b.ExtraPointsMade, ExtraPointsAttempted = a.ExtraPointsAttempted + b.ExtraPointsAttempted,
+        FieldGoalsMade = a.FieldGoalsMade + b.FieldGoalsMade, FieldGoalsAttempted = a.FieldGoalsAttempted + b.FieldGoalsAttempted,
+        Punts = a.Punts + b.Punts, PuntYards = a.PuntYards + b.PuntYards, LongPunt = Math.Max(a.LongPunt, b.LongPunt),
+        PuntsInside20 = a.PuntsInside20 + b.PuntsInside20, PuntsInside10 = a.PuntsInside10 + b.PuntsInside10,
+        KickReturns = a.KickReturns + b.KickReturns, KickReturnYards = a.KickReturnYards + b.KickReturnYards,
+        KickReturnTouchdowns = a.KickReturnTouchdowns + b.KickReturnTouchdowns, PuntReturns = a.PuntReturns + b.PuntReturns,
+        PuntReturnYards = a.PuntReturnYards + b.PuntReturnYards, PuntReturnTouchdowns = a.PuntReturnTouchdowns + b.PuntReturnTouchdowns,
+        Touchdowns = a.Touchdowns + b.Touchdowns, Turnovers = a.Turnovers + b.Turnovers
+    };
 
     private static GameTeamStats? GetOpponentStats(ScheduledGame game, string teamName) =>
         game.HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ? game.AwayStats : game.HomeStats;

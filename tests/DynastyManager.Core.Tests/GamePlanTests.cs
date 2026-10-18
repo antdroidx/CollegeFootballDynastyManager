@@ -40,6 +40,53 @@ public class GamePlanTests
     }
 
     [Fact]
+    public void CpuAndUserCallsUseTheSamePlayResolver()
+    {
+        var offense = Plan("Home", OffensivePlaybook.Spread) with
+        {
+            OffensiveFormation = OffensiveFormation.Pistol,
+            OpeningPlayIds = ["off-pistol-read"]
+        };
+        var defense = Plan("Away", OffensivePlaybook.Balanced) with
+        {
+            DefensiveFormation = DefensiveFormation.Nickel,
+            Approach = DefensiveApproach.ProtectPass
+        };
+
+        var userCall = GamePlanService.ResolvePlayCall(offense, defense, 0, new Random(7));
+        var cpuCall = GamePlanService.ResolvePlayCall(offense with { OpeningPlayIds = [] }, defense, 0, new Random(7));
+
+        Assert.Equal("off-pistol-read", userCall.Offense.Id);
+        Assert.Equal(PlayCallSource.User, userCall.Source);
+        Assert.Equal(PlayCallSource.Cpu, cpuCall.Source);
+        Assert.Equal(OffensiveFormation.Pistol, cpuCall.Offense.Formation);
+        Assert.Equal(DefensiveFormation.Nickel, userCall.Defense.Formation);
+    }
+
+    [Fact]
+    public void GameManagementImprovesCpuAdherenceWithoutChangingUserCalls()
+    {
+        var offense = Plan("Home", OffensivePlaybook.AirRaid) with { OffensiveFormation = OffensiveFormation.ShotgunSpread };
+        var defense = Plan("Away", OffensivePlaybook.Balanced) with
+            { DefensiveFormation = DefensiveFormation.Nickel, Approach = DefensiveApproach.ProtectPass };
+        var strongMatches = 0;
+        var weakMatches = 0;
+        for (var seed = 0; seed < 300; seed++)
+        {
+            var expected = GamePlanService.GetConcept(offense, seed % 12);
+            if (GamePlanService.ResolvePlayCall(offense, defense, seed % 12, new Random(seed), 95, 95).Offense.Concept == expected)
+                strongMatches++;
+            if (GamePlanService.ResolvePlayCall(offense, defense, seed % 12, new Random(seed), 25, 25).Offense.Concept == expected)
+                weakMatches++;
+        }
+        Assert.True(strongMatches > weakMatches + 100, $"Strong {strongMatches}, weak {weakMatches}");
+
+        var explicitCall = offense with { OpeningPlayIds = ["off-spread-verts"] };
+        Assert.Equal("off-spread-verts",
+            GamePlanService.ResolvePlayCall(explicitCall, defense, 0, new Random(1), 25, 25).Offense.Id);
+    }
+
+    [Fact]
     public void InitialPlayCatalogHasUniqueIdsAndEveryFormation()
     {
         var ids = PlaybookCatalog.OffensivePlays.Select(play => play.Id)

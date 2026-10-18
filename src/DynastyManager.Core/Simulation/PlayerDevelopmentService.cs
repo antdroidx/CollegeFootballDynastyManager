@@ -351,12 +351,10 @@ public static class PlayerDevelopmentService
             _ => StaffRole.SpecialTeamsCoordinator
         };
 
-        var headCoach = StaffManagementService.GetRoleRating(
-            state, player.TeamName, StaffRole.HeadCoach);
-        var coordinator = StaffManagementService.GetRoleRating(
-            state, player.TeamName, coordinatorRole);
-        var strength = StaffManagementService.GetRoleRating(
-            state, player.TeamName, StaffRole.StrengthConditioningDirector);
+        var headCoach = StaffManagementService.GetStaff(state, player.TeamName, StaffRole.HeadCoach)?.PlayerDevelopment ?? 60;
+        var coordinator = StaffManagementService.GetStaff(state, player.TeamName, coordinatorRole)?.PlayerDevelopment ?? 60;
+        var strengthCoach = StaffManagementService.GetStaff(state, player.TeamName, StaffRole.StrengthConditioningDirector);
+        var strength = ((strengthCoach?.Conditioning ?? 60) + (strengthCoach?.PlayerDevelopment ?? 60)) / 2;
 
         var average = (headCoach + coordinator + strength) / 3.0;
         return average switch

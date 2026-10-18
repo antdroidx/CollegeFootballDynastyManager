@@ -136,12 +136,9 @@ public static class BowlService
 
             homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
             awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
-            var played = DeterministicGameSimulator.Simulate(
-                game,
-                homeTeam,
-                awayTeam,
-                homeProfile,
-                awayProfile);
+            var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+            GameDayEngine.SimulateToEnd(session);
+            var played = GameDayEngine.Finish(session);
 
             newlyPlayed.Add(played);
             return played;

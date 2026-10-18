@@ -25,6 +25,7 @@ public sealed record ScheduledGame
     public int? AwayScore { get; init; }
     public GameTeamStats? HomeStats { get; init; }
     public GameTeamStats? AwayStats { get; init; }
+    public IReadOnlyList<PlayerSeasonStatLine> PlayerStats { get; init; } = Array.Empty<PlayerSeasonStatLine>();
 
     public bool InvolvesTeam(string teamName) =>
         HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ||
