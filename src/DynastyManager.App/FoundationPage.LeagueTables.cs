@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
@@ -8,17 +9,23 @@ public sealed partial class FoundationPage
 {
     private readonly Picker _rankingsRange = new() { ItemsSource = new[] { "Top 25", "All schools" }, SelectedIndex = 0 };
     private readonly Picker _scheduleVenue = new() { ItemsSource = new[] { "All games", "Home games", "Away games" }, SelectedIndex = 0 };
+    private readonly Picker _scheduleScope = new() { ItemsSource = new[] { "Your team", "All schools" }, SelectedIndex = 0 };
+    private readonly Picker _scheduleWeek = new() { Title = "Week", SelectedIndex = 0 };
     private readonly Picker _conferencePicker = new() { Title = "Conference" };
     private readonly ContentView _scheduleBanner = new();
+    private bool _updatingScheduleWeeks;
 
     private View BuildOrganizedScheduleSection()
     {
         _scheduleVenue.SelectedIndexChanged += (_, _) => RenderUserSchedule();
+        _scheduleScope.SelectedIndexChanged += (_, _) => RenderUserSchedule();
+        _scheduleWeek.SelectedIndexChanged += (_, _) => { if (!_updatingScheduleWeeks) RenderUserSchedule(); };
         return new VerticalStackLayout { Spacing = 10, Children =
         {
             ResponsiveTableHeader(_scheduleBanner, new VerticalStackLayout { Spacing = 8, Children =
             {
-                SectionTitle("Season schedule", "Opponent colors identify each school · W/L and scores remain explicit."), _scheduleVenue
+                SectionTitle("Season schedule", "Browse your schedule or every game and result by week."),
+                new HorizontalStackLayout { Spacing = 8, Children = { _scheduleScope, _scheduleWeek, _scheduleVenue } }
             } }), _scheduleList
         } };
     }
@@ -67,34 +74,74 @@ public sealed partial class FoundationPage
         _scheduleList.Children.Clear();
         if (_currentDynasty is null) return;
         var team = _currentDynasty.UserTeamName;
-        var games = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear && g.InvolvesTeam(team)).OrderBy(g => g.Week).ToArray();
-        var played = games.Where(g => g.HasPlayed).ToArray();
+        var seasonGames = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear).ToArray();
+        var weekValues = seasonGames.Select(game => game.Week).Distinct().Order().ToArray();
+        var weekOptions = new[] { "All weeks" }.Concat(weekValues.Select(FormatScheduleWeek)).ToArray();
+        if (_scheduleWeek.ItemsSource is not string[] oldWeeks || !oldWeeks.SequenceEqual(weekOptions))
+        {
+            _updatingScheduleWeeks = true;
+            var prior = _scheduleWeek.SelectedItem as string;
+            _scheduleWeek.ItemsSource = weekOptions;
+            _scheduleWeek.SelectedIndex = Math.Max(0, Array.IndexOf(weekOptions, prior));
+            _updatingScheduleWeeks = false;
+        }
+        var selectedWeek = _scheduleWeek.SelectedIndex > 0 ? weekValues[_scheduleWeek.SelectedIndex - 1] : (int?)null;
+        var leagueWide = _scheduleScope.SelectedIndex == 1;
+        var games = seasonGames.Where(game => (leagueWide || game.InvolvesTeam(team)) &&
+                (selectedWeek is null || game.Week == selectedWeek))
+            .OrderBy(game => game.Week).ThenBy(game => game.GameType).ThenBy(game => game.HomeTeamName).ToArray();
+        var userGames = seasonGames.Where(game => game.InvolvesTeam(team)).ToArray();
+        var played = userGames.Where(g => g.HasPlayed).ToArray();
         var wins = played.Count(g => g.WinnerTeamName == team);
-        _scheduleBanner.Content = SchoolBanner(team, $"{_currentDynasty.SeasonYear} season · {wins}-{played.Length - wins} · {games.Length} scheduled games");
+        _scheduleBanner.Content = SchoolBanner(team, leagueWide
+            ? $"{_currentDynasty.SeasonYear} league scoreboard · {games.Length} games shown"
+            : $"{_currentDynasty.SeasonYear} season · {wins}-{played.Length - wins} · {userGames.Length} scheduled games");
         var rows = new List<View[]>();
         foreach (var game in games)
         {
             var home = game.HomeTeamName.Equals(team, StringComparison.OrdinalIgnoreCase);
-            if (_scheduleVenue.SelectedIndex == 1 && !home || _scheduleVenue.SelectedIndex == 2 && home) continue;
+            if (!leagueWide && (_scheduleVenue.SelectedIndex == 1 && !home || _scheduleVenue.SelectedIndex == 2 && home)) continue;
             var result = "Upcoming";
             var resultColor = DynastyTheme.Muted;
             if (game.HasPlayed && game.HomeScore is int homeScore && game.AwayScore is int awayScore)
             {
-                var userScore = home ? homeScore : awayScore;
-                var otherScore = home ? awayScore : homeScore;
-                result = $"{(userScore > otherScore ? "W" : "L")} {userScore}-{otherScore}";
-                resultColor = userScore > otherScore ? PositiveChangeColor : NegativeChangeColor;
+                if (leagueWide)
+                {
+                    result = $"{awayScore}-{homeScore}";
+                    resultColor = Color.FromArgb("#E6EBF1");
+                }
+                else
+                {
+                    var userScore = home ? homeScore : awayScore;
+                    var otherScore = home ? awayScore : homeScore;
+                    result = $"{(userScore > otherScore ? "W" : "L")} {userScore}-{otherScore}";
+                    resultColor = userScore > otherScore ? PositiveChangeColor : NegativeChangeColor;
+                }
             }
             var type = game.GameType switch { ScheduledGameType.Conference => "CONF", ScheduledGameType.ConferenceChampionship => "CCG",
                 ScheduledGameType.CollegeFootballPlayoff => "CFP", ScheduledGameType.Bowl => "BOWL", _ => "OOC" };
             var stats = home ? game.HomeStats : game.AwayStats;
-            rows.Add([TableText(game.Week.ToString(), game.Week == _currentDynasty.Week), SchoolCell(home ? game.AwayTeamName : game.HomeTeamName),
-                TableText(result, true, resultColor), TableText(home ? "Home" : "Away"), TableText(type),
+            rows.Add([TableText(FormatScheduleWeek(game.Week), game.Week == _currentDynasty.Week),
+                leagueWide ? SchoolCell(game.AwayTeamName) : SchoolCell(home ? game.AwayTeamName : game.HomeTeamName),
+                leagueWide ? SchoolCell(game.HomeTeamName) : TableText(home ? "Home" : "Away"),
+                TableText(result, true, resultColor), TableText(type),
                 TableText(stats?.TotalYards.ToString("N0") ?? "—"), TableText(stats?.Turnovers.ToString() ?? "—")]);
         }
         if (rows.Count == 0) _scheduleList.Children.Add(new Label { Text = "No games match this selection." });
-        else _scheduleList.Children.Add(DataTable([("Week", 45), ("Opponent", 195), ("Result", 100), ("Venue", 60), ("Type", 55), ("Yards", 65), ("TO", 45)], rows));
+        else _scheduleList.Children.Add(DataTable(leagueWide
+            ? [("Week", 95), ("Away", 195), ("Home", 195), ("Score", 90), ("Type", 55), ("Yards", 65), ("TO", 45)]
+            : [("Week", 95), ("Opponent", 195), ("Venue", 60), ("Result", 100), ("Type", 55), ("Yards", 65), ("TO", 45)], rows));
     }
+
+    private static string FormatScheduleWeek(int week) => week switch
+    {
+        CollegeFootballPlayoffService.FirstRoundWeek => "CFP First Round",
+        CollegeFootballPlayoffService.QuarterfinalWeek => "CFP Quarterfinal",
+        CollegeFootballPlayoffService.SemifinalWeek => "CFP Semifinal",
+        CollegeFootballPlayoffService.NationalChampionshipWeek => "CFP Final",
+        14 => "Championship Week",
+        _ => $"Week {week}"
+    };
 
     private View CreateTeamRosterTable(IEnumerable<DynastyPlayer> roster) => DataTable(
         [("Pos", 45), ("Player", 172), ("OVR", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Profile", 110)],

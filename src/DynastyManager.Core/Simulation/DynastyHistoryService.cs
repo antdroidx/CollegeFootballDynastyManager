@@ -92,7 +92,7 @@ public static class DynastyHistoryService
                 LastRecordedSeason = state.SeasonYear
             };
         }
-        var playerStats = BuildPlayerStats(state);
+        var playerStats = BuildCurrentPlayerStats(state);
         var awards = BuildAwards(state, playerStats);
 
         return CoachCareerService.RecordCompletedSeason(state with
@@ -109,7 +109,7 @@ public static class DynastyHistoryService
         });
     }
 
-    private static IReadOnlyList<PlayerSeasonStatLine> BuildPlayerStats(DynastyState state)
+    public static IReadOnlyList<PlayerSeasonStatLine> BuildCurrentPlayerStats(DynastyState state)
     {
         var result = new List<PlayerSeasonStatLine>();
 
@@ -135,6 +135,12 @@ public static class DynastyHistoryService
                 GetTeamStats(game, teamGroup.Key)?.RushYards ?? 0);
             var turnovers = games.Sum(game =>
                 GetTeamStats(game, teamGroup.Key)?.Turnovers ?? 0);
+            var opponentPassAttempts = games.Sum(game =>
+                GetOpponentStats(game, teamGroup.Key)?.PassAttempts ?? 0);
+            var opponentRushAttempts = games.Sum(game =>
+                GetOpponentStats(game, teamGroup.Key)?.RushAttempts ?? 0);
+            var opponentTurnovers = games.Sum(game =>
+                GetOpponentStats(game, teamGroup.Key)?.Turnovers ?? 0);
             var points = games.Sum(game =>
                 GetTeamScore(game, teamGroup.Key));
             var touchdowns = Math.Max(0, points / 7);
@@ -144,6 +150,8 @@ public static class DynastyHistoryService
                 .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).ToArray();
             var runners = players.Where(player => player.Position is Position.RB or Position.QB)
                 .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).ToArray();
+            var receivers = players.Where(player => player.Position is Position.WR or Position.TE)
+                .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).Take(5).ToArray();
 
             if (qbs.Length > 0)
             {
@@ -189,10 +197,58 @@ public static class DynastyHistoryService
                     Turnovers = Math.Max(0, turnovers * weights[i] / 300)
                 });
             }
+
+            var receivingWeights = new[] { 35, 25, 18, 13, 9 };
+            for (var i = 0; i < receivers.Length; i++)
+            {
+                var player = receivers[i];
+                result.Add(new PlayerSeasonStatLine
+                {
+                    SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars,
+                    PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
+                    Games = games.Length, Receptions = passAttempts * receivingWeights[i] / 100,
+                    ReceivingYards = passYards * receivingWeights[i] / 100,
+                    Touchdowns = Math.Max(0, touchdowns * 3 * receivingWeights[i] / 500)
+                });
+            }
+
+            var defenders = players.Where(player => player.Position is Position.DE or Position.DT or Position.OLB or
+                    Position.MLB or Position.CB or Position.FS or Position.SS)
+                .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).Take(11).ToArray();
+            var estimatedTackles = Math.Max(0, opponentRushAttempts + opponentPassAttempts * 2 / 3);
+            var estimatedSacks = Math.Max(0, opponentPassAttempts / 14);
+            var estimatedInterceptions = Math.Max(0, opponentTurnovers / 2);
+            for (var i = 0; i < defenders.Length; i++)
+            {
+                var player = defenders[i];
+                var tackleWeight = Math.Max(4, 16 - i);
+                result.Add(new PlayerSeasonStatLine
+                {
+                    SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars,
+                    PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
+                    Games = games.Length, Tackles = estimatedTackles * tackleWeight / 100,
+                    Sacks = player.Position is Position.DE or Position.DT or Position.OLB or Position.MLB && i < 5
+                        ? Math.Max(0, estimatedSacks * (5 - i) / 10) : 0,
+                    Interceptions = player.Position is Position.CB or Position.FS or Position.SS && i < 7
+                        ? Math.Max(0, estimatedInterceptions * (8 - i) / 12) : 0
+                });
+            }
+
+            var recorded = result.Where(line => line.SeasonYear == state.SeasonYear &&
+                line.TeamName.Equals(teamGroup.Key, StringComparison.OrdinalIgnoreCase)).Select(line => line.PlayerId).ToHashSet();
+            foreach (var player in players.Where(player => !recorded.Contains(player.PlayerId)))
+                result.Add(new PlayerSeasonStatLine { SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, PlayerName = player.FullName,
+                    TeamName = player.TeamName, Position = player.Position, Games = games.Length });
         }
 
         return result;
     }
+
+    private static GameTeamStats? GetOpponentStats(ScheduledGame game, string teamName) =>
+        game.HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ? game.AwayStats : game.HomeStats;
 
     private static IReadOnlyList<PlayerAwardRecord> BuildAwards(
         DynastyState state,

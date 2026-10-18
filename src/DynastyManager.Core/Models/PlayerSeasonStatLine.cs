@@ -13,8 +13,13 @@ public sealed record PlayerSeasonStatLine
     public int PassYards { get; init; }
     public int RushAttempts { get; init; }
     public int RushYards { get; init; }
+    public int Receptions { get; init; }
+    public int ReceivingYards { get; init; }
+    public int Tackles { get; init; }
+    public int Sacks { get; init; }
+    public int Interceptions { get; init; }
     public int Touchdowns { get; init; }
     public int Turnovers { get; init; }
 
-    public int ScrimmageYards => PassYards + RushYards;
+    public int ScrimmageYards => PassYards + RushYards + ReceivingYards;
 }

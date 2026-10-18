@@ -4689,7 +4689,7 @@ public sealed partial class FoundationPage : ContentPage
                     {
                         Text = development is null
                             ? string.Empty
-                            : $"Last dev ({development.SeasonYear}→{development.SeasonYear + 1}): " +
+                            : $"{(development.Stage == PlayerDevelopmentStage.Midseason ? $"{development.SeasonYear} midseason" : $"{development.SeasonYear}→{development.SeasonYear + 1} offseason")}: " +
                               $"OVR {development.BeforeOverall}→{development.AfterOverall} " +
                               $"({FormatSigned(development.OverallChange)}) • " +
                               $"POT {FormatPotentialStars(development.BeforePotential)}→" +
@@ -4726,17 +4726,6 @@ public sealed partial class FoundationPage : ContentPage
         var records = PlayerDevelopmentService.GetLatestRecords(
             _currentDynasty.PlayerDevelopmentHistory,
             _currentDynasty.UserTeamName);
-
-        if (records.Count > 0 &&
-            records.All(record =>
-                record.Stage == PlayerDevelopmentStage.Midseason) &&
-            !(_currentDynasty.Phase == SeasonPhase.RegularSeason &&
-              _currentDynasty.Week == 7 &&
-              records.All(record =>
-                  record.SeasonYear == _currentDynasty.SeasonYear)))
-        {
-            return Array.Empty<PlayerDevelopmentRecord>();
-        }
 
         return records;
     }
@@ -5230,20 +5219,58 @@ public sealed partial class FoundationPage : ContentPage
                     TableText(selection.Seed.ToString(), true), SchoolCell(selection.TeamName), TableText($"#{selection.NationalRank}"),
                     TableText(selection.IsAutomaticBid ? "Automatic" : "At-large"), TableText(selection.Seed <= 4 ? "Bye" : "First round")
                 })));
-        var games = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
-            game.GameType is ScheduledGameType.CollegeFootballPlayoff or ScheduledGameType.Bowl)
+        var playoffGames = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType == ScheduledGameType.CollegeFootballPlayoff)
             .OrderBy(game => game.Week).ThenBy(game => game.PlayoffBracketSlot).ToArray();
-        if (games.Length > 0)
+        if (playoffGames.Length > 0)
         {
-            _postseasonList.Children.Add(SectionTitle("Playoff & bowl games", "School colors and scored results"));
-            _postseasonList.Children.Add(DataTable([("Round / Bowl", 150), ("Away", 195), ("Home", 195), ("Score (A–H)", 105)],
-                games.Select(game => new View[]
-                {
-                    TableText(game.GameType == ScheduledGameType.Bowl ? game.BowlName ?? "Bowl" : FormatPostseasonRound(game.PostseasonRound)),
-                    SchoolCell(game.AwayTeamName), SchoolCell(game.HomeTeamName),
-                    TableText(game.HasPlayed ? $"{game.AwayScore}–{game.HomeScore}" : "Upcoming", true)
-                })));
+            _postseasonList.Children.Add(SectionTitle("College Football Playoff", "Bracket progression from the first round through the national championship"));
+            _postseasonList.Children.Add(BuildPlayoffTree(playoffGames));
         }
+        var bowlGames = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType == ScheduledGameType.Bowl)
+            .OrderBy(game => game.Week).ThenBy(game => game.BowlName).ToArray();
+        if (bowlGames.Length > 0)
+        {
+            _postseasonList.Children.Add(SectionTitle("Bowl schedule", "Non-playoff postseason games organized separately"));
+            _postseasonList.Children.Add(DataTable([("Bowl", 180), ("Away", 195), ("Home", 195), ("Score (A–H)", 105)],
+                bowlGames.Select(game => new View[] { TableText(game.BowlName ?? "Bowl"), SchoolCell(game.AwayTeamName),
+                    SchoolCell(game.HomeTeamName), TableText(game.HasPlayed ? $"{game.AwayScore}–{game.HomeScore}" : "Upcoming", true) })));
+        }
+    }
+
+    private View BuildPlayoffTree(IReadOnlyList<ScheduledGame> games)
+    {
+        var rounds = new[] { PostseasonRound.FirstRound, PostseasonRound.Quarterfinal,
+            PostseasonRound.Semifinal, PostseasonRound.NationalChampionship };
+        var tree = new HorizontalStackLayout { Spacing = 10 };
+        foreach (var round in rounds)
+        {
+            var column = new VerticalStackLayout { Spacing = 8, WidthRequest = 235 };
+            column.Children.Add(new Label { Text = FormatPostseasonRound(round).ToUpperInvariant(), FontSize = 11,
+                FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") });
+            var roundGames = games.Where(game => game.PostseasonRound == round).OrderBy(game => game.PlayoffBracketSlot).ToArray();
+            if (roundGames.Length == 0)
+                column.Children.Add(new Label { Text = "Matchups pending", FontSize = 11, TextColor = DynastyTheme.Muted });
+            foreach (var game in roundGames)
+            {
+                var awaySeed = game.AwaySeed is int away ? $"#{away} " : string.Empty;
+                var homeSeed = game.HomeSeed is int home ? $"#{home} " : string.Empty;
+                column.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = 9,
+                    Content = new VerticalStackLayout { Spacing = 5, Children =
+                    {
+                        new Label { Text = $"{awaySeed}{game.AwayTeamName}  {(game.HasPlayed ? game.AwayScore : "—")}",
+                            FontAttributes = game.HasPlayed && game.AwayScore > game.HomeScore ? FontAttributes.Bold : FontAttributes.None },
+                        new Label { Text = $"{homeSeed}{game.HomeTeamName}  {(game.HasPlayed ? game.HomeScore : "—")}",
+                            FontAttributes = game.HasPlayed && game.HomeScore > game.AwayScore ? FontAttributes.Bold : FontAttributes.None },
+                        new Label { Text = game.HasPlayed ? "FINAL" : "UPCOMING", FontSize = 9,
+                            TextColor = game.HasPlayed ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted }
+                    } } });
+            }
+            tree.Children.Add(column);
+        }
+        return new ScrollView { Orientation = ScrollOrientation.Horizontal,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Never, Content = tree };
     }
 
     private static string FormatPostseasonRound(PostseasonRound round) =>
@@ -5362,6 +5389,24 @@ public sealed partial class FoundationPage : ContentPage
                 TableText(standing.OverallWins.ToString()), TableText(standing.OverallLosses.ToString()),
                 TableText(FormatSigned(standing.ConferencePointDifferential), color: GetChangeColor(standing.ConferencePointDifferential))
             })));
+
+        var championshipGames = _currentDynasty.Schedule
+            .Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
+                game.GameType == ScheduledGameType.ConferenceChampionship)
+            .OrderBy(game => _teamsByName.TryGetValue(game.HomeTeamName, out var home) ? home.ConferenceName : game.HomeTeamName)
+            .ToArray();
+        if (championshipGames.Length > 0)
+        {
+            _conferenceStandingsList.Children.Add(SectionTitle("Conference championship games", "Every title matchup and result"));
+            _conferenceStandingsList.Children.Add(DataTable(
+                [("Conference", 130), ("Away", 195), ("Home", 195), ("Result", 105)],
+                championshipGames.Select(game => new View[]
+                {
+                    TableText(_teamsByName.TryGetValue(game.HomeTeamName, out var home) ? home.ConferenceName : "Conference"),
+                    SchoolCell(game.AwayTeamName), SchoolCell(game.HomeTeamName),
+                    TableText(game.HasPlayed ? $"{game.AwayScore}–{game.HomeScore}" : "Upcoming", true)
+                })));
+        }
     }
 
     private void RenderUserSchedule() => RenderScheduleGrid();

@@ -101,6 +101,24 @@ public class ModernFbsTests
         finally { foreach (var suffix in new[] { "", "-wal", "-shm" }) if (File.Exists(path + suffix)) File.Delete(path + suffix); }
     }
 
+    [Fact]
+    public void CurrentSeasonStatsAreAvailableBeforeSeasonFinalization()
+    {
+        var qb = new DynastyPlayer { PlayerId = Guid.NewGuid(), FullName = "Live QB", TeamName = "Washington",
+            Position = Position.QB, ClassYear = 2, OriginalRecruitingStars = 4, OverallRating = 82, DepthChartOrder = 1 };
+        var rb = qb with { PlayerId = Guid.NewGuid(), FullName = "Live RB", Position = Position.RB, DepthChartOrder = 1 };
+        var state = new DynastyState { DynastyName = "Current stats", UserTeamName = "Washington", SeasonYear = 2026,
+            ActiveRoster = [qb, rb], Schedule = [Game(2026, "Washington", "Oregon")] };
+
+        var stats = DynastyHistoryService.BuildCurrentPlayerStats(state);
+
+        var quarterback = Assert.Single(stats, line => line.PlayerId == qb.PlayerId);
+        Assert.Equal(300, quarterback.PassYards);
+        Assert.Equal(1, quarterback.Games);
+        Assert.Contains(stats, line => line.PlayerId == rb.PlayerId && line.RushYards > 0);
+        Assert.Empty(state.PlayerSeasonStats);
+    }
+
     private static ScheduledGame Game(int year, string home, string away) => new()
     {
         GameId = $"{year}-game", SeasonYear = year, Week = 1, HomeTeamName = home, AwayTeamName = away,

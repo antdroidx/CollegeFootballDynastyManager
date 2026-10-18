@@ -55,9 +55,10 @@ public sealed partial class FoundationPage
     {
         if (_currentDynasty is null) return;
         var state = _currentDynasty;
+        var visibleStats = VisiblePlayerStatistics();
         var active = state.ActiveRoster.FirstOrDefault(player => player.PlayerId == id);
         var career = state.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id);
-        var latest = state.PlayerSeasonStats.Where(line => line.PlayerId == id).OrderByDescending(line => line.SeasonYear).FirstOrDefault();
+        var latest = visibleStats.Where(line => line.PlayerId == id).OrderByDescending(line => line.SeasonYear).FirstOrDefault();
         if (active is null && career is null && latest is null) return;
         var player = active ?? new DynastyPlayer
         {
@@ -97,7 +98,7 @@ public sealed partial class FoundationPage
                 TextColor = player.CurrentInjury is null ? Color.FromArgb("#83D6B6") : Color.FromArgb("#E5A1B7"), FontSize = 12 });
         }
         else content.Children.Add(new Label { Text = "This is a recorded career. Current attributes are unavailable after departure.", FontSize = 12, TextColor = DynastyTheme.Muted });
-        var totals = state.PlayerSeasonStats.Where(line => line.PlayerId == id).ToArray();
+        var totals = visibleStats.Where(line => line.PlayerId == id).ToArray();
         content.Children.Add(SectionTitle("Career snapshot", $"{totals.Sum(line => line.Games)} recorded games · {totals.Sum(line => line.ScrimmageYards):N0} yards · {totals.Sum(line => line.Touchdowns)} TD"));
         var stats = new Button { Text = "Season & career statistics", BackgroundColor = Color.FromArgb("#315D59") };
         stats.Clicked += async (_, _) => await ShowPlayerStatisticsAsync(player);
