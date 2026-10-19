@@ -12,12 +12,9 @@ public sealed record PlayerSkillRatings
     public int PassBlocking { get; init; }
     public int BallCarrying { get; init; }
     public int Acceleration { get; init; }
-    public int Stamina { get; init; }
     public int Leadership { get; init; }
     public int Discipline { get; init; }
     public int Jumping { get; init; }
-    public int ManCoverage { get; init; }
-    public int ZoneCoverage { get; init; }
     public int KickPower { get; init; }
     public int KickAccuracy { get; init; }
 }

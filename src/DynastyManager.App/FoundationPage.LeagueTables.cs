@@ -9,16 +9,21 @@ public sealed partial class FoundationPage
 {
     private readonly Picker _rankingsRange = new() { ItemsSource = new[] { "Top 25", "All schools" }, SelectedIndex = 0 };
     private readonly Picker _scheduleVenue = new() { ItemsSource = new[] { "All games", "Home games", "Away games" }, SelectedIndex = 0 };
-    private readonly Picker _scheduleScope = new() { ItemsSource = new[] { "Your team", "All schools" }, SelectedIndex = 0 };
+    private readonly Picker _scheduleScope = new() { ItemsSource = new[] { "Your team", "All teams" }, SelectedIndex = 0 };
     private readonly Picker _scheduleWeek = new() { Title = "Week", SelectedIndex = 0 };
     private readonly Picker _conferencePicker = new() { Title = "Conference" };
     private readonly ContentView _scheduleBanner = new();
     private bool _updatingScheduleWeeks;
+    private bool _defaultLeagueWeek;
 
     private View BuildOrganizedScheduleSection()
     {
         _scheduleVenue.SelectedIndexChanged += (_, _) => RenderUserSchedule();
-        _scheduleScope.SelectedIndexChanged += (_, _) => RenderUserSchedule();
+        _scheduleScope.SelectedIndexChanged += (_, _) =>
+        {
+            _defaultLeagueWeek = _scheduleScope.SelectedIndex == 1;
+            RenderUserSchedule();
+        };
         _scheduleWeek.SelectedIndexChanged += (_, _) => { if (!_updatingScheduleWeeks) RenderUserSchedule(); };
         return new VerticalStackLayout { Spacing = 10, Children =
         {
@@ -83,6 +88,14 @@ public sealed partial class FoundationPage
             var prior = _scheduleWeek.SelectedItem as string;
             _scheduleWeek.ItemsSource = weekOptions;
             _scheduleWeek.SelectedIndex = Math.Max(0, Array.IndexOf(weekOptions, prior));
+            _updatingScheduleWeeks = false;
+        }
+        if (_defaultLeagueWeek)
+        {
+            _updatingScheduleWeeks = true;
+            var week = weekValues.OrderBy(w => Math.Abs(w - _currentDynasty.Week)).FirstOrDefault();
+            _scheduleWeek.SelectedIndex = Math.Max(0, Array.IndexOf(weekValues, week) + 1);
+            _defaultLeagueWeek = false;
             _updatingScheduleWeeks = false;
         }
         var selectedWeek = _scheduleWeek.SelectedIndex > 0 ? weekValues[_scheduleWeek.SelectedIndex - 1] : (int?)null;

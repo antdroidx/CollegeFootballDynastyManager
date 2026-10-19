@@ -52,8 +52,8 @@ public static class PersonnelRotationService
                 Position.CB or Position.FS or Position.SS => 2.4,
                 Position.OL => 1.25, Position.QB => 1.0, _ => 1.5
             };
-            var stamina = player.Skills?.Stamina ?? player.DurabilityRating;
-            var durabilityFactor = 1.25 - Math.Clamp((stamina + player.DurabilityRating) / 200d, .35, 1);
+            var stamina = player.InjuryRating;
+            var durabilityFactor = 1.25 - Math.Clamp((stamina + player.InjuryRating) / 200d, .35, 1);
             fatigue.Set(player.PlayerId, energy - load * (1 + durabilityFactor) * (longPlay ? 1.3 : 1));
         }
     }
@@ -107,6 +107,7 @@ public static class PersonnelRotationService
 
     private static (Position, int)[] OffensiveNeeds(OffensivePersonnel package) => package switch
     {
+        OffensivePersonnel.TripleBack => [(Position.QB, 1), (Position.RB, 3), (Position.WR, 2), (Position.OL, 5)],
         OffensivePersonnel.Ten => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 4), (Position.OL, 5)],
         OffensivePersonnel.Twelve => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 2), (Position.TE, 2), (Position.OL, 5)],
         OffensivePersonnel.TwentyOne => [(Position.QB, 1), (Position.RB, 2), (Position.WR, 2), (Position.TE, 1), (Position.OL, 5)],

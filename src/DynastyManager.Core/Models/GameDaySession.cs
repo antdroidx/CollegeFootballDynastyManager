@@ -27,6 +27,8 @@ public sealed record GameSnapEvent
     public int ReturnYards { get; init; }
     public bool IsTouchback { get; init; }
     public bool IsFairCatch { get; init; }
+    public bool IsQuarterbackKeep { get; init; }
+    public bool IsBootleg { get; init; }
     public bool IsQuarterbackScramble { get; init; }
     public SnapOutcome Outcome { get; init; }
     public Guid? QuarterbackId { get; init; }
@@ -70,5 +72,9 @@ public sealed class GameDaySession
     public int PossessionNumber { get; set; } = 1;
     public bool KickoffPending { get; set; } = true;
     public string KickoffTeamName { get; set; } = string.Empty;
+    public string? ControlledTeamName { get; set; }
+    public int HomeTimeouts { get; set; } = 3;
+    public int AwayTimeouts { get; set; } = 3;
+    public bool ClockStopped { get; set; }
     public bool IsComplete { get; set; }
 }

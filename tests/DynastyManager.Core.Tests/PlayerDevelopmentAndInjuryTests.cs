@@ -97,6 +97,9 @@ public class PlayerDevelopmentAndInjuryTests
             Week = 4
         };
 
+        state = PlayerRatingService.EnsureProfiles(state);
+        player = Assert.Single(state.ActiveRoster);
+
         var injured = InjuryService.ApplyInjury(
             state,
             player.PlayerId,
@@ -109,7 +112,7 @@ public class PlayerDevelopmentAndInjuryTests
         Assert.NotNull(result.CurrentInjury);
         Assert.True(result.SpeedRating < player.SpeedRating);
         Assert.True(result.AgilityRating < player.AgilityRating);
-        Assert.True(result.DurabilityRating < player.DurabilityRating);
+        Assert.True(result.InjuryRating < player.InjuryRating);
         Assert.True(result.PotentialRating < player.PotentialRating);
         Assert.True(result.OverallRating < player.OverallRating);
         Assert.True(result.IsRedshirted);
@@ -274,8 +277,7 @@ public class PlayerDevelopmentAndInjuryTests
             StrengthRating = overall,
             AgilityRating = overall,
             AwarenessRating = overall,
-            TechniqueRating = overall,
-            DurabilityRating = overall
+            InjuryRating = overall
         };
 
     private static PlayerDevelopmentRecord DevelopmentRecord(

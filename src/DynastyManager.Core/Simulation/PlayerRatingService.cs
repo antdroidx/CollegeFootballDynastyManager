@@ -28,8 +28,7 @@ public static class PlayerRatingService
             player.StrengthRating > 0 &&
             player.AgilityRating > 0 &&
             player.AwarenessRating > 0 &&
-            player.TechniqueRating > 0 &&
-            player.DurabilityRating > 0)
+            player.InjuryRating > 0)
         {
             return RecalculateOverall(PlayerSkillService.EnsureInitialized(player));
         }
@@ -44,8 +43,6 @@ public static class PlayerRatingService
             Offset(state, player, "agility"));
         var awareness = ClampRating(target + PositionBias(player.Position, "awareness") +
             Offset(state, player, "awareness"));
-        var technique = ClampRating(target + PositionBias(player.Position, "technique") +
-            Offset(state, player, "technique"));
         var durability = ClampRating(
             Math.Max(
                 55,
@@ -58,8 +55,7 @@ public static class PlayerRatingService
             StrengthRating = strength,
             AgilityRating = agility,
             AwarenessRating = awareness,
-            TechniqueRating = technique,
-            DurabilityRating = durability
+            InjuryRating = durability
         };
 
         var potential = player.PotentialRating > 0
@@ -81,18 +77,7 @@ public static class PlayerRatingService
     public static int CalculateOverall(DynastyPlayer player)
     {
         ArgumentNullException.ThrowIfNull(player);
-        var passingWeight = player.Position switch
-        {
-            Position.QB or Position.WR => .85,
-            Position.RB => .20,
-            Position.TE => .55,
-            Position.DE or Position.DT or Position.MLB => .35,
-            Position.CB => .80,
-            Position.FS or Position.SS => .65,
-            _ => .50
-        };
-        return Math.Clamp((int)Math.Round(PlayerSkillService.GameRating(player, true) * passingWeight +
-            PlayerSkillService.GameRating(player, false) * (1 - passingWeight), MidpointRounding.AwayFromZero), 40, 99);
+        return Ncaa06RatingService.CalculateOverall(player);
     }
 
     public static DynastyPlayer RecalculateOverall(DynastyPlayer player) =>

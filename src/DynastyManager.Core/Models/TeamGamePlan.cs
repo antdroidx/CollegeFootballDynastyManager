@@ -1,12 +1,12 @@
 namespace DynastyManager.Core.Models;
 
-public enum OffensivePlaybook { Balanced, Spread, AirRaid, PowerRun, Option }
-public enum DefensivePlaybook { Balanced, FourThree, ThreeFour, Nickel }
+public enum OffensivePlaybook { Balanced, Spread, AirRaid, PowerRun, Option, Flexbone, Custom }
+public enum DefensivePlaybook { Balanced, FourThree, ThreeFour, Nickel, Custom }
 public enum DefensiveApproach { Balanced, StopRun, ProtectPass, Pressure }
 public enum OffensiveConcept { Automatic, InsideRun, OutsideRun, QuickPass, PlayAction, DeepPass }
-public enum OffensiveFormation { ShotgunSpread, Pistol, Singleback, IForm, Empty }
+public enum OffensiveFormation { ShotgunSpread, Pistol, Singleback, IForm, Empty, Flexbone }
 public enum DefensiveFormation { FourThree, ThreeFour, Nickel, Dime, GoalLine }
-public enum OffensivePersonnel { Ten, Eleven, Twelve, TwentyOne, Empty }
+public enum OffensivePersonnel { Ten, Eleven, Twelve, TwentyOne, Empty, TripleBack }
 public enum DefensivePersonnel { BaseFourThree, BaseThreeFour, Nickel, Dime, GoalLine }
 public enum PlayCallSource { Cpu, User }
 
@@ -23,7 +23,8 @@ public sealed record TeamGamePlan
     public DefensiveApproach Approach { get; init; }
     public OffensiveFormation OffensiveFormation { get; init; }
     public DefensiveFormation DefensiveFormation { get; init; }
-    public IReadOnlyList<string> FavoritePlayIds { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> CustomOffensivePlayIds { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> CustomDefensivePlayIds { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> OpeningPlayIds { get; init; } = Array.Empty<string>();
     public IReadOnlyList<OffensiveConcept> OpeningScript { get; init; } = Array.Empty<OffensiveConcept>();
 }

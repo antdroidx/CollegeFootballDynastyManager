@@ -267,12 +267,6 @@ public static class PlayerDevelopmentService
             "awareness",
             targetChange,
             1.15);
-        var techniqueChange = AttributeChange(
-            state,
-            player,
-            "technique",
-            targetChange,
-            1.10);
         var durabilityChange = targetChange > 0
             ? Math.Max(
                 0,
@@ -301,11 +295,9 @@ public static class PlayerDevelopmentService
                 player.AgilityRating + agilityChange),
             AwarenessRating = Clamp(
                 player.AwarenessRating + awarenessChange),
-            TechniqueRating = Clamp(
-                player.TechniqueRating + techniqueChange),
             Skills = PlayerSkillService.Train(state, player, targetChange, midseason),
-            DurabilityRating = Clamp(
-                player.DurabilityRating + durabilityChange)
+            InjuryRating = Clamp(
+                player.InjuryRating + durabilityChange)
         };
 
         return PlayerRatingService.RecalculateOverall(
@@ -397,10 +389,8 @@ public static class PlayerDevelopmentService
                 player.AgilityRating - difference),
             AwarenessRating = Clamp(
                 player.AwarenessRating - difference),
-            TechniqueRating = Clamp(
-                player.TechniqueRating - difference),
-            DurabilityRating = Clamp(
-                player.DurabilityRating - difference)
+            InjuryRating = Clamp(
+                player.InjuryRating - difference)
         };
 
         reduced = reduced with { Skills = PlayerSkillService.Shift(player.Skills!, -difference) };

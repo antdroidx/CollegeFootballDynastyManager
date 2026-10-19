@@ -184,12 +184,8 @@ public static class InjuryService
                 player.AwarenessRating - regression.Awareness,
                 40,
                 99),
-            TechniqueRating = Math.Clamp(
-                player.TechniqueRating - regression.Technique,
-                40,
-                99),
-            DurabilityRating = Math.Clamp(
-                player.DurabilityRating - regression.Durability,
+            InjuryRating = Math.Clamp(
+                player.InjuryRating - regression.Durability,
                 25,
                 99),
             PotentialRating = Math.Clamp(
@@ -276,7 +272,7 @@ public static class InjuryService
 
         var chanceBasisPoints = Math.Clamp(
             110 +
-            (80 - player.DurabilityRating) * 3 -
+            (80 - player.InjuryRating) * 3 -
             preventionAdjustment,
             35,
             230);

@@ -255,6 +255,49 @@ public class GameDayEngineTests
         }
     }
 
+    [Fact]
+    public void OptionCallsIncludeQuarterbackKeepsAndRushingStatistics()
+    {
+        GameDaySession? kept = null;
+        for (var seed = 1; seed <= 80 && kept is null; seed++)
+        {
+            var session = Session(GameDayMode.Play, seed: seed);
+            var snap = GameDayEngine.Step(session, "off-pistol-read");
+            if (snap.IsQuarterbackKeep) kept = session;
+        }
+        Assert.NotNull(kept);
+        var keep = kept!.Events.Single();
+        Assert.Equal(keep.QuarterbackId, keep.BallCarrierId);
+        Assert.Null(keep.TargetId);
+        GameDayEngine.SimulateToEnd(kept);
+        Assert.True(GameDayEngine.Finish(kept).PlayerStats.Single(p => p.PlayerId == keep.QuarterbackId).RushAttempts > 0);
+    }
+
+    [Fact]
+    public void TimeoutsStopRunoffAndResetAtHalftime()
+    {
+        var session = Session(GameDayMode.Play);
+        Assert.True(GameDayEngine.TryCallTimeout(session, "Home"));
+        Assert.Equal(2, session.HomeTimeouts);
+        Assert.False(GameDayEngine.TryCallTimeout(session, "Home"));
+        var priorClock = session.ClockSeconds;
+        GameDayEngine.Step(session, "off-spread-zone");
+        Assert.InRange(priorClock - session.ClockSeconds, 4, 8);
+        session.Quarter = 2; session.ClockSeconds = 1;
+        session.HomeTimeouts = 0; session.AwayTimeouts = 1;
+        GameDayEngine.Step(session, "off-spread-zone");
+        Assert.Equal(3, session.Quarter);
+        Assert.Equal(3, session.HomeTimeouts);
+        Assert.Equal(3, session.AwayTimeouts);
+    }
+
+    [Fact]
+    public void BootCallsCarryTheBootlegAssignmentIntoTheViewer()
+    {
+        var session = Session(GameDayMode.Play);
+        Assert.True(GameDayEngine.Step(session, "off-single-flood").IsBootleg);
+    }
+
     private static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false, int seed = 7123, bool neutral = false)
     {
         var homePlan = new TeamGamePlan { TeamName = "Home", Offense = OffensivePlaybook.Spread,
@@ -285,7 +328,7 @@ public class GameDayEngineTests
             PlayerId = Guid.NewGuid(), FullName = $"{team} {position} {i}", TeamName = team, Position = position,
             ClassYear = 2, TalentLevel = 75, OverallRating = 85 - i, PotentialRating = 90,
             SpeedRating = 75, StrengthRating = 75, AgilityRating = 75, AwarenessRating = 75,
-            TechniqueRating = 75, DurabilityRating = 80, DepthChartOrder = i
+            InjuryRating = 80, DepthChartOrder = i
         });
         return players.ToArray();
     }

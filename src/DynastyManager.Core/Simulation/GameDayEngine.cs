@@ -30,6 +30,13 @@ public static class GameDayEngine
     {
         if (session.IsComplete) throw new InvalidOperationException("The game is complete.");
         if (session.KickoffPending) return ResolveKickoff(session);
+        if (session.Quarter is 2 or 4 && session.ClockSeconds <= 90 && !session.ClockStopped)
+        {
+            var trailing = session.HomeScore < session.AwayScore ? session.Game.HomeTeamName :
+                session.AwayScore < session.HomeScore ? session.Game.AwayTeamName : null;
+            if (trailing is not null && trailing != session.PossessionTeamName &&
+                (session.Mode != GameDayMode.Play || trailing != session.ControlledTeamName)) TryCallTimeout(session, trailing);
+        }
         var homeOnOffense = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var offense = homeOnOffense ? session.HomeProfile : session.AwayProfile;
         var defense = homeOnOffense ? session.AwayProfile : session.HomeProfile;
@@ -42,6 +49,9 @@ public static class GameDayEngine
         var offensePlan = GamePlanService.Normalize(offense.GamePlan ?? new TeamGamePlan { TeamName = offense.TeamName });
         var defensePlan = GamePlanService.Normalize(defense.GamePlan ?? new TeamGamePlan { TeamName = defense.TeamName });
         var requestedSpecial = userPlayId is "special-punt" or "special-field-goal" ? userPlayId : null;
+        if (!string.IsNullOrWhiteSpace(userPlayId) && requestedSpecial is null && offensePlan.Offense == OffensivePlaybook.Custom &&
+            !offensePlan.CustomOffensivePlayIds.Contains(userPlayId))
+            throw new ArgumentException("Offensive play is not in this custom playbook.", nameof(userPlayId));
         if (!string.IsNullOrWhiteSpace(userPlayId) && requestedSpecial is null)
             offensePlan = offensePlan with { OpeningPlayIds = [userPlayId] };
         var offensivePossessionIndex = session.Events.Count(item => item.Outcome != SnapOutcome.Kickoff);
@@ -121,29 +131,36 @@ public static class GameDayEngine
         var offensePlayers = Players(session, offensePersonnel);
         var defensePlayers = Players(session, defensePersonnel);
 
+        var keepEligible = call.Offense.Name.Contains("Option", StringComparison.OrdinalIgnoreCase) ||
+            call.Offense.Name.Contains("RPO", StringComparison.OrdinalIgnoreCase) ||
+            call.Offense.Name.Contains("Read", StringComparison.OrdinalIgnoreCase);
+        var designedKeep = keepEligible && session.Random.NextDouble() < .32 ||
+            call.Offense.Name.Contains("QB Draw", StringComparison.OrdinalIgnoreCase);
         var calledPass = call.Offense.Concept is OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
         var qb = offensePlayers.FirstOrDefault(player => player.Position == Position.QB);
         var mobility = qb is null ? 50 : (qb.SpeedRating + qb.AgilityRating + (qb.Skills?.Acceleration ?? qb.SpeedRating)) / 3d;
         var scrambleChance = Math.Clamp(.025 + Math.Max(0, mobility - 62) * .0032 +
             (call.Defense.Approach == DefensiveApproach.Pressure ? .035 : 0) +
             (session.Down >= 3 && session.Distance >= 5 ? .018 : 0), .02, .19);
-        var scramble = calledPass && qb is not null && session.Random.NextDouble() < scrambleChance;
-        var isPass = calledPass && !scramble;
+        var scramble = calledPass && !designedKeep && qb is not null && session.Random.NextDouble() < scrambleChance;
+        var isPass = calledPass && !scramble && !designedKeep;
         var advantage = isPass ? offense.PassOffenseRating - defense.PassDefenseRating : offense.RushOffenseRating - defense.RushDefenseRating;
         advantage += MatchupShift(call.Offense.Concept, call.Defense.Approach);
         if (!session.Game.IsNeutralSite)
             advantage += homeOnOffense ? HomeFieldRatingBonus : -HomeFieldRatingBonus;
         var turnover = session.Random.NextDouble() < Math.Clamp(.025 - advantage * .0008, .008, .065);
         var sack = isPass && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - advantage * .001, .02, .14);
+        var hailMary = call.Offense.Name == "Hail Mary";
         var complete = isPass && !turnover && !sack && session.Random.NextDouble() < Math.Clamp(.61 + advantage * .004 +
-            (call.Offense.Concept == OffensiveConcept.QuickPass ? .07 : call.Offense.Concept == OffensiveConcept.DeepPass ? -.11 : 0), .38, .82);
+            (hailMary ? -.47 : call.Offense.Concept == OffensiveConcept.QuickPass ? .07 : call.Offense.Concept == OffensiveConcept.DeepPass ? -.11 : 0), .08, .82);
         var yards = turnover ? 0 : sack ? -session.Random.Next(3, 11) : scramble
             ? Math.Max(-3, (int)Math.Round(session.Random.Next(-1, 10) + (mobility - 65) * .10)) : isPass
             ? complete ? Math.Max(-2, (int)Math.Round(session.Random.Next(3, 16) + advantage * .12 +
                 (call.Offense.Concept == OffensiveConcept.DeepPass ? session.Random.Next(5, 24) : 0))) : 0
             : Math.Max(-4, (int)Math.Round(session.Random.Next(-2, 10) + advantage * .09));
 
-        var carrier = isPass ? null : scramble ? qb : Pick(offensePlayers.Where(player => player.Position == Position.RB).ToArray(), session.Random) ?? qb;
+        if (hailMary && complete) yards = Math.Max(1, 100 - session.YardLine + session.Random.Next(-5, 2));
+        var carrier = isPass ? null : scramble || designedKeep ? qb : Pick(offensePlayers.Where(player => player.Position == Position.RB).ToArray(), session.Random) ?? qb;
         var target = isPass ? Pick(PassTargets(call.Offense, offensePlayers), session.Random) : null;
         var defender = Pick(defensePlayers.Where(player => player.Position != Position.K).ToArray(), session.Random);
         var start = session.YardLine;
@@ -160,7 +177,8 @@ public static class GameDayEngine
             DefensiveCallSource = string.IsNullOrWhiteSpace(userDefensivePlayId) ? PlayCallSource.Cpu : PlayCallSource.User,
             Down = session.Down, Distance = session.Distance, StartYardLine = start,
             BallEndYardLine = Math.Clamp(start + yards, 0, 100), Yards = yards, Outcome = outcome,
-            IsQuarterbackScramble = scramble,
+            IsQuarterbackScramble = scramble, IsQuarterbackKeep = designedKeep,
+            IsBootleg = call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase),
             QuarterbackId = qb?.PlayerId, BallCarrierId = carrier?.PlayerId, TargetId = target?.PlayerId,
             PrimaryDefenderId = defender?.PlayerId, OffensePersonnel = offensePersonnel.PlayerIds,
             DefensePersonnel = defensePersonnel.PlayerIds
@@ -168,8 +186,18 @@ public static class GameDayEngine
         session.Events.Add(snap);
         PersonnelRotationService.ApplySnap(offenseFatigue, offenseRoster, offensePersonnel, Math.Abs(yards) >= 20);
         PersonnelRotationService.ApplySnap(defenseFatigue, defenseRoster, defensePersonnel, Math.Abs(yards) >= 20);
-        AdvanceState(session, homeOnOffense, yards, turnover, touchdown);
+        AdvanceState(session, homeOnOffense, yards, turnover, touchdown, outcome == SnapOutcome.Incompletion);
         return session.Events[^1];
+    }
+
+    public static bool TryCallTimeout(GameDaySession session, string teamName)
+    {
+        if (session.IsComplete || session.KickoffPending || session.ClockStopped) return false;
+        if (teamName == session.Game.HomeTeamName && session.HomeTimeouts > 0) session.HomeTimeouts--;
+        else if (teamName == session.Game.AwayTeamName && session.AwayTimeouts > 0) session.AwayTimeouts--;
+        else return false;
+        session.ClockStopped = true;
+        return true;
     }
 
     public static void SimulateToEnd(GameDaySession session)
@@ -207,7 +235,7 @@ public static class GameDayEngine
             var fieldGoal = group.Any(item => item.Outcome == SnapOutcome.FieldGoal);
             var scrimmage = group.Where(item => item.Outcome is not
                 (SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal)).ToArray();
-            bool IsPass(GameSnapEvent item) => !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
+            bool IsPass(GameSnapEvent item) => !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
                 PlaybookCatalog.OffensivePlays.First(play => play.Id == item.OffensivePlayId).Concept is
                     OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
             var points = touchdown ? 7 : fieldGoal ? 3 : 0;
@@ -265,7 +293,7 @@ public static class GameDayEngine
             }
             if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal) continue;
             var concept = PlaybookCatalog.OffensivePlays.First(play => play.Id == snap.OffensivePlayId).Concept;
-            var pass = !snap.IsQuarterbackScramble && snap.Outcome != SnapOutcome.Scramble &&
+            var pass = !snap.IsQuarterbackKeep && !snap.IsQuarterbackScramble && snap.Outcome != SnapOutcome.Scramble &&
                 concept is OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
             if (snap.QuarterbackId is Guid qbId)
             {
@@ -360,7 +388,7 @@ public static class GameDayEngine
         var puntReturns = session.Events.Where(item => item.Outcome == SnapOutcome.Punt &&
             item.DefenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) && item.ReturnYards > 0).ToArray();
         var scrimmage = snaps.Where(item => item.Outcome is not (SnapOutcome.FieldGoal or SnapOutcome.Punt or SnapOutcome.MissedFieldGoal)).ToArray();
-        var passes = scrimmage.Where(item => !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
+        var passes = scrimmage.Where(item => !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
             PlaybookCatalog.OffensivePlays.First(play => play.Id == item.OffensivePlayId).Concept is
             OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass).ToArray();
         var runs = scrimmage.Except(passes).ToArray();
@@ -395,9 +423,10 @@ public static class GameDayEngine
         };
     }
 
-    private static void AdvanceState(GameDaySession session, bool homeOnOffense, int yards, bool turnover, bool touchdown)
+    private static void AdvanceState(GameDaySession session, bool homeOnOffense, int yards, bool turnover, bool touchdown, bool incomplete)
     {
-        session.ClockSeconds -= session.Random.Next(22, 41);
+        session.ClockSeconds -= session.ClockStopped || incomplete ? session.Random.Next(4, 9) : session.Random.Next(22, 41);
+        session.ClockStopped = incomplete || turnover || touchdown;
         if (touchdown)
         {
             if (homeOnOffense) session.HomeScore += 7; else session.AwayScore += 7;
@@ -426,6 +455,7 @@ public static class GameDayEngine
                 session.Quarter++; session.ClockSeconds = 900;
                 if (session.Quarter == 3)
                 {
+                    session.HomeTimeouts = session.AwayTimeouts = 3;
                     session.PossessionTeamName = session.Game.AwayTeamName;
                     session.PossessionNumber++;
                     QueueKickoff(session, session.Game.HomeTeamName);

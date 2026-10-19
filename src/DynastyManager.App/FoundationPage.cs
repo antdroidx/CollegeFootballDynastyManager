@@ -4681,7 +4681,7 @@ public sealed partial class FoundationPage : ContentPage
                         Text =
                             $"SPD {player.SpeedRating} • STR {player.StrengthRating} • " +
                             $"AGI {player.AgilityRating} • AWR {player.AwarenessRating} • " +
-                            $"TECH {player.TechniqueRating} • DUR {player.DurabilityRating}",
+                            $"INJ {player.InjuryRating}",
                         FontSize = 12
                     },
                     CreateCareerStatsButton(player),

@@ -113,8 +113,7 @@ public class SchedulePersistenceTests
                         StrengthRating = 82,
                         AgilityRating = 83,
                         AwarenessRating = 90,
-                        TechniqueRating = 91,
-                        DurabilityRating = 80,
+                        InjuryRating = 80,
                         CurrentInjury = new PlayerInjury
                         {
                             InjuryId = Guid.Parse("44444444-4444-4444-4444-444444444444"),
@@ -236,7 +235,7 @@ public class SchedulePersistenceTests
             Assert.Equal(1, activePlayer.DepthChartOrder);
             Assert.Equal(94, activePlayer.PotentialRating);
             Assert.Equal(84, activePlayer.SpeedRating);
-            Assert.Equal(91, activePlayer.TechniqueRating);
+            Assert.Equal(80, activePlayer.InjuryRating);
             Assert.NotNull(activePlayer.CurrentInjury);
             Assert.Equal(
                 InjurySeverity.Major,

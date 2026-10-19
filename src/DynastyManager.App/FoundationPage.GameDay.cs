@@ -21,6 +21,8 @@ public sealed partial class FoundationPage
         home = GamePlanService.Attach(_currentDynasty, _teamsByName[game.HomeTeamName], home);
         away = GamePlanService.Attach(_currentDynasty, _teamsByName[game.AwayTeamName], away);
         var session = GameDayEngine.Start(game, home, away, _currentDynasty.ActiveRoster, mode);
+        session.ControlledTeamName = controlledTeamName;
+        var animating = false;
 
         if (mode == GameDayMode.Simulate)
         {
@@ -124,10 +126,11 @@ public sealed partial class FoundationPage
         var takeover = new Button { Text = "Take over", IsVisible = false };
         var punt = new Button { Text = "Punt", IsVisible = false };
         var kick = new Button { Text = "Field goal", IsVisible = false };
+        var timeout = new Button { Text = "Timeout" };
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
-        foreach (var button in new[] { call, callDefense, punt, kick, delegateOffense, delegateDefense, watch, takeover, skip, close })
+        foreach (var button in new[] { call, callDefense, punt, kick, delegateOffense, delegateDefense, watch, takeover, timeout, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
         page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 10, Children =
         {
@@ -148,6 +151,7 @@ public sealed partial class FoundationPage
         async Task AnimateSnapAsync(GameSnapEvent snap)
         {
             highlight.IsVisible = false;
+            result.Text = string.Empty;
             fieldPlayers.AbortAnimation("snap-movement");
             fieldPlayers.Children.Clear();
             fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance;
@@ -167,6 +171,22 @@ public sealed partial class FoundationPage
             fieldArt.Direction = direction; fieldLines.Invalidate();
             var movements = new List<(View View, Rect From, Rect To)>();
             var routeViews = new HashSet<View>();
+            var markerHighlights = new Dictionary<Guid, Action<bool>>();
+            var movementSpeeds = new Dictionary<View, int>();
+            var roleCounts = new Dictionary<Position, int>();
+            Guid? highlightedOwner = null;
+            void RegisterMarker(DynastyPlayer? player, Border view)
+            {
+                movementSpeeds[view] = player?.SpeedRating ?? 70;
+                if (player is null) return;
+                var normalStroke = view.Stroke;
+                var normalThickness = view.StrokeThickness;
+                markerHighlights[player.PlayerId] = active =>
+                {
+                    view.Stroke = active ? Colors.Yellow : normalStroke;
+                    view.StrokeThickness = active ? 3 : normalThickness;
+                };
+            }
             var pursuingDefenders = new HashSet<View>();
             // Use the personnel's football roles, not their arbitrary list order.
             // Coordinates are proportional to the field; the line of scrimmage is X.
@@ -261,6 +281,17 @@ public sealed partial class FoundationPage
                         y = .20 + (index % 7) * .10;
                         break;
                 }
+                if (player is not null && calledPlay is not null &&
+                    snap.Outcome is not (SnapOutcome.Punt or SnapOutcome.Kickoff or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal))
+                {
+                    roleCounts.TryGetValue(player.Position, out var roleIndex);
+                    roleCounts[player.Position] = roleIndex + 1;
+                    if (player.Position is Position.QB or Position.RB or Position.WR or Position.TE)
+                    {
+                        var alignment = GameDayAnimationPlanner.Alignment(calledPlay.Formation, player.Position, roleIndex);
+                        x = Project(snap.StartYardLine + alignment.X); y = alignment.Y;
+                    }
+                }
                 x = Math.Clamp(x, .025, .96);
                 var isEligible = player?.Position is Position.WR or Position.TE or Position.RB;
                 var eligibleIndex = isEligible ? routeEligibleIndex++ : index;
@@ -277,6 +308,7 @@ public sealed partial class FoundationPage
                         OffensiveConcept.PlayAction => 18,
                         _ => routeFamily == GameDayRouteFamily.Screen ? 5 : 10
                     };
+                    if (calledPlay.Name == "Hail Mary") designDepth = Math.Min(65, 100 - snap.StartYardLine);
                     endX = Project(snap.StartYardLine + designDepth * routeShare);
                 }
                 else if (player?.Position == Position.OL && routeFamily != GameDayRouteFamily.Run)
@@ -284,6 +316,7 @@ public sealed partial class FoundationPage
                 if (player?.Position == Position.QB && !snap.IsQuarterbackScramble &&
                     routeFamily != GameDayRouteFamily.Run)
                     endX = Math.Clamp(x - direction * .025, .025, .975);
+                if ((snap.IsBootleg || snap.IsQuarterbackKeep) && player?.Position == Position.QB) endY = .25;
                 if (isFieldGoalSnap)
                 {
                     endX = Math.Clamp(x + (player?.PlayerId == snap.KickerId ? direction * .025 : 0), .025, .96);
@@ -296,12 +329,10 @@ public sealed partial class FoundationPage
                 }
                 if (player?.PlayerId == terminalCarrierId) endX = destination;
                 var view = Marker(player, offenseColor, offenseIsAway);
+                RegisterMarker(player, view);
                 if (isEligible && calledPlay is not null && routeFamily != GameDayRouteFamily.Run &&
                     snap.Outcome is not (SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal))
                     routeViews.Add(view);
-                if (player is not null && (snap.BallCarrierId == player.PlayerId ||
-                    snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown && snap.TargetId == player.PlayerId))
-                { view.Stroke = Colors.Yellow; view.StrokeThickness = 3; }
                 var from = new Rect(x, y, 19, 19);
                 var puntCoverageTackler = isReturnTackle && snap.Outcome == SnapOutcome.Punt &&
                     player?.PlayerId == snap.PrimaryDefenderId;
@@ -311,8 +342,6 @@ public sealed partial class FoundationPage
                 if (puntCoverageTackler)
                 {
                     pursuingDefenders.Add(view);
-                    view.Stroke = Colors.Yellow;
-                    view.StrokeThickness = 3;
                     primaryTacklerView = view;
                 }
                 if (player?.PlayerId == snap.QuarterbackId) { qbFrom = from; qbTo = to; }
@@ -397,10 +426,10 @@ public sealed partial class FoundationPage
                     endY = .50;
                 }
                 var view = Marker(player, defenseColor, defenseIsAway);
+                RegisterMarker(player, view);
                 if (hasPursuitTarget) pursuingDefenders.Add(view);
                 if (primaryDefender)
                 {
-                    view.Stroke = Colors.Yellow; view.StrokeThickness = 3;
                     primaryTacklerView = view;
                 }
                 var from = new Rect(x, y, 19, 19);
@@ -439,6 +468,16 @@ public sealed partial class FoundationPage
             AbsoluteLayout.SetLayoutFlags(ball, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(ball, ballStart);
             fieldPlayers.Add(ball);
+            var durationSeconds = GameDayAnimationPlanner.PlaybackDurationSeconds(movements.Select(m =>
+            {
+                var from = new GameFieldPoint(m.From.X, m.From.Y);
+                var to = new GameFieldPoint(m.To.X, m.To.Y);
+                var distance = routeViews.Contains(m.View) ? GameDayAnimationPlanner.RouteLengthYards(from, to, routeFamily)
+                    : GameDayAnimationPlanner.DistanceYards(from, to);
+                var active = ReferenceEquals(m.View, specialReturnerView) &&
+                    snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt ? .35 : 1;
+                return (distance, movementSpeeds[m.View], active);
+            }));
             var completion = new TaskCompletionSource();
             var animation = new Animation(progress =>
             {
@@ -454,6 +493,13 @@ public sealed partial class FoundationPage
                         ? RouteTrack(movement.From, movement.To, movementProgress)
                         : Interpolate(movement.From, movement.To, movementProgress);
                     AbsoluteLayout.SetLayoutBounds(movement.View, position);
+                }
+                var owner = GameDayAnimationPlanner.BallOwner(snap, progress, passRelease);
+                if (owner != highlightedOwner)
+                {
+                    if (highlightedOwner is Guid old && markerHighlights.TryGetValue(old, out var clear)) clear(false);
+                    if (owner is Guid current && markerHighlights.TryGetValue(current, out var mark)) mark(true);
+                    highlightedOwner = owner;
                 }
                 Rect Track(Rect? from, Rect? to, double fraction) =>
                     from is Rect a && to is Rect b ? Interpolate(a, b, fraction) : centerPoint;
@@ -514,7 +560,7 @@ public sealed partial class FoundationPage
                     terminalCarrierView.Scale = 1 - impact * .08;
                 }
             });
-            var duration = isPass ? 4200u : 2800u;
+            var duration = (uint)(durationSeconds * 1000);
             animation.Commit(fieldPlayers, "snap-movement", 16, duration,
                 Easing.Linear, (_, _) => completion.TrySetResult());
             await completion.Task;
@@ -590,11 +636,17 @@ public sealed partial class FoundationPage
             punt.IsVisible = kick.IsVisible = awaitingOffense && session.Down == 4;
             skip.IsVisible = !session.IsComplete;
             close.IsVisible = session.IsComplete;
+            var remaining = controlledTeamName == game.HomeTeamName ? session.HomeTimeouts : session.AwayTimeouts;
+            timeout.Text = $"Timeout ({remaining})";
+            timeout.IsVisible = !session.IsComplete;
+            timeout.IsEnabled = !animating && !session.KickoffPending && !session.ClockStopped && remaining > 0;
         }
         async Task ShowSnapAsync(GameSnapEvent snap)
         {
+            animating = true; timeout.IsEnabled = false;
             await AnimateSnapAsync(snap);
             await ShowHighlightAsync(snap);
+            animating = false;
             Refresh(snap);
             await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
         }
@@ -658,6 +710,11 @@ public sealed partial class FoundationPage
         takeover.Clicked += async (_, _) => { session.Mode = GameDayMode.Play; Refresh(); await RunCpuUntilUserDecision(); };
         punt.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-punt")); await RunCpuUntilUserDecision(); };
         kick.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-field-goal")); await RunCpuUntilUserDecision(); };
+        timeout.Clicked += (_, _) =>
+        {
+            if (!animating && GameDayEngine.TryCallTimeout(session, controlledTeamName))
+            { result.Text = $"{controlledTeamName} calls timeout."; Refresh(); }
+        };
         skip.Clicked += async (_, _) => { GameDayEngine.SimulateToEnd(session); await FinishIfNeeded(); };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         Refresh();

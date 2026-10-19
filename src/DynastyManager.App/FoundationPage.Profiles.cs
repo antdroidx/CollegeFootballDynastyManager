@@ -82,17 +82,17 @@ public sealed partial class FoundationPage
             content.Children.Add(AttributeGroup("Physical traits", "Athletic ability, endurance and availability",
                 ("Speed", player.SpeedRating), ("Acceleration", player.Skills.Acceleration),
                 ("Agility", player.AgilityRating), ("Strength", player.StrengthRating),
-                ("Jumping", player.Skills.Jumping), ("Stamina", player.Skills.Stamina),
-                ("Durability", player.DurabilityRating)));
+                ("Jumping", player.Skills.Jumping),
+                ("Injury", player.InjuryRating)));
             content.Children.Add(AttributeGroup("Skill traits", "Position technique and football execution",
-                ("Technique", player.TechniqueRating), ("Passing power", player.Skills.PassingPower),
-                ("Passing accuracy", player.Skills.PassingAccuracy), ("Catching", player.Skills.Catching),
+                ("Throw power", player.Skills.PassingPower),
+                ("Throw accuracy", player.Skills.PassingAccuracy), ("Catching", player.Skills.Catching),
                 ("Break tackle", player.Skills.BreakTackle), ("Ball carrying", player.Skills.BallCarrying),
                 ("Tackling", player.Skills.Tackling), ("Run blocking", player.Skills.RunBlocking),
-                ("Pass blocking", player.Skills.PassBlocking), ("Man coverage", player.Skills.ManCoverage),
-                ("Zone coverage", player.Skills.ZoneCoverage), ("Kick power", player.Skills.KickPower),
-                ("Kick accuracy", player.Skills.KickAccuracy)));
-            content.Children.Add(new Label { Text = "Higher ratings are better. Durability represents resistance to injury and wear.", FontSize = 11, TextColor = DynastyTheme.Muted });
+                ("Pass blocking", player.Skills.PassBlocking),
+                ("Kicking power", player.Skills.KickPower),
+                ("Kicking accuracy", player.Skills.KickAccuracy)));
+            content.Children.Add(new Label { Text = "Higher ratings are better. Injury represents resistance to injury and wear.", FontSize = 11, TextColor = DynastyTheme.Muted });
             content.Children.Add(new Label { Text = player.CurrentInjury is null ? "Status: healthy" :
                 $"Status: {player.CurrentInjury.Severity} {player.CurrentInjury.BodyArea} injury · {player.CurrentInjury.WeeksRemaining} weeks remaining",
                 TextColor = player.CurrentInjury is null ? Color.FromArgb("#83D6B6") : Color.FromArgb("#E5A1B7"), FontSize = 12 });

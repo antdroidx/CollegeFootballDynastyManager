@@ -100,6 +100,6 @@ public class GameDayCommentaryTests
         PlayerId = Guid.NewGuid(), FullName = name, TeamName = position == Position.MLB ? "Away" : "Home",
         Position = position, ClassYear = 2, TalentLevel = 75, OverallRating = 80, PotentialRating = 85,
         SpeedRating = 75, StrengthRating = 75, AgilityRating = 75, AwarenessRating = 75,
-        TechniqueRating = 75, DurabilityRating = 80
+        InjuryRating = 80
     };
 }

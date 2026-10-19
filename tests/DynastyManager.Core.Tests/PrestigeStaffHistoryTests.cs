@@ -249,8 +249,7 @@ public sealed class PrestigeStaffHistoryTests
         StrengthRating = overall,
         AgilityRating = overall,
         AwarenessRating = overall,
-        TechniqueRating = overall,
-        DurabilityRating = 85,
+        InjuryRating = 85,
         DepthChartOrder = depth
     };
 

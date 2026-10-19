@@ -6,6 +6,7 @@ public sealed record DynastyPlayer
     public required string FullName { get; init; }
     public required string TeamName { get; init; }
     public required Position Position { get; init; }
+    public int? NcaaPositionCode { get; init; }
     public int ClassYear { get; init; }
     public int? OriginalRecruitingStars { get; init; }
     public int TalentLevel { get; init; }
@@ -15,8 +16,7 @@ public sealed record DynastyPlayer
     public int StrengthRating { get; init; }
     public int AgilityRating { get; init; }
     public int AwarenessRating { get; init; }
-    public int TechniqueRating { get; init; }
-    public int DurabilityRating { get; init; }
+    public int InjuryRating { get; init; }
     public PlayerSkillRatings? Skills { get; init; }
     public PlayerInjury? CurrentInjury { get; init; }
     public bool IsWalkOn { get; init; }

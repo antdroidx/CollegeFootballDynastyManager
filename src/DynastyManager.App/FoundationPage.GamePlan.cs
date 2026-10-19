@@ -82,53 +82,46 @@ public sealed partial class FoundationPage
         var offensiveFormation = new Picker { Title = "Primary offensive formation", ItemsSource = offensiveFormationValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offensiveFormationValues, plan.OffensiveFormation) };
         var defensiveFormation = new Picker { Title = "Primary defensive formation", ItemsSource = defensiveFormationValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defensiveFormationValues, plan.DefensiveFormation) };
         var description = new Label { Text = GamePlanService.Describe(plan.Offense), TextColor = DynastyTheme.Muted };
-        offense.SelectedIndexChanged += (_, _) => { if (offense.SelectedIndex >= 0) description.Text = GamePlanService.Describe(offenseValues[offense.SelectedIndex]); };
-        _gamePlanHost.Children.Add(CoachingCard("PLAYBOOKS", new Label { Text = "Offense", FontAttributes = FontAttributes.Bold }, offense, description,
-            offensiveFormation, new Label { Text = "Defense", FontAttributes = FontAttributes.Bold }, defense, approach, defensiveFormation,
-            new Label { Text = "4-3 strengthens the run front; Nickel helps coverage. Run/pass focus gives up strength elsewhere. Pressure creates takeaways but risks bigger gains.", TextColor = DynastyTheme.Muted }));
-        var favoriteIds = plan.FavoritePlayIds.ToHashSet(StringComparer.Ordinal);
-        var playLibrary = new VerticalStackLayout { Spacing = 8 };
-        void RenderPlayLibrary()
+        offense.SelectedIndexChanged += (_, _) =>
         {
-            playLibrary.Children.Clear();
-            var selectedOffense = offensiveFormationValues[Math.Max(0, offensiveFormation.SelectedIndex)];
-            var selectedDefense = defensiveFormationValues[Math.Max(0, defensiveFormation.SelectedIndex)];
-            playLibrary.Children.Add(new Label { Text = $"OFFENSE Â· {GamePlanService.Label(selectedOffense)}", FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent });
-            foreach (var play in PlaybookCatalog.OffensivePlays.Where(item => item.Formation == selectedOffense))
-                playLibrary.Children.Add(PlayLibraryRow(play.Id, play.Name,
-                    $"{GamePlanService.Label(play.Personnel)} Â· {GamePlanService.Label(play.Concept)}", play.Description,
-                    true, play.Concept.ToString(), favoriteIds, RenderPlayLibrary));
-            playLibrary.Children.Add(new Label { Text = $"DEFENSE Â· {GamePlanService.Label(selectedDefense)}", FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent,
-                Margin = new Thickness(0, 7, 0, 0) });
-            foreach (var play in PlaybookCatalog.DefensivePlays.Where(item => item.Formation == selectedDefense))
-                playLibrary.Children.Add(PlayLibraryRow(play.Id, play.Name,
-                    $"{GamePlanService.Label(play.Personnel)} Â· {GamePlanService.Label(play.Approach)}", play.Description,
-                    false, play.Approach.ToString(), favoriteIds, RenderPlayLibrary));
-        }
-        offensiveFormation.SelectedIndexChanged += (_, _) => RenderPlayLibrary();
-        defensiveFormation.SelectedIndexChanged += (_, _) => RenderPlayLibrary();
-        RenderPlayLibrary();
-        _gamePlanHost.Children.Add(CoachingCard("PLAY LIBRARY",
-            new Label { Text = "Browse the initial formation and personnel catalog. Star up to 20 calls for your working playbook; assignment editing follows in the visual play editor.", TextColor = DynastyTheme.Muted },
-            playLibrary));
+            if (offense.SelectedIndex < 0) return;
+            var book = offenseValues[offense.SelectedIndex];
+            description.Text = GamePlanService.Describe(book);
+            var preferred = book switch
+            {
+                OffensivePlaybook.Flexbone => OffensiveFormation.Flexbone,
+                OffensivePlaybook.PowerRun => OffensiveFormation.IForm,
+                OffensivePlaybook.Option => OffensiveFormation.Pistol,
+                OffensivePlaybook.AirRaid => OffensiveFormation.Empty,
+                _ => OffensiveFormation.ShotgunSpread
+            };
+            if (book != OffensivePlaybook.Custom) offensiveFormation.SelectedIndex = Array.IndexOf(offensiveFormationValues, preferred);
+        };
+        _gamePlanHost.Children.Add(CoachingCard("SCHEME & PLAYBOOK SELECTION", new Label { Text = "Offensive playbook — available calls and CPU run/pass tendencies", FontAttributes = FontAttributes.Bold }, offense, description,
+            new Label { Text = "Preferred offensive formation — CPU starting point", TextColor = DynastyTheme.Muted }, offensiveFormation, new Label { Text = "Defensive playbook — available fronts and coverages", FontAttributes = FontAttributes.Bold }, defense, new Label { Text = "Defensive tendency — how aggressively the CPU calls defense", TextColor = DynastyTheme.Muted }, approach, new Label { Text = "Preferred defensive formation", TextColor = DynastyTheme.Muted }, defensiveFormation,
+            new Label { Text = "4-3 strengthens the run front; Nickel helps coverage. Run/pass focus gives up strength elsewhere. Pressure creates takeaways but risks bigger gains.", TextColor = DynastyTheme.Muted }));
+        var editor = new Button { Text = "Open Playbook Editor", BackgroundColor = Color.FromArgb("#315D59") };
+        editor.Clicked += async (_, _) => await OpenPlaybookEditorAsync(plan, dynastyId);
+        _gamePlanHost.Children.Add(CoachingCard("CUSTOM PLAYBOOK",
+            new Label { Text = "Build a Custom offense and defense from the full play catalog. Custom books replace the standard book and use the same 17-offense / 14-defense call limits.", TextColor = DynastyTheme.Muted }, editor));
         var script = new VerticalStackLayout { Spacing = 8 };
         var calls = new List<Picker>();
-        var callSheetPlays = PlaybookCatalog.OffensivePlays.ToArray();
+        var callSheetPlays = GamePlanService.AvailableOffensivePlays(plan).ToArray();
         var callSheetLabels = callSheetPlays.Select(play => $"{play.Name} Â· {GamePlanService.Label(play.Formation)} Â· {GamePlanService.Label(play.Concept)}").ToList();
         for (var index = 0; index < 3; index++)
         {
-            script.Children.Add(new Label { Text = $"Drive {index + 1} call", FontAttributes = FontAttributes.Bold });
+            script.Children.Add(new Label { Text = $"Snap {index + 1} call", FontAttributes = FontAttributes.Bold });
             var savedId = plan.OpeningPlayIds.ElementAtOrDefault(index);
             var selected = Array.FindIndex(callSheetPlays, play => play.Id == savedId);
             if (selected < 0 && index < plan.OpeningScript.Count)
                 selected = Array.FindIndex(callSheetPlays, play => play.Concept == plan.OpeningScript[index]);
-            var picker = new Picker { Title = $"Drive {index + 1}", ItemsSource = callSheetLabels, SelectedIndex = Math.Max(0, selected) };
+            var picker = new Picker { Title = $"Snap {index + 1}", ItemsSource = callSheetLabels, SelectedIndex = Math.Max(0, selected) };
             calls.Add(picker);
             script.Children.Add(picker);
         }
         _gamePlanHost.Children.Add(CoachingCard("OPENING CALL SHEET",
-            new Label { Text = "Call exact plays for your first three possessions. CPU teams select from the same catalog and both paths use the same matchup resolver." },
-            script, new Label { Text = "The upcoming live Game Day view will use this same resolver on every snap rather than switching to a separate simulation model.", TextColor = DynastyTheme.Muted }));
+            new Label { Text = "Call exact plays for your first three snaps. CPU teams select from the same catalog and both paths use the same matchup resolver." },
+            script, new Label { Text = "These opening calls are drawn from your active playbook. CPU decisions take over after the opening script.", TextColor = DynastyTheme.Muted }));
         var status = new Label { TextColor = DynastyTheme.Muted };
         var save = new Button { Text = "Apply & save game plan", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
         save.Clicked += async (_, _) =>
@@ -143,7 +136,7 @@ public sealed partial class FoundationPage
                     Defense = defenseValues[Math.Max(0, defense.SelectedIndex)], Approach = approachValues[Math.Max(0, approach.SelectedIndex)],
                     OffensiveFormation = offensiveFormationValues[Math.Max(0, offensiveFormation.SelectedIndex)],
                     DefensiveFormation = defensiveFormationValues[Math.Max(0, defensiveFormation.SelectedIndex)],
-                    FavoritePlayIds = favoriteIds.ToArray(),
+                    CustomOffensivePlayIds = plan.CustomOffensivePlayIds, CustomDefensivePlayIds = plan.CustomDefensivePlayIds,
                     OpeningPlayIds = calls.Select(picker => callSheetPlays[Math.Max(0, picker.SelectedIndex)].Id).ToArray()
                 });
                 _cachedCurrentProfiles = null;
@@ -151,7 +144,7 @@ public sealed partial class FoundationPage
                 await SaveCurrentAsync(SaveKind.AutosaveCurrent);
                 status.Text = "Game plan saved. It applies to future games, including the postseason.";
             }
-            catch (Exception ex) { status.Text = $"Plan applied, but saving failed: {ex.Message}"; }
+            catch (Exception ex) { status.Text = $"Could not save game plan: {ex.Message}"; }
             finally { save.IsEnabled = true; }
         };
         _gamePlanHost.Children.Add(save);
@@ -181,7 +174,7 @@ public sealed partial class FoundationPage
         toggle.Clicked += (_, _) =>
         {
             if (favorites.Contains(id)) favorites.Remove(id);
-            else if (favorites.Count < 20) favorites.Add(id);
+            else if (favorites.Count < (offense ? 17 : 14)) favorites.Add(id);
             rerender();
         };
         var art = new GraphicsView
@@ -235,16 +228,8 @@ public sealed partial class FoundationPage
             canvas.FillColor = Color.FromArgb("#F2F5F4");
             for (var player = 0; player < 5; player++)
                 canvas.FillCircle(width * (.34f + player * .08f), height * .61f, 3);
-            canvas.FillCircle(width * .50f, height * .72f, 3.5f);
-            if (family == GameDayRouteFamily.Run)
-            {
-                canvas.FillCircle(width * .5f, height * .84f, 3.5f);
-                canvas.StrokeColor = Color.FromArgb("#F4CC66");
-                canvas.StrokeSize = 2.2f;
-                var outside = play.Concept == OffensiveConcept.OutsideRun;
-                DrawRoute(canvas, width * .5f, height * .84f, width * (outside ? .80f : .56f), height * .38f);
-                return;
-            }
+            var quarterback = GameDayAnimationPlanner.Alignment(play.Formation, Position.QB, 0);
+            canvas.FillCircle(width * .50f, height * (.61f - (float)quarterback.X * .03f), 3.5f);
             var positions = GameDayAnimationPlanner.EligiblePositions(play.Personnel);
             var roleCounts = new Dictionary<Position, int>();
             for (var i = 0; i < positions.Count; i++)
@@ -252,12 +237,23 @@ public sealed partial class FoundationPage
                 var position = positions[i];
                 roleCounts.TryGetValue(position, out var roleIndex);
                 roleCounts[position] = roleIndex + 1;
-                var start = new GameFieldPoint(0, GameDayAnimationPlanner.AlignmentLane(position, roleIndex));
+                var alignment = GameDayAnimationPlanner.Alignment(play.Formation, position, roleIndex);
+                var start = new GameFieldPoint(0, alignment.Y);
                 var depth = GameDayAnimationPlanner.RouteDepthShare(family, position, false);
                 var end = new GameFieldPoint(depth, GameDayAnimationPlanner.RouteEndLane(family, position, i, start.Y, false));
-                var startY = position == Position.RB ? .84f : .61f;
+                var startY = .61f - (float)alignment.X * .03f;
                 canvas.FillColor = Color.FromArgb("#F2F5F4");
                 canvas.FillCircle(width * (float)start.Y, height * startY, 3.5f);
+                if (family == GameDayRouteFamily.Run)
+                {
+                    if (i == 0 && position == Position.RB)
+                    {
+                        canvas.StrokeColor = Color.FromArgb("#F4CC66"); canvas.StrokeSize = 2;
+                        DrawRoute(canvas, width * (float)start.Y, height * startY,
+                            width * (play.Concept == OffensiveConcept.OutsideRun ? .80f : .50f), height * .38f);
+                    }
+                    continue;
+                }
                 canvas.StrokeColor = Color.FromArgb("#F4CC66");
                 canvas.StrokeSize = 1.8f;
                 var previousX = width * (float)start.Y;
