@@ -365,11 +365,13 @@ public sealed partial class FoundationPage
                         y = .20 + (index % 7) * .10;
                         break;
                 }
+                PlayAssignment? playerAssignment = null;
                 if (player is not null && calledPlay is not null &&
                     snap.Outcome is not (SnapOutcome.Punt or SnapOutcome.Kickoff or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal))
                 {
                     roleCounts.TryGetValue(player.Position, out var roleIndex);
                     roleCounts[player.Position] = roleIndex + 1;
+                    playerAssignment = calledPlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == roleIndex);
                     if (player.Position is Position.QB or Position.RB or Position.WR or Position.TE)
                     {
                         var custom = calledPlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == roleIndex);
@@ -377,10 +379,13 @@ public sealed partial class FoundationPage
                         x = Project(snap.StartYardLine + alignment.X); y = alignment.Y;
                     }
                     else if (player.Position == Position.OL)
-                        x = Project(snap.StartYardLine + GameDayAnimationPlanner.Alignment(calledPlay.Formation, Position.OL, roleIndex).X);
+                    {
+                        x = Project(snap.StartYardLine + (playerAssignment?.Depth ?? GameDayAnimationPlanner.Alignment(calledPlay.Formation, Position.OL, roleIndex).X));
+                        if (playerAssignment is not null) y = playerAssignment.Lane;
+                    }
                 }
                 x = Math.Clamp(x, .025, .96);
-                var isEligible = player?.Position is Position.WR or Position.TE or Position.RB;
+                var isEligible = playerAssignment?.Task != AssignmentTask.Block && player?.Position is Position.WR or Position.TE or Position.RB;
                 var assigned = player is null || calledPlay is null ? routeFamily :
                     GameDayAnimationPlanner.AssignedRoute(calledPlay, player.Position, Math.Max(0, roleCounts.GetValueOrDefault(player.Position) - 1));
                 var eligibleIndex = isEligible ? routeEligibleIndex++ : index;
@@ -406,6 +411,7 @@ public sealed partial class FoundationPage
                     routeFamily != GameDayRouteFamily.Run)
                     endX = Math.Clamp(x - direction * .025, .025, .975);
                 if ((snap.IsBootleg || snap.IsQuarterbackKeep) && player?.Position == Position.QB) endY = .25;
+                if (playerAssignment?.Task == AssignmentTask.Block) { endX = x + direction * .012; endY = y; }
                 if (isFieldGoalSnap)
                 {
                     endX = Math.Clamp(x + (player?.PlayerId == snap.KickerId ? direction * .025 : 0), .025, .96);

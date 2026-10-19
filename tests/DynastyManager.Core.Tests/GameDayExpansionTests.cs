@@ -173,6 +173,21 @@ public class GameDayExpansionTests
     }
 
     [Fact]
+    public void PlayersAssignedToBlockAreNotPassingTargets()
+    {
+        var s = GameDayEngineTests.Session(GameDayMode.Play);
+        var play = PlaybookCatalog.OffensivePlays.First(p => p.Concept == OffensiveConcept.QuickPass) with
+        {
+            Assignments = s.HomeRoster.Where(p => p.Position is Position.WR or Position.TE or Position.RB)
+                .GroupBy(p => p.Position).SelectMany(g => g.Select((p, index) => new PlayAssignment
+                { Position = p.Position, RoleIndex = index, Task = AssignmentTask.Block })).ToArray()
+        };
+        var read = PassingReadService.Read(play, PlaybookCatalog.DefensivePlays.First(), s.HomeRoster,
+            s.AwayRoster, s.HomeRoster.First(p => p.Position == Position.QB), 70, new Random(1));
+        Assert.Null(read.Target);
+    }
+
+    [Fact]
     public void CsvPreviewValidatesMappingsRatingsAndDuplicateIdsBeforeApply()
     {
         var csv = Csv("12", "90");

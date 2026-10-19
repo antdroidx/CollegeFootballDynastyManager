@@ -169,7 +169,7 @@ public static partial class GameDayEngine
         var turnover = session.Random.NextDouble() < (isPass ? read.InterceptionChance : Math.Clamp(.025 - advantage * .0008, .008, .065));
         var sack = isPass && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - read.Protection * .0018 + (read.ReleaseSeconds - 2) * .015, .015, .18);
         var hailMary = call.Offense.Name == "Hail Mary";
-        var complete = isPass && !turnover && !sack && session.Random.NextDouble() <
+        var complete = isPass && read.Target is not null && !turnover && !sack && session.Random.NextDouble() <
             Math.Clamp(read.CatchChance + advantage * .0015 - (hailMary ? .25 : 0), .06, .9);
         int RoundYards(double expected)
         {
