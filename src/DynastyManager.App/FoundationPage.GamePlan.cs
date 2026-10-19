@@ -222,79 +222,57 @@ public sealed partial class FoundationPage
             canvas.StrokeSize = 1.5f;
             canvas.DrawLine(8, height * .58f, width - 8, height * .58f);
 
-            var seed = Math.Abs(StringComparer.Ordinal.GetHashCode(id));
-            if (offense) DrawOffense(canvas, width, height, seed, styleKey, playName);
+            var seed = id.Aggregate(0, (hash, character) => (hash * 31 + character) & int.MaxValue);
+            if (offense) DrawOffense(canvas, width, height, id);
             else DrawDefense(canvas, width, height, seed, styleKey, playName);
         }
 
-        private static void DrawOffense(ICanvas canvas, float width, float height, int seed, string concept, string name)
+        private static void DrawOffense(ICanvas canvas, float width, float height, string playId)
         {
+            var play = PlaybookCatalog.OffensivePlays.FirstOrDefault(item => item.Id == playId);
+            if (play is null) return;
+            var family = GameDayAnimationPlanner.RouteFamily(play);
             canvas.FillColor = Color.FromArgb("#F2F5F4");
             for (var player = 0; player < 5; player++)
                 canvas.FillCircle(width * (.34f + player * .08f), height * .61f, 3);
-            canvas.FillCircle(width * .5f, height * .72f, 3.5f);
-            canvas.FillCircle(width * .5f, height * .84f, 3.5f);
-            canvas.FillCircle(width * .14f, height * .63f, 3.5f);
-            canvas.FillCircle(width * .86f, height * .63f, 3.5f);
-
-            canvas.StrokeColor = Color.FromArgb("#F4CC66");
-            canvas.StrokeSize = 2.2f;
-            var deep = concept.Contains("Deep", StringComparison.OrdinalIgnoreCase) || concept.Contains("PlayAction", StringComparison.OrdinalIgnoreCase);
-            var run = concept.Contains("Run", StringComparison.OrdinalIgnoreCase);
-            if (run)
+            canvas.FillCircle(width * .50f, height * .72f, 3.5f);
+            if (family == GameDayRouteFamily.Run)
             {
-                var outside = Contains(name, "Toss", "Sweep", "Wide", "Stretch", "Speed Option");
-                var counter = Contains(name, "Counter", "Trap");
-                var targetX = outside ? (seed % 2 == 0 ? .18f : .82f) * width
-                    : (seed % 2 == 0 ? .40f : .61f) * width;
-                canvas.DrawLine(width * .5f, height * .82f, targetX, height * .48f);
-                canvas.DrawLine(targetX, height * .48f,
-                    counter ? width * .5f : targetX + (seed % 3 - 1) * 18, height * .34f);
+                canvas.FillCircle(width * .5f, height * .84f, 3.5f);
+                canvas.StrokeColor = Color.FromArgb("#F4CC66");
+                canvas.StrokeSize = 2.2f;
+                var outside = play.Concept == OffensiveConcept.OutsideRun;
+                DrawRoute(canvas, width * .5f, height * .84f, width * (outside ? .80f : .56f), height * .38f);
+                return;
             }
-            else
+            var positions = GameDayAnimationPlanner.EligiblePositions(play.Personnel);
+            var roleCounts = new Dictionary<Position, int>();
+            for (var i = 0; i < positions.Count; i++)
             {
-                var top = deep ? .12f : .32f;
-                if (Contains(name, "Vertical", "All Go"))
+                var position = positions[i];
+                roleCounts.TryGetValue(position, out var roleIndex);
+                roleCounts[position] = roleIndex + 1;
+                var start = new GameFieldPoint(0, GameDayAnimationPlanner.AlignmentLane(position, roleIndex));
+                var depth = GameDayAnimationPlanner.RouteDepthShare(family, position, false);
+                var end = new GameFieldPoint(depth, GameDayAnimationPlanner.RouteEndLane(family, position, i, start.Y, false));
+                var startY = position == Position.RB ? .84f : .61f;
+                canvas.FillColor = Color.FromArgb("#F2F5F4");
+                canvas.FillCircle(width * (float)start.Y, height * startY, 3.5f);
+                canvas.StrokeColor = Color.FromArgb("#F4CC66");
+                canvas.StrokeSize = 1.8f;
+                var previousX = width * (float)start.Y;
+                var previousY = height * startY;
+                for (var step = 1; step <= 10; step++)
                 {
-                    DrawRoute(canvas, width * .14f, height * .59f, width * .14f, height * .10f);
-                    DrawRoute(canvas, width * .38f, height * .58f, width * .38f, height * .12f);
-                    DrawRoute(canvas, width * .62f, height * .58f, width * .62f, height * .12f);
-                    DrawRoute(canvas, width * .86f, height * .59f, width * .86f, height * .10f);
-                }
-                else if (Contains(name, "Mesh", "Cross"))
-                {
-                    DrawRoute(canvas, width * .14f, height * .59f, width * .72f, height * .42f);
-                    DrawRoute(canvas, width * .86f, height * .59f, width * .28f, height * .36f);
-                    DrawRoute(canvas, width * .42f, height * .58f, width * .78f, height * .18f);
-                }
-                else if (Contains(name, "Screen"))
-                {
-                    DrawRoute(canvas, width * .50f, height * .82f, width * .73f, height * .58f);
-                    DrawRoute(canvas, width * .86f, height * .59f, width * .68f, height * .50f);
-                }
-                else if (Contains(name, "Flood", "Sail", "Boot"))
-                {
-                    DrawRoute(canvas, width * .14f, height * .59f, width * .76f, height * .18f);
-                    DrawRoute(canvas, width * .42f, height * .58f, width * .78f, height * .36f);
-                    DrawRoute(canvas, width * .86f, height * .59f, width * .82f, height * .48f);
-                }
-                else if (Contains(name, "Smash"))
-                {
-                    DrawRoute(canvas, width * .14f, height * .59f, width * .14f, height * .45f);
-                    DrawRoute(canvas, width * .38f, height * .58f, width * .18f, height * .18f);
-                    DrawRoute(canvas, width * .86f, height * .59f, width * .86f, height * .45f);
-                }
-                else
-                {
-                    DrawRoute(canvas, width * .14f, height * .59f, width * (.18f + (seed % 3) * .08f), height * top);
-                    DrawRoute(canvas, width * .86f, height * .59f, width * (.82f - (seed % 4) * .07f), height * (top + .04f));
-                    DrawRoute(canvas, width * .42f, height * .58f, width * .58f, height * (deep ? .2f : .39f));
+                    var point = GameDayAnimationPlanner.RoutePoint(start, end, family, step / 10d);
+                    var nextX = width * (float)point.Y;
+                    var nextY = height * (startY - (float)point.X * .52f);
+                    canvas.DrawLine(previousX, previousY, nextX, nextY);
+                    if (step == 10) DrawRoute(canvas, previousX, previousY, nextX, nextY);
+                    previousX = nextX; previousY = nextY;
                 }
             }
         }
-
-        private static bool Contains(string value, params string[] terms) =>
-            terms.Any(term => value.Contains(term, StringComparison.OrdinalIgnoreCase));
 
         private static void DrawRoute(ICanvas canvas, float x1, float y1, float x2, float y2)
         {

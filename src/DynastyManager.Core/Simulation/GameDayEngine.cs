@@ -4,6 +4,7 @@ namespace DynastyManager.Core.Simulation;
 
 public static class GameDayEngine
 {
+    public const double HomeFieldRatingBonus = 2.5;
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
         TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode)
     {
@@ -130,6 +131,8 @@ public static class GameDayEngine
         var isPass = calledPass && !scramble;
         var advantage = isPass ? offense.PassOffenseRating - defense.PassDefenseRating : offense.RushOffenseRating - defense.RushDefenseRating;
         advantage += MatchupShift(call.Offense.Concept, call.Defense.Approach);
+        if (!session.Game.IsNeutralSite)
+            advantage += homeOnOffense ? HomeFieldRatingBonus : -HomeFieldRatingBonus;
         var turnover = session.Random.NextDouble() < Math.Clamp(.025 - advantage * .0008, .008, .065);
         var sack = isPass && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - advantage * .001, .02, .14);
         var complete = isPass && !turnover && !sack && session.Random.NextDouble() < Math.Clamp(.61 + advantage * .004 +
@@ -141,7 +144,7 @@ public static class GameDayEngine
             : Math.Max(-4, (int)Math.Round(session.Random.Next(-2, 10) + advantage * .09));
 
         var carrier = isPass ? null : scramble ? qb : Pick(offensePlayers.Where(player => player.Position == Position.RB).ToArray(), session.Random) ?? qb;
-        var target = isPass ? Pick(offensePlayers.Where(player => player.Position is Position.WR or Position.TE or Position.RB).ToArray(), session.Random) : null;
+        var target = isPass ? Pick(PassTargets(call.Offense, offensePlayers), session.Random) : null;
         var defender = Pick(defensePlayers.Where(player => player.Position != Position.K).ToArray(), session.Random);
         var start = session.YardLine;
         var touchdown = !turnover && start + yards >= 100;
@@ -498,6 +501,25 @@ public static class GameDayEngine
         .Where(player => player.CurrentInjury is null && !player.IsRedshirted)
         .OrderBy(player => player.Position is Position.WR or Position.RB ? 0 : 1)
         .ThenByDescending(player => player.SpeedRating).ThenByDescending(player => player.AgilityRating).FirstOrDefault();
+
+    private static DynastyPlayer[] PassTargets(OffensivePlayDefinition play, IReadOnlyList<DynastyPlayer> personnel)
+    {
+        var eligible = personnel.Where(player => player.Position is Position.WR or Position.TE or Position.RB).ToArray();
+        if (eligible.Length == 0) return [];
+        var family = GameDayAnimationPlanner.RouteFamily(play);
+        var preferred = family switch
+        {
+            GameDayRouteFamily.Screen when play.Name.Contains("Bubble", StringComparison.OrdinalIgnoreCase) ||
+                play.Name.Contains("WR", StringComparison.OrdinalIgnoreCase) =>
+                eligible.Where(player => player.Position == Position.WR).ToArray(),
+            GameDayRouteFamily.Screen => eligible.Where(player => player.Position == Position.RB).ToArray(),
+            GameDayRouteFamily.Verticals => eligible.Where(player => player.Position == Position.WR).ToArray(),
+            GameDayRouteFamily.Mesh => eligible.Where(player => player.Position is Position.WR or Position.TE).ToArray(),
+            GameDayRouteFamily.Flood or GameDayRouteFamily.Smash => eligible.Where(player => player.Position is Position.WR or Position.TE).ToArray(),
+            _ => eligible
+        };
+        return preferred.Length == 0 ? eligible : preferred;
+    }
 
     private static IReadOnlyList<DynastyPlayer> SpecialTeam(IReadOnlyList<DynastyPlayer> roster, DynastyPlayer? featured) =>
         roster.Where(player => player.CurrentInjury is null && !player.IsRedshirted)

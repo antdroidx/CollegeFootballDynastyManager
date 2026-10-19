@@ -209,13 +209,59 @@ public class GameDayEngineTests
         Assert.Equal(1, GameDayAnimationPlanner.PursuitProgress(1, true));
     }
 
-    private static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false, int seed = 7123)
+    [Fact]
+    public void HomeFieldImprovesHomeOffenseAndNeutralSitesRemoveTheBonus()
+    {
+        var homeYards = 0;
+        var neutralYards = 0;
+        for (var seed = 1; seed <= 500; seed++)
+        {
+            var home = Session(GameDayMode.Play, seed: seed);
+            var neutral = Session(GameDayMode.Play, seed: seed, neutral: true);
+            homeYards += GameDayEngine.Step(home, "off-spread-zone").Yards;
+            neutralYards += GameDayEngine.Step(neutral, "off-spread-zone").Yards;
+        }
+        Assert.True(homeYards > neutralYards, $"Home {homeYards}, neutral {neutralYards}");
+    }
+
+    [Fact]
+    public void HomeCrowdAlsoHelpsTheHomeDefense()
+    {
+        var visitingYards = 0;
+        var neutralYards = 0;
+        for (var seed = 1; seed <= 500; seed++)
+        {
+            var home = Session(GameDayMode.Play, seed: seed);
+            var neutral = Session(GameDayMode.Play, seed: seed, neutral: true);
+            home.PossessionTeamName = neutral.PossessionTeamName = "Away";
+            visitingYards += GameDayEngine.Step(home, "off-spread-zone").Yards;
+            neutralYards += GameDayEngine.Step(neutral, "off-spread-zone").Yards;
+        }
+        Assert.True(visitingYards < neutralYards, $"Visiting {visitingYards}, neutral {neutralYards}");
+    }
+
+    [Theory]
+    [InlineData("off-spread-bubble", Position.WR)]
+    [InlineData("off-pistol-screen", Position.RB)]
+    [InlineData("off-empty-screen", Position.WR)]
+    public void ScreensTargetThePlayerRoleNamedInThePlay(string playId, Position expectedRole)
+    {
+        for (var seed = 1; seed <= 30; seed++)
+        {
+            var session = Session(GameDayMode.Play, seed: seed);
+            var snap = GameDayEngine.Step(session, playId);
+            if (snap.TargetId is Guid targetId)
+                Assert.Equal(expectedRole, session.PlayersById[targetId].Position);
+        }
+    }
+
+    private static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false, int seed = 7123, bool neutral = false)
     {
         var homePlan = new TeamGamePlan { TeamName = "Home", Offense = OffensivePlaybook.Spread,
             OffensiveFormation = OffensiveFormation.ShotgunSpread, DefensiveFormation = DefensiveFormation.Nickel };
         var awayPlan = homePlan with { TeamName = "Away" };
         var session = GameDayEngine.Start(new ScheduledGame { GameId = "game-day", SeasonYear = 2026, Week = 1,
-                HomeTeamName = "Home", AwayTeamName = "Away", SimulationSeed = seed },
+                HomeTeamName = "Home", AwayTeamName = "Away", SimulationSeed = seed, IsNeutralSite = neutral },
             Profile("Home", homePlan), Profile("Away", awayPlan), Roster(), mode);
         session.KickoffPending = includeOpeningKickoff;
         return session;

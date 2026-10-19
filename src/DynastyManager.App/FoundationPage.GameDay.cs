@@ -157,15 +157,16 @@ public sealed partial class FoundationPage
             var offenseIsAway = snap.OffenseTeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase);
             var defenseIsAway = snap.DefenseTeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase);
             var direction = (snap.OffenseTeamName == game.HomeTeamName ? 1 : -1) * (snap.Quarter % 2 == 0 ? -1 : 1);
-            double Project(double yard) => direction == 1 ? yard / 100d : 1 - yard / 100d;
-            var line = Math.Clamp(Project(snap.StartYardLine), .06, .94);
+            double Project(double yard) => GameDayAnimationPlanner.ProjectYardLine(yard, direction);
+            var line = Project(snap.StartYardLine);
             var kickLanding = Math.Clamp(Project(snap.KickLandingYardLine > 0
                 ? snap.KickLandingYardLine : snap.BallEndYardLine), .02, .98);
             var ballEndYardLine = snap.BallEndYardLine != 0 || snap.StartYardLine + snap.Yards == 0
                 ? snap.BallEndYardLine : Math.Clamp(snap.StartYardLine + snap.Yards, 0, 100);
-            var destination = Math.Clamp(Project(ballEndYardLine), .025, .975);
+            var destination = Project(ballEndYardLine);
             fieldArt.Direction = direction; fieldLines.Invalidate();
             var movements = new List<(View View, Rect From, Rect To)>();
+            var routeViews = new HashSet<View>();
             var pursuingDefenders = new HashSet<View>();
             // Use the personnel's football roles, not their arbitrary list order.
             // Coordinates are proportional to the field; the line of scrimmage is X.
@@ -180,10 +181,13 @@ public sealed partial class FoundationPage
                 return player;
             }).ToArray();
             var lineSlots = new[] { .36, .43, .50, .57, .64 };
-            var receiverSlots = new[] { .10, .23, .77, .90, .84, .16 };
             var lineIndex = 0;
             var receiverIndex = 0;
+            var tightEndIndex = 0;
             var backIndex = 0;
+            var routeEligibleIndex = 0;
+            var calledPlay = PlaybookCatalog.OffensivePlays.FirstOrDefault(play => play.Id == snap.OffensivePlayId);
+            var routeFamily = calledPlay is null ? GameDayRouteFamily.Run : GameDayAnimationPlanner.RouteFamily(calledPlay);
             var terminalCarrierId = snap.BallCarrierId ?? snap.ReturnerId ??
                 (snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? snap.TargetId : null) ??
                 (snap.Outcome == SnapOutcome.Sack ? snap.QuarterbackId : null);
@@ -195,7 +199,7 @@ public sealed partial class FoundationPage
             var specialContact = GameDayAnimationPlanner.ContactPoint(snap, direction, .50);
             Rect? qbFrom = null, qbTo = null, runnerFrom = null, runnerTo = null, receiverFrom = null, receiverTo = null,
                 terminalCarrierTo = null, kickerFrom = null, kickerTo = null, returnerFrom = null, returnerTo = null;
-            View? terminalCarrierView = null, primaryTacklerView = null;
+            View? terminalCarrierView = null, primaryTacklerView = null, specialReturnerView = null;
             for (var index = 0; index < offense.Length; index++)
             {
                 var player = offense[index];
@@ -242,15 +246,15 @@ public sealed partial class FoundationPage
                         break;
                     case Position.RB:
                         x = line - direction * (.095 + backIndex * .023);
-                        y = backIndex++ % 2 == 0 ? .59 : .41;
+                        y = GameDayAnimationPlanner.AlignmentLane(Position.RB, backIndex++);
                         break;
                     case Position.WR:
                         x = line - direction * .018;
-                        y = receiverSlots[Math.Min(receiverIndex++, receiverSlots.Length - 1)];
+                        y = GameDayAnimationPlanner.AlignmentLane(Position.WR, receiverIndex++);
                         break;
                     case Position.TE:
                         x = line - direction * .022;
-                        y = receiverIndex++ % 2 == 0 ? .69 : .31;
+                        y = GameDayAnimationPlanner.AlignmentLane(Position.TE, tightEndIndex++);
                         break;
                     default:
                         x = line - direction * (.04 + (index % 3) * .02);
@@ -258,8 +262,28 @@ public sealed partial class FoundationPage
                         break;
                 }
                 x = Math.Clamp(x, .025, .96);
-                var endY = Math.Clamp(y + RouteLane(player, index, snap) * .35, .07, .93);
-                var endX = Math.Clamp(x + (destination - line + direction * .045) * RouteShare(player, snap), .025, .96);
+                var isEligible = player?.Position is Position.WR or Position.TE or Position.RB;
+                var eligibleIndex = isEligible ? routeEligibleIndex++ : index;
+                var endY = player is null ? y : GameDayAnimationPlanner.RouteEndLane(routeFamily,
+                    player.Position, eligibleIndex, y, player.PlayerId == snap.TargetId);
+                var routeShare = player is null ? .2 : GameDayAnimationPlanner.RouteDepthShare(routeFamily,
+                    player.Position, player.PlayerId == snap.TargetId || player.PlayerId == snap.BallCarrierId);
+                var endX = Math.Clamp(x + (destination - line + direction * .045) * routeShare, .025, .975);
+                if (isEligible && routeFamily != GameDayRouteFamily.Run && calledPlay is not null)
+                {
+                    var designDepth = calledPlay.Concept switch
+                    {
+                        OffensiveConcept.DeepPass => 24,
+                        OffensiveConcept.PlayAction => 18,
+                        _ => routeFamily == GameDayRouteFamily.Screen ? 5 : 10
+                    };
+                    endX = Project(snap.StartYardLine + designDepth * routeShare);
+                }
+                else if (player?.Position == Position.OL && routeFamily != GameDayRouteFamily.Run)
+                    endX = Math.Clamp(x - direction * .008, .025, .975);
+                if (player?.Position == Position.QB && !snap.IsQuarterbackScramble &&
+                    routeFamily != GameDayRouteFamily.Run)
+                    endX = Math.Clamp(x - direction * .025, .025, .975);
                 if (isFieldGoalSnap)
                 {
                     endX = Math.Clamp(x + (player?.PlayerId == snap.KickerId ? direction * .025 : 0), .025, .96);
@@ -272,6 +296,9 @@ public sealed partial class FoundationPage
                 }
                 if (player?.PlayerId == terminalCarrierId) endX = destination;
                 var view = Marker(player, offenseColor, offenseIsAway);
+                if (isEligible && calledPlay is not null && routeFamily != GameDayRouteFamily.Run &&
+                    snap.Outcome is not (SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal))
+                    routeViews.Add(view);
                 if (player is not null && (snap.BallCarrierId == player.PlayerId ||
                     snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown && snap.TargetId == player.PlayerId))
                 { view.Stroke = Colors.Yellow; view.StrokeThickness = 3; }
@@ -293,10 +320,13 @@ public sealed partial class FoundationPage
                 if (player?.PlayerId == snap.TargetId) { receiverFrom = from; receiverTo = to; }
                 if (player?.PlayerId == terminalCarrierId) { terminalCarrierTo = to; terminalCarrierView = view; }
                 if (player?.PlayerId == snap.KickerId) { kickerFrom = from; kickerTo = to; }
-                if (player?.PlayerId == snap.ReturnerId) { returnerFrom = from; returnerTo = to; }
+                if (player?.PlayerId == snap.ReturnerId)
+                {
+                    returnerFrom = from; returnerTo = to; specialReturnerView = view;
+                }
                 AddMovement(view, from, to, movements, fieldPlayers);
             }
-            var contact = GameDayAnimationPlanner.ContactPoint(snap, direction, terminalCarrierTo?.Y ?? .50);
+            var contact = GameDayAnimationPlanner.ContactPoint(snap, direction, isReturnTackle ? .50 : terminalCarrierTo?.Y ?? .50);
             var assistCount = snap.Outcome switch
             {
                 SnapOutcome.Sack => 0,
@@ -379,7 +409,7 @@ public sealed partial class FoundationPage
                 if (player?.PlayerId == snap.ReturnerId)
                 {
                     returnerFrom = from; returnerTo = to;
-                    terminalCarrierTo ??= to; terminalCarrierView ??= view;
+                    terminalCarrierTo ??= to; terminalCarrierView ??= view; specialReturnerView = view;
                 }
                 AddMovement(view, from, to, movements, fieldPlayers);
             }
@@ -398,6 +428,13 @@ public sealed partial class FoundationPage
             var caught = snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown;
             var isKick = snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal;
             var isFieldGoal = snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal;
+            var passRelease = calledPlay is null ? .54 : GameDayAnimationPlanner.PassReleaseProgress(calledPlay);
+            var catchProgress = Math.Min(.90, passRelease + .18);
+            Rect RouteTrack(Rect from, Rect to, double progress)
+            {
+                var point = GameDayAnimationPlanner.RoutePoint(new(from.X, from.Y), new(to.X, to.Y), routeFamily, progress);
+                return new Rect(point.X, point.Y, from.Width, from.Height);
+            }
             var ballStart = BallAt(centerPoint);
             AbsoluteLayout.SetLayoutFlags(ball, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(ball, ballStart);
@@ -407,10 +444,16 @@ public sealed partial class FoundationPage
             {
                 foreach (var movement in movements)
                 {
-                    var movementProgress = pursuingDefenders.Contains(movement.View)
+                    var movementProgress = isKick && (snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt) &&
+                        ReferenceEquals(movement.View, specialReturnerView)
+                        ? GameDayAnimationPlanner.ReturnProgress(progress)
+                        : pursuingDefenders.Contains(movement.View)
                         ? GameDayAnimationPlanner.PursuitProgress(progress, ReferenceEquals(movement.View, primaryTacklerView))
                         : progress;
-                    AbsoluteLayout.SetLayoutBounds(movement.View, Interpolate(movement.From, movement.To, movementProgress));
+                    var position = routeViews.Contains(movement.View)
+                        ? RouteTrack(movement.From, movement.To, movementProgress)
+                        : Interpolate(movement.From, movement.To, movementProgress);
+                    AbsoluteLayout.SetLayoutBounds(movement.View, position);
                 }
                 Rect Track(Rect? from, Rect? to, double fraction) =>
                     from is Rect a && to is Rect b ? Interpolate(a, b, fraction) : centerPoint;
@@ -425,7 +468,7 @@ public sealed partial class FoundationPage
                         currentBall = currentBall with { Y = Math.Clamp(currentBall.Y - Math.Sin(progress / .65 * Math.PI) * .18, .02, .97) };
                     }
                     else if (returnerFrom.HasValue)
-                        currentBall = BallAt(Track(returnerFrom, returnerTo, (progress - .65) / .35));
+                        currentBall = BallAt(Track(returnerFrom, returnerTo, GameDayAnimationPlanner.ReturnProgress(progress)));
                     else currentBall = new Rect(destination, .50, 14, 9);
                 }
                 else if (isFieldGoal)
@@ -444,17 +487,18 @@ public sealed partial class FoundationPage
                     currentBall = Interpolate(ballStart, BallAt(Track(qbFrom, qbTo, 0)), progress / .13);
                 else if (isSack)
                     currentBall = BallAt(Track(qbFrom, qbTo, progress));
-                else if (isPass && progress < .53)
-                    currentBall = BallAt(Track(qbFrom, qbTo, (progress - .13) / .87));
+                else if (isPass && progress < passRelease)
+                    currentBall = BallAt(Track(qbFrom, qbTo, progress));
                 else if (isPass && receiverFrom.HasValue)
                 {
-                    var receiver = Track(receiverFrom, receiverTo, progress);
+                    var receiver = RouteTrack(receiverFrom.Value, receiverTo ?? receiverFrom.Value, progress);
                     currentBall = caught
-                        ? progress < .67
-                            ? Interpolate(BallAt(Track(qbFrom, qbTo, .45)), BallAt(receiver), (progress - .53) / .14)
+                        ? progress < catchProgress
+                            ? Interpolate(BallAt(Track(qbFrom, qbTo, passRelease)), BallAt(receiver),
+                                (progress - passRelease) / (catchProgress - passRelease))
                             : BallAt(receiver)
-                        : Interpolate(BallAt(Track(qbFrom, qbTo, .45)),
-                            new Rect(destination, .25, 14, 9), (progress - .53) / .47);
+                        : Interpolate(BallAt(Track(qbFrom, qbTo, passRelease)),
+                            new Rect(destination, .25, 14, 9), (progress - passRelease) / (1 - passRelease));
                 }
                 else if (runnerFrom.HasValue)
                     currentBall = progress < .25
@@ -470,8 +514,9 @@ public sealed partial class FoundationPage
                     terminalCarrierView.Scale = 1 - impact * .08;
                 }
             });
-            animation.Commit(fieldPlayers, "snap-movement", 16, session.Mode == GameDayMode.Watch ? 2800u : 2200u,
-                Easing.CubicInOut, (_, _) => completion.TrySetResult());
+            var duration = isPass ? 4200u : 2800u;
+            animation.Commit(fieldPlayers, "snap-movement", 16, duration,
+                Easing.Linear, (_, _) => completion.TrySetResult());
             await completion.Task;
         }
         async Task ShowHighlightAsync(GameSnapEvent snap)
@@ -747,23 +792,6 @@ public sealed partial class FoundationPage
         start.X + (end.X - start.X) * progress, start.Y + (end.Y - start.Y) * progress,
         start.Width, start.Height);
 
-    private static double RouteLane(DynastyPlayer? player, int index, GameSnapEvent snap)
-    {
-        if (player is null) return 0;
-        if (player.Position is Position.WR or Position.TE)
-            return snap.TargetId == player.PlayerId ? -.38 : -.16 - index % 3 * .04;
-        if (player.Position == Position.RB) return snap.BallCarrierId == player.PlayerId ? -.22 : -.08;
-        if (player.Position == Position.QB) return -.04;
-        return -.015;
-    }
-
-    private static double RouteShare(DynastyPlayer? player, GameSnapEvent snap)
-    {
-        if (player is null) return .2;
-        if (snap.TargetId == player.PlayerId || snap.BallCarrierId == player.PlayerId) return 1;
-        return player.Position is Position.WR or Position.TE ? .75 : player.Position == Position.QB ? .25 : .35;
-    }
-
     private static string Ordinal(int down) => down switch { 1 => "1st", 2 => "2nd", 3 => "3rd", _ => "4th" };
 
     private sealed class GameFieldDrawable : IDrawable
@@ -779,8 +807,13 @@ public sealed partial class FoundationPage
         {
             canvas.FillColor = Color.FromArgb("#245B38"); canvas.FillRectangle(rect);
             canvas.FillColor = HomeColor;
-            canvas.FillRectangle(0, 0, rect.Width * .05f, rect.Height);
-            canvas.FillRectangle(rect.Width * .95f, 0, rect.Width * .05f, rect.Height);
+            var leftGoal = (float)GameDayAnimationPlanner.ProjectYardLine(0, 1);
+            var rightGoal = (float)GameDayAnimationPlanner.ProjectYardLine(100, 1);
+            canvas.FillRectangle(0, 0, rect.Width * leftGoal, rect.Height);
+            canvas.FillRectangle(rect.Width * rightGoal, 0, rect.Width * leftGoal, rect.Height);
+            canvas.StrokeColor = Colors.White; canvas.StrokeSize = 2;
+            canvas.DrawLine(rect.Width * leftGoal, 0, rect.Width * leftGoal, rect.Height);
+            canvas.DrawLine(rect.Width * rightGoal, 0, rect.Width * rightGoal, rect.Height);
             canvas.StrokeColor = Color.FromArgb("#FFD447"); canvas.StrokeSize = 4;
             var leftPost = rect.Width * .026f;
             var rightPost = rect.Width * .974f;
@@ -797,7 +830,7 @@ public sealed partial class FoundationPage
             canvas.StrokeColor = Color.FromArgb("#A8CBB5"); canvas.StrokeSize = 1;
             for (var yard = 10; yard < 100; yard += 10)
             {
-                var x = rect.Width * yard / 100f;
+                var x = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(yard, 1);
                 canvas.DrawLine(x, 0, x, rect.Height);
                 canvas.FontColor = Color.FromArgb("#D5E6DB"); canvas.FontSize = 11;
                 canvas.DrawString((yard <= 50 ? yard : 100 - yard).ToString(), x - 10, 8, 24, 18,
@@ -808,7 +841,7 @@ public sealed partial class FoundationPage
             canvas.StrokeColor = Color.FromArgb("#D5E6DB"); canvas.StrokeSize = 1;
             for (var yard = 5; yard < 100; yard += 5)
             {
-                var x = rect.Width * yard / 100f;
+                var x = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(yard, 1);
                 canvas.DrawLine(x, rect.Height * .25f, x, rect.Height * .29f);
                 canvas.DrawLine(x, rect.Height * .71f, x, rect.Height * .75f);
             }
@@ -817,9 +850,8 @@ public sealed partial class FoundationPage
             canvas.FontSize = 42; canvas.FontColor = HomeSecondaryColor;
             canvas.DrawString(HomeInitial, rect.Width * .40f, rect.Height * .36f, rect.Width * .20f, rect.Height * .28f,
                 HorizontalAlignment.Center, VerticalAlignment.Center);
-            var line = rect.Width * (Direction == 1 ? YardLine : 100 - YardLine) / 100f;
-            var gain = rect.Width * (Direction == 1 ? Math.Min(100, YardLine + Distance) :
-                100 - Math.Min(100, YardLine + Distance)) / 100f;
+            var line = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(YardLine, Direction);
+            var gain = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(Math.Min(100, YardLine + Distance), Direction);
             canvas.StrokeColor = Color.FromArgb("#4FA8FF"); canvas.StrokeSize = 3; canvas.DrawLine(line, 0, line, rect.Height);
             canvas.StrokeColor = Color.FromArgb("#E7C45B"); canvas.StrokeSize = 3; canvas.DrawLine(gain, 0, gain, rect.Height);
         }
