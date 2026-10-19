@@ -70,6 +70,27 @@ public static class PlayerRatingService
                 99);
 
         initialized = PlayerSkillService.EnsureInitialized(initialized);
+        // Generated recruiting OVR is a talent target. Fit the generated attributes
+        // to that target on the NCAA scale; imported or already initialized ratings
+        // take the earlier branch and are never altered by this calibration.
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            var current = CalculateOverall(initialized);
+            if (Math.Abs(current - target) <= 1) break;
+            var shift = Math.Sign(target - current) * Math.Max(1, Math.Abs(target - current) / 2);
+            var skills = initialized.Skills!;
+            var candidate = initialized with
+            {
+                SpeedRating = ClampRating(initialized.SpeedRating + shift),
+                StrengthRating = ClampRating(initialized.StrengthRating + shift),
+                AgilityRating = ClampRating(initialized.AgilityRating + shift),
+                AwarenessRating = ClampRating(initialized.AwarenessRating + shift),
+                Skills = PlayerSkillService.Shift(skills, shift) with
+                { Leadership = skills.Leadership, Discipline = skills.Discipline }
+            };
+            if (Math.Abs(CalculateOverall(candidate) - target) >= Math.Abs(current - target)) break;
+            initialized = candidate;
+        }
         var overall = CalculateOverall(initialized);
         return initialized with { OverallRating = overall, PotentialRating = Math.Max(overall, potential) };
     }

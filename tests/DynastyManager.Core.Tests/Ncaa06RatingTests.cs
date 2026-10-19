@@ -6,6 +6,21 @@ namespace DynastyManager.Core.Tests;
 
 public class Ncaa06RatingTests
 {
+    [Fact]
+    public void GeneratedTalentTargetsAreCalibratedOnTheSamePositionWeightedScale()
+    {
+        var state = new DynastyState { DynastyName = "Talent", UserTeamName = "Home" };
+        foreach (var position in Enum.GetValues<Position>())
+        {
+            var player = PlayerRatingService.EnsureInitialized(state, new DynastyPlayer
+            {
+                PlayerId = Guid.NewGuid(), FullName = "Generated Recruit", TeamName = "Home",
+                Position = position, OverallRating = 84, TalentLevel = 7, ClassYear = 1
+            });
+            Assert.InRange(player.OverallRating, 83, 85);
+            Assert.Equal(player.OverallRating, Ncaa06RatingService.CalculateOverall(player));
+        }
+    }
     private static DynastyPlayer Player(int position, int rating) => Ncaa06RosterRatings.Apply(
         new DynastyPlayer { FullName = "NEXT Player", TeamName = "Home", Position = Position.QB },
         Ncaa06RosterRatings.RatingFields.ToDictionary(f => f, _ => rating)
