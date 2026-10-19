@@ -6,6 +6,70 @@ namespace DynastyManager.Core.Tests;
 
 public class GameDayEngineTests
 {
+    [Theory]
+    [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)]
+    public void UserCanKickOrPuntOnAnyDown(int down)
+    {
+        foreach (var choice in new[] { "special-field-goal", "special-punt" })
+        {
+            var session = Session(GameDayMode.Play);
+            session.Down = down; session.YardLine = 85;
+            var snap = GameDayEngine.Step(session, choice);
+            Assert.Equal(down, snap.Down);
+            Assert.True(choice == "special-punt" ? snap.Outcome == SnapOutcome.Punt : snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal);
+            Assert.Equal(PlayCallSource.User, snap.CallSource);
+        }
+    }
+
+    [Fact]
+    public void GameDayIsAvailableOnlyInItsScheduledWeekAndYear()
+    {
+        var game = Session(GameDayMode.Play).Game;
+        Assert.False(GameDayEngine.IsAvailable(game, 2026, 0));
+        Assert.True(GameDayEngine.IsAvailable(game, 2026, 1));
+        Assert.False(GameDayEngine.IsAvailable(game, 2026, 2));
+        Assert.False(GameDayEngine.IsAvailable(game, 2027, 1));
+        Assert.False(GameDayEngine.IsAvailable(game, 2026, 1, SeasonPhase.Preseason));
+        Assert.False(GameDayEngine.IsAvailable(game with { HasPlayed = true }, 2026, 1));
+    }
+
+    [Fact]
+    public void InterceptionsNameACoveragePlayerInTheActualDefensivePackage()
+    {
+        GameDaySession? pickedSession = null; GameSnapEvent? interception = null;
+        for (var seed = 1; seed <= 500 && interception is null; seed++)
+        {
+            var session = Session(GameDayMode.Play, seed: seed);
+            var snap = GameDayEngine.Step(session, "off-spread-verts");
+            if (snap.Outcome == SnapOutcome.Interception) { pickedSession = session; interception = snap; }
+        }
+        Assert.NotNull(interception);
+        Assert.Contains(interception.PrimaryDefenderId!.Value, interception.DefensePersonnel);
+        Assert.Contains(pickedSession!.PlayersById[interception.PrimaryDefenderId.Value].Position,
+            new[] { Position.CB, Position.FS, Position.SS, Position.MLB, Position.OLB });
+    }
+
+    [Fact]
+    public void SimWatchAndCpuDelegatedPlayProduceTheSameStats()
+    {
+        var source = Session(GameDayMode.Simulate, includeOpeningKickoff: true);
+        var games = new List<ScheduledGame>();
+        foreach (var mode in Enum.GetValues<GameDayMode>())
+        {
+            var session = GameDayEngine.Start(source.Game, source.HomeProfile, source.AwayProfile, source.Roster, mode);
+            // No user calls or controlled school: all three modes delegate identical decisions to CPU.
+            GameDayEngine.SimulateToEnd(session);
+            games.Add(GameDayEngine.Finish(session));
+        }
+        foreach (var game in games.Skip(1))
+        {
+            Assert.Equal(games[0].HomeScore, game.HomeScore);
+            Assert.Equal(games[0].AwayStats, game.AwayStats);
+            Assert.Equal(games[0].HomeStats, game.HomeStats);
+            Assert.Equal(games[0].PlayerStats.OrderBy(p => p.PlayerId), game.PlayerStats.OrderBy(p => p.PlayerId));
+        }
+    }
+
     [Fact]
     public void UserAndCpuCallsAdvanceTheSameSessionAndRecordPersonnel()
     {

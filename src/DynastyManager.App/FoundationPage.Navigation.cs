@@ -175,7 +175,7 @@ public sealed partial class FoundationPage
 
     private void RenderOverviewGameActions(ScheduledGame? game)
     {
-        if (_currentDynasty is null || game is null)
+        if (_currentDynasty is null || game is null || !GameDayEngine.IsAvailable(game, _currentDynasty.SeasonYear, _currentDynasty.Week, _currentDynasty.Phase))
         {
             _overviewGameActions.Content = null;
             _overviewGameActions.IsVisible = false;
@@ -202,10 +202,15 @@ public sealed partial class FoundationPage
         var unplayed = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear && !g.HasPlayed)
             .OrderBy(g => g.Week).ThenBy(g => g.AwayTeamName).ToArray();
         if (unplayed.Length == 0) { _matchupHub.Children.Add(new Label { Text = "No upcoming game is scheduled." }); return; }
-        var week = unplayed.FirstOrDefault(g => g.Week == _currentDynasty.Week)?.Week ?? unplayed[0].Week;
-        var games = unplayed.Where(g => g.Week == week)
+        var week = _currentDynasty.Week;
+        var games = unplayed.Where(g => GameDayEngine.IsAvailable(g, _currentDynasty.SeasonYear, week, _currentDynasty.Phase))
             .OrderByDescending(g => g.InvolvesTeam(_currentDynasty.UserTeamName)).ThenBy(g => g.AwayTeamName).ToArray();
         var userGame = games.FirstOrDefault(g => g.InvolvesTeam(_currentDynasty.UserTeamName));
+        if (games.Length == 0)
+        {
+            _matchupHub.Children.Add(new Label { Text = $"No games to play in Week {week}. Advance the week to reach the next matchup.", TextColor = DynastyTheme.Muted });
+            return;
+        }
         _matchupHub.Children.Add(SectionTitle($"Week {week} Game Day", "Sim, watch, or take control of any league matchup"));
         if (userGame is not null)
         {

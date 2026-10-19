@@ -7,6 +7,44 @@ namespace DynastyManager.Core.Tests;
 public class GameDayPresentationTests
 {
     [Fact]
+    public void InterceptionBallAndHighlightReachTheDefenderAtTheCatch()
+    {
+        var qb = Guid.NewGuid(); var defender = Guid.NewGuid();
+        var snap = new GameSnapEvent { OffenseTeamName = "H", DefenseTeamName = "A", OffensivePlayId = "pass",
+            DefensivePlayId = "coverage", QuarterbackId = qb, TargetId = Guid.NewGuid(), PrimaryDefenderId = defender, Outcome = SnapOutcome.Interception };
+        var launch = new GameFieldPoint(.4, .5); var catchPoint = new GameFieldPoint(.6, .2);
+        const double release = .43;
+        var caught = GameDayAnimationPlanner.CatchProgress(release);
+        Assert.Equal(launch, GameDayAnimationPlanner.InterceptionBallPoint(launch, catchPoint, release, release));
+        Assert.Equal(catchPoint.X, GameDayAnimationPlanner.InterceptionBallPoint(launch, catchPoint, caught, release).X, 10);
+        Assert.Equal(catchPoint.Y, GameDayAnimationPlanner.InterceptionBallPoint(launch, catchPoint, 1, release).Y, 10);
+        Assert.Null(GameDayAnimationPlanner.BallOwner(snap, caught - .01, release));
+        Assert.Equal(defender, GameDayAnimationPlanner.BallOwner(snap, caught, release));
+    }
+
+    [Fact]
+    public void PassingConceptsAssignComplementaryReceiverRoutes()
+    {
+        foreach (var name in new[] { "Mesh", "Slants", "Smash", "Curls", "Outs", "Flood" })
+        {
+            var play = new OffensivePlayDefinition("test", name, OffensiveFormation.ShotgunSpread, OffensivePersonnel.Eleven, OffensiveConcept.QuickPass, "");
+            var routes = Enumerable.Range(0, 3).Select(i => GameDayAnimationPlanner.AssignedRoute(play, Position.WR, i)).ToArray();
+            Assert.True(routes.Distinct().Count() > 1, name);
+            Assert.Equal(GameDayRouteFamily.Screen, GameDayAnimationPlanner.AssignedRoute(play, Position.RB, 0));
+        }
+    }
+
+    [Fact]
+    public void MissesAndPeriodChangesHaveDistinctHighlights()
+    {
+        Assert.Equal("FIELD GOAL MISSED", GameDayAnimationPlanner.OutcomeHeadline(SnapOutcome.MissedFieldGoal));
+        Assert.Equal("END OF Q1", GameDayAnimationPlanner.PeriodHeadline(1, 2, false));
+        Assert.Equal("HALFTIME", GameDayAnimationPlanner.PeriodHeadline(2, 3, false));
+        Assert.Null(GameDayAnimationPlanner.PeriodHeadline(2, 2, false));
+        Assert.Equal("FINAL", GameDayAnimationPlanner.PeriodHeadline(4, 4, true));
+    }
+
+    [Fact]
     public void SinglebackAndPistolPutTheBackDirectlyBehindTheQuarterback()
     {
         foreach (var formation in new[] { OffensiveFormation.Singleback, OffensiveFormation.Pistol })

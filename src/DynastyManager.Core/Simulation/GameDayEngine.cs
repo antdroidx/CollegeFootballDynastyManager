@@ -4,6 +4,9 @@ namespace DynastyManager.Core.Simulation;
 
 public static class GameDayEngine
 {
+    public static bool IsAvailable(ScheduledGame game, int year, int week, SeasonPhase phase = SeasonPhase.RegularSeason) =>
+        phase is (SeasonPhase.RegularSeason or SeasonPhase.ConferenceChampionship or SeasonPhase.Postseason) &&
+        !game.HasPlayed && game.SeasonYear == year && game.Week == week;
     public const double HomeFieldRatingBonus = 2.5;
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
         TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode)
@@ -67,8 +70,7 @@ public static class GameDayEngine
             call = call with { Defense = calledDefense };
         }
 
-        // A coach can choose a kick on fourth down before a normal offensive snap.
-        // CPU decisions are situational rather than always running the same play.
+        // A user can choose a kick on any down; CPU fourth-down decisions remain situational.
         var special = requestedSpecial is not null
             ? requestedSpecial
             : session.Down == 4 && string.IsNullOrWhiteSpace(userPlayId)
@@ -78,8 +80,11 @@ public static class GameDayEngine
         {
             var kickStart = session.YardLine;
             var kickDistance = 100 - kickStart + 17;
+            var kicker = Kicker(offenseRoster);
             var made = special == "special-field-goal" &&
-                session.Random.NextDouble() < Math.Clamp(.92 - Math.Max(0, kickDistance - 30) * .018, .12, .95);
+                session.Random.NextDouble() < GameDayMatchupService.FieldGoalProbability(kickDistance,
+                    kicker?.Skills?.KickAccuracy ?? offense.SpecialTeamsRating,
+                    kicker?.Skills?.KickPower ?? offense.SpecialTeamsRating);
             var puntLanding = special == "special-punt"
                 ? Math.Min(95, kickStart + session.Random.Next(34, 51)) : 100;
             var touchback = special == "special-punt" && puntLanding >= 95;
@@ -88,7 +93,6 @@ public static class GameDayEngine
             var newSpot = made ? 25 : special == "special-punt"
                 ? touchback ? 20 : Math.Clamp(100 - puntLanding + returnYards, 5, 80)
                 : Math.Clamp(100 - Math.Max(20, kickStart - 7), 10, 80);
-            var kicker = Kicker(offenseRoster);
             var returner = Returner(defenseRoster);
             var kickingUnit = SpecialTeam(offenseRoster, kicker);
             var returnUnit = SpecialTeam(defenseRoster, returner);
@@ -146,6 +150,8 @@ public static class GameDayEngine
         var isPass = calledPass && !scramble && !designedKeep;
         var advantage = isPass ? offense.PassOffenseRating - defense.PassDefenseRating : offense.RushOffenseRating - defense.RushDefenseRating;
         advantage += MatchupShift(call.Offense.Concept, call.Defense.Approach);
+        advantage += GameDayMatchupService.FormationAdvantage(call.Offense, call.Defense, isPass);
+        advantage += GameDayMatchupService.PersonnelAdvantage(offensePlayers, defensePlayers, isPass);
         if (!session.Game.IsNeutralSite)
             advantage += homeOnOffense ? HomeFieldRatingBonus : -HomeFieldRatingBonus;
         var turnover = session.Random.NextDouble() < Math.Clamp(.025 - advantage * .0008, .008, .065);
@@ -153,16 +159,23 @@ public static class GameDayEngine
         var hailMary = call.Offense.Name == "Hail Mary";
         var complete = isPass && !turnover && !sack && session.Random.NextDouble() < Math.Clamp(.61 + advantage * .004 +
             (hailMary ? -.47 : call.Offense.Concept == OffensiveConcept.QuickPass ? .07 : call.Offense.Concept == OffensiveConcept.DeepPass ? -.11 : 0), .08, .82);
+        int RoundYards(double expected)
+        {
+            var floor = Math.Floor(expected);
+            return (int)floor + (session.Random.NextDouble() < expected - floor ? 1 : 0);
+        }
         var yards = turnover ? 0 : sack ? -session.Random.Next(3, 11) : scramble
-            ? Math.Max(-3, (int)Math.Round(session.Random.Next(-1, 10) + (mobility - 65) * .10)) : isPass
-            ? complete ? Math.Max(-2, (int)Math.Round(session.Random.Next(3, 16) + advantage * .12 +
+            ? Math.Max(-3, RoundYards(session.Random.Next(-1, 10) + (mobility - 65) * .10)) : isPass
+            ? complete ? Math.Max(-2, RoundYards(session.Random.Next(3, 16) + advantage * .12 +
                 (call.Offense.Concept == OffensiveConcept.DeepPass ? session.Random.Next(5, 24) : 0))) : 0
-            : Math.Max(-4, (int)Math.Round(session.Random.Next(-2, 10) + advantage * .09));
+            : Math.Max(-4, RoundYards(session.Random.Next(-2, 10) + advantage * .09));
 
         if (hailMary && complete) yards = Math.Max(1, 100 - session.YardLine + session.Random.Next(-5, 2));
         var carrier = isPass ? null : scramble || designedKeep ? qb : Pick(offensePlayers.Where(player => player.Position == Position.RB).ToArray(), session.Random) ?? qb;
         var target = isPass ? Pick(PassTargets(call.Offense, offensePlayers), session.Random) : null;
-        var defender = Pick(defensePlayers.Where(player => player.Position != Position.K).ToArray(), session.Random);
+        var defenders = defensePlayers.Where(player => !isPass || !turnover
+            ? player.Position != Position.K : player.Position is Position.CB or Position.FS or Position.SS or Position.OLB or Position.MLB).ToArray();
+        var defender = Pick(defenders.Length == 0 ? defensePlayers : defenders, session.Random);
         var start = session.YardLine;
         var touchdown = !turnover && start + yards >= 100;
         var outcome = turnover ? isPass ? SnapOutcome.Interception : SnapOutcome.Fumble :

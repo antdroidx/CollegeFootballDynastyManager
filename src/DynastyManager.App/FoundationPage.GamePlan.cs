@@ -97,8 +97,8 @@ public sealed partial class FoundationPage
             };
             if (book != OffensivePlaybook.Custom) offensiveFormation.SelectedIndex = Array.IndexOf(offensiveFormationValues, preferred);
         };
-        _gamePlanHost.Children.Add(CoachingCard("SCHEME & PLAYBOOK SELECTION", new Label { Text = "Offensive playbook — available calls and CPU run/pass tendencies", FontAttributes = FontAttributes.Bold }, offense, description,
-            new Label { Text = "Preferred offensive formation — CPU starting point", TextColor = DynastyTheme.Muted }, offensiveFormation, new Label { Text = "Defensive playbook — available fronts and coverages", FontAttributes = FontAttributes.Bold }, defense, new Label { Text = "Defensive tendency — how aggressively the CPU calls defense", TextColor = DynastyTheme.Muted }, approach, new Label { Text = "Preferred defensive formation", TextColor = DynastyTheme.Muted }, defensiveFormation,
+        _gamePlanHost.Children.Add(CoachingCard("SCHEME & PLAYBOOK SELECTION", new Label { Text = "Offensive playbook â€” available calls and CPU run/pass tendencies", FontAttributes = FontAttributes.Bold }, offense, description,
+            new Label { Text = "Preferred offensive formation â€” CPU starting point", TextColor = DynastyTheme.Muted }, offensiveFormation, new Label { Text = "Defensive playbook â€” available fronts and coverages", FontAttributes = FontAttributes.Bold }, defense, new Label { Text = "Defensive tendency â€” how aggressively the CPU calls defense", TextColor = DynastyTheme.Muted }, approach, new Label { Text = "Preferred defensive formation", TextColor = DynastyTheme.Muted }, defensiveFormation,
             new Label { Text = "4-3 strengthens the run front; Nickel helps coverage. Run/pass focus gives up strength elsewhere. Pressure creates takeaways but risks bigger gains.", TextColor = DynastyTheme.Muted }));
         var editor = new Button { Text = "Open Playbook Editor", BackgroundColor = Color.FromArgb("#315D59") };
         editor.Clicked += async (_, _) => await OpenPlaybookEditorAsync(plan, dynastyId);
@@ -238,9 +238,10 @@ public sealed partial class FoundationPage
                 roleCounts.TryGetValue(position, out var roleIndex);
                 roleCounts[position] = roleIndex + 1;
                 var alignment = GameDayAnimationPlanner.Alignment(play.Formation, position, roleIndex);
+                var assigned = GameDayAnimationPlanner.AssignedRoute(play, position, roleIndex);
                 var start = new GameFieldPoint(0, alignment.Y);
-                var depth = GameDayAnimationPlanner.RouteDepthShare(family, position, false);
-                var end = new GameFieldPoint(depth, GameDayAnimationPlanner.RouteEndLane(family, position, i, start.Y, false));
+                var depth = GameDayAnimationPlanner.RouteDepthShare(assigned, position, false);
+                var end = new GameFieldPoint(depth, GameDayAnimationPlanner.RouteEndLane(assigned, position, i, start.Y, false));
                 var startY = .61f - (float)alignment.X * .03f;
                 canvas.FillColor = Color.FromArgb("#F2F5F4");
                 canvas.FillCircle(width * (float)start.Y, height * startY, 3.5f);
@@ -260,7 +261,7 @@ public sealed partial class FoundationPage
                 var previousY = height * startY;
                 for (var step = 1; step <= 10; step++)
                 {
-                    var point = GameDayAnimationPlanner.RoutePoint(start, end, family, step / 10d);
+                    var point = GameDayAnimationPlanner.RoutePoint(start, end, assigned, step / 10d);
                     var nextX = width * (float)point.Y;
                     var nextY = height * (startY - (float)point.X * .52f);
                     canvas.DrawLine(previousX, previousY, nextX, nextY);

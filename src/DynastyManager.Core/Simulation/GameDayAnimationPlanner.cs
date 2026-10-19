@@ -7,6 +7,45 @@ public enum GameDayRouteFamily { Run, Verticals, Mesh, Screen, Flood, Smash, Sla
 
 public static class GameDayAnimationPlanner
 {
+    public static string? OutcomeHeadline(SnapOutcome outcome) => outcome switch
+    {
+        SnapOutcome.Touchdown => "TOUCHDOWN", SnapOutcome.FieldGoal => "FIELD GOAL GOOD",
+        SnapOutcome.MissedFieldGoal => "FIELD GOAL MISSED", SnapOutcome.Interception => "INTERCEPTION",
+        SnapOutcome.Fumble => "FUMBLE RECOVERED", _ => null
+    };
+
+    public static string? PeriodHeadline(int playedQuarter, int currentQuarter, bool complete) =>
+        complete ? "FINAL" : currentQuarter == playedQuarter ? null : currentQuarter switch
+        { 3 => "HALFTIME", 5 => "OVERTIME", _ => $"END OF Q{playedQuarter}" };
+
+    public static double CatchProgress(double release) => Math.Min(.90, release + .18);
+
+    public static GameFieldPoint InterceptionBallPoint(GameFieldPoint launch, GameFieldPoint contact, double progress, double release)
+    {
+        var flight = Math.Clamp((progress - release) / (CatchProgress(release) - release), 0, 1);
+        return new(launch.X + (contact.X - launch.X) * flight, launch.Y + (contact.Y - launch.Y) * flight);
+    }
+
+    public static GameDayRouteFamily AssignedRoute(OffensivePlayDefinition play, Position position, int roleIndex)
+    {
+        var family = RouteFamily(play);
+        if (family == GameDayRouteFamily.Run) return family;
+        if (position == Position.RB) return GameDayRouteFamily.Screen;
+        if (position == Position.TE) return family switch
+        { GameDayRouteFamily.Mesh => GameDayRouteFamily.Mesh, GameDayRouteFamily.Verticals => GameDayRouteFamily.Corner, _ => GameDayRouteFamily.Outs };
+        if (position != Position.WR) return family;
+        return family switch
+        {
+            GameDayRouteFamily.Mesh => roleIndex < 2 ? family : GameDayRouteFamily.Corner,
+            GameDayRouteFamily.Slants => roleIndex % 3 == 0 ? family : roleIndex % 3 == 1 ? GameDayRouteFamily.Outs : GameDayRouteFamily.Verticals,
+            GameDayRouteFamily.Curls => roleIndex < 2 ? family : GameDayRouteFamily.Post,
+            GameDayRouteFamily.Outs => roleIndex % 3 == 0 ? family : roleIndex % 3 == 1 ? GameDayRouteFamily.Post : GameDayRouteFamily.Curls,
+            GameDayRouteFamily.Smash => roleIndex % 2 == 0 ? GameDayRouteFamily.Curls : GameDayRouteFamily.Corner,
+            GameDayRouteFamily.Flood => roleIndex % 3 == 0 ? GameDayRouteFamily.Outs : roleIndex % 3 == 1 ? GameDayRouteFamily.Corner : GameDayRouteFamily.Verticals,
+            GameDayRouteFamily.Post or GameDayRouteFamily.Corner => roleIndex == 0 ? family : GameDayRouteFamily.Curls,
+            _ => family
+        };
+    }
     public static GameFieldPoint ContactPoint(GameSnapEvent snap, int direction, double carrierLane)
     {
         var yardLine = snap.BallEndYardLine != 0 || snap.StartYardLine + snap.Yards == 0
@@ -103,7 +142,7 @@ public static class GameDayAnimationPlanner
         if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal) return progress < .20 ? snap.KickerId : null;
         if (snap.IsQuarterbackKeep || snap.IsQuarterbackScramble || snap.Outcome == SnapOutcome.Sack) return snap.QuarterbackId;
         if (snap.TargetId.HasValue)
-            return progress < release ? snap.QuarterbackId : progress < Math.Min(.90, release + .18) ? null :
+            return progress < release ? snap.QuarterbackId : progress < CatchProgress(release) ? null :
                 snap.Outcome == SnapOutcome.Interception ? snap.PrimaryDefenderId :
                 snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? snap.TargetId : null;
         return progress < .25 ? snap.QuarterbackId : snap.BallCarrierId;
@@ -171,6 +210,9 @@ public static class GameDayAnimationPlanner
             GameDayRouteFamily.Screen => position == Position.RB ? .16 : .42,
             GameDayRouteFamily.Flood => position is Position.WR or Position.TE ? .72 : .28,
             GameDayRouteFamily.Smash => position is Position.WR or Position.TE ? .64 : .28,
+            GameDayRouteFamily.Curls or GameDayRouteFamily.Outs => .65,
+            GameDayRouteFamily.Slants => .50,
+            GameDayRouteFamily.Post or GameDayRouteFamily.Corner => .90,
             GameDayRouteFamily.StandardPass => position is Position.WR or Position.TE ? .65 : .30,
             _ => position == Position.QB ? .10 : .32
         };
