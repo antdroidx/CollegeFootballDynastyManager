@@ -1,0 +1,157 @@
+using DynastyManager.Core.Models;
+
+namespace DynastyManager.Core.Simulation;
+
+public static partial class GameDayEngine
+{
+    public static bool IsScrimmage(GameSnapEvent snap) => snap.Outcome is SnapOutcome.Run or SnapOutcome.Completion or
+        SnapOutcome.Incompletion or SnapOutcome.Sack or SnapOutcome.Turnover or SnapOutcome.Touchdown or
+        SnapOutcome.Interception or SnapOutcome.Fumble or SnapOutcome.Scramble or SnapOutcome.Kneel or SnapOutcome.Spike;
+
+    public static bool ShouldAttemptTwo(GameDaySession session)
+    {
+        if (session.OvertimeRound >= 2) return true;
+        var margin = session.PossessionTeamName == session.Game.HomeTeamName
+            ? session.HomeScore - session.AwayScore : session.AwayScore - session.HomeScore;
+        return session.Quarter == 4 && session.ClockSeconds <= 300 && margin is -8 or -5 or -2 or 1 or 5;
+    }
+
+    private static GameSnapEvent ResolveTry(GameDaySession session, string? choice)
+    {
+        var two = choice == "special-two-point" || choice != "special-extra-point" && ShouldAttemptTwo(session);
+        if (session.OvertimeRound >= 2) two = true;
+        var home = session.PossessionTeamName == session.Game.HomeTeamName;
+        var profile = home ? session.HomeProfile : session.AwayProfile;
+        var defense = home ? session.AwayProfile : session.HomeProfile;
+        var kicker = Kicker(home ? session.HomeRoster : session.AwayRoster);
+        var probability = two ? Math.Clamp(.44 + (profile.OffenseRating - defense.DefenseRating) * .006, .15, .75)
+            : GameDayMatchupService.FieldGoalProbability(20, kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating,
+                kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating);
+        var made = session.Random.NextDouble() < probability;
+        var snap = new GameSnapEvent
+        {
+            Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
+            Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
+            OffenseTeamName = session.PossessionTeamName, DefenseTeamName = home ? session.Game.AwayTeamName : session.Game.HomeTeamName,
+            OffensivePlayId = string.Empty, DefensivePlayId = string.Empty, StartYardLine = two ? 97 : 97,
+            BallEndYardLine = made ? 100 : 97, Down = 0, Distance = 3, KickerId = two ? null : kicker?.PlayerId,
+            CallSource = choice is null ? PlayCallSource.Cpu : PlayCallSource.User,
+            Outcome = two ? made ? SnapOutcome.TwoPointConversion : SnapOutcome.FailedTwoPointConversion
+                : made ? SnapOutcome.ExtraPoint : SnapOutcome.MissedExtraPoint,
+            Points = made ? two ? 2 : 1 : 0
+        };
+        session.Events.Add(snap);
+        if (home) session.HomeScore += snap.Points; else session.AwayScore += snap.Points;
+        session.TryPending = false;
+        ChangePossession(session, 25);
+        if (session.OvertimeRound == 0) QueueKickoff(session, snap.OffenseTeamName);
+        AdvanceQuarter(session);
+        return snap;
+    }
+
+    private static GameSnapEvent ClockPlay(GameDaySession session, bool spike)
+    {
+        if (session.OvertimeRound > 0) throw new InvalidOperationException("Clock plays are unavailable in untimed overtime.");
+        var home = session.PossessionTeamName == session.Game.HomeTeamName;
+        var qb = (home ? session.HomeRoster : session.AwayRoster).FirstOrDefault(p => p.Position == Position.QB);
+        var snap = new GameSnapEvent
+        {
+            Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber, Quarter = session.Quarter,
+            ClockSeconds = session.ClockSeconds, OffenseTeamName = session.PossessionTeamName,
+            DefenseTeamName = home ? session.Game.AwayTeamName : session.Game.HomeTeamName,
+            OffensivePlayId = string.Empty, DefensivePlayId = string.Empty, CallSource = PlayCallSource.User,
+            Down = session.Down, Distance = session.Distance, StartYardLine = session.YardLine,
+            BallEndYardLine = session.YardLine - (spike ? 0 : 1), Yards = spike ? 0 : -1,
+            QuarterbackId = qb?.PlayerId, BallCarrierId = spike ? null : qb?.PlayerId,
+            Outcome = spike ? SnapOutcome.Spike : SnapOutcome.Kneel
+        };
+        session.Events.Add(snap);
+        AdvanceState(session, home, snap.Yards, false, false, spike);
+        return snap;
+    }
+
+    private static GameSnapEvent ResolveOnsideKick(GameDaySession session)
+    {
+        var kicking = session.KickoffTeamName;
+        var recovered = session.Random.NextDouble() < .12;
+        var receiving = session.PossessionTeamName;
+        var snap = new GameSnapEvent
+        {
+            Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
+            Quarter = session.Quarter, ClockSeconds = session.ClockSeconds, OffenseTeamName = receiving,
+            DefenseTeamName = kicking, OffensivePlayId = "", DefensivePlayId = "", Outcome = SnapOutcome.Kickoff,
+            IsOnsideKick = true, KickingTeamRecovered = recovered,
+            StartYardLine = 65, KickLandingYardLine = 55, BallEndYardLine = recovered ? 45 : 55
+        };
+        session.Events.Add(snap);
+        session.PossessionTeamName = recovered ? kicking : receiving;
+        session.YardLine = snap.BallEndYardLine; session.Down = 1; session.Distance = 10;
+        session.PossessionNumber++; session.KickoffPending = false; session.OnsideKickRequested = false;
+        return snap;
+    }
+
+    private static GameSnapEvent? TryPreSnapPenalty(GameDaySession session)
+    {
+        if (session.Events.Count == 0) return null;
+        var random = new Random(unchecked(session.Game.SimulationSeed * 397 ^ session.Events.Count * 7919));
+        if (random.NextDouble() >= .025) return null;
+        var offense = random.Next(2) == 0;
+        var yards = offense ? -Math.Min(5, Math.Max(1, session.YardLine / 2)) : Math.Min(5, Math.Max(1, (100 - session.YardLine) / 2));
+        var snap = new GameSnapEvent
+        {
+            Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
+            Quarter = session.Quarter, ClockSeconds = session.ClockSeconds, OffenseTeamName = session.PossessionTeamName,
+            DefenseTeamName = session.PossessionTeamName == session.Game.HomeTeamName ? session.Game.AwayTeamName : session.Game.HomeTeamName,
+            OffensivePlayId = "", DefensivePlayId = "", Down = session.Down, Distance = session.Distance,
+            StartYardLine = session.YardLine, BallEndYardLine = session.YardLine + yards,
+            Outcome = SnapOutcome.Penalty, Description = offense ? $"False start: {Math.Abs(yards)} yards. Replay the down."
+                : $"Defensive offside: {yards} yards."
+        };
+        session.YardLine += yards; session.Distance -= yards;
+        if (session.Distance <= 0) { session.Down = 1; session.Distance = Math.Min(10, 100 - session.YardLine); }
+        session.ClockStopped = true; session.Events.Add(snap);
+        return snap;
+    }
+
+    private static void StartOvertimeRound(GameDaySession session)
+    {
+        session.OvertimeRound++;
+        session.Quarter = 4 + session.OvertimeRound;
+        session.ClockSeconds = 0;
+        session.KickoffPending = false;
+        session.OvertimePossessions = 0;
+        session.OvertimeFirstTeam = session.OvertimeRound % 2 == 1 ? session.Game.AwayTeamName : session.Game.HomeTeamName;
+        session.PossessionTeamName = session.OvertimeFirstTeam;
+        session.PossessionNumber++;
+        session.HomeTimeouts = session.AwayTimeouts = session.OvertimeRound <= 3 ? 1 : 0;
+        SetOvertimeSpot(session);
+    }
+
+    private static void SetOvertimeSpot(GameDaySession session)
+    {
+        session.YardLine = session.OvertimeRound >= 3 ? 97 : 75;
+        session.Down = 1; session.Distance = session.OvertimeRound >= 3 ? 3 : 10;
+        session.TryPending = session.OvertimeRound >= 3;
+        session.ClockStopped = true;
+    }
+
+    private static void EndOvertimePossession(GameDaySession session)
+    {
+        session.OvertimePossessions++;
+        session.PossessionNumber++;
+        if (session.OvertimePossessions == 1)
+        {
+            session.PossessionTeamName = session.OvertimeFirstTeam == session.Game.HomeTeamName
+                ? session.Game.AwayTeamName : session.Game.HomeTeamName;
+            SetOvertimeSpot(session);
+        }
+        else if (session.HomeScore != session.AwayScore) session.IsComplete = true;
+        else
+        {
+            var homeTimeouts = session.HomeTimeouts; var awayTimeouts = session.AwayTimeouts;
+            StartOvertimeRound(session);
+            // Since 2025, each team has only one timeout total from the third overtime onward.
+            if (session.OvertimeRound > 3) { session.HomeTimeouts = homeTimeouts; session.AwayTimeouts = awayTimeouts; }
+        }
+    }
+}

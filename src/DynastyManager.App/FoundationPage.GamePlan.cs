@@ -166,7 +166,7 @@ public sealed partial class FoundationPage
 
     private static View PlayLibraryRow(string id, string name, string details, string description,
         bool offense, string styleKey,
-        HashSet<string> favorites, Action rerender)
+        HashSet<string> favorites, Action rerender, OffensivePlayDefinition? definition = null, DefensivePlayDefinition? defensiveDefinition = null)
     {
         var favorite = favorites.Contains(id);
         var toggle = new Button { Text = favorite ? "★" : "☆", FontSize = 20, Padding = new Thickness(8, 2),
@@ -179,7 +179,7 @@ public sealed partial class FoundationPage
         };
         var art = new GraphicsView
         {
-            Drawable = new PlayArtDrawable(id, name, offense, styleKey),
+            Drawable = new PlayArtDrawable(id, name, offense, styleKey, definition, defensiveDefinition),
             HeightRequest = 92,
             WidthRequest = 150,
             BackgroundColor = Color.FromArgb("#102A24")
@@ -198,7 +198,7 @@ public sealed partial class FoundationPage
         return new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = new Thickness(10, 10), Content = grid };
     }
 
-    private sealed class PlayArtDrawable(string id, string playName, bool offense, string styleKey) : IDrawable
+    private sealed class PlayArtDrawable(string id, string playName, bool offense, string styleKey, OffensivePlayDefinition? definition = null, DefensivePlayDefinition? defensiveDefinition = null) : IDrawable
     {
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
@@ -216,13 +216,25 @@ public sealed partial class FoundationPage
             canvas.DrawLine(8, height * .58f, width - 8, height * .58f);
 
             var seed = id.Aggregate(0, (hash, character) => (hash * 31 + character) & int.MaxValue);
-            if (offense) DrawOffense(canvas, width, height, id);
+            if (offense) DrawOffense(canvas, width, height, id, definition);
+            else if (defensiveDefinition?.Assignments.Count > 0)
+            {
+                canvas.StrokeColor = Color.FromArgb("#7CC6FF"); canvas.StrokeSize = 2;
+                foreach (var a in defensiveDefinition.Assignments)
+                {
+                    var x = width * (float)a.Lane; var y = height * (.55f - (float)a.Depth * .014f);
+                    canvas.DrawCircle(x, y, 4);
+                    if (a.Task == AssignmentTask.Rush) DrawRoute(canvas, x, y, x, height * .68f);
+                    else if (a.Task == AssignmentTask.Zone) canvas.DrawEllipse(x - 10, y - 15, 20, 12);
+                    else canvas.DrawLine(x, y, x + 8, y - 15);
+                }
+            }
             else DrawDefense(canvas, width, height, seed, styleKey, playName);
         }
 
-        private static void DrawOffense(ICanvas canvas, float width, float height, string playId)
+        private static void DrawOffense(ICanvas canvas, float width, float height, string playId, OffensivePlayDefinition? definition)
         {
-            var play = PlaybookCatalog.OffensivePlays.FirstOrDefault(item => item.Id == playId);
+            var play = definition ?? PlaybookCatalog.OffensivePlays.FirstOrDefault(item => item.Id == playId);
             if (play is null) return;
             var family = GameDayAnimationPlanner.RouteFamily(play);
             canvas.FillColor = Color.FromArgb("#F2F5F4");
@@ -237,7 +249,8 @@ public sealed partial class FoundationPage
                 var position = positions[i];
                 roleCounts.TryGetValue(position, out var roleIndex);
                 roleCounts[position] = roleIndex + 1;
-                var alignment = GameDayAnimationPlanner.Alignment(play.Formation, position, roleIndex);
+                var custom = play.Assignments.FirstOrDefault(a => a.Position == position && a.RoleIndex == roleIndex);
+                var alignment = custom is null ? GameDayAnimationPlanner.Alignment(play.Formation, position, roleIndex) : new GameFieldPoint(custom.Depth, custom.Lane);
                 var assigned = GameDayAnimationPlanner.AssignedRoute(play, position, roleIndex);
                 var start = new GameFieldPoint(0, alignment.Y);
                 var depth = GameDayAnimationPlanner.RouteDepthShare(assigned, position, false);
@@ -245,6 +258,7 @@ public sealed partial class FoundationPage
                 var startY = .61f - (float)alignment.X * .03f;
                 canvas.FillColor = Color.FromArgb("#F2F5F4");
                 canvas.FillCircle(width * (float)start.Y, height * startY, 3.5f);
+                if (custom?.Task == AssignmentTask.Block) continue;
                 if (family == GameDayRouteFamily.Run)
                 {
                     if (i == 0 && position == Position.RB)

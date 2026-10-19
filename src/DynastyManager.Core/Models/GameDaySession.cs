@@ -4,7 +4,8 @@ public enum GameDayMode { Simulate, Watch, Play }
 public enum SnapOutcome
 {
     Run, Completion, Incompletion, Sack, Turnover, Touchdown, FieldGoal, Punt, MissedFieldGoal,
-    Interception, Fumble, Kickoff, Scramble
+    Interception, Fumble, Kickoff, Scramble, ExtraPoint, MissedExtraPoint, TwoPointConversion, FailedTwoPointConversion,
+    Kneel, Spike, Penalty
 }
 
 public sealed record GameSnapEvent
@@ -30,6 +31,13 @@ public sealed record GameSnapEvent
     public bool IsQuarterbackKeep { get; init; }
     public bool IsBootleg { get; init; }
     public bool IsQuarterbackScramble { get; init; }
+    public bool IsDrop { get; init; }
+    public double PassReleaseProgress { get; init; }
+    public double TargetSeparation { get; init; }
+    public string? Description { get; init; }
+    public int Points { get; init; }
+    public bool IsOnsideKick { get; init; }
+    public bool KickingTeamRecovered { get; init; }
     public SnapOutcome Outcome { get; init; }
     public Guid? QuarterbackId { get; init; }
     public Guid? BallCarrierId { get; init; }
@@ -77,4 +85,9 @@ public sealed class GameDaySession
     public int AwayTimeouts { get; set; } = 3;
     public bool ClockStopped { get; set; }
     public bool IsComplete { get; set; }
+    public bool TryPending { get; set; }
+    public bool OnsideKickRequested { get; set; }
+    public int OvertimeRound { get; set; }
+    public int OvertimePossessions { get; set; }
+    public string OvertimeFirstTeam { get; set; } = string.Empty;
 }

@@ -19,11 +19,16 @@ Working continuation of the roadmap discussed in the "Dynasty Manager Roadmap" c
 - Recognize CPU-signed recruits in visible interactions, assistance and manual actions, and prevent double-signing during resolution.
 - Add repeatable five-cycle diagnostics rather than assuming that a single working season proves balance.
 
-## Next work
+## Active roadmap: game-day expansion
 
-1. Expand balance/health diagnostics to FBS scale and additional seeds, including simulated wins/losses and prestige movement.
-2. Investigate low-prestige walk-on dependence and age/position bottlenecks from those measurements; preserve organic commitment timing and roster-based portal decisions.
-3. Continue interface clarity once the recruiting and dynasty-health checks are dependable.
+The user approved starting items 1–4 together. The first integrated delivery includes:
+
+1. **Rules and situational AI:** untimed, paired college overtime possessions; separate XP/two-point attempts; forced two-point attempts from second OT and alternating tries from third OT; onside decisions; kneel/spike controls; pre-snap false starts/offside; hurry-up and late first-down clock stopping; CPU calls use the same situational advice as the user. Remaining: full penalty catalog/acceptance, defensive return scores, safeties, full two-minute/clock enforcement and richer special-teams animations.
+2. **Shared snap engine:** actual personnel, route assignments, coverage matchups, pass protection, QB awareness and staff game management now determine a probabilistic passing read before the throw. Separation, catch/interception risk and release timing feed the shared engine/viewer. Remaining: time-stepped spatial simulation, blocking collisions, true sequential progressions and calibrated run/option reads.
+3. **Play Editor:** copy catalog calls into a persisted library, edit offense formation/concept, slot alignments, route types and blocking; edit defensive rush/man/zone assignments and alignment. Created calls enter the same capped Custom playbooks. Remaining: freehand route waypoints, assignment targets, editing/deleting saved definitions and richer defensive art.
+4. **NCAA 06 NEXT importer:** Settings file picker, explicit TGID mapping, validation and preview, POCI recalculation, preseason apply. First version consumes PLAY-table CSV with decoded names and displayed 1–99 ratings. Remaining: direct binary database/PS2 save parsing, automatic TEAM/PRLU extraction, export/round-trip and user-supplied real-file validation.
+
+NIL and coaching budgets remain later additions. Recruiting and dynasty behavior continue through the existing shared systems.
 
 Competing offers are now a core engine feature (Build 204). CPU and user schools share persisted offers and one decision resolver. CPU direct signings and protected user targets have been removed. The next balance baseline must use this shared market; the original Build 203 report is historical.
 

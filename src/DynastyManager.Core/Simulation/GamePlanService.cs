@@ -7,13 +7,14 @@ public static class GamePlanService
     public static DynastyState SetPlan(DynastyState state, TeamGamePlan plan)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(plan.TeamName);
+        PlayEditorService.Validate(plan);
         if (!Enum.IsDefined(plan.Offense) || !Enum.IsDefined(plan.Defense) || !Enum.IsDefined(plan.Approach) ||
             !Enum.IsDefined(plan.OffensiveFormation) || !Enum.IsDefined(plan.DefensiveFormation) ||
             plan.OpeningScript.Count > 12 || plan.OpeningScript.Any(call => !Enum.IsDefined(call)) ||
-            plan.OpeningPlayIds.Count > 12 || plan.OpeningPlayIds.Any(id => PlaybookCatalog.OffensivePlays.All(play => play.Id != id)) ||
+            plan.OpeningPlayIds.Count > 12 || plan.OpeningPlayIds.Any(id => PlayEditorService.OffensiveLibrary(plan).All(play => play.Id != id)) ||
             plan.CustomOffensivePlayIds.Count > 17 || plan.CustomDefensivePlayIds.Count > 14 ||
-            plan.CustomOffensivePlayIds.Any(id => PlaybookCatalog.OffensivePlays.All(p => p.Id != id)) ||
-            plan.CustomDefensivePlayIds.Any(id => PlaybookCatalog.DefensivePlays.All(p => p.Id != id)) ||
+            plan.CustomOffensivePlayIds.Any(id => PlayEditorService.OffensiveLibrary(plan).All(p => p.Id != id)) ||
+            plan.CustomDefensivePlayIds.Any(id => PlayEditorService.DefensiveLibrary(plan).All(p => p.Id != id)) ||
             plan.Offense == OffensivePlaybook.Custom && plan.CustomOffensivePlayIds.Count == 0 ||
             plan.Defense == DefensivePlaybook.Custom && plan.CustomDefensivePlayIds.Count == 0)
             throw new ArgumentException("Invalid game plan.", nameof(plan));
@@ -50,9 +51,9 @@ public static class GamePlanService
         Approach = Enum.IsDefined(plan.Approach) ? plan.Approach : DefensiveApproach.Balanced,
         OffensiveFormation = Enum.IsDefined(plan.OffensiveFormation) ? plan.OffensiveFormation : OffensiveFormation.ShotgunSpread,
         DefensiveFormation = Enum.IsDefined(plan.DefensiveFormation) ? plan.DefensiveFormation : DefensiveFormation.FourThree,
-        CustomOffensivePlayIds = plan.CustomOffensivePlayIds.Where(id => PlaybookCatalog.OffensivePlays.Any(p => p.Id == id)).Distinct().Take(17).ToArray(),
-        CustomDefensivePlayIds = plan.CustomDefensivePlayIds.Where(id => PlaybookCatalog.DefensivePlays.Any(p => p.Id == id)).Distinct().Take(14).ToArray(),
-        OpeningPlayIds = plan.OpeningPlayIds.Where(id => PlaybookCatalog.OffensivePlays.Any(play => play.Id == id)).Take(12).ToArray(),
+        CustomOffensivePlayIds = plan.CustomOffensivePlayIds.Where(id => PlayEditorService.OffensiveLibrary(plan).Any(p => p.Id == id)).Distinct().Take(17).ToArray(),
+        CustomDefensivePlayIds = plan.CustomDefensivePlayIds.Where(id => PlayEditorService.DefensiveLibrary(plan).Any(p => p.Id == id)).Distinct().Take(14).ToArray(),
+        OpeningPlayIds = plan.OpeningPlayIds.Where(id => PlayEditorService.OffensiveLibrary(plan).Any(play => play.Id == id)).Take(12).ToArray(),
         OpeningScript = plan.OpeningScript.Take(12).Select(call => Enum.IsDefined(call) ? call : OffensiveConcept.Automatic).ToArray()
     };
 
@@ -74,7 +75,7 @@ public static class GamePlanService
             : offensivePool.Where(play => play.Concept == desiredConcept).ToArray();
         if (conceptFallback.Length == 0) conceptFallback = offensivePool;
         var calledOffense = scriptedId is not null
-            ? PlaybookCatalog.OffensivePlays.Single(play => play.Id == scriptedId)
+            ? PlayEditorService.OffensiveLibrary(offense).Single(play => play.Id == scriptedId)
             : Pick(offensivePool.Where(play => play.Formation == offense.OffensiveFormation &&
                 (desiredConcept == OffensiveConcept.Automatic || play.Concept == desiredConcept)).ToArray(), conceptFallback, random);
 
@@ -90,7 +91,7 @@ public static class GamePlanService
     public static IReadOnlyList<OffensivePlayDefinition> AvailableOffensivePlays(TeamGamePlan plan)
     {
         if (plan.Offense == OffensivePlaybook.Custom && plan.CustomOffensivePlayIds.Count > 0)
-            return PlaybookCatalog.OffensivePlays.Where(p => plan.CustomOffensivePlayIds.Contains(p.Id)).Take(17).ToArray();
+            return PlayEditorService.OffensiveLibrary(plan).Where(p => plan.CustomOffensivePlayIds.Contains(p.Id)).Take(17).ToArray();
         var formations = plan.Offense switch
         {
             OffensivePlaybook.Spread => new[] { OffensiveFormation.ShotgunSpread, OffensiveFormation.Pistol, OffensiveFormation.Empty },
@@ -119,7 +120,7 @@ public static class GamePlanService
     public static IReadOnlyList<DefensivePlayDefinition> AvailableDefensivePlays(TeamGamePlan plan)
     {
         if (plan.Defense == DefensivePlaybook.Custom && plan.CustomDefensivePlayIds.Count > 0)
-            return PlaybookCatalog.DefensivePlays.Where(p => plan.CustomDefensivePlayIds.Contains(p.Id)).Take(14).ToArray();
+            return PlayEditorService.DefensiveLibrary(plan).Where(p => plan.CustomDefensivePlayIds.Contains(p.Id)).Take(14).ToArray();
         var formations = plan.Defense switch
         {
             DefensivePlaybook.FourThree => new[] { DefensiveFormation.FourThree, DefensiveFormation.Nickel, DefensiveFormation.GoalLine },

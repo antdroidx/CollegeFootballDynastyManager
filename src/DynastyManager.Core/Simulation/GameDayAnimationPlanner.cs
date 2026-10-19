@@ -10,7 +10,10 @@ public static class GameDayAnimationPlanner
     public static string? OutcomeHeadline(SnapOutcome outcome) => outcome switch
     {
         SnapOutcome.Touchdown => "TOUCHDOWN", SnapOutcome.FieldGoal => "FIELD GOAL GOOD",
-        SnapOutcome.MissedFieldGoal => "FIELD GOAL MISSED", SnapOutcome.Interception => "INTERCEPTION",
+        SnapOutcome.MissedFieldGoal => "FIELD GOAL MISSED",
+        SnapOutcome.ExtraPoint => "EXTRA POINT GOOD", SnapOutcome.MissedExtraPoint => "EXTRA POINT MISSED",
+        SnapOutcome.TwoPointConversion => "TWO POINTS", SnapOutcome.FailedTwoPointConversion => "CONVERSION STOPPED",
+        SnapOutcome.Penalty => "PENALTY", SnapOutcome.Interception => "INTERCEPTION",
         SnapOutcome.Fumble => "FUMBLE RECOVERED", _ => null
     };
 
@@ -28,6 +31,8 @@ public static class GameDayAnimationPlanner
 
     public static GameDayRouteFamily AssignedRoute(OffensivePlayDefinition play, Position position, int roleIndex)
     {
+        var custom = play.Assignments.FirstOrDefault(a => a.Position == position && a.RoleIndex == roleIndex);
+        if (custom is not null && Enum.TryParse<GameDayRouteFamily>(custom.Route, out var route)) return route;
         var family = RouteFamily(play);
         if (family == GameDayRouteFamily.Run) return family;
         if (position == Position.RB) return GameDayRouteFamily.Screen;

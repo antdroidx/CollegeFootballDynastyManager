@@ -93,7 +93,7 @@ public class GameDayEngineTests
 
         Assert.True(session.IsComplete);
         Assert.NotEmpty(session.Events);
-        Assert.InRange(session.Events.Count, 1, 180);
+        Assert.InRange(session.Events.Count, 1, 500);
         Assert.NotEqual(session.HomeScore, session.AwayScore);
     }
 
@@ -362,7 +362,7 @@ public class GameDayEngineTests
         Assert.True(GameDayEngine.Step(session, "off-single-flood").IsBootleg);
     }
 
-    private static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false, int seed = 7123, bool neutral = false)
+    internal static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false, int seed = 7123, bool neutral = false)
     {
         var homePlan = new TeamGamePlan { TeamName = "Home", Offense = OffensivePlaybook.Spread,
             OffensiveFormation = OffensiveFormation.ShotgunSpread, DefensiveFormation = DefensiveFormation.Nickel };

@@ -11,9 +11,26 @@ public enum DefensivePersonnel { BaseFourThree, BaseThreeFour, Nickel, Dime, Goa
 public enum PlayCallSource { Cpu, User }
 
 public sealed record OffensivePlayDefinition(string Id, string Name, OffensiveFormation Formation,
-    OffensivePersonnel Personnel, OffensiveConcept Concept, string Description);
+    OffensivePersonnel Personnel, OffensiveConcept Concept, string Description)
+{
+    public IReadOnlyList<PlayAssignment> Assignments { get; init; } = [];
+}
 public sealed record DefensivePlayDefinition(string Id, string Name, DefensiveFormation Formation,
-    DefensivePersonnel Personnel, DefensiveApproach Approach, string Description);
+    DefensivePersonnel Personnel, DefensiveApproach Approach, string Description)
+{
+    public IReadOnlyList<PlayAssignment> Assignments { get; init; } = [];
+}
+
+public enum AssignmentTask { Route, Block, Rush, Man, Zone }
+public sealed record PlayAssignment
+{
+    public Position Position { get; init; }
+    public int RoleIndex { get; init; }
+    public double Depth { get; init; }
+    public double Lane { get; init; } = .5;
+    public AssignmentTask Task { get; init; }
+    public string Route { get; init; } = "Curls";
+}
 
 public sealed record TeamGamePlan
 {
@@ -25,6 +42,8 @@ public sealed record TeamGamePlan
     public DefensiveFormation DefensiveFormation { get; init; }
     public IReadOnlyList<string> CustomOffensivePlayIds { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> CustomDefensivePlayIds { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<OffensivePlayDefinition> CreatedOffensivePlays { get; init; } = [];
+    public IReadOnlyList<DefensivePlayDefinition> CreatedDefensivePlays { get; init; } = [];
     public IReadOnlyList<string> OpeningPlayIds { get; init; } = Array.Empty<string>();
     public IReadOnlyList<OffensiveConcept> OpeningScript { get; init; } = Array.Empty<OffensiveConcept>();
 }

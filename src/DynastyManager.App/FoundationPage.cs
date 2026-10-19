@@ -968,6 +968,7 @@ public sealed partial class FoundationPage : ContentPage
                 },
                 _rollingAutosaveStatus,
                 _autosaveButton,
+                RosterImportButton(),
 
             }
         };

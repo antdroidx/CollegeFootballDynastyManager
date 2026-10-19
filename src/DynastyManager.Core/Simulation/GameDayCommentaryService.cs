@@ -18,6 +18,7 @@ public static class GameDayCommentaryService
 
         return snap.Outcome switch
         {
+            SnapOutcome.Kickoff when snap.IsOnsideKick => snap.KickingTeamRecovered ? $"{snap.DefenseTeamName} recovers the onside kick!" : $"{snap.OffenseTeamName} secures the onside kick.",
             SnapOutcome.Kickoff when snap.PrimaryDefenderId.HasValue =>
                 $"{kicker} kicks to {returner}, who returns it {snap.ReturnYards} yards before {defender} makes the tackle.",
             SnapOutcome.Kickoff => $"{kicker} kicks to {returner}, who returns it {snap.ReturnYards} yards.",
@@ -26,6 +27,13 @@ public static class GameDayCommentaryService
             SnapOutcome.Punt => snap.ReturnYards > 0
                 ? $"{kicker} punts to {returner}, who returns it {snap.ReturnYards} yards before {defender} makes the tackle."
                 : $"{kicker} punts. {returner} is stopped without a return.",
+            SnapOutcome.ExtraPoint => $"{kicker} makes the extra point.",
+            SnapOutcome.MissedExtraPoint => $"{kicker} misses the extra point.",
+            SnapOutcome.TwoPointConversion => "Two-point conversion is good.",
+            SnapOutcome.FailedTwoPointConversion => "The two-point conversion is stopped.",
+            SnapOutcome.Kneel => $"{quarterback} takes a knee.",
+            SnapOutcome.Spike => $"{quarterback} spikes the ball to stop the clock.",
+            SnapOutcome.Penalty => snap.Description ?? "Penalty.",
             SnapOutcome.FieldGoal => $"{kicker} makes the field goal.",
             SnapOutcome.MissedFieldGoal => $"{kicker} misses the field goal.",
             SnapOutcome.Sack => $"{defender} sacks {quarterback} {YardPhrase(snap.Yards)}.",

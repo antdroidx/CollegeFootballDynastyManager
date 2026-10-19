@@ -115,6 +115,8 @@ public static class PersonnelRotationService
         _ => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 3), (Position.TE, 1), (Position.OL, 5)]
     };
 
+    public static IReadOnlyList<Position> DefensivePositions(DefensivePersonnel package) => DefensiveNeeds(package).SelectMany(p => Enumerable.Repeat(p.Item1, p.Item2)).ToArray();
+
     private static (Position, int)[] DefensiveNeeds(DefensivePersonnel package) => package switch
     {
         DefensivePersonnel.BaseThreeFour => [(Position.DE, 2), (Position.DT, 1), (Position.OLB, 2), (Position.MLB, 2), (Position.CB, 2), (Position.FS, 1), (Position.SS, 1)],

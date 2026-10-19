@@ -23,3 +23,12 @@ Standard coach books expose up to 17 offensive and 14 defensive plays. The Playb
 ## Viewer and simulation
 
 Formation alignments and route paths are shared between play art and live presentation. Route movement uses distance along the path; play duration accounts for speed ratings, pursuit distance and the returner's catch delay. The gold outline follows possession through QB, handoff, pass flight and catch. Read/RPO/option calls can become QB keepers; boot calls move the quarterback laterally. Three timeouts per half stop the next clock runoff; the CPU uses them late while trailing on defense. The existing probabilistic snap resolver still determines outcomes before playback; this update does not implement a spatial coverage/read progression engine.
+
+
+## In-app CSV import (first version)
+
+Use Settings → Import NCAA 06 NEXT roster (CSV) in a newly created dynasty before advancing preseason. Pick the PLAY-table CSV, enter any numeric TGID mappings as `TGID=Exact league team name`, then validate and inspect the player/team preview. Apply replaces only teams present in the file and autosaves. Unknown teams and invalid rows block applying the entire preview; existing season records cannot be replaced.
+
+Required headers: `TGID,PFNA,PLNA,PYEA,PPOS,PCAR,PKAC,PTHA,PPBK,PRBK,PACC,PAGI,PTAK,PINJ,PKPR,PSPD,PTHP,PBTK,PCTH,PSTR,PJMP,PAWR`. Column order is flexible. Names must be decoded text. PYEA is 0=FR, 1=SO, 2=JR, 3=SR, 4=GR. PPOS retains the original NCAA position code. All rating columns must contain displayed 1–99 values, not compressed raw indexes. Optional PGID rejects duplicates; optional PRSD=1 marks redshirt history. Leadership/discipline default to 60, recruiting stars remain unknown, and potential is at least the recalculated POCI overall.
+
+The low-level adapter accepts a PRLU lookup, but the first file-picker UI expects an already decoded export. Raw EA databases, PS2 memory-card formats, automatic TEAM/PRLU extraction and roster export are pending. This CSV contract is tested with constructed exports; a real user roster file still needs an end-to-end compatibility check.

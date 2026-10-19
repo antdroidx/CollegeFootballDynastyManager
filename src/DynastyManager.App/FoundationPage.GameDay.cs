@@ -93,7 +93,7 @@ public sealed partial class FoundationPage
             selectedArt.IsVisible = true;
             playGrid.ColumnDefinitions[0].Width = new GridLength(selectedArt.WidthRequest);
             selectedHeading.Text = recommended ? "RECOMMENDED OFFENSIVE CALL" : "SELECTED OFFENSIVE CALL";
-            selectedArt.Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString());
+            selectedArt.Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString(), play);
             selectedName.Text = play.Name;
             selectedDetails.Text = $"{GamePlanService.Label(play.Formation)} · {GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Concept)}";
             selectedDescription.Text = play.Description;
@@ -137,7 +137,7 @@ public sealed partial class FoundationPage
         {
             selectedDefense = play;
             defenseHeading.Text = recommended ? "RECOMMENDED DEFENSIVE CALL" : "SELECTED DEFENSIVE CALL";
-            defenseArt.Drawable = new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString());
+            defenseArt.Drawable = new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString(), defensiveDefinition: play);
             defenseName.Text = play.Name;
             defenseDetails.Text = $"{GamePlanService.Label(play.Formation)} · {GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Approach)}";
             defenseDescription.Text = play.Description;
@@ -151,11 +151,17 @@ public sealed partial class FoundationPage
         var takeover = new Button { Text = "Take over", IsVisible = false };
         var punt = new Button { Text = "Punt", IsVisible = false };
         var kick = new Button { Text = "Field goal", IsVisible = false };
+        var extraPoint = new Button { Text = "Extra point", IsVisible = false };
+        var twoPoint = new Button { Text = "Go for 2", IsVisible = false };
+        var kneel = new Button { Text = "Kneel", IsVisible = false };
+        var spike = new Button { Text = "Spike", IsVisible = false };
+        var onside = new Button { Text = "Next kickoff: Deep" };
+        onside.Clicked += (_, _) => { session.OnsideKickRequested = !session.OnsideKickRequested; onside.Text = session.OnsideKickRequested ? "Next kickoff: Onside" : "Next kickoff: Deep"; };
         var timeout = new Button { Text = "Timeout" };
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
-        foreach (var button in new[] { call, callDefense, punt, kick, delegateOffense, delegateDefense, watch, takeover, timeout, skip, close })
+        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
         bool? compactLayout = null;
         void ArrangeViewer(bool compact)
@@ -222,6 +228,8 @@ public sealed partial class FoundationPage
         }
         async Task AnimateSnapAsync(GameSnapEvent snap)
         {
+            if (snap.IsOnsideKick) { await Task.Delay(350); return; }
+            if (!GameDayEngine.IsScrimmage(snap) && snap.Outcome is not (SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal)) { await Task.Delay(350); return; }
             highlight.IsVisible = false;
             result.Text = string.Empty;
             fieldPlayers.AbortAnimation("snap-movement");
@@ -279,10 +287,10 @@ public sealed partial class FoundationPage
             var tightEndIndex = 0;
             var backIndex = 0;
             var routeEligibleIndex = 0;
-            var calledPlay = PlaybookCatalog.OffensivePlays.FirstOrDefault(play => play.Id == snap.OffensivePlayId);
+            var calledPlay = PlayEditorService.OffensiveLibrary((snap.OffenseTeamName == game.HomeTeamName ? home : away).GamePlan ?? controlledPlan).FirstOrDefault(play => play.Id == snap.OffensivePlayId);
             var routeFamily = calledPlay is null ? GameDayRouteFamily.Run : GameDayAnimationPlanner.RouteFamily(calledPlay);
             var receiverFamily = routeFamily;
-            var passRelease = calledPlay is null ? .54 : GameDayAnimationPlanner.PassReleaseProgress(calledPlay);
+            var passRelease = snap.PassReleaseProgress > 0 ? snap.PassReleaseProgress : calledPlay is null ? .54 : GameDayAnimationPlanner.PassReleaseProgress(calledPlay);
             var catchProgress = GameDayAnimationPlanner.CatchProgress(passRelease);
             var terminalCarrierId = snap.BallCarrierId ?? snap.ReturnerId ??
                 (snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? snap.TargetId : null) ??
@@ -364,7 +372,8 @@ public sealed partial class FoundationPage
                     roleCounts[player.Position] = roleIndex + 1;
                     if (player.Position is Position.QB or Position.RB or Position.WR or Position.TE)
                     {
-                        var alignment = GameDayAnimationPlanner.Alignment(calledPlay.Formation, player.Position, roleIndex);
+                        var custom = calledPlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == roleIndex);
+                        var alignment = custom is null ? GameDayAnimationPlanner.Alignment(calledPlay.Formation, player.Position, roleIndex) : new GameFieldPoint(custom.Depth, custom.Lane);
                         x = Project(snap.StartYardLine + alignment.X); y = alignment.Y;
                     }
                     else if (player.Position == Position.OL)
@@ -452,6 +461,9 @@ public sealed partial class FoundationPage
                 .OrderBy(player => player!.Position is Position.MLB or Position.OLB or Position.FS or Position.SS ? 0 : 1)
                 .ThenBy(player => player!.PlayerId)
                 .Take(assistCount).Select(player => player!.PlayerId).ToHashSet();
+            var defensivePlan = (snap.DefenseTeamName == game.HomeTeamName ? home : away).GamePlan ?? controlledPlan;
+            var calledDefensivePlay = PlayEditorService.DefensiveLibrary(defensivePlan).FirstOrDefault(p => p.Id == snap.DefensivePlayId);
+            var defensiveRoles = new Dictionary<Position, int>();
             var defensiveLine = 0;
             var linebackers = 0;
             var secondary = 0;
@@ -493,6 +505,12 @@ public sealed partial class FoundationPage
                     var isFront = player?.Position is Position.DE or Position.DT or Position.OLB or Position.MLB;
                     x = Math.Clamp(line + direction * (isFront ? .018 : .065), .025, .96);
                     y = isFront ? .26 + (index % 7) * .08 : .18 + (index % 6) * .13;
+                }
+                if (player is not null && calledDefensivePlay is not null && !isFieldGoalSnap && snap.Outcome != SnapOutcome.Punt)
+                {
+                    var role = defensiveRoles.GetValueOrDefault(player.Position); defensiveRoles[player.Position] = role + 1;
+                    var assignment = calledDefensivePlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == role);
+                    if (assignment is not null) { x = Project(snap.StartYardLine + assignment.Depth); y = assignment.Lane; }
                 }
                 var primaryDefender = isTackle && player?.PlayerId == snap.PrimaryDefenderId;
                 var assistingDefender = isTackle && player is not null && assistIds.Contains(player.PlayerId);
@@ -689,8 +707,10 @@ public sealed partial class FoundationPage
         {
             score.Text = $"{game.AwayTeamName} {session.AwayScore}  ·  {session.HomeScore} {game.HomeTeamName}";
             quarterClock.Text = $"Q{session.Quarter}  {TimeSpan.FromSeconds(session.ClockSeconds):m\\:ss}";
+            if (session.OvertimeRound > 0) quarterClock.Text = $"OT {session.OvertimeRound} · untimed";
             downValue.Text = session.KickoffPending ? "—" : Ordinal(session.Down);
             toGoValue.Text = session.KickoffPending ? "KICKOFF" : session.Distance.ToString();
+            if (session.TryPending) { downValue.Text = "TRY"; toGoValue.Text = "3"; }
             ballValue.Text = session.KickoffPending ? "RECEIVE" : session.YardLine.ToString();
             possession.Text = session.Mode == GameDayMode.Watch
                 ? $"CPU vs CPU · {session.PossessionTeamName} possession"
@@ -702,7 +722,16 @@ public sealed partial class FoundationPage
             if (!session.IsComplete && !session.KickoffPending)
             {
                 if (ControlledOnOffense())
-                    SelectRecommendation(GameDayRecommendationService.Recommend(session, controlledPlan));
+                    {
+                    if (session.TryPending)
+                    {
+                        selectedCallId = GameDayEngine.ShouldAttemptTwo(session) ? "special-two-point" : "special-extra-point";
+                        selectedName.Text = selectedCallId == "special-two-point" ? "Two-point conversion" : "Extra point";
+                        selectedHeading.Text = "CONVERSION ATTEMPT"; selectedDetails.Text = "Try from the 3-yard line";
+                        selectedDescription.Text = "Choose one or two points."; selectedArt.IsVisible = false; call.Text = "Attempt conversion";
+                    }
+                    else SelectRecommendation(GameDayRecommendationService.Recommend(session, controlledPlan));
+                }
                 else
                     SelectDefense(GamePlanService.RecommendDefensivePlay(controlledPlan, session.Down, session.Distance), true);
             }
@@ -713,6 +742,7 @@ public sealed partial class FoundationPage
             call.IsVisible = awaitingOffense;
             callDefense.IsVisible = awaitingDefense;
             playCard.IsVisible = call.IsVisible;
+            choose.IsVisible = !session.TryPending;
             defenseCard.IsVisible = callDefense.IsVisible;
             delegateOffense.IsVisible = delegateDefense.IsVisible = session.Mode == GameDayMode.Play && !session.IsComplete;
             delegateOffense.Text = coachCallsOffense ? "Offense: Coach" : "Offense: You";
@@ -720,7 +750,12 @@ public sealed partial class FoundationPage
             watch.IsVisible = !session.IsComplete;
             watch.Text = session.Mode == GameDayMode.Watch ? "Pause watch" : "Watch CPU";
             takeover.IsVisible = session.Mode == GameDayMode.Watch && !session.IsComplete;
-            punt.IsVisible = kick.IsVisible = awaitingOffense;
+            onside.IsVisible = session.Mode == GameDayMode.Play && !session.IsComplete;
+            onside.Text = session.OnsideKickRequested ? "Next kickoff: Onside" : "Next kickoff: Deep";
+            punt.IsVisible = kick.IsVisible = awaitingOffense && !session.TryPending;
+            extraPoint.IsVisible = awaitingOffense && session.TryPending && session.OvertimeRound < 2;
+            twoPoint.IsVisible = awaitingOffense && session.TryPending;
+            kneel.IsVisible = spike.IsVisible = awaitingOffense && !session.TryPending && session.OvertimeRound == 0;
             skip.IsVisible = !session.IsComplete;
             close.IsVisible = session.IsComplete;
             var remaining = controlledTeamName == game.HomeTeamName ? session.HomeTimeouts : session.AwayTimeouts;
@@ -798,6 +833,10 @@ public sealed partial class FoundationPage
         };
         takeover.Clicked += async (_, _) => { session.Mode = GameDayMode.Play; Refresh(); await RunCpuUntilUserDecision(); };
         punt.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-punt")); await RunCpuUntilUserDecision(); };
+        extraPoint.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-extra-point")); await RunCpuUntilUserDecision(); };
+        twoPoint.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-two-point")); await RunCpuUntilUserDecision(); };
+        kneel.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-kneel")); await RunCpuUntilUserDecision(); };
+        spike.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-spike")); await RunCpuUntilUserDecision(); };
         kick.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-field-goal")); await RunCpuUntilUserDecision(); };
         timeout.Clicked += (_, _) =>
         {
@@ -831,7 +870,7 @@ public sealed partial class FoundationPage
                 var type = play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun ? "RUN" : "PASS";
                 var badge = new Label { Text = type, FontSize = 9, FontAttributes = FontAttributes.Bold,
                     TextColor = type == "RUN" ? Color.FromArgb("#B9F6CA") : Color.FromArgb("#B8D8FA") };
-                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString()),
+                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString(), play),
                     HeightRequest = 105, BackgroundColor = Color.FromArgb("#102A24") };
                 var card = new Border { StrokeThickness = play.Id == selected.Id ? 2 : 0,
                     Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = Color.FromArgb("#1B2B37"), Content =
@@ -881,7 +920,7 @@ public sealed partial class FoundationPage
                 if (index % 2 == 0) grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
                 var play = formationPlays[index];
                 var badgeText = play.Approach switch { DefensiveApproach.StopRun => "RUN", DefensiveApproach.ProtectPass => "PASS", _ => "BALANCED" };
-                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString()),
+                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString(), defensiveDefinition: play),
                     HeightRequest = 105, BackgroundColor = Color.FromArgb("#102A24") };
                 var card = new Border { StrokeThickness = play.Id == selected.Id ? 2 : 0,
                     Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = Color.FromArgb("#1B2B37"), Content =

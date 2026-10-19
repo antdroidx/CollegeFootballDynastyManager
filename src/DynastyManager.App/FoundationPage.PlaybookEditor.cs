@@ -8,6 +8,8 @@ public sealed partial class FoundationPage
 {
     private async Task OpenPlaybookEditorAsync(TeamGamePlan plan, Guid dynastyId)
     {
+        var createdDefense = plan.CreatedDefensivePlays.ToList();
+        var createdOffense = plan.CreatedOffensivePlays.ToList();
         var offenseIds = (plan.CustomOffensivePlayIds.Count > 0 ? plan.CustomOffensivePlayIds :
             GamePlanService.AvailableOffensivePlays(plan).Select(p => p.Id)).ToHashSet(StringComparer.Ordinal);
         var defenseIds = (plan.CustomDefensivePlayIds.Count > 0 ? plan.CustomDefensivePlayIds :
@@ -29,18 +31,28 @@ public sealed partial class FoundationPage
             if (side.SelectedIndex == 0)
             {
                 var value = Enum.GetValues<OffensiveFormation>()[selected];
-                foreach (var p in PlaybookCatalog.OffensivePlays.Where(p => p.Formation == value))
+                foreach (var p in PlaybookCatalog.OffensivePlays.Concat(createdOffense).Where(p => p.Formation == value))
+                {
                     library.Children.Add(PlayLibraryRow(p.Id, p.Name,
                         $"{GamePlanService.Label(p.Formation)} · {GamePlanService.Label(p.Concept)}", p.Description,
-                        true, p.Concept.ToString(), offenseIds, Render));
+                        true, p.Concept.ToString(), offenseIds, Render, p));
+                    var edit = new Button { Text = $"Edit / copy {p.Name}" };
+                    edit.Clicked += async (_, _) => { var result = await EditOffensivePlayAsync(p); if (result is not null) { createdOffense.Add(result); Render(); } };
+                    library.Children.Add(edit);
+                }
             }
             else
             {
                 var value = Enum.GetValues<DefensiveFormation>()[selected];
-                foreach (var p in PlaybookCatalog.DefensivePlays.Where(p => p.Formation == value))
+                foreach (var p in PlaybookCatalog.DefensivePlays.Concat(createdDefense).Where(p => p.Formation == value))
+                {
                     library.Children.Add(PlayLibraryRow(p.Id, p.Name,
                         $"{GamePlanService.Label(p.Formation)} · {GamePlanService.Label(p.Approach)}", p.Description,
-                        false, p.Approach.ToString(), defenseIds, Render));
+                        false, p.Approach.ToString(), defenseIds, Render, defensiveDefinition: p));
+                    var edit = new Button { Text = $"Edit / copy {p.Name}" };
+                    edit.Clicked += async (_, _) => { var result = await EditDefensivePlayAsync(p); if (result is not null) { createdDefense.Add(result); Render(); } };
+                    library.Children.Add(edit);
+                }
             }
             save.IsEnabled = offenseIds.Count > 0 && defenseIds.Count > 0;
         }
@@ -63,6 +75,7 @@ public sealed partial class FoundationPage
                 _currentDynasty = GamePlanService.SetPlan(_currentDynasty, plan with
                 {
                     Offense = OffensivePlaybook.Custom, Defense = DefensivePlaybook.Custom,
+                    CreatedOffensivePlays = createdOffense.ToArray(), CreatedDefensivePlays = createdDefense.ToArray(),
                     CustomOffensivePlayIds = offenseIds.ToArray(), CustomDefensivePlayIds = defenseIds.ToArray(),
                     OpeningPlayIds = [], OpeningScript = []
                 });
