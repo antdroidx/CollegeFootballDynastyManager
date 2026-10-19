@@ -19,6 +19,8 @@ public static class GameDayCommentaryService
         return snap.Outcome switch
         {
             SnapOutcome.Kickoff => $"{kicker} kicks to {returner}, who returns it {snap.ReturnYards} yards.",
+            SnapOutcome.Punt when snap.IsTouchback => $"{kicker}'s punt carries into the end zone for a touchback.",
+            SnapOutcome.Punt when snap.IsFairCatch => $"{kicker} punts to {returner}, who signals for a fair catch.",
             SnapOutcome.Punt => snap.ReturnYards > 0
                 ? $"{kicker} punts to {returner}, who returns it {snap.ReturnYards} yards."
                 : $"{kicker} punts. {returner} is stopped without a return.",
@@ -29,8 +31,11 @@ public static class GameDayCommentaryService
             SnapOutcome.Fumble => $"{carrier} fumbles after {gain}; {defender} recovers for the defense.",
             SnapOutcome.Incompletion => $"{quarterback}'s pass for {target} is incomplete with {defender} in coverage.",
             SnapOutcome.Completion => $"{quarterback} completes to {target} {gain}; {defender} makes the tackle.",
+            SnapOutcome.Touchdown when snap.IsQuarterbackScramble => $"{quarterback} escapes the pocket and scrambles {Math.Max(0, snap.Yards)} yards for a touchdown.",
             SnapOutcome.Touchdown when snap.TargetId.HasValue => $"{quarterback} finds {target} for a touchdown.",
             SnapOutcome.Touchdown => $"{carrier} scores on a {Math.Max(0, snap.Yards)}-yard run.",
+            SnapOutcome.Scramble when snap.Yards < 0 => $"{quarterback} scrambles but {defender} stops him for a loss of {Math.Abs(snap.Yards)} yards.",
+            SnapOutcome.Scramble => $"{quarterback} escapes the pocket and scrambles {gain} before {defender} makes the tackle.",
             SnapOutcome.Run when snap.Yards < 0 => $"{carrier} is stopped by {defender} for a loss of {Math.Abs(snap.Yards)} yards.",
             SnapOutcome.Run => $"{carrier} runs {gain} and is tackled by {defender}.",
             _ => $"{carrier} gains {snap.Yards} yards."

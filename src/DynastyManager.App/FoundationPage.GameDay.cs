@@ -56,7 +56,12 @@ public sealed partial class FoundationPage
         var field = new Grid { HeightRequest = 330, BackgroundColor = Color.FromArgb("#245B38") };
         var fieldLines = new GraphicsView { Drawable = fieldArt };
         var fieldPlayers = new AbsoluteLayout();
-        field.Add(fieldLines); field.Add(fieldPlayers);
+        var highlightText = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold,
+            TextColor = Colors.White, HorizontalTextAlignment = TextAlignment.Center };
+        var highlight = new Border { IsVisible = false, StrokeThickness = 2, Stroke = Colors.White,
+            Padding = new Thickness(22, 12), HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center, Content = highlightText };
+        field.Add(fieldLines); field.Add(fieldPlayers); field.Add(highlight);
 
         var controlledProfile = controlledTeamName.Equals(game.HomeTeamName, StringComparison.OrdinalIgnoreCase) ? home : away;
         var controlledPlan = GamePlanService.Normalize(controlledProfile.GamePlan ?? new TeamGamePlan { TeamName = controlledTeamName });
@@ -142,6 +147,7 @@ public sealed partial class FoundationPage
         }
         async Task AnimateSnapAsync(GameSnapEvent snap)
         {
+            highlight.IsVisible = false;
             fieldPlayers.AbortAnimation("snap-movement");
             fieldPlayers.Children.Clear();
             fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance;
@@ -153,6 +159,8 @@ public sealed partial class FoundationPage
             var direction = (snap.OffenseTeamName == game.HomeTeamName ? 1 : -1) * (snap.Quarter % 2 == 0 ? -1 : 1);
             double Project(double yard) => direction == 1 ? yard / 100d : 1 - yard / 100d;
             var line = Math.Clamp(Project(snap.StartYardLine), .06, .94);
+            var kickLanding = Math.Clamp(Project(snap.KickLandingYardLine > 0
+                ? snap.KickLandingYardLine : snap.BallEndYardLine), .02, .98);
             var ballEndYardLine = snap.BallEndYardLine != 0 || snap.StartYardLine + snap.Yards == 0
                 ? snap.BallEndYardLine : Math.Clamp(snap.StartYardLine + snap.Yards, 0, 100);
             var destination = Math.Clamp(Project(ballEndYardLine), .025, .975);
@@ -180,7 +188,7 @@ public sealed partial class FoundationPage
                 (snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? snap.TargetId : null) ??
                 (snap.Outcome == SnapOutcome.Sack ? snap.QuarterbackId : null);
             var isTackle = terminalCarrierId.HasValue &&
-                snap.Outcome is SnapOutcome.Run or SnapOutcome.Completion or SnapOutcome.Sack or SnapOutcome.Fumble;
+                snap.Outcome is SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Sack or SnapOutcome.Fumble;
             Rect? qbFrom = null, qbTo = null, runnerFrom = null, runnerTo = null, receiverFrom = null, receiverTo = null,
                 terminalCarrierTo = null, kickerFrom = null, kickerTo = null, returnerFrom = null, returnerTo = null;
             View? terminalCarrierView = null, primaryTacklerView = null;
@@ -188,7 +196,19 @@ public sealed partial class FoundationPage
             {
                 var player = offense[index];
                 double x, y;
-                switch (player?.Position)
+                if (player?.PlayerId == snap.KickerId && snap.Outcome is
+                    SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal)
+                {
+                    x = line - direction * .075;
+                    y = .50;
+                }
+                else if (snap.Outcome == SnapOutcome.Kickoff)
+                {
+                    x = player?.PlayerId == snap.ReturnerId
+                        ? kickLanding : Math.Clamp(Project(10 + index % 5 * 8), .03, .60);
+                    y = player?.PlayerId == snap.ReturnerId ? .50 : .10 + index % 6 * .16;
+                }
+                else switch (player?.Position)
                 {
                     case Position.OL:
                         x = line - direction * .016;
@@ -238,7 +258,7 @@ public sealed partial class FoundationPage
             {
                 SnapOutcome.Sack => 0,
                 SnapOutcome.Run when snap.Yards < 0 => 1,
-                SnapOutcome.Run or SnapOutcome.Completion or SnapOutcome.Fumble => snap.Yards >= 8 ? 2 : 1,
+                SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Fumble => snap.Yards >= 8 ? 2 : 1,
                 _ => 0
             };
             var assistIds = defense.Where(player => player is not null && player.PlayerId != snap.PrimaryDefenderId)
@@ -252,7 +272,12 @@ public sealed partial class FoundationPage
             {
                 var player = defense[index];
                 double x, y;
-                switch (player?.Position)
+                if (snap.Outcome == SnapOutcome.Punt && player?.PlayerId == snap.ReturnerId)
+                {
+                    x = kickLanding;
+                    y = .50;
+                }
+                else switch (player?.Position)
                 {
                     case Position.DE:
                     case Position.DT:
@@ -282,6 +307,11 @@ public sealed partial class FoundationPage
                 var pursuitTarget = GameDayAnimationPlanner.PursuitTarget(contact, index, primaryDefender);
                 var endX = hasPursuitTarget ? pursuitTarget.X : Math.Clamp(x + (destination - line) * .72, .025, .96);
                 var endY = hasPursuitTarget ? pursuitTarget.Y : Math.Clamp(y + ((index % 3) - 1) * .025, .07, .93);
+                if (snap.Outcome == SnapOutcome.Punt && player?.PlayerId == snap.ReturnerId)
+                {
+                    endX = destination;
+                    endY = .50;
+                }
                 var view = Marker(player, defenseColor, defenseIsAway);
                 if (hasPursuitTarget) pursuingDefenders.Add(view);
                 if (primaryDefender)
@@ -313,6 +343,7 @@ public sealed partial class FoundationPage
             var isSack = snap.Outcome == SnapOutcome.Sack;
             var caught = snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown;
             var isKick = snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal;
+            var isFieldGoal = snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal;
             var ballStart = BallAt(centerPoint);
             AbsoluteLayout.SetLayoutFlags(ball, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(ball, ballStart);
@@ -335,7 +366,7 @@ public sealed partial class FoundationPage
                     var launch = kickerFrom ?? qbFrom ?? centerPoint;
                     if (progress < .65)
                     {
-                        var landing = returnerFrom ?? new Rect(destination, .50, 14, 9);
+                        var landing = returnerFrom ?? new Rect(kickLanding, .50, 14, 9);
                         currentBall = Interpolate(BallAt(launch), BallAt(landing), progress / .65);
                         currentBall = currentBall with { Y = Math.Clamp(currentBall.Y - Math.Sin(progress / .65 * Math.PI) * .18, .02, .97) };
                     }
@@ -343,11 +374,20 @@ public sealed partial class FoundationPage
                         currentBall = BallAt(Track(returnerFrom, returnerTo, (progress - .65) / .35));
                     else currentBall = new Rect(destination, .50, 14, 9);
                 }
+                else if (isFieldGoal)
+                {
+                    var launch = kickerFrom ?? qbFrom ?? centerPoint;
+                    var flight = Math.Clamp((progress - .20) / .80, 0, 1);
+                    var goalX = direction == 1 ? .975 : .025;
+                    var goalY = snap.Outcome == SnapOutcome.FieldGoal ? .50 : snap.Sequence % 2 == 0 ? .28 : .72;
+                    currentBall = progress < .20
+                        ? Interpolate(ballStart, BallAt(launch), progress / .20)
+                        : Interpolate(BallAt(launch), new Rect(goalX, goalY, 14, 9), flight);
+                    ball.Scale = 1 + Math.Sin(flight * Math.PI) * .55;
+                    ball.Rotation = flight * 540 * direction;
+                }
                 else if (progress < .13)
                     currentBall = Interpolate(ballStart, BallAt(Track(qbFrom, qbTo, 0)), progress / .13);
-                else if (isKick)
-                    currentBall = Interpolate(BallAt(Track(qbFrom, qbTo, 0)),
-                        new Rect(destination, .5, 14, 9), (progress - .13) / .87);
                 else if (isSack)
                     currentBall = BallAt(Track(qbFrom, qbTo, progress));
                 else if (isPass && progress < .53)
@@ -379,6 +419,34 @@ public sealed partial class FoundationPage
             animation.Commit(fieldPlayers, "snap-movement", 16, session.Mode == GameDayMode.Watch ? 2800u : 2200u,
                 Easing.CubicInOut, (_, _) => completion.TrySetResult());
             await completion.Task;
+        }
+        async Task ShowHighlightAsync(GameSnapEvent snap)
+        {
+            var headline = snap.Outcome switch
+            {
+                SnapOutcome.Touchdown => "TOUCHDOWN",
+                SnapOutcome.FieldGoal => "FIELD GOAL GOOD",
+                SnapOutcome.Interception => "INTERCEPTION",
+                SnapOutcome.Fumble => "FUMBLE RECOVERED",
+                _ => null
+            };
+            if (headline is null) return;
+            var team = snap.Outcome is SnapOutcome.Interception or SnapOutcome.Fumble
+                ? snap.DefenseTeamName : snap.OffenseTeamName;
+            highlightText.Text = $"{headline}\n{team}";
+            highlight.BackgroundColor = TeamColor(team).WithAlpha(.94f);
+            highlight.Opacity = 0;
+            highlight.Scale = .72;
+            highlight.IsVisible = true;
+            var completion = new TaskCompletionSource();
+            new Animation(progress =>
+            {
+                highlight.Opacity = progress < .25 ? progress / .25 : progress > .82 ? (1 - progress) / .18 : 1;
+                highlight.Scale = .72 + Math.Min(1, progress / .30) * .28 + Math.Sin(progress * Math.PI * 2) * .025;
+            }).Commit(highlight, "game-highlight", 16, 1250, Easing.CubicOut,
+                (_, _) => completion.TrySetResult());
+            await completion.Task;
+            highlight.IsVisible = false;
         }
         var coachCallsOffense = false;
         var coachCallsDefense = false;
@@ -426,7 +494,9 @@ public sealed partial class FoundationPage
         }
         async Task ShowSnapAsync(GameSnapEvent snap)
         {
-            await AnimateSnapAsync(snap); Refresh(snap);
+            await AnimateSnapAsync(snap);
+            await ShowHighlightAsync(snap);
+            Refresh(snap);
             await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
         }
         async Task FinishIfNeeded()
@@ -657,6 +727,19 @@ public sealed partial class FoundationPage
             canvas.FillColor = HomeColor;
             canvas.FillRectangle(0, 0, rect.Width * .05f, rect.Height);
             canvas.FillRectangle(rect.Width * .95f, 0, rect.Width * .05f, rect.Height);
+            canvas.StrokeColor = Color.FromArgb("#FFD447"); canvas.StrokeSize = 4;
+            var leftPost = rect.Width * .026f;
+            var rightPost = rect.Width * .974f;
+            var postTop = rect.Height * .41f;
+            var postBottom = rect.Height * .59f;
+            canvas.DrawLine(0, rect.Center.Y, leftPost, rect.Center.Y);
+            canvas.DrawLine(leftPost, postTop, leftPost, postBottom);
+            canvas.DrawLine(leftPost, postTop, rect.Width * .046f, postTop);
+            canvas.DrawLine(leftPost, postBottom, rect.Width * .046f, postBottom);
+            canvas.DrawLine(rect.Width, rect.Center.Y, rightPost, rect.Center.Y);
+            canvas.DrawLine(rightPost, postTop, rightPost, postBottom);
+            canvas.DrawLine(rightPost, postTop, rect.Width * .954f, postTop);
+            canvas.DrawLine(rightPost, postBottom, rect.Width * .954f, postBottom);
             canvas.StrokeColor = Color.FromArgb("#A8CBB5"); canvas.StrokeSize = 1;
             for (var yard = 10; yard < 100; yard += 10)
             {

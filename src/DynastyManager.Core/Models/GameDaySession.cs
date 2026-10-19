@@ -4,7 +4,7 @@ public enum GameDayMode { Simulate, Watch, Play }
 public enum SnapOutcome
 {
     Run, Completion, Incompletion, Sack, Turnover, Touchdown, FieldGoal, Punt, MissedFieldGoal,
-    Interception, Fumble, Kickoff
+    Interception, Fumble, Kickoff, Scramble
 }
 
 public sealed record GameSnapEvent
@@ -22,8 +22,12 @@ public sealed record GameSnapEvent
     public int Distance { get; init; }
     public int StartYardLine { get; init; }
     public int BallEndYardLine { get; init; }
+    public int KickLandingYardLine { get; init; }
     public int Yards { get; init; }
     public int ReturnYards { get; init; }
+    public bool IsTouchback { get; init; }
+    public bool IsFairCatch { get; init; }
+    public bool IsQuarterbackScramble { get; init; }
     public SnapOutcome Outcome { get; init; }
     public Guid? QuarterbackId { get; init; }
     public Guid? BallCarrierId { get; init; }

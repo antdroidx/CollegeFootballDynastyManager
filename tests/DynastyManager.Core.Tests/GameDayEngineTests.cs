@@ -89,7 +89,8 @@ public class GameDayEngineTests
 
         var game = GameDayEngine.Finish(session);
         var homeKickoffs = session.Events.Where(play => play.Outcome == SnapOutcome.Kickoff && play.OffenseTeamName == "Home").ToArray();
-        var awayPuntReturns = session.Events.Where(play => play.Outcome == SnapOutcome.Punt && play.DefenseTeamName == "Away" && play.ReturnerId.HasValue).ToArray();
+        var awayPuntReturns = session.Events.Where(play => play.Outcome == SnapOutcome.Punt &&
+            play.DefenseTeamName == "Away" && play.ReturnYards > 0).ToArray();
 
         Assert.Equal(homeKickoffs.Length, game.HomeStats!.KickReturns);
         Assert.Equal(homeKickoffs.Sum(play => play.ReturnYards), game.HomeStats.KickReturnYards);
@@ -114,6 +115,59 @@ public class GameDayEngineTests
     }
 
     [Fact]
+    public void MobileQuarterbacksScrambleAndReceiveRushingStats()
+    {
+        GameDaySession? gameWithScramble = null;
+        for (var seed = 1; seed <= 40 && gameWithScramble is null; seed++)
+        {
+            var candidate = Session(GameDayMode.Watch, seed: seed);
+            GameDayEngine.SimulateToEnd(candidate);
+            if (candidate.Events.Any(play => play.IsQuarterbackScramble)) gameWithScramble = candidate;
+        }
+
+        Assert.NotNull(gameWithScramble);
+        var scrambleSession = gameWithScramble!;
+        var scrambles = scrambleSession.Events.Where(play => play.IsQuarterbackScramble).ToArray();
+        var completed = GameDayEngine.Finish(scrambleSession);
+        Assert.All(scrambles, play =>
+        {
+            Assert.Equal(play.QuarterbackId, play.BallCarrierId);
+            Assert.Null(play.TargetId);
+        });
+        foreach (var quarterback in scrambles.GroupBy(play => play.QuarterbackId!.Value))
+            Assert.True(completed.PlayerStats.Single(stat => stat.PlayerId == quarterback.Key).RushAttempts >= quarterback.Count());
+    }
+
+    [Fact]
+    public void PuntsTrackTheirLandingPointFairCatchesAndTouchbacks()
+    {
+        var sawFairCatch = false;
+        var sawTouchback = false;
+        for (var seed = 1; seed <= 80 && (!sawFairCatch || !sawTouchback); seed++)
+        {
+            var session = Session(GameDayMode.Play, seed: seed);
+            session.Down = 4;
+            session.YardLine = seed % 2 == 0 ? 42 : 62;
+            var punt = GameDayEngine.Step(session, "special-punt");
+
+            Assert.True(punt.KickLandingYardLine > punt.StartYardLine);
+            if (punt.IsFairCatch)
+            {
+                sawFairCatch = true;
+                Assert.Equal(0, punt.ReturnYards);
+            }
+            if (punt.IsTouchback)
+            {
+                sawTouchback = true;
+                Assert.Equal(20, session.YardLine);
+                Assert.Null(punt.ReturnerId);
+            }
+        }
+        Assert.True(sawFairCatch);
+        Assert.True(sawTouchback);
+    }
+
+    [Fact]
     public void PursuitMeetsCarrierBehindTheLineOnATackleForLoss()
     {
         var snap = new GameSnapEvent
@@ -134,13 +188,13 @@ public class GameDayEngineTests
         Assert.Equal(1, GameDayAnimationPlanner.PursuitProgress(1, true));
     }
 
-    private static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false)
+    private static GameDaySession Session(GameDayMode mode, bool includeOpeningKickoff = false, int seed = 7123)
     {
         var homePlan = new TeamGamePlan { TeamName = "Home", Offense = OffensivePlaybook.Spread,
             OffensiveFormation = OffensiveFormation.ShotgunSpread, DefensiveFormation = DefensiveFormation.Nickel };
         var awayPlan = homePlan with { TeamName = "Away" };
         var session = GameDayEngine.Start(new ScheduledGame { GameId = "game-day", SeasonYear = 2026, Week = 1,
-                HomeTeamName = "Home", AwayTeamName = "Away", SimulationSeed = 7123 },
+                HomeTeamName = "Home", AwayTeamName = "Away", SimulationSeed = seed },
             Profile("Home", homePlan), Profile("Away", awayPlan), Roster(), mode);
         session.KickoffPending = includeOpeningKickoff;
         return session;
