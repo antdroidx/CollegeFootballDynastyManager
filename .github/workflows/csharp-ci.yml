@@ -40,6 +40,9 @@ jobs:
       - name: Check packaged resources
         run: python3 build/check-packaged-resources.py
 
+      - name: Test Android UI synchronization helpers
+        run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
