@@ -239,9 +239,13 @@ public sealed partial class FoundationPage
             var family = GameDayAnimationPlanner.RouteFamily(play);
             canvas.FillColor = Color.FromArgb("#F2F5F4");
             for (var player = 0; player < 5; player++)
-                canvas.FillCircle(width * (.34f + player * .08f), height * .61f, 3);
-            var quarterback = GameDayAnimationPlanner.Alignment(play.Formation, Position.QB, 0);
-            canvas.FillCircle(width * .50f, height * (.61f - (float)quarterback.X * .03f), 3.5f);
+            {
+                var lineman = play.Assignments.FirstOrDefault(a => a.Position == Position.OL && a.RoleIndex == player);
+                canvas.FillCircle(width * (float)(lineman?.Lane ?? .34 + player * .08), height * (.61f - (float)(lineman?.Depth ?? 0) * .03f), 3);
+            }
+            var qb = play.Assignments.FirstOrDefault(a => a.Position == Position.QB && a.RoleIndex == 0);
+            var quarterback = qb is null ? GameDayAnimationPlanner.Alignment(play.Formation, Position.QB, 0) : new GameFieldPoint(qb.Depth, qb.Lane);
+            canvas.FillCircle(width * (float)quarterback.Y, height * (.61f - (float)quarterback.X * .03f), 3.5f);
             var positions = GameDayAnimationPlanner.EligiblePositions(play.Personnel);
             var roleCounts = new Dictionary<Position, int>();
             for (var i = 0; i < positions.Count; i++)

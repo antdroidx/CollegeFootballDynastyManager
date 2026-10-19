@@ -9,6 +9,17 @@ namespace DynastyManager.Core.Tests;
 public class GameDayExpansionTests
 {
     [Fact]
+    public void CreatedPlayDefaultsKeepFiveDistinctOffensiveLineSlots()
+    {
+        var slots = Enumerable.Range(0, 5).Select(i => GameDayAnimationPlanner.Alignment(OffensiveFormation.Singleback, Position.OL, i)).ToArray();
+        Assert.Equal(5, slots.Select(p => p.Y).Distinct().Count());
+        Assert.All(slots, p => Assert.Equal(-.25, p.X));
+        var qb = GameDayAnimationPlanner.Alignment(OffensiveFormation.Singleback, Position.QB, 0);
+        var back = GameDayAnimationPlanner.Alignment(OffensiveFormation.Singleback, Position.RB, 0);
+        Assert.Equal(qb.Y, back.Y); Assert.True(back.X < qb.X);
+    }
+
+    [Fact]
     public void CompletedGamesScoresReconcileWithRecordedScoringEvents()
     {
         for (var seed = 1; seed <= 30; seed++)

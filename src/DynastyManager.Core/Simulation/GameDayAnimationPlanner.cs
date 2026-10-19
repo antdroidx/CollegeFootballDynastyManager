@@ -103,6 +103,7 @@ public static class GameDayAnimationPlanner
 
     public static GameFieldPoint Alignment(OffensiveFormation formation, Position position, int roleIndex)
     {
+        if (position == Position.OL) return new(-.25, .34 + Math.Clamp(roleIndex, 0, 4) * .08);
         var lane = AlignmentLane(position, roleIndex);
         if (position == Position.QB)
             return new(formation switch { OffensiveFormation.Singleback or OffensiveFormation.IForm or OffensiveFormation.Flexbone => -1.5, OffensiveFormation.Pistol => -4, _ => -5 }, .50);
