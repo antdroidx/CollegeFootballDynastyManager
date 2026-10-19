@@ -65,7 +65,8 @@ def enabled(root, text):
 
 
 def calendar(root):
-    values = texts(root)
+    # The shell header precedes dated news cards in document order.
+    values = [node.get("text") for node in root.iter("node")]
     header = next((value for value in values if value and re.search(r" · \d{4} · Week \d+$", value)), None)
     phase = next((value for value in values if value and value.endswith((" · Preseason", " · Regular season"))), None)
     return (header, phase)

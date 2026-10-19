@@ -34,6 +34,11 @@ class SmokeSynchronizationTests(unittest.TestCase):
     def test_preseason_to_regular_season_can_keep_week_zero(self):
         self.assertTrue(smoke.overview_ready(overview(), smoke.calendar(overview(phase="Preseason"))))
 
+    def test_calendar_uses_shell_header_before_old_news_dates(self):
+        root = overview(week=1)
+        ET.SubElement(root, "node", text="INJURIES · 2026 · Week 0")
+        self.assertEqual("Air Force · 2026 · Week 1", smoke.calendar(root)[0])
+
     def test_failed_dump_never_reads_stale_xml(self):
         dumps = iter((b"ERROR: could not get idle state", b"UI hierchary dumped to: /sdcard/dynasty-ui.xml"))
         dump_count = 0
