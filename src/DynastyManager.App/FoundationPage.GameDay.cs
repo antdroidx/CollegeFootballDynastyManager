@@ -70,6 +70,8 @@ public sealed partial class FoundationPage
         var availablePlays = GamePlanService.AvailableOffensivePlays(controlledPlan).ToArray();
         var availableDefenses = GamePlanService.AvailableDefensivePlays(controlledPlan).ToArray();
         var selectedPlay = GamePlanService.RecommendOffensivePlay(controlledPlan, session.Down, session.Distance, session.YardLine);
+        var selectedCallId = selectedPlay.Id;
+        var call = new Button { Text = "Call play", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
         var selectedDefense = GamePlanService.RecommendDefensivePlay(controlledPlan, session.Down, session.Distance);
         var selectedArt = new GraphicsView { HeightRequest = 112, WidthRequest = 185, BackgroundColor = Color.FromArgb("#102A24") };
         var selectedHeading = new Label { Text = "RECOMMENDED OFFENSIVE CALL", FontSize = 9, TextColor = Color.FromArgb("#E8C979") };
@@ -86,6 +88,10 @@ public sealed partial class FoundationPage
         void SelectPlay(OffensivePlayDefinition play, bool recommended = false)
         {
             selectedPlay = play;
+            selectedCallId = play.Id;
+            call.Text = "Call play";
+            selectedArt.IsVisible = true;
+            playGrid.ColumnDefinitions[0].Width = new GridLength(selectedArt.WidthRequest);
             selectedHeading.Text = recommended ? "RECOMMENDED OFFENSIVE CALL" : "SELECTED OFFENSIVE CALL";
             selectedArt.Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString());
             selectedName.Text = play.Name;
@@ -93,6 +99,26 @@ public sealed partial class FoundationPage
             selectedDescription.Text = play.Description;
         }
         SelectPlay(selectedPlay, true);
+
+        void SelectRecommendation(GameDayRecommendation recommendation)
+        {
+            if (recommendation.Play is not null)
+            {
+                SelectPlay(recommendation.Play, true);
+                selectedDescription.Text = recommendation.Reason + " " + recommendation.Play.Description;
+                return;
+            }
+            selectedCallId = recommendation.PlayId;
+            var fieldGoal = recommendation.Type == RecommendedCallType.FieldGoal;
+            selectedHeading.Text = "RECOMMENDED SPECIAL TEAMS CALL";
+            selectedName.Text = fieldGoal ? "Field goal attempt" : "Punt";
+            selectedDetails.Text = fieldGoal ? $"{recommendation.KickDistance}-yard attempt · {recommendation.KickProbability:P0} estimated"
+                : $"4th & {session.Distance} · Protect field position";
+            selectedDescription.Text = recommendation.Reason;
+            selectedArt.IsVisible = false;
+            playGrid.ColumnDefinitions[0].Width = new GridLength(0);
+            call.Text = fieldGoal ? "Kick field goal" : "Call punt";
+        }
 
         var defenseArt = new GraphicsView { HeightRequest = 112, WidthRequest = 185, BackgroundColor = Color.FromArgb("#102A24") };
         var defenseHeading = new Label { Text = "RECOMMENDED DEFENSIVE CALL", FontSize = 9, TextColor = Color.FromArgb("#E8C979") };
@@ -118,7 +144,6 @@ public sealed partial class FoundationPage
         }
         SelectDefense(selectedDefense, true);
 
-        var call = new Button { Text = "Call play", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
         var callDefense = new Button { Text = "Call defense", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
         var delegateOffense = new Button { Text = "Offense: You", BackgroundColor = Color.FromArgb("#315D59") };
         var delegateDefense = new Button { Text = "Defense: You", BackgroundColor = Color.FromArgb("#315D59") };
@@ -153,7 +178,8 @@ public sealed partial class FoundationPage
             selectedDescription.IsVisible = defenseDescription.IsVisible = !compact;
             selectedArt.HeightRequest = defenseArt.HeightRequest = compact ? 68 : 112;
             selectedArt.WidthRequest = defenseArt.WidthRequest = compact ? 92 : 185;
-            playGrid.ColumnDefinitions[0].Width = defenseGrid.ColumnDefinitions[0].Width = new GridLength(compact ? 92 : 185);
+            playGrid.ColumnDefinitions[0].Width = new GridLength(selectedArt.IsVisible ? compact ? 92 : 185 : 0);
+            defenseGrid.ColumnDefinitions[0].Width = new GridLength(compact ? 92 : 185);
             playCard.Padding = defenseCard.Padding = compact ? 6 : 10;
             if (!compact)
             {
@@ -676,7 +702,7 @@ public sealed partial class FoundationPage
             if (!session.IsComplete && !session.KickoffPending)
             {
                 if (ControlledOnOffense())
-                    SelectPlay(GamePlanService.RecommendOffensivePlay(controlledPlan, session.Down, session.Distance, session.YardLine), true);
+                    SelectRecommendation(GameDayRecommendationService.Recommend(session, controlledPlan));
                 else
                     SelectDefense(GamePlanService.RecommendDefensivePlay(controlledPlan, session.Down, session.Distance), true);
             }
@@ -744,7 +770,7 @@ public sealed partial class FoundationPage
         call.Clicked += async (_, _) =>
         {
             call.IsEnabled = false;
-            try { await ShowSnapAsync(GameDayEngine.Step(session, selectedPlay.Id)); await RunCpuUntilUserDecision(); }
+            try { await ShowSnapAsync(GameDayEngine.Step(session, selectedCallId)); await RunCpuUntilUserDecision(); }
             finally { call.IsEnabled = true; }
         };
         callDefense.Clicked += async (_, _) =>

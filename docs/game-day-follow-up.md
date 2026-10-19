@@ -16,3 +16,11 @@ Team profiles include roster and staff quality. Snap resolution additionally use
 These are probabilistic modifiers. The viewer does not calculate physical blocking collisions, receiver separation or real-time QB progression reads. Route variety is a shared presentation assignment, not a spatial physics engine.
 
 Save schema remains 25; Build 246 dynasties can continue.
+
+## Recommendations
+
+Offensive advice uses weighted coach tendencies, down/distance, field position and the last four actual calls. Individual recently used plays receive less weight; concept weights are normalized so the size of the passing catalog does not erase run preferences. A separate deterministic stream keeps advice stable during repeated UI refreshes and never advances simulation randomness. Only the active playbook's scrimmage plays are suggested.
+
+Fourth-down advice can recommend a punt, a field goal, or a short-yardage attempt. Score/time context avoids punting or settling for a field goal when a touchdown is needed late. Expiring-half situations can suggest a field goal before fourth down. Kicking advice uses the same selected kicker, distance, accuracy and power calculation as the kick resolver. The recommendation card's main button executes the displayed action; manual plays and kicking shortcuts remain available.
+
+These changes affect advice and its UI. CPU play selection and snap outcome probabilities are unchanged.

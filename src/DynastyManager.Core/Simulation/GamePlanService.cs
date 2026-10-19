@@ -136,15 +136,41 @@ public static class GamePlanService
         return selected.DistinctBy(play => play.Id).ToArray();
     }
 
-    public static OffensivePlayDefinition RecommendOffensivePlay(TeamGamePlan plan, int down, int distance, int yardLine)
+    public static OffensivePlayDefinition RecommendOffensivePlay(TeamGamePlan plan, int down, int distance, int yardLine,
+        int snapIndex = 0, IReadOnlyList<string>? recentPlayIds = null, int seed = 0, bool hurryUp = false)
     {
         var available = AvailableOffensivePlays(plan);
-        var preferred = distance <= 2 ? new[] { OffensiveConcept.InsideRun, OffensiveConcept.OutsideRun, OffensiveConcept.PlayAction }
-            : down >= 3 && distance >= 7 ? new[] { OffensiveConcept.QuickPass, OffensiveConcept.DeepPass, OffensiveConcept.PlayAction }
-            : yardLine >= 80 ? new[] { OffensiveConcept.InsideRun, OffensiveConcept.QuickPass, OffensiveConcept.PlayAction }
-            : PreferredConcepts(plan.Offense);
-        return available.OrderBy(play => Array.IndexOf(preferred, play.Concept) is var rank && rank >= 0 ? rank : preferred.Length)
-            .ThenBy(play => play.Formation == plan.OffensiveFormation ? 0 : 1).ThenBy(play => play.Id).First();
+        var preferred = PreferredConcepts(plan.Offense);
+        var history = recentPlayIds ?? Array.Empty<string>();
+        double Weight(OffensivePlayDefinition play)
+        {
+            var rank = Array.IndexOf(preferred, play.Concept);
+            var weight = rank >= 0 ? new[] { 6d, 5d, 3d, 2d, 1d }[rank] : 1;
+            var run = play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun;
+            if (distance <= 2) weight = play.Concept switch
+            { OffensiveConcept.InsideRun => 8, OffensiveConcept.OutsideRun => 6, OffensiveConcept.PlayAction => 3, OffensiveConcept.QuickPass => 2, _ => .2 };
+            else if (down >= 3 && distance >= 6) weight = play.Concept switch
+            { OffensiveConcept.QuickPass => 6, OffensiveConcept.DeepPass => 5, OffensiveConcept.PlayAction => 3, _ => .15 };
+            else if (down == 2 && distance >= 8 && !run) weight *= 1.5;
+            if (yardLine >= 90 && play.Concept == OffensiveConcept.DeepPass) weight *= .15;
+            if (hurryUp) weight *= run ? .08 : 2;
+            if (play.Name == "Hail Mary") weight *= .02;
+            weight /= available.Count(p => p.Concept == play.Concept);
+            if (play.Formation == plan.OffensiveFormation) weight *= 1.2;
+            if (history.LastOrDefault() == play.Id) weight *= .12;
+            else if (history.Contains(play.Id)) weight *= .4;
+            return weight;
+        }
+        var weighted = available.Select(p => (Play: p, Weight: Weight(p))).ToArray();
+        // Advice uses its own stream: UI refreshes never consume simulation randomness.
+        var random = new Random(unchecked(seed ^ snapIndex * 397 ^ down * 7919 ^ distance * 31 ^ yardLine * 17));
+        var choice = random.NextDouble() * weighted.Sum(p => p.Weight);
+        foreach (var candidate in weighted)
+        {
+            choice -= candidate.Weight;
+            if (choice <= 0) return candidate.Play;
+        }
+        return weighted[^1].Play;
     }
 
     public static DefensivePlayDefinition RecommendDefensivePlay(TeamGamePlan plan, int down, int distance)
@@ -197,7 +223,7 @@ public static class GamePlanService
     public static string Label(DefensiveFormation formation) => formation switch
     { DefensiveFormation.FourThree => "4-3", DefensiveFormation.ThreeFour => "3-4", DefensiveFormation.GoalLine => "Goal Line", _ => formation.ToString() };
     public static string Label(OffensivePersonnel personnel) => personnel switch
-    { OffensivePersonnel.Ten => "10 personnel", OffensivePersonnel.Eleven => "11 personnel", OffensivePersonnel.Twelve => "12 personnel", OffensivePersonnel.TwentyOne => "21 personnel", OffensivePersonnel.TripleBack => "30 personnel · 3 backs", _ => "Empty" };
+    { OffensivePersonnel.Ten => "10 personnel", OffensivePersonnel.Eleven => "11 personnel", OffensivePersonnel.Twelve => "12 personnel", OffensivePersonnel.TwentyOne => "21 personnel", OffensivePersonnel.TripleBack => "30 personnel Â· 3 backs", _ => "Empty" };
     public static string Label(DefensivePersonnel personnel) => personnel switch
     { DefensivePersonnel.BaseFourThree => "4-3 base", DefensivePersonnel.BaseThreeFour => "3-4 base", DefensivePersonnel.GoalLine => "Goal line", _ => personnel.ToString() };
     public static string Describe(OffensivePlaybook book) => book switch

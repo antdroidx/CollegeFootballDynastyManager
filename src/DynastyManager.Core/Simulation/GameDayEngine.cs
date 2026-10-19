@@ -8,6 +8,14 @@ public static class GameDayEngine
         phase is (SeasonPhase.RegularSeason or SeasonPhase.ConferenceChampionship or SeasonPhase.Postseason) &&
         !game.HasPlayed && game.SeasonYear == year && game.Week == week;
     public const double HomeFieldRatingBonus = 2.5;
+    public static double FieldGoalProbability(GameDaySession session)
+    {
+        var home = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
+        var profile = home ? session.HomeProfile : session.AwayProfile;
+        var kicker = Kicker(home ? session.HomeRoster : session.AwayRoster);
+        return GameDayMatchupService.FieldGoalProbability(117 - session.YardLine,
+            kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating, kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating);
+    }
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
         TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode)
     {
@@ -79,12 +87,9 @@ public static class GameDayEngine
         if (special is not null)
         {
             var kickStart = session.YardLine;
-            var kickDistance = 100 - kickStart + 17;
             var kicker = Kicker(offenseRoster);
             var made = special == "special-field-goal" &&
-                session.Random.NextDouble() < GameDayMatchupService.FieldGoalProbability(kickDistance,
-                    kicker?.Skills?.KickAccuracy ?? offense.SpecialTeamsRating,
-                    kicker?.Skills?.KickPower ?? offense.SpecialTeamsRating);
+                session.Random.NextDouble() < FieldGoalProbability(session);
             var puntLanding = special == "special-punt"
                 ? Math.Min(95, kickStart + session.Random.Next(34, 51)) : 100;
             var touchback = special == "special-punt" && puntLanding >= 95;
