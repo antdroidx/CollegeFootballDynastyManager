@@ -38,14 +38,8 @@ public static class WalkOnRosterService
                      .OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase))
         {
             var generatedIndex = 0;
-
-            while (CountTeamRoster(roster, team.Name) <
-                   DynastyRosterRules.MaximumRosterSize)
+            void AddWalkOn(Position position)
             {
-                var position = SelectMostNeededPosition(
-                    roster,
-                    team.Name);
-
                 var talentLevel =
                     1 + DeterministicValue(
                         state,
@@ -105,6 +99,31 @@ public static class WalkOnRosterService
 
                 generatedIndex++;
             }
+
+            foreach (var need in DynastyRosterRules.StarterPositionCounts)
+            {
+                while (CountActivePosition(roster, team.Name, need.Key) < need.Value)
+                {
+                    if (CountTeamRoster(roster, team.Name) >= DynastyRosterRules.MaximumRosterSize)
+                    {
+                        var activeCounts = roster.Where(player => player.TeamName.Equals(team.Name,
+                                StringComparison.OrdinalIgnoreCase) && !player.IsRedshirted)
+                            .GroupBy(player => player.Position).ToDictionary(group => group.Key, group => group.Count());
+                        var expendable = roster.Where(player => player.TeamName.Equals(team.Name,
+                                StringComparison.OrdinalIgnoreCase) && player.Position != need.Key &&
+                            activeCounts.GetValueOrDefault(player.Position) >
+                                DynastyRosterRules.StarterPositionCounts.GetValueOrDefault(player.Position, 1))
+                            .OrderBy(player => player.IsWalkOn ? 0 : 1)
+                            .ThenBy(player => player.OverallRating).ThenBy(player => player.PotentialRating).FirstOrDefault();
+                        if (expendable is null) break;
+                        roster.Remove(expendable);
+                    }
+                    AddWalkOn(need.Key);
+                }
+            }
+
+            while (CountTeamRoster(roster, team.Name) < DynastyRosterRules.MaximumRosterSize)
+                AddWalkOn(SelectMostNeededPosition(roster, team.Name));
         }
 
         return PlayerRatingService.EnsureProfiles(state with
@@ -151,6 +170,10 @@ public static class WalkOnRosterService
         roster.Count(player => player.TeamName.Equals(
             teamName,
             StringComparison.OrdinalIgnoreCase));
+
+    private static int CountActivePosition(IEnumerable<DynastyPlayer> roster, string teamName, Position position) =>
+        roster.Count(player => player.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
+            player.Position == position && !player.IsRedshirted);
 
     private static NamePool BuildNamePool(
         IEnumerable<DynastyPlayer> players)
