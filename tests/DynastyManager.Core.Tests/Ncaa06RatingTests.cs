@@ -40,6 +40,8 @@ public class Ncaa06RatingTests
             var loaded = Ncaa06RosterRatings.Apply(original, Ncaa06RosterRatings.Export(original));
             Assert.Equal(original, loaded);
             Assert.Equal(position, loaded.NcaaPositionCode);
+            Assert.Equal(loaded, PlayerRatingService.EnsureInitialized(new DynastyState
+                { DynastyName = "NEXT", UserTeamName = "Home" }, loaded));
         }
     }
 

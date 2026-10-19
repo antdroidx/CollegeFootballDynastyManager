@@ -46,7 +46,8 @@ public static class Ncaa06RosterRatings
                 BreakTackle = Read("PBTK"), Catching = Read("PCTH"), Jumping = Read("PJMP")
             }
         };
-        return PlayerRatingService.RecalculateOverall(imported);
+        imported = PlayerRatingService.RecalculateOverall(imported);
+        return imported with { PotentialRating = Math.Max(imported.PotentialRating, imported.OverallRating) };
     }
 
     public static IReadOnlyDictionary<string, int> Export(DynastyPlayer player)
