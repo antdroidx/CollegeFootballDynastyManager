@@ -291,6 +291,8 @@ public sealed partial class FoundationPage
                         var alignment = GameDayAnimationPlanner.Alignment(calledPlay.Formation, player.Position, roleIndex);
                         x = Project(snap.StartYardLine + alignment.X); y = alignment.Y;
                     }
+                    else if (player.Position == Position.OL)
+                        x = Project(snap.StartYardLine + GameDayAnimationPlanner.Alignment(calledPlay.Formation, Position.OL, roleIndex).X);
                 }
                 x = Math.Clamp(x, .025, .96);
                 var isEligible = player?.Position is Position.WR or Position.TE or Position.RB;
@@ -447,7 +449,7 @@ public sealed partial class FoundationPage
             // Ball starts on the center, goes to the QB, then follows the handoff
             // or pass target. Its position is computed from the same player movement.
             var center = movements.Where(m => m.From.Y >= .35 && m.From.Y <= .65 &&
-                Math.Abs(m.From.X - (line - direction * .016)) < .01)
+                Math.Abs(m.From.X - Project(snap.StartYardLine - .25)) < .01)
                 .OrderBy(m => Math.Abs(m.From.Y - .50)).FirstOrDefault();
             var centerPoint = center.View is null ? new Rect(line, .50, 14, 9) : center.From;
             Rect BallAt(Rect player) => new(Math.Clamp(player.X + .006, .02, .97),

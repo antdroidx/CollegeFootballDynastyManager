@@ -80,7 +80,7 @@ public sealed partial class FoundationPage
         if (_currentDynasty is null) return;
         var team = _currentDynasty.UserTeamName;
         var seasonGames = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear).ToArray();
-        var weekValues = seasonGames.Select(game => game.Week).Distinct().Order().ToArray();
+        var weekValues = seasonGames.Select(game => game.Week).Append(_currentDynasty.Week).Distinct().Order().ToArray();
         var weekOptions = new[] { "All weeks" }.Concat(weekValues.Select(FormatScheduleWeek)).ToArray();
         if (_scheduleWeek.ItemsSource is not string[] oldWeeks || !oldWeeks.SequenceEqual(weekOptions))
         {
@@ -93,7 +93,7 @@ public sealed partial class FoundationPage
         if (_defaultLeagueWeek)
         {
             _updatingScheduleWeeks = true;
-            var week = weekValues.OrderBy(w => Math.Abs(w - _currentDynasty.Week)).FirstOrDefault();
+            var week = _currentDynasty.Week;
             _scheduleWeek.SelectedIndex = Math.Max(0, Array.IndexOf(weekValues, week) + 1);
             _defaultLeagueWeek = false;
             _updatingScheduleWeeks = false;

@@ -13,7 +13,9 @@ public class GameDayPresentationTests
         {
             var qb = GameDayAnimationPlanner.Alignment(formation, Position.QB, 0);
             var back = GameDayAnimationPlanner.Alignment(formation, Position.RB, 0);
+            var center = GameDayAnimationPlanner.Alignment(formation, Position.OL, 0);
             Assert.Equal(qb.Y, back.Y);
+            Assert.True(qb.X < center.X);
             Assert.True(back.X < qb.X);
         }
         var flexbone = Enumerable.Range(0, 3).Select(i => GameDayAnimationPlanner.Alignment(OffensiveFormation.Flexbone, Position.RB, i)).ToArray();
