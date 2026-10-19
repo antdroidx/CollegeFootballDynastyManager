@@ -18,11 +18,13 @@ public static class GameDayCommentaryService
 
         return snap.Outcome switch
         {
+            SnapOutcome.Kickoff when snap.PrimaryDefenderId.HasValue =>
+                $"{kicker} kicks to {returner}, who returns it {snap.ReturnYards} yards before {defender} makes the tackle.",
             SnapOutcome.Kickoff => $"{kicker} kicks to {returner}, who returns it {snap.ReturnYards} yards.",
             SnapOutcome.Punt when snap.IsTouchback => $"{kicker}'s punt carries into the end zone for a touchback.",
             SnapOutcome.Punt when snap.IsFairCatch => $"{kicker} punts to {returner}, who signals for a fair catch.",
             SnapOutcome.Punt => snap.ReturnYards > 0
-                ? $"{kicker} punts to {returner}, who returns it {snap.ReturnYards} yards."
+                ? $"{kicker} punts to {returner}, who returns it {snap.ReturnYards} yards before {defender} makes the tackle."
                 : $"{kicker} punts. {returner} is stopped without a return.",
             SnapOutcome.FieldGoal => $"{kicker} makes the field goal.",
             SnapOutcome.MissedFieldGoal => $"{kicker} misses the field goal.",

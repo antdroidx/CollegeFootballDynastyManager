@@ -79,6 +79,11 @@ public static class GameDayEngine
                 : Math.Clamp(100 - Math.Max(20, kickStart - 7), 10, 80);
             var kicker = Kicker(offenseRoster);
             var returner = Returner(defenseRoster);
+            var kickingUnit = SpecialTeam(offenseRoster, kicker);
+            var returnUnit = SpecialTeam(defenseRoster, returner);
+            var coverageTackler = special == "special-punt" && returnYards > 0
+                ? CoverageTackler(kickingUnit, kicker, session.Random)
+                : null;
             var kick = new GameSnapEvent
             {
                 Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
@@ -93,8 +98,9 @@ public static class GameDayEngine
                 Yards = 0, ReturnYards = returnYards,
                 IsTouchback = touchback, IsFairCatch = fairCatch,
                 KickerId = kicker?.PlayerId, ReturnerId = special == "special-punt" && !touchback ? returner?.PlayerId : null,
-                OffensePersonnel = SpecialTeam(offenseRoster, kicker).Select(player => player.PlayerId).ToArray(),
-                DefensePersonnel = SpecialTeam(defenseRoster, returner).Select(player => player.PlayerId).ToArray(),
+                PrimaryDefenderId = coverageTackler?.PlayerId,
+                OffensePersonnel = kickingUnit.Select(player => player.PlayerId).ToArray(),
+                DefensePersonnel = returnUnit.Select(player => player.PlayerId).ToArray(),
                 Outcome = special == "special-punt" ? SnapOutcome.Punt :
                     made ? SnapOutcome.FieldGoal : SnapOutcome.MissedFieldGoal
             };
@@ -240,6 +246,7 @@ public static class GameDayEngine
                         KickReturnTouchdowns = returner.KickReturnTouchdowns +
                             (snap.BallEndYardLine >= 100 ? 1 : 0) });
                 }
+                CreditSpecialTeamsTackle(snap);
                 continue;
             }
             if (snap.Outcome == SnapOutcome.Punt)
@@ -250,6 +257,7 @@ public static class GameDayEngine
                     Save(returner with { PuntReturns = returner.PuntReturns + 1,
                         PuntReturnYards = returner.PuntReturnYards + snap.ReturnYards });
                 }
+                CreditSpecialTeamsTackle(snap);
                 continue;
             }
             if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal) continue;
@@ -310,6 +318,12 @@ public static class GameDayEngine
                 };
                 Save(defender);
             }
+        }
+        void CreditSpecialTeamsTackle(GameSnapEvent snap)
+        {
+            if (snap.ReturnYards <= 0 || snap.PrimaryDefenderId is not Guid defenderId) return;
+            var defender = Line(defenderId);
+            Save(defender with { Tackles = defender.Tackles + 1 });
         }
         foreach (var team in new[] { session.Game.HomeTeamName, session.Game.AwayTeamName })
         {
@@ -445,6 +459,9 @@ public static class GameDayEngine
         var start = 65;
         var landing = kickoffRandom.Next(1, 8);
         var end = Math.Clamp(landing + returnYards, 15, 40);
+        var receivingUnit = SpecialTeam(receivingRoster, returner);
+        var coverageUnit = SpecialTeam(kickingRoster, kicker);
+        var coverageTackler = CoverageTackler(coverageUnit, kicker, kickoffRandom);
         var kickoff = new GameSnapEvent
         {
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
@@ -455,8 +472,9 @@ public static class GameDayEngine
             KickLandingYardLine = landing,
             Yards = 0, ReturnYards = returnYards, Outcome = SnapOutcome.Kickoff,
             KickerId = kicker?.PlayerId, ReturnerId = returner?.PlayerId, BallCarrierId = returner?.PlayerId,
-            OffensePersonnel = SpecialTeam(receivingRoster, returner).Select(player => player.PlayerId).ToArray(),
-            DefensePersonnel = SpecialTeam(kickingRoster, kicker).Select(player => player.PlayerId).ToArray()
+            PrimaryDefenderId = coverageTackler?.PlayerId,
+            OffensePersonnel = receivingUnit.Select(player => player.PlayerId).ToArray(),
+            DefensePersonnel = coverageUnit.Select(player => player.PlayerId).ToArray()
         };
         session.Events.Add(kickoff);
         session.YardLine = end; session.Down = 1; session.Distance = Math.Min(10, 100 - end);
@@ -486,6 +504,15 @@ public static class GameDayEngine
             .OrderBy(player => featured is not null && player.PlayerId == featured.PlayerId ? 0 : 1)
             .ThenByDescending(player => player.SpeedRating + player.AwarenessRating)
             .Take(11).ToArray();
+
+    private static DynastyPlayer? CoverageTackler(IReadOnlyList<DynastyPlayer> coverageUnit,
+        DynastyPlayer? kicker, Random random)
+    {
+        var candidates = coverageUnit.Where(player => player.PlayerId != kicker?.PlayerId)
+            .OrderByDescending(player => player.SpeedRating + (player.Skills?.Tackling ?? player.AwarenessRating) + player.AwarenessRating)
+            .Take(6).ToArray();
+        return candidates.Length == 0 ? null : candidates[random.Next(candidates.Length)];
+    }
 
     private static bool IsTurnover(SnapOutcome outcome) =>
         outcome is SnapOutcome.Turnover or SnapOutcome.Interception or SnapOutcome.Fumble;

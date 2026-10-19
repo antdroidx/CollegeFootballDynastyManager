@@ -186,7 +186,7 @@ public sealed partial class FoundationPage
         };
         var art = new GraphicsView
         {
-            Drawable = new PlayArtDrawable(id, offense, styleKey),
+            Drawable = new PlayArtDrawable(id, name, offense, styleKey),
             HeightRequest = 92,
             WidthRequest = 150,
             BackgroundColor = Color.FromArgb("#102A24")
@@ -205,7 +205,7 @@ public sealed partial class FoundationPage
         return new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = new Thickness(10, 10), Content = grid };
     }
 
-    private sealed class PlayArtDrawable(string id, bool offense, string styleKey) : IDrawable
+    private sealed class PlayArtDrawable(string id, string playName, bool offense, string styleKey) : IDrawable
     {
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
@@ -223,11 +223,11 @@ public sealed partial class FoundationPage
             canvas.DrawLine(8, height * .58f, width - 8, height * .58f);
 
             var seed = Math.Abs(StringComparer.Ordinal.GetHashCode(id));
-            if (offense) DrawOffense(canvas, width, height, seed, styleKey);
-            else DrawDefense(canvas, width, height, seed, styleKey);
+            if (offense) DrawOffense(canvas, width, height, seed, styleKey, playName);
+            else DrawDefense(canvas, width, height, seed, styleKey, playName);
         }
 
-        private static void DrawOffense(ICanvas canvas, float width, float height, int seed, string concept)
+        private static void DrawOffense(ICanvas canvas, float width, float height, int seed, string concept, string name)
         {
             canvas.FillColor = Color.FromArgb("#F2F5F4");
             for (var player = 0; player < 5; player++)
@@ -243,18 +243,58 @@ public sealed partial class FoundationPage
             var run = concept.Contains("Run", StringComparison.OrdinalIgnoreCase);
             if (run)
             {
-                var targetX = (seed % 2 == 0 ? .38f : .65f) * width;
+                var outside = Contains(name, "Toss", "Sweep", "Wide", "Stretch", "Speed Option");
+                var counter = Contains(name, "Counter", "Trap");
+                var targetX = outside ? (seed % 2 == 0 ? .18f : .82f) * width
+                    : (seed % 2 == 0 ? .40f : .61f) * width;
                 canvas.DrawLine(width * .5f, height * .82f, targetX, height * .48f);
-                canvas.DrawLine(targetX, height * .48f, targetX + (seed % 3 - 1) * 18, height * .34f);
+                canvas.DrawLine(targetX, height * .48f,
+                    counter ? width * .5f : targetX + (seed % 3 - 1) * 18, height * .34f);
             }
             else
             {
                 var top = deep ? .12f : .32f;
-                DrawRoute(canvas, width * .14f, height * .59f, width * (.18f + (seed % 3) * .08f), height * top);
-                DrawRoute(canvas, width * .86f, height * .59f, width * (.82f - (seed % 4) * .07f), height * (top + .04f));
-                DrawRoute(canvas, width * .42f, height * .58f, width * .58f, height * (deep ? .2f : .39f));
+                if (Contains(name, "Vertical", "All Go"))
+                {
+                    DrawRoute(canvas, width * .14f, height * .59f, width * .14f, height * .10f);
+                    DrawRoute(canvas, width * .38f, height * .58f, width * .38f, height * .12f);
+                    DrawRoute(canvas, width * .62f, height * .58f, width * .62f, height * .12f);
+                    DrawRoute(canvas, width * .86f, height * .59f, width * .86f, height * .10f);
+                }
+                else if (Contains(name, "Mesh", "Cross"))
+                {
+                    DrawRoute(canvas, width * .14f, height * .59f, width * .72f, height * .42f);
+                    DrawRoute(canvas, width * .86f, height * .59f, width * .28f, height * .36f);
+                    DrawRoute(canvas, width * .42f, height * .58f, width * .78f, height * .18f);
+                }
+                else if (Contains(name, "Screen"))
+                {
+                    DrawRoute(canvas, width * .50f, height * .82f, width * .73f, height * .58f);
+                    DrawRoute(canvas, width * .86f, height * .59f, width * .68f, height * .50f);
+                }
+                else if (Contains(name, "Flood", "Sail", "Boot"))
+                {
+                    DrawRoute(canvas, width * .14f, height * .59f, width * .76f, height * .18f);
+                    DrawRoute(canvas, width * .42f, height * .58f, width * .78f, height * .36f);
+                    DrawRoute(canvas, width * .86f, height * .59f, width * .82f, height * .48f);
+                }
+                else if (Contains(name, "Smash"))
+                {
+                    DrawRoute(canvas, width * .14f, height * .59f, width * .14f, height * .45f);
+                    DrawRoute(canvas, width * .38f, height * .58f, width * .18f, height * .18f);
+                    DrawRoute(canvas, width * .86f, height * .59f, width * .86f, height * .45f);
+                }
+                else
+                {
+                    DrawRoute(canvas, width * .14f, height * .59f, width * (.18f + (seed % 3) * .08f), height * top);
+                    DrawRoute(canvas, width * .86f, height * .59f, width * (.82f - (seed % 4) * .07f), height * (top + .04f));
+                    DrawRoute(canvas, width * .42f, height * .58f, width * .58f, height * (deep ? .2f : .39f));
+                }
             }
         }
+
+        private static bool Contains(string value, params string[] terms) =>
+            terms.Any(term => value.Contains(term, StringComparison.OrdinalIgnoreCase));
 
         private static void DrawRoute(ICanvas canvas, float x1, float y1, float x2, float y2)
         {
@@ -263,7 +303,7 @@ public sealed partial class FoundationPage
             canvas.DrawLine(x2, y2, x2 + 5, y2 + 5);
         }
 
-        private static void DrawDefense(ICanvas canvas, float width, float height, int seed, string approach)
+        private static void DrawDefense(ICanvas canvas, float width, float height, int seed, string approach, string name)
         {
             canvas.StrokeColor = Color.FromArgb("#7CC6FF");
             canvas.StrokeSize = 2;
@@ -279,7 +319,19 @@ public sealed partial class FoundationPage
                 canvas.DrawCircle(width * (.3f + player * .2f), height * .34f, 4);
             canvas.DrawCircle(width * .18f, height * .2f, 4);
             canvas.DrawCircle(width * .82f, height * .2f, 4);
-            if (protect)
+            if (name.Contains("Cover 3", StringComparison.OrdinalIgnoreCase))
+            {
+                canvas.StrokeColor = Color.FromArgb("#99E0D0");
+                for (var zone = 0; zone < 3; zone++)
+                    canvas.DrawArc(width * (.06f + zone * .30f), height * .06f, width * .28f, height * .30f, 190, 160, false, false);
+            }
+            else if (name.Contains("Quarters", StringComparison.OrdinalIgnoreCase))
+            {
+                canvas.StrokeColor = Color.FromArgb("#99E0D0");
+                for (var zone = 0; zone < 4; zone++)
+                    canvas.DrawArc(width * (.03f + zone * .24f), height * .07f, width * .22f, height * .27f, 190, 160, false, false);
+            }
+            else if (protect)
             {
                 canvas.StrokeColor = Color.FromArgb("#99E0D0");
                 canvas.DrawArc(width * .1f, height * .08f, width * .8f, height * .32f, 190, 160, false, false);

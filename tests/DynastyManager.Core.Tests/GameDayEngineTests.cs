@@ -46,6 +46,8 @@ public class GameDayEngineTests
         Assert.Equal(kickoff.BallEndYardLine, session.YardLine);
         Assert.Equal(11, kickoff.OffensePersonnel.Count);
         Assert.Equal(11, kickoff.DefensePersonnel.Count);
+        Assert.NotNull(kickoff.PrimaryDefenderId);
+        Assert.Contains(kickoff.PrimaryDefenderId!.Value, kickoff.DefensePersonnel);
     }
 
     [Fact]
@@ -165,6 +167,25 @@ public class GameDayEngineTests
         }
         Assert.True(sawFairCatch);
         Assert.True(sawTouchback);
+    }
+
+    [Fact]
+    public void ReturnedPuntsAssignExactlyOneCoverageTackler()
+    {
+        GameSnapEvent? returnedPunt = null;
+        for (var seed = 1; seed <= 60 && returnedPunt is null; seed++)
+        {
+            var session = Session(GameDayMode.Play, seed: seed);
+            session.Down = 4;
+            session.YardLine = 42;
+            var punt = GameDayEngine.Step(session, "special-punt");
+            if (punt.ReturnYards > 0) returnedPunt = punt;
+        }
+
+        Assert.NotNull(returnedPunt);
+        Assert.NotNull(returnedPunt!.PrimaryDefenderId);
+        Assert.Contains(returnedPunt.PrimaryDefenderId!.Value, returnedPunt.OffensePersonnel);
+        Assert.DoesNotContain(returnedPunt.PrimaryDefenderId.Value, returnedPunt.DefensePersonnel);
     }
 
     [Fact]

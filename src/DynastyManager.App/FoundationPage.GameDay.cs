@@ -85,7 +85,7 @@ public sealed partial class FoundationPage
         {
             selectedPlay = play;
             selectedHeading.Text = recommended ? "RECOMMENDED OFFENSIVE CALL" : "SELECTED OFFENSIVE CALL";
-            selectedArt.Drawable = new PlayArtDrawable(play.Id, true, play.Concept.ToString());
+            selectedArt.Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString());
             selectedName.Text = play.Name;
             selectedDetails.Text = $"{GamePlanService.Label(play.Formation)} · {GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Concept)}";
             selectedDescription.Text = play.Description;
@@ -109,7 +109,7 @@ public sealed partial class FoundationPage
         {
             selectedDefense = play;
             defenseHeading.Text = recommended ? "RECOMMENDED DEFENSIVE CALL" : "SELECTED DEFENSIVE CALL";
-            defenseArt.Drawable = new PlayArtDrawable(play.Id, false, play.Approach.ToString());
+            defenseArt.Drawable = new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString());
             defenseName.Text = play.Name;
             defenseDetails.Text = $"{GamePlanService.Label(play.Formation)} · {GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Approach)}";
             defenseDescription.Text = play.Description;
@@ -187,8 +187,12 @@ public sealed partial class FoundationPage
             var terminalCarrierId = snap.BallCarrierId ?? snap.ReturnerId ??
                 (snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? snap.TargetId : null) ??
                 (snap.Outcome == SnapOutcome.Sack ? snap.QuarterbackId : null);
-            var isTackle = terminalCarrierId.HasValue &&
-                snap.Outcome is SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Sack or SnapOutcome.Fumble;
+            var isReturnTackle = (snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt) &&
+                snap.ReturnYards > 0 && !snap.IsFairCatch && !snap.IsTouchback;
+            var isTackle = terminalCarrierId.HasValue && (isReturnTackle ||
+                snap.Outcome is SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Sack or SnapOutcome.Fumble);
+            var isFieldGoalSnap = snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal;
+            var specialContact = GameDayAnimationPlanner.ContactPoint(snap, direction, .50);
             Rect? qbFrom = null, qbTo = null, runnerFrom = null, runnerTo = null, receiverFrom = null, receiverTo = null,
                 terminalCarrierTo = null, kickerFrom = null, kickerTo = null, returnerFrom = null, returnerTo = null;
             View? terminalCarrierView = null, primaryTacklerView = null;
@@ -207,6 +211,24 @@ public sealed partial class FoundationPage
                     x = player?.PlayerId == snap.ReturnerId
                         ? kickLanding : Math.Clamp(Project(10 + index % 5 * 8), .03, .60);
                     y = player?.PlayerId == snap.ReturnerId ? .50 : .10 + index % 6 * .16;
+                }
+                else if (isFieldGoalSnap)
+                {
+                    if (player?.Position == Position.QB)
+                    {
+                        x = line - direction * .065;
+                        y = .50;
+                    }
+                    else if (player?.Position == Position.OL)
+                    {
+                        x = line - direction * .012;
+                        y = lineSlots[Math.Min(lineIndex++, lineSlots.Length - 1)];
+                    }
+                    else
+                    {
+                        x = line - direction * .026;
+                        y = .20 + (index % 7) * .10;
+                    }
                 }
                 else switch (player?.Position)
                 {
@@ -238,13 +260,34 @@ public sealed partial class FoundationPage
                 x = Math.Clamp(x, .025, .96);
                 var endY = Math.Clamp(y + RouteLane(player, index, snap) * .35, .07, .93);
                 var endX = Math.Clamp(x + (destination - line + direction * .045) * RouteShare(player, snap), .025, .96);
+                if (isFieldGoalSnap)
+                {
+                    endX = Math.Clamp(x + (player?.PlayerId == snap.KickerId ? direction * .025 : 0), .025, .96);
+                    endY = y;
+                }
+                else if (snap.Outcome == SnapOutcome.Punt)
+                {
+                    endX = Math.Clamp(x + (destination - x) * .68, .025, .96);
+                    endY = Math.Clamp(y + (.50 - y) * .45, .07, .93);
+                }
                 if (player?.PlayerId == terminalCarrierId) endX = destination;
                 var view = Marker(player, offenseColor, offenseIsAway);
                 if (player is not null && (snap.BallCarrierId == player.PlayerId ||
                     snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown && snap.TargetId == player.PlayerId))
                 { view.Stroke = Colors.Yellow; view.StrokeThickness = 3; }
                 var from = new Rect(x, y, 19, 19);
-                var to = new Rect(endX, endY, 19, 19);
+                var puntCoverageTackler = isReturnTackle && snap.Outcome == SnapOutcome.Punt &&
+                    player?.PlayerId == snap.PrimaryDefenderId;
+                var to = puntCoverageTackler
+                    ? new Rect(specialContact.X, specialContact.Y, 19, 19)
+                    : new Rect(endX, endY, 19, 19);
+                if (puntCoverageTackler)
+                {
+                    pursuingDefenders.Add(view);
+                    view.Stroke = Colors.Yellow;
+                    view.StrokeThickness = 3;
+                    primaryTacklerView = view;
+                }
                 if (player?.PlayerId == snap.QuarterbackId) { qbFrom = from; qbTo = to; }
                 if (player?.PlayerId == snap.BallCarrierId) { runnerFrom = from; runnerTo = to; }
                 if (player?.PlayerId == snap.TargetId) { receiverFrom = from; receiverTo = to; }
@@ -301,12 +344,23 @@ public sealed partial class FoundationPage
                         break;
                 }
                 x = Math.Clamp(x, .025, .96);
+                if (isFieldGoalSnap)
+                {
+                    var isFront = player?.Position is Position.DE or Position.DT or Position.OLB or Position.MLB;
+                    x = Math.Clamp(line + direction * (isFront ? .018 : .065), .025, .96);
+                    y = isFront ? .26 + (index % 7) * .08 : .18 + (index % 6) * .13;
+                }
                 var primaryDefender = isTackle && player?.PlayerId == snap.PrimaryDefenderId;
                 var assistingDefender = isTackle && player is not null && assistIds.Contains(player.PlayerId);
                 var hasPursuitTarget = primaryDefender || assistingDefender;
                 var pursuitTarget = GameDayAnimationPlanner.PursuitTarget(contact, index, primaryDefender);
                 var endX = hasPursuitTarget ? pursuitTarget.X : Math.Clamp(x + (destination - line) * .72, .025, .96);
                 var endY = hasPursuitTarget ? pursuitTarget.Y : Math.Clamp(y + ((index % 3) - 1) * .025, .07, .93);
+                if (isFieldGoalSnap)
+                {
+                    endX = Math.Clamp(x - direction * .018, .025, .96);
+                    endY = y;
+                }
                 if (snap.Outcome == SnapOutcome.Punt && player?.PlayerId == snap.ReturnerId)
                 {
                     endX = destination;
@@ -586,7 +640,7 @@ public sealed partial class FoundationPage
                 var type = play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun ? "RUN" : "PASS";
                 var badge = new Label { Text = type, FontSize = 9, FontAttributes = FontAttributes.Bold,
                     TextColor = type == "RUN" ? Color.FromArgb("#B9F6CA") : Color.FromArgb("#B8D8FA") };
-                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, true, play.Concept.ToString()),
+                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString()),
                     HeightRequest = 105, BackgroundColor = Color.FromArgb("#102A24") };
                 var card = new Border { StrokeThickness = play.Id == selected.Id ? 2 : 0,
                     Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = Color.FromArgb("#1B2B37"), Content =
@@ -636,7 +690,7 @@ public sealed partial class FoundationPage
                 if (index % 2 == 0) grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
                 var play = formationPlays[index];
                 var badgeText = play.Approach switch { DefensiveApproach.StopRun => "RUN", DefensiveApproach.ProtectPass => "PASS", _ => "BALANCED" };
-                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, false, play.Approach.ToString()),
+                var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString()),
                     HeightRequest = 105, BackgroundColor = Color.FromArgb("#102A24") };
                 var card = new Border { StrokeThickness = play.Id == selected.Id ? 2 : 0,
                     Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = Color.FromArgb("#1B2B37"), Content =

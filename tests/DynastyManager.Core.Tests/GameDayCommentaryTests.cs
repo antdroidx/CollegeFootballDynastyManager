@@ -49,6 +49,27 @@ public class GameDayCommentaryTests
     }
 
     [Fact]
+    public void ReturnCommentaryNamesTheCoverageTackler()
+    {
+        var kicker = Player("Kai Kicker", Position.K);
+        var returner = Player("Riley Returner", Position.WR);
+        var tackler = Player("Terry Tackler", Position.MLB);
+        var players = new[] { kicker, returner, tackler }.ToDictionary(player => player.PlayerId);
+        var snap = new GameSnapEvent
+        {
+            OffenseTeamName = "Home", DefenseTeamName = "Away",
+            OffensivePlayId = "off-spread-zone", DefensivePlayId = "def-43-cover3",
+            Outcome = SnapOutcome.Punt, ReturnYards = 9, KickerId = kicker.PlayerId,
+            ReturnerId = returner.PlayerId, PrimaryDefenderId = tackler.PlayerId
+        };
+
+        var commentary = GameDayCommentaryService.Describe(snap, players);
+
+        Assert.Contains("Riley Returner", commentary);
+        Assert.Contains("Terry Tackler makes the tackle", commentary);
+    }
+
+    [Fact]
     public void ScrambleAndFairCatchUseFootballSpecificCommentary()
     {
         var quarterback = Player("Quinn Quarterback", Position.QB);
