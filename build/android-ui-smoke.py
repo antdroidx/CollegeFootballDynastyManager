@@ -11,11 +11,16 @@ def adb(*args):
 
 
 def capture(name):
-    for attempt in range(4):
+    for attempt in range(6):
         adb("shell", "uiautomator", "dump", "/sdcard/dynasty-ui.xml")
         xml = adb("exec-out", "cat", "/sdcard/dynasty-ui.xml")
-        root = ET.fromstring(xml)
         Path(f"android-{name}.xml").write_bytes(xml)
+        try:
+            root = ET.fromstring(xml)
+        except ET.ParseError:
+            # ADB can briefly return transport/startup text during a fresh boot.
+            time.sleep(1)
+            continue
         Path(f"android-{name}.png").write_bytes(adb("exec-out", "screencap", "-p"))
         if "Quickstep isn't responding" not in texts(root):
             return root
@@ -67,7 +72,7 @@ tap(capture("library"), "New dynasty")
 tap(capture("create-form"), "Choose your team")
 tap(capture("school-picker"), "Air Force")
 tap(capture("create-ready"), "Start dynasty")
-overview = wait_for("overview-preseason", lambda r: enabled(r, "Advance Week"))
+overview = wait_for("overview-preseason", lambda r: enabled(r, "Advance Week"), timeout=300)
 for week in range(4):
     if "Play game" in texts(overview):
         break
@@ -83,6 +88,14 @@ time.sleep(3)
 landscape = capture("game-day-landscape")
 assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(landscape)
 assert "Call play" in texts(landscape) or "Call defense" in texts(landscape)
+screen = next(landscape.iter("node"))
+screen_left, screen_top, screen_right, screen_bottom = map(int, re.findall(r"\d+", screen.get("bounds")))
+assert screen_right - screen_left > screen_bottom - screen_top, "Viewer did not rotate to landscape"
+for label in ("Call play", "Call defense", "Punt", "Field goal", "Skip to end"):
+    for node in landscape.iter("node"):
+        if node.get("text") == label:
+            left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
+            assert screen_top <= top < bottom <= screen_bottom, f"Landscape control is off-screen: {label}"
 # Rotate back as well: the same field/cards must safely reparent in both directions.
 adb("shell", "settings", "put", "system", "user_rotation", "0")
 time.sleep(2)
