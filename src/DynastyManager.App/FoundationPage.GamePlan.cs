@@ -55,12 +55,13 @@ public sealed partial class FoundationPage
         var profiles = BuildCurrentSimulationProfiles();
         if (!profiles.TryGetValue(teamName, out var profile)) return;
         var plan = GamePlanService.GetPlan(_currentDynasty, profile);
-        _gamePlanHost.Children.Add(CoachingCard("PROGRAM IDENTITY",
-            new Label { Text = teamName, FontSize = 16, FontAttributes = FontAttributes.Bold },
-            new Label { Text = $"PASS {profile.PassOffenseRating:F0}  /  RUN {profile.RushOffenseRating:F0}  /  DEF {profile.DefenseRating:F0}",
-                TextColor = DynastyTheme.Muted },
-            new Label { Text = "Build around your personnel. Playbooks change tendencies; player ratings still decide matchups." }));
-        var scoutingHost = new ContentView();
+        var identity = new Grid { ColumnSpacing = 12,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
+        identity.Add(new Label { Text = teamName, FontSize = 16, FontAttributes = FontAttributes.Bold, VerticalOptions = LayoutOptions.Center }, 0, 0);
+        identity.Add(new Label { Text = $"PASS {profile.PassOffenseRating:F0}  /  RUN {profile.RushOffenseRating:F0}  /  DEF {profile.DefenseRating:F0}",
+            FontSize = 12, TextColor = DynastyTheme.Muted, VerticalOptions = LayoutOptions.Center }, 1, 0);
+        _gamePlanHost.Children.Add(CoachingCard("YOUR PROGRAM", identity));
+        var scoutingHost = new ContentView { VerticalOptions = LayoutOptions.Start };
         var settingsHost = new VerticalStackLayout { Spacing = 12 };
         var workspace = new Grid { ColumnSpacing = 12, RowSpacing = 12,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(new GridLength(0)) },

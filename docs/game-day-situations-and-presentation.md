@@ -1,6 +1,6 @@
 # Game-day situations and presentation
 
-Build 264 adjusts the existing shared engine rather than adding a separate CPU simulation. Deficit and time remaining increase the passing weight before the final three minutes; early one-score deficits retain meaningful rushing. Third-and-3/4/5 favors passing in every coach book, with draws and runs still possible. Fourth-down decisions consider the number of scoring possessions needed. Explicit user calls and custom-book membership remain authoritative.
+This update adjusts the existing shared engine rather than adding a separate CPU simulation. Deficit and time remaining increase the passing weight before the final three minutes; early one-score deficits retain meaningful rushing. Third-and-3/4/5 favors passing in every coach book, with draws and runs still possible. Fourth-down decisions consider the number of scoring possessions needed. Explicit user calls and custom-book membership remain authoritative.
 
 Punt fair catches use punt distance, hang time, coverage speed/release delay and returner awareness. The event records the nearest cover player's distance at the catch. The viewer brings that player to the corresponding catch-area position as the ball arrives. This is a coverage-arrival model, not a full blocking/collision simulation. Kickoff handling remains separate.
 
