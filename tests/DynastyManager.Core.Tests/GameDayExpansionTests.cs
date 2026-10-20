@@ -216,7 +216,7 @@ public class GameDayExpansionTests
     }
 
     private static string Csv(string team, string rating) =>
-        "TGID,PFNA,PLNA,PYEA,PPOS,PGID," + string.Join(',', Ncaa06RosterRatings.RatingFields) + "\n" +
+        "TGID,PFNA,PLNA,PYER,PPOS,PGID," + string.Join(',', Ncaa06RosterRatings.RatingFields) + "\n" +
         $"{team},First,Last,0,0,1," + string.Join(',', Ncaa06RosterRatings.RatingFields.Select(_ => rating)) + "\n";
     private static DynastyState State() => new() { DynastyName = "Test", UserTeamName = "Home", SeasonYear = 2026 };
 }

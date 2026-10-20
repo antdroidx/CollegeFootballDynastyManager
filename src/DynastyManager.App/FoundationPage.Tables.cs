@@ -18,6 +18,13 @@ public sealed partial class FoundationPage
         _ => null
     };
 
+    private static View HeightCell(int inches)
+    {
+        var label = TableText(inches > 0 ? $"{inches / 12}′{inches % 12}″" : "—");
+        label.SetValue(TableValueProperty, inches > 0 ? inches.ToString() : null);
+        return label;
+    }
+
     private static Color BrandInk(Color color)
     {
         static double Linear(double value) => value <= .04045 ? value / 12.92 : Math.Pow((value + .055) / 1.055, 2.4);

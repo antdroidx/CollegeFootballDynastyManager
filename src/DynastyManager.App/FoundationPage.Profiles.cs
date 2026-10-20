@@ -8,13 +8,13 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
-    private static View IdentityHeader(Guid id, string name, string school, string subtitle, bool staff = false, int age = 20)
+    private static View IdentityHeader(Guid id, string name, string school, string subtitle, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
     {
         var brand = TeamBrandCatalog.Get(school);
         var primary = Color.FromArgb(brand.Primary);
         var row = new Grid { ColumnSpacing = 14,
             ColumnDefinitions = new ColumnDefinitionCollection { new(88), new(GridLength.Star) } };
-        row.Add(PersonPortrait.Create(id, name, primary, Color.FromArgb(brand.Secondary), 88, staff, age), 0, 0);
+        row.Add(PersonPortrait.Create(id, name, primary, Color.FromArgb(brand.Secondary), 88, staff, age, appearance), 0, 0);
         row.Add(new VerticalStackLayout { Spacing = 5, VerticalOptions = LayoutOptions.Center, Children =
         {
             new Label { Text = staff ? "COACH PROFILE" : "PLAYER PROFILE", FontSize = 10,
@@ -27,21 +27,22 @@ public sealed partial class FoundationPage
     }
 
     private View PlayerLink(DynastyPlayer player) => PersonLink(player.PlayerId, player.FullName, player.TeamName,
-        () => ShowPlayerProfileAsync(player.PlayerId));
+        () => ShowPlayerProfileAsync(player.PlayerId), appearance: player.Appearance);
 
     private View PlayerLink(Guid id, string name) => PersonLink(id, name,
         _currentDynasty?.ActiveRoster.FirstOrDefault(player => player.PlayerId == id)?.TeamName ?? "",
-        () => ShowPlayerProfileAsync(id));
+        () => ShowPlayerProfileAsync(id), appearance: _currentDynasty?.ActiveRoster.FirstOrDefault(player => player.PlayerId == id)?.Appearance
+            ?? _currentDynasty?.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id)?.Appearance);
 
     private View CoachLink(StaffMember coach) => PersonLink(coach.StaffId, coach.FullName, coach.TeamName,
         () => ShowCoachProfileAsync(coach), true, coach.Age);
 
-    private static View PersonLink(Guid id, string name, string school, Func<Task> open, bool staff = false, int age = 20)
+    private static View PersonLink(Guid id, string name, string school, Func<Task> open, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
     {
         var brand = TeamBrandCatalog.Get(school);
         var row = new Grid { ColumnSpacing = 6, Padding = new Thickness(5, 3), MinimumHeightRequest = 48,
             ColumnDefinitions = new ColumnDefinitionCollection { new(36), new(GridLength.Star) } };
-        row.Add(PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 36, staff, age), 0, 0);
+        row.Add(PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 36, staff, age, appearance), 0, 0);
         // A real button retains keyboard, screen-reader and touch behavior inside sortable tables.
         var button = new Button { Text = name, FontSize = 12,
             TextColor = Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
@@ -66,13 +67,17 @@ public sealed partial class FoundationPage
         {
             PlayerId = id, FullName = career?.PlayerName ?? latest!.PlayerName, TeamName = latest?.TeamName ?? "Recorded career",
             Position = career?.Position ?? latest!.Position, OriginalRecruitingStars = career?.OriginalRecruitingStars ?? latest?.OriginalRecruitingStars,
-            RecruitingStarsEstimated = career?.OriginalRecruitingStars is not null ? career.RecruitingStarsEstimated : latest?.RecruitingStarsEstimated ?? false
+            RecruitingStarsEstimated = career?.OriginalRecruitingStars is not null ? career.RecruitingStarsEstimated : latest?.RecruitingStarsEstimated ?? false,
+            HeightInches = career?.HeightInches ?? latest?.HeightInches ?? 0, WeightPounds = career?.WeightPounds ?? latest?.WeightPounds ?? 0,
+            Appearance = career?.Appearance ?? latest?.Appearance
         };
+        if (active is not null) player = PlayerRatingService.EnsureInitialized(state, player);
         var close = new Button { Text = "‹ Back" };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
         {
-            close, IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}"),
+            close, IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance),
+            new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), FontSize = 13, TextColor = DynastyTheme.Accent },
             new Label { Text = FormatOriginalRecruitingStars(player), TextColor = Color.FromArgb("#E8C979") }
         } };
         if (active is not null)

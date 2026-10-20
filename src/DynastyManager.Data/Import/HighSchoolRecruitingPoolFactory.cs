@@ -78,6 +78,8 @@ public static class HighSchoolRecruitingPoolFactory
                 HomeState = homeState,
                 HomeRegion = RecruitGeography.GetRegionForState(homeState)
             };
+            var measurements = PlayerPhysicalService.Generate(recruits[index].RecruitId, position);
+            recruits[index] = recruits[index] with { HeightInches = measurements.Height, WeightPounds = measurements.Weight };
         }
 
         return recruits;

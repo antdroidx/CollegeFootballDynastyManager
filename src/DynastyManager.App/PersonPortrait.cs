@@ -9,14 +9,14 @@ internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Col
     bool staff, int age) : IDrawable
 {
     private static readonly string[] Skin = ["#F0C9AB", "#DCAB84", "#C58D64", "#AB714C", "#8E583B", "#70432F", "#503125"];
-    private static readonly string[] Hair = ["#201C1C", "#3B2924", "#60412C", "#9F773F", "#BB955B", "#6C3528"];
+    private static readonly string[] Hair = ["#201C1C", "#3B2924", "#60412C", "#9F773F", "#BB955B", "#6C3528", "#93928B"];
 
     public static GraphicsView Create(Guid id, string name, Color primary, Color secondary,
-        double size = 76, bool staff = false, int age = 20)
+        double size = 76, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
     {
         var view = new GraphicsView { WidthRequest = size, HeightRequest = size,
             HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
-            InputTransparent = true, Drawable = new PersonPortrait(PortraitAppearance.ForIdentity(id), primary, secondary, staff, age) };
+            InputTransparent = true, Drawable = new PersonPortrait(PortraitAppearance.ForPlayer(id, appearance), primary, secondary, staff, age) };
         SemanticProperties.SetDescription(view, $"Illustrated portrait of {name}");
         return view;
     }
@@ -57,6 +57,15 @@ internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Col
         canvas.FillEllipse(47, 49, 7, 10);
         var hair = Color.FromArgb(staff && age >= 55 ? "#93928B" : Hair[face.HairColor]);
         canvas.FillColor = hair;
+        if (face.HairStyle is 10 or 11)
+        {
+            canvas.FillColor = hair;
+            for (var i = 0; i < 3; i++)
+            {
+                canvas.FillRoundedRectangle(left - 6 + i * 3, 30, 3, 43 - i * 3, 1);
+                canvas.FillRoundedRectangle(left + width + 3 - i * 3, 30, 3, 43 - i * 3, 1);
+            }
+        }
         if (face.HairStyle != 4)
         {
             canvas.FillRoundedRectangle(left - 1, 16, width + 2, face.HairStyle == 0 ? 18 : 24, 12);
@@ -69,6 +78,14 @@ internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Col
                 for (var i = 0; i < 6; i++) canvas.FillEllipse(left - 2 + i * (width / 6f), 14 + i % 2 * 3, 12, 13);
             }
         }
+        if (face.HairStyle == 5)
+        {
+            canvas.StrokeColor = hair; canvas.StrokeSize = 2;
+            for (var i = 0; i < 5; i++) canvas.DrawLine(left + 5 + i * 8, 20, left + 7 + i * 8, 35);
+        }
+        if (face.HairStyle == 6) { canvas.FillColor = hair; canvas.FillRectangle(left + 1, 15, width - 2, 14); }
+        if (face.HairStyle == 7) { canvas.FillColor = hair.WithAlpha(.55f); canvas.FillRoundedRectangle(left, 26, 5, 19, 2); canvas.FillRoundedRectangle(left + width - 5, 26, 5, 19, 2); }
+        if (face.HairStyle == 8) { canvas.FillColor = skin; canvas.FillEllipse(left + 7, 13, width - 14, 20); }
         canvas.StrokeColor = hair; canvas.StrokeSize = 1.8f;
         canvas.DrawLine(35, 41 + face.Brow, 43, 40); canvas.DrawLine(57, 40, 65, 41 + face.Brow);
         canvas.FillColor = Color.FromArgb("#211E20");

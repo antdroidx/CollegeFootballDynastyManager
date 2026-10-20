@@ -36,6 +36,12 @@ public sealed class Next26StartingRosterTests
             Assert.Equal(int.Parse(source["PYER"]) + 1, p.ClassYear);
             Assert.Equal(source["PRSD"] == "1", p.IsRedshirted);
             Assert.Equal(source["PRSD"] != "0", p.HasRedshirted);
+            Assert.Equal(int.Parse(source["PHGT"]), p.HeightInches);
+            Assert.Equal(int.Parse(source["PWGT"]) + 160, p.WeightPounds);
+            Assert.Equal(int.Parse(source["PSKI"]), p.Appearance!.SkinTone);
+            Assert.Equal(int.Parse(source["PHCL"]), p.Appearance.HairColor);
+            Assert.Equal(int.Parse(source["PHED"]), p.Appearance.HairStyle);
+            Assert.Equal(int.Parse(source["PFMP"]), p.Appearance.Face);
             Assert.Equal(60, p.Skills!.Leadership); Assert.Equal(60, p.Skills.Discipline);
             Assert.True(p.RecruitingStarsEstimated); Assert.InRange(p.OriginalRecruitingStars!.Value, 1, 5);
             Assert.Equal(Ncaa06RatingService.CalculateOverall(p), p.OverallRating);
@@ -110,14 +116,17 @@ public sealed class Next26StartingRosterTests
     public void CareerArchiveRetainsEstimatedProvenanceAfterDevelopment()
     {
         var player = ImportedRecruitingStarsService.EstimateIfUnknown(new DynastyPlayer { PlayerId = Guid.NewGuid(),
-            FullName = "Estimated Recruit", TeamName = "Washington", Position = Position.QB, ClassYear = 2, OverallRating = 82 });
+            FullName = "Estimated Recruit", TeamName = "Washington", Position = Position.QB, ClassYear = 2, OverallRating = 82, HeightInches = 75, WeightPounds = 215,
+            Appearance = new NcaaPlayerAppearance { SkinTone = 3, HairColor = 0, HairStyle = 14, Face = 31 } });
         var state = new DynastyState { DynastyName = "NEXT", UserTeamName = "Washington", SeasonYear = 2026, ActiveRoster = [player] };
         var teams = Teams().Where(t => t.Name == "Washington").ToDictionary(t => t.Name);
         var archived = DynastyHistoryService.FinalizeSeason(state, teams);
         var career = Assert.Single(archived.PlayerCareerHistory);
         Assert.Equal(player.OriginalRecruitingStars, career.OriginalRecruitingStars); Assert.True(career.RecruitingStarsEstimated);
+        Assert.Equal(player.HeightInches, career.HeightInches); Assert.Equal(player.WeightPounds, career.WeightPounds); Assert.Equal(player.Appearance, career.Appearance);
         var developed = archived with { SeasonYear = 2027, ActiveRoster = [player with { OverallRating = 99, ClassYear = 3 }] };
         career = Assert.Single(DynastyHistoryService.FinalizeSeason(developed, teams).PlayerCareerHistory);
         Assert.Equal(player.OriginalRecruitingStars, career.OriginalRecruitingStars); Assert.True(career.RecruitingStarsEstimated);
+        Assert.Equal(player.HeightInches, career.HeightInches); Assert.Equal(player.WeightPounds, career.WeightPounds); Assert.Equal(player.Appearance, career.Appearance);
     }
 }

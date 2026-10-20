@@ -20,9 +20,9 @@ public static class Ncaa06RosterCsvImporter
         var known = teamNames.ToDictionary(t => t, StringComparer.OrdinalIgnoreCase);
         var header = reader.ReadLine();
         if (header is null) return new([], ["The CSV file is empty."]);
-        var columns = CsvLineParser.Parse(header.TrimStart('\uFEFF')).Select(c => c.ToUpperInvariant()).ToArray();
+        var columns = CsvLineParser.Parse(header.TrimStart('\uFEFF')).Select(c => c.ToUpperInvariant()).Select(c => c == "PYEA" ? "PYER" : c).ToArray();
         if (columns.Distinct().Count() != columns.Length) return new([], ["Duplicate CSV column names."]);
-        var required = Ncaa06RosterRatings.RatingFields.Concat(["PPOS", "PFNA", "PLNA", "PYEA", "TGID"]).ToArray();
+        var required = Ncaa06RosterRatings.RatingFields.Concat(["PPOS", "PFNA", "PLNA", "PYER", "TGID"]).ToArray();
         var missing = required.Where(c => !columns.Contains(c)).ToArray();
         if (missing.Length > 0) return new([], [$"Missing columns: {string.Join(", ", missing)}"]);
         var lineNumber = 1; var ids = new HashSet<string>();
@@ -42,16 +42,18 @@ public static class Ncaa06RosterCsvImporter
                 if (!known.TryGetValue(mapped, out var team)) throw new FormatException($"Unmapped team TGID '{teamId}'. Map it to a league team name.");
                 int Number(string key) => int.TryParse(row[key], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n)
                     ? n : throw new FormatException($"{key} must be an integer.");
-                var year = Number("PYEA");
-                if (year is < 0 or > 4) throw new FormatException("PYEA must be NCAA class year 0–4 (FR through GR).");
+                var year = Number("PYER");
+                if (year is < 0 or > 4) throw new FormatException("PYER must be NCAA class year 0–4 (FR through GR).");
                 var fullName = $"{row["PFNA"]} {row["PLNA"]}".Trim();
                 if (fullName.Length is < 2 or > 100) throw new FormatException("Player name is missing or too long.");
                 if (row.TryGetValue("PGID", out var id) && !ids.Add(id)) throw new FormatException($"Duplicate PGID {id}.");
+                var redshirt = row.TryGetValue("PRSD", out var rs) && !string.IsNullOrWhiteSpace(rs) ? Number("PRSD") : 0;
+                if (redshirt is < 0 or > 2) throw new FormatException("PRSD must be 0 (eligible), 1 (current), or 2 (previous).");
                 var player = new DynastyPlayer { PlayerId = Guid.NewGuid(), FullName = fullName,
                     TeamName = team, Position = Position.QB, ClassYear = year + 1, PotentialRating = 60, TalentLevel = 60,
-                    HasRedshirted = row.TryGetValue("PRSD", out var rs) && rs == "1", DepthChartOrder = 99 };
+                    HasRedshirted = redshirt != 0, IsRedshirted = redshirt == 1, DepthChartOrder = 99 };
                 var ratings = Ncaa06RosterRatings.RatingFields.Concat(["PPOS"]).ToDictionary(c => c, Number);
-                player = Ncaa06RosterRatings.Apply(player, ratings, ratingLookup);
+                player = NcaaPlayerBioImporter.Apply(Ncaa06RosterRatings.Apply(player, ratings, ratingLookup), row);
                 players.Add(player with { TalentLevel = player.OverallRating });
             }
             catch (Exception ex) when (ex is ArgumentException or FormatException)

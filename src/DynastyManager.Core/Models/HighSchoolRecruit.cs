@@ -6,6 +6,8 @@ public sealed record HighSchoolRecruit
     public int SeasonYear { get; init; }
     public required string FullName { get; init; }
     public required Position Position { get; init; }
+    public int HeightInches { get; init; }
+    public int WeightPounds { get; init; }
     public int StarRating { get; init; }
     public int TrueOverallRating { get; init; }
     public int PotentialRating { get; init; }

@@ -47,7 +47,7 @@ public static class Ncaa06RosterRatings
             }
         };
         imported = PlayerRatingService.RecalculateOverall(imported);
-        return imported with { PotentialRating = Math.Max(imported.PotentialRating, imported.OverallRating) };
+        return PlayerPhysicalService.EnsureMeasurements(imported with { PotentialRating = Math.Max(imported.PotentialRating, imported.OverallRating) });
     }
 
     public static IReadOnlyDictionary<string, int> Export(DynastyPlayer player)

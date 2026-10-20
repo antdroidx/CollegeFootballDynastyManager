@@ -4667,7 +4667,8 @@ public sealed partial class FoundationPage : ContentPage
                 {
                     CloseRosterDetailButton(),
                     IdentityHeader(player.PlayerId, player.FullName, player.TeamName,
-                        $"{player.Position} · {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} · OVR {player.OverallRating}"),
+                        $"{player.Position} · {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} · OVR {player.OverallRating}", appearance: player.Appearance),
+                    new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), TextColor = DynastyTheme.Accent },
                     new Label
                     {
                         Text =

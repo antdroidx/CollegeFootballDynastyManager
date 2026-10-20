@@ -22,6 +22,7 @@ public static class PlayerRatingService
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(player);
+        player = PlayerPhysicalService.EnsureMeasurements(player);
 
         if (player.PotentialRating > 0 &&
             player.SpeedRating > 0 &&

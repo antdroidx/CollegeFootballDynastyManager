@@ -68,7 +68,7 @@ public static class Next26RosterCsvImporter
                     IsRedshirted = redshirt == 1, HasRedshirted = redshirt != 0, DepthChartOrder = 99,
                     PotentialRating = 60
                 };
-                player = Ncaa06RosterRatings.Apply(player, ratings, DisplayedRatings);
+                player = NcaaPlayerBioImporter.Apply(Ncaa06RosterRatings.Apply(player, ratings, DisplayedRatings), row);
                 players.Add(ImportedRecruitingStarsService.EstimateIfUnknown(player with { TalentLevel = player.OverallRating }));
             }
             catch (Exception ex) when (ex is ArgumentException or FormatException)

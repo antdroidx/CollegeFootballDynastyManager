@@ -96,12 +96,13 @@ public sealed partial class FoundationPage
                 details, TableText(player.IsRedshirted ? "RS" : player.DepthChartOrder.ToString()),
                 TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating), color: Color.FromArgb("#E9C76C")),
                 TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"),
-                TableText(status, color: player.CurrentInjury is not null ? NegativeChangeColor : player.IsRedshirted ? Color.FromArgb("#D6A3EB") : DynastyTheme.Muted)]);
+                TableText(status, color: player.CurrentInjury is not null ? NegativeChangeColor : player.IsRedshirted ? Color.FromArgb("#D6A3EB") : DynastyTheme.Muted),
+                HeightCell(player.HeightInches), TableText(player.WeightPounds > 0 ? player.WeightPounds.ToString() : "—")]);
         }
         _transferPortalList.Children.Add(SectionTitle($"Depth chart · {rows.Count} players", "Aligned columns · swipe horizontally for year, potential, HS stars (~ = estimated) and status"));
         if (rows.Count == 0) _transferPortalList.Children.Add(new Label { Text = "No players match these filters." });
         else _transferPortalList.Children.Add(DataTable([("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Details", 64),
-            ("Depth", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Status", 105)], rows));
+            ("Depth", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Status", 105), ("Height", 64), ("Wt lb", 60)], rows));
     }
 
     private bool MatchesRosterStatus(DynastyPlayer player) => _rosterStatus.SelectedIndex switch

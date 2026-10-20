@@ -31,6 +31,25 @@ Use **Import starting roster** on the main screen. Choose a league setup for its
 
 Schools present in a pack replace their generated starting roster; missing schools retain default/generated players. Schools outside a selected league are ignored, allowing full-universe packs to serve smaller league subsets. Unknown schools must first be added to an available league setup. Library entries can be removed independently of saved careers. See `starting-library-and-custom-leagues.md`.
 
-Required headers: `TGID,PFNA,PLNA,PYEA,PPOS,PCAR,PKAC,PTHA,PPBK,PRBK,PACC,PAGI,PTAK,PINJ,PKPR,PSPD,PTHP,PBTK,PCTH,PSTR,PJMP,PAWR`. Column order is flexible. Names must be decoded text. PYEA is 0=FR, 1=SO, 2=JR, 3=SR, 4=GR. PPOS retains the original NCAA position code. All rating columns must contain displayed 1–99 values, not compressed raw indexes. Optional PGID rejects duplicates; optional PRSD=1 marks redshirt history. Leadership/discipline default to 60, recruiting stars remain unknown, and potential is at least the recalculated POCI overall.
+Required headers: `TGID,PFNA,PLNA,PYER,PPOS,PCAR,PKAC,PTHA,PPBK,PRBK,PACC,PAGI,PTAK,PINJ,PKPR,PSPD,PTHP,PBTK,PCTH,PSTR,PJMP,PAWR`. Column order is flexible. Names must be decoded text. PYER is 0=FR, 1=SO, 2=JR, 3=SR, 4=GR. PPOS retains the original NCAA position code. All rating columns must contain displayed 1–99 values, not compressed raw indexes. Optional PGID rejects duplicates; optional PRSD=1 marks a current redshirt and PRSD=2 marks a previous redshirt. Leadership/discipline default to 60, recruiting stars remain unknown, and potential is at least the recalculated POCI overall.
 
 The low-level adapter accepts a PRLU lookup, but the first file-picker UI expects an already decoded export. Raw EA databases, PS2 memory-card formats, automatic TEAM/PRLU extraction and roster export are pending. This CSV contract is tested with constructed exports; a real user roster file still needs an end-to-end compatibility check.
+
+
+`PYER` is the canonical NCAA class-year header; `PYEA` remains an alias. Include one, not both. Additional unique, unrecognized columns are ignored. Known optional fields are validated when populated.
+
+Optional bio columns:
+
+| Column | Interpretation |
+| --- | --- |
+| PHGT | Height in inches (75 = 6 feet 3 inches) |
+| PWGT | NCAA stored weight; add 160 for pounds (55 = 215 lb) |
+| HeightInches / WeightPounds | Explicit displayed measurements, with no weight offset |
+| PSKI | Skin-tone code 0–7 |
+| PHCL | Hair color 0–5 |
+| PHED | Hairstyle 0–14 |
+| PFMP | Face code 0–63 |
+
+Supplying both stored and displayed measurements is allowed only when they agree. Missing measurements are generated from persistent identity and position. Imported appearance overrides procedural defaults in the illustrated portrait; source face codes control shape/detail variations, not exact NCAA texture likenesses. Measurements and appearance remain on transfers, season statistics and career profiles. These are player bio fields; on-field outcomes continue to use the football ratings.
+
+Example: `examples/ncaa-roster-import.csv` includes these optional fields. It uses displayed attribute ratings, as required by the menu importer.
