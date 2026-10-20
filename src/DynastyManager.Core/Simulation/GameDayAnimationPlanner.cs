@@ -65,6 +65,20 @@ public static class GameDayAnimationPlanner
         return direction == 1 ? leftToRight : 1 - leftToRight;
     }
 
+    /// <summary>Visual player positions may enter either ten-yard end zone.</summary>
+    public static double ProjectFieldYardLine(double yardLine, int direction)
+    {
+        var leftToRight = (10 + Math.Clamp(yardLine, -9, 109)) / 120d;
+        return direction == 1 ? leftToRight : 1 - leftToRight;
+    }
+
+    public static double CarrierDestinationYardLine(GameSnapEvent snap)
+    {
+        var spot = snap.BallEndYardLine != 0 || snap.StartYardLine + snap.Yards == 0
+            ? snap.BallEndYardLine : Math.Clamp(snap.StartYardLine + snap.Yards, 0, 100);
+        return snap.Outcome == SnapOutcome.Touchdown ? 104 : spot;
+    }
+
     public static GameDayRouteFamily RouteFamily(OffensivePlayDefinition play)
     {
         if (play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun) return GameDayRouteFamily.Run;
@@ -171,7 +185,7 @@ public static class GameDayAnimationPlanner
         if (family == GameDayRouteFamily.Curls)
         {
             var depth = p <= 1.15 / 1.30 ? p * 1.30 : 1.15 - (p - 1.15 / 1.30) * 1.30;
-            return new(start.X + (end.X - start.X) * depth, start.Y);
+            return new(Math.Clamp(start.X + (end.X - start.X) * depth, 1 / 120d, 119 / 120d), start.Y);
         }
         if (family == GameDayRouteFamily.Verticals) return new(start.X + (end.X - start.X) * p, start.Y);
         if (family is GameDayRouteFamily.Screen or GameDayRouteFamily.Run)

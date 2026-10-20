@@ -20,12 +20,12 @@ public static class NcaaPlayerBioImporter
         if (rawHeight.HasValue && height.HasValue && rawHeight != height) throw new FormatException("PHGT and HeightInches disagree.");
         if (rawWeight.HasValue && weight.HasValue && rawWeight + 160 != weight) throw new FormatException("PWGT and WeightPounds disagree.");
         var appearance = new NcaaPlayerAppearance { SkinTone = Read("PSKI", 0, 7), HairColor = Read("PHCL", 0, 5),
-            HairStyle = Read("PHED", 0, 14), Face = Read("PFMP", 0, 63) };
+            HairStyle = Read("PHED", 0, 14), Face = Read("PFMP", 0, 63), FacialHair = Read("FACIALHAIR", 0, 3) };
         return PlayerPhysicalService.EnsureMeasurements(player with
         {
             HeightInches = height ?? rawHeight ?? player.HeightInches,
             WeightPounds = weight ?? (rawWeight.HasValue ? rawWeight.Value + 160 : player.WeightPounds),
-            Appearance = appearance.SkinTone.HasValue || appearance.HairColor.HasValue || appearance.HairStyle.HasValue || appearance.Face.HasValue
+            Appearance = appearance.SkinTone.HasValue || appearance.HairColor.HasValue || appearance.HairStyle.HasValue || appearance.Face.HasValue || appearance.FacialHair.HasValue
                 ? appearance : player.Appearance
         });
     }

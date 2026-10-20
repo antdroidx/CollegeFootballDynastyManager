@@ -7,4 +7,6 @@ public sealed record NcaaPlayerAppearance
     public int? HairColor { get; init; }
     public int? HairStyle { get; init; }
     public int? Face { get; init; }
+    // App extension: 0 clean-shaven, 1 stubble, 2 goatee, 3 beard.
+    public int? FacialHair { get; init; }
 }

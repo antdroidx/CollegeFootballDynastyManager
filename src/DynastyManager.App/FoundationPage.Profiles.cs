@@ -35,7 +35,7 @@ public sealed partial class FoundationPage
             ?? _currentDynasty?.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id)?.Appearance);
 
     private View CoachLink(StaffMember coach) => PersonLink(coach.StaffId, coach.FullName, coach.TeamName,
-        () => ShowCoachProfileAsync(coach), true, coach.Age);
+        () => ShowCoachProfileAsync(coach), true, coach.Age, coach.Appearance);
 
     private static View PersonLink(Guid id, string name, string school, Func<Task> open, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
     {
@@ -74,9 +74,18 @@ public sealed partial class FoundationPage
         if (active is not null) player = PlayerRatingService.EnsureInitialized(state, player);
         var close = new Button { Text = "‹ Back" };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
+        View PlayerHeader() => IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance);
+        var portraitHeader = new ContentView { Content = PlayerHeader() };
+        var editPortrait = new Button { Text = "Edit portrait", FontSize = 11 };
+        editPortrait.Clicked += async (_, _) =>
+        {
+            var next = await EditPortraitAsync(player.PlayerId, player.FullName, player.TeamName, player.Appearance);
+            if (next is null) return;
+            player = player with { Appearance = next }; portraitHeader.Content = PlayerHeader(); RenderCurrentDynasty();
+        };
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
         {
-            close, IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance),
+            close, portraitHeader, editPortrait,
             new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), FontSize = 13, TextColor = DynastyTheme.Accent },
             new Label { Text = FormatOriginalRecruitingStars(player), TextColor = Color.FromArgb("#E8C979") }
         } };
@@ -149,9 +158,18 @@ public sealed partial class FoundationPage
         var state = CoachCareerService.RestoreUserHistory(_currentDynasty);
         var summary = CoachCareerService.GetSummary(state, coach.StaffId, coach.FullName);
         var close = new Button { Text = "‹ Back" }; close.Clicked += async (_, _) => await Navigation.PopModalAsync();
+        View CoachHeader() => IdentityHeader(coach.StaffId, coach.FullName, coach.TeamName, FormatStaffRole(coach.Role), true, coach.Age, coach.Appearance);
+        var portraitHeader = new ContentView { Content = CoachHeader() };
+        var editPortrait = new Button { Text = "Edit portrait", FontSize = 11 };
+        editPortrait.Clicked += async (_, _) =>
+        {
+            var next = await EditPortraitAsync(coach.StaffId, coach.FullName, coach.TeamName, coach.Appearance, true, coach.Age);
+            if (next is null) return;
+            coach = coach with { Appearance = next }; portraitHeader.Content = CoachHeader(); RenderCurrentDynasty();
+        };
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
         {
-            close, IdentityHeader(coach.StaffId, coach.FullName, coach.TeamName, FormatStaffRole(coach.Role), true, coach.Age),
+            close, portraitHeader, editPortrait,
             SectionTitle("Coach profile", $"Age {coach.Age} · OVR {coach.OverallRating} · {coach.CareerYears} career years · {coach.ContractYearsRemaining} contract years"),
             AttributeGroup("Coaching traits", "Leadership, strategy, development and program management",
                 ("Leadership", coach.Leadership), ("Recruiting", coach.Recruiting), ("Player development", coach.PlayerDevelopment),

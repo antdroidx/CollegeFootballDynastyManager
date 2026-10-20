@@ -241,13 +241,11 @@ public sealed partial class FoundationPage
             var offenseIsAway = snap.OffenseTeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase);
             var defenseIsAway = snap.DefenseTeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase);
             var direction = (snap.OffenseTeamName == game.HomeTeamName ? 1 : -1) * (snap.Quarter % 2 == 0 ? -1 : 1);
-            double Project(double yard) => GameDayAnimationPlanner.ProjectYardLine(yard, direction);
+            double Project(double yard) => GameDayAnimationPlanner.ProjectFieldYardLine(yard, direction);
             var line = Project(snap.StartYardLine);
             var kickLanding = Math.Clamp(Project(snap.KickLandingYardLine > 0
                 ? snap.KickLandingYardLine : snap.BallEndYardLine), .02, .98);
-            var ballEndYardLine = snap.BallEndYardLine != 0 || snap.StartYardLine + snap.Yards == 0
-                ? snap.BallEndYardLine : Math.Clamp(snap.StartYardLine + snap.Yards, 0, 100);
-            var destination = Project(ballEndYardLine);
+            var destination = Project(GameDayAnimationPlanner.CarrierDestinationYardLine(snap));
             fieldArt.Direction = direction; fieldLines.Invalidate();
             var movements = new List<(View View, Rect From, Rect To)>();
             var routeViews = new HashSet<View>();

@@ -6,17 +6,19 @@ namespace DynastyManager.App;
 
 /// <summary>Lightweight, offline illustrated headshots. No image cache or network required.</summary>
 internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Color secondary,
-    bool staff, int age) : IDrawable
+    bool staff, int age, bool naturalAging) : IDrawable
 {
     private static readonly string[] Skin = ["#F0C9AB", "#DCAB84", "#C58D64", "#AB714C", "#8E583B", "#70432F", "#503125"];
-    private static readonly string[] Hair = ["#201C1C", "#3B2924", "#60412C", "#9F773F", "#BB955B", "#6C3528", "#93928B"];
+    private static readonly string[] Hair = ["#201C1C", "#3B2924", "#60412C", "#9F773F", "#BB955B", "#6C3528", "#93928B", "#C8C9C5"];
 
     public static GraphicsView Create(Guid id, string name, Color primary, Color secondary,
         double size = 76, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
     {
         var view = new GraphicsView { WidthRequest = size, HeightRequest = size,
             HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
-            InputTransparent = true, Drawable = new PersonPortrait(PortraitAppearance.ForPlayer(id, appearance), primary, secondary, staff, age) };
+            BackgroundColor = Colors.Transparent, InputTransparent = true, Drawable = new PersonPortrait(
+                staff ? PortraitAppearance.ForStaff(id, age, appearance) : PortraitAppearance.ForPlayer(id, appearance),
+                primary, secondary, staff, age, appearance?.HairColor.HasValue != true) };
         SemanticProperties.SetDescription(view, $"Illustrated portrait of {name}");
         return view;
     }
@@ -28,10 +30,6 @@ internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Col
         canvas.Translate(dirtyRect.X + (dirtyRect.Width - size) / 2, dirtyRect.Y + (dirtyRect.Height - size) / 2);
         canvas.Scale(size / 100, size / 100);
         canvas.ClipRectangle(0, 0, 100, 100);
-        canvas.FillColor = Color.FromArgb("#24394B");
-        canvas.FillRoundedRectangle(0, 0, 100, 100, 16);
-        canvas.FillColor = secondary.WithAlpha(.16f);
-        canvas.FillEllipse(45, -12, 80, 80);
         // Team jersey/polo, shoulders and collar.
         canvas.FillColor = primary;
         canvas.FillRoundedRectangle(7, 75, 86, 25, 20);
@@ -55,12 +53,17 @@ internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Col
         canvas.FillRoundedRectangle(left, 22, width, 52, 20);
         canvas.FillColor = Color.FromArgb("#271B18").WithAlpha(.13f);
         canvas.FillEllipse(47, 49, 7, 10);
-        var hair = Color.FromArgb(staff && age >= 55 ? "#93928B" : Hair[face.HairColor]);
+        var hair = Color.FromArgb(Hair[face.HairColor]);
         canvas.FillColor = hair;
         if (face.HairStyle is 10 or 11)
         {
             canvas.FillColor = hair;
-            for (var i = 0; i < 3; i++)
+            if (face.HairStyle == 10)
+            {
+                canvas.FillRoundedRectangle(left - 5, 32, 8, 40, 3);
+                canvas.FillRoundedRectangle(left + width - 3, 32, 8, 40, 3);
+            }
+            else for (var i = 0; i < 3; i++)
             {
                 canvas.FillRoundedRectangle(left - 6 + i * 3, 30, 3, 43 - i * 3, 1);
                 canvas.FillRoundedRectangle(left + width + 3 - i * 3, 30, 3, 43 - i * 3, 1);
@@ -92,14 +95,38 @@ internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Col
         canvas.FillEllipse(37, 45, 4, 4); canvas.FillEllipse(59, 45, 4, 4);
         canvas.StrokeColor = Color.FromArgb("#714331"); canvas.StrokeSize = 1.3f;
         canvas.DrawLine(46, 61, 55, 61 + face.Detail % 2);
-        if (face.FacialHair > 0)
+        // Filled silhouettes read as facial hair at thumbnail sizes, without scar-like cheek strokes.
+        if (face.FacialHair is 1 or 3)
         {
-            canvas.StrokeColor = hair.WithAlpha(.7f); canvas.StrokeSize = face.FacialHair == 3 ? 5 : 2;
-            canvas.DrawLine(43, 66, 57, 66);
-            if (face.FacialHair >= 2)
+            canvas.FillColor = hair.WithAlpha(face.FacialHair == 1 ? .22f : .95f);
+            var beard = new PathF();
+            beard.MoveTo(left + 2, 51); beard.LineTo(38, 57); beard.LineTo(43, 55);
+            beard.LineTo(57, 55); beard.LineTo(62, 57); beard.LineTo(left + width - 2, 51);
+            beard.CurveTo(68, 70, 60, 77, 50, 77); beard.CurveTo(40, 77, 31, 70, left + 2, 51); beard.Close();
+            canvas.FillPath(beard);
+            canvas.FillColor = skin; canvas.FillRoundedRectangle(42, 59, 16, 5, 2);
+        }
+        else if (face.FacialHair == 2)
+        {
+            canvas.FillColor = hair;
+            canvas.FillRoundedRectangle(42, 63, 16, 12, 5);
+            canvas.FillRoundedRectangle(42, 56, 16, 3, 1);
+            canvas.FillColor = skin; canvas.FillRoundedRectangle(45, 62, 10, 3, 1);
+        }
+        // Keep the mouth visible against beard and goatee fills.
+        canvas.StrokeColor = Color.FromArgb("#714331"); canvas.StrokeSize = 1.3f;
+        canvas.DrawLine(46, 61, 55, 61 + face.Detail % 2);
+        if (staff && age >= 45)
+        {
+            if (naturalAging && age < 55 && face.HairStyle != 4)
             {
-                canvas.DrawLine(33, 57, 39, 66); canvas.DrawLine(67, 57, 61, 66);
+                canvas.StrokeColor = Color.FromArgb("#B4B4AE"); canvas.StrokeSize = 1.5f;
+                canvas.DrawLine(left + 1, 31, left + 2, 39); canvas.DrawLine(left + width - 1, 31, left + width - 2, 39);
             }
+            canvas.StrokeColor = Color.FromArgb("#503125").WithAlpha(age >= 60 ? .30f : .15f);
+            canvas.StrokeSize = .8f;
+            canvas.DrawLine(34, 51, 40, 52); canvas.DrawLine(60, 52, 66, 51);
+            if (age >= 55) { canvas.DrawLine(41, 35, 59, 35); canvas.DrawLine(42, 37, 58, 37); }
         }
         if (staff && age >= 45 && face.Detail == 0)
         {

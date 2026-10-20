@@ -16,6 +16,7 @@ public sealed record StaffMember
     public Guid StaffId { get; init; } = Guid.NewGuid();
     public required string FullName { get; init; }
     public required string TeamName { get; init; }
+    public NcaaPlayerAppearance? Appearance { get; init; }
     public StaffRole Role { get; init; }
     public int Reputation { get; init; }
     public int Leadership { get; init; }

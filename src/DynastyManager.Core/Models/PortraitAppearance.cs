@@ -21,9 +21,14 @@ public sealed record PortraitAppearance(int Skin, int HairColor, int HairStyle, 
             FaceShape = face.HasValue ? face.Value % 4 : fallback.FaceShape,
             Brow = face.HasValue ? face.Value / 4 % 3 : fallback.Brow,
             Detail = face.HasValue ? face.Value / 12 % 4 : fallback.Detail,
-            // NCAA face textures cannot be reconstructed as exact vector likenesses.
-            FacialHair = face.HasValue ? 0 : fallback.FacialHair
+            FacialHair = appearance.FacialHair is >= 0 and <= 3 ? appearance.FacialHair.Value : fallback.FacialHair
         };
+    }
+
+    public static PortraitAppearance ForStaff(Guid id, int age, NcaaPlayerAppearance? appearance = null)
+    {
+        var face = ForPlayer(id, appearance);
+        return appearance?.HairColor.HasValue == true || age < 55 ? face : face with { HairColor = age >= 65 ? 7 : 6 };
     }
 
     public static PortraitAppearance ForIdentity(Guid id)

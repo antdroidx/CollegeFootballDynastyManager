@@ -49,6 +49,7 @@ Optional bio columns:
 | PHCL | Hair color 0–5 |
 | PHED | Hairstyle 0–14 |
 | PFMP | Face code 0–63 |
+| FacialHair | Optional app extension: 0=clean shaven, 1=stubble, 2=goatee, 3=beard |
 
 Supplying both stored and displayed measurements is allowed only when they agree. Missing measurements are generated from persistent identity and position. Imported appearance overrides procedural defaults in the illustrated portrait; source face codes control shape/detail variations, not exact NCAA texture likenesses. Measurements and appearance remain on transfers, season statistics and career profiles. These are player bio fields; on-field outcomes continue to use the football ratings.
 
