@@ -288,7 +288,7 @@ public static partial class GameDayEngine
             var player = session.Roster.First(item => item.PlayerId == id);
             return new PlayerSeasonStatLine { SeasonYear = session.Game.SeasonYear, PlayerId = id,
                 PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
-                OriginalRecruitingStars = player.OriginalRecruitingStars, Games = 1 };
+                OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, Games = 1 };
         }
         void Save(PlayerSeasonStatLine line) => lines[line.PlayerId] = line;
         foreach (var snap in session.Events)

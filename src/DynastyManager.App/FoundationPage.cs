@@ -895,7 +895,7 @@ public sealed partial class FoundationPage : ContentPage
         };
 
     private static string FormatOriginalRecruitingStars(DynastyPlayer player) =>
-        player.OriginalRecruitingStars is int stars ? $"HS recruit: {stars} stars"
+        player.OriginalRecruitingStars is int stars ? player.RecruitingStarsEstimated ? $"Estimated HS stars: {stars}★" : $"HS recruit: {stars} stars"
             : player.IsWalkOn ? "Walk-on" : "HS recruit: unknown";
 
     private static string FormatClassYear(int classYear, bool redshirted = false)
@@ -1009,6 +1009,10 @@ public sealed partial class FoundationPage : ContentPage
                 .ToArray();
 
             _legacyTeams = universe.Teams;
+            await ShowAdvanceProgressAsync("Loading NCAA NEXT starting roster...", 0.80);
+            var nextRosterCsv = await ReadAssetAsync("next26_roster.csv");
+            var nextRosterTeams = ModernFbsUniverseFactory.Create(_legacyTeams).Select(t => t.Name).ToArray();
+            _bundledStartingRoster = await Task.Run(() => Next26RosterCsvImporter.LoadPack(new StringReader(nextRosterCsv), nextRosterTeams));
             _startingLibraryRepository = new StartingLibraryRepository(Path.Combine(FileSystem.Current.AppDataDirectory, "starting-library.json"));
             try { _startingLibrary = await _startingLibraryRepository.LoadAsync(); }
             catch (Exception ex)

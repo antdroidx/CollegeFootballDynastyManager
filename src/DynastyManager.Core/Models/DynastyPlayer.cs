@@ -9,6 +9,7 @@ public sealed record DynastyPlayer
     public int? NcaaPositionCode { get; init; }
     public int ClassYear { get; init; }
     public int? OriginalRecruitingStars { get; init; }
+    public bool RecruitingStarsEstimated { get; init; }
     public int TalentLevel { get; init; }
     public int OverallRating { get; init; }
     public int PotentialRating { get; init; }

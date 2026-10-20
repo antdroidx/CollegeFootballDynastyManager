@@ -65,7 +65,8 @@ public sealed partial class FoundationPage
         var player = active ?? new DynastyPlayer
         {
             PlayerId = id, FullName = career?.PlayerName ?? latest!.PlayerName, TeamName = latest?.TeamName ?? "Recorded career",
-            Position = career?.Position ?? latest!.Position, OriginalRecruitingStars = career?.OriginalRecruitingStars ?? latest?.OriginalRecruitingStars
+            Position = career?.Position ?? latest!.Position, OriginalRecruitingStars = career?.OriginalRecruitingStars ?? latest?.OriginalRecruitingStars,
+            RecruitingStarsEstimated = career?.OriginalRecruitingStars is not null ? career.RecruitingStarsEstimated : latest?.RecruitingStarsEstimated ?? false
         };
         var close = new Button { Text = "‹ Back" };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();

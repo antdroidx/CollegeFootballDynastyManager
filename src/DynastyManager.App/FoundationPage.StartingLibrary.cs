@@ -8,6 +8,7 @@ namespace DynastyManager.App;
 public sealed partial class FoundationPage
 {
     private StartingLibrary _startingLibrary = new();
+    private StartingRosterPack? _bundledStartingRoster;
     private StartingLibraryRepository? _startingLibraryRepository;
     private bool _startingLibrarySaving;
     private string? _startingLibraryError;
@@ -24,6 +25,10 @@ public sealed partial class FoundationPage
     }.Where(s => !_startingLibrary.HiddenBuiltIns.Contains(s.Id)).Concat(_startingLibrary.Setups).ToArray();
 
     private StartingLeagueSetup? SelectedStartingSetup => _startingSetups.ElementAtOrDefault(_leaguePicker.SelectedIndex);
+    private IReadOnlyList<StartingRosterPack> AvailableStartingRosters() =>
+        (_bundledStartingRoster is null ? Enumerable.Empty<StartingRosterPack>() : new[] { _bundledStartingRoster })
+        .Concat(_startingLibrary.Rosters).ToArray();
+
     private StartingRosterPack? SelectedStartingRoster => _startingRosterPicker.SelectedIndex > 0
         ? _compatibleStartingRosters.ElementAtOrDefault(_startingRosterPicker.SelectedIndex - 1) : null;
 
@@ -42,9 +47,9 @@ public sealed partial class FoundationPage
     private void UpdateStartingRosterChoices()
     {
         var setup = SelectedStartingSetup;
-        _compatibleStartingRosters = setup is null ? [] : _startingLibrary.Rosters.Where(r => StartingLibraryService.IsCompatible(r, setup.Teams)).ToArray();
-        _startingRosterPicker.ItemsSource = new[] { "Default / generated roster" }.Concat(_compatibleStartingRosters.Select(r => r.Name)).ToArray();
-        var defaultId = setup is not null && _startingLibrary.DefaultRosterBySetup.TryGetValue(setup.Id, out var id) ? id : Guid.Empty;
+        _compatibleStartingRosters = setup is null ? [] : AvailableStartingRosters().Where(r => StartingLibraryService.IsCompatible(r, setup.Teams)).ToArray();
+        _startingRosterPicker.ItemsSource = new[] { "Legacy / generated roster" }.Concat(_compatibleStartingRosters.Select(r => r.Name)).ToArray();
+        var defaultId = setup is not null && _startingLibrary.DefaultRosterBySetup.TryGetValue(setup.Id, out var id) ? id : _bundledStartingRoster?.Id ?? Guid.Empty;
         _startingRosterPicker.SelectedIndex = Array.FindIndex(_compatibleStartingRosters.ToArray(), r => r.Id == defaultId) + 1;
         _newDynastyButton.IsEnabled = setup is not null;
     }
@@ -88,24 +93,31 @@ public sealed partial class FoundationPage
                 var defaults = new Button { Text = "Default starting roster" };
                 defaults.Clicked += async (_, _) =>
                 {
-                    var compatible = _startingLibrary.Rosters.Where(r => StartingLibraryService.IsCompatible(r, setup.Teams)).ToArray();
-                    var labels = new[] { "Default / generated roster" }.Concat(compatible.Select((r, i) => $"{i + 1}. {r.Name}")).ToArray();
+                    var compatible = AvailableStartingRosters().Where(r => StartingLibraryService.IsCompatible(r, setup.Teams)).ToArray();
+                    var labels = new[] { "Legacy / generated roster" }.Concat(compatible.Select((r, i) => $"{i + 1}. {r.Name}")).ToArray();
                     var choice = await DisplayActionSheetAsync(setup.Name, "Cancel", null, labels); var index = Array.IndexOf(labels, choice);
                     if (index < 0) return;
-                    try { var map = _startingLibrary.DefaultRosterBySetup.ToDictionary(); map.Remove(setup.Id); if (index > 0) map[setup.Id] = compatible[index - 1].Id;
+                    try { var map = _startingLibrary.DefaultRosterBySetup.ToDictionary(); map[setup.Id] = index > 0 ? compatible[index - 1].Id : Guid.Empty;
                         await SaveStartingLibraryAsync(_startingLibrary with { DefaultRosterBySetup = map }); Render(); }
                     catch (Exception ex) { status.Text = ex.Message; }
                 };
                 var remove = new Button { Text = "Remove" };
                 remove.Clicked += async (_, _) => { if (!await DisplayAlertAsync("Remove league option?", $"Remove {setup.Name} from the starting library? Existing dynasties keep their setup.", "Remove", "Cancel")) return;
                     try { await SaveStartingLibraryAsync(StartingLibraryService.RemoveSetup(_startingLibrary, setup)); Render(); } catch (Exception ex) { status.Text = ex.Message; } };
-                var defaultName = _startingLibrary.DefaultRosterBySetup.TryGetValue(setup.Id, out var rosterId)
-                    ? _startingLibrary.Rosters.FirstOrDefault(r => r.Id == rosterId)?.Name ?? "Generated" : "Generated";
+                var defaultId = _startingLibrary.DefaultRosterBySetup.TryGetValue(setup.Id, out var rosterId)
+                    ? rosterId : _bundledStartingRoster?.Id ?? Guid.Empty;
+                var defaultName = AvailableStartingRosters().FirstOrDefault(r => r.Id == defaultId)?.Name ?? "Legacy / generated";
                 rows.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = Color.FromArgb("#1B2B37"), Content = new VerticalStackLayout { Spacing = 5, Children =
                 { new Label { Text = setup.Name, FontAttributes = FontAttributes.Bold }, new Label { Text = $"{setup.Teams.Count} teams · {setup.Rules.GamesPerTeam} games · {setup.Rules.PlayoffTeams}-team playoff · Roster: {defaultName}", FontSize = 11 },
                     new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { edit, defaults, remove } } } } });
             }
             rows.Children.Add(SectionTitle("Roster packs", "A pack replaces the listed teams' starting rosters. Teams missing from the pack use generated/default players. Packs can be reused across setups; schools outside the chosen setup are ignored."));
+            if (_bundledStartingRoster is { } included) rows.Children.Add(new Border { Content = new VerticalStackLayout { Spacing = 5, Children =
+            {
+                new Label { Text = included.Name, FontAttributes = FontAttributes.Bold },
+                new Label { Text = $"Included default · {included.Players.Count:N0} players · 136 schools. The modern 138-school setup generates players for North Dakota State and Sacramento State.", FontSize = 11 },
+                new Label { Text = "Choose a different default for each setup above. Imported roster packs remain available.", FontSize = 11, TextColor = DynastyTheme.Muted }
+            } } });
             foreach (var roster in _startingLibrary.Rosters)
             {
                 var remove = new Button { Text = "Remove roster pack" };

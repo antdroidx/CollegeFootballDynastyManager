@@ -162,6 +162,6 @@ public sealed partial class FoundationPage
         {
             TableText(player.Position.ToString()), PlayerLink(player), RatingCell(player.OverallRating),
             TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating)),
-            TableText(player.OriginalRecruitingStars is int stars ? $"{stars}★" : "—"), CreateCareerStatsButton(player)
+            TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"), CreateCareerStatsButton(player)
         }));
 }

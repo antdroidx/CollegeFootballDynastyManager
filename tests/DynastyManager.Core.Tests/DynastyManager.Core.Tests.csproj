@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\src\DynastyManager.App\Resources\Raw\next26-aug26-2025.csv" Link="TestData\next26-roster.csv" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\main\assets\universe.csv" Link="TestData\universe.csv" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\main\assets\roster.csv" Link="TestData\roster.csv" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\main\assets\coach.csv" Link="TestData\coach.csv" CopyToOutputDirectory="PreserveNewest" />
