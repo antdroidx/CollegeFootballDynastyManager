@@ -312,7 +312,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _postseasonStatus = new Label
         {
-            Text = "The 12-team CFP field is selected after conference championships.",
+            Text = "The playoff field is selected after conference championships.",
             FontSize = 13
         };
 
@@ -968,7 +968,6 @@ public sealed partial class FoundationPage : ContentPage
                 },
                 _rollingAutosaveStatus,
                 _autosaveButton,
-                RosterImportButton(),
 
             }
         };
@@ -1010,7 +1009,14 @@ public sealed partial class FoundationPage : ContentPage
                 .ToArray();
 
             _legacyTeams = universe.Teams;
-            UpdateNewDynastyTeams();
+            _startingLibraryRepository = new StartingLibraryRepository(Path.Combine(FileSystem.Current.AppDataDirectory, "starting-library.json"));
+            try { _startingLibrary = await _startingLibraryRepository.LoadAsync(); }
+            catch (Exception ex)
+            {
+                _startingLibraryRepository = null;
+                _startingLibraryError = $"Could not load starting-library.json: {ex.Message}. The original library file was preserved. Saved dynasties can still be loaded.";
+            }
+            RefreshStartingChoices();
             _teamBrowserPicker.ItemsSource = _teamNames.ToList();
 
             _importStatus.Text =
@@ -1041,11 +1047,11 @@ public sealed partial class FoundationPage : ContentPage
     {
         if (_legacyTeams.Count == 0) return;
         var previous = _teamPicker.SelectedItem as string;
-        _newDynastyTeams = _leaguePicker.SelectedIndex == 0
-            ? ModernFbsUniverseFactory.Create(_legacyTeams) : _legacyTeams;
+        _newDynastyTeams = SelectedStartingSetup?.Teams ?? [];
         _teamPicker.ItemsSource = _newDynastyTeams.Select(team => team.Name)
             .OrderBy(name => name).ToList();
         if (previous is not null) _teamPicker.SelectedItem = previous;
+        UpdateStartingRosterChoices();
     }
 
     private void ConfigureLeague(IReadOnlyList<Team> teams)
@@ -1065,6 +1071,9 @@ public sealed partial class FoundationPage : ContentPage
             _newDynastyStatus.Text = "Choose a school before starting your dynasty.";
             return;
         }
+        var startingSetup = SelectedStartingSetup;
+        if (startingSetup is null) { _newDynastyStatus.Text = "Add a league setup from the main screen."; return; }
+        var startingRoster = SelectedStartingRoster;
         _newDynastyStatus.Text = "";
         ConfigureLeague(_newDynastyTeams);
         var dynastyName = string.IsNullOrWhiteSpace(_dynastyNameEntry.Text)
@@ -1085,7 +1094,7 @@ public sealed partial class FoundationPage : ContentPage
             await ShowAdvanceProgressAsync("Generating league schedule...", 0.18);
             var schedule = await GenerateScheduleAsync(
                 dynastyId,
-                startingYear);
+                startingYear, startingSetup.Rules);
 
             await ShowAdvanceProgressAsync("Building team rosters...", 0.42);
             var activeRoster = LegacyDynastyRosterFactory.Create(
@@ -1094,12 +1103,14 @@ public sealed partial class FoundationPage : ContentPage
                 dynastyId,
                 startingYear);
 
+            activeRoster = StartingLibraryService.CreateRoster(startingSetup, startingRoster, activeRoster);
             _currentDynasty = new DynastyState
             {
                 DynastyId = dynastyId,
                 DynastyName = dynastyName,
                 LeagueTeams = _newDynastyTeams.ToArray(),
-                LeagueName = _leaguePicker.SelectedIndex == 0 ? "Modern FBS (2026)" : "Legacy FBS",
+                LeagueName = startingSetup.Name, LeagueRules = startingSetup.Rules with { },
+                StartingRosterName = startingRoster?.Name ?? "Default roster",
                 UserTeamName = teamName,
                 SeasonYear = startingYear,
                 Week = 0,
@@ -1750,7 +1761,7 @@ public sealed partial class FoundationPage : ContentPage
                 "National rankings will appear after a dynasty is created.";
             _nationalRankingsList.Children.Clear();
             _postseasonStatus.Text =
-                "The 12-team CFP field is selected after conference championships.";
+                "The playoff field is selected after conference championships.";
             _postseasonList.Children.Clear();
             _conferenceChampionshipStatus.Text =
                 "Conference standings will appear after a dynasty is created.";
@@ -5201,15 +5212,16 @@ public sealed partial class FoundationPage : ContentPage
                 $"{champion.ChampionScore}-{champion.RunnerUpScore} " +
                 $"over {champion.RunnerUpTeamName}";
         }
-        else if (field.Length == CollegeFootballPlayoffService.PlayoffTeamCount)
+        else if (field.Length >= 2)
         {
-            _postseasonStatus.Text =
-                "12-team CFP field: five highest-ranked conference champions + seven at-large teams.";
+            _postseasonStatus.Text = field.Length == 12
+                ? "12-team CFP field: five highest-ranked conference champions + seven at-large teams."
+                : $"{field.Length}-team playoff field.";
         }
         else
         {
             _postseasonStatus.Text =
-                "The 12-team CFP field is selected after conference championships.";
+                $"The {_currentDynasty.LeagueRules.PlayoffTeams}-team playoff field is selected after conference championships.";
             return;
         }
 
@@ -5218,7 +5230,7 @@ public sealed partial class FoundationPage : ContentPage
                 field.Select(selection => new View[]
                 {
                     TableText(selection.Seed.ToString(), true), SchoolCell(selection.TeamName), TableText($"#{selection.NationalRank}"),
-                    TableText(selection.IsAutomaticBid ? "Automatic" : "At-large"), TableText(selection.Seed <= 4 ? "Bye" : "First round")
+                    TableText(selection.IsAutomaticBid ? "Automatic" : "At-large"), TableText(field.Length == 12 ? selection.Seed <= 4 ? "Bye" : "First round" : field.Length == 8 ? "Quarterfinal" : field.Length == 4 ? "Semifinal" : "Final")
                 })));
         var playoffGames = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
                 game.GameType == ScheduledGameType.CollegeFootballPlayoff)
@@ -5245,7 +5257,8 @@ public sealed partial class FoundationPage : ContentPage
         var rounds = new[] { PostseasonRound.FirstRound, PostseasonRound.Quarterfinal,
             PostseasonRound.Semifinal, PostseasonRound.NationalChampionship };
         var tree = new HorizontalStackLayout { Spacing = 10 };
-        foreach (var round in rounds)
+        var initialRound = _currentDynasty?.LeagueRules.PlayoffTeams switch { 2 => PostseasonRound.NationalChampionship, 4 => PostseasonRound.Semifinal, 8 => PostseasonRound.Quarterfinal, _ => PostseasonRound.FirstRound };
+        foreach (var round in rounds.Where(r => r >= initialRound))
         {
             var column = new VerticalStackLayout { Spacing = 8, WidthRequest = 235 };
             column.Children.Add(new Label { Text = FormatPostseasonRound(round).ToUpperInvariant(), FontSize = 11,
@@ -5414,26 +5427,28 @@ public sealed partial class FoundationPage : ContentPage
 
     private Task<IReadOnlyList<ScheduledGame>> GenerateScheduleAsync(
         Guid dynastyId,
-        int seasonYear)
+        int seasonYear, LeagueRules? rules = null)
     {
         // The conference/OOC scheduler is CPU-bound. Running it on the UI
         // thread makes Android appear frozen while the full 130-team slate is
         // constructed, especially on lower-power devices.
         var teams = _teamsByName.Values.ToArray();
+        rules ??= _currentDynasty?.LeagueRules ?? new LeagueRules();
 
         return Task.Run<IReadOnlyList<ScheduledGame>>(() =>
             SeasonScheduleBuilder.BuildRegularSeason(
                 teams,
                 dynastyId,
-                seasonYear));
+                seasonYear, gamesPerTeam: rules.GamesPerTeam, allowAutomaticConferenceFill: rules.AllowAutomaticConferenceFill));
     }
 
     private void SetNewDynastyControlsEnabled(bool enabled)
     {
-        _newDynastyButton.IsEnabled = enabled;
+        _newDynastyButton.IsEnabled = enabled && SelectedStartingSetup is not null;
         _dynastyNameEntry.IsEnabled = enabled;
         _teamPicker.IsEnabled = enabled;
         _leaguePicker.IsEnabled = enabled;
+        _startingRosterPicker.IsEnabled = enabled;
     }
 
     private void SetDynastyControlsEnabled(bool enabled)

@@ -18,7 +18,7 @@ The player schema is version 25. Start a new test dynasty for this format; older
 
 ## Playbook behavior
 
-Standard coach books expose up to 17 offensive and 14 defensive plays. The Playbook Editor browses the complete catalog by side and formation, then saves explicit Custom books under the same limits. A Custom book replaces the corresponding standard book; it does not append extra plays. Both CPU and user game-day calls use the selected membership. Saving a custom book clears the old opening script. Route assignment editing is deferred to a later Play Editor.
+Standard coach books expose up to 17 offensive and 14 defensive plays. The Playbook Editor browses the complete catalog by side and formation, then saves explicit Custom books under the same limits. A Custom book replaces the corresponding standard book; it does not append extra plays. Both CPU and user game-day calls use the selected membership. Saving a custom book clears the old opening script. The Play Editor can copy calls and edit alignment, route families and blocking/coverage assignments; freehand route waypoints remain pending.
 
 ## Viewer and simulation
 
@@ -27,7 +27,9 @@ Formation alignments and route paths are shared between play art and live presen
 
 ## In-app CSV import (first version)
 
-Use Settings → Import NCAA 06 NEXT roster (CSV) in a newly created dynasty before advancing preseason. Pick the PLAY-table CSV, enter any numeric TGID mappings as `TGID=Exact league team name`, then validate and inspect the player/team preview. Apply replaces only teams present in the file and autosaves. Unknown teams and invalid rows block applying the entire preview; existing season records cannot be replaced.
+Use **Import starting roster** on the main screen. Choose a league setup for its default roster, pick the PLAY CSV, give the roster a name, enter any numeric TGID mappings as `TGID=Exact league team name`, then validate and inspect the player/team preview. Save adds a reusable roster pack and can make it the default for that setup. **New dynasty → Starting roster** selects the pack. Existing dynasties are never replaced by this flow.
+
+Schools present in a pack replace their generated starting roster; missing schools retain default/generated players. Schools outside a selected league are ignored, allowing full-universe packs to serve smaller league subsets. Unknown schools must first be added to an available league setup. Library entries can be removed independently of saved careers. See `starting-library-and-custom-leagues.md`.
 
 Required headers: `TGID,PFNA,PLNA,PYEA,PPOS,PCAR,PKAC,PTHA,PPBK,PRBK,PACC,PAGI,PTAK,PINJ,PKPR,PSPD,PTHP,PBTK,PCTH,PSTR,PJMP,PAWR`. Column order is flexible. Names must be decoded text. PYEA is 0=FR, 1=SO, 2=JR, 3=SR, 4=GR. PPOS retains the original NCAA position code. All rating columns must contain displayed 1–99 values, not compressed raw indexes. Optional PGID rejects duplicates; optional PRSD=1 marks redshirt history. Leadership/discipline default to 60, recruiting stars remain unknown, and potential is at least the recalculated POCI overall.
 

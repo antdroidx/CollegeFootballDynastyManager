@@ -72,6 +72,12 @@ public static class LegacyUniverseCsvImporter
                 if (!int.TryParse(values[5], out var region))
                     region = 0;
 
+                int? conferenceGames = null;
+                if (values.Count > 6 && !string.IsNullOrWhiteSpace(values[6]))
+                {
+                    if (!int.TryParse(values[6], out var target) || target is < 0 or > 12) throw new FormatException($"Invalid conference games for {values[0]}.");
+                    conferenceGames = target;
+                }
                 teams.Add(new Team
                 {
                     Name = values[0],
@@ -79,7 +85,7 @@ public static class LegacyUniverseCsvImporter
                     ConferenceName = values[2],
                     Prestige = prestige,
                     DivisionName = BlankToNull(values[4]),
-                    LegacyRegionId = region
+                    LegacyRegionId = region, ConferenceGamesPerSeason = conferenceGames
                 });
             }
         }

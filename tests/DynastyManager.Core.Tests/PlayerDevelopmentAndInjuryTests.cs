@@ -88,7 +88,14 @@ public class PlayerDevelopmentAndInjuryTests
             Position.RB,
             overall: 90,
             potential: 96,
-            classYear: 2);
+            classYear: 2) with
+        {
+            // Generate attributes for a 90 OVR target. Raw 90s plus randomly
+            // generated skills can exceed the POCI cap and hide a real loss.
+            PlayerId = Guid.Parse("88888888-1111-2222-3333-444444444444"),
+            SpeedRating = 0, StrengthRating = 0, AgilityRating = 0,
+            AwarenessRating = 0, InjuryRating = 0
+        };
 
         var state = State(
             SeasonPhase.RegularSeason,

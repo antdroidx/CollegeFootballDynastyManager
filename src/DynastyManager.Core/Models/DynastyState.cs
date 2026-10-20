@@ -10,6 +10,8 @@ public sealed record DynastyState
     public IReadOnlyList<Team> LeagueTeams { get; init; } = Array.Empty<Team>();
     public IReadOnlyList<TeamGamePlan> TeamGamePlans { get; init; } = Array.Empty<TeamGamePlan>();
     public string LeagueName { get; init; } = "Legacy FBS";
+    public LeagueRules LeagueRules { get; init; } = new();
+    public string StartingRosterName { get; init; } = "Default roster";
     public int SeasonYear { get; init; }
     public int Week { get; init; }
     public SeasonPhase Phase { get; init; } = SeasonPhase.Preseason;

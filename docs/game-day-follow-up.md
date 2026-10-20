@@ -37,4 +37,4 @@ Onside kicks resolve recovery and possession; a user can request their next kick
 
 Coach → Playbook Editor → Edit / copy creates persisted play definitions. Save to the library, select the new call with the star, then save the Custom books. Existing 17 offense / 14 defense active-book limits apply to created and catalog calls together. Editing uses slot alignment sliders and route families / block or rush / man / zone assignments; freehand route drawing is still pending. Custom assignments are used in diagrams, live alignments, route animation and passing-read matchups.
 
-Settings → Import NCAA 06 NEXT roster (CSV) imports before the first season starts. See `NCAA06-NEXT-ratings.md` for the explicit input contract. No direct memory-card or raw database loader is included.
+Main screen → Import starting roster saves a reusable NCAA roster pack; New dynasty selects it separately from the league setup. Existing careers are unchanged. See `NCAA06-NEXT-ratings.md` for the explicit input contract. No direct memory-card or raw database loader is included.

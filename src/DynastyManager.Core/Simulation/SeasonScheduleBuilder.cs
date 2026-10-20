@@ -17,7 +17,8 @@ public static class SeasonScheduleBuilder
         int seasonYear,
         int weeks = DefaultRegularSeasonWeeks,
         int gamesPerTeam = DefaultGamesPerTeam,
-        int weekZeroGames = DefaultWeekZeroGames)
+        int weekZeroGames = DefaultWeekZeroGames,
+        bool allowAutomaticConferenceFill = false)
     {
         ArgumentNullException.ThrowIfNull(teams);
 
@@ -70,7 +71,7 @@ public static class SeasonScheduleBuilder
             conferenceGames,
             dynastyId,
             seasonYear,
-            gamesPerTeam);
+            gamesPerTeam, allowAutomaticConferenceFill);
 
         var drafts = conferenceGames
             .Concat(nonConferenceGames)
@@ -126,6 +127,7 @@ public static class SeasonScheduleBuilder
                      .GroupBy(team => team.ConferenceName, StringComparer.OrdinalIgnoreCase)
                      .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase))
         {
+            if (conference.Key.Equals("Independent", StringComparison.OrdinalIgnoreCase)) continue;
             var members = conference
                 .OrderBy(team => SimulationSeed.Create(
                     dynastyId,
@@ -203,7 +205,7 @@ public static class SeasonScheduleBuilder
         IReadOnlyList<DraftGame> conferenceGames,
         Guid dynastyId,
         int seasonYear,
-        int gamesPerTeam)
+        int gamesPerTeam, bool allowAutomaticConferenceFill)
     {
         var baseCounts = teams.ToDictionary(
             team => team.Name,
@@ -252,11 +254,11 @@ public static class SeasonScheduleBuilder
                     .Where(team =>
                         remaining[team.Name] > 0 &&
                         !team.Name.Equals(teamA.Name, StringComparison.OrdinalIgnoreCase) &&
-                        !team.ConferenceName.Equals(
-                            teamA.ConferenceName,
-                            StringComparison.OrdinalIgnoreCase) &&
+                        (!team.ConferenceName.Equals(teamA.ConferenceName, StringComparison.OrdinalIgnoreCase) ||
+                            allowAutomaticConferenceFill && team.ConferenceGamesPerSeason is null && teamA.ConferenceGamesPerSeason is null) &&
                         !pairs.Contains(PairKey(teamA.Name, team.Name)))
-                    .OrderByDescending(team => remaining[team.Name])
+                    .OrderBy(team => team.ConferenceName.Equals(teamA.ConferenceName, StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+                    .ThenByDescending(team => remaining[team.Name])
                     .ThenBy(team => SimulationSeed.Create(
                         dynastyId,
                         seasonYear,
@@ -275,7 +277,8 @@ public static class SeasonScheduleBuilder
                 result.Add(new DraftGame(
                     teamA,
                     teamB,
-                    ScheduledGameType.NonConference));
+                    !teamA.ConferenceName.Equals("Independent", StringComparison.OrdinalIgnoreCase) && teamA.ConferenceName.Equals(teamB.ConferenceName, StringComparison.OrdinalIgnoreCase)
+                        ? ScheduledGameType.Conference : ScheduledGameType.NonConference));
 
                 pairs.Add(PairKey(teamA.Name, teamB.Name));
                 remaining[teamA.Name]--;

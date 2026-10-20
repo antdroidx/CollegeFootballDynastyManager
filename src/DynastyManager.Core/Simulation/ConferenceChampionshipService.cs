@@ -14,7 +14,7 @@ public static class ConferenceChampionshipService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
 
-        if (state.Phase != SeasonPhase.ConferenceChampionship)
+        if (state.Phase != SeasonPhase.ConferenceChampionship || !state.LeagueRules.ConferenceChampionships)
             return state;
 
         if (state.Schedule.Any(game =>

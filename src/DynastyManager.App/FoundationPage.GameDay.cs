@@ -967,6 +967,8 @@ public sealed partial class FoundationPage
         var completed = GameDayEngine.Finish(session);
         _currentDynasty = _currentDynasty with { Schedule = _currentDynasty.Schedule.Select(game =>
             game.GameId == completed.GameId ? completed : game).ToArray() };
+        if (completed.GameType == ScheduledGameType.CollegeFootballPlayoff && completed.PostseasonRound == PostseasonRound.NationalChampionship)
+            _currentDynasty = CollegeFootballPlayoffService.RecordNationalChampion(_currentDynasty);
         _cachedCurrentProfiles = null;
         await SaveCurrentAsync(SaveKind.AutosaveCurrent);
         RenderCurrentDynasty();

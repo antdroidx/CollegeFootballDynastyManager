@@ -154,7 +154,7 @@ public class GameDayEngineTests
         GameDayEngine.SimulateToEnd(session);
 
         var game = GameDayEngine.Finish(session);
-        var homeKickoffs = session.Events.Where(play => play.Outcome == SnapOutcome.Kickoff && play.OffenseTeamName == "Home").ToArray();
+        var homeKickoffs = session.Events.Where(play => play.Outcome == SnapOutcome.Kickoff && !play.IsOnsideKick && play.OffenseTeamName == "Home").ToArray();
         var awayPuntReturns = session.Events.Where(play => play.Outcome == SnapOutcome.Punt &&
             play.DefenseTeamName == "Away" && play.ReturnYards > 0).ToArray();
 
