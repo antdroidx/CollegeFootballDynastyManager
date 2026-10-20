@@ -8,47 +8,49 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
-    private static View IdentityHeader(string name, string school, string subtitle)
+    private static View IdentityHeader(Guid id, string name, string school, string subtitle, bool staff = false, int age = 20)
     {
         var brand = TeamBrandCatalog.Get(school);
         var primary = Color.FromArgb(brand.Primary);
-        var initials = string.Concat(name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0]));
-        var avatar = new Border { WidthRequest = 58, HeightRequest = 58, Padding = 0, BackgroundColor = primary,
-            Stroke = Color.FromArgb(brand.Secondary), StrokeThickness = 2,
-            Content = new Label { Text = initials, FontSize = 23, FontAttributes = FontAttributes.Bold,
-                TextColor = BrandInk(primary), HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center } };
-        SemanticProperties.SetDescription(avatar, "Initials avatar for " + name);
-        var row = new Grid { ColumnSpacing = 12, ColumnDefinitions = new ColumnDefinitionCollection { new(58), new(GridLength.Star) } };
-        row.Add(avatar, 0, 0);
-        row.Add(new VerticalStackLayout { Spacing = 4, Children =
+        var row = new Grid { ColumnSpacing = 14,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(88), new(GridLength.Star) } };
+        row.Add(PersonPortrait.Create(id, name, primary, Color.FromArgb(brand.Secondary), 88, staff, age), 0, 0);
+        row.Add(new VerticalStackLayout { Spacing = 5, VerticalOptions = LayoutOptions.Center, Children =
         {
-            new Label { Text = name, FontSize = 18, FontAttributes = FontAttributes.Bold },
-            new Label { Text = school + " · " + subtitle, FontSize = 12, TextColor = DynastyTheme.Muted },
-            new Label { Text = "Initials avatar", FontSize = 10, TextColor = DynastyTheme.Muted }
+            new Label { Text = staff ? "COACH PROFILE" : "PLAYER PROFILE", FontSize = 10,
+                FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent },
+            new Label { Text = name, FontSize = 21, FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.WordWrap },
+            new Label { Text = subtitle, FontSize = 12, TextColor = Colors.White },
+            new Label { Text = school, FontSize = 12, TextColor = DynastyTheme.Muted }
         } }, 1, 0);
-        return new Border { Content = row, BackgroundColor = Color.FromArgb("#233543") };
+        return new Border { Content = row, Padding = 14, BackgroundColor = Color.FromArgb("#203342") };
     }
 
-    private Button PlayerLink(DynastyPlayer player) => PlayerLink(player.PlayerId, player.FullName);
+    private View PlayerLink(DynastyPlayer player) => PersonLink(player.PlayerId, player.FullName, player.TeamName,
+        () => ShowPlayerProfileAsync(player.PlayerId));
 
-    private Button PlayerLink(Guid id, string name)
-    {
-        var button = new Button { Text = name, FontSize = 12, TextColor = Color.FromArgb("#BDE5F5"),
-            BackgroundColor = Colors.Transparent, HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(8, 4) };
-        button.SetValue(TableValueProperty, name);
-        SemanticProperties.SetDescription(button, "View player " + name);
-        button.Clicked += async (_, _) => await ShowPlayerProfileAsync(id);
-        return button;
-    }
+    private View PlayerLink(Guid id, string name) => PersonLink(id, name,
+        _currentDynasty?.ActiveRoster.FirstOrDefault(player => player.PlayerId == id)?.TeamName ?? "",
+        () => ShowPlayerProfileAsync(id));
 
-    private Button CoachLink(StaffMember coach)
+    private View CoachLink(StaffMember coach) => PersonLink(coach.StaffId, coach.FullName, coach.TeamName,
+        () => ShowCoachProfileAsync(coach), true, coach.Age);
+
+    private static View PersonLink(Guid id, string name, string school, Func<Task> open, bool staff = false, int age = 20)
     {
-        var button = new Button { Text = coach.FullName, FontSize = 12, TextColor = Color.FromArgb("#D6C4F2"),
-            BackgroundColor = Colors.Transparent, HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(8, 4) };
-        button.SetValue(TableValueProperty, coach.FullName);
-        SemanticProperties.SetDescription(button, "View coach " + coach.FullName);
-        button.Clicked += async (_, _) => await ShowCoachProfileAsync(coach);
-        return button;
+        var brand = TeamBrandCatalog.Get(school);
+        var row = new Grid { ColumnSpacing = 6, Padding = new Thickness(5, 3), MinimumHeightRequest = 48,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(36), new(GridLength.Star) } };
+        row.Add(PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 36, staff, age), 0, 0);
+        // A real button retains keyboard, screen-reader and touch behavior inside sortable tables.
+        var button = new Button { Text = name, FontSize = 12,
+            TextColor = Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
+            HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(0, 4), MinimumHeightRequest = 44 };
+        SemanticProperties.SetDescription(button, (staff ? "View coach " : "View player ") + name);
+        button.Clicked += async (_, _) => await open();
+        row.Add(button, 1, 0);
+        row.SetValue(TableValueProperty, name);
+        return row;
     }
 
     private async Task ShowPlayerProfileAsync(Guid id)
@@ -69,7 +71,7 @@ public sealed partial class FoundationPage
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
         {
-            close, IdentityHeader(player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}"),
+            close, IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}"),
             new Label { Text = FormatOriginalRecruitingStars(player), TextColor = Color.FromArgb("#E8C979") }
         } };
         if (active is not null)
@@ -79,7 +81,7 @@ public sealed partial class FoundationPage
             content.Children.Add(AttributeGroup("Character traits", "Decision-making and team influence",
                 ("Awareness", player.AwarenessRating), ("Leadership", player.Skills!.Leadership),
                 ("Discipline", player.Skills.Discipline)));
-            content.Children.Add(AttributeGroup("Physical traits", "Athletic ability, endurance and availability",
+            content.Children.Add(AttributeGroup("Physical traits", "Athletic ability and availability",
                 ("Speed", player.SpeedRating), ("Acceleration", player.Skills.Acceleration),
                 ("Agility", player.AgilityRating), ("Strength", player.StrengthRating),
                 ("Jumping", player.Skills.Jumping),
@@ -111,16 +113,28 @@ public sealed partial class FoundationPage
 
     private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes)
     {
-        var rows = new Grid { ColumnSpacing = 12, RowSpacing = 6,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(64) } };
-        for (var index = 0; index < attributes.Length; index++)
+        var tiles = new Grid { ColumnSpacing = 8, RowSpacing = 8 };
+        int previousColumns = 0;
+        void Arrange(int columns)
         {
-            rows.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            rows.Add(new Label { Text = attributes[index].Name, FontSize = 12,
-                VerticalTextAlignment = TextAlignment.Center, Margin = new Thickness(4, 3) }, 0, index);
-            rows.Add(RatingCell(attributes[index].Rating), 1, index);
+            if (columns == previousColumns) return;
+            previousColumns = columns;
+            tiles.Children.Clear(); tiles.ColumnDefinitions.Clear(); tiles.RowDefinitions.Clear();
+            for (var i = 0; i < columns; i++) tiles.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            for (var i = 0; i < attributes.Length; i++)
+            {
+                if (i % columns == 0) tiles.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                var attribute = attributes[i];
+                var row = new Grid { ColumnSpacing = 6,
+                    ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
+                row.Add(new Label { Text = attribute.Name, FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
+                row.Add(RatingCell(attribute.Rating), 1, 0);
+                tiles.Add(new Border { Padding = new Thickness(10, 7), BackgroundColor = Color.FromArgb("#1D2C38"), Content = row }, i % columns, i / columns);
+            }
         }
-        return new VerticalStackLayout { Spacing = 6, Children = { SectionTitle(title, subtitle), rows } };
+        Arrange(2);
+        tiles.SizeChanged += (_, _) => Arrange(tiles.Width >= 780 ? 4 : tiles.Width >= 540 ? 3 : tiles.Width < 300 ? 1 : 2);
+        return new VerticalStackLayout { Spacing = 8, Children = { SectionTitle(title, subtitle), tiles } };
     }
 
     private async Task ShowCoachProfileAsync(StaffMember coach)
@@ -131,7 +145,7 @@ public sealed partial class FoundationPage
         var close = new Button { Text = "‹ Back" }; close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
         {
-            close, IdentityHeader(coach.FullName, coach.TeamName, FormatStaffRole(coach.Role)),
+            close, IdentityHeader(coach.StaffId, coach.FullName, coach.TeamName, FormatStaffRole(coach.Role), true, coach.Age),
             SectionTitle("Coach profile", $"Age {coach.Age} · OVR {coach.OverallRating} · {coach.CareerYears} career years · {coach.ContractYearsRemaining} contract years"),
             AttributeGroup("Coaching traits", "Leadership, strategy, development and program management",
                 ("Leadership", coach.Leadership), ("Recruiting", coach.Recruiting), ("Player development", coach.PlayerDevelopment),
@@ -155,7 +169,7 @@ public sealed partial class FoundationPage
     }
 
     private View TeamStaffTable(string school) => DataTable(
-        [("Role", 160), ("Coach", 175), ("OVR", 55), ("Age", 45), ("Recruit", 65), ("Develop", 70)],
+        [("Role", 160), ("Coach", 210), ("OVR", 55), ("Age", 45), ("Recruit", 65), ("Develop", 70)],
         (_currentDynasty is null ? Enumerable.Empty<StaffMember>() : Enum.GetValues<StaffRole>()
             .Select(role => StaffManagementService.GetStaff(_currentDynasty, school, role)).OfType<StaffMember>()).OrderBy(coach => coach.Role).Select(coach => new View[]
         {

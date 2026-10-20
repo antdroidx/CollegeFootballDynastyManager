@@ -2686,14 +2686,8 @@ public sealed partial class FoundationPage : ContentPage
             Spacing = 8,
             Children =
             {
-                new Label
-                {
-                    Text =
-                        presentation.Title,
-                    FontAttributes =
-                        FontAttributes.Bold,
-                    FontSize = 16
-                }, metrics, statusPanel
+                RecruitIdentity(prospect.ProspectId, prospect.FullName, presentation.Title,
+                    prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT"), metrics, statusPanel
             }
         };
         var actions = new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.End,
@@ -3237,14 +3231,8 @@ public sealed partial class FoundationPage : ContentPage
                     Spacing = 9,
                     Children =
                     {
-                        new Label
-                        {
-                            Text =
-                                $"{prospect.Position} {prospect.FullName}",
-                            FontAttributes =
-                                FontAttributes.Bold,
-                            FontSize = 17
-                        },
+                        RecruitIdentity(prospect.ProspectId, prospect.FullName, $"{prospect.Position} {prospect.FullName}",
+                            prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT"),
                         new Label
                         {
                             Text =
@@ -4052,7 +4040,7 @@ public sealed partial class FoundationPage : ContentPage
 
             var title = staff is null
                 ? $"{FormatStaffRole(role)} • VACANT"
-                : $"{FormatStaffRole(role)} • {staff.FullName} • OVR {staff.OverallRating}{status}";
+                : $"{FormatStaffRole(role)} · OVR {staff.OverallRating}{status}";
 
             var subtext = staff is null
                 ? detail
@@ -4087,7 +4075,7 @@ public sealed partial class FoundationPage : ContentPage
                 }
             };
 
-            if (staff is not null) info.Children.Add(CreateCoachCareerButton(staff));
+            if (staff is not null) info.Children.Insert(0, CoachLink(staff));
 
             var row = new Grid
             {
@@ -4102,7 +4090,7 @@ public sealed partial class FoundationPage : ContentPage
             row.Add(candidatesButton);
             Grid.SetColumn(candidatesButton, 1);
 
-            _programList.Children.Add(row);
+            _programList.Children.Add(new Border { Padding = 12, Content = row });
         }
 
         RenderStaffCarouselHistory();
@@ -4674,6 +4662,8 @@ public sealed partial class FoundationPage : ContentPage
                 Children =
                 {
                     CloseRosterDetailButton(),
+                    IdentityHeader(player.PlayerId, player.FullName, player.TeamName,
+                        $"{player.Position} · {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} · OVR {player.OverallRating}"),
                     new Label
                     {
                         Text =
