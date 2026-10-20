@@ -42,6 +42,7 @@ Optional bio columns:
 
 | Column | Interpretation |
 | --- | --- |
+| PJEN / JerseyNumber | Displayed jersey number 0–99 (both must agree when supplied) |
 | PHGT | Height in inches (75 = 6 feet 3 inches) |
 | PWGT | NCAA stored weight; add 160 for pounds (55 = 215 lb) |
 | HeightInches / WeightPounds | Explicit displayed measurements, with no weight offset |

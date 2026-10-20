@@ -15,6 +15,8 @@ public static class NcaaPlayerBioImporter
                 throw new FormatException($"{key} must be {min}–{max}.");
             return value;
         }
+        var jersey = Read("PJEN", 0, 99); var displayedJersey = Read("JERSEYNUMBER", 0, 99);
+        if (jersey.HasValue && displayedJersey.HasValue && jersey != displayedJersey) throw new FormatException("PJEN and JerseyNumber disagree.");
         var rawHeight = Read("PHGT", 48, 90); var height = Read("HEIGHTINCHES", 48, 90);
         var rawWeight = Read("PWGT", 0, 255); var weight = Read("WEIGHTPOUNDS", 100, 450);
         if (rawHeight.HasValue && height.HasValue && rawHeight != height) throw new FormatException("PHGT and HeightInches disagree.");
@@ -23,6 +25,7 @@ public static class NcaaPlayerBioImporter
             HairStyle = Read("PHED", 0, 14), Face = Read("PFMP", 0, 63), FacialHair = Read("FACIALHAIR", 0, 3) };
         return PlayerPhysicalService.EnsureMeasurements(player with
         {
+            JerseyNumber = jersey ?? displayedJersey ?? player.JerseyNumber,
             HeightInches = height ?? rawHeight ?? player.HeightInches,
             WeightPounds = weight ?? (rawWeight.HasValue ? rawWeight.Value + 160 : player.WeightPounds),
             Appearance = appearance.SkinTone.HasValue || appearance.HairColor.HasValue || appearance.HairStyle.HasValue || appearance.Face.HasValue || appearance.FacialHair.HasValue

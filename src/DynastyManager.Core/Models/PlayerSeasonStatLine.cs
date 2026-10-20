@@ -8,6 +8,7 @@ public sealed record PlayerSeasonStatLine
     public required string TeamName { get; init; }
     public int? OriginalRecruitingStars { get; init; }
     public bool RecruitingStarsEstimated { get; init; }
+    public int? JerseyNumber { get; init; }
     public int HeightInches { get; init; }
     public int WeightPounds { get; init; }
     public NcaaPlayerAppearance? Appearance { get; init; }

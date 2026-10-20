@@ -7,6 +7,17 @@ public enum GameDayRouteFamily { Run, Verticals, Mesh, Screen, Flood, Smash, Sla
 
 public static class GameDayAnimationPlanner
 {
+    public static bool IsPlaceKick(GameSnapEvent snap) => snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal
+        or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint;
+
+    public static GameFieldPoint IncompletePassDestination(GameFieldPoint receiver, int direction, bool drop, int sequence)
+    {
+        if (drop) return receiver;
+        // Miss just beyond the intended receiver, rather than back at the statistical (zero-yard) spot.
+        return new(Math.Clamp(receiver.X + direction * (sequence % 2 == 0 ? 3 : -2) / 120d, 1 / 120d, 119 / 120d),
+            Math.Clamp(receiver.Y + (sequence % 3 - 1) * .035, .04, .96));
+    }
+
     public static string? OutcomeHeadline(SnapOutcome outcome) => outcome switch
     {
         SnapOutcome.Touchdown => "TOUCHDOWN", SnapOutcome.FieldGoal => "FIELD GOAL GOOD",
@@ -159,7 +170,7 @@ public static class GameDayAnimationPlanner
     {
         if (snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt)
             return progress < .10 ? snap.KickerId : progress < .65 ? null : snap.ReturnerId;
-        if (snap.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal) return progress < .20 ? snap.KickerId : null;
+        if (IsPlaceKick(snap)) return progress < .20 ? snap.KickerId : null;
         if (snap.IsQuarterbackKeep || snap.IsQuarterbackScramble || snap.Outcome == SnapOutcome.Sack) return snap.QuarterbackId;
         if (snap.TargetId.HasValue)
             return progress < release ? snap.QuarterbackId : progress < CatchProgress(release) ? null :

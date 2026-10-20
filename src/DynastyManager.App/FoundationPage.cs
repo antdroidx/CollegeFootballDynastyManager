@@ -4672,8 +4672,7 @@ public sealed partial class FoundationPage : ContentPage
                     new Label
                     {
                         Text =
-                            $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
-                            $"POT {FormatPotentialStars(player.PotentialRating)} • {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} • " +
+                            $"{depthLabel} • Potential {FormatPotentialStars(player.PotentialRating)} • " +
                             FormatOriginalRecruitingStars(player) +
                             (status.Count > 0
                                 ? $" • {string.Join(" • ", status)}"

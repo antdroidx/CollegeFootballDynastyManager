@@ -26,6 +26,8 @@ public sealed record GameSnapEvent
     public int KickLandingYardLine { get; init; }
     public int Yards { get; init; }
     public int ReturnYards { get; init; }
+    public double KickHangTimeSeconds { get; init; }
+    public double NearestCoverageYardsAtCatch { get; init; }
     public bool IsTouchback { get; init; }
     public bool IsFairCatch { get; init; }
     public bool IsQuarterbackKeep { get; init; }

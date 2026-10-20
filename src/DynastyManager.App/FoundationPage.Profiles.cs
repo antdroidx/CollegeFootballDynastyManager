@@ -13,8 +13,8 @@ public sealed partial class FoundationPage
         var brand = TeamBrandCatalog.Get(school);
         var primary = Color.FromArgb(brand.Primary);
         var row = new Grid { ColumnSpacing = 14,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(88), new(GridLength.Star) } };
-        row.Add(PersonPortrait.Create(id, name, primary, Color.FromArgb(brand.Secondary), 88, staff, age, appearance), 0, 0);
+            ColumnDefinitions = new ColumnDefinitionCollection { new(108), new(GridLength.Star) } };
+        row.Add(PersonPortrait.Create(id, name, primary, Color.FromArgb(brand.Secondary), 108, staff, age, appearance), 0, 0);
         row.Add(new VerticalStackLayout { Spacing = 5, VerticalOptions = LayoutOptions.Center, Children =
         {
             new Label { Text = staff ? "COACH PROFILE" : "PLAYER PROFILE", FontSize = 10,
@@ -69,12 +69,12 @@ public sealed partial class FoundationPage
             Position = career?.Position ?? latest!.Position, OriginalRecruitingStars = career?.OriginalRecruitingStars ?? latest?.OriginalRecruitingStars,
             RecruitingStarsEstimated = career?.OriginalRecruitingStars is not null ? career.RecruitingStarsEstimated : latest?.RecruitingStarsEstimated ?? false,
             HeightInches = career?.HeightInches ?? latest?.HeightInches ?? 0, WeightPounds = career?.WeightPounds ?? latest?.WeightPounds ?? 0,
-            Appearance = career?.Appearance ?? latest?.Appearance
+            JerseyNumber = career?.JerseyNumber ?? latest?.JerseyNumber, Appearance = career?.Appearance ?? latest?.Appearance
         };
         if (active is not null) player = PlayerRatingService.EnsureInitialized(state, player);
         var close = new Button { Text = "‹ Back" };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
-        View PlayerHeader() => IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance);
+        View PlayerHeader() => IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{(player.JerseyNumber is int number ? $"#{number} · " : "")}{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance);
         var portraitHeader = new ContentView { Content = PlayerHeader() };
         var editPortrait = new Button { Text = "Edit portrait", FontSize = 11 };
         editPortrait.Clicked += async (_, _) =>

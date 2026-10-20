@@ -16,6 +16,28 @@ public static partial class GameDayEngine
         return session.Quarter == 4 && session.ClockSeconds <= 300 && margin is -8 or -5 or -2 or 1 or 5;
     }
 
+    private static IReadOnlyList<DynastyPlayer> PlaceKickTeam(IReadOnlyList<DynastyPlayer> roster, DynastyPlayer? kicker)
+    {
+        var eligible = roster.Where(p => p.CurrentInjury is null && !p.IsRedshirted)
+            .OrderBy(p => p.DepthChartOrder).ThenByDescending(p => p.OverallRating).ToArray();
+        var unit = new List<DynastyPlayer>();
+        if (kicker is not null) unit.Add(kicker);
+        var holder = eligible.FirstOrDefault(p => p.Position == Position.QB && p.PlayerId != kicker?.PlayerId);
+        if (holder is not null) unit.Add(holder);
+        unit.AddRange(eligible.Where(p => p.Position == Position.OL).Take(5));
+        unit.AddRange(eligible.Where(p => p.Position == Position.TE).Take(2));
+        return unit.Concat(eligible).DistinctBy(p => p.PlayerId).Take(11).ToArray();
+    }
+
+    private static IReadOnlyList<DynastyPlayer> PlaceKickDefense(IReadOnlyList<DynastyPlayer> roster)
+    {
+        var eligible = roster.Where(p => p.CurrentInjury is null && !p.IsRedshirted)
+            .OrderBy(p => p.DepthChartOrder).ThenByDescending(p => p.OverallRating).ToArray();
+        return eligible.Where(p => p.Position is Position.DE or Position.DT or Position.MLB or Position.OLB).Take(8)
+            .Concat(eligible.Where(p => p.Position is Position.CB or Position.FS or Position.SS))
+            .Concat(eligible).DistinctBy(p => p.PlayerId).Take(11).ToArray();
+    }
+
     private static GameSnapEvent ResolveTry(GameDaySession session, string? choice)
     {
         var two = choice == "special-two-point" || choice != "special-extra-point" && ShouldAttemptTwo(session);
@@ -28,16 +50,20 @@ public static partial class GameDayEngine
             : GameDayMatchupService.FieldGoalProbability(20, kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating,
                 kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating);
         var made = session.Random.NextDouble() < probability;
+        var offenseUnit = PlaceKickTeam(home ? session.HomeRoster : session.AwayRoster, kicker);
+        var defenseUnit = PlaceKickDefense(home ? session.AwayRoster : session.HomeRoster);
         var snap = new GameSnapEvent
         {
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
             OffenseTeamName = session.PossessionTeamName, DefenseTeamName = home ? session.Game.AwayTeamName : session.Game.HomeTeamName,
-            OffensivePlayId = string.Empty, DefensivePlayId = string.Empty, StartYardLine = two ? 97 : 97,
+            OffensivePlayId = string.Empty, DefensivePlayId = string.Empty, StartYardLine = 97,
             BallEndYardLine = made ? 100 : 97, Down = 0, Distance = 3, KickerId = two ? null : kicker?.PlayerId,
             CallSource = choice is null ? PlayCallSource.Cpu : PlayCallSource.User,
             Outcome = two ? made ? SnapOutcome.TwoPointConversion : SnapOutcome.FailedTwoPointConversion
                 : made ? SnapOutcome.ExtraPoint : SnapOutcome.MissedExtraPoint,
+            OffensePersonnel = offenseUnit.Select(p => p.PlayerId).ToArray(),
+            DefensePersonnel = defenseUnit.Select(p => p.PlayerId).ToArray(),
             Points = made ? two ? 2 : 1 : 0
         };
         session.Events.Add(snap);

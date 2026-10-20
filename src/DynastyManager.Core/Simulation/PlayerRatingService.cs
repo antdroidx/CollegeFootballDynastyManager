@@ -10,9 +10,8 @@ public static class PlayerRatingService
 
         return state with
         {
-            ActiveRoster = state.ActiveRoster
-                .Select(player => EnsureInitialized(state, player))
-                .ToArray()
+            ActiveRoster = PlayerJerseyService.Assign(state.ActiveRoster
+                .Select(player => EnsureInitialized(state, player)).ToArray())
         };
     }
 

@@ -89,7 +89,7 @@ public static class DynastyHistoryService
                 PlayerId = player.PlayerId, PlayerName = player.FullName, Position = player.Position,
                 OriginalRecruitingStars = previous?.OriginalRecruitingStars ?? player.OriginalRecruitingStars,
                 RecruitingStarsEstimated = previous?.OriginalRecruitingStars is not null ? previous.RecruitingStarsEstimated : player.RecruitingStarsEstimated,
-                HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance,
+                HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                 FirstRecordedSeason = previous?.FirstRecordedSeason ?? state.SeasonYear,
                 LastRecordedSeason = state.SeasonYear
             };
@@ -172,7 +172,7 @@ public static class DynastyHistoryService
                 {
                     SeasonYear = state.SeasonYear,
                     PlayerId = qb.PlayerId,
-                    OriginalRecruitingStars = qb.OriginalRecruitingStars, RecruitingStarsEstimated = qb.RecruitingStarsEstimated, HeightInches = qb.HeightInches, WeightPounds = qb.WeightPounds, Appearance = qb.Appearance,
+                    OriginalRecruitingStars = qb.OriginalRecruitingStars, RecruitingStarsEstimated = qb.RecruitingStarsEstimated, HeightInches = qb.HeightInches, WeightPounds = qb.WeightPounds, Appearance = qb.Appearance, JerseyNumber = qb.JerseyNumber,
                     PlayerName = qb.FullName,
                     TeamName = qb.TeamName,
                     Position = qb.Position,
@@ -204,7 +204,7 @@ public static class DynastyHistoryService
                 {
                     SeasonYear = state.SeasonYear,
                     PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                     PlayerName = player.FullName,
                     TeamName = player.TeamName,
                     Position = player.Position,
@@ -226,7 +226,7 @@ public static class DynastyHistoryService
                 result.Add(new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                     PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
                     Games = games.Length, Receptions = passCompletions * receivingWeights[i] / 100,
                     ReceivingYards = passYards * receivingWeights[i] / 100,
@@ -252,7 +252,7 @@ public static class DynastyHistoryService
                 result.Add(new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                     PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
                     Games = games.Length, Tackles = estimatedTackles * tackleWeight / 100,
                     TacklesForLoss = Math.Max(0, opponentRushAttempts / 12 * tackleWeight / 100),
@@ -273,7 +273,7 @@ public static class DynastyHistoryService
                 result.Add(new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = kicker.PlayerId,
-                    OriginalRecruitingStars = kicker.OriginalRecruitingStars, RecruitingStarsEstimated = kicker.RecruitingStarsEstimated, HeightInches = kicker.HeightInches, WeightPounds = kicker.WeightPounds, Appearance = kicker.Appearance, PlayerName = kicker.FullName,
+                    OriginalRecruitingStars = kicker.OriginalRecruitingStars, RecruitingStarsEstimated = kicker.RecruitingStarsEstimated, HeightInches = kicker.HeightInches, WeightPounds = kicker.WeightPounds, Appearance = kicker.Appearance, JerseyNumber = kicker.JerseyNumber, PlayerName = kicker.FullName,
                     TeamName = kicker.TeamName, Position = kicker.Position, Games = games.Length,
                     ExtraPointsMade = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsMade ?? 0),
                     ExtraPointsAttempted = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsAttempted ?? 0),
@@ -295,7 +295,7 @@ public static class DynastyHistoryService
                 var baseLine = index >= 0 ? result[index] : new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = returner.PlayerId,
-                    OriginalRecruitingStars = returner.OriginalRecruitingStars, RecruitingStarsEstimated = returner.RecruitingStarsEstimated, HeightInches = returner.HeightInches, WeightPounds = returner.WeightPounds, Appearance = returner.Appearance, PlayerName = returner.FullName,
+                    OriginalRecruitingStars = returner.OriginalRecruitingStars, RecruitingStarsEstimated = returner.RecruitingStarsEstimated, HeightInches = returner.HeightInches, WeightPounds = returner.WeightPounds, Appearance = returner.Appearance, JerseyNumber = returner.JerseyNumber, PlayerName = returner.FullName,
                     TeamName = returner.TeamName, Position = returner.Position, Games = games.Length
                 };
                 var returnLine = baseLine with
@@ -314,7 +314,7 @@ public static class DynastyHistoryService
                 line.TeamName.Equals(teamGroup.Key, StringComparison.OrdinalIgnoreCase)).Select(line => line.PlayerId).ToHashSet();
             foreach (var player in players.Where(player => !recorded.Contains(player.PlayerId)))
                 result.Add(new PlayerSeasonStatLine { SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, PlayerName = player.FullName,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber, PlayerName = player.FullName,
                     TeamName = player.TeamName, Position = player.Position, Games = games.Length });
         }
 

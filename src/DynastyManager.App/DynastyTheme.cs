@@ -23,7 +23,7 @@ public static class DynastyTheme
             new Setter { Property = Button.TextColorProperty, Value = Colors.White },
             new Setter { Property = View.VerticalOptionsProperty, Value = LayoutOptions.Center },
             new Setter { Property = View.HorizontalOptionsProperty, Value = LayoutOptions.Start },
-            new Setter { Property = Button.CornerRadiusProperty, Value = 5 },
+            new Setter { Property = Button.CornerRadiusProperty, Value = 8 },
             new Setter { Property = Button.FontSizeProperty, Value = 12.0 },
             new Setter { Property = Button.PaddingProperty, Value = new Thickness(10, 5) },
             new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 36.0 } } },
@@ -31,7 +31,7 @@ public static class DynastyTheme
             new Setter { Property = VisualElement.BackgroundColorProperty, Value = Surface },
             new Setter { Property = Border.StrokeProperty, Value = new SolidColorBrush(Colors.Transparent) },
             new Setter { Property = Border.StrokeThicknessProperty, Value = 0.0 },
-            new Setter { Property = Border.StrokeShapeProperty, Value = new RoundRectangle { CornerRadius = 6 } },
+            new Setter { Property = Border.StrokeShapeProperty, Value = new RoundRectangle { CornerRadius = 10 } },
             new Setter { Property = Border.PaddingProperty, Value = new Thickness(10) } } },
         new Style(typeof(Picker)) { Setters = {
             new Setter { Property = Picker.FontSizeProperty, Value = 13.0 },

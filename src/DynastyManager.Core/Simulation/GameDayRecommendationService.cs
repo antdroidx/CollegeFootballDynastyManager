@@ -8,12 +8,28 @@ public sealed record GameDayRecommendation(RecommendedCallType Type, string Play
 
 public static class GameDayRecommendationService
 {
+    public static double PassingUrgency(GameDaySession session)
+    {
+        if (session.OvertimeRound > 0) return 1;
+        var margin = session.PossessionTeamName == session.Game.HomeTeamName
+            ? session.HomeScore - session.AwayScore : session.AwayScore - session.HomeScore;
+        if (margin >= 0) return 1;
+        var deficit = -margin;
+        var remaining = Math.Max(1, (4 - session.Quarter) * 900 + session.ClockSeconds);
+        // Score and time both matter: preserve an offense's identity early, accelerate when possessions run short.
+        var possessionsNeeded = Math.Ceiling(deficit / 8d);
+        var pressure = possessionsNeeded * 240 / remaining;
+        var lateWeight = session.Quarter >= 4 ? 1.0 : session.Quarter == 3 ? .55 : .18;
+        return Math.Clamp(1 + deficit / 7d * lateWeight + pressure * 2, 1, 10);
+    }
+
     public static GameDayRecommendation Recommend(GameDaySession session, TeamGamePlan plan)
     {
         var home = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var margin = home ? session.HomeScore - session.AwayScore : session.AwayScore - session.HomeScore;
         var late = session.Quarter >= 4 && session.ClockSeconds <= 180;
-        var needTouchdown = late && margin < -3;
+        var needTouchdown = session.Quarter == 4 && margin < -3 &&
+            session.ClockSeconds <= Math.Max(180, Math.Ceiling(-margin / 8d) * 150);
         var fieldGoalChance = GameDayEngine.FieldGoalProbability(session);
         var kickDistance = 117 - session.YardLine;
         GameDayRecommendation FieldGoal(string reason) => new(RecommendedCallType.FieldGoal, "special-field-goal", null,
@@ -34,13 +50,14 @@ public static class GameDayRecommendationService
             .TakeLast(4).Select(e => e.OffensivePlayId).ToArray();
         var hurryUp = late && margin < 0;
         var play = GamePlanService.RecommendOffensivePlay(plan, session.Down, session.Distance, session.YardLine,
-            session.Events.Count, recent, session.Game.SimulationSeed, hurryUp);
+            session.Events.Count, recent, session.Game.SimulationSeed, hurryUp, PassingUrgency(session));
         if (hurryUp && session.ClockSeconds <= 8 && session.YardLine >= 40)
             play = GamePlanService.AvailableOffensivePlays(plan).FirstOrDefault(p => p.Name == "Hail Mary") ?? play;
         var reason = needTouchdown ? "A field goal is not enough; keep the drive alive."
             : session.Down == 4 ? "Short fourth down in opponent territory; consider going for the first down."
             : hurryUp ? "Trailing late; favor the passing game."
-            : session.Down >= 3 && session.Distance >= 6 ? "Attack the distance needed for a first down."
+            : PassingUrgency(session) >= 2 ? "The deficit and remaining time call for a stronger passing mix."
+            : session.Down >= 3 && session.Distance >= 3 ? "Attack the distance needed for a first down."
             : session.Distance <= 2 ? "Short yardage: favor the run while keeping complementary calls available."
             : "Mix the coach's preferred concepts and formations, with less weight on recent repeats.";
         return new(RecommendedCallType.Scrimmage, play.Id, play, reason);

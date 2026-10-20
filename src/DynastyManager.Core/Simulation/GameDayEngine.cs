@@ -19,6 +19,8 @@ public static partial class GameDayEngine
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
         TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode)
     {
+        roster = PlayerJerseyService.Assign(roster.Where(p => p.TeamName.Equals(game.HomeTeamName, StringComparison.OrdinalIgnoreCase) ||
+            p.TeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase)).ToArray());
         var homeRoster = roster.Where(player =>
             player.TeamName.Equals(game.HomeTeamName, StringComparison.OrdinalIgnoreCase)).ToArray();
         var awayRoster = roster.Where(player =>
@@ -75,8 +77,9 @@ public static partial class GameDayEngine
             (offense.HeadCoachGameManagement + offense.OffensiveCoordinatorGameManagement) / 2,
             (defense.HeadCoachGameManagement + defense.DefensiveCoordinatorGameManagement) / 2);
         var advice = GameDayRecommendationService.Recommend(session, offensePlan);
-        if (string.IsNullOrWhiteSpace(userPlayId) && offensivePossessionIndex >= offensePlan.OpeningPlayIds.Count &&
-            offensivePossessionIndex >= offensePlan.OpeningScript.Count && advice.Play is not null)
+        if (string.IsNullOrWhiteSpace(userPlayId) && advice.Play is not null &&
+            (offensivePossessionIndex >= offensePlan.OpeningPlayIds.Count && offensivePossessionIndex >= offensePlan.OpeningScript.Count ||
+             session.Down >= 3 && session.Distance >= 3 || GameDayRecommendationService.PassingUrgency(session) >= 2))
             call = call with { Offense = advice.Play, Source = PlayCallSource.Cpu };
         if (!string.IsNullOrWhiteSpace(userDefensivePlayId))
         {
@@ -98,14 +101,16 @@ public static partial class GameDayEngine
             var puntLanding = special == "special-punt"
                 ? Math.Min(95, kickStart + session.Random.Next(34, 51)) : 100;
             var touchback = special == "special-punt" && puntLanding >= 95;
-            var fairCatch = special == "special-punt" && !touchback && session.Random.NextDouble() < .28;
+            var returner = Returner(defenseRoster);
+            var kickingUnit = special == "special-field-goal" ? PlaceKickTeam(offenseRoster, kicker) : SpecialTeam(offenseRoster, kicker);
+            var returnUnit = special == "special-field-goal" ? PlaceKickDefense(defenseRoster) : SpecialTeam(defenseRoster, returner);
+            var hangTime = special == "special-punt" ? 3.6 + session.Random.NextDouble() * 1.8 : 0;
+            var coverage = PuntCoverageService.Evaluate(puntLanding - kickStart, hangTime, kickingUnit, kicker?.PlayerId, returner?.AwarenessRating ?? 60);
+            var fairCatch = special == "special-punt" && !touchback && coverage.FairCatch;
             var returnYards = special == "special-punt" && !touchback && !fairCatch ? session.Random.Next(0, 13) : 0;
             var newSpot = made ? 25 : special == "special-punt"
                 ? touchback ? 20 : Math.Clamp(100 - puntLanding + returnYards, 5, 80)
                 : Math.Clamp(100 - Math.Max(20, kickStart - 7), 10, 80);
-            var returner = Returner(defenseRoster);
-            var kickingUnit = SpecialTeam(offenseRoster, kicker);
-            var returnUnit = SpecialTeam(defenseRoster, returner);
             var coverageTackler = special == "special-punt" && returnYards > 0
                 ? CoverageTackler(kickingUnit, kicker, session.Random)
                 : null;
@@ -123,7 +128,8 @@ public static partial class GameDayEngine
                 Yards = 0, ReturnYards = returnYards,
                 IsTouchback = touchback, IsFairCatch = fairCatch,
                 KickerId = kicker?.PlayerId, ReturnerId = special == "special-punt" && !touchback ? returner?.PlayerId : null,
-                PrimaryDefenderId = coverageTackler?.PlayerId,
+                PrimaryDefenderId = fairCatch ? coverage.DefenderId : coverageTackler?.PlayerId,
+                KickHangTimeSeconds = hangTime, NearestCoverageYardsAtCatch = coverage.DistanceAtCatch,
                 OffensePersonnel = kickingUnit.Select(player => player.PlayerId).ToArray(),
                 DefensePersonnel = returnUnit.Select(player => player.PlayerId).ToArray(),
                 Outcome = special == "special-punt" ? SnapOutcome.Punt :
@@ -288,7 +294,7 @@ public static partial class GameDayEngine
             var player = session.Roster.First(item => item.PlayerId == id);
             return new PlayerSeasonStatLine { SeasonYear = session.Game.SeasonYear, PlayerId = id,
                 PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
-                OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, Games = 1 };
+                OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber, Games = 1 };
         }
         void Save(PlayerSeasonStatLine line) => lines[line.PlayerId] = line;
         foreach (var snap in session.Events)

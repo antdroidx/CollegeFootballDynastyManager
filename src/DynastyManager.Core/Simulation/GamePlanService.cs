@@ -138,7 +138,7 @@ public static class GamePlanService
     }
 
     public static OffensivePlayDefinition RecommendOffensivePlay(TeamGamePlan plan, int down, int distance, int yardLine,
-        int snapIndex = 0, IReadOnlyList<string>? recentPlayIds = null, int seed = 0, bool hurryUp = false)
+        int snapIndex = 0, IReadOnlyList<string>? recentPlayIds = null, int seed = 0, bool hurryUp = false, double passBias = 1)
     {
         var available = AvailableOffensivePlays(plan);
         var preferred = PreferredConcepts(plan.Offense);
@@ -150,11 +150,12 @@ public static class GamePlanService
             var run = play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun;
             if (distance <= 2) weight = play.Concept switch
             { OffensiveConcept.InsideRun => 8, OffensiveConcept.OutsideRun => 6, OffensiveConcept.PlayAction => 3, OffensiveConcept.QuickPass => 2, _ => .2 };
-            else if (down >= 3 && distance >= 6) weight = play.Concept switch
-            { OffensiveConcept.QuickPass => 6, OffensiveConcept.DeepPass => 5, OffensiveConcept.PlayAction => 3, _ => .15 };
+            else if (down >= 3 && distance >= 3) weight = play.Concept switch
+            { OffensiveConcept.QuickPass => 6, OffensiveConcept.DeepPass => 5, OffensiveConcept.PlayAction => 3, _ => distance >= 6 ? .15 : .8 };
             else if (down == 2 && distance >= 8 && !run) weight *= 1.5;
             if (yardLine >= 90 && play.Concept == OffensiveConcept.DeepPass) weight *= .15;
             if (hurryUp) weight *= run ? .08 : 2;
+            weight *= run ? 1 / Math.Sqrt(Math.Clamp(passBias, .5, 12)) : Math.Clamp(passBias, .5, 12);
             if (play.Name == "Hail Mary") weight *= .02;
             weight /= available.Count(p => p.Concept == play.Concept);
             if (play.Formation == plan.OffensiveFormation) weight *= 1.2;

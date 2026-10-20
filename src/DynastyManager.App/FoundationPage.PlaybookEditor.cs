@@ -90,7 +90,7 @@ public sealed partial class FoundationPage
         page.Content = new ScrollView { Content = new VerticalStackLayout
         {
             Padding = 14, Spacing = 10, Children = { back,
-                SectionTitle("Playbook Editor", "Browse every formation in the full catalog. Remove a call before adding another when a book is full. Saving replaces the active playbooks and clears the opening script."),
+                SectionTitle("Playbook Editor", "Browse every formation in the full catalog. Remove a call before adding another when a book is full. Saving replaces the active playbooks."),
                 side, formation, count, save, status, library }
         } };
         await Navigation.PushModalAsync(page);

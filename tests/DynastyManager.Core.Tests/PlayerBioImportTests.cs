@@ -51,6 +51,17 @@ public sealed class PlayerBioImportTests
         Assert.Equal(style, PortraitAppearance.ForPlayer(player.PlayerId, player.Appearance).FacialHair);
     }
 
+    [Fact]
+    public void JerseyNumbersImportAsDisplayedValuesIncludingZero()
+    {
+        foreach (var number in new[] { 0, 7, 99 })
+        {
+            var preview = Ncaa06RosterCsvImporter.Preview(new StringReader(Csv(extraHeader: ",PJEN", extraValues: "," + number)), ["Washington"]);
+            Assert.True(preview.CanApply); Assert.Equal(number, preview.Players.Single().JerseyNumber);
+        }
+        Assert.False(Ncaa06RosterCsvImporter.Preview(new StringReader(Csv(extraHeader: ",PJEN,JerseyNumber", extraValues: ",7,9")), ["Washington"]).CanApply);
+    }
+
     [Theory]
     [InlineData(0, false, false)] [InlineData(1, true, true)] [InlineData(2, false, true)]
     public void MenuImporterUsesNcaaRedshirtStates(int code, bool current, bool previous)
@@ -63,6 +74,7 @@ public sealed class PlayerBioImportTests
     [Theory]
     [InlineData("PHGT", "20")] [InlineData("PWGT", "300")] [InlineData("PSKI", "8")]
     [InlineData("PHCL", "6")] [InlineData("PHED", "15")] [InlineData("PFMP", "64")]
+    [InlineData("PJEN", "100")] [InlineData("JerseyNumber", "-1")]
     [InlineData("FacialHair", "-1")] [InlineData("FacialHair", "4")]
     public void InvalidKnownOptionalFieldsFailPreview(string header, string value) =>
         Assert.False(Ncaa06RosterCsvImporter.Preview(new StringReader(Csv(extraHeader: "," + header, extraValues: "," + value)), ["Washington"]).CanApply);
