@@ -130,6 +130,8 @@ public sealed partial class FoundationPage
             scoutingHost.Content = CoachingCard("OPPONENT SCOUTING REPORT", scouting);
         }
         var offenseValues = Enum.GetValues<OffensivePlaybook>();
+        var tempoValues = Enum.GetValues<OffensiveTempo>();
+        var tempo = new Picker { Title = "Offensive tempo", ItemsSource = new[] { "Automatic — adapt to the game", "Normal", "Up tempo", "Chew clock" }, SelectedIndex = (int)plan.Tempo };
         var defenseValues = Enum.GetValues<DefensivePlaybook>();
         var approachValues = Enum.GetValues<DefensiveApproach>();
         var offensiveFormationValues = Enum.GetValues<OffensiveFormation>();
@@ -155,7 +157,8 @@ public sealed partial class FoundationPage
             };
             if (book != OffensivePlaybook.Custom) offensiveFormation.SelectedIndex = Array.IndexOf(offensiveFormationValues, preferred);
         };
-        settingsHost.Children.Add(CoachingCard("SCHEME & PLAYBOOK SELECTION", new Label { Text = "Offensive playbook — available calls and CPU run/pass tendencies", FontAttributes = FontAttributes.Bold }, offense, description,
+        settingsHost.Children.Add(CoachingCard("SCHEME & PLAYBOOK SELECTION",
+            new Label { Text = "Offensive tempo — controls time used before the snap; trailing teams hurry and leading teams protect the clock late.", TextColor = DynastyTheme.Muted }, tempo, new Label { Text = "Offensive playbook — available calls and CPU run/pass tendencies", FontAttributes = FontAttributes.Bold }, offense, description,
             new Label { Text = "Preferred offensive formation — CPU starting point", TextColor = DynastyTheme.Muted }, offensiveFormation, new Label { Text = "Defensive playbook — available fronts and coverages", FontAttributes = FontAttributes.Bold }, defense, new Label { Text = "Defensive tendency — how aggressively the CPU calls defense", TextColor = DynastyTheme.Muted }, approach, new Label { Text = "Preferred defensive formation", TextColor = DynastyTheme.Muted }, defensiveFormation,
             new Label { Text = "4-3 strengthens the run front; Nickel helps coverage. Run/pass focus gives up strength elsewhere. Pressure creates takeaways but risks bigger gains.", TextColor = DynastyTheme.Muted }));
         var editor = new Button { Text = "Open Playbook Editor", BackgroundColor = Color.FromArgb("#315D59") };
@@ -172,7 +175,7 @@ public sealed partial class FoundationPage
             {
                 _currentDynasty = GamePlanService.SetPlan(_currentDynasty, new TeamGamePlan
                 {
-                    TeamName = teamName, Offense = offenseValues[Math.Max(0, offense.SelectedIndex)],
+                    TeamName = teamName, Tempo = tempoValues[Math.Max(0, tempo.SelectedIndex)], Offense = offenseValues[Math.Max(0, offense.SelectedIndex)],
                     Defense = defenseValues[Math.Max(0, defense.SelectedIndex)], Approach = approachValues[Math.Max(0, approach.SelectedIndex)],
                     OffensiveFormation = offensiveFormationValues[Math.Max(0, offensiveFormation.SelectedIndex)],
                     DefensiveFormation = defensiveFormationValues[Math.Max(0, defensiveFormation.SelectedIndex)],

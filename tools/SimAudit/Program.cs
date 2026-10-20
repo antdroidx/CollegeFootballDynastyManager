@@ -1,0 +1,30 @@
+using System.Text.Json;
+using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
+using DynastyManager.Data.Import;
+var root = Directory.GetCurrentDirectory();
+var count = args.Length > 0 ? int.Parse(args[0]) : 272;
+var seed = args.Length > 1 ? int.Parse(args[1]) : 2025;
+if (count < 1) throw new ArgumentOutOfRangeException(nameof(count), "Supply a positive game count.");
+var teams = ModernFbsUniverseFactory.Create(LegacyUniverseCsvImporter.Import(File.ReadAllText(Path.Combine(root,"src/main/assets/universe.csv"))).Teams).ToArray();
+using var reader = File.OpenText(Path.Combine(root,"src/DynastyManager.App/Resources/Raw/next26-aug26-2025.csv"));
+var pack = Next26RosterCsvImporter.LoadPack(reader, teams.Select(t=>t.Name));
+var state = new DynastyState { DynastyName="Audit", UserTeamName="Washington", SeasonYear=2025, ActiveRoster=pack.Players };
+teams = teams.Where(t=>pack.Players.Any(p=>p.TeamName==t.Name)).OrderBy(t=>t.Name,StringComparer.Ordinal).ToArray();
+var profiles = DynastyRosterSimulationProfileBuilder.Build(state,teams);
+var random = new Random(seed);
+var games = new List<ScheduledGame>(); var snaps = new List<GameSnapEvent>(); var playCounts = new List<int>();
+for(var i=0;i<count;i++) {
+ var h=i%teams.Length; var a=(h+1+random.Next(teams.Length-1))%teams.Length;
+ var game=new ScheduledGame { GameId=$"audit-{i}",SeasonYear=2025,Week=1,HomeTeamName=teams[h].Name,AwayTeamName=teams[a].Name,SimulationSeed=seed+i*7919 };
+ var session=GameDayEngine.Start(game,GamePlanService.Attach(state,teams[h],profiles[teams[h].Name]),GamePlanService.Attach(state,teams[a],profiles[teams[a].Name]),pack.Players,GameDayMode.Simulate);
+ GameDayEngine.SimulateToEnd(session); games.Add(GameDayEngine.Finish(session)); snaps.AddRange(session.Events);
+ playCounts.Add(session.Events.Count(s=>s.Quarter<=4&&GameDayEngine.IsScrimmage(s)));
+}
+var stats=games.SelectMany(g=>new[]{g.HomeStats!,g.AwayStats!}).ToArray();
+double Mean(Func<GameTeamStats,int> f)=>stats.Average(f);
+var catches=snaps.Where(s=>s.TargetId!=null&&s.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown).ToArray();
+var ordered=playCounts.Order().ToArray();
+var report=new {Games=count,Seed=seed,Teams=teams.Length,RegulationPlays=playCounts.Average(),PlaysP10=ordered[count/10],PlaysP90=ordered[count*9/10],PointsPerTeam=games.Average(g=>(g.HomeScore!.Value+g.AwayScore!.Value)/2d),YardsPerTeam=Mean(s=>s.TotalYards),PassYards=Mean(s=>s.PassYards),RushYards=Mean(s=>s.RushYards),YardsPerPlay=stats.Sum(s=>s.TotalYards)/(double)snaps.Count(GameDayEngine.IsScrimmage),CompletionPct=100d*stats.Sum(s=>s.PassCompletions)/stats.Sum(s=>s.PassAttempts),YardsPerPassAttempt=stats.Sum(s=>s.PassYards)/(double)stats.Sum(s=>s.PassAttempts),YardsPerRush=stats.Sum(s=>s.RushYards)/(double)stats.Sum(s=>s.RushAttempts),Sacks=Mean(s=>s.SacksAllowed),Turnovers=Mean(s=>s.Turnovers),ExplosivePasses=Mean(s=>s.ExplosivePasses20),ExplosiveRuns=Mean(s=>s.ExplosiveRuns20),YacPerCatch=stats.Sum(s=>s.YardsAfterCatch)/(double)Math.Max(1,catches.Length)};
+var json=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true}); Console.WriteLine(json);
+if(args.Length>2)File.WriteAllText(args[2],json);

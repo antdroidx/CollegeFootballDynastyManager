@@ -193,7 +193,8 @@ public sealed partial class FoundationPage
                 button.Margin = compact ? new Thickness(0, 0, 4, 4) : new Thickness(0, 0, 8, 8);
             }
             score.FontSize = compact ? 16 : 22;
-            downValue.FontSize = toGoValue.FontSize = ballValue.FontSize = compact ? 17 : 22;
+            downValue.FontSize = toGoValue.FontSize = compact ? 17 : 22;
+            ballValue.FontSize = compact ? 14 : 18;
             result.FontSize = compact ? 11 : 14;
             selectedDescription.IsVisible = defenseDescription.IsVisible = !compact;
             selectedArt.HeightRequest = defenseArt.HeightRequest = compact ? 68 : 112;
@@ -308,6 +309,7 @@ public sealed partial class FoundationPage
             var receiverFamily = routeFamily;
             var passRelease = snap.PassReleaseProgress > 0 ? snap.PassReleaseProgress : calledPlay is null ? .54 : GameDayAnimationPlanner.PassReleaseProgress(calledPlay);
             var catchProgress = GameDayAnimationPlanner.CatchProgress(passRelease);
+            var caught = snap.TargetId.HasValue && snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown;
             var terminalCarrierId = snap.BallCarrierId ?? snap.ReturnerId ??
                 (snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown ? snap.TargetId : null) ??
                 (snap.Outcome == SnapOutcome.Sack ? snap.QuarterbackId : null);
@@ -438,7 +440,8 @@ public sealed partial class FoundationPage
                     endX = Math.Clamp(x + (destination - x) * .68, .025, .96);
                     endY = Math.Clamp(y + (.50 - y) * .45, .07, .93);
                 }
-                if (player?.PlayerId == terminalCarrierId) endX = destination;
+                if (player?.PlayerId == snap.TargetId && caught) endX = Project(snap.StartYardLine + snap.AirYards);
+                else if (player?.PlayerId == terminalCarrierId) endX = destination;
                 var view = Marker(player, offenseColor, offenseIsAway);
                 RegisterMarker(player, view);
                 assignedRoutes[view] = assigned;
@@ -464,13 +467,21 @@ public sealed partial class FoundationPage
                 if (player?.PlayerId == snap.QuarterbackId) { qbFrom = from; qbTo = to; }
                 if (player?.PlayerId == snap.BallCarrierId) { runnerFrom = from; runnerTo = to; }
                 if (player?.PlayerId == snap.TargetId) { receiverFrom = from; receiverTo = to; receiverFamily = assigned; }
-                if (player?.PlayerId == terminalCarrierId) { terminalCarrierTo = to; terminalCarrierView = view; }
+                if (player?.PlayerId == terminalCarrierId) { terminalCarrierTo = caught ? to with { X = destination } : to; terminalCarrierView = view; }
                 if (player?.PlayerId == snap.KickerId) { kickerFrom = from; kickerTo = to; }
                 if (player?.PlayerId == snap.ReturnerId)
                 {
                     returnerFrom = from; returnerTo = to; specialReturnerView = view;
                 }
                 AddMovement(view, from, to, movements, fieldPlayers);
+            }
+            Rect ReceiverTrack(double progress)
+            {
+                if (receiverFrom is not Rect from || receiverTo is not Rect to) return new Rect(line, .50, 19, 19);
+                if (!caught) return RouteTrack(from, to, progress, receiverFamily);
+                return progress < catchProgress
+                    ? RouteTrack(from, to, progress / catchProgress, receiverFamily)
+                    : Interpolate(to, to with { X = destination }, (progress - catchProgress) / (1 - catchProgress));
             }
             GameFieldPoint? interceptionPoint = snap.Outcome == SnapOutcome.Interception && receiverFrom is Rect rf && receiverTo is Rect rt
                 ? GameDayAnimationPlanner.RoutePoint(new(rf.X, rf.Y), new(rt.X, rt.Y), receiverFamily, catchProgress) : null;
@@ -588,7 +599,6 @@ public sealed partial class FoundationPage
                 Math.Clamp(player.Y + .006, .02, .97), 14, 9);
             var isPass = snap.TargetId.HasValue && !snap.BallCarrierId.HasValue;
             var isSack = snap.Outcome == SnapOutcome.Sack;
-            var caught = snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown;
             var isKick = snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint;
             var isFieldGoal = GameDayAnimationPlanner.IsPlaceKick(snap);
             Rect RouteTrack(Rect from, Rect to, double progress, GameDayRouteFamily? assigned = null)
@@ -606,6 +616,8 @@ public sealed partial class FoundationPage
                 var to = new GameFieldPoint(m.To.X, m.To.Y);
                 var distance = routeViews.Contains(m.View) ? GameDayAnimationPlanner.RouteLengthYards(from, to, assignedRoutes.GetValueOrDefault(m.View, routeFamily))
                     : GameDayAnimationPlanner.DistanceYards(from, to);
+                if (caught && ReferenceEquals(m.View, terminalCarrierView))
+                    return (Math.Max(distance / catchProgress, GameDayAnimationPlanner.DistanceYards(to, new(destination, to.Y)) / (1 - catchProgress)), movementSpeeds[m.View], 1d);
                 var active = ReferenceEquals(m.View, fairCatchGunner) ? .65 : ReferenceEquals(m.View, specialReturnerView) &&
                     snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt ? .35 : ReferenceEquals(m.View, interceptorView) ? catchProgress : 1;
                 return (distance, movementSpeeds[m.View], active);
@@ -621,7 +633,7 @@ public sealed partial class FoundationPage
                         : pursuingDefenders.Contains(movement.View)
                         ? GameDayAnimationPlanner.PursuitProgress(progress, ReferenceEquals(movement.View, primaryTacklerView))
                         : progress;
-                    var position = routeViews.Contains(movement.View)
+                    var position = caught && ReferenceEquals(movement.View, terminalCarrierView) ? ReceiverTrack(progress) : routeViews.Contains(movement.View)
                         ? RouteTrack(movement.From, movement.To, movementProgress, assignedRoutes.GetValueOrDefault(movement.View, routeFamily))
                         : Interpolate(movement.From, movement.To, movementProgress);
                     AbsoluteLayout.SetLayoutBounds(movement.View, position);
@@ -676,10 +688,10 @@ public sealed partial class FoundationPage
                 }
                 else if (isPass && receiverFrom.HasValue)
                 {
-                    var receiver = RouteTrack(receiverFrom.Value, receiverTo ?? receiverFrom.Value, progress, receiverFamily);
+                    var receiver = ReceiverTrack(progress);
                     currentBall = caught
                         ? progress < catchProgress
-                            ? Interpolate(BallAt(Track(qbFrom, qbTo, passRelease)), BallAt(receiver),
+                            ? Interpolate(BallAt(Track(qbFrom, qbTo, passRelease)), BallAt(receiverTo ?? receiver),
                                 (progress - passRelease) / (catchProgress - passRelease))
                             : BallAt(receiver)
                         : IncompleteBall();
@@ -744,7 +756,7 @@ public sealed partial class FoundationPage
             downValue.Text = session.KickoffPending ? "—" : Ordinal(session.Down);
             toGoValue.Text = session.KickoffPending ? "KICKOFF" : session.Distance.ToString();
             if (session.TryPending) { downValue.Text = "TRY"; toGoValue.Text = "3"; }
-            ballValue.Text = session.KickoffPending ? "RECEIVE" : session.YardLine.ToString();
+            ballValue.Text = session.KickoffPending ? "RECEIVE" : GameDayEngine.BallOn(session, name => _teamsByName.TryGetValue(name, out var team) ? team.Abbreviation : name);
             possession.Text = session.Mode == GameDayMode.Watch
                 ? $"CPU vs CPU · {session.PossessionTeamName} possession"
                 : $"Controlling {controlledTeamName} · {session.PossessionTeamName} possession";

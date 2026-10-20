@@ -9,6 +9,7 @@ public enum DefensiveFormation { FourThree, ThreeFour, Nickel, Dime, GoalLine }
 public enum OffensivePersonnel { Ten, Eleven, Twelve, TwentyOne, Empty, TripleBack }
 public enum DefensivePersonnel { BaseFourThree, BaseThreeFour, Nickel, Dime, GoalLine }
 public enum PlayCallSource { Cpu, User }
+public enum OffensiveTempo { Automatic, Normal, UpTempo, ChewClock }
 
 public sealed record OffensivePlayDefinition(string Id, string Name, OffensiveFormation Formation,
     OffensivePersonnel Personnel, OffensiveConcept Concept, string Description)
@@ -38,6 +39,7 @@ public sealed record TeamGamePlan
     public OffensivePlaybook Offense { get; init; }
     public DefensivePlaybook Defense { get; init; }
     public DefensiveApproach Approach { get; init; }
+    public OffensiveTempo Tempo { get; init; }
     public OffensiveFormation OffensiveFormation { get; init; }
     public DefensiveFormation DefensiveFormation { get; init; }
     public IReadOnlyList<string> CustomOffensivePlayIds { get; init; } = Array.Empty<string>();

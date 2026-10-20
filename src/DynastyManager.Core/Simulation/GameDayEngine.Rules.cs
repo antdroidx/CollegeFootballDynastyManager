@@ -89,9 +89,11 @@ public static partial class GameDayEngine
             Down = session.Down, Distance = session.Distance, StartYardLine = session.YardLine,
             BallEndYardLine = session.YardLine - (spike ? 0 : 1), Yards = spike ? 0 : -1,
             QuarterbackId = qb?.PlayerId, BallCarrierId = spike ? null : qb?.PlayerId,
+            PreSnapSeconds = session.LastPreSnapSeconds, LiveBallSeconds = spike ? 2 : 4,
             Outcome = spike ? SnapOutcome.Spike : SnapOutcome.Kneel
         };
         session.Events.Add(snap);
+        ConsumeLiveClock(session, spike ? 2 : 4);
         AdvanceState(session, home, snap.Yards, false, false, spike);
         return snap;
     }
@@ -135,7 +137,8 @@ public static partial class GameDayEngine
         };
         session.YardLine += yards; session.Distance -= yards;
         if (session.Distance <= 0) { session.Down = 1; session.Distance = Math.Min(10, 100 - session.YardLine); }
-        session.ClockStopped = true; session.Events.Add(snap);
+        session.ClockRestartsOnReady = !session.ClockStopped || session.ClockRestartsOnReady;
+        session.ClockStopped = true; session.PlayClockSeconds = 25; session.Events.Add(snap);
         return snap;
     }
 

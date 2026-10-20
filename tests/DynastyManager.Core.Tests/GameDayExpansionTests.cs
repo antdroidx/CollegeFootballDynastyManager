@@ -58,7 +58,7 @@ public class GameDayExpansionTests
     public void TiedRegulationStartsUntimedOvertimeWithoutInventedPoints()
     {
         var s = GameDayEngineTests.Session(GameDayMode.Play);
-        s.Quarter = 4; s.ClockSeconds = 1; s.Down = 1;
+        s.Quarter = 4; s.ClockSeconds = 1; s.TwoMinuteTimeoutHalf = 2; s.Down = 1;
         GameDayEngine.Step(s, "special-kneel");
         Assert.Equal(1, s.OvertimeRound); Assert.Equal(0, s.ClockSeconds);
         Assert.Equal(75, s.YardLine); Assert.False(s.KickoffPending);

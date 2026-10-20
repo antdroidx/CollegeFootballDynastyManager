@@ -5,7 +5,7 @@ public enum SnapOutcome
 {
     Run, Completion, Incompletion, Sack, Turnover, Touchdown, FieldGoal, Punt, MissedFieldGoal,
     Interception, Fumble, Kickoff, Scramble, ExtraPoint, MissedExtraPoint, TwoPointConversion, FailedTwoPointConversion,
-    Kneel, Spike, Penalty
+    Kneel, Spike, Penalty, ClockStoppage
 }
 
 public sealed record GameSnapEvent
@@ -25,6 +25,10 @@ public sealed record GameSnapEvent
     public int BallEndYardLine { get; init; }
     public int KickLandingYardLine { get; init; }
     public int Yards { get; init; }
+    public int AirYards { get; init; }
+    public int YardsAfterCatch { get; init; }
+    public int PreSnapSeconds { get; init; }
+    public int LiveBallSeconds { get; init; }
     public int ReturnYards { get; init; }
     public double KickHangTimeSeconds { get; init; }
     public double NearestCoverageYardsAtCatch { get; init; }
@@ -86,6 +90,10 @@ public sealed class GameDaySession
     public int HomeTimeouts { get; set; } = 3;
     public int AwayTimeouts { get; set; } = 3;
     public bool ClockStopped { get; set; }
+    public bool ClockRestartsOnReady { get; set; }
+    public int PlayClockSeconds { get; set; } = 25;
+    public int LastPreSnapSeconds { get; set; }
+    public int TwoMinuteTimeoutHalf { get; set; }
     public bool IsComplete { get; set; }
     public bool TryPending { get; set; }
     public bool OnsideKickRequested { get; set; }

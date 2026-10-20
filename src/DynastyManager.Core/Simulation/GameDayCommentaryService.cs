@@ -33,6 +33,7 @@ public static class GameDayCommentaryService
             SnapOutcome.FailedTwoPointConversion => "The two-point conversion is stopped.",
             SnapOutcome.Kneel => $"{quarterback} takes a knee.",
             SnapOutcome.Spike => $"{quarterback} spikes the ball to stop the clock.",
+            SnapOutcome.ClockStoppage => snap.Description ?? "Clock stopped.",
             SnapOutcome.Penalty => snap.Description ?? "Penalty.",
             SnapOutcome.FieldGoal => $"{kicker} makes the field goal.",
             SnapOutcome.MissedFieldGoal => $"{kicker} misses the field goal.",

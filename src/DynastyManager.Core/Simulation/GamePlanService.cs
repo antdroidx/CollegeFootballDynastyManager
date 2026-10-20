@@ -8,7 +8,7 @@ public static class GamePlanService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(plan.TeamName);
         PlayEditorService.Validate(plan);
-        if (!Enum.IsDefined(plan.Offense) || !Enum.IsDefined(plan.Defense) || !Enum.IsDefined(plan.Approach) ||
+        if (!Enum.IsDefined(plan.Tempo) || !Enum.IsDefined(plan.Offense) || !Enum.IsDefined(plan.Defense) || !Enum.IsDefined(plan.Approach) ||
             !Enum.IsDefined(plan.OffensiveFormation) || !Enum.IsDefined(plan.DefensiveFormation) ||
             plan.OpeningScript.Count > 12 || plan.OpeningScript.Any(call => !Enum.IsDefined(call)) ||
             plan.OpeningPlayIds.Count > 12 || plan.OpeningPlayIds.Any(id => PlayEditorService.OffensiveLibrary(plan).All(play => play.Id != id)) ||
@@ -46,6 +46,7 @@ public static class GamePlanService
 
     public static TeamGamePlan Normalize(TeamGamePlan plan) => plan with
     {
+        Tempo = Enum.IsDefined(plan.Tempo) ? plan.Tempo : OffensiveTempo.Automatic,
         Offense = Enum.IsDefined(plan.Offense) ? plan.Offense : OffensivePlaybook.Balanced,
         Defense = Enum.IsDefined(plan.Defense) ? plan.Defense : DefensivePlaybook.Balanced,
         Approach = Enum.IsDefined(plan.Approach) ? plan.Approach : DefensiveApproach.Balanced,
@@ -153,6 +154,7 @@ public static class GamePlanService
             else if (down >= 3 && distance >= 3) weight = play.Concept switch
             { OffensiveConcept.QuickPass => 6, OffensiveConcept.DeepPass => 5, OffensiveConcept.PlayAction => 3, _ => distance >= 6 ? .15 : .8 };
             else if (down == 2 && distance >= 8 && !run) weight *= 1.5;
+            if (run && down < 3 && distance > 2) weight *= 2.25;
             if (yardLine >= 90 && play.Concept == OffensiveConcept.DeepPass) weight *= .15;
             if (hurryUp) weight *= run ? .08 : 2;
             weight *= run ? 1 / Math.Sqrt(Math.Clamp(passBias, .5, 12)) : Math.Clamp(passBias, .5, 12);
