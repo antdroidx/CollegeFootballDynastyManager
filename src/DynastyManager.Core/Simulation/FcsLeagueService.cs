@@ -48,7 +48,12 @@ public static class FcsLeagueService
     {
         var generated = WalkOnRosterService.FillAllTeams(state with { ActiveRoster = [] }, new Dictionary<string, Team> { [team.Name] = team }).ActiveRoster;
         // Real schools; fictional athletes. Only scheduled FCS opponents allocate a roster.
-        return PlayerRatingService.EnsureProfiles(state with { ActiveRoster = generated }).ActiveRoster;
+        var balanced = generated.Select((player,index) => player with
+        {
+            ClassYear = 1 + index % 4,
+            IsWalkOn = false
+        }).ToArray();
+        return PlayerRatingService.EnsureProfiles(state with { ActiveRoster = balanced }).ActiveRoster;
     }
 
     public static IReadOnlyList<ScheduledGame> BuildSchedule(IReadOnlyList<Team> teams, Guid dynastyId, int year, LeagueRules rules)

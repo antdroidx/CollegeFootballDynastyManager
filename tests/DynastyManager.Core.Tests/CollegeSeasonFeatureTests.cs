@@ -159,6 +159,17 @@ public sealed class CollegeSeasonFeatureTests
     }
 
     [Fact]
+    public void GeneratedFcsProgramsHaveSustainableClassesAndScholarshipRosters()
+    {
+        var state=State(Team("A"),Team("B"));var school=FcsLeagueService.Find("Montana")!;
+        var roster=FcsLeagueService.CreateRoster(state,school);
+        Assert.Equal(85,roster.Count);
+        Assert.All(roster,p=>Assert.False(p.IsWalkOn));
+        foreach(var year in Enumerable.Range(1,4)) Assert.InRange(roster.Count(p=>p.ClassYear==year),20,22);
+        Assert.Equal(roster,FcsLeagueService.CreateRoster(state,school));
+    }
+
+    [Fact]
     public void FullModernLeagueSchedulesWithFcsAndCanGrowAcrossOffseasons()
     {
         var legacy=LegacyUniverseCsvImporter.Import(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"TestData","universe.csv"))).Teams;
