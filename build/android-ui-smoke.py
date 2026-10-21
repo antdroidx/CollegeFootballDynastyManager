@@ -203,7 +203,10 @@ def main():
     # Close the box, then leave the incomplete watched game. Advance the actual league
     # calendar as well, so a repeated numeric zero cannot silently pass this smoke test.
     adb("shell", "input", "keyevent", "4")
-    time.sleep(.3)
+    # The box closes asynchronously through MAUI modal navigation. A second Back
+    # during that transition can be discarded by Android, leaving Watch running.
+    # Match normal touch sequencing instead of issuing overlapping navigation.
+    time.sleep(1.5)
     adb("shell", "input", "keyevent", "4")
     overview = wait_for("after-live-view", lambda r: overview_ready(r), timeout=300)
     previous = calendar(overview)
