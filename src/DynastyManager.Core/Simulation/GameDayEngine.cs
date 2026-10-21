@@ -283,6 +283,9 @@ public static partial class GameDayEngine
             HomePregameRating = (session.HomeProfile.OffenseRating + session.HomeProfile.DefenseRating) / 2,
             AwayPregameRating = (session.AwayProfile.OffenseRating + session.AwayProfile.DefenseRating) / 2,
             Drives = BuildDrives(session),
+            Highlights = GameHighlightService.Select(session.Events),
+            HighlightPlayers = GameHighlightService.Participants(session),
+            PeriodScores = BuildPeriodScores(session),
             PlayerStats = BuildPlayerStats(session)
         };
     }
@@ -331,6 +334,8 @@ public static partial class GameDayEngine
         void Save(PlayerSeasonStatLine line) => lines[line.PlayerId] = line;
         foreach (var snap in session.Events)
         {
+            foreach (var id in snap.OffensePersonnel.Concat(snap.DefensePersonnel).Distinct())
+                if (session.PlayersById.ContainsKey(id)) Save(Line(id));
             if (snap.Outcome == SnapOutcome.Kickoff)
             {
                 if (snap.ReturnerId is Guid kickoffReturnerId)

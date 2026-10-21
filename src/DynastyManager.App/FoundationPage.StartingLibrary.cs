@@ -20,8 +20,8 @@ public sealed partial class FoundationPage
 
     private IReadOnlyList<StartingLeagueSetup> AvailableStartingSetups() => new[]
     {
-        new StartingLeagueSetup { Id = ModernSetupId, Name = "Modern FBS (2026) - 138 teams", Teams = ModernFbsUniverseFactory.Create(_legacyTeams), IsBuiltIn = true },
-        new StartingLeagueSetup { Id = LegacySetupId, Name = "Legacy FBS - 130 teams", Teams = _legacyTeams, IsBuiltIn = true }
+        new StartingLeagueSetup { Id = ModernSetupId, Name = "Modern FBS (2026) - 138 teams", Teams = ModernFbsUniverseFactory.Create(_legacyTeams), IsBuiltIn = true, Rules = new LeagueRules { FcsOpponents = true } },
+        new StartingLeagueSetup { Id = LegacySetupId, Name = "Legacy FBS - 130 teams", Teams = _legacyTeams, IsBuiltIn = true, Rules = new LeagueRules { FcsOpponents = true } }
     }.Where(s => !_startingLibrary.HiddenBuiltIns.Contains(s.Id)).Concat(_startingLibrary.Setups).ToArray();
 
     private StartingLeagueSetup? SelectedStartingSetup => _startingSetups.ElementAtOrDefault(_leaguePicker.SelectedIndex);

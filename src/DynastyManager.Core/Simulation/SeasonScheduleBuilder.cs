@@ -9,7 +9,6 @@ public static class SeasonScheduleBuilder
     public const int DefaultWeekZeroGames = 5;
     private const int MinimumConferenceSize = 8;
     private const int MaximumPairingAttempts = 200;
-    private const int MaximumWeekAssignmentAttempts = 200;
 
     public static IReadOnlyList<ScheduledGame> BuildRegularSeason(
         IEnumerable<Team> teams,
@@ -409,8 +408,102 @@ public static class SeasonScheduleBuilder
             }
         }
 
+        var remainingDegree = Enumerable.Range(0,games.Count).Where(i => !fixedAssignments.ContainsKey(i))
+            .SelectMany(i => new[] {games[i].HomeTeam.Name,games[i].AwayTeam.Name}).GroupBy(n => n).Select(g => g.Count()).DefaultIfEmpty(0).Max();
+        if (remainingDegree >= weeks) return AssignWeeksCompact(games,dynastyId,seasonYear,weeks,requestedWeekZeroGames);
+        // Fan recoloring gives a simple maximum-degree D graph a calendar of D+1
+        // weeks, avoiding hundreds of expensive greedy retries on large leagues.
+        var colors = Enumerable.Repeat(-1, games.Count).ToArray();
+        var incident = games.SelectMany(g => new[] { g.HomeTeam.Name, g.AwayTeam.Name }).Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(n => n, _ => new Dictionary<int,int>(), StringComparer.OrdinalIgnoreCase);
+        string Other(int edge, string vertex) => games[edge].HomeTeam.Name == vertex ? games[edge].AwayTeam.Name : games[edge].HomeTeam.Name;
+        void Clear(int edge)
+        {
+            var old = colors[edge]; if (old < 1) return;
+            incident[games[edge].HomeTeam.Name].Remove(old); incident[games[edge].AwayTeam.Name].Remove(old); colors[edge] = -1;
+        }
+        void Color(int edge, int color)
+        {
+            colors[edge] = color; incident[games[edge].HomeTeam.Name][color] = edge; incident[games[edge].AwayTeam.Name][color] = edge;
+        }
+        IEnumerable<int> Missing(string vertex) => Enumerable.Range(1,weeks).Where(c => !incident[vertex].ContainsKey(c));
+        foreach (var pair in fixedAssignments) colors[pair.Key] = 0;
+        foreach (var edge in Enumerable.Range(0,games.Count).Where(i => colors[i] != 0)
+                     .OrderBy(i => SimulationSeed.Create(dynastyId,seasonYear,0,games[i].HomeTeam.Name,games[i].AwayTeam.Name)))
+        {
+            var u = games[edge].HomeTeam.Name;
+            var fan = new List<string> { games[edge].AwayTeam.Name };
+            var fanEdges = new List<int> { edge };
+            while (true)
+            {
+                var next = incident[u].Where(p => !incident[fan[^1]].ContainsKey(p.Key) && !fan.Contains(Other(p.Value,u)))
+                    .OrderBy(p => p.Key).Select(p => (int?)p.Value).FirstOrDefault();
+                if (next is null) break;
+                fanEdges.Add(next.Value); fan.Add(Other(next.Value,u));
+            }
+            var c = Missing(u).FirstOrDefault(); var d = Missing(fan[^1]).FirstOrDefault();
+            if (c == 0 || d == 0) throw new InvalidOperationException("Not enough regular-season weeks for this schedule.");
+            var path = new List<(int Edge,int Color)>(); var vertex = u; var targetColor = d;
+            while (incident[vertex].TryGetValue(targetColor,out var pathEdge))
+            {
+                path.Add((pathEdge,targetColor == c ? d : c)); vertex = Other(pathEdge,vertex); targetColor = targetColor == c ? d : c;
+            }
+            foreach (var item in path) Clear(item.Edge);
+            foreach (var item in path) Color(item.Edge,item.Color);
+            var end = fan.FindIndex(v => !incident[v].ContainsKey(d));
+            if (end < 0) throw new InvalidOperationException("Unable to rotate the season calendar.");
+            var shifted = Enumerable.Range(0,end).Select(i => colors[fanEdges[i+1]]).ToArray();
+            for (var i = 0; i <= end; i++) Clear(fanEdges[i]);
+            for (var i = 0; i < end; i++) Color(fanEdges[i],shifted[i]);
+            Color(fanEdges[end],d);
+        }
+        return colors.Select((color,index) => (color,index)).ToDictionary(x => x.index,x => x.color);
+    }
+
+    private static IReadOnlyDictionary<int, int> AssignWeeksCompact(
+        IReadOnlyList<OrientedDraftGame> games,
+        Guid dynastyId,
+        int seasonYear,
+        int weeks,
+        int requestedWeekZeroGames)
+    {
+        var fixedAssignments = new Dictionary<int, int>();
+        var weekZeroTeams = new HashSet<string>(
+            StringComparer.OrdinalIgnoreCase);
+
+        if (requestedWeekZeroGames > 0)
+        {
+            foreach (var candidate in Enumerable.Range(0, games.Count)
+                         .Where(index =>
+                             games[index].GameType ==
+                             ScheduledGameType.NonConference)
+                         .OrderBy(index => SimulationSeed.Create(
+                             dynastyId,
+                             seasonYear,
+                             0,
+                             $"{games[index].HomeTeam.Name}|{games[index].AwayTeam.Name}",
+                             "week-zero"))
+                         .ThenBy(index => index))
+            {
+                if (fixedAssignments.Count >= requestedWeekZeroGames)
+                    break;
+
+                var game = games[candidate];
+
+                if (weekZeroTeams.Contains(game.HomeTeam.Name) ||
+                    weekZeroTeams.Contains(game.AwayTeam.Name))
+                {
+                    continue;
+                }
+
+                fixedAssignments[candidate] = 0;
+                weekZeroTeams.Add(game.HomeTeam.Name);
+                weekZeroTeams.Add(game.AwayTeam.Name);
+            }
+        }
+
         for (var attempt = 0;
-             attempt < MaximumWeekAssignmentAttempts;
+             attempt < 200;
              attempt++)
         {
             var assignments = new Dictionary<int, int>(

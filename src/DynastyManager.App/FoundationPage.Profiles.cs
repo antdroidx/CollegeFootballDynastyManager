@@ -115,6 +115,12 @@ public sealed partial class FoundationPage
                 TextColor = player.CurrentInjury is null ? Color.FromArgb("#83D6B6") : Color.FromArgb("#E5A1B7"), FontSize = 12 });
         }
         else content.Children.Add(new Label { Text = "This is a recorded career. Current attributes are unavailable after departure.", FontSize = 12, TextColor = DynastyTheme.Muted });
+        var honors = state.PlayerAwardHistory.Where(a => a.PlayerId == id).OrderByDescending(a => a.SeasonYear).ThenBy(a => a.IsPreseason).ToArray();
+        if (honors.Length > 0)
+        {
+            content.Children.Add(SectionTitle("Honors & awards", "Permanent season selections"));
+            foreach (var honor in honors) content.Children.Add(new Label { Text = $"{honor.SeasonYear} · {honor.AwardName}{(honor.ConferenceName is null ? "" : " · " + honor.ConferenceName)}", FontSize = 12, TextColor = Color.FromArgb("#E8C979") });
+        }
         var totals = visibleStats.Where(line => line.PlayerId == id).ToArray();
         content.Children.Add(SectionTitle("Career snapshot", $"{totals.Sum(line => line.Games)} recorded games · {totals.Sum(line => line.ScrimmageYards):N0} yards · {totals.Sum(line => line.Touchdowns)} TD"));
         var stats = new Button { Text = "Season & career statistics", BackgroundColor = Color.FromArgb("#315D59") };

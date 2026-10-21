@@ -99,6 +99,24 @@ def overview_ready(root, previous=None):
             and not busy and (previous is None or state != previous))
 
 
+def check_college_center():
+    tap(capture("season-navigation"), "Season")
+    tap(scroll_to_text("season-center", "Awards, polls & program center ›"), "Awards, polls & program center ›")
+    honors = wait_for("preseason-honors", lambda r: "Preseason honors" in texts(r))
+    assert "Trophy room" in texts(honors)
+    tap(honors, "Awards & honors")
+    tap(capture("college-center-sections"), "Polls & trends")
+    polls = wait_for("poll-trends", lambda r: "Poll tracker" in texts(r))
+    assert "Media" in texts(polls)
+    tap(polls, "Polls & trends")
+    tap(capture("college-center-sections-2"), "Program conduct")
+    conduct = wait_for("program-conduct", lambda r: "Program standards" in texts(r))
+    assert any("Conduct 80/100" in (value or "") for value in texts(conduct))
+    tap(conduct, "Return to season")
+    tap(capture("season-return"), "Overview")
+    return wait_for("overview-after-college-center", overview_ready)
+
+
 def main():
     home = capture("launch")
     assert {"Your dynasties", "New dynasty"} <= texts(home), "Launch must open the save library"
@@ -118,6 +136,7 @@ def main():
     tap(capture("school-picker"), "Air Force")
     tap(capture("create-ready"), "Start dynasty")
     overview = wait_for("overview-preseason", lambda r: overview_ready(r), timeout=300)
+    overview = check_college_center()
     for week in range(4):
         if "Play game" in texts(overview):
             break

@@ -16,6 +16,7 @@ public sealed partial class FoundationPage
         var playoffs = new Picker { Title = "Playoff size", ItemsSource = new[] { "2", "4", "8", "12" }, SelectedIndex = Array.IndexOf(new[] { 2, 4, 8, 12 }, original?.Rules.PlayoffTeams ?? 4) };
         var championships = new Switch { IsToggled = original?.Rules.ConferenceChampionships ?? true };
         var list = new VerticalStackLayout { Spacing = 5 }; var status = new Label { TextColor = DynastyTheme.Muted };
+        var fcs = new Switch { IsToggled = original?.Rules.FcsOpponents ?? false };
         var search = new SearchBar { Placeholder = "Find a team" };
         var summary = new Label { TextColor = DynastyTheme.Accent };
         var save = new Button { Text = "Validate schedule & save setup" }; var cancel = new Button { Text = "Cancel" };
@@ -95,10 +96,10 @@ public sealed partial class FoundationPage
             {
                 var setup = new StartingLeagueSetup { Id = original is { IsBuiltIn: false } ? original.Id : Guid.NewGuid(), Name = name.Text?.Trim() ?? "",
                     Teams = teams.ToArray(), Rules = new LeagueRules { GamesPerTeam = games.SelectedIndex + 1, PlayoffTeams = new[] { 2, 4, 8, 12 }[Math.Max(0, playoffs.SelectedIndex)],
-                        ConferenceChampionships = championships.IsToggled, AllowAutomaticConferenceFill = true } };
+                        ConferenceChampionships = championships.IsToggled, AllowAutomaticConferenceFill = true, FcsOpponents = fcs.IsToggled, ConferenceRealignment = original?.Rules.ConferenceRealignment ?? false, FcsPromotion = original?.Rules.FcsPromotion ?? false } };
                 if (_startingLibrary.Setups.Any(s => s.Id != setup.Id && s.Name.Equals(setup.Name, StringComparison.OrdinalIgnoreCase))) throw new ArgumentException("Choose a unique league setup name.");
                 StartingLibraryService.Validate(setup); status.Text = "Checking schedule feasibility...";
-                await Task.Run(() => SeasonScheduleBuilder.BuildRegularSeason(setup.Teams, setup.Id, 2026, gamesPerTeam: setup.Rules.GamesPerTeam, allowAutomaticConferenceFill: true));
+                await Task.Run(() => FcsLeagueService.BuildSchedule(setup.Teams, setup.Id, 2026, setup.Rules));
                 if (cancelled) return;
                 // A roster default only survives edits while the roster still includes schools in the setup.
                 var defaults = _startingLibrary.DefaultRosterBySetup.ToDictionary();
@@ -114,6 +115,7 @@ public sealed partial class FoundationPage
         { cancel, SectionTitle("League setup", "Add/remove schools and change conferences. Use automatic conference games unless you need exact targets. The current season calendar is 13 weeks; playoffs support 2, 4, 8 or 12 teams."),
             name, new Label { Text = "Games per team" }, games, new Label { Text = "Playoff teams" }, playoffs,
             new HorizontalStackLayout { Children = { championships, new Label { Text = "Conference championship games (conferences with 8+ teams)", VerticalOptions = LayoutOptions.Center } } },
+            new HorizontalStackLayout { Children = { fcs, new Label { Text = "Allow FCS opponents (also supports odd league/game counts)", VerticalOptions = LayoutOptions.Center } } },
             import, add, save, checking, status, summary, search, list } } };
         await Navigation.PushModalAsync(page);
     }

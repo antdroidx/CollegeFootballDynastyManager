@@ -127,14 +127,20 @@ public sealed partial class FoundationPage
             () => ShowSection(next is null ? AppSection.Schedule : AppSection.GameDay)), 0, 1);
         cards.Add(NavigationCard("INJURIES", $"{injuries} active", "Team & league report ›", "#443657", () => ShowSection(AppSection.Injuries)), 1, 1);
         _homeHighlights.Children.Add(cards);
-        if (state.UserCoachIsFired)
-            _homeHighlights.Children.Add(NavigationCard("ACTION REQUIRED", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
+        if (state.UserCoachIsFired || state.UserCoachJobOffers.Any(o => o.Status == UserCoachJobOfferStatus.Pending))
+            _homeHighlights.Children.Add(NavigationCard(state.UserCoachIsFired ? "ACTION REQUIRED" : "COACHING CAROUSEL", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
         else if (state.Phase is SeasonPhase.TransferPortal or SeasonPhase.Recruiting or SeasonPhase.RosterManagement)
             _homeHighlights.Children.Add(NavigationCard("OFFSEASON", PhaseLabel(state.Phase), "Review your roster and recruiting ›", "#4C432A",
                 () => ShowSection(state.Phase == SeasonPhase.RosterManagement ? AppSection.Roster : AppSection.Recruiting)));
         var all = new Button { Text = "News & headlines ›", TextColor = Color.FromArgb("#E8C979"), BackgroundColor = Colors.Transparent };
         all.Clicked += (_, _) => ShowSection(AppSection.News);
         _homeHighlights.Children.Add(all);
+        if (state.Schedule.Any(g => g.SeasonYear == state.SeasonYear && g.HasPlayed))
+        {
+            var recap = new Button { Text = "Weekly recap & highlights ›", FontSize = 12, TextColor = DynastyTheme.Accent, BackgroundColor = Colors.Transparent };
+            recap.Clicked += async (_, _) => await ShowCollegeCenterAsync(3);
+            _homeHighlights.Children.Add(recap);
+        }
         var stories = DynastyNewsService.BuildOverview(state);
         foreach (var story in stories) _homeHighlights.Children.Add(NewsCard(story));
         if (stories.Count == 0) _homeHighlights.Children.Add(new Label { Text = "Results, recruiting and injury updates will appear as your dynasty develops.", TextColor = DynastyTheme.Muted });
@@ -169,6 +175,9 @@ public sealed partial class FoundationPage
             }), index % 2, index / 2);
         }
         _seasonHub.Children.Add(grid);
+        var college = new Button { Text = "Awards, polls & program center ›", BackgroundColor = Color.FromArgb("#645025") };
+        college.Clicked += async (_, _) => await ShowCollegeCenterAsync();
+        _seasonHub.Children.Add(college);
     }
 
     private View BuildMatchupHub() => _matchupHub;
@@ -190,7 +199,7 @@ public sealed partial class FoundationPage
         _overviewGameActions.Content = new Border { StrokeThickness = 0, Padding = 10,
             BackgroundColor = Color.FromArgb("#172733"), Content = new VerticalStackLayout { Spacing = 8, Children =
             {
-                title, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+                title, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
             } } };
         _overviewGameActions.IsVisible = true;
     }
@@ -241,7 +250,7 @@ public sealed partial class FoundationPage
         return new Border { StrokeThickness = 0, Padding = 11, BackgroundColor = Color.FromArgb("#1B2B37"),
             Content = new VerticalStackLayout { Spacing = 7, Children =
             {
-                matchup, note, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+                matchup, note, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
             } } };
     }
 

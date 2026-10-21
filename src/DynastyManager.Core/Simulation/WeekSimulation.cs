@@ -22,11 +22,11 @@ public static class WeekSimulation
                 if (game.SeasonYear != state.SeasonYear || game.Week != state.Week || game.HasPlayed)
                     return game;
 
-                if (!teamsByName.TryGetValue(game.HomeTeamName, out var homeTeam))
+                if (!teamsByName.TryGetValue(game.HomeTeamName, out var homeTeam) && (homeTeam = FcsLeagueService.Find(game.HomeTeamName)) is null)
                     throw new InvalidOperationException(
                         $"Scheduled home team '{game.HomeTeamName}' is not available.");
 
-                if (!teamsByName.TryGetValue(game.AwayTeamName, out var awayTeam))
+                if (!teamsByName.TryGetValue(game.AwayTeamName, out var awayTeam) && (awayTeam = FcsLeagueService.Find(game.AwayTeamName)) is null)
                     throw new InvalidOperationException(
                         $"Scheduled away team '{game.AwayTeamName}' is not available.");
 
@@ -42,7 +42,16 @@ public static class WeekSimulation
                 changed = true;
                 homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
                 awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
-                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+                var roster = state.ActiveRoster;
+                if (game.IsFcsGame)
+                {
+                    var external = teamsByName.ContainsKey(homeTeam.Name) ? awayTeam : homeTeam;
+                    roster = roster.Concat(FcsLeagueService.CreateRoster(state, external)).ToArray();
+                    var externalProfiles = DynastyRosterSimulationProfileBuilder.Build(state with { ActiveRoster = roster }, new[] { homeTeam, awayTeam });
+                    if (!teamsByName.ContainsKey(homeTeam.Name)) homeProfile = externalProfiles[homeTeam.Name];
+                    if (!teamsByName.ContainsKey(awayTeam.Name)) awayProfile = externalProfiles[awayTeam.Name];
+                }
+                var session = GameDayEngine.Start(game, homeProfile, awayProfile, roster, GameDayMode.Simulate);
                 GameDayEngine.SimulateToEnd(session);
                 return GameDayEngine.Finish(session);
             })

@@ -95,7 +95,7 @@ public static class DynastyHistoryService
             };
         }
         var playerStats = BuildCurrentPlayerStats(state);
-        var awards = BuildAwards(state, playerStats);
+        var awards = SeasonAwardsService.Build(state, false);
 
         return CoachCareerService.RecordCompletedSeason(state with
         {
@@ -106,6 +106,7 @@ public static class DynastyHistoryService
                 .Concat(playerStats)
                 .ToArray(),
             PlayerAwardHistory = state.PlayerAwardHistory
+                .Where(a => a.SeasonYear != state.SeasonYear || a.IsPreseason)
                 .Concat(awards)
                 .ToArray()
         });
@@ -356,58 +357,6 @@ public static class DynastyHistoryService
 
     private static GameTeamStats? GetOpponentStats(ScheduledGame game, string teamName) =>
         game.HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ? game.AwayStats : game.HomeStats;
-
-    private static IReadOnlyList<PlayerAwardRecord> BuildAwards(
-        DynastyState state,
-        IReadOnlyList<PlayerSeasonStatLine> stats)
-    {
-        var awards = new List<PlayerAwardRecord>();
-        var skill = stats
-            .Where(item => item.Position is Position.QB or Position.RB)
-            .OrderByDescending(item =>
-                item.ScrimmageYards + item.Touchdowns * 120 - item.Turnovers * 80)
-            .ToArray();
-
-        if (skill.Length > 0)
-        {
-            var winner = skill[0];
-            awards.Add(new PlayerAwardRecord
-            {
-                SeasonYear = state.SeasonYear,
-                AwardName = "National Player of the Year",
-                PlayerId = winner.PlayerId,
-                PlayerName = winner.PlayerName,
-                TeamName = winner.TeamName,
-                Position = winner.Position,
-                Summary = $"{winner.ScrimmageYards:N0} yards • {winner.Touchdowns} TD"
-            });
-        }
-
-        foreach (var position in Enum.GetValues<Position>())
-        {
-            var candidate = state.ActiveRoster
-                .Where(player => !player.IsRedshirted && player.Position == position)
-                .OrderByDescending(player => player.OverallRating)
-                .ThenByDescending(player => player.PotentialRating)
-                .FirstOrDefault();
-            if (candidate is null)
-                continue;
-
-            awards.Add(new PlayerAwardRecord
-            {
-                SeasonYear = state.SeasonYear,
-                AwardName = "First Team All-American",
-                PlayerId = candidate.PlayerId,
-                PlayerName = candidate.FullName,
-                TeamName = candidate.TeamName,
-                Position = candidate.Position,
-                IsAllAmerican = true,
-                Summary = $"OVR {candidate.OverallRating} • POT {candidate.PotentialRating}"
-            });
-        }
-
-        return awards;
-    }
 
     private static GameTeamStats? GetTeamStats(ScheduledGame game, string teamName) =>
         game.HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)

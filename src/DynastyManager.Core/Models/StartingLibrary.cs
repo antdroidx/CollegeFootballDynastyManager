@@ -6,6 +6,10 @@ public sealed record LeagueRules
     public int PlayoffTeams { get; init; } = 12;
     public bool ConferenceChampionships { get; init; } = true;
     public bool AllowAutomaticConferenceFill { get; init; }
+    public bool ConferenceRealignment { get; init; }
+    public bool FcsPromotion { get; init; }
+    public bool FcsOpponents { get; init; }
+    public bool ProgramDiscipline { get; init; } = true;
 }
 
 public sealed record StartingLeagueSetup

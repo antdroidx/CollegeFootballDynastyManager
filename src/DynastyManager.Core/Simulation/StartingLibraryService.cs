@@ -14,7 +14,7 @@ public static class StartingLibraryService
             throw new ArgumentException("Team names must be unique.");
         if (setup.Rules.GamesPerTeam is < 1 or > 12 || setup.Rules.GamesPerTeam >= setup.Teams.Count)
             throw new ArgumentException("Choose 1–12 games per team, with enough unique opponents.");
-        if ((setup.Teams.Count * setup.Rules.GamesPerTeam) % 2 != 0)
+        if ((setup.Teams.Count * setup.Rules.GamesPerTeam) % 2 != 0 && !setup.Rules.FcsOpponents)
             throw new ArgumentException("An odd number of teams needs an even game count so every matchup has two teams.");
         if (setup.Rules.PlayoffTeams is not (2 or 4 or 8 or 12) || setup.Rules.PlayoffTeams > setup.Teams.Count)
             throw new ArgumentException("Choose a 2-, 4-, 8- or 12-team playoff that fits this league.");

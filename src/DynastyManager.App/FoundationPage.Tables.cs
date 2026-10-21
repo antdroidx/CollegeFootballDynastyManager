@@ -1,3 +1,4 @@
+using DynastyManager.Core.Simulation;
 using DynastyManager.Data.Branding;
 using DynastyManager.Data.Presentation;
 using Microsoft.Maui.Controls;
@@ -39,7 +40,7 @@ public sealed partial class FoundationPage
         LineBreakMode = LineBreakMode.TailTruncation, Margin = new Thickness(8, 6)
     };
 
-    private View SchoolCell(string name)
+    private View SchoolCell(string name, bool includeRank = true)
     {
         var brand = TeamBrandCatalog.Get(name);
         var primary = Color.FromArgb(brand.Primary);
@@ -50,7 +51,7 @@ public sealed partial class FoundationPage
                 TextColor = BrandInk(primary), HorizontalTextAlignment = TextAlignment.Center } };
         var row = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(42), new(GridLength.Star) },
             ColumnSpacing = 4, Padding = new Thickness(6, 4) };
-        row.Add(badge, 0, 0); row.Add(TableText(name, name == _currentDynasty?.UserTeamName), 1, 0);
+        row.Add(badge, 0, 0); row.Add(TableText(_currentDynasty is null || !includeRank ? name : CollegePollService.RankedName(name, BuildCurrentNationalRankings()), name == _currentDynasty?.UserTeamName), 1, 0);
         row.SetValue(TableValueProperty, name);
         var open = new TapGestureRecognizer();
         open.Tapped += (_, _) => OpenSchool(name);
@@ -59,7 +60,7 @@ public sealed partial class FoundationPage
         return row;
     }
 
-    private static View SchoolBanner(string name, string subtitle)
+    private View SchoolBanner(string name, string subtitle)
     {
         var brand = TeamBrandCatalog.Get(name);
         var primary = Color.FromArgb(brand.Primary);
@@ -69,7 +70,7 @@ public sealed partial class FoundationPage
             {
                 new VerticalStackLayout { Padding = new Thickness(14, 10), Spacing = 3, Children =
                 {
-                    new Label { Text = name, FontSize = 18, FontAttributes = FontAttributes.Bold, TextColor = ink },
+                    new Label { Text = _currentDynasty is null ? name : CollegePollService.RankedName(name, BuildCurrentNationalRankings()), FontSize = 18, FontAttributes = FontAttributes.Bold, TextColor = ink },
                     new Label { Text = subtitle, FontSize = 12, TextColor = ink }
                 } },
                 new BoxView { Color = Color.FromArgb(brand.Secondary), HeightRequest = 3 }

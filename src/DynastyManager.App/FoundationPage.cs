@@ -165,6 +165,7 @@ public sealed partial class FoundationPage : ContentPage
     private IReadOnlyList<NationalChampionRecord>? _cachedRankingNationalHistory;
     private IReadOnlyDictionary<string, TeamSimulationProfile>? _cachedRankingProfiles;
     private IReadOnlyList<NationalRanking>? _cachedNationalRankings;
+    private IReadOnlyList<PollSnapshot>? _cachedRankingPollHistory;
     private bool _loaded;
     private bool _isAdvancing;
 
@@ -920,6 +921,7 @@ public sealed partial class FoundationPage : ContentPage
                     FontAttributes = FontAttributes.Bold
                 },
 
+                BuildLeagueFeatureSettings(),
                 new Label
                 {
                     Text = "RECRUITING ASSISTANCE",
@@ -1151,6 +1153,8 @@ public sealed partial class FoundationPage : ContentPage
             _currentDynasty = ScoutingDepartmentService.EnsureDepartment(
                 _currentDynasty, _teamsByName[teamName]);
 
+            _currentDynasty = SeasonAwardsService.EnsurePreseason(_currentDynasty);
+            _currentDynasty = CollegePollService.Record(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
             await ShowAdvanceProgressAsync("Dynasty ready", 1.0);
             SetDynastyControlsEnabled(true);
             RenderCurrentDynasty();
@@ -1385,6 +1389,8 @@ public sealed partial class FoundationPage : ContentPage
 
         var wasOffseason = phaseBeforeAdvance == SeasonPhase.Offseason;
         await ShowAdvanceProgressAsync("Updating rankings, stats, and calendar...", 0.72);
+        _currentDynasty = ProgramDisciplineService.AdvanceWeek(_currentDynasty);
+        _currentDynasty = CollegePollService.Record(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
         _currentDynasty = SeasonProgression.Advance(_currentDynasty);
 
         if (phaseBeforeAdvance == SeasonPhase.Postseason &&
@@ -1535,6 +1541,8 @@ public sealed partial class FoundationPage : ContentPage
 
         if (wasOffseason && _currentDynasty.Phase == SeasonPhase.Preseason)
         {
+            _currentDynasty = LeagueEvolutionService.AdvanceOffseason(_currentDynasty);
+            ConfigureLeague(_currentDynasty.LeagueTeams);
             SetDynastyControlsEnabled(false);
             _rollingAutosaveStatus.Text =
                 $"Generating {_currentDynasty.SeasonYear} schedule…";
@@ -1579,6 +1587,8 @@ public sealed partial class FoundationPage : ContentPage
             SetDynastyControlsEnabled(true);
         }
 
+        if (_currentDynasty.Phase == SeasonPhase.Preseason)
+            _currentDynasty = SeasonAwardsService.EnsurePreseason(_currentDynasty);
         await ShowAdvanceProgressAsync("Saving weekly progress...", 0.90);
         RenderCurrentDynasty();
 
@@ -4904,7 +4914,7 @@ public sealed partial class FoundationPage : ContentPage
         var profiles =
             BuildCurrentSimulationProfiles();
 
-        if (_cachedNationalRankings is not null &&
+        if (_cachedNationalRankings is not null && ReferenceEquals(_cachedRankingPollHistory, _currentDynasty.PollHistory) &&
             ReferenceEquals(
                 _cachedRankingSchedule,
                 _currentDynasty.Schedule) &&
@@ -4924,11 +4934,12 @@ public sealed partial class FoundationPage : ContentPage
         }
 
         _cachedNationalRankings =
-            NationalRankingService.Build(
+            CollegePollService.Build(
                 _currentDynasty,
-                _teamsByName,
+                _teamsByName, PollKind.Media,
                 profiles);
 
+        _cachedRankingPollHistory = _currentDynasty.PollHistory;
         _cachedRankingSchedule =
             _currentDynasty.Schedule;
         _cachedRankingConferenceHistory =
@@ -5156,7 +5167,7 @@ public sealed partial class FoundationPage : ContentPage
             return;
         }
 
-        var rankings = BuildCurrentNationalRankings();
+        var rankings = _pollKind.SelectedIndex <= 0 ? BuildCurrentNationalRankings() : CollegePollService.Build(_currentDynasty, _teamsByName, (PollKind)_pollKind.SelectedIndex, BuildCurrentSimulationProfiles());
 
         var userRanking = rankings.FirstOrDefault(ranking =>
             ranking.TeamName.Equals(
@@ -5176,7 +5187,7 @@ public sealed partial class FoundationPage : ContentPage
             shown.Select(ranking => new View[]
             {
                 TableText($"#{ranking.Rank}", true, ranking.Rank <= 4 ? Color.FromArgb("#F4CC66") : DynastyTheme.Accent),
-                SchoolCell(ranking.TeamName), TableText(ranking.Wins.ToString()), TableText(ranking.Losses.ToString()),
+                SchoolCell(ranking.TeamName, false), TableText(ranking.Wins.ToString()), TableText(ranking.Losses.ToString()),
                 TableText(ranking.ConferenceName), TableText(ranking.PointsPerGame.ToString("F1")),
                 TableText(ranking.OpponentPointsPerGame.ToString("F1")), TableText(ranking.Score.ToString("F1"))
             })));
@@ -5434,10 +5445,7 @@ public sealed partial class FoundationPage : ContentPage
         rules ??= _currentDynasty?.LeagueRules ?? new LeagueRules();
 
         return Task.Run<IReadOnlyList<ScheduledGame>>(() =>
-            SeasonScheduleBuilder.BuildRegularSeason(
-                teams,
-                dynastyId,
-                seasonYear, gamesPerTeam: rules.GamesPerTeam, allowAutomaticConferenceFill: rules.AllowAutomaticConferenceFill));
+            FcsLeagueService.BuildSchedule(teams, dynastyId, seasonYear, rules));
     }
 
     private void SetNewDynastyControlsEnabled(bool enabled)

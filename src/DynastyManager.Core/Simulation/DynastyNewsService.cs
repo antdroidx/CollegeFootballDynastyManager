@@ -120,6 +120,15 @@ public static class DynastyNewsService
                 $"Week {next.Week} pairs {next.AwayTeamName} with {next.HomeTeamName}. Review the schedule, scout the matchup and prepare your game plan before advancing.",
                 state.UserTeamName, state.SeasonYear, state.Week));
         }
+        foreach (var incident in state.DisciplineHistory.Where(i => i.SeasonYear == state.SeasonYear).TakeLast(30))
+            stories.Add(new($"conduct-{incident.SeasonYear}-{incident.Week}-{incident.TeamName}-{incident.EventId}", "Program conduct",
+                $"{incident.TeamName}: {incident.Title}", incident.Description, incident.TeamName, incident.SeasonYear, incident.Week));
+        foreach (var move in state.LeagueMovementHistory.Where(m => m.SeasonYear == state.SeasonYear))
+            stories.Add(new($"move-{move.SeasonYear}-{move.TeamName}", "Realignment", $"{move.TeamName} joins {move.ToConference}",
+                $"{move.TeamName} moves from {move.FromConference} to {move.ToConference}{(move.Promotion ? " as a new FBS member" : "")}. Conference strength and this season's schedule reflect the change.", move.TeamName, move.SeasonYear, 0));
+        foreach (var award in state.PlayerAwardHistory.Where(a => a.SeasonYear == state.SeasonYear && !a.IsPreseason && !a.IsAllAmerican && a.ConferenceName is null))
+            stories.Add(new($"award-{award.SeasonYear}-{award.AwardName}", "Awards", $"{award.PlayerName} wins the {award.AwardName}",
+                $"{award.TeamName}'s {award.Position} earns national recognition. {award.Summary}.", award.TeamName, award.SeasonYear, state.Week, award.PlayerId));
         return stories.OrderByDescending(s => s.SeasonYear).ThenByDescending(s => s.Week)
             .ThenByDescending(s => s.Category is "Championships" or "Playoff" or "Upsets" or "Streaks" or "Shutouts" or "Blowouts" or "Bowls")
             .ThenByDescending(s => s.TeamName == state.UserTeamName)

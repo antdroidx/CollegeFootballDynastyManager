@@ -11,18 +11,28 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
-    private async Task OpenGameDayAsync(ScheduledGame game, GameDayMode mode, string? controlledTeamName = null)
+    private async Task OpenGameDayAsync(ScheduledGame game, GameDayMode mode, string? controlledTeamName = null, IReadOnlyList<GameSnapEvent>? replay = null, bool autoReplay = false)
     {
-        if (_currentDynasty is null || !GameDayEngine.IsAvailable(game, _currentDynasty.SeasonYear, _currentDynasty.Week, _currentDynasty.Phase)) return;
+        if (_currentDynasty is null || replay is null && !GameDayEngine.IsAvailable(game, _currentDynasty.SeasonYear, _currentDynasty.Week, _currentDynasty.Phase)) return;
         controlledTeamName ??= game.InvolvesTeam(_currentDynasty.UserTeamName)
             ? _currentDynasty.UserTeamName : game.HomeTeamName;
         _currentDynasty = PlayerRatingService.EnsureProfiles(_currentDynasty);
-        var profiles = BuildCurrentSimulationProfiles();
-        if (!profiles.TryGetValue(game.HomeTeamName, out var home) || !profiles.TryGetValue(game.AwayTeamName, out var away)) return;
-        home = GamePlanService.Attach(_currentDynasty, _teamsByName[game.HomeTeamName], home);
-        away = GamePlanService.Attach(_currentDynasty, _teamsByName[game.AwayTeamName], away);
-        var session = GameDayEngine.Start(game, home, away, _currentDynasty.ActiveRoster, mode);
+        var roster = replay is null ? _currentDynasty.ActiveRoster : GameHighlightService.ReplayRoster(game);
+        var homeTeam = _teamsByName.GetValueOrDefault(game.HomeTeamName) ?? FcsLeagueService.Find(game.HomeTeamName);
+        var awayTeam = _teamsByName.GetValueOrDefault(game.AwayTeamName) ?? FcsLeagueService.Find(game.AwayTeamName);
+        if (homeTeam is null || awayTeam is null) return;
+        if (game.IsFcsGame && replay is null)
+        {
+            var external = _teamsByName.ContainsKey(homeTeam.Name) ? awayTeam : homeTeam;
+            roster = roster.Concat(FcsLeagueService.CreateRoster(_currentDynasty, external)).ToArray();
+        }
+        var profiles = DynastyRosterSimulationProfileBuilder.Build(_currentDynasty with { ActiveRoster = roster }, new[] { homeTeam, awayTeam });
+        var home = GamePlanService.Attach(_currentDynasty, homeTeam, profiles[game.HomeTeamName]);
+        var away = GamePlanService.Attach(_currentDynasty, awayTeam, profiles[game.AwayTeamName]);
+        if (replay is not null) { home = home with { GamePlan = game.HomeGamePlan ?? home.GamePlan }; away = away with { GamePlan = game.AwayGamePlan ?? away.GamePlan }; }
+        var session = GameDayEngine.Start(game, home, away, roster, mode);
         session.ControlledTeamName = controlledTeamName;
+        var gameRanks = BuildCurrentNationalRankings();
         var animating = false;
         var boxScoreOpen = false;
         Task currentSnapFinished = Task.CompletedTask;
@@ -751,7 +761,7 @@ public sealed partial class FoundationPage
             (ControlledOnOffense() ? !coachCallsOffense : !coachCallsDefense);
         void Refresh(GameSnapEvent? snap = null)
         {
-            score.Text = $"{game.AwayTeamName} {session.AwayScore}  ·  {session.HomeScore} {game.HomeTeamName}";
+            score.Text = $"{CollegePollService.RankedName(game.AwayTeamName, gameRanks)} {session.AwayScore}  ·  {session.HomeScore} {CollegePollService.RankedName(game.HomeTeamName, gameRanks)}";
             quarterClock.Text = $"Q{session.Quarter}  {TimeSpan.FromSeconds(session.ClockSeconds):m\\:ss}";
             if (session.OvertimeRound > 0) quarterClock.Text = $"OT {session.OvertimeRound} · untimed";
             downValue.Text = session.KickoffPending ? "—" : Ordinal(session.Down);
@@ -843,6 +853,53 @@ public sealed partial class FoundationPage
                 await ShowSnapAsync(GameDayEngine.Step(session));
             Refresh();
             await FinishIfNeeded();
+        }
+        if (replay is not null)
+        {
+            var clipIndex = 0;
+            var replayBusy = false;
+            var replayClosed = false;
+            var replayCompleted = false;
+            page.Disappearing += (_, _) => { replayClosed = true; if (autoReplay && !replayCompleted) _highlightShowCanceled = true; };
+            var replayNext = new Button { Text = "Next highlight" };
+            var replayAll = new Button { Text = "Play highlights" };
+            var replayClose = new Button { Text = autoReplay ? "Stop highlight show" : "Close highlights" };
+            replayAll.IsVisible = replayNext.IsVisible = !autoReplay;
+            controls.Children.Clear(); controls.Children.Add(replayAll); controls.Children.Add(replayNext); controls.Children.Add(replayClose);
+            playCard.IsVisible = defenseCard.IsVisible = false;
+            boxScore.IsVisible = false;
+            async Task Clip()
+            {
+                if (replayBusy || replayClosed || replay.Count == 0) return;
+                replayBusy = true; replayAll.IsEnabled = replayNext.IsEnabled = false;
+                try
+                {
+                    var snap = replay[clipIndex++ % replay.Count];
+                    session.PossessionTeamName = snap.OffenseTeamName;
+                    session.Quarter = snap.Quarter; session.ClockSeconds = snap.ClockSeconds;
+                    session.Down = snap.Down; session.Distance = snap.Distance; session.YardLine = snap.StartYardLine;
+                    score.Text = $"{game.AwayTeamName} {game.AwayScore} · {game.HomeScore} {game.HomeTeamName}";
+                    quarterClock.Text = $"Q{snap.Quarter} {snap.ClockSeconds / 60}:{snap.ClockSeconds % 60:D2}";
+                    downValue.Text = snap.Down.ToString(); toGoValue.Text = snap.Distance.ToString();
+                    ballValue.Text = GameDayEngine.BallOn(session);
+                    possession.Text = $"HIGHLIGHT {((clipIndex - 1) % replay.Count) + 1}/{replay.Count} · Recorded play · Final score above";
+                    await AnimateSnapAsync(snap);
+                    result.Text = GameDayCommentaryService.Describe(snap, session.PlayersById);
+                    await ShowHighlightAsync(snap);
+                }
+                finally { replayBusy = false; replayAll.IsEnabled = replayNext.IsEnabled = true; }
+            }
+            replayNext.Clicked += async (_, _) => await Clip();
+            replayAll.Clicked += async (_, _) => { for (var i = 0; i < replay.Count && !replayClosed; i++) { await Clip(); if (!replayClosed) await Task.Delay(500); } };
+            replayClose.Clicked += async (_, _) => { _highlightShowCanceled = true; await Navigation.PopModalAsync(); };
+            await Navigation.PushModalAsync(page);
+            if (autoReplay)
+            {
+                for (var i = 0; i < replay.Count && !replayClosed; i++) { await Clip(); if (!replayClosed) await Task.Delay(500); }
+                if (!replayClosed) { replayCompleted = true; await Navigation.PopModalAsync(); }
+            }
+            else await Clip();
+            return;
         }
         choose.Clicked += async (_, _) =>
         {

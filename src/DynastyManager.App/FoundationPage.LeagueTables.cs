@@ -38,12 +38,13 @@ public sealed partial class FoundationPage
     private View BuildOrganizedRankingsSection()
     {
         _rankingsRange.SelectedIndexChanged += (_, _) => RenderNationalRankings();
+        _pollKind.SelectedIndexChanged += (_, _) => RenderNationalRankings();
         _conferencePicker.SelectedIndexChanged += (_, _) => RenderConferenceRace();
         View[] panels =
         [
             new VerticalStackLayout { Spacing = 10, Children = { ResponsiveTableHeader(
                 new VerticalStackLayout { Spacing = 6, Children = { SectionTitle("National rankings", "School colors · records · scoring · ranking score"), _nationalRankingStatus } },
-                _rankingsRange), _nationalRankingsList } },
+                new HorizontalStackLayout { Spacing = 8, Children = { _pollKind, _rankingsRange } }), _nationalRankingsList } },
             new VerticalStackLayout { Spacing = 10, IsVisible = false, Children =
             {
                 ResponsiveTableHeader(
@@ -138,12 +139,12 @@ public sealed partial class FoundationPage
                 leagueWide ? SchoolCell(game.AwayTeamName) : SchoolCell(home ? game.AwayTeamName : game.HomeTeamName),
                 leagueWide ? SchoolCell(game.HomeTeamName) : TableText(home ? "Home" : "Away"),
                 TableText(result, true, resultColor), TableText(type),
-                TableText(stats?.TotalYards.ToString("N0") ?? "—"), TableText(stats?.Turnovers.ToString() ?? "—")]);
+                TableText(stats?.TotalYards.ToString("N0") ?? "—"), TableText(stats?.Turnovers.ToString() ?? "—"), GameDetailCell(game)]);
         }
         if (rows.Count == 0) _scheduleList.Children.Add(new Label { Text = "No games match this selection." });
         else _scheduleList.Children.Add(DataTable(leagueWide
-            ? [("Week", 95), ("Away", 195), ("Home", 195), ("Score", 90), ("Type", 55), ("Yards", 65), ("TO", 45)]
-            : [("Week", 95), ("Opponent", 195), ("Venue", 60), ("Result", 100), ("Type", 55), ("Yards", 65), ("TO", 45)], rows));
+            ? [("Week", 95), ("Away", 195), ("Home", 195), ("Score", 90), ("Type", 55), ("Yards", 65), ("TO", 45), ("Game center", 230)]
+            : [("Week", 95), ("Opponent", 195), ("Venue", 60), ("Result", 100), ("Type", 55), ("Yards", 65), ("TO", 45), ("Game center", 230)], rows));
     }
 
     private static string FormatScheduleWeek(int week) => week switch

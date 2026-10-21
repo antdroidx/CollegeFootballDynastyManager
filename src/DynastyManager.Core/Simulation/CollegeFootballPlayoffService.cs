@@ -89,7 +89,7 @@ public static partial class CollegeFootballPlayoffService
             ? existingField
             : SelectField(
                 state.SeasonYear,
-                NationalRankingService.Build(state, teamsByName, profilesByTeam),
+                CollegePollService.Build(state, teamsByName, PollKind.Computer, profilesByTeam).Where(r => ProgramDisciplineService.PostseasonEligible(state, r.TeamName)).ToArray(),
                 state.ConferenceChampionshipHistory, fieldSize);
 
         var playoffHistory = state.CollegeFootballPlayoffHistory
