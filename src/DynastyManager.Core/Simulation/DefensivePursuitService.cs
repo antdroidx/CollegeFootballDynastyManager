@@ -6,6 +6,14 @@ public sealed record PursuitDecision(DynastyPlayer? Tackler, IReadOnlyList<Guid>
 /// <summary>Ranks actual package defenders by estimated arrival, reaction and tackling ability.</summary>
 public static class DefensivePursuitService
 {
+    public static bool IsPassRusher(DefensivePlayDefinition? play, Position position, int roleIndex)
+    {
+        var assignment = play?.Assignments.FirstOrDefault(a => a.Position == position && a.RoleIndex == roleIndex);
+        return assignment is not null ? assignment.Task == AssignmentTask.Rush :
+            position is Position.DE or Position.DT ||
+            play?.Approach == DefensiveApproach.Pressure && position is Position.MLB or Position.OLB;
+    }
+
     // X is depth in yards relative to the line; Y is the fraction across the field.
     public static IReadOnlyDictionary<Guid, GameFieldPoint> Alignments(IReadOnlyList<DynastyPlayer> defenders, DefensivePlayDefinition play)
     {
@@ -64,10 +72,7 @@ public static class DefensivePursuitService
             foreach (var player in defenders)
             {
                 var role = roles.GetValueOrDefault(player.Position); roles[player.Position] = role + 1;
-                var assignment = play.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == role);
-                var rushing = assignment is not null ? assignment.Task == AssignmentTask.Rush :
-                    player.Position is Position.DE or Position.DT ||
-                    play.Approach == DefensiveApproach.Pressure && player.Position is Position.MLB or Position.OLB;
+                var rushing = IsPassRusher(play, player.Position, role);
                 if (rushing) rusherIds.Add(player.PlayerId);
             }
             candidates = candidates.Where(p => rusherIds.Contains(p.PlayerId)).ToArray();

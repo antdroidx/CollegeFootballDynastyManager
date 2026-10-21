@@ -516,12 +516,19 @@ public sealed partial class FoundationPage
             var calledDefensivePlay = PlayEditorService.DefensiveLibrary(defensivePlan).FirstOrDefault(p => p.Id == snap.DefensivePlayId);
             var defensiveStarts = calledDefensivePlay is null ? new Dictionary<Guid, GameFieldPoint>() :
                 DefensivePursuitService.Alignments(defense.Where(p => p is not null).Select(p => p!).ToArray(), calledDefensivePlay);
+            var rushPockets = new Dictionary<View, GameFieldPoint>();
+            var defensiveRoles = new Dictionary<Position, int>();
             var defensiveLine = 0;
             var linebackers = 0;
             var secondary = 0;
             for (var index = 0; index < defense.Length; index++)
             {
                 var player = defense[index];
+                var defensiveRole = player is null ? 0 : defensiveRoles.GetValueOrDefault(player.Position);
+                if (player is not null) defensiveRoles[player.Position] = defensiveRole + 1;
+                var passRusher = player is not null && !isFieldGoalSnap &&
+                    (snap.TargetId.HasValue || snap.Outcome == SnapOutcome.Sack || snap.IsQuarterbackScramble) &&
+                    DefensivePursuitService.IsPassRusher(calledDefensivePlay, player.Position, defensiveRole);
                 double x, y;
                 if (snap.Outcome == SnapOutcome.Punt && player?.PlayerId == snap.ReturnerId)
                 {
@@ -567,6 +574,12 @@ public sealed partial class FoundationPage
                 var pursuitTarget = GameDayAnimationPlanner.PursuitTarget(contact, index, primaryDefender);
                 var endX = hasPursuitTarget ? pursuitTarget.X : Math.Clamp(x + (destination - line) * .72, .025, .96);
                 var endY = hasPursuitTarget ? pursuitTarget.Y : Math.Clamp(y + ((index % 3) - 1) * .025, .07, .93);
+                // Non-tackling rushers must attack the pocket, not inherit the pass's downfield destination.
+                var pocket = new GameFieldPoint(
+                    Math.Clamp((qbTo?.X ?? line - direction * .05) + direction * (2 + index % 2) / 120d, .025, .975),
+                    Math.Clamp((qbTo?.Y ?? .50) + (y - .50) * .55, .07, .93));
+                if (passRusher && !hasPursuitTarget)
+                { endX = pocket.X; endY = pocket.Y; }
                 if (isFieldGoalSnap)
                 {
                     endX = Math.Clamp(x - direction * .018, .025, .96);
@@ -581,6 +594,10 @@ public sealed partial class FoundationPage
                 { endX = interception.X; endY = interception.Y; }
                 var view = Marker(player, defenseColor, defenseIsAway);
                 RegisterMarker(player, view);
+                if (passRusher && snap.TargetId.HasValue && player?.PlayerId != snap.PrimaryDefenderId)
+                    rushPockets[view] = pocket;
+                else if (passRusher && caught)
+                    rushPockets[view] = pocket;
                 if (hasPursuitTarget) pursuingDefenders.Add(view);
                 if (primaryDefender)
                 {
@@ -617,6 +634,12 @@ public sealed partial class FoundationPage
                 var point = GameDayAnimationPlanner.RoutePoint(new(from.X, from.Y), new(to.X, to.Y), assigned ?? routeFamily, progress);
                 return new Rect(point.X, point.Y, from.Width, from.Height);
             }
+            Rect RushTrack(Rect from, Rect to, GameFieldPoint pocket, double progress)
+            {
+                var point = GameDayAnimationPlanner.PassRushPoint(new(from.X, from.Y), pocket,
+                    new(to.X, to.Y), progress, catchProgress);
+                return new Rect(point.X, point.Y, from.Width, from.Height);
+            }
             var ballStart = BallAt(centerPoint);
             AbsoluteLayout.SetLayoutFlags(ball, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(ball, ballStart);
@@ -627,6 +650,9 @@ public sealed partial class FoundationPage
                 var to = new GameFieldPoint(m.To.X, m.To.Y);
                 var distance = routeViews.Contains(m.View) ? GameDayAnimationPlanner.RouteLengthYards(from, to, assignedRoutes.GetValueOrDefault(m.View, routeFamily))
                     : GameDayAnimationPlanner.DistanceYards(from, to);
+                if (rushPockets.TryGetValue(m.View, out var pocket))
+                    return (Math.Max(GameDayAnimationPlanner.DistanceYards(from, pocket) / catchProgress,
+                        GameDayAnimationPlanner.DistanceYards(pocket, to) / (1 - catchProgress)), movementSpeeds[m.View], 1d);
                 if (caught && ReferenceEquals(m.View, terminalCarrierView))
                     return (Math.Max(distance / catchProgress, GameDayAnimationPlanner.DistanceYards(to, new(destination, to.Y)) / (1 - catchProgress)), movementSpeeds[m.View], 1d);
                 var active = ReferenceEquals(m.View, fairCatchGunner) ? .65 : ReferenceEquals(m.View, specialReturnerView) &&
@@ -644,7 +670,9 @@ public sealed partial class FoundationPage
                         : pursuingDefenders.Contains(movement.View)
                         ? GameDayAnimationPlanner.PursuitProgress(progress, ReferenceEquals(movement.View, primaryTacklerView))
                         : progress;
-                    var position = caught && ReferenceEquals(movement.View, terminalCarrierView) ? ReceiverTrack(progress) : routeViews.Contains(movement.View)
+                    var position = rushPockets.TryGetValue(movement.View, out var pocket)
+                        ? RushTrack(movement.From, movement.To, pocket, progress)
+                        : caught && ReferenceEquals(movement.View, terminalCarrierView) ? ReceiverTrack(progress) : routeViews.Contains(movement.View)
                         ? RouteTrack(movement.From, movement.To, movementProgress, assignedRoutes.GetValueOrDefault(movement.View, routeFamily))
                         : Interpolate(movement.From, movement.To, movementProgress);
                     AbsoluteLayout.SetLayoutBounds(movement.View, position);

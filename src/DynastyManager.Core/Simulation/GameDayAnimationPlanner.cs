@@ -257,6 +257,18 @@ public static class GameDayAnimationPlanner
             Math.Clamp(contact.Y + yOffset, .07, .93));
     }
 
+    /// <summary>Rush the pocket while the QB holds/throws, then react to a completed pass.</summary>
+    public static GameFieldPoint PassRushPoint(GameFieldPoint start, GameFieldPoint pocket,
+        GameFieldPoint finish, double progress, double catchProgress)
+    {
+        var reaction = Math.Clamp(catchProgress, .1, .95);
+        var p = Math.Clamp(progress, 0, 1);
+        var from = p <= reaction ? start : pocket;
+        var to = p <= reaction ? pocket : finish;
+        var fraction = p <= reaction ? p / reaction : (p - reaction) / (1 - reaction);
+        return new(from.X + (to.X - from.X) * fraction, from.Y + (to.Y - from.Y) * fraction);
+    }
+
     public static double PursuitProgress(double animationProgress, bool primaryDefender)
     {
         return Math.Clamp(animationProgress, 0, 1);

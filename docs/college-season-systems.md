@@ -51,3 +51,7 @@ Every newly completed Sim, Watch, or Play game retains up to five notable snap e
 ## Sprite feasibility (assessment only)
 
 Sprites can replace the current marker bodies while keeping the existing field positions, routes, pursuit, ball ownership, and replay timing. A first version needs eight-direction idle/run frames and short tackle, throw, kick, and celebration sequences, plus team-color tinting. Jersey numbers, the active-carrier outline, and a marker-mode fallback should remain available. The main work is creating consistent art and animation transitions, then checking frame time on lower-end Android devices. This would improve presentation; it would not turn the statistical engine into collision-based football physics. No sprite assets or sprite renderer are included in this build.
+
+## Pass-rush playback
+
+Live games and recorded highlights send assigned pass rushers toward the quarterback pocket while a pass develops, rather than moving them toward the eventual downfield result. Rushers selected for a completion tackle turn toward the receiver after the catch; the playback duration accounts for both segments to avoid accelerating that pursuit. Explicit zone/man assignments still permit a lineman to drop, while pressure linebackers and custom rushers use the same position/role assignment rules as sack attribution. This changes presentation without rerolling outcomes or statistics.
