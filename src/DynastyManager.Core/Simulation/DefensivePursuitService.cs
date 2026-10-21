@@ -9,25 +9,46 @@ public static class DefensivePursuitService
     // X is depth in yards relative to the line; Y is the fraction across the field.
     public static IReadOnlyDictionary<Guid, GameFieldPoint> Alignments(IReadOnlyList<DynastyPlayer> defenders, DefensivePlayDefinition play)
     {
-        var roles = new Dictionary<Position, int>(); var line = 0; var linebackers = 0; var corners = 0; var safeties = 0;
+        var roles = new Dictionary<Position, int>();
+        var edges = 0; var tackles = 0; var corners = 0; var safeties = 0;
+        var edgeCount = defenders.Count(p => p.Position == Position.DE);
+        var tackleCount = defenders.Count(p => p.Position == Position.DT);
+        var outsideCount = defenders.Count(p => p.Position == Position.OLB);
+        var insideCount = defenders.Count(p => p.Position == Position.MLB);
+        var linebackerCount = outsideCount + insideCount;
+        var safetyCount = defenders.Count(p => p.Position is Position.FS or Position.SS);
+        static double Spread(int index, int count, double low, double high) => count <= 1 ? .50 : low + (high-low)*index/(count-1);
         var result = new Dictionary<Guid, GameFieldPoint>();
         foreach (var player in defenders)
         {
             var role = roles.GetValueOrDefault(player.Position); roles[player.Position] = role + 1;
             var custom = play.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == role);
-            if (custom is not null) { result[player.PlayerId] = new(custom.Depth, custom.Lane); continue; }
             var goalLine = play.Formation == DefensiveFormation.GoalLine;
             var point = player.Position switch
             {
-                Position.DE or Position.DT => new GameFieldPoint(goalLine ? .5 : 1, .34 + line++ % 5 * .08),
-                Position.MLB or Position.OLB => new GameFieldPoint(goalLine ? 2 : 4.5, .28 + linebackers++ % 5 * .11),
-                Position.CB => new GameFieldPoint(goalLine ? 2 : 5, corners++ % 2 == 0 ? .14 : .86),
-                Position.FS or Position.SS => new GameFieldPoint(goalLine ? 5 : 13, safeties++ % 2 == 0 ? .32 : .68),
+                Position.DE => new GameFieldPoint(goalLine ? .5 : 1, Spread(edges++, edgeCount, .30, .70)),
+                Position.DT => new GameFieldPoint(goalLine ? .5 : 1, Spread(tackles++, tackleCount, .43, .57)),
+                Position.MLB or Position.OLB => new GameFieldPoint(goalLine ? 2 : 4.5,
+                    LinebackerLane(player.Position, role)),
+                Position.CB => Corner(corners++, goalLine),
+                Position.FS or Position.SS => new GameFieldPoint(goalLine ? 5 : 13, Spread(safeties++, safetyCount, .32, .68)),
                 _ => new GameFieldPoint(6, .5)
             };
-            result[player.PlayerId] = point;
+            result[player.PlayerId] = custom is null ? point : new(custom.Depth, custom.Lane);
         }
         return result;
+
+        double LinebackerLane(Position position, int role)
+        {
+            var outside = position == Position.OLB;
+            var count = outside ? outsideCount : insideCount;
+            if (linebackerCount <= 2)
+                return outsideCount == 1 && insideCount == 1 ? outside ? .40 : .60 : Spread(role, count, .40, .60);
+            return Spread(role, count, outside ? .26 : .42, outside ? .74 : .58);
+        }
+
+        static GameFieldPoint Corner(int role, bool goalLine) => new(goalLine ? 2 : role < 2 ? 5 : 4,
+            role switch { 0 => .14, 1 => .86, 2 => .34, 3 => .66, _ => .50 });
     }
 
     public static PursuitDecision Select(IReadOnlyList<DynastyPlayer> defenders, DefensivePlayDefinition play,
@@ -38,10 +59,18 @@ public static class DefensivePursuitService
         var candidates = defenders.Where(p => p.CurrentInjury is null && !p.IsRedshirted && p.Position != Position.K).ToArray();
         if (sack)
         {
-            var rushers = candidates.Where(p => p.Position is Position.DE or Position.DT ||
-                play.Assignments.Any(a => a.Position == p.Position && a.Task == AssignmentTask.Rush) ||
-                play.Approach == DefensiveApproach.Pressure && p.Position is Position.MLB or Position.OLB).ToArray();
-            if (rushers.Length > 0) candidates = rushers;
+            var roles = new Dictionary<Position, int>();
+            var rusherIds = new HashSet<Guid>();
+            foreach (var player in defenders)
+            {
+                var role = roles.GetValueOrDefault(player.Position); roles[player.Position] = role + 1;
+                var assignment = play.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == role);
+                var rushing = assignment is not null ? assignment.Task == AssignmentTask.Rush :
+                    player.Position is Position.DE or Position.DT ||
+                    play.Approach == DefensiveApproach.Pressure && player.Position is Position.MLB or Position.OLB;
+                if (rushing) rusherIds.Add(player.PlayerId);
+            }
+            candidates = candidates.Where(p => rusherIds.Contains(p.PlayerId)).ToArray();
         }
         double Distance(GameFieldPoint a, GameFieldPoint b) => Math.Sqrt(Math.Pow(a.X-b.X,2)+Math.Pow((a.Y-b.Y)*53.333,2));
         var contact = new GameFieldPoint(contactDepth, lane);

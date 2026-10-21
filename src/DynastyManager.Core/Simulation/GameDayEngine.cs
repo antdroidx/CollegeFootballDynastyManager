@@ -176,7 +176,7 @@ public static partial class GameDayEngine
         var read = isPass ? PassingReadService.Read(call.Offense, call.Defense, offensePlayers, defensePlayers, qb,
             offense.OffensiveCoordinatorGameManagement, session.Random) : new PassingRead(null, null, 0, 0, 2, 0, 0);
         var turnover = session.Random.NextDouble() < (isPass ? read.InterceptionChance : Math.Clamp(.025 - advantage * .0008, .008, .065));
-        var sack = isPass && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - read.Protection * .0018 + (read.ReleaseSeconds - 2) * .015, .015, .18);
+        var sack = isPass && read.RusherCount > 0 && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - read.Protection * .0018 + (read.ReleaseSeconds - 2) * .015, .015, .18);
         var hailMary = call.Offense.Name == "Hail Mary";
         var complete = isPass && read.Target is not null && !turnover && !sack && session.Random.NextDouble() <
             Math.Clamp(read.CatchChance - .055 + advantage * .0015 - (hailMary ? .25 : 0), .06, .9);
