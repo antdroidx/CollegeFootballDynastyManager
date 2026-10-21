@@ -50,6 +50,22 @@ def tap(root, text):
     time.sleep(1)
 
 
+def scroll_to_text(name, text, max_swipes=6):
+    for attempt in range(max_swipes + 1):
+        root = capture(name)
+        for node in root.iter("node"):
+            if node.get("text") == text:
+                left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
+                if right > left and bottom > top:
+                    return root
+        scrollables = [node for node in root.iter("node") if node.get("scrollable") == "true"]
+        if not scrollables or attempt == max_swipes:
+            raise AssertionError(f"Could not find visible {text}: {sorted(texts(root))}")
+        left, top, right, bottom = map(int, re.findall(r"\d+", scrollables[-1].get("bounds")))
+        x = str((left + right) // 2)
+        adb("shell", "input", "swipe", x, str(top + (bottom-top)*3//4), x, str(top + (bottom-top)//4), "350")
+
+
 def wait_for(name, predicate, timeout=120):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -67,22 +83,26 @@ def enabled(root, text):
 def calendar(root):
     # The shell header precedes dated news cards in document order.
     values = [node.get("text") for node in root.iter("node")]
-    header = next((value for value in values if value and re.search(r" · \d{4} · Week \d+$", value)), None)
+    header = next((value for value in values if value and re.search(r" · \d{4} · (?:Week \d+(?: · Opening week)?|Preseason)$", value)), None)
     phase = next((value for value in values if value and value.endswith((" · Preseason", " · Regular season"))), None)
     return (header, phase)
+
+
+def advance_action(root):
+    return next((label for label in ("Start season", "Advance to Week 1", "Advance Week") if enabled(root, label)), None)
 
 
 def overview_ready(root, previous=None):
     state = calendar(root)
     busy = any(node.get("class") == "android.widget.ProgressBar" for node in root.iter("node"))
-    return (enabled(root, "Advance Week") and state[0] is not None and state[1] is not None
+    return (advance_action(root) is not None and state[0] is not None and state[1] is not None
             and not busy and (previous is None or state != previous))
 
 
 def main():
     home = capture("launch")
     assert {"Your dynasties", "New dynasty"} <= texts(home), "Launch must open the save library"
-    assert not {"Advance Week", "Overview", "Roster", "Coach", "Recruit", "Season", "Settings"} & texts(home), "Career controls leaked onto Home"
+    assert not {"Advance Week", "Start season", "Advance to Week 1", "Overview", "Roster", "Coach", "Recruit", "Season", "Settings"} & texts(home), "Career controls leaked onto Home"
     tap(home, "New dynasty")
     create = capture("new-dynasty")
     assert {"Start a dynasty", "Dynasty name", "League structure", "Your school", "Start dynasty"} <= texts(create)
@@ -102,7 +122,7 @@ def main():
         if "Play game" in texts(overview):
             break
         previous = calendar(overview)
-        tap(overview, "Advance Week")
+        tap(overview, advance_action(overview))
         overview = wait_for(f"overview-week-{week}", lambda r: overview_ready(r, previous), timeout=300)
     assert "Play game" in texts(overview), "Expected a current-week user matchup"
     tap(overview, "Play game")
@@ -122,12 +142,57 @@ def main():
             if node.get("text") == label:
                 left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
                 assert screen_top <= top < bottom <= screen_bottom, f"Landscape control is off-screen: {label}"
+    # Inspect in-progress totals without finishing the match or advancing the play clock.
+    before_clock = next(t for t in texts(landscape) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
+    tap(landscape, "Box score")
+    box = wait_for("live-box-score", lambda r: "Live box score" in texts(r) and "Return to game" in texts(r))
+    assert {"Team totals", "Player statistics", "Total yards"} <= texts(box)
+    tap(box, "Player statistics")
+    players = capture("live-box-players")
+    assert "Passing" in texts(players)
+    tap(players, "Passing")
+    tap(scroll_to_text("live-box-category", "Returns"), "Returns")
+    returns = capture("live-box-returns")
+    assert {"KR", "KR yds"} <= texts(returns), "The opening kick return must appear in the live box score"
+    tap(returns, "Return to game")
+    returned = wait_for("live-box-returned", lambda r: "BALL ON" in texts(r))
+    assert before_clock in texts(returned), "Reading the box score advanced a paused game"
     # Rotate back as well: the same field/cards must safely reparent in both directions.
     adb("shell", "settings", "put", "system", "user_rotation", "0")
     time.sleep(2)
     assert "BALL ON" in texts(capture("game-day-portrait-restored"))
     assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip()
-    print("Current-week game entry and portrait/landscape rotation passed.")
+    print("Current-week game entry, live box-score filters and portrait/landscape rotation passed.")
+
+    # The header button stays in the same place when switching to Watch; wait for the
+    # active snap to finish before showing stats, then ensure Watch resumes on return.
+    adb("shell", "settings", "put", "system", "user_rotation", "1")
+    time.sleep(2)
+    ready = capture("watch-ready")
+    tap(ready, "Watch CPU")
+    tap(ready, "Box score")
+    paused = wait_for("watch-box-paused", lambda r: "Live box score" in texts(r))
+    snapshot = texts(paused)
+    time.sleep(2)
+    assert texts(capture("watch-box-still-paused")) == snapshot
+    tap(paused, "Return to game")
+    tap(ready, "Box score")
+    resumed = wait_for("watch-box-resumed", lambda r: "Live box score" in texts(r))
+    assert texts(resumed) != snapshot, "Watch did not advance after returning from the box score"
+    assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip()
+    print("Watch mode box-score pause/resume passed.")
+    # Close the box, then leave the incomplete watched game. Advance the actual league
+    # calendar as well, so a repeated numeric zero cannot silently pass this smoke test.
+    adb("shell", "input", "keyevent", "4")
+    time.sleep(.3)
+    adb("shell", "input", "keyevent", "4")
+    overview = wait_for("after-live-view", lambda r: overview_ready(r), timeout=300)
+    previous = calendar(overview)
+    tap(overview, advance_action(overview))
+    advanced = wait_for("calendar-advanced", lambda r: overview_ready(r, previous), timeout=300)
+    assert calendar(advanced) != previous
+    assert "Advance to Week 1" not in texts(advanced), "The calendar remained at Week 0"
+    print("Actual week advancement after live-view exit passed.")
 
 
 if __name__ == "__main__":

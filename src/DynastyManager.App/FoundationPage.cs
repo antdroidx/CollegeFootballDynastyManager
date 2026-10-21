@@ -1308,10 +1308,11 @@ public sealed partial class FoundationPage : ContentPage
             }
 
             await ShowAdvanceProgressAsync("Simulating games...", 0.48);
-            _currentDynasty = WeekSimulation.SimulateCurrentRegularSeasonWeek(
-                _currentDynasty,
-                _teamsByName,
-                BuildCurrentSimulationProfiles());
+            var simulationState = _currentDynasty;
+            var simulationTeams = _teamsByName;
+            var simulationProfiles = BuildCurrentSimulationProfiles();
+            _currentDynasty = await Task.Run(() => WeekSimulation.SimulateCurrentRegularSeasonWeek(
+                simulationState, simulationTeams, simulationProfiles));
 
             _currentDynasty = InjuryService
                 .AdvanceAndGenerateForCurrentWeek(_currentDynasty);
@@ -1580,6 +1581,9 @@ public sealed partial class FoundationPage : ContentPage
 
         await ShowAdvanceProgressAsync("Saving weekly progress...", 0.90);
         RenderCurrentDynasty();
+
+        if (_rollingAutosaveSwitch.IsToggled && _saveRepository is not null && _currentDynasty.Week == 0)
+            await SaveCurrentAsync(SaveKind.AutosaveCurrent);
 
         if (_rollingAutosaveSwitch.IsToggled &&
             _saveRepository is not null &&

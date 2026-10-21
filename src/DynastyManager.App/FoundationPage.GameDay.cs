@@ -24,6 +24,8 @@ public sealed partial class FoundationPage
         var session = GameDayEngine.Start(game, home, away, _currentDynasty.ActiveRoster, mode);
         session.ControlledTeamName = controlledTeamName;
         var animating = false;
+        var boxScoreOpen = false;
+        Task currentSnapFinished = Task.CompletedTask;
 
         if (mode == GameDayMode.Simulate)
         {
@@ -172,6 +174,9 @@ public sealed partial class FoundationPage
             numbers.Text = showNumbers ? "Markers: Numbers" : "Markers: Positions";
         }
         numbers.Clicked += (_, _) => { showNumbers = !showNumbers; Microsoft.Maui.Storage.Preferences.Default.Set("live-jersey-numbers", showNumbers); UpdateMarkerLabels(); };
+        var boxScore = new Button { Text = "Box score", FontSize = 11, MinimumHeightRequest = 34, Padding = new Thickness(8, 4), VerticalOptions = LayoutOptions.Center };
+        var scoreHeader = new Grid { ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
+        scoreHeader.Add(score, 0, 0); scoreHeader.Add(boxScore, 1, 0);
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
@@ -183,7 +188,7 @@ public sealed partial class FoundationPage
             if (compactLayout == compact) return;
             compactLayout = compact;
             page.Content = null;
-            foreach (var view in new View[] { score, situation, possession, field, result, playCard, defenseCard, controls })
+            foreach (var view in new View[] { scoreHeader, situation, possession, field, result, playCard, defenseCard, controls })
                 if (view.Parent is Layout parent) parent.Children.Remove(view);
             foreach (var button in controls.Children.OfType<Button>())
             {
@@ -206,13 +211,13 @@ public sealed partial class FoundationPage
             {
                 field.HeightRequest = 330;
                 page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 10,
-                    Children = { score, situation, possession, field, result, playCard, defenseCard, controls } } };
+                    Children = { scoreHeader, situation, possession, field, result, playCard, defenseCard, controls } } };
                 return;
             }
             field.HeightRequest = -1;
             var heading = new Grid { ColumnSpacing = 10, ColumnDefinitions =
                 new ColumnDefinitionCollection { new(new GridLength(2, GridUnitType.Star)), new(new GridLength(3, GridUnitType.Star)) } };
-            heading.Add(new VerticalStackLayout { Spacing = 1, Children = { score, possession } }, 0, 0);
+            heading.Add(new VerticalStackLayout { Spacing = 1, Children = { scoreHeader, possession } }, 0, 0);
             heading.Add(situation, 1, 0);
             var body = new Grid { ColumnSpacing = 8, ColumnDefinitions =
                 new ColumnDefinitionCollection { new(new GridLength(2.2, GridUnitType.Star)), new(GridLength.Star) } };
@@ -440,6 +445,7 @@ public sealed partial class FoundationPage
                     endX = Math.Clamp(x + (destination - x) * .68, .025, .96);
                     endY = Math.Clamp(y + (.50 - y) * .45, .07, .93);
                 }
+                if (player?.PlayerId == terminalCarrierId && snap.CarrierLane.HasValue) endY = snap.CarrierLane.Value;
                 if (player?.PlayerId == snap.TargetId && caught) endX = Project(snap.StartYardLine + snap.AirYards);
                 else if (player?.PlayerId == terminalCarrierId) endX = destination;
                 var view = Marker(player, offenseColor, offenseIsAway);
@@ -495,13 +501,11 @@ public sealed partial class FoundationPage
                 SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Fumble => snap.Yards >= 8 ? 2 : 1,
                 _ => 0
             };
-            var assistIds = defense.Where(player => player is not null && player.PlayerId != snap.PrimaryDefenderId)
-                .OrderBy(player => player!.Position is Position.MLB or Position.OLB or Position.FS or Position.SS ? 0 : 1)
-                .ThenBy(player => player!.PlayerId)
-                .Take(assistCount).Select(player => player!.PlayerId).ToHashSet();
+            var assistIds = snap.TackleAttemptIds.Where(id => id != snap.PrimaryDefenderId).Take(assistCount).ToHashSet();
             var defensivePlan = (snap.DefenseTeamName == game.HomeTeamName ? home : away).GamePlan ?? controlledPlan;
             var calledDefensivePlay = PlayEditorService.DefensiveLibrary(defensivePlan).FirstOrDefault(p => p.Id == snap.DefensivePlayId);
-            var defensiveRoles = new Dictionary<Position, int>();
+            var defensiveStarts = calledDefensivePlay is null ? new Dictionary<Guid, GameFieldPoint>() :
+                DefensivePursuitService.Alignments(defense.Where(p => p is not null).Select(p => p!).ToArray(), calledDefensivePlay);
             var defensiveLine = 0;
             var linebackers = 0;
             var secondary = 0;
@@ -544,12 +548,9 @@ public sealed partial class FoundationPage
                     x = Math.Clamp(line + direction * (isFront ? .018 : .065), .025, .96);
                     y = isFront ? .26 + (index % 7) * .08 : .18 + (index % 6) * .13;
                 }
-                if (player is not null && calledDefensivePlay is not null && !isFieldGoalSnap && snap.Outcome != SnapOutcome.Punt)
-                {
-                    var role = defensiveRoles.GetValueOrDefault(player.Position); defensiveRoles[player.Position] = role + 1;
-                    var assignment = calledDefensivePlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == role);
-                    if (assignment is not null) { x = Project(snap.StartYardLine + assignment.Depth); y = assignment.Lane; }
-                }
+                if (player is not null && !isFieldGoalSnap && snap.Outcome is not (SnapOutcome.Punt or SnapOutcome.Kickoff) &&
+                    defensiveStarts.TryGetValue(player.PlayerId, out var defensiveStart))
+                { x = Project(snap.StartYardLine + defensiveStart.X); y = defensiveStart.Y; }
                 var primaryDefender = isTackle && player?.PlayerId == snap.PrimaryDefenderId;
                 var assistingDefender = isTackle && player is not null && assistIds.Contains(player.PlayerId);
                 var hasPursuitTarget = primaryDefender || assistingDefender;
@@ -806,18 +807,24 @@ public sealed partial class FoundationPage
             var remaining = controlledTeamName == game.HomeTeamName ? session.HomeTimeouts : session.AwayTimeouts;
             timeout.Text = $"Timeout ({remaining})";
             timeout.IsVisible = !session.IsComplete;
-            timeout.IsEnabled = !animating && !session.KickoffPending && !session.ClockStopped && remaining > 0;
+            timeout.IsEnabled = !animating && !session.KickoffPending && (!session.ClockStopped || session.ClockRestartsOnReady) && remaining > 0;
         }
         async Task ShowSnapAsync(GameSnapEvent snap)
         {
-            animating = true; timeout.IsEnabled = false;
-            await AnimateSnapAsync(snap);
-            await ShowHighlightAsync(snap);
-            var period = GameDayAnimationPlanner.PeriodHeadline(snap.Quarter, session.Quarter, session.IsComplete);
-            if (period is not null) await ShowHighlightAsync(snap, period);
-            animating = false;
-            Refresh(snap);
-            await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
+            var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            currentSnapFinished = finished.Task;
+            try
+            {
+                animating = true; timeout.IsEnabled = false;
+                await AnimateSnapAsync(snap);
+                await ShowHighlightAsync(snap);
+                var period = GameDayAnimationPlanner.PeriodHeadline(snap.Quarter, session.Quarter, session.IsComplete);
+                if (period is not null) await ShowHighlightAsync(snap, period);
+                animating = false;
+                Refresh(snap);
+                await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
+            }
+            finally { animating = false; finished.TrySetResult(); }
         }
         async Task FinishIfNeeded()
         {
@@ -826,13 +833,13 @@ public sealed partial class FoundationPage
         }
         async Task WatchLoop()
         {
-            while (!session.IsComplete && session.Mode == GameDayMode.Watch && page.Parent is not null)
+            while (!session.IsComplete && session.Mode == GameDayMode.Watch && !boxScoreOpen && page.Parent is not null)
                 await ShowSnapAsync(GameDayEngine.Step(session));
             await FinishIfNeeded();
         }
         async Task RunCpuUntilUserDecision()
         {
-            while (!session.IsComplete && session.Mode == GameDayMode.Play && !NeedsUserCall())
+            while (!session.IsComplete && session.Mode == GameDayMode.Play && !boxScoreOpen && !NeedsUserCall())
                 await ShowSnapAsync(GameDayEngine.Step(session));
             Refresh();
             await FinishIfNeeded();
@@ -887,6 +894,18 @@ public sealed partial class FoundationPage
         {
             if (!animating && GameDayEngine.TryCallTimeout(session, controlledTeamName))
             { result.Text = $"{controlledTeamName} calls timeout."; Refresh(); }
+        };
+        boxScore.Clicked += async (_, _) =>
+        {
+            if (boxScoreOpen) return;
+            boxScoreOpen = true; controls.IsEnabled = false; boxScore.IsEnabled = false;
+            try
+            {
+                await currentSnapFinished;
+                await ShowLiveBoxScoreAsync(GameDayEngine.BoxScore(session));
+            }
+            finally { boxScoreOpen = false; controls.IsEnabled = true; boxScore.IsEnabled = true; }
+            if (session.Mode == GameDayMode.Watch) await WatchLoop(); else await RunCpuUntilUserDecision();
         };
         skip.Clicked += async (_, _) => { GameDayEngine.SimulateToEnd(session); await FinishIfNeeded(); };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();

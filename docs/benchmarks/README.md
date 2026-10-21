@@ -9,7 +9,7 @@ dotnet run --project tools/SimAudit -c Release -- 544 70931 .artifacts/validatio
 
 The runner uses the bundled August 26, 2025 NEXT26 roster and the same `GameDayEngine` used by Sim, Watch, Play and normal weekly/postseason games. It selects the 136 schools present in that pack, derives ratings and game plans from actual roster attributes, rotates home schools evenly and samples opponents. It does not force outcomes or a play-count maximum. Team statistics include overtime; regulation play count excludes overtime, kicks, tries, penalties and clock-only events. National offense tables include overtime, so the play-count comparison has that small methodological difference. Published FBS totals also include games against FCS opponents; this audit samples FBS versus FBS.
 
-The first 272 games were used for tuning. The 544-game sample uses a separate seed and was not used to choose parameters. These are synthetic schedules, not a replay of the actual 2025 schedule. Imported August ratings, injuries, depth charts and coaching choices do not reconstruct the season's real development or availability.
+The table below records the Build 266 calibration. The first 272 games were used for tuning. The 544-game sample uses a separate seed and was not used to choose parameters. These are synthetic schedules, not a replay of the actual 2025 schedule. Imported August ratings, injuries, depth charts and coaching choices do not reconstruct the season's real development or availability.
 
 | Metric | Before | Validation (544 games) | 2025 FBS |
 |---|---:|---:|---:|
@@ -43,3 +43,9 @@ Remaining limitations: probabilistic play resolution, no full collision simulati
 - [NCAA statistics manual](https://fs.ncaa.org/Docs/stats/Stats_Manuals/Football.pdf).
 
 `2025-fbs.json` contains derived national aggregates and source URLs. `before-build266.json` and `build266-validation.json` contain measured simulator output. Original downloaded HTML is retained only in ignored local artifacts.
+
+## Build 267 pursuit check
+
+`build267-validation.json` repeats the separate 544-game sample after the pursuit and live box-score work: 134.3 regulation plays, 388.8 yards/team, 62.5% completions, 2.03 sacks/team, 2.90 explosive passes/team and 1.38 explosive runs/team. This is a regression check of the earlier calibration, not a new fit to the data. The runner now also reports credited tackles by position, including special-teams participants. Defensive pursuit uses shared formation/assignment starting positions, estimated arrival/reaction time, speed/acceleration/agility and tackling ratings. It chooses among close contenders rather than forcing equal tackle shares by position. Receiving/defensive coverage is still an approximation, not a collision simulation.
+
+Live box-score snapshots read the same in-progress event/stat builders used by final results, without consuming randomness or marking a game complete. The viewer pauses after the current animation while a box score is open and resumes on return. Quarter scoring includes tries and overtime; player statistics can be filtered by team/category and sorted. Touchdowns and interceptions no longer invent defensive tackles.

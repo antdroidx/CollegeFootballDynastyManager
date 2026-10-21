@@ -13,9 +13,11 @@ spec.loader.exec_module(smoke)
 
 def overview(week=0, phase="Regular season", busy=False, enabled=True):
     root = ET.Element("hierarchy")
-    for text in (f"Air Force · 2026 · Week {week}", f"My Dynasty · 2026 · {phase}"):
+    period = "Preseason" if phase == "Preseason" else "Week 0 · Opening week" if week == 0 else f"Week {week}"
+    for text in (f"Air Force · 2026 · {period}", f"My Dynasty · 2026 · {phase}"):
         ET.SubElement(root, "node", text=text)
-    ET.SubElement(root, "node", text="Advance Week", enabled=str(enabled).lower())
+    action = "Start season" if phase == "Preseason" else "Advance to Week 1" if week == 0 else "Advance Week"
+    ET.SubElement(root, "node", text=action, enabled=str(enabled).lower())
     if busy:
         ET.SubElement(root, "node", attrib={"class": "android.widget.ProgressBar"})
     return root
@@ -38,6 +40,25 @@ class SmokeSynchronizationTests(unittest.TestCase):
         root = overview(week=1)
         ET.SubElement(root, "node", text="INJURIES · 2026 · Week 0")
         self.assertEqual("Air Force · 2026 · Week 1", smoke.calendar(root)[0])
+
+    def test_new_calendar_labels_choose_the_correct_action(self):
+        self.assertEqual("Start season", smoke.advance_action(overview(phase="Preseason")))
+        self.assertEqual("Advance to Week 1", smoke.advance_action(overview()))
+        self.assertEqual("Advance Week", smoke.advance_action(overview(week=1)))
+        self.assertTrue(smoke.overview_ready(overview(phase="Preseason")))
+
+    def test_preseason_start_waits_for_progress_overlay(self):
+        self.assertFalse(smoke.overview_ready(overview(phase="Preseason", busy=True)))
+        self.assertIsNone(smoke.advance_action(overview(phase="Preseason", enabled=False)))
+
+    def test_picker_option_can_be_reached_by_scrolling_its_observed_bounds(self):
+        first = ET.Element("hierarchy")
+        ET.SubElement(first, "node", attrib={"class":"android.widget.ListView", "scrollable":"true", "bounds":"[100,200][500,600]"})
+        second = ET.Element("hierarchy")
+        ET.SubElement(second, "node", text="Returns", bounds="[100,500][500,580]")
+        with patch.object(smoke, "capture", side_effect=[first, second]), patch.object(smoke, "adb") as command:
+            self.assertIs(second, smoke.scroll_to_text("picker", "Returns"))
+            command.assert_called_once_with("shell", "input", "swipe", "300", "500", "300", "300", "350")
 
     def test_failed_dump_never_reads_stale_xml(self):
         dumps = iter((b"ERROR: could not get idle state", b"UI hierchary dumped to: /sdcard/dynasty-ui.xml"))

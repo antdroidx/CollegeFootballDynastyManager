@@ -24,7 +24,7 @@ public class SeasonProgressionTests
     public void PreseasonOpensRegularSeasonAtWeekZero()
     {
         var next = SeasonProgression.Advance(
-            State(SeasonPhase.Preseason, 0));
+            State(SeasonPhase.Preseason, 0) with { Schedule = [new ScheduledGame { GameId = "opener", SeasonYear = 2026, Week = 0, HomeTeamName = "Washington", AwayTeamName = "Hawaii" }] });
 
         Assert.Equal(SeasonPhase.RegularSeason, next.Phase);
         Assert.Equal(0, next.Week);

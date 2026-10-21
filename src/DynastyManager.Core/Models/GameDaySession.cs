@@ -25,6 +25,8 @@ public sealed record GameSnapEvent
     public int BallEndYardLine { get; init; }
     public int KickLandingYardLine { get; init; }
     public int Yards { get; init; }
+    public double? CarrierLane { get; init; }
+    public IReadOnlyList<Guid> TackleAttemptIds { get; init; } = [];
     public int AirYards { get; init; }
     public int YardsAfterCatch { get; init; }
     public int PreSnapSeconds { get; init; }

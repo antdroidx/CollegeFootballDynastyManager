@@ -1,4 +1,5 @@
 using DynastyManager.Data.Persistence;
+using DynastyManager.Core.Seasons;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
@@ -54,7 +55,9 @@ public sealed partial class FoundationPage
         _headerContext.IsVisible = !library && _currentDynasty is not null;
         _settingsButton.IsVisible = !library && _currentDynasty is not null && _activeSection != AppSection.Settings;
         if (_currentDynasty is not null)
-            _headerContext.Text = $"{_currentDynasty.UserTeamName} · {_currentDynasty.SeasonYear} · Week {_currentDynasty.Week}";
+            _headerContext.Text = $"{_currentDynasty.UserTeamName} · {_currentDynasty.SeasonYear} · {SeasonProgression.PeriodLabel(_currentDynasty.Phase, _currentDynasty.Week)}";
+        if (_currentDynasty is not null)
+            _advanceWeekButton.Text = SeasonProgression.AdvanceLabel(_currentDynasty.Phase, _currentDynasty.Week);
     }
 
     private async Task ReturnToLibraryAsync()

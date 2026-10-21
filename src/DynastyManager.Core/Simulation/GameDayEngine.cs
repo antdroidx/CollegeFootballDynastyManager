@@ -206,9 +206,22 @@ public static partial class GameDayEngine
         yards = Math.Clamp(yards, 1 - session.YardLine, 100 - session.YardLine);
         var liveSeconds = Math.Clamp((int)Math.Round(isPass ? read.ReleaseSeconds + 1.2 + Math.Max(0, yards) / 8d : 3 + Math.Max(0, yards) / 6d), 4, 17);
 
-        var defenders = defensePlayers.Where(player => !isPass || !turnover
-            ? player.Position != Position.K : player.Position is Position.CB or Position.FS or Position.SS or Position.OLB or Position.MLB).ToArray();
-        var defender = isPass && !sack ? read.Defender : Pick(defenders.Length == 0 ? defensePlayers : defenders, session.Random);
+        var carrierLane = .50;
+        if (isPass && target is not null)
+        {
+            var role = offensePlayers.TakeWhile(p => p.PlayerId != target.PlayerId).Count(p => p.Position == target.Position);
+            var custom = call.Offense.Assignments.FirstOrDefault(a => a.Position == target.Position && a.RoleIndex == role);
+            var alignment = custom is null ? GameDayAnimationPlanner.Alignment(call.Offense.Formation, target.Position, role) : new GameFieldPoint(custom.Depth, custom.Lane);
+            var route = GameDayAnimationPlanner.AssignedRoute(call.Offense, target.Position, role);
+            var eligibleIndex = offensePlayers.TakeWhile(p => p.PlayerId != target.PlayerId).Count(p => p.Position is Position.WR or Position.TE or Position.RB);
+            carrierLane = GameDayAnimationPlanner.RouteEndLane(route, target.Position, eligibleIndex, alignment.Y, true);
+        }
+        else if (sack) carrierLane = call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase) ? .25 : .50;
+        else if (call.Offense.Concept == OffensiveConcept.OutsideRun) carrierLane = session.Events.Count % 2 == 0 ? .22 : .78;
+        else if (designedKeep && call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase)) carrierLane = .25;
+        var pursuit = DefensivePursuitService.Select(defensePlayers, call.Defense, yards, carrierLane,
+            isPass, sack, gain.AirYards, read.ReleaseSeconds, read.Defender?.PlayerId, read.Separation, session.Random);
+        var defender = isPass && (turnover || !complete && !sack) ? read.Defender : pursuit.Tackler;
         var start = session.YardLine;
         var touchdown = !turnover && start + yards >= 100;
         var outcome = turnover ? isPass ? SnapOutcome.Interception : SnapOutcome.Fumble :
@@ -223,6 +236,7 @@ public static partial class GameDayEngine
             DefensiveCallSource = string.IsNullOrWhiteSpace(userDefensivePlayId) ? PlayCallSource.Cpu : PlayCallSource.User,
             Down = session.Down, Distance = session.Distance, StartYardLine = start,
             BallEndYardLine = Math.Clamp(start + yards, 0, 100), Yards = yards, Outcome = outcome,
+            CarrierLane = carrierLane, TackleAttemptIds = pursuit.AttemptIds,
             AirYards = complete ? gain.AirYards : 0, YardsAfterCatch = complete ? gain.YardsAfterCatch : 0,
             PreSnapSeconds = session.LastPreSnapSeconds, LiveBallSeconds = liveSeconds,
             PassReleaseProgress = Math.Clamp(read.ReleaseSeconds / 5, .3, .75), TargetSeparation = read.Separation,
@@ -388,11 +402,11 @@ public static partial class GameDayEngine
                 };
                 Save(target);
             }
-            if (snap.PrimaryDefenderId is Guid defenderId && snap.Outcome is not SnapOutcome.Incompletion)
+            if (snap.PrimaryDefenderId is Guid defenderId && snap.Outcome is SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Sack or SnapOutcome.Fumble or SnapOutcome.Interception or SnapOutcome.Turnover)
             {
                 var defender = Line(defenderId) with
                 {
-                    Tackles = Line(defenderId).Tackles + 1,
+                    Tackles = Line(defenderId).Tackles + (snap.Outcome is SnapOutcome.Interception or SnapOutcome.Turnover ? 0 : 1),
                     TacklesForLoss = Line(defenderId).TacklesForLoss + (snap.Yards < 0 ? 1 : 0),
                     Sacks = Line(defenderId).Sacks + (snap.Outcome == SnapOutcome.Sack ? 1 : 0),
                     Interceptions = Line(defenderId).Interceptions + (snap.Outcome == SnapOutcome.Interception || pass && snap.Outcome == SnapOutcome.Turnover ? 1 : 0),
