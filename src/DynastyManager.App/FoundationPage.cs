@@ -1588,7 +1588,10 @@ public sealed partial class FoundationPage : ContentPage
         }
 
         if (_currentDynasty.Phase == SeasonPhase.Preseason)
+        {
             _currentDynasty = SeasonAwardsService.EnsurePreseason(_currentDynasty);
+            _currentDynasty = CollegePollService.Record(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
+        }
         await ShowAdvanceProgressAsync("Saving weekly progress...", 0.90);
         RenderCurrentDynasty();
 
@@ -1680,6 +1683,7 @@ public sealed partial class FoundationPage : ContentPage
 
         await ShowAdvanceProgressAsync("Preparing dynasty screen...", 0.90);
         _currentDynasty = state;
+        _currentDynasty = CollegePollService.EnsurePublished(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
         _recruitingAssistanceSwitch.IsToggled =
             state.RecruitingAssistanceEnabled;
         _recruitingAssistanceWorkloadSlider.Value =
@@ -4934,7 +4938,7 @@ public sealed partial class FoundationPage : ContentPage
         }
 
         _cachedNationalRankings =
-            CollegePollService.Build(
+            CollegePollService.GetPublished(
                 _currentDynasty,
                 _teamsByName, PollKind.Media,
                 profiles);
@@ -5167,7 +5171,7 @@ public sealed partial class FoundationPage : ContentPage
             return;
         }
 
-        var rankings = _pollKind.SelectedIndex <= 0 ? BuildCurrentNationalRankings() : CollegePollService.Build(_currentDynasty, _teamsByName, (PollKind)_pollKind.SelectedIndex, BuildCurrentSimulationProfiles());
+        var rankings = _pollKind.SelectedIndex <= 0 ? BuildCurrentNationalRankings() : CollegePollService.GetPublished(_currentDynasty, _teamsByName, (PollKind)_pollKind.SelectedIndex, BuildCurrentSimulationProfiles());
 
         var userRanking = rankings.FirstOrDefault(ranking =>
             ranking.TeamName.Equals(
@@ -5180,6 +5184,8 @@ public sealed partial class FoundationPage : ContentPage
                 : userRanking.Rank <= 25
                     ? $"Your team: #{userRanking.Rank} {userRanking.TeamName}"
                     : $"Your team: NR ({userRanking.Rank}) {userRanking.TeamName}";
+
+        _nationalRankingStatus.Text += " · Polls update on week advancement";
 
         var shown = _rankingsRange.SelectedIndex == 1 ? rankings : rankings.Take(25);
         _nationalRankingsList.Children.Add(DataTable(

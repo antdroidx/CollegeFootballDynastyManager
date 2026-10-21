@@ -5,6 +5,32 @@ namespace DynastyManager.Core.Simulation;
 /// <summary>Simulated media/coaches ballots; these are dynasty polls, not licensed real-world polls.</summary>
 public static class CollegePollService
 {
+    /// <summary>Read the last released poll. Finishing an individual game never publishes a poll.</summary>
+    public static IReadOnlyList<NationalRanking> GetPublished(DynastyState state, IReadOnlyDictionary<string, Team> teams,
+        PollKind kind = PollKind.Media, IReadOnlyDictionary<string, TeamSimulationProfile>? profiles = null)
+    {
+        var snapshot = state.PollHistory.LastOrDefault(p => p.SeasonYear == state.SeasonYear && p.Kind == kind);
+        if (snapshot is not null) return snapshot.Rankings;
+        // Saves without snapshots must not include any partially completed current week.
+        return Build(state with { Schedule = state.Schedule.Where(g => g.Week < state.Week).ToArray() }, teams, kind, profiles);
+    }
+
+    /// <summary>Anchor missing polls on load, excluding this week's games, and retain them in saves.</summary>
+    public static DynastyState EnsurePublished(DynastyState state, IReadOnlyDictionary<string, Team> teams,
+        IReadOnlyDictionary<string, TeamSimulationProfile>? profiles = null)
+    {
+        var missing = Enum.GetValues<PollKind>().Where(kind => !state.PollHistory.Any(p =>
+            p.SeasonYear == state.SeasonYear && p.Kind == kind)).ToArray();
+        if (missing.Length == 0) return state;
+        return state with { PollHistory = state.PollHistory.Concat(missing.Select(kind => new PollSnapshot
+        {
+            SeasonYear = state.SeasonYear, Week = Math.Max(0, state.Week - 1),
+            Phase = state.Week == 0 ? SeasonPhase.Preseason : state.Phase,
+            Kind = kind, Rankings = GetPublished(state, teams, kind, profiles)
+        })).ToArray() };
+    }
+
+    /// <summary>Compute a candidate poll after all games for a week have been resolved; UI uses GetPublished.</summary>
     public static IReadOnlyList<NationalRanking> Build(DynastyState state, IReadOnlyDictionary<string, Team> teams,
         PollKind kind = PollKind.Media, IReadOnlyDictionary<string, TeamSimulationProfile>? profiles = null)
     {
@@ -26,15 +52,39 @@ public static class CollegePollService
             // Results and opponents' results dominate; margin has diminishing returns, no reward for running up scores.
             return (wins / (double)slate.Length - .5) * 110 + (opponentStrength - .5) * 35 + wins * 3 - (slate.Length - wins) * 4 + margin * .35;
         }
+        var prestige = teams.Values.ToDictionary(t => t.Name, t => (double)ProgramPrestigeService.GetCurrentPrestige(state, t));
+        double History(Team t)
+        {
+            var seasons = state.TeamSeasonHistory.Where(h => h.TeamName == t.Name && h.SeasonYear < state.SeasonYear)
+                .OrderByDescending(h => h.SeasonYear).Take(3).ToArray();
+            if (seasons.Length == 0) return prestige[t.Name];
+            var weights = seasons.Select(h => 1.0 / (state.SeasonYear - h.SeasonYear)).ToArray();
+            return seasons.Select((h, i) => (45 + 40.0 * h.Wins / Math.Max(1, h.Wins + h.Losses) +
+                (h.FinalRanking is > 0 and <= 25 ? (26 - h.FinalRanking) * .6 : 0)) * weights[i]).Sum() / weights.Sum();
+        }
+        var expectations = teams.Values.ToDictionary(t => t.Name, t =>
+            Talent(t) * .45 + prestige[t.Name] * .25 + History(t) * .15 +
+            teams.Values.Where(x => x.ConferenceName == t.ConferenceName).Average(x => prestige[x.Name]) * .15);
         var scores = teams.Values.ToDictionary(t => t.Name, t =>
         {
             var count = records[t.Name].Length;
             if (kind == PollKind.Computer) return Resume(t);
-            var preseasonWeight = Math.Max(.05, 1 - count / 8.0);
-            var conference = teams.Values.Where(x => x.ConferenceName == t.ConferenceName).Average(x => (double)x.Prestige);
-            var expectation = Talent(t) * .65 + ProgramPrestigeService.GetCurrentPrestige(state, t) * .25 + conference * .1;
-            var inertia = previous is not null && previous.TryGetValue(t.Name, out var old) ? Math.Max(0, 26 - old.Rank) * (kind == PollKind.Coaches ? .22 : .12) : 0;
-            return Resume(t) + expectation * preseasonWeight + inertia;
+            // A one-game resume is evidence, not a full season. By six games results carry full weight;
+            // expectations gradually recede over eight games, so byes do not count as losses.
+            var evidence = Math.Min(1, count / 6.0);
+            var preseasonWeight = Math.Max(.08, 1 - count / 8.0);
+            var expectation = (expectations[t.Name] - 70) * 1.6 * preseasonWeight;
+            var inertia = previous is not null && previous.TryGetValue(t.Name, out var old)
+                ? Math.Max(0, 26 - old.Rank) * (kind == PollKind.Coaches ? .40 : .25) : 0;
+            // Distinguish a win over a strong program from an early win over an FCS opponent,
+            // before opponents have accumulated meaningful win/loss samples of their own.
+            var quality = count == 0 ? 0 : records[t.Name].Average(g =>
+            {
+                var opponent = g.HomeTeamName == t.Name ? g.AwayTeamName : g.HomeTeamName;
+                var strength = expectations.GetValueOrDefault(opponent, 40);
+                return (strength - 70) * .45;
+            }) * Math.Min(1, count / 3.0) * (1 - evidence);
+            return Resume(t) * evidence + expectation + inertia + quality;
         }, StringComparer.OrdinalIgnoreCase);
         var points = teams.Keys.ToDictionary(n => n, _ => 0d, StringComparer.OrdinalIgnoreCase);
         if (kind != PollKind.Computer)
