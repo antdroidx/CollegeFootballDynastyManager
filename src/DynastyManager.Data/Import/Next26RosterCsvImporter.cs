@@ -12,7 +12,6 @@ public static class Next26RosterCsvImporter
 {
     public const string RosterName = "NCAA 06 NEXT26 · Aug 26, 2025";
     public static readonly Guid RosterId = Guid.Parse("2be66e42-ec81-49e9-8d1c-000000000026");
-    private static readonly int[] DisplayedRatings = Enumerable.Range(40, 60).ToArray();
     private static readonly IReadOnlyDictionary<string, string> Aliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["Florida Atlantic"] = "Florida Atl", ["Florida International"] = "Florida Intl", ["Hawai'i"] = "Hawaii",
@@ -68,7 +67,7 @@ public static class Next26RosterCsvImporter
                     IsRedshirted = redshirt == 1, HasRedshirted = redshirt != 0, DepthChartOrder = 99,
                     PotentialRating = 60
                 };
-                player = NcaaPlayerBioImporter.Apply(Ncaa06RosterRatings.Apply(player, ratings, DisplayedRatings), row);
+                player = NcaaPlayerBioImporter.Apply(Ncaa06RosterRatings.Apply(player, Next26RatingAdjustments.Decode(ratings)), row);
                 players.Add(ImportedRecruitingStarsService.EstimateIfUnknown(player with { TalentLevel = player.OverallRating }));
             }
             catch (Exception ex) when (ex is ArgumentException or FormatException)

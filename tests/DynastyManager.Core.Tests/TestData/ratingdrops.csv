@@ -1,0 +1,21 @@
+Attribute,QB,HB,FB,WR,TE,OL,DT,DE,LB,CB,FS,SS,K,P
+Acceleration,-3,,,,-1,,,,-1,,-1,-1,,
+Agility,-3,,,,-2,,,,-1,,-1,-1,,
+Awareness,-2,-2,-2,-2,-2,0,-3,-3,-3,-2,-3,-4,-2,-2
+Ball Carrying,,,,,,,,,,,,,,
+Break Tackle,,,,,,,,,,,,,,
+Catching,,,,,,,,,-1,-1,-1,-1,,
+Importance,,,,,,,,,,,,,,
+Injury,,,,,,,,,,,,,,
+Jumping,,,,,,,,,,-2,-2,-2,,
+Kick Accuracy,,,,,,,,,,,,,-1,-1
+Kick Power,,,,,,,,,,,,,-1,-1
+Pass Block,,,,,,,,,,,,,,
+Potential,,,,,,,,,,,,,,
+Run Block,,,,,,,,,,,,,,
+Speed,-3,,,,-1,,,-1,-1,,-1,-1,,
+Stamina,,,,,,,,,,,,,,
+Strength,-6,,,,,,-1,-1,,,,,,
+Tackling,,,,,,,-1,-1,-1,-1,-1,-1,,
+Throw Accuracy,-2,,,,,,,,,,,,,
+Throw Power,-2,,,,,,,,,,,,,
