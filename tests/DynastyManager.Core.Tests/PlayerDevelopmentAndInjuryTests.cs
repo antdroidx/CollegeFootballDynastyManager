@@ -68,7 +68,7 @@ public class PlayerDevelopmentAndInjuryTests
         var playerId = Guid.NewGuid();
         var history = new[]
         {
-            DevelopmentRecord(playerId, PlayerDevelopmentStage.Midseason, 70, 72),
+            DevelopmentRecord(playerId, PlayerDevelopmentStage.Midseason, 70, 72) with { Week = 12 },
             DevelopmentRecord(playerId, PlayerDevelopmentStage.Offseason, 72, 75)
         };
 

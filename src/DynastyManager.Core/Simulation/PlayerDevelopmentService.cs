@@ -25,8 +25,8 @@ public static class PlayerDevelopmentService
             .Where(record => record.SeasonYear == latestSeason)
             .GroupBy(record => record.PlayerId)
             .Select(group => group
-                .OrderByDescending(record => record.Week)
-                .ThenBy(record => record.Stage == PlayerDevelopmentStage.Offseason ? 0 : 1)
+                .OrderBy(record => record.Stage == PlayerDevelopmentStage.Offseason ? 0 : 1)
+                .ThenByDescending(record => record.Week)
                 .First())
             .ToArray();
     }
