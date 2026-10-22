@@ -47,7 +47,7 @@ internal sealed class GameDayCallPicker : Border
             {
                 if (i % columns == 0) cards.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
                 var play = filtered[i];
-                var card = Card(play.Name, play.Formation, play.Type, play.Art, () => select(play.Id), true);
+                var card = Card(play.Name, play.Formation, play.Type, play.Art, () => select(play.Id), false);
                 card.Stroke = Color.FromArgb("#E8C979"); card.StrokeThickness = play.Id == selectedId ? 2 : 0;
                 cards.Add(card, i % columns, i / columns);
             }
@@ -63,15 +63,24 @@ internal sealed class GameDayCallPicker : Border
 
     internal static Border Card(string name, string formation, string type, IDrawable? art, Action select, bool compact)
     {
+        var diagram = new GraphicsView { Drawable = art, IsVisible = art is not null,
+            HeightRequest = compact ? 68 : 100, BackgroundColor = Color.FromArgb("#102A24"), InputTransparent = true };
+        var info = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children =
+        {
+            new Label { Text = name, FontSize = 12, FontAttributes = FontAttributes.Bold, MaxLines = 2, TextColor = Colors.White },
+            new Label { Text = type, FontSize = 9, MaxLines = 2, TextColor = Color.FromArgb("#E8C979") },
+            new Label { Text = formation, FontSize = 9, MaxLines = 2, TextColor = Color.FromArgb("#B8D8FA") }
+        } };
+        View content;
+        if (compact)
+        {
+            var row = new Grid { ColumnSpacing = 6, ColumnDefinitions =
+                new ColumnDefinitionCollection { new(new GridLength(1.1, GridUnitType.Star)), new(GridLength.Star) } };
+            row.Add(diagram, 0, 0); row.Add(info, 1, 0); content = row;
+        }
+        else content = new VerticalStackLayout { Spacing = 4, Children = { diagram, info } };
         var card = new Border { Padding = 6, StrokeThickness = 0,
-            StrokeShape = new RoundRectangle { CornerRadius = 7 }, BackgroundColor = Color.FromArgb("#213442"),
-            Content = new VerticalStackLayout { Spacing = 2, Children =
-            {
-                new GraphicsView { Drawable = art, IsVisible = art is not null, HeightRequest = compact ? 42 : 100,
-                    BackgroundColor = Color.FromArgb("#102A24"), InputTransparent = true },
-                new Label { Text = name, FontSize = 12, FontAttributes = FontAttributes.Bold, MaxLines = 1, TextColor = Colors.White },
-                new Label { Text = $"{type} · {formation}", FontSize = 9, MaxLines = 1, TextColor = Color.FromArgb("#E8C979") }
-            } } };
+            StrokeShape = new RoundRectangle { CornerRadius = 7 }, BackgroundColor = Color.FromArgb("#213442"), Content = content };
         SemanticProperties.SetDescription(card, $"Select {name}, {type}, {formation}");
         var tap = new TapGestureRecognizer(); tap.Tapped += (_, _) => select(); card.GestureRecognizers.Add(tap);
         return card;

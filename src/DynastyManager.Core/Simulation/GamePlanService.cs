@@ -115,7 +115,11 @@ public static class GamePlanService
         }
         var selected = orderedFormations.SelectMany((formation, formationIndex) =>
             Curated(formation, formationIndex == 0 ? 7 : 5));
-        return selected.DistinctBy(play => play.Id).ToArray();
+        var book = selected.DistinctBy(play => play.Id).ToList();
+        // Reserve a situational last-heave call inside the same playbook size.
+        var heave = PlaybookCatalog.OffensivePlays.FirstOrDefault(p => p.Formation == orderedFormations[0] && p.Name == "Hail Mary");
+        if (heave is not null && book.All(p => p.Name != "Hail Mary") && book.Count > 0) book[^1] = heave;
+        return book;
     }
 
     public static IReadOnlyList<DefensivePlayDefinition> AvailableDefensivePlays(TeamGamePlan plan)

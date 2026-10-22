@@ -203,6 +203,24 @@ def main():
     assert "Players: Sprites" not in texts(landscape), "Utility controls should collapse during play selection"
     assert choose_label in texts(landscape)
     print("Hybrid play overlay, Android Back, compact utility menu and paused-clock checks passed.")
+    assert any((value or "").startswith("TIMEOUTS  ") for value in texts(landscape)), "Both timeout banks must be visible"
+    tap(landscape, "Box score")
+    replay_before = wait_for("replay-stats-before", lambda r: "Live box score" in texts(r))
+    replay_stats = texts(replay_before)
+    tap(replay_before, "Return to game")
+    replay_ready = wait_for("manual-replay-ready", lambda r: "Replay last" in texts(r))
+    replay_clock = next(t for t in texts(replay_ready) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
+    tap(replay_ready, "Replay last")
+    Path("android-instant-replay.png").write_bytes(adb("exec-out", "screencap", "-p"))
+    replay_returned = wait_for("manual-replay-returned", lambda r: "Replay last" in texts(r))
+    assert replay_clock in texts(replay_returned), "Replay consumed game time"
+    assert any("SELECTED" in (value or "") for value in texts(replay_returned)), "Replay reset the pending call"
+    tap(replay_returned, "Box score")
+    replay_after = wait_for("replay-stats-after", lambda r: "Live box score" in texts(r))
+    assert texts(replay_after) == replay_stats, "Replay changed scores or statistics"
+    tap(replay_after, "Return to game")
+    landscape = wait_for("replay-complete", lambda r: "Replay last" in texts(r))
+    print("Both timeout banks and manual replay without clock/stat/call changes passed.")
     # Inspect in-progress totals without finishing the match or advancing the play clock.
     before_clock = next(t for t in texts(landscape) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
     tap(landscape, "Box score")
@@ -218,6 +236,18 @@ def main():
     tap(returns, "Return to game")
     returned = wait_for("live-box-returned", lambda r: "BALL ON" in texts(r))
     assert before_clock in texts(returned), "Reading the box score advanced a paused game"
+    if "Call play" in texts(returned):
+        tap(returned, "More")
+        special = capture("timeout-clock-play")
+        tap(special, "Kneel")
+        running = wait_for("timeout-available", lambda r: enabled(r, "Timeout (3)"))
+        timeout_clock = next(t for t in texts(running) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
+        tap(running, "Timeout (3)")
+        Path("android-timeout-banner.png").write_bytes(adb("exec-out", "screencap", "-p"))
+        stopped = wait_for("timeout-called", lambda r: "Timeout (2)" in texts(r))
+        assert timeout_clock in texts(stopped), "A timeout consumed game time"
+        assert any("(2)" in (value or "") and (value or "").startswith("TIMEOUTS  ") for value in texts(stopped))
+        print("User timeout notification and both-team remaining counters passed.")
     # Rotate back as well: the same field/cards must safely reparent in both directions.
     adb("shell", "settings", "put", "system", "user_rotation", "0")
     time.sleep(2)

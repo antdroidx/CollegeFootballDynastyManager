@@ -76,3 +76,16 @@ The landscape field spans the available width, with a compact score/situation he
 **Choose play / Choose defense** expands a field overlay with a scrollable three-column library and formation filter. It uses only the controlled coach's available plays. Selecting a play closes the overlay without consuming game time. **Close playbook** or Android Back dismisses it. Portrait retains the larger scrolling cards and existing formation-grouped call sheets.
 
 The tray's play cards disappear during a snap and while watching CPU play. **More** reveals special teams, kneel/spike, offense/defense delegation, onside preference, jersey labels and renderer options. The scoreboard's box-score control and compact watch/timeout/end-game controls remain accessible. This is an in-game layout change; the concept image's stadium surroundings and illustrated sprite assets are not bundled artwork.
+
+
+## Live presentation, timeouts and instant replay
+
+Play-art diagrams render in a fixed aspect ratio, centered within their cards. Landscape quick calls use art beside the labels; expanded calls retain larger art. The procedural field includes mowing bands, subtle turf grain, five-yard lines, college hash marks, team-colored named end zones and a bordered midfield initial. Sprites include collar/pad highlights and seams. This remains original procedural art rather than the earlier concept's illustrated stadium assets.
+
+The commentary panel shows a neutral live-play caption while action unfolds and named play-by-play afterward. The active ball owner's full name appears above the sprite, transfers at the handoff/catch, and disappears during flight. Carrier names can be disabled in More. At user decision points, the prior active units gather in separate huddles without consuming simulation randomness. The next snap renders the called formation.
+
+Both timeout banks appear in the scoreboard. User and CPU team timeouts record distinct clock-stoppage events containing the calling school and both remaining counts; a field banner announces the timeout. Official two-minute timeouts remain separate, without charging a team timeout. Standard coach playbooks reserve one Hail Mary within their existing play count; final-heave advice covers suitable final seconds of either half, after considering a feasible field goal. Custom playbooks must include it explicitly.
+
+Tightly contested non-drop incompletions can be recorded as pass breakups. The credited defender converges at the target's catch point, the ball tips away without possession, commentary names the defender, and the same event credits a pass defended without adding a tackle or interception. Other misses and receiver drops retain separate animation/commentary.
+
+Automatic instant replays show touchdowns, turnovers, two-point conversions, gains of at least 25 yards, and returns of at least 30 yards. More offers Auto replay On/Off. Replay last is available between user calls and after the final play; pause Watch first to replay manually. Replays use recorded events at slightly slower playback and never step the engine, consume clock/randomness, alter the pending call or add statistics. Recorded replay playback remains a visualization of the shared probabilistic engine, not collision physics.

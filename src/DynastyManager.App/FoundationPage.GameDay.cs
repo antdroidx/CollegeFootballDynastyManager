@@ -35,7 +35,11 @@ public sealed partial class FoundationPage
         var gameRanks = BuildCurrentNationalRankings();
         var animating = false;
         var boxScoreOpen = false;
+        var driving = false;
         Task currentSnapFinished = Task.CompletedTask;
+        GameSnapEvent? lastPlayedSnap = null;
+        var instantReplays = Microsoft.Maui.Storage.Preferences.Default.Get("live-instant-replays", true);
+        var showCarrierNames = Microsoft.Maui.Storage.Preferences.Default.Get("live-carrier-names", true);
 
         if (mode == GameDayMode.Simulate)
         {
@@ -60,12 +64,18 @@ public sealed partial class FoundationPage
         situation.Add(SituationCell("YARDS TO GO", toGoValue), 2, 0);
         situation.Add(SituationCell("BALL ON", ballValue), 3, 0);
         var possession = new Label { FontSize = 11, HorizontalTextAlignment = TextAlignment.Center, TextColor = Color.FromArgb("#E8C979") };
-        var result = new Label { HorizontalTextAlignment = TextAlignment.Center, FontSize = 14 };
+        var result = new Label { HorizontalTextAlignment = TextAlignment.Center, FontSize = 14,
+            FontAttributes = FontAttributes.Bold, TextColor = Colors.White, MaxLines = 3 };
+        var commentaryPanel = new Border { StrokeThickness = 0, Padding = new Thickness(10, 6),
+            BackgroundColor = Color.FromArgb("#203645"), Content = result };
+        var timeoutsHud = new Label { FontSize = 10, TextColor = Color.FromArgb("#E8C979"),
+            HorizontalTextAlignment = TextAlignment.Center, AutomationId = "game-day-timeouts" };
         var homeBrand = TeamBrandCatalog.Get(game.HomeTeamName);
         var fieldArt = new GameFieldDrawable
         {
             HomeColor = Color.FromArgb(homeBrand.Primary),
             HomeSecondaryColor = Color.FromArgb(homeBrand.Secondary),
+            HomeName = game.HomeTeamName.ToUpperInvariant(),
             HomeInitial = TeamBrandCatalog.Initial(game.HomeTeamName)
         };
         var field = new Grid { HeightRequest = 330, BackgroundColor = Color.FromArgb("#245B38") };
@@ -76,7 +86,10 @@ public sealed partial class FoundationPage
         var highlight = new Border { IsVisible = false, StrokeThickness = 2, Stroke = Colors.White,
             Padding = new Thickness(22, 12), HorizontalOptions = LayoutOptions.Center,
             VerticalOptions = LayoutOptions.Center, Content = highlightText };
-        field.Add(fieldLines); field.Add(fieldPlayers); field.Add(highlight);
+        var replayChip = new Label { Text = "INSTANT REPLAY", IsVisible = false, FontSize = 12,
+            FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#FFE194"), BackgroundColor = Color.FromArgb("#E0101F2C"),
+            Padding = new Thickness(12, 4), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Start, Margin = 6 };
+        field.Add(fieldLines); field.Add(fieldPlayers); field.Add(highlight); field.Add(replayChip);
 
         var controlledProfile = controlledTeamName.Equals(game.HomeTeamName, StringComparison.OrdinalIgnoreCase) ? home : away;
         var controlledPlan = GamePlanService.Normalize(controlledProfile.GamePlan ?? new TeamGamePlan { TeamName = controlledTeamName });
@@ -171,6 +184,15 @@ public sealed partial class FoundationPage
         var onside = new Button { Text = "Next kickoff: Deep" };
         onside.Clicked += (_, _) => { session.OnsideKickRequested = !session.OnsideKickRequested; onside.Text = session.OnsideKickRequested ? "Next kickoff: Onside" : "Next kickoff: Deep"; };
         var timeout = new Button { Text = "Timeout" };
+        var replayLast = new Button { Text = "Replay last", IsVisible = false };
+        var replayToggle = new Button { Text = instantReplays ? "Auto replay: On" : "Auto replay: Off" };
+        var carrierToggle = new Button { Text = showCarrierNames ? "Carrier names: On" : "Carrier names: Off" };
+        replayToggle.Clicked += (_, _) => { instantReplays = !instantReplays;
+            Microsoft.Maui.Storage.Preferences.Default.Set("live-instant-replays", instantReplays);
+            replayToggle.Text = instantReplays ? "Auto replay: On" : "Auto replay: Off"; };
+        carrierToggle.Clicked += (_, _) => { showCarrierNames = !showCarrierNames;
+            Microsoft.Maui.Storage.Preferences.Default.Set("live-carrier-names", showCarrierNames);
+            carrierToggle.Text = showCarrierNames ? "Carrier names: On" : "Carrier names: Off"; };
         var showNumbers = Microsoft.Maui.Storage.Preferences.Default.Get("live-jersey-numbers", false);
         var markerLabels = new Dictionary<Label, DynastyPlayer?>();
         var spritePlayers = new Dictionary<FootballSpriteView, DynastyPlayer?>();
@@ -193,11 +215,11 @@ public sealed partial class FoundationPage
         numbers.Clicked += (_, _) => { showNumbers = !showNumbers; Microsoft.Maui.Storage.Preferences.Default.Set("live-jersey-numbers", showNumbers); UpdateMarkerLabels(); };
         var boxScore = new Button { Text = "Box score", FontSize = 11, MinimumHeightRequest = 34, Padding = new Thickness(8, 4), VerticalOptions = LayoutOptions.Center };
         var scoreHeader = new Grid { ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-        scoreHeader.Add(score, 0, 0); scoreHeader.Add(boxScore, 1, 0);
+        scoreHeader.Add(new VerticalStackLayout { Spacing = 1, Children = { score, timeoutsHud } }, 0, 0); scoreHeader.Add(boxScore, 1, 0);
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
-        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, numbers, spriteMode, skip, close })
+        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, replayLast, numbers, spriteMode, replayToggle, carrierToggle, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
         var coachCallsOffense = false;
         var coachCallsDefense = false;
@@ -237,13 +259,14 @@ public sealed partial class FoundationPage
             twoPoint.IsVisible = deciding && ControlledOnOffense() && session.TryPending;
             call.IsVisible = deciding && ControlledOnOffense();
             callDefense.IsVisible = deciding && !ControlledOnOffense();
+            replayLast.IsVisible = replay is null && lastPlayedSnap is not null && !animating && session.Mode != GameDayMode.Watch;
             more.IsVisible = landscape && !animating && !session.IsComplete && replay is null;
             more.Text = moreOpen ? "Less" : "More";
-            foreach (var utility in new[] { punt, kick, kneel, spike, onside, delegateOffense, delegateDefense, numbers, spriteMode })
+            foreach (var utility in new[] { punt, kick, kneel, spike, onside, delegateOffense, delegateDefense, numbers, spriteMode, replayToggle, carrierToggle })
             {
                 var eligible = utility == punt || utility == kick || utility == kneel || utility == spike
                     ? deciding && ControlledOnOffense() && !session.TryPending && (utility != kneel && utility != spike || session.OvertimeRound == 0)
-                    : utility == numbers || utility == spriteMode || session.Mode == GameDayMode.Play && !session.IsComplete;
+                    : utility == numbers || utility == spriteMode || utility == replayToggle || utility == carrierToggle || session.Mode == GameDayMode.Play && !session.IsComplete;
                 utility.IsVisible = eligible && (!landscape || moreOpen) && !animating;
             }
             foreach (var action in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, delegateOffense, delegateDefense, takeover, onside, skip })
@@ -302,7 +325,7 @@ public sealed partial class FoundationPage
             compactLayout = compact;
             ClosePicker();
             page.Content = null;
-            foreach (var view in new View[] { scoreHeader, situation, possession, field, result, playCard, defenseCard, controls, quickCalls, traySurface, pickerLayer })
+            foreach (var view in new View[] { scoreHeader, situation, possession, field, commentaryPanel, playCard, defenseCard, controls, quickCalls, traySurface, pickerLayer })
                 if (view.Parent is Layout parent) parent.Children.Remove(view);
             foreach (var button in controls.Children.OfType<Button>())
             {
@@ -315,7 +338,8 @@ public sealed partial class FoundationPage
             score.FontSize = compact ? 16 : 22;
             downValue.FontSize = toGoValue.FontSize = compact ? 17 : 22;
             ballValue.FontSize = compact ? 14 : 18;
-            result.FontSize = compact ? 11 : 14;
+            result.FontSize = compact ? 13 : 15;
+            result.MaxLines = compact ? 2 : 3;
             selectedDescription.IsVisible = defenseDescription.IsVisible = !compact;
             selectedHeading.FontSize = defenseHeading.FontSize = compact ? 8 : 9;
             selectedName.FontSize = defenseName.FontSize = compact ? 13 : 15;
@@ -340,7 +364,7 @@ public sealed partial class FoundationPage
                 UpdateOverlay();
                 field.HeightRequest = 330;
                 page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 10,
-                    Children = { scoreHeader, situation, possession, field, result, playCard, defenseCard, controls } } };
+                    Children = { scoreHeader, situation, possession, field, commentaryPanel, playCard, defenseCard, controls } } };
                 return;
             }
             field.HeightRequest = -1;
@@ -357,7 +381,7 @@ public sealed partial class FoundationPage
             body.Add(field); body.Add(traySurface); body.Add(pickerLayer);
             var root = new Grid { Padding = 4, RowSpacing = 3, RowDefinitions =
                 new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
-            root.Add(heading, 0, 0); root.Add(body, 0, 1); root.Add(result, 0, 2);
+            root.Add(heading, 0, 0); root.Add(body, 0, 1); root.Add(commentaryPanel, 0, 2);
             page.Content = root;
             UpdateOverlay();
         }
@@ -413,12 +437,36 @@ public sealed partial class FoundationPage
             foreach (var (marker, info) in markerHosts)
                 SetMarkerAppearance(marker, info.Player, info.Primary, info.Secondary, info.Away);
         };
-        async Task AnimateSnapAsync(GameSnapEvent snap)
+        void RenderHuddles()
+        {
+            if (replay is not null || animating || session.IsComplete || !NeedsUserCall()) return;
+            fieldPlayers.Children.Clear(); markerLabels.Clear(); spritePlayers.Clear(); markerHosts.Clear(); activeBallOwners.Clear();
+            var direction = (session.PossessionTeamName == game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1);
+            fieldArt.YardLine = session.YardLine; fieldArt.Distance = session.Distance; fieldArt.Direction = direction; fieldLines.Invalidate();
+            foreach (var team in new[] { game.HomeTeamName, game.AwayTeamName })
+            {
+                var offense = team == session.PossessionTeamName;
+                var priorIds = lastPlayedSnap is null ? Array.Empty<Guid>() :
+                    (lastPlayedSnap.OffenseTeamName == team ? lastPlayedSnap.OffensePersonnel : lastPlayedSnap.DefensePersonnel).ToArray();
+                var unit = priorIds.Select(id => session.PlayersById.GetValueOrDefault(id)).Where(p => p is not null).Select(p => p!).Take(11).ToArray();
+                if (unit.Length == 0) unit = roster.Where(p => p.TeamName == team && p.CurrentInjury is null).Take(11).ToArray();
+                var brand = TeamBrandCatalog.Get(team);
+                for (var i = 0; i < unit.Length; i++)
+                {
+                    var point = GameDayLivePresentation.HuddlePoint(session.YardLine, direction, offense, i);
+                    var marker = Marker(unit[i], Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), team == game.AwayTeamName);
+                    AbsoluteLayout.SetLayoutFlags(marker, AbsoluteLayoutFlags.PositionProportional);
+                    AbsoluteLayout.SetLayoutBounds(marker, new Rect(point.X, point.Y, 28, 28)); fieldPlayers.Add(marker);
+                }
+            }
+        }
+        async Task AnimateSnapAsync(GameSnapEvent snap, bool instantReplay = false)
         {
             if (snap.IsOnsideKick) { await Task.Delay(350); return; }
             if (!GameDayEngine.IsScrimmage(snap) && !GameDayAnimationPlanner.IsPlaceKick(snap) && snap.Outcome is not (SnapOutcome.Kickoff or SnapOutcome.Punt)) { await Task.Delay(350); return; }
             highlight.IsVisible = false;
-            result.Text = string.Empty;
+            result.Text = instantReplay ? "REPLAY · " + GameDayCommentaryService.Describe(snap, session.PlayersById)
+                : $"LIVE · {snap.OffenseTeamName} · {PlayEditorService.OffensiveLibrary(controlledPlan).FirstOrDefault(p => p.Id == snap.OffensivePlayId)?.Name ?? (snap.Outcome is SnapOutcome.Punt or SnapOutcome.Kickoff ? "Kick and return" : "Play in progress")}";
             fieldPlayers.AbortAnimation("snap-movement");
             fieldPlayers.Children.Clear(); markerLabels.Clear(); spritePlayers.Clear(); markerHosts.Clear(); activeBallOwners.Clear();
             fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance;
@@ -657,7 +705,7 @@ public sealed partial class FoundationPage
                     ? RouteTrack(from, to, progress / catchProgress, receiverFamily)
                     : Interpolate(to, to with { X = destination }, (progress - catchProgress) / (1 - catchProgress));
             }
-            GameFieldPoint? interceptionPoint = snap.Outcome == SnapOutcome.Interception && receiverFrom is Rect rf && receiverTo is Rect rt
+            GameFieldPoint? interceptionPoint = (snap.Outcome == SnapOutcome.Interception || snap.IsPassBreakup) && receiverFrom is Rect rf && receiverTo is Rect rt
                 ? GameDayAnimationPlanner.RoutePoint(new(rf.X, rf.Y), new(rt.X, rt.Y), receiverFamily, catchProgress) : null;
             Rect? interceptorFrom = null, interceptorTo = null;
             View? interceptorView = null;
@@ -813,10 +861,14 @@ public sealed partial class FoundationPage
                     new(block.From.X, block.From.Y), new(block.To.X, block.To.Y), new(to.X, to.Y), direction, progress, block.Release);
                 return new Rect(point.X, point.Y, from.Width, from.Height);
             }
+            var carrierLabel = new Label { FontSize = 10, FontAttributes = FontAttributes.Bold, TextColor = Colors.White,
+                BackgroundColor = Color.FromArgb("#DD10202B"), Padding = new Thickness(4, 1),
+                HorizontalTextAlignment = TextAlignment.Center, IsVisible = false, InputTransparent = true };
             var ballStart = BallAt(centerPoint);
             AbsoluteLayout.SetLayoutFlags(ball, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(ball, ballStart);
             fieldPlayers.Add(ball);
+            AbsoluteLayout.SetLayoutFlags(carrierLabel, AbsoluteLayoutFlags.PositionProportional); fieldPlayers.Add(carrierLabel);
             var durationSeconds = GameDayAnimationPlanner.PlaybackDurationSeconds(movements.Select(m =>
             {
                 var from = new GameFieldPoint(m.From.X, m.From.Y);
@@ -844,6 +896,7 @@ public sealed partial class FoundationPage
                     snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt ? .35 : ReferenceEquals(m.View, interceptorView) ? catchProgress : 1;
                 return (distance, movementSpeeds[m.View], active);
             }));
+            if (instantReplay) durationSeconds *= 1.2;
             var previousPositions = movements.ToDictionary(m => m.View, m => m.From);
             var completion = new TaskCompletionSource();
             var animation = new Animation(progress =>
@@ -883,6 +936,21 @@ public sealed partial class FoundationPage
                     if (owner is Guid current && markerHighlights.TryGetValue(current, out var mark)) mark(true);
                     highlightedOwner = owner;
                 }
+                carrierLabel.IsVisible = useSprites && showCarrierNames && owner.HasValue;
+                if (carrierLabel.IsVisible && owner is Guid ownerId)
+                {
+                    var host = markerHosts.FirstOrDefault(m => m.Value.Player?.PlayerId == ownerId).Key;
+                    if (host is not null)
+                    {
+                        carrierLabel.Text = session.PlayersById.GetValueOrDefault(ownerId)?.FullName ?? "";
+                        var pos = AbsoluteLayout.GetLayoutBounds(host);
+                        var width = Math.Max(180, fieldPlayers.Width); var height = Math.Max(50, fieldPlayers.Height);
+                        AbsoluteLayout.SetLayoutBounds(carrierLabel, new Rect(
+                            Math.Clamp((pos.X * (width - 28) + 14 - 75) / (width - 150), 0, 1),
+                            Math.Clamp((pos.Y * (height - 28) - 20) / (height - 20), 0, 1), 150, 20));
+                    }
+                    else carrierLabel.IsVisible = false;
+                }
                 Rect Track(Rect? from, Rect? to, double fraction) =>
                     from is Rect a && to is Rect b ? Interpolate(a, b, fraction) : centerPoint;
                 Rect currentBall;
@@ -917,12 +985,19 @@ public sealed partial class FoundationPage
                     currentBall = BallAt(Track(qbFrom, qbTo, progress));
                 else if (isPass && progress < passRelease)
                     currentBall = BallAt(Track(qbFrom, qbTo, progress));
-                else if (snap.Outcome == SnapOutcome.Interception && interceptorTo is Rect interceptionSpot)
+                else if ((snap.Outcome == SnapOutcome.Interception || snap.IsPassBreakup) && interceptorTo is Rect interceptionSpot)
                 {
                     var launch = Track(qbFrom, qbTo, passRelease);
                     var caughtAt = GameDayAnimationPlanner.InterceptionBallPoint(new(launch.X, launch.Y),
                         new(interceptionSpot.X, interceptionSpot.Y), progress, passRelease);
+                    if (snap.IsPassBreakup && progress >= catchProgress)
+                        caughtAt = GameDayLivePresentation.DeflectedBallPoint(new(interceptionSpot.X, interceptionSpot.Y), direction, progress, catchProgress);
                     currentBall = BallAt(new Rect(caughtAt.X, caughtAt.Y, 28, 28));
+                    if (snap.IsPassBreakup && interceptorView is not null && progress >= catchProgress)
+                    {
+                        interceptorView.Scale = 1 + Math.Sin(Math.Clamp((progress - catchProgress) / .12, 0, 1) * Math.PI) * .18;
+                        ball.Rotation = (progress - catchProgress) * 1400;
+                    }
                 }
                 else if (isPass && receiverFrom.HasValue)
                 {
@@ -962,12 +1037,15 @@ public sealed partial class FoundationPage
         }
         async Task ShowHighlightAsync(GameSnapEvent snap, string? period = null)
         {
-            var headline = period ?? GameDayAnimationPlanner.OutcomeHeadline(snap.Outcome);
+            var headline = period ?? (snap.Outcome == SnapOutcome.ClockStoppage
+                ? snap.TimeoutTeamName is not null ? "TIMEOUT" : snap.Description?.Contains("Two-minute", StringComparison.OrdinalIgnoreCase) == true ? "TWO-MINUTE TIMEOUT" : null
+                : GameDayAnimationPlanner.OutcomeHeadline(snap.Outcome));
             if (headline is null) return;
             var penalty = GameDayCommentaryService.Penalty(snap);
-            var team = penalty?.TeamName ?? (snap.Outcome is SnapOutcome.Interception or SnapOutcome.Fumble
+            var team = snap.TimeoutTeamName ?? penalty?.TeamName ?? (snap.Outcome is SnapOutcome.Interception or SnapOutcome.Fumble
                 ? snap.DefenseTeamName : snap.OffenseTeamName);
-            highlightText.Text = period is null ? penalty?.Banner ?? $"{headline}\n{team}" : $"{headline}\n{game.AwayTeamName} {session.AwayScore} - {session.HomeScore} {game.HomeTeamName}";
+            highlightText.Text = snap.TimeoutTeamName is not null && period is null
+                ? $"TIMEOUT\n{snap.TimeoutTeamName}\n{(team == game.HomeTeamName ? snap.HomeTimeoutsRemaining : snap.AwayTimeoutsRemaining)} remaining" : period is null ? penalty?.Banner ?? $"{headline}\n{team}" : $"{headline}\n{game.AwayTeamName} {session.AwayScore} - {session.HomeScore} {game.HomeTeamName}";
             highlight.BackgroundColor = TeamColor(team).WithAlpha(.94f);
             highlight.Opacity = 0;
             highlight.Scale = .72;
@@ -988,6 +1066,8 @@ public sealed partial class FoundationPage
         void Refresh(GameSnapEvent? snap = null)
         {
             score.Text = $"{CollegePollService.RankedName(game.AwayTeamName, gameRanks)} {session.AwayScore}  ·  {session.HomeScore} {CollegePollService.RankedName(game.HomeTeamName, gameRanks)}";
+            string Dots(int count) => new string('●', count) + new string('○', Math.Max(0, 3 - count));
+            timeoutsHud.Text = $"TIMEOUTS  {awayTeam.Abbreviation} {Dots(session.AwayTimeouts)} ({session.AwayTimeouts})   ·   {homeTeam.Abbreviation} {Dots(session.HomeTimeouts)} ({session.HomeTimeouts})";
             quarterClock.Text = $"Q{session.Quarter}  {TimeSpan.FromSeconds(session.ClockSeconds):m\\:ss}";
             if (session.OvertimeRound > 0) quarterClock.Text = $"OT {session.OvertimeRound} · untimed";
             downValue.Text = session.KickoffPending ? "—" : Ordinal(session.Down);
@@ -1046,6 +1126,7 @@ public sealed partial class FoundationPage
             timeout.IsEnabled = !animating && !session.KickoffPending && (!session.ClockStopped || session.ClockRestartsOnReady) && remaining > 0;
             UpdateQuickCalls();
             UpdateOverlay();
+            RenderHuddles();
         }
         async Task ShowSnapAsync(GameSnapEvent snap)
         {
@@ -1053,35 +1134,57 @@ public sealed partial class FoundationPage
             currentSnapFinished = finished.Task;
             try
             {
+                if (GameDayEngine.IsScrimmage(snap) || GameDayAnimationPlanner.IsPlaceKick(snap) || snap.Outcome is SnapOutcome.Punt or SnapOutcome.Kickoff)
+                    lastPlayedSnap = snap;
                 animating = true; timeout.IsEnabled = false; UpdateOverlay();
                 await AnimateSnapAsync(snap);
                 await ShowHighlightAsync(snap);
+                if (instantReplays && GameDayLivePresentation.InstantReplay(snap)) await ReplaySnapAsync(snap);
                 var period = GameDayAnimationPlanner.PeriodHeadline(snap.Quarter, session.Quarter, session.IsComplete);
                 if (period is not null) await ShowHighlightAsync(snap, period);
+                await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
                 animating = false;
                 Refresh(snap);
-                await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
             }
             finally { animating = false; UpdateOverlay(); finished.TrySetResult(); }
         }
+        async Task ReplaySnapAsync(GameSnapEvent snap)
+        {
+            replayChip.IsVisible = true;
+            try { await AnimateSnapAsync(snap, true); }
+            finally { replayChip.IsVisible = false; }
+        }
+        replayLast.Clicked += async (_, _) =>
+        {
+            if (animating || lastPlayedSnap is null || session.Mode == GameDayMode.Watch) return;
+            var commentary = result.Text;
+            var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            currentSnapFinished = finished.Task;
+            animating = true; UpdateOverlay();
+            try { await ReplaySnapAsync(lastPlayedSnap); }
+            finally { animating = false; result.Text = commentary; UpdateOverlay(); RenderHuddles(); finished.TrySetResult(); }
+            if (session.Mode == GameDayMode.Watch && !boxScoreOpen) await WatchLoop();
+        };
         async Task FinishIfNeeded()
         {
             if (!session.IsComplete) return;
             await CompleteGameDayAsync(session); result.Text = "Final · result saved"; Refresh();
         }
-        async Task WatchLoop()
+        async Task DriveGameAsync()
         {
-            while (!session.IsComplete && session.Mode == GameDayMode.Watch && !boxScoreOpen && page.Parent is not null)
-                await ShowSnapAsync(GameDayEngine.Step(session));
-            await FinishIfNeeded();
+            if (driving || animating) return;
+            driving = true;
+            try
+            {
+                while (!session.IsComplete && !boxScoreOpen && page.Parent is not null &&
+                    (session.Mode == GameDayMode.Watch || !NeedsUserCall()))
+                    await ShowSnapAsync(GameDayEngine.Step(session));
+                await FinishIfNeeded();
+            }
+            finally { driving = false; }
         }
-        async Task RunCpuUntilUserDecision()
-        {
-            while (!session.IsComplete && session.Mode == GameDayMode.Play && !boxScoreOpen && !NeedsUserCall())
-                await ShowSnapAsync(GameDayEngine.Step(session));
-            Refresh();
-            await FinishIfNeeded();
-        }
+        Task WatchLoop() => DriveGameAsync();
+        Task RunCpuUntilUserDecision() => DriveGameAsync();
         if (replay is not null)
         {
             var clipIndex = 0;
@@ -1186,8 +1289,9 @@ public sealed partial class FoundationPage
         {
             session.Mode = session.Mode == GameDayMode.Watch ? GameDayMode.Play : GameDayMode.Watch;
             Refresh();
+            if (animating) return;
             if (session.Mode == GameDayMode.Watch) await WatchLoop();
-            else if (!animating) await RunCpuUntilUserDecision();
+            else await RunCpuUntilUserDecision();
         };
         takeover.Clicked += async (_, _) => { session.Mode = GameDayMode.Play; Refresh(); await RunCpuUntilUserDecision(); };
         punt.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-punt")); await RunCpuUntilUserDecision(); };
@@ -1196,10 +1300,10 @@ public sealed partial class FoundationPage
         kneel.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-kneel")); await RunCpuUntilUserDecision(); };
         spike.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-spike")); await RunCpuUntilUserDecision(); };
         kick.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-field-goal")); await RunCpuUntilUserDecision(); };
-        timeout.Clicked += (_, _) =>
+        timeout.Clicked += async (_, _) =>
         {
             if (!animating && GameDayEngine.TryCallTimeout(session, controlledTeamName))
-            { result.Text = $"{controlledTeamName} calls timeout."; Refresh(); }
+            { await ShowSnapAsync(session.Events[^1]); }
         };
         boxScore.Clicked += async (_, _) =>
         {
@@ -1359,16 +1463,47 @@ public sealed partial class FoundationPage
         public Color HomeColor { get; set; } = Colors.DarkBlue;
         public Color HomeSecondaryColor { get; set; } = Colors.White;
         public string HomeInitial { get; set; } = "H";
+        public string HomeName { get; set; } = "HOME";
 
         public void Draw(ICanvas canvas, RectF rect)
         {
             canvas.FillColor = Color.FromArgb("#245B38"); canvas.FillRectangle(rect);
+            // Stable procedural turf: mowing bands, subtle blades and five-yard lines.
+            for (var band = 0; band < 20; band++)
+            {
+                canvas.FillColor = Color.FromArgb(band % 2 == 0 ? "#2E6944" : "#285D3D");
+                canvas.FillRectangle(rect.Width * (10 + band * 5) / 120f, 0, rect.Width * 5 / 120f, rect.Height);
+            }
+            for (var blade = 0; blade < 900; blade++)
+            {
+                var x = rect.Width * ((blade * 73 % 997) / 997f);
+                var y = rect.Height * ((blade * 139 % 991) / 991f);
+                canvas.FillColor = blade % 2 == 0 ? Color.FromRgba(1, 1, 1, .035) : Color.FromRgba(0, 0, 0, .045);
+                canvas.FillRectangle(x, y, 1, 2);
+            }
+            canvas.StrokeColor = Color.FromRgba(1, 1, 1, .25); canvas.StrokeSize = .7f;
+            for (var yard = 5; yard < 100; yard += 5)
+            {
+                var x = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(yard, 1);
+                canvas.DrawLine(x, 0, x, rect.Height);
+            }
             canvas.FillColor = HomeColor;
             var leftGoal = (float)GameDayAnimationPlanner.ProjectYardLine(0, 1);
             var rightGoal = (float)GameDayAnimationPlanner.ProjectYardLine(100, 1);
             canvas.FillRectangle(0, 0, rect.Width * leftGoal, rect.Height);
             canvas.FillRectangle(rect.Width * rightGoal, 0, rect.Width * leftGoal, rect.Height);
+            canvas.SaveState(); canvas.FontColor = HomeSecondaryColor; canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
+            canvas.FontSize = Math.Clamp(rect.Width * leftGoal * .35f, 10, 23);
+            canvas.Translate(rect.Width * leftGoal * .5f, rect.Height * .5f); canvas.Rotate(-90);
+            canvas.DrawString(HomeName, -rect.Height / 2, -rect.Width * leftGoal / 2, rect.Height, rect.Width * leftGoal,
+                HorizontalAlignment.Center, VerticalAlignment.Center); canvas.RestoreState();
+            canvas.SaveState(); canvas.FontColor = HomeSecondaryColor; canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
+            canvas.FontSize = Math.Clamp(rect.Width * leftGoal * .35f, 10, 23);
+            canvas.Translate(rect.Width * (rightGoal + leftGoal * .5f), rect.Height * .5f); canvas.Rotate(90);
+            canvas.DrawString(HomeName, -rect.Height / 2, -rect.Width * leftGoal / 2, rect.Height, rect.Width * leftGoal,
+                HorizontalAlignment.Center, VerticalAlignment.Center); canvas.RestoreState();
             canvas.StrokeColor = Colors.White; canvas.StrokeSize = 2;
+            canvas.DrawRectangle(1, 1, rect.Width - 2, rect.Height - 2);
             canvas.DrawLine(rect.Width * leftGoal, 0, rect.Width * leftGoal, rect.Height);
             canvas.DrawLine(rect.Width * rightGoal, 0, rect.Width * rightGoal, rect.Height);
             canvas.StrokeColor = Color.FromArgb("#FFD447"); canvas.StrokeSize = 4;
@@ -1396,15 +1531,18 @@ public sealed partial class FoundationPage
                     HorizontalAlignment.Center, VerticalAlignment.Center);
             }
             canvas.StrokeColor = Color.FromArgb("#D5E6DB"); canvas.StrokeSize = 1;
-            for (var yard = 5; yard < 100; yard += 5)
+            for (var yard = 1; yard < 100; yard++)
             {
                 var x = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(yard, 1);
-                canvas.DrawLine(x, rect.Height * .25f, x, rect.Height * .29f);
-                canvas.DrawLine(x, rect.Height * .71f, x, rect.Height * .75f);
+                canvas.DrawLine(x, rect.Height * .29f, x, rect.Height * .31f);
+                canvas.DrawLine(x, rect.Height * .69f, x, rect.Height * .71f);
             }
             canvas.FillColor = HomeColor;
             canvas.FillCircle(rect.Center.X, rect.Center.Y, Math.Min(rect.Width, rect.Height) * .105f);
-            canvas.FontSize = 42; canvas.FontColor = HomeSecondaryColor;
+            canvas.StrokeColor = HomeSecondaryColor; canvas.StrokeSize = 2;
+            canvas.DrawCircle(rect.Center.X, rect.Center.Y, Math.Min(rect.Width, rect.Height) * .105f);
+            canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
+            canvas.FontSize = Math.Min(46, rect.Height * .19f); canvas.FontColor = HomeSecondaryColor;
             canvas.DrawString(HomeInitial, rect.Width * .40f, rect.Height * .36f, rect.Width * .20f, rect.Height * .28f,
                 HorizontalAlignment.Center, VerticalAlignment.Center);
             var line = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(YardLine, Direction);

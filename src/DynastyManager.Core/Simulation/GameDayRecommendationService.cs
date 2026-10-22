@@ -37,6 +37,13 @@ public static class GameDayRecommendationService
         if (session.ClockSeconds <= 8 && session.Quarter is 2 or 4 && !needTouchdown &&
             fieldGoalChance >= .50 && (session.Quarter == 2 || margin is >= -3 and <= 0))
             return FieldGoal("Use the remaining time to attempt points before the half ends.");
+        if (session.OvertimeRound == 0 && session.ClockSeconds <= 8 && session.ClockSeconds > 0 &&
+            session.Quarter is 2 or 4 && session.YardLine >= 35 && (session.Quarter == 2 || margin <= 0))
+        {
+            var heave = GamePlanService.AvailableOffensivePlays(plan).FirstOrDefault(p => p.Name == "Hail Mary");
+            if (heave is not null) return new(RecommendedCallType.Scrimmage, heave.Id, heave,
+                "One final shot at the end zone before time expires.");
+        }
         if (session.Down == 4 && !needTouchdown)
         {
             if (fieldGoalChance >= .55 || late && margin is >= -3 and < 0 && fieldGoalChance >= .40)
@@ -51,8 +58,6 @@ public static class GameDayRecommendationService
         var hurryUp = late && margin < 0;
         var play = GamePlanService.RecommendOffensivePlay(plan, session.Down, session.Distance, session.YardLine,
             session.Events.Count, recent, session.Game.SimulationSeed, hurryUp, PassingUrgency(session));
-        if (hurryUp && session.ClockSeconds <= 8 && session.YardLine >= 40)
-            play = GamePlanService.AvailableOffensivePlays(plan).FirstOrDefault(p => p.Name == "Hail Mary") ?? play;
         var reason = needTouchdown ? "A field goal is not enough; keep the drive alive."
             : session.Down == 4 ? "Short fourth down in opponent territory; consider going for the first down."
             : hurryUp ? "Trailing late; favor the passing game."

@@ -40,6 +40,10 @@ public sealed record GameSnapEvent
     public bool IsBootleg { get; init; }
     public bool IsQuarterbackScramble { get; init; }
     public bool IsDrop { get; init; }
+    public bool IsPassBreakup { get; init; }
+    public string? TimeoutTeamName { get; init; }
+    public int? HomeTimeoutsRemaining { get; init; }
+    public int? AwayTimeoutsRemaining { get; init; }
     public double PassReleaseProgress { get; init; }
     public double TargetSeparation { get; init; }
     public string? Description { get; init; }

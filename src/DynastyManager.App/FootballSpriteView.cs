@@ -90,6 +90,10 @@ internal sealed class FootballSpriteView : GraphicsView
             Box(jersey,bodyX-torsoWidth/2+1,24,torsoWidth-4,13);
             Box(Shade(jersey,.85f),bodyX-torsoWidth/2+2,36,torsoWidth-3,4);
             Box(pants,bodyX-torsoWidth/2+1,40,torsoWidth-2,3);
+            // Collar, pad highlights and trouser seams add depth without changing hit/ball anchors.
+            Box(Shade(secondary,.75f),bodyX-5,23,10,2); Box(ink,bodyX-2,24,4,2);
+            Box(new Color(Math.Min(1,jersey.Red+.16f),Math.Min(1,jersey.Green+.16f),Math.Min(1,jersey.Blue+.16f)),bodyX-torsoWidth/2+2,25,3,9);
+            Box(Shade(pants,.65f),bodyX-torsoWidth/2+2,40,2,4);
             Box(ink,bodyX-7,40,14,1); Box(Colors.White,bodyX-1,40,3,2);
             // Shoulder pads and bent arms are posed in screen space for eight facings.
             for (var arm=0; arm<2; arm++)

@@ -246,6 +246,18 @@ public sealed partial class FoundationPage
     {
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
+            const float diagramWidth = 185, diagramHeight = 112;
+            var scale = Math.Min(dirtyRect.Width / diagramWidth, dirtyRect.Height / diagramHeight);
+            canvas.SaveState();
+            canvas.Translate(dirtyRect.X + (dirtyRect.Width - diagramWidth * scale) / 2,
+                dirtyRect.Y + (dirtyRect.Height - diagramHeight * scale) / 2);
+            canvas.Scale(scale, scale);
+            DrawDiagram(canvas, new RectF(0, 0, diagramWidth, diagramHeight));
+            canvas.RestoreState();
+        }
+
+        private void DrawDiagram(ICanvas canvas, RectF dirtyRect)
+        {
             var width = dirtyRect.Width;
             var height = dirtyRect.Height;
             canvas.StrokeColor = Color.FromArgb("#3E675B");

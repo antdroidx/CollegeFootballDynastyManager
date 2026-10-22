@@ -56,6 +56,8 @@ public static class GameDayCommentaryService
             SnapOutcome.Sack => $"{defender} sacks {quarterback} {YardPhrase(snap.Yards)}.",
             SnapOutcome.Interception => $"{defender} intercepts {quarterback}'s pass intended for {target}.",
             SnapOutcome.Fumble => $"{carrier} fumbles after {gain}; {defender} recovers for the defense.",
+            SnapOutcome.Incompletion when snap.IsPassBreakup => $"{defender} breaks up {quarterback}'s pass intended for {target}.",
+            SnapOutcome.Incompletion when snap.IsDrop => $"{target} drops {quarterback}'s pass. Incomplete.",
             SnapOutcome.Incompletion => $"{quarterback}'s pass for {target} is incomplete with {defender} in coverage.",
             SnapOutcome.Completion => $"{quarterback} completes to {target} {gain}; {defender} makes the tackle.",
             SnapOutcome.Touchdown when snap.IsQuarterbackScramble => $"{quarterback} escapes the pocket and scrambles {Math.Max(0, snap.Yards)} yards for a touchdown.",

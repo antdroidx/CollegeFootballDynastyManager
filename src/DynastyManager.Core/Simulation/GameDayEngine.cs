@@ -49,7 +49,7 @@ public static partial class GameDayEngine
             var trailing = session.HomeScore < session.AwayScore ? session.Game.HomeTeamName :
                 session.AwayScore < session.HomeScore ? session.Game.AwayTeamName : null;
             if (trailing is not null && trailing != session.PossessionTeamName &&
-                (session.Mode != GameDayMode.Play || trailing != session.ControlledTeamName)) TryCallTimeout(session, trailing);
+                (session.Mode != GameDayMode.Play || trailing != session.ControlledTeamName) && TryCallTimeout(session, trailing)) return session.Events[^1];
         }
         var clockEvent = PrepareSnap(session, userPlayId == "special-spike");
         if (clockEvent is not null) return clockEvent;
@@ -82,7 +82,7 @@ public static partial class GameDayEngine
         var advice = GameDayRecommendationService.Recommend(session, offensePlan);
         if (string.IsNullOrWhiteSpace(userPlayId) && advice.Play is not null &&
             (offensivePossessionIndex >= offensePlan.OpeningPlayIds.Count && offensivePossessionIndex >= offensePlan.OpeningScript.Count ||
-             session.Down >= 3 && session.Distance >= 3 || GameDayRecommendationService.PassingUrgency(session) >= 2))
+             session.Down >= 3 && session.Distance >= 3 || GameDayRecommendationService.PassingUrgency(session) >= 2 || advice.Play.Name == "Hail Mary"))
             call = call with { Offense = advice.Play, Source = PlayCallSource.Cpu };
         if (!string.IsNullOrWhiteSpace(userDefensivePlayId))
         {
@@ -247,6 +247,8 @@ public static partial class GameDayEngine
             PrimaryDefenderId = defender?.PlayerId, OffensePersonnel = offensePersonnel.PlayerIds,
             DefensePersonnel = defensePersonnel.PlayerIds
         };
+        snap = snap with { IsPassBreakup = snap.Outcome == SnapOutcome.Incompletion && !snap.IsDrop &&
+            defender is not null && read.Separation <= 1.5 };
         session.Events.Add(snap);
         PersonnelRotationService.ApplySnap(offenseFatigue, offenseRoster, offensePersonnel, Math.Abs(yards) >= 20);
         PersonnelRotationService.ApplySnap(defenseFatigue, defenseRoster, defensePersonnel, Math.Abs(yards) >= 20);
@@ -262,6 +264,9 @@ public static partial class GameDayEngine
         else if (teamName == session.Game.AwayTeamName && session.AwayTimeouts > 0) session.AwayTimeouts--;
         else return false;
         session.ClockStopped = true; session.ClockRestartsOnReady = false; session.PlayClockSeconds = 25;
+        var timeout = ClockEvent(session, $"{teamName} calls timeout.");
+        session.Events[^1] = timeout with { TimeoutTeamName = teamName,
+            HomeTimeoutsRemaining = session.HomeTimeouts, AwayTimeoutsRemaining = session.AwayTimeouts };
         return true;
     }
 
@@ -407,6 +412,8 @@ public static partial class GameDayEngine
                 };
                 Save(target);
             }
+            if (snap.IsPassBreakup && snap.PrimaryDefenderId is Guid breakupId)
+                Save(Line(breakupId) with { PassesDefended = Line(breakupId).PassesDefended + 1 });
             if (snap.PrimaryDefenderId is Guid defenderId && snap.Outcome is SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Sack or SnapOutcome.Fumble or SnapOutcome.Interception or SnapOutcome.Turnover)
             {
                 var defender = Line(defenderId) with
