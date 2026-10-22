@@ -60,6 +60,31 @@ class SmokeSynchronizationTests(unittest.TestCase):
             self.assertIs(second, smoke.scroll_to_text("picker", "Returns"))
             command.assert_called_once_with("shell", "input", "swipe", "300", "500", "300", "300", "350")
 
+    def test_system_ui_dialog_is_retried_but_game_anr_is_not_dismissed(self):
+        for message, should_wait in (("System UI isn't responding", True), ("CF Dynasty Manager Dev isn't responding", False)):
+            dialog = ET.Element("hierarchy")
+            ET.SubElement(dialog, "node", text=message)
+            ET.SubElement(dialog, "node", text="Wait", bounds="[10,20][100,80]")
+            dumps = iter((dialog, overview(week=1)))
+            def fake_adb(*args):
+                if "uiautomator" in args: return b"UI hierchary dumped to: /sdcard/dynasty-ui.xml"
+                if "cat" in args: return ET.tostring(next(dumps))
+                return b""
+            original_cwd = Path.cwd()
+            with tempfile.TemporaryDirectory() as temp, patch.object(smoke, "adb", side_effect=fake_adb), patch.object(smoke, "tap") as tapped:
+                try:
+                    os.chdir(temp)
+                    result = smoke.capture("dialog")
+                    if should_wait:
+                        tapped.assert_called_once()
+                        self.assertEqual("Wait", tapped.call_args.args[1])
+                        self.assertTrue(smoke.overview_ready(result))
+                    else:
+                        tapped.assert_not_called()
+                        self.assertIn(message, smoke.texts(result))
+                finally:
+                    os.chdir(original_cwd)
+
     def test_failed_dump_never_reads_stale_xml(self):
         dumps = iter((b"ERROR: could not get idle state", b"UI hierchary dumped to: /sdcard/dynasty-ui.xml"))
         dump_count = 0

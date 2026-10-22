@@ -173,6 +173,11 @@ public sealed partial class FoundationPage
         var timeout = new Button { Text = "Timeout" };
         var showNumbers = Microsoft.Maui.Storage.Preferences.Default.Get("live-jersey-numbers", false);
         var markerLabels = new Dictionary<Label, DynastyPlayer?>();
+        var spritePlayers = new Dictionary<FootballSpriteView, DynastyPlayer?>();
+        var activeBallOwners = new HashSet<Guid>();
+        var useSprites = Microsoft.Maui.Storage.Preferences.Default.Get("live-football-sprites", true);
+        var spriteMode = new Button { Text = useSprites ? "Players: Sprites" : "Players: Circles" };
+        var markerHosts = new Dictionary<Border, (DynastyPlayer? Player, Color Primary, Color Secondary, bool Away)>();
         var numbers = new Button { Text = showNumbers ? "Markers: Numbers" : "Markers: Positions" };
         void UpdateMarkerLabels()
         {
@@ -181,6 +186,8 @@ public sealed partial class FoundationPage
                 label.Text = showNumbers && player?.JerseyNumber is int number ? number.ToString() : player?.Position.ToString() ?? "•";
                 label.FontSize = showNumbers ? 8 : 6;
             }
+            foreach (var (sprite, player) in spritePlayers)
+                sprite.SetLabel(showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "");
             numbers.Text = showNumbers ? "Markers: Numbers" : "Markers: Positions";
         }
         numbers.Clicked += (_, _) => { showNumbers = !showNumbers; Microsoft.Maui.Storage.Preferences.Default.Set("live-jersey-numbers", showNumbers); UpdateMarkerLabels(); };
@@ -190,7 +197,7 @@ public sealed partial class FoundationPage
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
-        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, numbers, skip, close })
+        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, numbers, spriteMode, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
         bool? compactLayout = null;
         void ArrangeViewer(bool compact)
@@ -246,19 +253,51 @@ public sealed partial class FoundationPage
         };
 
         Color TeamColor(string teamName) => Color.FromArgb(TeamBrandCatalog.Get(teamName).Primary);
-        Border Marker(DynastyPlayer? player, Color color, bool awayTeam)
+        void SetMarkerAppearance(Border marker, DynastyPlayer? player, Color color, Color secondary, bool awayTeam)
         {
-            var markerLabel = new Label { Text = showNumbers && player?.JerseyNumber is int number ? number.ToString() : player?.Position.ToString() ?? "•",
-                FontSize = showNumbers ? 8 : 6, FontAttributes = FontAttributes.Bold, TextColor = awayTeam ? color : Colors.White,
-                HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center };
-            markerLabels[markerLabel] = player;
-            var marker = new Border { WidthRequest = 19, HeightRequest = 19,
-                StrokeShape = new RoundRectangle { CornerRadius = 10 }, BackgroundColor = awayTeam ? Colors.White : color,
-                Stroke = awayTeam ? color : Colors.White, StrokeThickness = awayTeam ? 2.2 : 1.4,
-                Padding = 0, Content = markerLabel };
+            if (marker.Content is Label oldLabel) markerLabels.Remove(oldLabel);
+            if (marker.Content is FootballSpriteView oldSprite) spritePlayers.Remove(oldSprite);
+            if (useSprites)
+            {
+                var sprite = new FootballSpriteView(color, secondary, awayTeam, player?.Appearance?.SkinTone ?? 1,
+                    showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "");
+                spritePlayers[sprite] = player;
+                marker.Stroke = Colors.Transparent; marker.StrokeThickness = 0; marker.BackgroundColor = Colors.Transparent;
+                marker.StrokeShape = new RoundRectangle { CornerRadius = 0 };
+                sprite.Highlight(player is not null && activeBallOwners.Contains(player.PlayerId));
+                marker.Content = sprite;
+            }
+            else
+            {
+                var label = new Label { Text = showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "•",
+                    FontSize = showNumbers ? 8 : 6, FontAttributes = FontAttributes.Bold, TextColor = awayTeam ? color : Colors.White,
+                    HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center };
+                markerLabels[label] = player;
+                marker.StrokeShape = new RoundRectangle { CornerRadius = 14 };
+                marker.BackgroundColor = awayTeam ? Colors.White : color;
+                var active = player is not null && activeBallOwners.Contains(player.PlayerId);
+                marker.Stroke = active ? Colors.Yellow : awayTeam ? color : Colors.White;
+                marker.StrokeThickness = active ? 3 : awayTeam ? 2.2 : 1.4;
+                marker.Content = label;
+            }
+        }
+        Border Marker(DynastyPlayer? player, Color color, Color secondary, bool awayTeam)
+        {
+            var marker = new Border { WidthRequest = 28, HeightRequest = 28,
+                StrokeShape = new RoundRectangle { CornerRadius = 14 }, Padding = 0, InputTransparent = true };
+            markerHosts[marker] = (player, color, secondary, awayTeam);
+            SetMarkerAppearance(marker, player, color, secondary, awayTeam);
             if (player is not null) SemanticProperties.SetDescription(marker, $"{player.Position} {player.FullName}");
             return marker;
         }
+        spriteMode.Clicked += (_, _) =>
+        {
+            useSprites = !useSprites;
+            Microsoft.Maui.Storage.Preferences.Default.Set("live-football-sprites", useSprites);
+            spriteMode.Text = useSprites ? "Players: Sprites" : "Players: Circles";
+            foreach (var (marker, info) in markerHosts)
+                SetMarkerAppearance(marker, info.Player, info.Primary, info.Secondary, info.Away);
+        };
         async Task AnimateSnapAsync(GameSnapEvent snap)
         {
             if (snap.IsOnsideKick) { await Task.Delay(350); return; }
@@ -266,7 +305,7 @@ public sealed partial class FoundationPage
             highlight.IsVisible = false;
             result.Text = string.Empty;
             fieldPlayers.AbortAnimation("snap-movement");
-            fieldPlayers.Children.Clear(); markerLabels.Clear();
+            fieldPlayers.Children.Clear(); markerLabels.Clear(); spritePlayers.Clear(); markerHosts.Clear(); activeBallOwners.Clear();
             fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance;
             fieldArt.HomeColor = TeamColor(game.HomeTeamName);
             var offenseColor = TeamColor(snap.OffenseTeamName);
@@ -291,12 +330,16 @@ public sealed partial class FoundationPage
             {
                 movementSpeeds[view] = player?.SpeedRating ?? 70;
                 if (player is null) return;
-                var normalStroke = view.Stroke;
-                var normalThickness = view.StrokeThickness;
                 markerHighlights[player.PlayerId] = active =>
                 {
-                    view.Stroke = active ? Colors.Yellow : normalStroke;
-                    view.StrokeThickness = active ? 3 : normalThickness;
+                    if (active) activeBallOwners.Add(player.PlayerId); else activeBallOwners.Remove(player.PlayerId);
+                    if (view.Content is FootballSpriteView sprite) sprite.Highlight(active);
+                    else
+                    {
+                        var info = markerHosts[view];
+                        view.Stroke = active ? Colors.Yellow : info.Away ? info.Primary : Colors.White;
+                        view.StrokeThickness = active ? 3 : info.Away ? 2.2 : 1.4;
+                    }
                 };
             }
             var pursuingDefenders = new HashSet<View>();
@@ -458,21 +501,21 @@ public sealed partial class FoundationPage
                 if (player?.PlayerId == terminalCarrierId && snap.CarrierLane.HasValue) endY = snap.CarrierLane.Value;
                 if (player?.PlayerId == snap.TargetId && caught) endX = Project(snap.StartYardLine + snap.AirYards);
                 else if (player?.PlayerId == terminalCarrierId) endX = destination;
-                var view = Marker(player, offenseColor, offenseIsAway);
+                var view = Marker(player, offenseColor, Color.FromArgb(TeamBrandCatalog.Get(snap.OffenseTeamName).Secondary), offenseIsAway);
                 RegisterMarker(player, view);
                 assignedRoutes[view] = assigned;
                 if (isEligible && calledPlay is not null && routeFamily != GameDayRouteFamily.Run &&
                     snap.Outcome is not (SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint))
                     routeViews.Add(view);
-                var from = new Rect(x, y, 19, 19);
+                var from = new Rect(x, y, 28, 28);
                 var puntCoverageTackler = isReturnTackle && snap.Outcome == SnapOutcome.Punt &&
                     player?.PlayerId == snap.PrimaryDefenderId;
                 var to = puntCoverageTackler
-                    ? new Rect(specialContact.X, specialContact.Y, 19, 19)
-                    : new Rect(endX, endY, 19, 19);
+                    ? new Rect(specialContact.X, specialContact.Y, 28, 28)
+                    : new Rect(endX, endY, 28, 28);
                 if (snap.IsFairCatch && player?.PlayerId == snap.PrimaryDefenderId)
                 {
-                    to = new Rect(kickLanding - direction * snap.NearestCoverageYardsAtCatch / 120d, .52, 19, 19);
+                    to = new Rect(kickLanding - direction * snap.NearestCoverageYardsAtCatch / 120d, .52, 28, 28);
                     fairCatchGunner = view;
                 }
                 if (puntCoverageTackler)
@@ -493,7 +536,7 @@ public sealed partial class FoundationPage
             }
             Rect ReceiverTrack(double progress)
             {
-                if (receiverFrom is not Rect from || receiverTo is not Rect to) return new Rect(line, .50, 19, 19);
+                if (receiverFrom is not Rect from || receiverTo is not Rect to) return new Rect(line, .50, 28, 28);
                 if (!caught) return RouteTrack(from, to, progress, receiverFamily);
                 return progress < catchProgress
                     ? RouteTrack(from, to, progress / catchProgress, receiverFamily)
@@ -592,7 +635,7 @@ public sealed partial class FoundationPage
                 }
                 if (interceptionPoint is GameFieldPoint interception && player?.PlayerId == snap.PrimaryDefenderId)
                 { endX = interception.X; endY = interception.Y; }
-                var view = Marker(player, defenseColor, defenseIsAway);
+                var view = Marker(player, defenseColor, Color.FromArgb(TeamBrandCatalog.Get(snap.DefenseTeamName).Secondary), defenseIsAway);
                 RegisterMarker(player, view);
                 if (passRusher && snap.TargetId.HasValue && player?.PlayerId != snap.PrimaryDefenderId)
                     rushPockets[view] = pocket;
@@ -603,8 +646,8 @@ public sealed partial class FoundationPage
                 {
                     primaryTacklerView = view;
                 }
-                var from = new Rect(x, y, 19, 19);
-                var to = new Rect(endX, endY, 19, 19);
+                var from = new Rect(x, y, 28, 28);
+                var to = new Rect(endX, endY, 28, 28);
                 if (interceptionPoint.HasValue && player?.PlayerId == snap.PrimaryDefenderId)
                 { interceptorView = view; interceptorFrom = from; interceptorTo = to; }
                 if (player?.PlayerId == snap.KickerId) { kickerFrom = from; kickerTo = to; }
@@ -623,8 +666,16 @@ public sealed partial class FoundationPage
                 Math.Abs(m.From.X - Project(snap.StartYardLine - .25)) < .01)
                 .OrderBy(m => Math.Abs(m.From.Y - .50)).FirstOrDefault();
             var centerPoint = center.View is null ? new Rect(line, .50, 14, 9) : center.From;
-            Rect BallAt(Rect player) => new(Math.Clamp(player.X + .006, .02, .97),
-                Math.Clamp(player.Y + .006, .02, .97), 14, 9);
+            Rect BallAt(Rect player)
+            {
+                // Proportional layout positions depend on each view's size. Anchor the ball to the
+                // sprite's hands in actual pixels so portrait/landscape and larger players stay synced.
+                var width = Math.Max(40, fieldPlayers.Width); var height = Math.Max(40, fieldPlayers.Height);
+                var handX = player.X * (width - player.Width) + player.Width * (.5 + direction * .23);
+                var handY = player.Y * (height - player.Height) + player.Height * .52;
+                return new Rect(Math.Clamp((handX - 7) / (width - 14), 0, 1),
+                    Math.Clamp((handY - 4.5) / (height - 9), 0, 1), 14, 9);
+            }
             var isPass = snap.TargetId.HasValue && !snap.BallCarrierId.HasValue;
             var isSack = snap.Outcome == SnapOutcome.Sack;
             var isKick = snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint;
@@ -676,6 +727,13 @@ public sealed partial class FoundationPage
                         ? RouteTrack(movement.From, movement.To, movementProgress, assignedRoutes.GetValueOrDefault(movement.View, routeFamily))
                         : Interpolate(movement.From, movement.To, movementProgress);
                     AbsoluteLayout.SetLayoutBounds(movement.View, position);
+                    if (movement.View is Border host && host.Content is FootballSpriteView sprite)
+                    {
+                        var player = spritePlayers.GetValueOrDefault(sprite);
+                        var blocking = player?.Position == Position.OL || rushPockets.ContainsKey(host);
+                        sprite.Animate(progress, durationSeconds, movement.To.X - movement.From.X, blocking,
+                            player?.PlayerId == snap.QuarterbackId && isPass && progress < passRelease);
+                    }
                 }
                 var owner = GameDayAnimationPlanner.BallOwner(snap, progress, passRelease);
                 if (owner != highlightedOwner)
@@ -723,7 +781,7 @@ public sealed partial class FoundationPage
                     var launch = Track(qbFrom, qbTo, passRelease);
                     var caughtAt = GameDayAnimationPlanner.InterceptionBallPoint(new(launch.X, launch.Y),
                         new(interceptionSpot.X, interceptionSpot.Y), progress, passRelease);
-                    currentBall = BallAt(new Rect(caughtAt.X, caughtAt.Y, 19, 19));
+                    currentBall = BallAt(new Rect(caughtAt.X, caughtAt.Y, 28, 28));
                 }
                 else if (isPass && receiverFrom.HasValue)
                 {

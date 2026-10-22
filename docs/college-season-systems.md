@@ -55,3 +55,9 @@ Sprites can replace the current marker bodies while keeping the existing field p
 ## Pass-rush playback
 
 Live games and recorded highlights send assigned pass rushers toward the quarterback pocket while a pass develops, rather than moving them toward the eventual downfield result. Rushers selected for a completion tackle turn toward the receiver after the catch; the playback duration accounts for both segments to avoid accelerating that pursuit. Explicit zone/man assignments still permit a lineman to drop, while pressure linebackers and custom rushers use the same position/role assignment rules as sack attribution. This changes presentation without rerolling outcomes or statistics.
+
+## Experimental football sprites
+
+The live viewer and recorded highlights default to original procedural pixel players. Helmets and home jerseys use team colors; away jerseys are white. Strides, passing and blocking poses follow the existing movement/possession timeline, with a gold ball-carrier ring and optional jersey-number/position labels. The ball is attached to the sprite using actual layout dimensions in portrait and landscape. No game results, ratings, substitutions or replay events are changed by choosing a renderer.
+
+Use **Players: Sprites / Players: Circles** in the viewer to switch immediately; the choice persists on the device. **Markers: Numbers / Positions** controls the labels in either style. This first playable prototype uses a compact pixel silhouette and mirrored facing rather than the fully detailed multi-direction sprite sheet shown in the concept illustration. Richer tackle, diving and celebration frames remain art follow-ups.

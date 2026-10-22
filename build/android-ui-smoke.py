@@ -31,10 +31,14 @@ def capture(name, timeout=90):
             time.sleep(1)
             continue
         Path(f"android-{name}.png").write_bytes(adb("exec-out", "screencap", "-p"))
-        if "Quickstep isn't responding" not in texts(root):
+        visible = texts(root)
+        if "Quickstep isn't responding" in visible:
+            tap(root, "Close app")
+        elif "System UI isn't responding" in visible:
+            tap(root, "Wait")
+        else:
+            # Never dismiss a game ANR or another application's error dialog.
             return root
-        # Only dismiss the disposable emulator's launcher ANR; never mask an app ANR.
-        tap(root, "Close app")
     raise AssertionError(f"Could not capture a fresh, unobstructed UI for {name}")
 
 
@@ -118,7 +122,8 @@ def check_college_center():
 
 
 def main():
-    home = capture("launch")
+    home = wait_for("launch", lambda r: {"Your dynasties", "New dynasty"} <= texts(r) and
+        not any(t.startswith("Loading ") for t in texts(r)))
     assert {"Your dynasties", "New dynasty"} <= texts(home), "Launch must open the save library"
     assert not {"Advance Week", "Start season", "Advance to Week 1", "Overview", "Roster", "Coach", "Recruit", "Season", "Settings"} & texts(home), "Career controls leaked onto Home"
     tap(home, "New dynasty")
@@ -147,6 +152,13 @@ def main():
     tap(overview, "Play game")
     viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
+    # Swap the renderer on an existing field and restore it without advancing the snap.
+    sprites = scroll_to_text("sprites-ready", "Players: Sprites")
+    tap(sprites, "Players: Sprites")
+    circles = capture("circle-renderer")
+    assert "Players: Circles" in texts(circles)
+    tap(circles, "Players: Circles")
+    assert "Players: Sprites" in texts(capture("sprite-renderer"))
     adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
     adb("shell", "settings", "put", "system", "user_rotation", "1")
     time.sleep(3)
