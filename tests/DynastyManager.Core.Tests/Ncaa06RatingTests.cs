@@ -27,8 +27,8 @@ public class Ncaa06RatingTests
             .Append(new KeyValuePair<string, int>("PPOS", position)).ToDictionary(p => p.Key, p => p.Value));
 
     [Theory]
-    [InlineData(0, 67, 50)]
-    [InlineData(0, 91, 99)]
+    [InlineData(0, 67, 49)]
+    [InlineData(0, 92, 99)]
     [InlineData(0, 43, 40)]
     [InlineData(7, 68, 50)]
     [InlineData(19, 96, 99)]
@@ -41,8 +41,8 @@ public class Ncaa06RatingTests
     {
         var player = Player(0, 67);
         player = player with { Skills = player.Skills! with { PassingAccuracy = 87, PassingPower = 77 } };
-        // QB: THA 33%, THP 27%; center=67; spread=48; 50+(20*.33+10*.27)*98/48=68.9875.
-        Assert.Equal(69, Ncaa06RatingService.CalculateOverall(player));
+        // QB: center=67.5, spread=49; weighted rating=76.3; 50+(76.3-67.5)*98/49=67.6.
+        Assert.Equal(68, Ncaa06RatingService.CalculateOverall(player));
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class Ncaa06RatingTests
         var fields = Ncaa06RosterRatings.RatingFields.ToDictionary(f => f, _ => 0);
         fields["PPOS"] = 0;
         var player = Ncaa06RosterRatings.Apply(Player(0, 80), fields, new[] { 67 });
-        Assert.Equal(50, player.OverallRating);
+        Assert.Equal(49, player.OverallRating);
         Assert.Equal(67, player.Skills!.PassingAccuracy);
         fields.Remove("PSPD");
         Assert.Throws<ArgumentException>(() => Ncaa06RosterRatings.Apply(player, fields));
@@ -80,5 +80,27 @@ public class Ncaa06RatingTests
         Assert.Contains("InjuryRating", names);
         Assert.DoesNotContain("TechniqueRating", names);
         Assert.DoesNotContain("DurabilityRating", names);
+    }
+
+    [Fact]
+    public void EveryPositionMatchesLatestPociForVariedAttributes()
+    {
+        var lines = File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, "TestData", "NCAA06_POCI.csv"));
+        var headers = lines[0].Split(',');
+        string[] weights = ["CAWT", "KAWT", "TAWT", "PBWT", "RBWT", "ACWT", "AGWT", "TKWT", "INWT", "KPWT", "SPWT", "TPWT", "BTWT", "CTWT", "STWT", "JUWT", "AWWT"];
+        foreach (var line in lines.Skip(1))
+        {
+            var cells = line.Split(',');
+            var row = headers.Select((h, i) => (h, v: int.Parse(cells[i]))).ToDictionary(x => x.h, x => x.v);
+            foreach (var seed in Enumerable.Range(0, 20))
+            {
+                var values = Ncaa06RosterRatings.RatingFields.Select((f, i) => (f, v: 40 + (seed * 13 + i * 7) % 60)).ToDictionary(x => x.f, x => x.v);
+                values["PPOS"] = row["PPOS"];
+                var player = Ncaa06RosterRatings.Apply(Player(row["PPOS"], 70), values);
+                var weighted = Ncaa06RosterRatings.RatingFields.Select((f, i) => values[f] * row[weights[i]]).Sum() / 100d;
+                var expected = Math.Clamp((int)Math.Round(50 + (weighted - (row["PLDH"] + row["PLDL"]) / 2d) * 98 / (row["PLDH"] - row["PLDL"]), MidpointRounding.ToEven), 40, 99);
+                Assert.Equal(expected, player.OverallRating);
+            }
+        }
     }
 }

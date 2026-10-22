@@ -1,5 +1,6 @@
-# Current work: NEXT26 rating corrections
+# Current work: corrected NCAA06 POCI
 
-User requested per-position global adjustments from ratingdrops.xlsx. Implemented import-only corrections after raw decoding and before OVR/stars/talent calculation. Existing saves and generic imports untouched. All 594 regular tests passed, including full bundled roster comparison to independent spreadsheet fixture and 21-position boundary coverage. See docs/data/next26-rating-corrections.md. GitHub APK build pending. Previous completed APK: Build287. No automation active; no unrelated work requested.
+User supplied corrected NCAA06_POCI.csv on 2026-10-22 (attachment 90f42be0). Headers and all 21 position identities now align. Applied its PLDH/PLDL values to shared Ncaa06RatingService. All 17 attribute weights unchanged. Previous NEXT26 import-only rating drops retained. The shared calculation applies when player overall is recalculated (including initialized profiles); raw attributes are not changed by POCI. Existing historical snapshots are not rewritten.
 
-Source commit: 5dde4bd. Build288 running: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39828639274 . Packaged resource and Python smoke-helper checks passed; Android APK packaging pending. No emulator or extended career run requested for this import-only change.
+595 regular tests passed, including 420 varied-attribute comparisons against literal supplied CSV fixture. Targeted 12-team career health checks running. Prior Build288 succeeded. New APK pending. No automation active or unrelated work requested.
+`nAll three targeted 12-team career health checks passed (24 seconds).
