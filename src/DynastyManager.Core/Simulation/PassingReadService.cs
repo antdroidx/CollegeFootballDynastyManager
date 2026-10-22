@@ -44,7 +44,7 @@ public static class PassingReadService
             var role = counts.GetValueOrDefault(receiver.Position); counts[receiver.Position] = role + 1;
             var route = GameDayAnimationPlanner.AssignedRoute(play, receiver.Position, role);
             var custom = offenseRoles[receiver.PlayerId];
-            var lane = custom?.Lane ?? GameDayAnimationPlanner.Alignment(play.Formation, receiver.Position, role).Y;
+            var lane = GameDayAnimationPlanner.OffensiveAlignment(play, receiver.Position, role).Y;
             // Match outside receivers to corners; safeties and linebackers handle inside routes.
             var defender = coverage.OrderBy(p => receiver.Position == Position.WR
                     ? p.Position == Position.CB ? 0 : 1 : p.Position is Position.MLB or Position.OLB ? 0 : 1)

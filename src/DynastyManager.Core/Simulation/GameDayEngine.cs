@@ -204,13 +204,14 @@ public static partial class GameDayEngine
             read.Separation, advantage, session.YardLine, session.Random) : new ReceivingGain(0, 0);
         if (complete) yards = gain.TotalYards;
         if (hailMary && complete) { yards = Math.Min(100 - session.YardLine, Math.Max(1, yards)); gain = new(yards, 0); }
+        var brokeTackle = false;
         if (!isPass && !turnover && !sack && carrier is not null && yards > 0)
         {
             // A broken tackle and open-field speed can extend a run; no fixed maximum gain.
             var tackling = defensePlayers.Select(p => (double)(p.Skills?.Tackling ?? p.OverallRating)).DefaultIfEmpty(65).Average();
             var escape = (carrier.SpeedRating + carrier.AgilityRating + (carrier.Skills?.BreakTackle ?? carrier.OverallRating)) / 3d;
             if (session.Random.NextDouble() < Math.Clamp(.065 + (escape - tackling) * .002, .015, .16))
-                yards += session.Random.Next(12, 29) + (session.Random.NextDouble() < .18 ? session.Random.Next(10, 41) : 0);
+                { brokeTackle = true; yards += session.Random.Next(12, 29) + (session.Random.NextDouble() < .18 ? session.Random.Next(10, 41) : 0); }
         }
         yards = Math.Clamp(yards, 1 - session.YardLine, 100 - session.YardLine);
         var liveSeconds = Math.Clamp((int)Math.Round(isPass ? read.ReleaseSeconds + 1.2 + Math.Max(0, yards) / 8d : 3 + Math.Max(0, yards) / 6d), 4, 17);
@@ -220,7 +221,7 @@ public static partial class GameDayEngine
         {
             var role = offensePlayers.TakeWhile(p => p.PlayerId != target.PlayerId).Count(p => p.Position == target.Position);
             var custom = call.Offense.Assignments.FirstOrDefault(a => a.Position == target.Position && a.RoleIndex == role);
-            var alignment = custom is null ? GameDayAnimationPlanner.Alignment(call.Offense.Formation, target.Position, role) : new GameFieldPoint(custom.Depth, custom.Lane);
+            var alignment = GameDayAnimationPlanner.OffensiveAlignment(call.Offense, target.Position, role);
             var route = GameDayAnimationPlanner.AssignedRoute(call.Offense, target.Position, role);
             var eligibleIndex = offensePlayers.TakeWhile(p => p.PlayerId != target.PlayerId).Count(p => p.Position is Position.WR or Position.TE or Position.RB);
             carrierLane = GameDayAnimationPlanner.RouteEndLane(route, target.Position, eligibleIndex, alignment.Y, true);
@@ -250,7 +251,7 @@ public static partial class GameDayEngine
             PreSnapSeconds = session.LastPreSnapSeconds, LiveBallSeconds = liveSeconds,
             PassReleaseProgress = Math.Clamp(read.ReleaseSeconds / 5, .3, .75), TargetSeparation = read.Separation,
             IsDrop = isPass && !complete && !turnover && !sack && read.Separation >= 2 && session.Random.NextDouble() < .18,
-            IsQuarterbackScramble = scramble, IsQuarterbackKeep = designedKeep,
+            BrokeTackle = brokeTackle || complete && gain.BrokeTackle, IsQuarterbackScramble = scramble, IsQuarterbackKeep = designedKeep,
             IsBootleg = call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase),
             QuarterbackId = qb?.PlayerId, BallCarrierId = carrier?.PlayerId, TargetId = target?.PlayerId,
             PrimaryDefenderId = defender?.PlayerId, OffensePersonnel = offensePersonnel.PlayerIds,

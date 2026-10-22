@@ -25,8 +25,8 @@ public static class PlayerDevelopmentService
             .Where(record => record.SeasonYear == latestSeason)
             .GroupBy(record => record.PlayerId)
             .Select(group => group
-                .OrderBy(record =>
-                    record.Stage == PlayerDevelopmentStage.Offseason ? 0 : 1)
+                .OrderByDescending(record => record.Week)
+                .ThenBy(record => record.Stage == PlayerDevelopmentStage.Offseason ? 0 : 1)
                 .First())
             .ToArray();
     }
@@ -94,10 +94,10 @@ public static class PlayerDevelopmentService
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        if (state.Phase != SeasonPhase.RegularSeason || state.Week < 6 ||
+        if (state.Phase != SeasonPhase.RegularSeason || state.Week < 3 || state.Week > 12 || state.Week % 3 != 0 ||
             state.PlayerDevelopmentHistory.Any(record =>
                 record.SeasonYear == state.SeasonYear &&
-                record.Stage == PlayerDevelopmentStage.Midseason))
+                record.Stage == PlayerDevelopmentStage.Midseason && record.Week == state.Week))
         {
             return state;
         }
@@ -119,7 +119,7 @@ public static class PlayerDevelopmentService
                 AfterOverall = developed.OverallRating,
                 BeforePotential = player.PotentialRating,
                 AfterPotential = developed.PotentialRating,
-                Stage = PlayerDevelopmentStage.Midseason
+                Stage = PlayerDevelopmentStage.Midseason, Week = state.Week
             });
             return developed;
         }).ToArray();
@@ -197,7 +197,7 @@ public static class PlayerDevelopmentService
             redshirtFactor +
             injuryFactor +
             staffFactor +
-            moraleModifier +
+            (midseason ? GameMoraleService.TrainingModifier(GameMoraleService.PlayerMorale(state, player)) : moraleModifier) +
             random,
             -3,
             6);
@@ -234,8 +234,47 @@ public static class PlayerDevelopmentService
                 developed.PotentialRating + 1);
         }
 
-        return PlayerRatingService.RecalculateOverall(
-            developed);
+        var baseline = player.RatingBaselineSeason == state.SeasonYear && player.SeasonStartOverall > 0 ? player.SeasonStartOverall : player.OverallRating;
+        var minimum = midseason ? Math.Max(40, baseline - 2) : Math.Max(40, player.OverallRating - 2);
+        var maximum = Math.Min(player.PotentialRating + 1, midseason ? baseline + 2 : player.OverallRating + 4);
+        return BoundDevelopment(player, developed, minimum, Math.Max(minimum, maximum));
+    }
+
+    private static DynastyPlayer BoundDevelopment(DynastyPlayer original, DynastyPlayer developed, int minimum, int maximum)
+    {
+        var best = original with { CurrentInjury = developed.CurrentInjury };
+        for (var step = 1; step <= 20; step++)
+        {
+            var fraction = step / 20d;
+            int Blend(int before, int after) => (int)Math.Round(before + (after - before) * fraction);
+            var skills = developed.Skills!;
+            // Reduce the developed profile back toward its starting attributes without falsifying OVR.
+            var blendedSkills = skills with
+            {
+                PassingPower = Blend(original.Skills!.PassingPower, skills.PassingPower),
+                PassingAccuracy = Blend(original.Skills!.PassingAccuracy, skills.PassingAccuracy),
+                Catching = Blend(original.Skills!.Catching, skills.Catching),
+                BreakTackle = Blend(original.Skills!.BreakTackle, skills.BreakTackle),
+                Tackling = Blend(original.Skills!.Tackling, skills.Tackling),
+                RunBlocking = Blend(original.Skills!.RunBlocking, skills.RunBlocking),
+                PassBlocking = Blend(original.Skills!.PassBlocking, skills.PassBlocking),
+                BallCarrying = Blend(original.Skills!.BallCarrying, skills.BallCarrying),
+                Acceleration = Blend(original.Skills!.Acceleration, skills.Acceleration),
+                Leadership = Blend(original.Skills!.Leadership, skills.Leadership),
+                Discipline = Blend(original.Skills!.Discipline, skills.Discipline),
+                Jumping = Blend(original.Skills!.Jumping, skills.Jumping),
+                KickPower = Blend(original.Skills!.KickPower, skills.KickPower),
+                KickAccuracy = Blend(original.Skills!.KickAccuracy, skills.KickAccuracy)
+            };
+            var candidate = PlayerRatingService.RecalculateOverall(developed with
+            {
+                SpeedRating = Blend(original.SpeedRating, developed.SpeedRating), StrengthRating = Blend(original.StrengthRating, developed.StrengthRating),
+                AgilityRating = Blend(original.AgilityRating, developed.AgilityRating), AwarenessRating = Blend(original.AwarenessRating, developed.AwarenessRating),
+                InjuryRating = Blend(original.InjuryRating, developed.InjuryRating), Skills = blendedSkills
+            });
+            if (candidate.OverallRating >= minimum && candidate.OverallRating <= maximum) best = candidate;
+        }
+        return best;
     }
 
     private static DynastyPlayer ApplyAttributeDevelopment(
@@ -303,8 +342,10 @@ public static class PlayerDevelopmentService
                 player.InjuryRating + durabilityChange)
         };
 
-        return PlayerRatingService.RecalculateOverall(
-            developed);
+        var baseline = player.RatingBaselineSeason == state.SeasonYear && player.SeasonStartOverall > 0 ? player.SeasonStartOverall : player.OverallRating;
+        var minimum = midseason ? Math.Max(40, baseline - 2) : Math.Max(40, player.OverallRating - 2);
+        var maximum = Math.Min(player.PotentialRating + 1, midseason ? baseline + 2 : player.OverallRating + 4);
+        return BoundDevelopment(player, developed, minimum, Math.Max(minimum, maximum));
     }
 
     private static int AttributeChange(

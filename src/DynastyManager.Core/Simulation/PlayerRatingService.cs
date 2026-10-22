@@ -11,7 +11,7 @@ public static class PlayerRatingService
         return state with
         {
             ActiveRoster = PlayerJerseyService.Assign(state.ActiveRoster
-                .Select(player => EnsureInitialized(state, player)).ToArray())
+                .Select(player => WithSeasonBaseline(state, EnsureInitialized(state, player))).ToArray())
         };
     }
 
@@ -94,6 +94,10 @@ public static class PlayerRatingService
         var overall = CalculateOverall(initialized);
         return initialized with { OverallRating = overall, PotentialRating = Math.Max(overall, potential) };
     }
+
+    private static DynastyPlayer WithSeasonBaseline(DynastyState state, DynastyPlayer player) =>
+        player.RatingBaselineSeason == state.SeasonYear && player.SeasonStartOverall > 0 ? player :
+            player with { RatingBaselineSeason = state.SeasonYear, SeasonStartOverall = player.OverallRating };
 
     public static int CalculateOverall(DynastyPlayer player)
     {

@@ -54,7 +54,7 @@ public class DynastyHealthTests(ITestOutputHelper output)
                     state = InteractiveRecruitingService.EnsurePhaseInitialized(state, user);
                     state = CpuRecruitingService.ApplyWeeklyUserAssistance(state, user);
                     state = InteractiveRecruitingService.ResolveCurrentPhase(state, user, teams);
-                    if (gameWeek == 6) state = PlayerDevelopmentService.ApplyMidseasonDevelopment(state);
+                    if (gameWeek is 3 or 6 or 9 or 12) state = PlayerDevelopmentService.ApplyMidseasonDevelopment(state);
                 }
                 Assert.All(state.Schedule, game => Assert.True(game.HasPlayed));
                 Assert.Equal(state.PendingTransferCommitments.Count,
@@ -95,6 +95,8 @@ public class DynastyHealthTests(ITestOutputHelper output)
                 state = WalkOnRosterService.FillAllTeams(state, teams);
                 state = RosterManagementService.NormalizeAllDepthCharts(state);
                 AssertHealthy(state, teams);
+                Assert.InRange(state.ActiveRoster.Average(p => p.OverallRating), 55, 88);
+                Assert.True(state.ActiveRoster.Count(p => p.OverallRating >= 90) < state.ActiveRoster.Count * .20, "Elite ratings became too common");
                 var roster = state.ActiveRoster.Where(player => player.TeamName == user.Name).ToArray();
                 var cpuAverage = state.ActiveRoster.Where(player => player.TeamName != user.Name)
                     .Average(player => player.OverallRating);
@@ -109,7 +111,7 @@ public class DynastyHealthTests(ITestOutputHelper output)
                     "Assistance left too much of the roster dependent on walk-ons");
                 output.WriteLine($"seed={seed} teams={teamCount} prestige={ProgramPrestigeService.GetCurrentPrestige(state, user)} year={state.SeasonYear} HS={rank.HighSchoolCount} " +
                     $"portal={rank.TransferCount} rank={rank.Rank}/{teamCount} walkons={roster.Count(player => player.IsWalkOn)} " +
-                    $"userOVR={roster.Average(player => player.OverallRating):F1} CPUOVR={cpuAverage:F1} peerOVR={peerAverage:F1} " +
+                    $"userOVR={roster.Average(player => player.OverallRating):F1} CPUOVR={cpuAverage:F1} elite90={state.ActiveRoster.Count(p => p.OverallRating >= 90) / (double)state.ActiveRoster.Count:P1} peerOVR={peerAverage:F1} " +
                     $"weeklyHS={string.Join(',', weekly)}");
 
                 var save = await repository.SaveAsync(state, SaveKind.Manual);

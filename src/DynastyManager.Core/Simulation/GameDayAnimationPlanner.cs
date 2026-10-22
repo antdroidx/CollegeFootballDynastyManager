@@ -145,6 +145,28 @@ public static class GameDayAnimationPlanner
         return new(position == Position.TE ? -.5 : -.25, lane);
     }
 
+    public static GameFieldPoint OffensiveAlignment(OffensivePlayDefinition play, Position position, int roleIndex)
+    {
+        var point = Alignment(play.Formation, position, roleIndex);
+        var tightEnds = EligiblePositions(play.Personnel).Count(p => p == Position.TE);
+        if (position == Position.TE) return new(-.25, roleIndex == 0 ? .77 : .23);
+        if (position == Position.WR)
+        {
+            var onLine = tightEnds == 0 ? roleIndex < 2 : tightEnds == 1 && roleIndex == 0;
+            return new(onLine ? -.25 : -1.5, new[] { .10, .90, .23, .77, .84 }[Math.Clamp(roleIndex, 0, 4)]);
+        }
+        return point;
+    }
+
+    public static GameFieldPoint CarrierPoint(GameFieldPoint from, GameFieldPoint to, double progress, int agility, bool brokenTackle)
+    {
+        var p = Math.Clamp(progress, 0, 1);
+        if (DistanceYards(from, to) < 4) return new(from.X + (to.X - from.X) * p, from.Y + (to.Y - from.Y) * p);
+        var cut = Math.Sin(p * Math.PI) * Math.Sin(p * Math.PI * 2) * Math.Clamp((agility - 35) / 1600d, .008, .035);
+        if (brokenTackle) cut += Math.Sin(p * Math.PI) * Math.Sin(p * Math.PI * 4) * .012;
+        return new(from.X + (to.X - from.X) * p, Math.Clamp(from.Y + (to.Y - from.Y) * p + cut, .05, .95));
+    }
+
     public static double PlaybackDurationSeconds(IEnumerable<(double Distance, int Speed, double ActiveFraction)> players)
     {
         var longest = players.Select(p => p.Distance / (6 + Math.Clamp(p.Speed, 1, 99) / 20d) /

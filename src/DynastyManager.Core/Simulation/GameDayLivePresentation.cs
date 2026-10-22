@@ -9,7 +9,7 @@ public static class GameDayLivePresentation
         ? !snap.IsOnsideKick && !snap.IsTouchback && !snap.IsFairCatch && snap.ReturnYards > 0 && snap.BallEndYardLine > 50
         : snap.Outcome is SnapOutcome.Touchdown or SnapOutcome.Interception or
         SnapOutcome.Fumble or SnapOutcome.TwoPointConversion ||
-        (GameDayEngine.IsScrimmage(snap) && snap.Yards >= 25) ||
+        (GameDayEngine.IsScrimmage(snap) && snap.Yards >= 20) ||
         (snap.Outcome == SnapOutcome.Punt && snap.ReturnYards >= 30);
 
     public static GameFieldPoint HuddlePoint(int yardLine, int direction, bool offense, int slot)

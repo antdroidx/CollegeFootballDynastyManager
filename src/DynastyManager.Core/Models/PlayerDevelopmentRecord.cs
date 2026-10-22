@@ -9,6 +9,7 @@ public enum PlayerDevelopmentStage
 public sealed record PlayerDevelopmentRecord
 {
     public int SeasonYear { get; init; }
+    public int Week { get; init; }
     public Guid PlayerId { get; init; }
     public required string PlayerName { get; init; }
     public required string TeamName { get; init; }

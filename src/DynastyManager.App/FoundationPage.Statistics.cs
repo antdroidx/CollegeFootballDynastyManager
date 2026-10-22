@@ -1,3 +1,4 @@
+using Microsoft.Maui.Layouts;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
 using DynastyManager.Data.Presentation;
@@ -26,7 +27,7 @@ public sealed partial class FoundationPage
         return new VerticalStackLayout { Spacing = 10, Children =
         {
             ResponsiveTableHeader(SectionTitle("Player statistics", "Season/career totals · tap a column heading to sort ↑↓"),
-                new HorizontalStackLayout { Spacing = 8, Children = { _statisticsSeason, _statisticsScope, _statisticsCategory } }),
+                new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _statisticsSeason, _statisticsScope, _statisticsCategory } }),
             _statisticsRows
         } };
     }
@@ -95,7 +96,7 @@ public sealed partial class FoundationPage
             var next = new Button { Text = "Next", IsEnabled = (_statisticsPage + 1) * pageSize < ordered.Length };
             previousPage.Clicked += (_, _) => { _statisticsPage--; RenderStatistics(); };
             next.Clicked += (_, _) => { _statisticsPage++; RenderStatistics(); };
-            _statisticsRows.Children.Insert(1, new HorizontalStackLayout { Spacing = 8, Children =
+            _statisticsRows.Children.Insert(1, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children =
             {
                 previousPage, new Label { Text = $"{_statisticsPage * pageSize + 1}–{Math.Min(ordered.Length, (_statisticsPage + 1) * pageSize)} of {ordered.Length}", FontSize = 12, VerticalOptions = LayoutOptions.Center }, next
             } });

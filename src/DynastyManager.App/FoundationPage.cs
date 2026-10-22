@@ -1325,10 +1325,10 @@ public sealed partial class FoundationPage : ContentPage
             _currentDynasty = TransferPortalMarketService
                 .AdvanceRegularSeasonWeek(_currentDynasty);
 
-            if (weekAtStart == 6)
+            if (weekAtStart is 3 or 6 or 9 or 12)
             {
                 await ShowAdvanceProgressAsync(
-                    "Applying midseason player development...", 0.68);
+                    "Applying automatic player training...", 0.68);
                 var midseasonState = _currentDynasty;
                 _currentDynasty = await Task.Run(() =>
                     PlayerDevelopmentService.ApplyMidseasonDevelopment(
@@ -2656,7 +2656,7 @@ public sealed partial class FoundationPage : ContentPage
             FontSize = 11,
             Padding = new Thickness(10, 5),
             TextColor = Colors.White,
-            IsVisible = _recruitingView == RecruitingView.Board,
+            IsVisible = _recruitingView == RecruitingView.Board && IsRecruitingOpen(prospect.Source),
             IsEnabled =
                 interaction.CommittedTeamName is null &&
                 IsRecruitingOpen(prospect.Source)
@@ -2712,8 +2712,13 @@ public sealed partial class FoundationPage : ContentPage
                     prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT"), metrics, statusPanel
             }
         };
-        var actions = new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.End,
-            Children = { viewButton, boardButton } };
+        var actions = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.End };
+        var quickScout = new Button { Text = interaction.IsPriorityScout ? "Scout weekly ✓" : "Scout weekly", FontSize = 11,
+            Padding = new Thickness(10, 5), IsEnabled = interaction.CommittedTeamName is null && interaction.ScoutingPercent < 100 };
+        quickScout.Opacity = quickScout.IsEnabled ? 1 : .4;
+        quickScout.Clicked += (_, _) => { if (_currentDynasty is null) return;
+            _currentDynasty = ScoutingDepartmentService.TogglePriority(_currentDynasty, prospect.Source, prospect.ProspectId); RenderCurrentDynasty(); };
+        foreach (var action in new[] { viewButton, boardButton, quickScout }) { action.Margin = new Thickness(3); actions.Children.Add(action); }
         if (_recruitingView == RecruitingView.Board) actions.Children.Add(quickOfferButton);
         var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions } };
 
@@ -3143,6 +3148,10 @@ public sealed partial class FoundationPage : ContentPage
             actions.Children.Add(button);
         }
 
+        scoutButton.IsVisible = offerButton.IsVisible = pitchButton.IsVisible = pitchPicker.IsVisible = recruitingOpen;
+        pitchPicker.IsEnabled = pitchButton.IsEnabled;
+        foreach (var action in new[] { scoutButton, offerButton, pitchButton, priorityButton, boardButton })
+            action.Opacity = action.IsEnabled ? 1 : .4;
         pitchPicker.Margin =
             new Thickness(0, 0, 6, 6);
         pitchPicker.WidthRequest = 170;
@@ -4708,6 +4717,7 @@ public sealed partial class FoundationPage : ContentPage
                             $"INJ {player.InjuryRating}",
                         FontSize = 12
                     },
+                    new Label { Text = $"Morale {GameMoraleService.PlayerMorale(_currentDynasty!, player)}/100 · Season OVR Δ {FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty!, player))}", FontSize = 12, TextColor = DynastyTheme.Accent },
                     CreateCareerStatsButton(player),
                     new Label
                     {

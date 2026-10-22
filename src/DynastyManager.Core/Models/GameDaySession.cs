@@ -10,6 +10,7 @@ public enum SnapOutcome
 
 public sealed record GameSnapEvent
 {
+    public bool BrokeTackle { get; init; }
     public int Sequence { get; init; }
     public int PossessionNumber { get; init; }
     public int Quarter { get; init; }

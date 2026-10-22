@@ -1,3 +1,4 @@
+using Microsoft.Maui.Layouts;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
 using DynastyManager.Data.Persistence;
@@ -33,8 +34,8 @@ public sealed partial class FoundationPage
         program.Clicked += (_, _) => ShowSection(AppSection.Program);
         var depthChart = new Button { Text = "Manage depth chart", BackgroundColor = Color.FromArgb("#315D59") };
         depthChart.Clicked += (_, _) => { _showDepthChartOrganizer = true; ShowSection(AppSection.Roster); };
-        _gamePlanHost.Children.Add(new HorizontalStackLayout { Spacing = 8, Children = { program, depthChart } });
-        var careerTools = new HorizontalStackLayout { Spacing = 8 };
+        _gamePlanHost.Children.Add(new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { program, depthChart } });
+        var careerTools = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
         if (_currentDynasty.UserHeadCoach is not null)
         {
             var career = CreateCoachCareerButton(_currentDynasty.UserHeadCoach);
@@ -296,11 +297,11 @@ public sealed partial class FoundationPage
             canvas.FillColor = Color.FromArgb("#F2F5F4");
             for (var player = 0; player < 5; player++)
             {
-                var lineman = play.Assignments.FirstOrDefault(a => a.Position == Position.OL && a.RoleIndex == player);
-                canvas.FillCircle(width * (float)(lineman?.Lane ?? .34 + player * .08), height * (.61f - (float)(lineman?.Depth ?? 0) * .03f), 3);
+                var lineman = GameDayAnimationPlanner.OffensiveAlignment(play, Position.OL, player);
+                canvas.FillCircle(width * (float)(lineman.Y), height * (.61f - (float)(lineman.X) * .03f), 3);
             }
             var qb = play.Assignments.FirstOrDefault(a => a.Position == Position.QB && a.RoleIndex == 0);
-            var quarterback = qb is null ? GameDayAnimationPlanner.Alignment(play.Formation, Position.QB, 0) : new GameFieldPoint(qb.Depth, qb.Lane);
+            var quarterback = GameDayAnimationPlanner.OffensiveAlignment(play, Position.QB, 0);
             canvas.FillCircle(width * (float)quarterback.Y, height * (.61f - (float)quarterback.X * .03f), 3.5f);
             var positions = GameDayAnimationPlanner.EligiblePositions(play.Personnel);
             var roleCounts = new Dictionary<Position, int>();
@@ -310,7 +311,7 @@ public sealed partial class FoundationPage
                 roleCounts.TryGetValue(position, out var roleIndex);
                 roleCounts[position] = roleIndex + 1;
                 var custom = play.Assignments.FirstOrDefault(a => a.Position == position && a.RoleIndex == roleIndex);
-                var alignment = custom is null ? GameDayAnimationPlanner.Alignment(play.Formation, position, roleIndex) : new GameFieldPoint(custom.Depth, custom.Lane);
+                var alignment = GameDayAnimationPlanner.OffensiveAlignment(play, position, roleIndex);
                 var assigned = GameDayAnimationPlanner.AssignedRoute(play, position, roleIndex);
                 var start = new GameFieldPoint(0, alignment.Y);
                 var depth = GameDayAnimationPlanner.RouteDepthShare(assigned, position, false);

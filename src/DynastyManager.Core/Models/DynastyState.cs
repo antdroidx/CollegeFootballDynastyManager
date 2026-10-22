@@ -39,6 +39,8 @@ public sealed record DynastyState
     public IReadOnlyList<PendingTransferCommitment> PendingTransferCommitments { get; init; } =
         Array.Empty<PendingTransferCommitment>();
     public int TransferPortalEntryWindowSeasonYear { get; init; }
+    public IReadOnlyList<PlayerDepartureRecord> PlayerDepartureHistory { get; init; } = [];
+    public IReadOnlyList<HallOfFameEntry> HallOfFame { get; init; } = [];
     public IReadOnlyList<PlayerDepartureRecord> RecentPlayerDepartures { get; init; } =
         Array.Empty<PlayerDepartureRecord>();
     public IReadOnlyList<PlayerInjuryRecord> InjuryHistory { get; init; } =

@@ -154,6 +154,7 @@ def main():
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
     assert len([n for n in viewer.iter("node") if n.get("content-desc", "").startswith("Select ")]) == 3, "Portrait must show three play choices"
     tap(viewer, "More")
+    assert "Carrier names: On" in texts(capture("names-default-on")), "Subtle names must default on"
     # Swap the renderer on an existing field and restore it without advancing the snap.
     sprites = scroll_to_text("sprites-ready", "Players: Sprites")
     tap(sprites, "Players: Sprites")
@@ -290,6 +291,29 @@ def main():
     assert calendar(advanced) != previous
     assert "Advance to Week 1" not in texts(advanced), "The calendar remained at Week 0"
     print("Actual week advancement after live-view exit passed.")
+    tap(advanced, "Roster")
+    roster = wait_for("roster-morale", lambda r: any("Δ = change from season start" in (t or "") for t in texts(r)))
+    assert any("Morale responds" in (t or "") for t in texts(roster))
+    tap(roster, "Recruit")
+    recruit_hub = wait_for("recruit-hub", lambda r: "High School" in texts(r), timeout=120)
+    tap(recruit_hub, "High School")
+    recruits = wait_for("season-recruits", lambda r: any((t or "").startswith("Scout weekly") for t in texts(r)), timeout=120)
+    assert "Offer Scholarship" not in texts(recruits) and "Choose pitch" not in texts(recruits)
+    tap(recruits, "Season")
+    season = scroll_to_text("season-careers", "Player departures ›")
+    tap(season, "Player departures ›")
+    departures = wait_for("departures-view", lambda r: "Player departures" in texts(r) and "Return to season" in texts(r))
+    assert any("departures" in (t or "").lower() for t in texts(departures))
+    tap(departures, "Return to season")
+    season = scroll_to_text("season-hall", "Hall of Fame ›")
+    tap(season, "Hall of Fame ›")
+    hall = wait_for("hall-of-fame", lambda r: "Hall of Fame" in texts(r) and "Return to season" in texts(r))
+    assert any("No inductees" in (t or "") for t in texts(hall))
+    adb("shell", "settings", "put", "system", "user_rotation", "0")
+    time.sleep(2)
+    assert "Hall of Fame" in texts(capture("hall-portrait"))
+    tap(capture("hall-close"), "Return to season")
+    print("Season-baseline roster, phase-aware recruiting, departures and Hall of Fame navigation passed.")
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ public sealed partial class FoundationPage
         Task currentSnapFinished = Task.CompletedTask;
         GameSnapEvent? lastPlayedSnap = null;
         var instantReplays = Microsoft.Maui.Storage.Preferences.Default.Get("live-instant-replays", true);
-        var showCarrierNames = Microsoft.Maui.Storage.Preferences.Default.Get("live-carrier-labels-subtle", false);
+        var showCarrierNames = Microsoft.Maui.Storage.Preferences.Default.Get("live-player-labels", true);
 
         if (mode == GameDayMode.Simulate)
         {
@@ -195,7 +195,7 @@ public sealed partial class FoundationPage
             Microsoft.Maui.Storage.Preferences.Default.Set("live-instant-replays", instantReplays);
             replayToggle.Text = instantReplays ? "Auto replay: On" : "Auto replay: Off"; };
         carrierToggle.Clicked += (_, _) => { showCarrierNames = !showCarrierNames;
-            Microsoft.Maui.Storage.Preferences.Default.Set("live-carrier-labels-subtle", showCarrierNames);
+            Microsoft.Maui.Storage.Preferences.Default.Set("live-player-labels", showCarrierNames);
             carrierToggle.Text = showCarrierNames ? "Carrier names: On" : "Carrier names: Off"; };
         var showNumbers = Microsoft.Maui.Storage.Preferences.Default.Get("live-jersey-numbers", false);
         var markerLabels = new Dictionary<Label, DynastyPlayer?>();
@@ -627,13 +627,13 @@ public sealed partial class FoundationPage
                     if (player.Position is Position.QB or Position.RB or Position.WR or Position.TE)
                     {
                         var custom = calledPlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == roleIndex);
-                        var alignment = custom is null ? GameDayAnimationPlanner.Alignment(calledPlay.Formation, player.Position, roleIndex) : new GameFieldPoint(custom.Depth, custom.Lane);
+                        var alignment = GameDayAnimationPlanner.OffensiveAlignment(calledPlay, player.Position, roleIndex);
                         x = Project(snap.StartYardLine + alignment.X); y = alignment.Y;
                     }
                     else if (player.Position == Position.OL)
                     {
-                        x = Project(snap.StartYardLine + (playerAssignment?.Depth ?? GameDayAnimationPlanner.Alignment(calledPlay.Formation, Position.OL, roleIndex).X));
-                        if (playerAssignment is not null) y = playerAssignment.Lane;
+                        var alignment = GameDayAnimationPlanner.OffensiveAlignment(calledPlay, Position.OL, roleIndex);
+                        x = Project(snap.StartYardLine + alignment.X); y = alignment.Y;
                     }
                 }
                 x = Math.Clamp(x, .025, .96);
@@ -710,13 +710,19 @@ public sealed partial class FoundationPage
                 }
                 AddMovement(view, from, to, movements, fieldPlayers);
             }
+            Rect CarrierTrack(Rect from, Rect to, double progress)
+            {
+                var carrier = session.PlayersById.GetValueOrDefault(snap.BallCarrierId ?? snap.ReturnerId ?? Guid.Empty);
+                var point = GameDayAnimationPlanner.CarrierPoint(new(from.X, from.Y), new(to.X, to.Y), progress, carrier?.AgilityRating ?? 65, snap.BrokeTackle);
+                return new Rect(point.X, point.Y, from.Width, from.Height);
+            }
             Rect ReceiverTrack(double progress)
             {
                 if (receiverFrom is not Rect from || receiverTo is not Rect to) return new Rect(line, .50, 28, 28);
                 if (!caught) return RouteTrack(from, to, progress, receiverFamily);
                 return progress < catchProgress
                     ? RouteTrack(from, to, progress / catchProgress, receiverFamily)
-                    : Interpolate(to, to with { X = destination }, (progress - catchProgress) / (1 - catchProgress));
+                    : CarrierTrack(to, to with { X = destination }, (progress - catchProgress) / (1 - catchProgress));
             }
             GameFieldPoint? interceptionPoint = (snap.Outcome == SnapOutcome.Interception || snap.IsPassBreakup) && receiverFrom is Rect rf && receiverTo is Rect rt
                 ? GameDayAnimationPlanner.RoutePoint(new(rf.X, rf.Y), new(rt.X, rt.Y), receiverFamily, catchProgress) : null;
@@ -926,7 +932,8 @@ public sealed partial class FoundationPage
                         ? BlockingTrack(movement.From, movement.To, block, progress)
                         : caught && ReferenceEquals(movement.View, terminalCarrierView) ? ReceiverTrack(progress) : routeViews.Contains(movement.View)
                         ? RouteTrack(movement.From, movement.To, movementProgress, assignedRoutes.GetValueOrDefault(movement.View, routeFamily))
-                        : Interpolate(movement.From, movement.To, movementProgress);
+                        : (ReferenceEquals(movement.View, terminalCarrierView) && !isPass || ReferenceEquals(movement.View, specialReturnerView))
+                        ? CarrierTrack(movement.From, movement.To, movementProgress) : Interpolate(movement.From, movement.To, movementProgress);
                     AbsoluteLayout.SetLayoutBounds(movement.View, position);
                     if (movement.View is Border host && host.Content is FootballSpriteView sprite)
                     {
@@ -949,8 +956,22 @@ public sealed partial class FoundationPage
                     if (owner is Guid current && markerHighlights.TryGetValue(current, out var mark)) mark(true);
                     highlightedOwner = owner;
                 }
-                carrierLabel.IsVisible = useSprites && showCarrierNames && owner.HasValue;
-                if (carrierLabel.IsVisible && owner is Guid ownerId)
+                var labelOwner = owner;
+                if (owner is Guid liveOwner && progress > .7)
+                {
+                    var carrierHost = markerHosts.FirstOrDefault(m => m.Value.Player?.PlayerId == liveOwner).Key;
+                    if (carrierHost is not null)
+                    {
+                        var at = AbsoluteLayout.GetLayoutBounds(carrierHost);
+                        var nearby = markerHosts.Where(m => m.Value.Player?.TeamName == snap.DefenseTeamName)
+                            .Select(m => (Player: m.Value.Player!, Distance: GameDayAnimationPlanner.DistanceYards(new(at.X, at.Y),
+                                new(AbsoluteLayout.GetLayoutBounds(m.Key).X, AbsoluteLayout.GetLayoutBounds(m.Key).Y))))
+                            .OrderBy(m => m.Distance).FirstOrDefault();
+                        if (nearby.Player is not null && nearby.Distance < 5) labelOwner = nearby.Player.PlayerId;
+                    }
+                }
+                carrierLabel.IsVisible = useSprites && showCarrierNames && labelOwner.HasValue;
+                if (carrierLabel.IsVisible && labelOwner is Guid ownerId)
                 {
                     var host = markerHosts.FirstOrDefault(m => m.Value.Player?.PlayerId == ownerId).Key;
                     if (host is not null)
@@ -968,7 +989,7 @@ public sealed partial class FoundationPage
                     else carrierLabel.IsVisible = false;
                 }
                 Rect Track(Rect? from, Rect? to, double fraction) =>
-                    from is Rect a && to is Rect b ? Interpolate(a, b, fraction) : centerPoint;
+                    from is Rect a && to is Rect b ? (from == runnerFrom && !isPass || from == returnerFrom ? CarrierTrack(a, b, fraction) : Interpolate(a, b, fraction)) : centerPoint;
                 Rect currentBall;
                 if (isKick && snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt)
                 {

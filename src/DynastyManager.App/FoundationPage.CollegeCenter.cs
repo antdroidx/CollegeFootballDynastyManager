@@ -73,7 +73,7 @@ public sealed partial class FoundationPage
         var page = new ContentPage { BackgroundColor = DynastyTheme.Background, Title = "College football center" };
         var close = new Button { Text = "Return to season", HorizontalOptions = LayoutOptions.Start };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
-        var section = new Picker { Title = "Section", ItemsSource = new[] { "Awards & honors", "Polls & trends", "Program conduct", "Weekly recap", "Conference landscape" }, SelectedIndex = initialSection };
+        var section = new Picker { Title = "Section", ItemsSource = new[] { "Awards & honors", "Polls & trends", "Program conduct", "Weekly recap", "Conference landscape", "Player departures", "Hall of Fame" }, SelectedIndex = initialSection };
         var body = new VerticalStackLayout { Spacing = 12 };
         void Render()
         {
@@ -85,7 +85,9 @@ public sealed partial class FoundationPage
                 case 1: RenderPollTrends(body); break;
                 case 2: RenderConduct(body); break;
                 case 3: RenderWeeklyRecap(body); break;
-                default: RenderConferenceLandscape(body); break;
+                case 4: RenderConferenceLandscape(body); break;
+                case 5: RenderPlayerDepartures(body); break;
+                case 6: RenderHallOfFame(body); break;
             }
         }
         section.SelectedIndexChanged += (_, _) => Render();
@@ -97,6 +99,53 @@ public sealed partial class FoundationPage
         layout.Add(heading,0,0); layout.Add(new ScrollView { Content = body },0,1);
         page.Content = layout;
         await Navigation.PushModalAsync(page);
+    }
+
+    private void RenderPlayerDepartures(VerticalStackLayout body)
+    {
+        var state = _currentDynasty!;
+        body.Children.Add(SectionTitle("Player departures", "Graduations, early pro declarations and portal entries · retained across seasons"));
+        var records = state.PlayerDepartureHistory.Concat(state.RecentPlayerDepartures).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray();
+        var teams = new[] { "All teams" }.Concat(state.LeagueTeams.Select(t => t.Name).Order()).ToArray();
+        var team = new Picker { Title = "Team", ItemsSource = teams, SelectedIndex = Math.Max(0, Array.IndexOf(teams, state.UserTeamName)) };
+        var years = records.Select(p => p.SeasonYear).Append(state.SeasonYear).Distinct().OrderDescending().ToArray();
+        var year = new Picker { Title = "Season", ItemsSource = years, SelectedIndex = 0 };
+        var filters = new Grid { ColumnDefinitions = new() { new(GridLength.Star), new(90) }, ColumnSpacing = 8 };
+        filters.Add(team, 0, 0); filters.Add(year, 1, 0); body.Children.Add(filters);
+        var list = new VerticalStackLayout { Spacing = 6 }; body.Children.Add(list);
+        void Render()
+        {
+            list.Children.Clear();
+            var selected = records.Where(p => p.SeasonYear == (int)year.SelectedItem && (team.SelectedIndex == 0 || p.TeamName == (string)team.SelectedItem)).OrderBy(p => p.Reason).ThenByDescending(p => p.OverallRating).ToArray();
+            list.Children.Add(new Label { Text = $"{selected.Length} departures · elite juniors may declare early" });
+            foreach (var p in selected)
+            {
+                list.Children.Add(PlayerLink(p.PlayerId, p.FullName));
+                list.Children.Add(new Label { Text = $"{p.TeamName} · {p.Position} · OVR {p.OverallRating} · {p.Reason switch { PlayerDepartureReason.EarlyProDeclaration => "Declared for pro draft", PlayerDepartureReason.TransferPortal => "Entered transfer portal", PlayerDepartureReason.Released => "Released from roster", _ => "Graduated" }}", FontSize = 11, TextColor = DynastyTheme.Muted });
+            }
+        }
+        team.SelectedIndexChanged += (_, _) => Render(); year.SelectedIndexChanged += (_, _) => Render(); Render();
+    }
+
+    private void RenderHallOfFame(VerticalStackLayout body)
+    {
+        var state = _currentDynasty!;
+        body.Children.Add(SectionTitle("Hall of Fame", "Inducted on graduation or early pro departure · original career / honors scoring, with recorded stats only"));
+        var teams = new[] { "National" }.Concat(state.HallOfFame.Select(p => p.TeamName).Distinct().Order()).ToArray();
+        var scope = new Picker { Title = "Scope", ItemsSource = teams, SelectedIndex = 0 }; body.Children.Add(scope);
+        var list = new VerticalStackLayout { Spacing = 8 }; body.Children.Add(list);
+        void Render()
+        {
+            list.Children.Clear();
+            var entries = state.HallOfFame.Where(p => scope.SelectedIndex == 0 || p.TeamName == (string)scope.SelectedItem).OrderByDescending(p => p.CareerScore + p.HonorsScore * 10).ToArray();
+            if (entries.Length == 0) list.Children.Add(new Label { Text = "No inductees yet. Exceptional completed careers and final honors earn induction." });
+            foreach (var p in entries)
+                list.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = Color.FromArgb("#203342"), Content =
+                    new VerticalStackLayout { Spacing = 4, Children = { PlayerLink(p.PlayerId, p.PlayerName),
+                        new Label { Text = $"{p.InductionYear} · {p.TeamName} · {p.Position}", TextColor = DynastyTheme.Accent },
+                        new Label { Text = p.Citation, FontSize = 11, TextColor = DynastyTheme.Muted } } } });
+        }
+        scope.SelectedIndexChanged += (_, _) => Render(); Render();
     }
 
     private void RenderHonors(VerticalStackLayout body)

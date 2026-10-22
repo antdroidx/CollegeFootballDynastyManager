@@ -1,3 +1,4 @@
+using Microsoft.Maui.Layouts;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
 using Microsoft.Maui.Controls;
@@ -45,7 +46,7 @@ public sealed partial class FoundationPage
             ResponsiveTableHeader(
                 new VerticalStackLayout { Spacing = 8, Children = { _rosterBanner, _offseasonRosterStatus } },
                 new VerticalStackLayout { Spacing = 8, Children = { filters,
-                    new HorizontalStackLayout { Spacing = 8, Children = { _rosterSort, _depthChartOrganizerButton, stats } } } }),
+                    new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _rosterSort, _depthChartOrganizerButton, stats } } } }),
             _depthChartOrganizer, _rosterDetail, _transferPortalList
         } };
     }
@@ -89,20 +90,21 @@ public sealed partial class FoundationPage
             var status = player.CurrentInjury is not null ? $"Injured {player.CurrentInjury.WeeksRemaining}w"
                 : player.IsRedshirted ? "Redshirt" : player.IsWalkOn ? "Walk-on" : RosterManagementService.IsStarter(player) ? "Starter" : "Depth";
             var playerDevelopment = development.GetValueOrDefault(player.PlayerId);
+            var seasonDelta = GameMoraleService.SeasonDelta(_currentDynasty, player);
+            var morale = GameMoraleService.PlayerMorale(_currentDynasty, player);
             rows.Add([TableText(player.Position.ToString()), PlayerLink(player),
                 RatingCell(player.OverallRating),
-                TableText(playerDevelopment is null ? "—" : FormatSigned(playerDevelopment.OverallChange), true,
-                    playerDevelopment is null ? DynastyTheme.Muted : GetChangeColor(playerDevelopment.OverallChange)),
+                TableText(FormatSigned(seasonDelta), true, GetChangeColor(seasonDelta)),
                 details, TableText(player.IsRedshirted ? "RS" : player.DepthChartOrder.ToString()),
                 TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating), color: Color.FromArgb("#E9C76C")),
                 TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"),
                 TableText(status, color: player.CurrentInjury is not null ? NegativeChangeColor : player.IsRedshirted ? Color.FromArgb("#D6A3EB") : DynastyTheme.Muted),
-                HeightCell(player.HeightInches), TableText(player.WeightPounds > 0 ? player.WeightPounds.ToString() : "—")]);
+                TableText($"{morale} · {GameMoraleService.Label(morale)}"), HeightCell(player.HeightInches), TableText(player.WeightPounds > 0 ? player.WeightPounds.ToString() : "—")]);
         }
-        _transferPortalList.Children.Add(SectionTitle($"Depth chart · {rows.Count} players", "Aligned columns · swipe horizontally for year, potential, HS stars (~ = estimated) and status"));
+        _transferPortalList.Children.Add(SectionTitle($"Depth chart · {rows.Count} players", "Δ = change from season start · Morale responds to form and injury · swipe for more columns"));
         if (rows.Count == 0) _transferPortalList.Children.Add(new Label { Text = "No players match these filters." });
         else _transferPortalList.Children.Add(DataTable([("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Details", 64),
-            ("Depth", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Status", 105), ("Height", 64), ("Wt lb", 60)], rows));
+            ("Depth", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Status", 105), ("Morale", 110), ("Height", 64), ("Wt lb", 60)], rows));
     }
 
     private bool MatchesRosterStatus(DynastyPlayer player) => _rosterStatus.SelectedIndex switch

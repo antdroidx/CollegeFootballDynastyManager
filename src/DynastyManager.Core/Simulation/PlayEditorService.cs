@@ -19,6 +19,12 @@ public static class PlayEditorService
             Check(play.Id, play.Name, play.Assignments);
             if (!Enum.IsDefined(play.Formation) || !Enum.IsDefined(play.Personnel) || !Enum.IsDefined(play.Concept)) throw new ArgumentException("Invalid offensive play.");
             if (play.Assignments.Any(a => a.Task is not (AssignmentTask.Route or AssignmentTask.Block))) throw new ArgumentException("Offensive assignments must be routes or blocks.");
+            var slots = new[] { Position.QB, Position.OL, Position.OL, Position.OL, Position.OL, Position.OL }
+                .Concat(GameDayAnimationPlanner.EligiblePositions(play.Personnel)).GroupBy(p => p).ToDictionary(g => g.Key, g => g.Count());
+            if (play.Assignments.Any(a => a.RoleIndex >= slots.GetValueOrDefault(a.Position)))
+                throw new ArgumentException("Assignment slot does not exist in this personnel package.");
+            if (play.Assignments.Any(a => a.Position == Position.OL && a.Task != AssignmentTask.Block))
+                throw new ArgumentException("Ineligible offensive linemen must have blocking assignments.");
         }
         foreach (var play in plan.CreatedDefensivePlays)
         {

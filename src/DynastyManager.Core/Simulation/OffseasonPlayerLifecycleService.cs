@@ -114,6 +114,9 @@ public static class OffseasonPlayerLifecycleService
             .Where(player => !portalIds.Contains(player.PlayerId))
             .ToArray();
 
+        var retirees = departures.ToArray();
+        departures.AddRange(portalPlayers.Select(p => ToDeparture(state.SeasonYear, p, PlayerDepartureReason.TransferPortal)));
+        state = HallOfFameService.Induct(state, retirees);
         var newPortalEntries = portalPlayers
             .Select(player => new TransferPortalEntry
             {
@@ -144,7 +147,8 @@ public static class OffseasonPlayerLifecycleService
                 HighSchoolRecruitingPool = state.HighSchoolRecruitingPool
                     .Where(recruit => recruit.SeasonYear == state.SeasonYear)
                     .ToArray(),
-                RecentPlayerDepartures = departures
+                RecentPlayerDepartures = departures,
+                PlayerDepartureHistory = state.PlayerDepartureHistory.Concat(departures).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray()
             });
     }
 

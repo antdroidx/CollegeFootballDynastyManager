@@ -224,10 +224,16 @@ public static class RosterManagementService
         if (roster.Length == state.ActiveRoster.Count)
             return state;
 
+        var player = state.ActiveRoster.First(p => p.PlayerId == playerId && p.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+        var departure = new PlayerDepartureRecord { SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
+            FullName = player.FullName, TeamName = player.TeamName, Position = player.Position,
+            OverallRating = player.OverallRating, Reason = PlayerDepartureReason.Released };
         return NormalizeAllDepthCharts(
             state with
             {
-                ActiveRoster = roster
+                ActiveRoster = roster,
+                RecentPlayerDepartures = state.RecentPlayerDepartures.Append(departure).ToArray(),
+                PlayerDepartureHistory = state.PlayerDepartureHistory.Append(departure).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray()
             });
     }
 

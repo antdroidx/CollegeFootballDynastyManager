@@ -16,6 +16,8 @@ public sealed record DynastyPlayer
     public NcaaPlayerAppearance? Appearance { get; init; }
     public int TalentLevel { get; init; }
     public int OverallRating { get; init; }
+    public int RatingBaselineSeason { get; init; }
+    public int SeasonStartOverall { get; init; }
     public int PotentialRating { get; init; }
     public int SpeedRating { get; init; }
     public int StrengthRating { get; init; }

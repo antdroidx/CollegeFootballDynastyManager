@@ -1,3 +1,4 @@
+using Microsoft.Maui.Layouts;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
 using Microsoft.Maui.Controls;
@@ -62,7 +63,7 @@ public sealed partial class FoundationPage
         _manualSaveButton.Text = "Save";
         return new VerticalStackLayout { Spacing = 12, Children =
         {
-            _overviewBanner, new HorizontalStackLayout { Spacing = 8, Children = { _advanceWeekButton, _manualSaveButton } },
+            _overviewBanner, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _advanceWeekButton, _manualSaveButton } },
             _overviewGameActions, _homeHighlights
         } };
     }
@@ -178,6 +179,13 @@ public sealed partial class FoundationPage
         var college = new Button { Text = "Awards, polls & program center ›", BackgroundColor = Color.FromArgb("#645025") };
         college.Clicked += async (_, _) => await ShowCollegeCenterAsync();
         _seasonHub.Children.Add(college);
+        var careers = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
+        foreach (var item in new[] { ("Player departures", 5), ("Hall of Fame", 6) })
+        {
+            var open = new Button { Text = item.Item1 + " ›", FontSize = 12, Margin = new Thickness(3) };
+            open.Clicked += async (_, _) => await ShowCollegeCenterAsync(item.Item2); careers.Children.Add(open);
+        }
+        _seasonHub.Children.Add(careers);
     }
 
     private View BuildMatchupHub() => _matchupHub;
@@ -199,7 +207,7 @@ public sealed partial class FoundationPage
         _overviewGameActions.Content = new Border { StrokeThickness = 0, Padding = 10,
             BackgroundColor = Color.FromArgb("#172733"), Content = new VerticalStackLayout { Spacing = 8, Children =
             {
-                title, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+                title, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
             } } };
         _overviewGameActions.IsVisible = true;
     }
@@ -250,7 +258,7 @@ public sealed partial class FoundationPage
         return new Border { StrokeThickness = 0, Padding = 11, BackgroundColor = Color.FromArgb("#1B2B37"),
             Content = new VerticalStackLayout { Spacing = 7, Children =
             {
-                matchup, note, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+                matchup, note, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
             } } };
     }
 

@@ -187,7 +187,7 @@ public static class LegacyDynastyRosterFactory
                 Position = position,
                 ClassYear = classYear,
                 TalentLevel = talent,
-                OverallRating = RatingFromTalent(talent)
+                OverallRating = Math.Clamp(RatingFromTalent(talent) + (classYear - 2) * 2, 50, 95)
             });
 
             generatedIndex++;

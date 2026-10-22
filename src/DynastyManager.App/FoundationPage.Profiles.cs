@@ -62,11 +62,12 @@ public sealed partial class FoundationPage
         var active = state.ActiveRoster.FirstOrDefault(player => player.PlayerId == id);
         var career = state.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id);
         var latest = visibleStats.Where(line => line.PlayerId == id).OrderByDescending(line => line.SeasonYear).FirstOrDefault();
-        if (active is null && career is null && latest is null) return;
+        var departure = state.PlayerDepartureHistory.Concat(state.RecentPlayerDepartures).Where(p => p.PlayerId == id).OrderByDescending(p => p.SeasonYear).FirstOrDefault();
+        if (active is null && career is null && latest is null && departure is null) return;
         var player = active ?? new DynastyPlayer
         {
-            PlayerId = id, FullName = career?.PlayerName ?? latest!.PlayerName, TeamName = latest?.TeamName ?? "Recorded career",
-            Position = career?.Position ?? latest!.Position, OriginalRecruitingStars = career?.OriginalRecruitingStars ?? latest?.OriginalRecruitingStars,
+            PlayerId = id, FullName = career?.PlayerName ?? latest?.PlayerName ?? departure!.FullName, TeamName = latest?.TeamName ?? departure?.TeamName ?? "Recorded career",
+            Position = career?.Position ?? latest?.Position ?? departure!.Position, OverallRating = departure?.OverallRating ?? 0, OriginalRecruitingStars = career?.OriginalRecruitingStars ?? latest?.OriginalRecruitingStars,
             RecruitingStarsEstimated = career?.OriginalRecruitingStars is not null ? career.RecruitingStarsEstimated : latest?.RecruitingStarsEstimated ?? false,
             HeightInches = career?.HeightInches ?? latest?.HeightInches ?? 0, WeightPounds = career?.WeightPounds ?? latest?.WeightPounds ?? 0,
             JerseyNumber = career?.JerseyNumber ?? latest?.JerseyNumber, Appearance = career?.Appearance ?? latest?.Appearance
@@ -89,6 +90,8 @@ public sealed partial class FoundationPage
             new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), FontSize = 13, TextColor = DynastyTheme.Accent },
             new Label { Text = FormatOriginalRecruitingStars(player), TextColor = Color.FromArgb("#E8C979") }
         } };
+        var hallEntry = state.HallOfFame.FirstOrDefault(e => e.PlayerId == id);
+        if (hallEntry is not null) content.Children.Add(SectionTitle($"Hall of Fame · {hallEntry.InductionYear}", hallEntry.Citation));
         if (active is not null)
         {
             player = PlayerRatingService.EnsureInitialized(state, player);
@@ -127,8 +130,8 @@ public sealed partial class FoundationPage
             content.Children.Add(SectionTitle("Player of the Game", $"{gameAwards.Length} game award{(gameAwards.Length == 1 ? "" : "s")}"));
             foreach (var a in gameAwards) content.Children.Add(new Label { Text = $"{a.SeasonYear} · Week {a.Week} · {a.TeamName}\n{a.Summary}", FontSize = 12, TextColor = Color.FromArgb("#E8C979") });
         }
-        var morale = GameMoraleService.SeasonMorale(state, player.TeamName);
-        content.Children.Add(new Label { Text = $"Team morale: {GameMoraleService.Label(morale)} ({morale}/100) · modest training effect", FontSize = 11, TextColor = DynastyTheme.Muted });
+        var morale = GameMoraleService.PlayerMorale(state, player);
+        content.Children.Add(new Label { Text = $"Morale: {GameMoraleService.Label(morale)} ({morale}/100) · Season OVR Δ {FormatSigned(GameMoraleService.SeasonDelta(state, player))} · automatic staff-led training", FontSize = 11, TextColor = DynastyTheme.Muted });
         var totals = visibleStats.Where(line => line.PlayerId == id).ToArray();
         content.Children.Add(SectionTitle("Career snapshot", $"{totals.Sum(line => line.Games)} recorded games · {totals.Sum(line => line.ScrimmageYards):N0} yards · {totals.Sum(line => line.Touchdowns)} TD"));
         var stats = new Button { Text = "Season & career statistics", BackgroundColor = Color.FromArgb("#315D59") };

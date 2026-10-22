@@ -139,12 +139,23 @@ public sealed partial class FoundationPage
             }
         }
         Render();
-        return new ScrollView
+        var scroll = new ScrollView
         {
             Orientation = ScrollOrientation.Horizontal,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Never,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Default,
             Content = grid
         };
+        var naturalWidth = columns.Sum(column => column.Width);
+        scroll.SizeChanged += (_, _) =>
+        {
+            var width = Math.Max(naturalWidth, scroll.Width);
+            if (Math.Abs(grid.WidthRequest - width) < 1) return;
+            grid.WidthRequest = width;
+            var extra = (width - naturalWidth) / columns.Length;
+            for (var column = 0; column < columns.Length; column++)
+                grid.ColumnDefinitions[column].Width = columns[column].Width + extra;
+        };
+        return scroll;
     }
 
     private static View SectionTitle(string title, string description) => new VerticalStackLayout { Spacing = 3, Children =
