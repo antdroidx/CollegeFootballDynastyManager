@@ -8,9 +8,11 @@ internal sealed class FootballSpriteView : GraphicsView
 {
     private readonly PlayerDrawable art;
     private int lastFrame = -1;
+    private readonly int stridePhase;
     public FootballSpriteView(Color primary, Color secondary, bool away, int skin, string label)
     {
         art = new(primary, secondary, away, skin) { Label = label };
+        stridePhase = (label.Sum(c => c) + skin) % 4;
         Drawable = art; InputTransparent = true;
         WidthRequest = HeightRequest = 28;
     }
@@ -18,7 +20,7 @@ internal sealed class FootballSpriteView : GraphicsView
     public void Highlight(bool active) { art.Active = active; Invalidate(); }
     public void Animate(double progress, double seconds, double dx, double dy, bool blocking, bool passing)
     {
-        var frame = (int)(progress * seconds * 8) % 4;
+        var frame = ((int)(progress * seconds * 8) + stridePhase) % 4;
         var heading = GameDayAnimationPlanner.SpriteHeading(dx, dy, art.Heading);
         if (frame == lastFrame && heading == art.Heading && blocking == art.Blocking && passing == art.Passing) return;
         lastFrame = frame; art.Frame = frame; art.Heading = heading; art.Blocking = blocking; art.Passing = passing;
@@ -107,6 +109,7 @@ internal sealed class FootballSpriteView : GraphicsView
             }
             // Helmet shading, crown stripe, earhole and facemask replace the flat prototype crown.
             var headX=(int)Math.Round(bodyX+fx*2); var headY=15;
+            canvas.SaveState(); canvas.Translate(headX,headY); canvas.Scale(.75f,.75f); canvas.Translate(-headX,-headY);
             if(front) { Oval(ink,headX-7,headY+1,15,14); Oval(skinColor,headX-6,headY+2,13,11); }
             Oval(ink,headX-12,headY-12,25,23);
             Oval(Shade(primary,.55f),headX-11,headY-11,23,20);
@@ -127,6 +130,7 @@ internal sealed class FootballSpriteView : GraphicsView
                 Box(Color.FromArgb("#D6DDE4"),headX-8,headY+5,2,8); Box(Color.FromArgb("#D6DDE4"),headX+7,headY+5,2,8);
                 Box(Color.FromArgb("#D6DDE4"),headX-7,headY+10,15,2);
             }
+            canvas.RestoreState();
             // Back/chest number remains readable; the art changes facing rather than rotating text.
             canvas.FontColor=away?primary:Colors.White; canvas.Font=Microsoft.Maui.Graphics.Font.DefaultBold;
             canvas.FontSize=Label.Length>2?10:13;
