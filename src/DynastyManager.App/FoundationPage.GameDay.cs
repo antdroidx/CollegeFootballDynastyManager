@@ -190,13 +190,13 @@ public sealed partial class FoundationPage
         var timeout = new Button { Text = "Timeout" };
         var replayLast = new Button { Text = "Replay last", IsVisible = false };
         var replayToggle = new Button { Text = instantReplays ? "Auto replay: On" : "Auto replay: Off" };
-        var carrierToggle = new Button { Text = showCarrierNames ? "Carrier names: On" : "Carrier names: Off" };
+        var carrierToggle = new Button { Text = showCarrierNames ? "Player names: On" : "Player names: Off" };
         replayToggle.Clicked += (_, _) => { instantReplays = !instantReplays;
             Microsoft.Maui.Storage.Preferences.Default.Set("live-instant-replays", instantReplays);
             replayToggle.Text = instantReplays ? "Auto replay: On" : "Auto replay: Off"; };
         carrierToggle.Clicked += (_, _) => { showCarrierNames = !showCarrierNames;
             Microsoft.Maui.Storage.Preferences.Default.Set("live-player-labels", showCarrierNames);
-            carrierToggle.Text = showCarrierNames ? "Carrier names: On" : "Carrier names: Off"; };
+            carrierToggle.Text = showCarrierNames ? "Player names: On" : "Player names: Off"; };
         var showNumbers = Microsoft.Maui.Storage.Preferences.Default.Get("live-jersey-numbers", false);
         var markerLabels = new Dictionary<Label, DynastyPlayer?>();
         var spritePlayers = new Dictionary<FootballSpriteView, DynastyPlayer?>();

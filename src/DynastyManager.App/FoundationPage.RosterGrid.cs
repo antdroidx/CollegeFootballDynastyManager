@@ -26,14 +26,16 @@ public sealed partial class FoundationPage
         _rosterStatus.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
         _rosterSort.SelectedIndexChanged += (_, _) =>
         {
-            foreach (var key in _tableOrders.Keys.Where(key => key.StartsWith("Pos/Player/OVR/Details/", StringComparison.Ordinal)).ToArray()) _tableOrders.Remove(key);
+            foreach (var key in _tableOrders.Keys.Where(key => key.StartsWith("Pos/Player/OVR/", StringComparison.Ordinal)).ToArray()) _tableOrders.Remove(key);
             RenderCurrentDynasty();
         };
         var filters = new Grid { ColumnSpacing = 8, RowSpacing = 8,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(120) },
-            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(90), new(95) },
+            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto) } };
         filters.Add(_rosterSearch, 0, 0); filters.Add(_rosterPosition, 1, 0);
-        filters.Add(_rosterStatus, 0, 1); Grid.SetColumnSpan(_rosterStatus, 2);
+        filters.Add(_rosterStatus, 2, 0);
+        _rosterPosition.FontSize = _rosterStatus.FontSize = 11;
+        _rosterSearch.FontSize = 12;
         var stats = new Button { Text = "Player statistics", TextColor = DynastyTheme.Accent, BackgroundColor = Colors.Transparent };
         stats.Clicked += (_, _) => ShowSection(AppSection.Stats);
         _depthChartOrganizerButton.Clicked += (_, _) =>
@@ -95,16 +97,17 @@ public sealed partial class FoundationPage
             rows.Add([TableText(player.Position.ToString()), PlayerLink(player),
                 RatingCell(player.OverallRating),
                 TableText(FormatSigned(seasonDelta), true, GetChangeColor(seasonDelta)),
+                TableText(morale.ToString(), color: morale >= 65 ? Color.FromArgb("#83D6B6") : morale <= 35 ? NegativeChangeColor : DynastyTheme.Muted),
                 details, TableText(player.IsRedshirted ? "RS" : player.DepthChartOrder.ToString()),
                 TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating), color: Color.FromArgb("#E9C76C")),
                 TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"),
                 TableText(status, color: player.CurrentInjury is not null ? NegativeChangeColor : player.IsRedshirted ? Color.FromArgb("#D6A3EB") : DynastyTheme.Muted),
-                TableText($"{morale} · {GameMoraleService.Label(morale)}"), HeightCell(player.HeightInches), TableText(player.WeightPounds > 0 ? player.WeightPounds.ToString() : "—")]);
+                HeightCell(player.HeightInches), TableText(player.WeightPounds > 0 ? player.WeightPounds.ToString() : "—")]);
         }
         _transferPortalList.Children.Add(SectionTitle($"Depth chart · {rows.Count} players", "Δ = change from season start · Morale responds to form and injury · swipe for more columns"));
         if (rows.Count == 0) _transferPortalList.Children.Add(new Label { Text = "No players match these filters." });
-        else _transferPortalList.Children.Add(DataTable([("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Details", 64),
-            ("Depth", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Status", 105), ("Morale", 110), ("Height", 64), ("Wt lb", 60)], rows));
+        else _transferPortalList.Children.Add(DataTable([("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Morale", 60), ("Details", 64),
+            ("Depth", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Status", 105), ("Height", 64), ("Wt lb", 60)], rows));
     }
 
     private bool MatchesRosterStatus(DynastyPlayer player) => _rosterStatus.SelectedIndex switch

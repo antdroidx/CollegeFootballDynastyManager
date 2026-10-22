@@ -154,7 +154,7 @@ def main():
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
     assert len([n for n in viewer.iter("node") if n.get("content-desc", "").startswith("Select ")]) == 3, "Portrait must show three play choices"
     tap(viewer, "More")
-    assert "Carrier names: On" in texts(capture("names-default-on")), "Subtle names must default on"
+    assert "Player names: On" in texts(capture("names-default-on")), "Subtle names must default on"
     # Swap the renderer on an existing field and restore it without advancing the snap.
     sprites = scroll_to_text("sprites-ready", "Players: Sprites")
     tap(sprites, "Players: Sprites")

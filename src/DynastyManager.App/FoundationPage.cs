@@ -2709,7 +2709,7 @@ public sealed partial class FoundationPage : ContentPage
             Children =
             {
                 RecruitIdentity(prospect.ProspectId, prospect.FullName, presentation.Title,
-                    prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT"), metrics, statusPanel
+                    prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT")
             }
         };
         var actions = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.End };
@@ -2720,7 +2720,7 @@ public sealed partial class FoundationPage : ContentPage
             _currentDynasty = ScoutingDepartmentService.TogglePriority(_currentDynasty, prospect.Source, prospect.ProspectId); RenderCurrentDynasty(); };
         foreach (var action in new[] { viewButton, boardButton, quickScout }) { action.Margin = new Thickness(3); actions.Children.Add(action); }
         if (_recruitingView == RecruitingView.Board) actions.Children.Add(quickOfferButton);
-        var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions } };
+        var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions, metrics, statusPanel } };
 
         _recruitingList.Children.Add(
             new Border
