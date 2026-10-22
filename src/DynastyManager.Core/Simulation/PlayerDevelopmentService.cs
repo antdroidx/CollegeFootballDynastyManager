@@ -52,6 +52,7 @@ public static class PlayerDevelopmentService
             state.ActiveRoster.Count);
 
         var history = state.PlayerDevelopmentHistory.ToList();
+        var moraleModifiers = state.ActiveRoster.Select(p => p.TeamName).Distinct().ToDictionary(t => t, t => GameMoraleService.TrainingModifier(GameMoraleService.SeasonMorale(state, t)));
 
         foreach (var player in state.ActiveRoster)
         {
@@ -61,7 +62,7 @@ public static class PlayerDevelopmentService
             var developed = DevelopPlayer(
                 state,
                 player,
-                false);
+                false, moraleModifiers[player.TeamName]);
 
             updatedPlayers.Add(developed);
 
@@ -103,9 +104,10 @@ public static class PlayerDevelopmentService
 
         state = PlayerRatingService.EnsureProfiles(state);
         var history = state.PlayerDevelopmentHistory.ToList();
+        var moraleModifiers = state.ActiveRoster.Select(p => p.TeamName).Distinct().ToDictionary(t => t, t => GameMoraleService.TrainingModifier(GameMoraleService.SeasonMorale(state, t)));
         var players = state.ActiveRoster.Select(player =>
         {
-            var developed = DevelopPlayer(state, player, true);
+            var developed = DevelopPlayer(state, player, true, moraleModifiers[player.TeamName]);
             history.Add(new PlayerDevelopmentRecord
             {
                 SeasonYear = state.SeasonYear,
@@ -132,7 +134,7 @@ public static class PlayerDevelopmentService
     private static DynastyPlayer DevelopPlayer(
         DynastyState state,
         DynastyPlayer player,
-        bool midseason)
+        bool midseason, int moraleModifier)
     {
         var potentialGap =
             player.PotentialRating -
@@ -195,6 +197,7 @@ public static class PlayerDevelopmentService
             redshirtFactor +
             injuryFactor +
             staffFactor +
+            moraleModifier +
             random,
             -3,
             6);

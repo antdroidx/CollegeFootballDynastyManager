@@ -42,6 +42,7 @@ public static class GameDayAnimationPlanner
 
     public static GameDayRouteFamily AssignedRoute(OffensivePlayDefinition play, Position position, int roleIndex)
     {
+        if (play.Name == "Hail Mary" && position is Position.WR or Position.TE or Position.RB) return GameDayRouteFamily.Verticals;
         var custom = play.Assignments.FirstOrDefault(a => a.Position == position && a.RoleIndex == roleIndex);
         if (custom is not null && Enum.TryParse<GameDayRouteFamily>(custom.Route, out var route)) return route;
         var family = RouteFamily(play);
@@ -87,7 +88,7 @@ public static class GameDayAnimationPlanner
     {
         var spot = snap.BallEndYardLine != 0 || snap.StartYardLine + snap.Yards == 0
             ? snap.BallEndYardLine : Math.Clamp(snap.StartYardLine + snap.Yards, 0, 100);
-        return snap.Outcome == SnapOutcome.Touchdown ? 104 : spot;
+        return snap.Outcome == SnapOutcome.Touchdown || snap.Points >= 6 ? 104 : spot;
     }
 
     public static GameDayRouteFamily RouteFamily(OffensivePlayDefinition play)

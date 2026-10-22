@@ -16,6 +16,7 @@ internal sealed class FootballSpriteView : GraphicsView
         Drawable = art; InputTransparent = true;
         WidthRequest = HeightRequest = 28;
     }
+    public void HuddleFacing(double dx, double dy) { art.Frame = 1; art.Heading = GameDayAnimationPlanner.SpriteHeading(dx, dy, 90); Invalidate(); }
     public void SetLabel(string label) { art.Label = label; Invalidate(); }
     public void Highlight(bool active) { art.Active = active; Invalidate(); }
     public void Animate(double progress, double seconds, double dx, double dy, bool blocking, bool passing)

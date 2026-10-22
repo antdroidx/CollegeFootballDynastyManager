@@ -13,8 +13,8 @@ public static partial class GameDayEngine
         var home = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var profile = home ? session.HomeProfile : session.AwayProfile;
         var kicker = Kicker(home ? session.HomeRoster : session.AwayRoster);
-        return GameDayMatchupService.FieldGoalProbability(117 - session.YardLine,
-            kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating, kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating);
+        return GameWeatherService.KickProbability(session, GameDayMatchupService.FieldGoalProbability(117 - session.YardLine,
+            kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating, kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating));
     }
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
         TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode)
@@ -33,6 +33,7 @@ public static partial class GameDayEngine
             PlayersById = gameRoster.ToDictionary(player => player.PlayerId),
             HomeDepthChart = PersonnelRotationService.BuildDepthChart(homeRoster, game.HomeTeamName),
             AwayDepthChart = PersonnelRotationService.BuildDepthChart(awayRoster, game.AwayTeamName),
+            Weather = GameWeatherService.ForGame(game),
             Mode = mode, Random = new Random(game.SimulationSeed), PossessionTeamName = game.HomeTeamName,
             KickoffTeamName = game.AwayTeamName, KickoffPending = true
         };
@@ -51,7 +52,13 @@ public static partial class GameDayEngine
             if (trailing is not null && trailing != session.PossessionTeamName &&
                 (session.Mode != GameDayMode.Play || trailing != session.ControlledTeamName) && TryCallTimeout(session, trailing)) return session.Events[^1];
         }
-        var clockEvent = PrepareSnap(session, userPlayId == "special-spike");
+        var lastSeconds = session.OvertimeRound == 0 && session.Quarter is 2 or 4 && session.ClockSeconds is > 0 and <= 8;
+        var finalAdvice = lastSeconds && userPlayId is null ? GameDayRecommendationService.Recommend(session,
+            (session.PossessionTeamName == session.Game.HomeTeamName ? session.HomeProfile : session.AwayProfile).GamePlan ?? new TeamGamePlan { TeamName=session.PossessionTeamName }) : null;
+        var quickShot = lastSeconds && (userPlayId == "special-field-goal" ||
+            PlaybookCatalog.OffensivePlays.Any(p => p.Id == userPlayId && p.Name == "Hail Mary") ||
+            finalAdvice?.Play?.Name == "Hail Mary" || finalAdvice?.Type == RecommendedCallType.FieldGoal);
+        var clockEvent = PrepareSnap(session, userPlayId == "special-spike", quickShot);
         if (clockEvent is not null) return clockEvent;
         if (userPlayId is "special-kneel" or "special-spike") return ClockPlay(session, userPlayId == "special-spike");
         if (userPlayId is null && ShouldKneel(session)) return ClockPlay(session, false);
@@ -102,7 +109,7 @@ public static partial class GameDayEngine
             var made = special == "special-field-goal" &&
                 session.Random.NextDouble() < FieldGoalProbability(session);
             var puntLanding = special == "special-punt"
-                ? Math.Min(95, kickStart + session.Random.Next(34, 51)) : 100;
+                ? Math.Clamp(kickStart + session.Random.Next(34, 51) + (int)Math.Round(GameWeatherService.Tailwind(session, offense.TeamName) * .3), kickStart + 1, 99) : 100;
             var touchback = special == "special-punt" && puntLanding >= 95;
             var returner = Returner(defenseRoster);
             var kickingUnit = special == "special-field-goal" ? PlaceKickTeam(offenseRoster, kicker) : SpecialTeam(offenseRoster, kicker);
@@ -169,17 +176,19 @@ public static partial class GameDayEngine
         var isPass = calledPass && !scramble && !designedKeep;
         var advantage = isPass ? offense.PassOffenseRating - defense.PassDefenseRating : offense.RushOffenseRating - defense.RushDefenseRating;
         advantage += MatchupShift(call.Offense.Concept, call.Defense.Approach);
+        advantage += GameMoraleService.MatchupShift(session, offense.TeamName, defense.TeamName);
         advantage += GameDayMatchupService.FormationAdvantage(call.Offense, call.Defense, isPass);
         advantage += GameDayMatchupService.PersonnelAdvantage(offensePlayers, defensePlayers, isPass);
         if (!session.Game.IsNeutralSite)
             advantage += homeOnOffense ? HomeFieldRatingBonus : -HomeFieldRatingBonus;
         var read = isPass ? PassingReadService.Read(call.Offense, call.Defense, offensePlayers, defensePlayers, qb,
             offense.OffensiveCoordinatorGameManagement, session.Random) : new PassingRead(null, null, 0, 0, 2, 0, 0);
-        var turnover = session.Random.NextDouble() < (isPass ? read.InterceptionChance : Math.Clamp(.025 - advantage * .0008, .008, .065));
+        var turnover = session.Random.NextDouble() < (isPass ? read.InterceptionChance : Math.Clamp(.025 - advantage * .0008 + GameWeatherService.FumblePenalty(session.Weather), .008, .075));
         var sack = isPass && read.RusherCount > 0 && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - read.Protection * .0018 + (read.ReleaseSeconds - 2) * .015, .015, .18);
         var hailMary = call.Offense.Name == "Hail Mary";
         var complete = isPass && read.Target is not null && !turnover && !sack && session.Random.NextDouble() <
-            Math.Clamp(read.CatchChance - .055 + advantage * .0015 - (hailMary ? .25 : 0), .06, .9);
+            Math.Clamp(read.CatchChance - .055 + advantage * .0015 - (hailMary ? .25 : 0) -
+                GameWeatherService.CatchPenalty(session.Weather, call.Offense.Concept == OffensiveConcept.DeepPass), .06, .9);
         int RoundYards(double expected)
         {
             var floor = Math.Floor(expected);
@@ -280,8 +289,10 @@ public static partial class GameDayEngine
         if (!session.IsComplete) throw new InvalidOperationException("The game is not complete.");
         var homeStats = BuildStats(session, session.Game.HomeTeamName);
         var awayStats = BuildStats(session, session.Game.AwayTeamName);
-        return session.Game with
+        var finished = session.Game with
         {
+            Weather = session.Weather, HomeEndingMorale = GameMoraleService.InGame(session, session.Game.HomeTeamName),
+            AwayEndingMorale = GameMoraleService.InGame(session, session.Game.AwayTeamName),
             HasPlayed = true, HomeScore = session.HomeScore, AwayScore = session.AwayScore,
             HomeStats = homeStats, AwayStats = awayStats,
             HomeGamePlan = session.HomeProfile.GamePlan, AwayGamePlan = session.AwayProfile.GamePlan,
@@ -293,6 +304,7 @@ public static partial class GameDayEngine
             PeriodScores = BuildPeriodScores(session),
             PlayerStats = BuildPlayerStats(session)
         };
+        return finished with { PlayerOfGame = PlayerOfGameService.Select(finished, finished.PlayerStats) };
     }
 
     private static IReadOnlyList<GameDriveSummary> BuildDrives(GameDaySession session) => session.Events
@@ -574,7 +586,14 @@ public static partial class GameDayEngine
         var returnYards = kickoffRandom.Next(16, 34);
         var start = 65;
         var landing = kickoffRandom.Next(1, 8);
-        var end = Math.Clamp(landing + returnYards, 15, 40);
+        landing = Math.Clamp(landing - (int)Math.Round(GameWeatherService.Tailwind(session, session.KickoffTeamName) * .22), 1, 15);
+        var coverageSpeed = kickingRoster.Where(p => p.Position is Position.CB or Position.SS or Position.OLB).Select(p => (double)p.SpeedRating).DefaultIfEmpty(70).Average();
+        var returnSpeed = returner?.SpeedRating ?? 70;
+        if (kickoffRandom.NextDouble() < Math.Clamp(.025 + (returnSpeed - coverageSpeed) * .0004, .01, .05))
+            returnYards += kickoffRandom.Next(18, 85);
+        var end = Math.Clamp(landing + returnYards, 1, 100);
+        returnYards = end - landing;
+        var touchdown = end == 100;
         var receivingUnit = SpecialTeam(receivingRoster, returner);
         var coverageUnit = SpecialTeam(kickingRoster, kicker);
         var coverageTackler = CoverageTackler(coverageUnit, kicker, kickoffRandom);
@@ -588,13 +607,18 @@ public static partial class GameDayEngine
             KickLandingYardLine = landing,
             Yards = 0, ReturnYards = returnYards, Outcome = SnapOutcome.Kickoff,
             KickerId = kicker?.PlayerId, ReturnerId = returner?.PlayerId, BallCarrierId = returner?.PlayerId,
-            PrimaryDefenderId = coverageTackler?.PlayerId,
+            PrimaryDefenderId = touchdown ? null : coverageTackler?.PlayerId, Points = touchdown ? 6 : 0,
             OffensePersonnel = receivingUnit.Select(player => player.PlayerId).ToArray(),
             DefensePersonnel = coverageUnit.Select(player => player.PlayerId).ToArray()
         };
         session.Events.Add(kickoff);
         session.YardLine = end; session.Down = 1; session.Distance = Math.Min(10, 100 - end);
         session.KickoffPending = false;
+        if (touchdown)
+        {
+            if (receivingHome) session.HomeScore += 6; else session.AwayScore += 6;
+            session.TryPending = true; session.YardLine = 97;
+        }
         session.ClockStopped = true; session.ClockRestartsOnReady = false; session.PlayClockSeconds = 25;
         ConsumeLiveClock(session, Math.Clamp(2 + returnYards / 6, 3, 9));
         CheckTwoMinuteTimeout(session); AdvanceQuarter(session);

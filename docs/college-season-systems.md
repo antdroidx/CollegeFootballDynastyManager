@@ -89,3 +89,11 @@ Both timeout banks appear in the scoreboard. User and CPU team timeouts record d
 Tightly contested non-drop incompletions can be recorded as pass breakups. The credited defender converges at the target's catch point, the ball tips away without possession, commentary names the defender, and the same event credits a pass defended without adding a tackle or interception. Other misses and receiver drops retain separate animation/commentary.
 
 Automatic instant replays show touchdowns, turnovers, two-point conversions, gains of at least 25 yards, and returns of at least 30 yards. More offers Auto replay On/Off. Replay last is available between user calls and after the final play; pause Watch first to replay manually. Replays use recorded events at slightly slower playback and never step the engine, consume clock/randomness, alter the pending call or add statistics. Recorded replay playback remains a visualization of the shared probabilistic engine, not collision physics.
+
+## Live conditions, morale and portrait calls (after Build 280)
+
+Carrier labels are now optional and off by default; enabling them displays an unobtrusive surname without an opaque box. Portrait uses the same three-call field overlay as landscape, with secondary controls under More. Replays announce themselves with a large banner. Kickoff auto replays require a returned ball ending strictly beyond midfield; onside, fair-catch and touchback events are excluded.
+
+Weather is seeded fictional game-day weather, shared by Sim/Watch/Play, with wind, rain/snow and cold affecting passing, ball security and kicking. Indoor sites suppress weather effects. Morale responds to recent results, coaching leadership and major game events; execution effects are bounded and training receives a smaller modifier. These are an initial model, not real forecasts or a full player personality system.
+
+PBU (passes defended) is visible in defensive statistics, including players whose only contribution is a breakup. Player of the Game is selected from recorded production across positions, saved with the game and archived for profiles. Rare long kickoff returns can now cross midfield and score with the normal conversion sequence. Final-seconds Hail Mary/field goal preparation preserves time for a snap; Hail Mary eligible receivers run deep routes. Huddles use the next unit's actual personnel.

@@ -246,6 +246,8 @@ public sealed partial class FoundationPage
         {
             HomeTeamName = game.HomeTeamName, AwayTeamName = game.AwayTeamName, HomeScore = game.HomeScore ?? 0, AwayScore = game.AwayScore ?? 0,
             IsComplete = true, Quarter = Math.Max(4, game.PeriodScores.Select(p => p.Period).DefaultIfEmpty(4).Max()), HomeStats = game.HomeStats ?? new(), AwayStats = game.AwayStats ?? new(),
+            Weather = game.Weather, HomeMorale = game.HomeEndingMorale, AwayMorale = game.AwayEndingMorale,
+            PlayerOfGame = game.PlayerOfGame ?? PlayerOfGameService.Select(game, game.PlayerStats),
             Players = game.PlayerStats, Periods = game.PeriodScores
         }); body.Children.Add(box);
         var replay = new Button { Text = "Watch game highlights", IsEnabled = game.Highlights.Count > 0 };

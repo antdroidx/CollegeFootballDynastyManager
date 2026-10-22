@@ -1,4 +1,5 @@
 using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
@@ -32,6 +33,13 @@ public sealed partial class FoundationPage
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12 };
         var heading = SectionTitle("Live box score", box.IsComplete ? "Final statistics" :
             $"Paused · {(box.Quarter > 4 ? $"OT {box.Quarter-4}" : $"Q{box.Quarter}")} {TimeSpan.FromSeconds(box.ClockSeconds):m\\:ss} · returns to the same game");
+        if (box.Weather is not null) content.Children.Add(new Label { Text = box.Weather.Summary, FontSize = 11, TextColor = DynastyTheme.Muted });
+        content.Children.Add(new Label { Text = $"Morale · {box.AwayTeamName}: {GameMoraleService.Label(box.AwayMorale)} ({box.AwayMorale}) · {box.HomeTeamName}: {GameMoraleService.Label(box.HomeMorale)} ({box.HomeMorale})", FontSize = 11, TextColor = DynastyTheme.Muted });
+        if (box.PlayerOfGame is { } award) content.Children.Add(new Border { Padding = 12, StrokeThickness = 0, BackgroundColor = Color.FromArgb("#343B28"),
+            Content = new VerticalStackLayout { Spacing = 4, Children = {
+                new Label { Text = "★ PLAYER OF THE GAME", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#E8C979") },
+                new Label { Text = $"{award.PlayerName} · {award.TeamName}", FontSize = 16, FontAttributes = FontAttributes.Bold },
+                new Label { Text = award.Summary, FontSize = 12 } } } });
         var scoreColumns = new[] { (Title:"Team",Width:140d) }.Concat(box.Periods.Select(p=>(Title:p.Period<=4?$"Q{p.Period}":$"OT{p.Period-4}",Width:38d)))
             .Append((Title:"Total",Width:56d)).ToArray();
         View[] ScoreRow(string team, bool home) => new View[] {TableText(team,true)}
@@ -66,8 +74,9 @@ public sealed partial class FoundationPage
         var category = new Picker {Title="Statistics",ItemsSource=new[]{"Passing","Rushing","Receiving","Defense","Kicking","Punting","Returns"},SelectedIndex=0};
         var filters = new Grid {ColumnSpacing=10,ColumnDefinitions=new ColumnDefinitionCollection{new(GridLength.Star),new(GridLength.Star)}};
         filters.Add(team,0,0);filters.Add(category,1,0);
+        var defenseLegend = new Label { Text = "PBU = passes broken up / defended · INT = interceptions · FR = fumble recoveries", FontSize = 11, TextColor = DynastyTheme.Muted, IsVisible = false };
         var players = new ContentView();
-        var playerHost = new VerticalStackLayout {Spacing=10,IsVisible=false,Children={filters,players}};
+        var playerHost = new VerticalStackLayout {Spacing=10,IsVisible=false,Children={filters,defenseLegend,players}};
         content.Children.Add(playerHost);
         void SelectPlayers(bool selected)
         {
@@ -81,6 +90,7 @@ public sealed partial class FoundationPage
         void RenderPlayers()
         {
             var selected=category.SelectedItem?.ToString()??"Passing";
+            defenseLegend.IsVisible = selected == "Defense";
             var lines=box.Players.Where(p=>(team.SelectedIndex==0||p.TeamName==team.SelectedItem?.ToString())&&CategoryEligible(p,selected)).ToArray();
             if(lines.Length==0) {players.Content=new Label {Text="No recorded statistics in this category yet.",TextColor=DynastyTheme.Muted};return;}
             var columns=CategoryColumns(selected);var keep=Enumerable.Range(0,columns.Length).Where(i=>columns[i].Title is not ("GP" or "YPG")).ToArray();

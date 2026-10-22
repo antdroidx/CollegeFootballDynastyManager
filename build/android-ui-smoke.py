@@ -152,6 +152,8 @@ def main():
     tap(overview, "Play game")
     viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
+    assert len([n for n in viewer.iter("node") if n.get("content-desc", "").startswith("Select ")]) == 3, "Portrait must show three play choices"
+    tap(viewer, "More")
     # Swap the renderer on an existing field and restore it without advancing the snap.
     sprites = scroll_to_text("sprites-ready", "Players: Sprites")
     tap(sprites, "Players: Sprites")
@@ -159,6 +161,7 @@ def main():
     assert "Players: Circles" in texts(circles)
     tap(circles, "Players: Circles")
     assert "Players: Sprites" in texts(capture("sprite-renderer"))
+    tap(capture("portrait-utilities"), "Less")
     adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
     adb("shell", "settings", "put", "system", "user_rotation", "1")
     time.sleep(3)

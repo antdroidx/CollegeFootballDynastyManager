@@ -83,6 +83,7 @@ public sealed partial class FoundationPage
         _statisticsPage = Math.Min(_statisticsPage, Math.Max(0, (ordered.Length - 1) / pageSize));
         var rows = ordered.Skip(_statisticsPage * pageSize).Take(pageSize).Select(line => CategoryCells(line, category)).ToArray();
         _statisticsRows.Children.Add(new Label { Text = $"{ordered.Length} players · {category} · {_statisticsSeason.SelectedItem} · {_statisticsScope.SelectedItem}", TextColor = DynastyTheme.Muted, FontSize = 12 });
+        if (category == "Defense") _statisticsRows.Children.Add(new Label { Text = "PBU = passes broken up / defended · recorded even when the defender has no tackles.", FontSize = 11, TextColor = DynastyTheme.Muted });
         if (rows.Length == 0) _statisticsRows.Children.Add(new Label { Text = "No player statistics yet. Current-season totals appear after the first completed game." });
         else _statisticsRows.Children.Add(DataTable(CategoryColumns(category), rows, (column, descending) =>
             {
@@ -107,7 +108,7 @@ public sealed partial class FoundationPage
         "Passing" => line.PassAttempts > 0,
         "Rushing" => line.RushAttempts > 0,
         "Receiving" => line.Receptions > 0 || line.ReceivingYards > 0,
-        "Defense" => line.Tackles > 0 || line.Sacks > 0 || line.Interceptions > 0,
+        "Defense" => line.Tackles > 0 || line.Sacks > 0 || line.Interceptions > 0 || line.PassesDefended > 0 || line.FumbleRecoveries > 0,
         "Kicking" => line.ExtraPointsAttempted > 0 || line.FieldGoalsAttempted > 0,
         "Punting" => line.Punts > 0,
         "Returns" => line.KickReturns > 0 || line.PuntReturns > 0,
@@ -123,7 +124,7 @@ public sealed partial class FoundationPage
         "Receiving" => [("Player", 165), ("School", 195), ("GP", 45), ("Rec", 55), ("Yds", 75), ("TD", 45),
             ("YPR", 55), ("YAC", 60), ("Drop", 50), ("Fum", 48), ("20+", 48), ("YPG", 60)],
         "Defense" => [("Player", 165), ("School", 195), ("GP", 45), ("Tkl", 55), ("TFL", 50), ("Sack", 55),
-            ("PD", 48), ("INT", 48), ("FR", 45)],
+            ("PBU", 56), ("INT", 48), ("FR", 45)],
         "Kicking" => [("Player", 165), ("School", 195), ("GP", 45), ("XPM", 50), ("XPA", 50),
             ("FGM", 50), ("FGA", 50), ("FG%", 60)],
         "Punting" => [("Player", 165), ("School", 195), ("GP", 45), ("Punts", 55), ("Avg", 55),

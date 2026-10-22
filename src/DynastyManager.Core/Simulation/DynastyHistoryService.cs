@@ -99,6 +99,7 @@ public static class DynastyHistoryService
 
         return CoachCareerService.RecordCompletedSeason(state with
         {
+            PlayerGameAwardHistory = PlayerOfGameService.All(state),
             TeamSeasonHistory = teamHistory,
             PlayerCareerHistory = careers.Values.OrderBy(item => item.PlayerId).ToArray(),
             PlayerSeasonStats = state.PlayerSeasonStats

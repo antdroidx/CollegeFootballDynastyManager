@@ -5,10 +5,12 @@ namespace DynastyManager.Core.Simulation;
 public static class GameDayLivePresentation
 {
     // Replays consume only a recorded event: no random calls or simulation steps.
-    public static bool InstantReplay(GameSnapEvent snap) => snap.Outcome is SnapOutcome.Touchdown or SnapOutcome.Interception or
+    public static bool InstantReplay(GameSnapEvent snap) => snap.Outcome == SnapOutcome.Kickoff
+        ? !snap.IsOnsideKick && !snap.IsTouchback && !snap.IsFairCatch && snap.ReturnYards > 0 && snap.BallEndYardLine > 50
+        : snap.Outcome is SnapOutcome.Touchdown or SnapOutcome.Interception or
         SnapOutcome.Fumble or SnapOutcome.TwoPointConversion ||
         (GameDayEngine.IsScrimmage(snap) && snap.Yards >= 25) ||
-        (snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt && snap.ReturnYards >= 30);
+        (snap.Outcome == SnapOutcome.Punt && snap.ReturnYards >= 30);
 
     public static GameFieldPoint HuddlePoint(int yardLine, int direction, bool offense, int slot)
     {

@@ -61,10 +61,10 @@ internal sealed class GameDayCallPicker : Border
         Content = body;
     }
 
-    internal static Border Card(string name, string formation, string type, IDrawable? art, Action select, bool compact)
+    internal static Border Card(string name, string formation, string type, IDrawable? art, Action select, bool compact, bool portrait = false)
     {
         var diagram = new GraphicsView { Drawable = art, IsVisible = art is not null,
-            HeightRequest = compact ? 68 : 100, BackgroundColor = Color.FromArgb("#102A24"), InputTransparent = true };
+            HeightRequest = compact ? portrait ? 58 : 68 : 100, BackgroundColor = Color.FromArgb("#102A24"), InputTransparent = true };
         var info = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children =
         {
             new Label { Text = name, FontSize = 12, FontAttributes = FontAttributes.Bold, MaxLines = 2, TextColor = Colors.White },
@@ -72,7 +72,7 @@ internal sealed class GameDayCallPicker : Border
             new Label { Text = formation, FontSize = 9, MaxLines = 2, TextColor = Color.FromArgb("#B8D8FA") }
         } };
         View content;
-        if (compact)
+        if (compact && !portrait)
         {
             var row = new Grid { ColumnSpacing = 6, ColumnDefinitions =
                 new ColumnDefinitionCollection { new(new GridLength(1.1, GridUnitType.Star)), new(GridLength.Star) } };

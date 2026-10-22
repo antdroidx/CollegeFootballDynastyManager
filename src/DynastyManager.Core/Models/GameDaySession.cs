@@ -79,6 +79,7 @@ public sealed class GameDaySession
         new Dictionary<Position, IReadOnlyList<DynastyPlayer>>();
     public IReadOnlyDictionary<Position, IReadOnlyList<DynastyPlayer>> AwayDepthChart { get; init; } =
         new Dictionary<Position, IReadOnlyList<DynastyPlayer>>();
+    public GameWeather Weather { get; init; } = new();
     public GameDayMode Mode { get; set; }
     public required Random Random { get; init; }
     public GameFatigueState HomeFatigue { get; } = new();

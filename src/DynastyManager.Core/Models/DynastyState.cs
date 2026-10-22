@@ -3,6 +3,7 @@ namespace DynastyManager.Core.Models;
 public sealed record DynastyState
 {
     public const int CurrentSchemaVersion = 26;
+    public IReadOnlyList<PlayerGameAward> PlayerGameAwardHistory { get; init; } = [];
     public IReadOnlyList<PollSnapshot> PollHistory { get; init; } = [];
     public IReadOnlyList<ProgramConductRecord> ProgramConduct { get; init; } = [];
     public IReadOnlyList<DisciplineIncident> DisciplineHistory { get; init; } = [];

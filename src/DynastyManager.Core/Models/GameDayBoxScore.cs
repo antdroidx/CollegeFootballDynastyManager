@@ -5,6 +5,10 @@ public sealed record GameDayBoxScore
 {
     public required string HomeTeamName { get; init; }
     public required string AwayTeamName { get; init; }
+    public GameWeather? Weather { get; init; }
+    public PlayerGameAward? PlayerOfGame { get; init; }
+    public int HomeMorale { get; init; } = 50;
+    public int AwayMorale { get; init; } = 50;
     public int HomeScore { get; init; }
     public int AwayScore { get; init; }
     public int Quarter { get; init; }

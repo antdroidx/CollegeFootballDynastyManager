@@ -31,14 +31,14 @@ public static partial class GameDayEngine
             ? OffensiveTempo.ChewClock : (identity & 7) == 0 ? OffensiveTempo.UpTempo : OffensiveTempo.Normal;
     }
 
-    private static GameSnapEvent? PrepareSnap(GameDaySession session, bool spike)
+    private static GameSnapEvent? PrepareSnap(GameDaySession session, bool spike, bool quickShot = false)
     {
         session.LastPreSnapSeconds = 0;
         if (session.OvertimeRound > 0) return null;
         if (CheckTwoMinuteTimeout(session)) return ClockEvent(session, "Two-minute timeout.");
         if (session.ClockSeconds <= 0) { var end = ClockEvent(session, "The period ends before another snap."); AdvanceQuarter(session); return end; }
         var tempo = EffectiveTempo(session);
-        var seconds = spike ? 1 : tempo switch
+        var seconds = spike || quickShot ? 1 : tempo switch
         {
             OffensiveTempo.UpTempo => session.Random.Next(12, 21),
             OffensiveTempo.ChewClock => session.Random.Next(37, 40),
@@ -47,6 +47,7 @@ public static partial class GameDayEngine
         seconds = Math.Min(seconds, session.PlayClockSeconds - 1);
         // A first down inside two minutes pauses only until the ball is ready, unlike an incompletion.
         var runoff = !session.ClockStopped ? seconds : session.ClockRestartsOnReady ? Math.Max(0, seconds - 4) : 0;
+        if (quickShot) runoff = Math.Min(runoff, Math.Max(0, session.ClockSeconds - 1));
         var half = session.Quarter == 2 ? 1 : session.Quarter == 4 ? 2 : 0;
         if (half > 0 && session.TwoMinuteTimeoutHalf < half && session.ClockSeconds > 120 && session.ClockSeconds - runoff <= 120)
         {

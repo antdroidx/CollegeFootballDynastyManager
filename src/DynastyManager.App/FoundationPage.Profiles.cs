@@ -121,6 +121,14 @@ public sealed partial class FoundationPage
             content.Children.Add(SectionTitle("Honors & awards", "Permanent season selections"));
             foreach (var honor in honors) content.Children.Add(new Label { Text = $"{honor.SeasonYear} · {honor.AwardName}{(honor.ConferenceName is null ? "" : " · " + honor.ConferenceName)}", FontSize = 12, TextColor = Color.FromArgb("#E8C979") });
         }
+        var gameAwards = PlayerOfGameService.All(state).Where(a => a.PlayerId == id).OrderByDescending(a => a.SeasonYear).ThenByDescending(a => a.Week).ToArray();
+        if (gameAwards.Length > 0)
+        {
+            content.Children.Add(SectionTitle("Player of the Game", $"{gameAwards.Length} game award{(gameAwards.Length == 1 ? "" : "s")}"));
+            foreach (var a in gameAwards) content.Children.Add(new Label { Text = $"{a.SeasonYear} · Week {a.Week} · {a.TeamName}\n{a.Summary}", FontSize = 12, TextColor = Color.FromArgb("#E8C979") });
+        }
+        var morale = GameMoraleService.SeasonMorale(state, player.TeamName);
+        content.Children.Add(new Label { Text = $"Team morale: {GameMoraleService.Label(morale)} ({morale}/100) · modest training effect", FontSize = 11, TextColor = DynastyTheme.Muted });
         var totals = visibleStats.Where(line => line.PlayerId == id).ToArray();
         content.Children.Add(SectionTitle("Career snapshot", $"{totals.Sum(line => line.Games)} recorded games · {totals.Sum(line => line.ScrimmageYards):N0} yards · {totals.Sum(line => line.Touchdowns)} TD"));
         var stats = new Button { Text = "Season & career statistics", BackgroundColor = Color.FromArgb("#315D59") };

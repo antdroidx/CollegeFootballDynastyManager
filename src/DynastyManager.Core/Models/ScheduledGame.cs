@@ -14,6 +14,10 @@ public sealed record ScheduledGame
     public int? AwaySeed { get; init; }
     public bool IsNeutralSite { get; init; }
     public string? BowlName { get; init; }
+    public GameWeather? Weather { get; init; }
+    public PlayerGameAward? PlayerOfGame { get; init; }
+    public int HomeEndingMorale { get; init; } = 50;
+    public int AwayEndingMorale { get; init; } = 50;
     public int SimulationSeed { get; init; }
     public TeamGamePlan? HomeGamePlan { get; init; }
     public TeamGamePlan? AwayGamePlan { get; init; }
