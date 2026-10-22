@@ -124,16 +124,21 @@ public static partial class GameDayEngine
         var random = new Random(unchecked(session.Game.SimulationSeed * 397 ^ session.Events.Count * 7919));
         if (random.NextDouble() >= .025) return null;
         var offense = random.Next(2) == 0;
-        var yards = offense ? -Math.Min(5, Math.Max(1, session.YardLine / 2)) : Math.Min(5, Math.Max(1, (100 - session.YardLine) / 2));
+        // Field spots use whole yards. Do not turn a half-distance foul into a goal-line crossing.
+        var enforced = Math.Min(5, Math.Max(0, (offense ? session.YardLine : 100 - session.YardLine) / 2));
+        var yards = offense ? -enforced : enforced;
+        var defenseTeam = session.PossessionTeamName == session.Game.HomeTeamName ? session.Game.AwayTeamName : session.Game.HomeTeamName;
+        var penalizedTeam = offense ? session.PossessionTeamName : defenseTeam;
+        var foul = offense ? "False start" : "Offside";
         var snap = new GameSnapEvent
         {
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds, OffenseTeamName = session.PossessionTeamName,
-            DefenseTeamName = session.PossessionTeamName == session.Game.HomeTeamName ? session.Game.AwayTeamName : session.Game.HomeTeamName,
+            DefenseTeamName = defenseTeam,
             OffensivePlayId = "", DefensivePlayId = "", Down = session.Down, Distance = session.Distance,
             StartYardLine = session.YardLine, BallEndYardLine = session.YardLine + yards,
-            Outcome = SnapOutcome.Penalty, Description = offense ? $"False start: {Math.Abs(yards)} yards. Replay the down."
-                : $"Defensive offside: {yards} yards."
+            PenalizedTeamName = penalizedTeam, PenaltyName = foul, PenaltyYards = enforced,
+            Outcome = SnapOutcome.Penalty, Description = $"{foul} on {penalizedTeam}: {enforced} yards."
         };
         session.YardLine += yards; session.Distance -= yards;
         if (session.Distance <= 0) { session.Down = 1; session.Distance = Math.Min(10, 100 - session.YardLine); }

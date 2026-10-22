@@ -43,6 +43,9 @@ public sealed record GameSnapEvent
     public double PassReleaseProgress { get; init; }
     public double TargetSeparation { get; init; }
     public string? Description { get; init; }
+    public string? PenalizedTeamName { get; init; }
+    public string? PenaltyName { get; init; }
+    public int? PenaltyYards { get; init; }
     public int Points { get; init; }
     public bool IsOnsideKick { get; init; }
     public bool KickingTeamRecovered { get; init; }

@@ -863,9 +863,10 @@ public sealed partial class FoundationPage
         {
             var headline = period ?? GameDayAnimationPlanner.OutcomeHeadline(snap.Outcome);
             if (headline is null) return;
-            var team = snap.Outcome is SnapOutcome.Interception or SnapOutcome.Fumble
-                ? snap.DefenseTeamName : snap.OffenseTeamName;
-            highlightText.Text = period is null ? $"{headline}\n{team}" : $"{headline}\n{game.AwayTeamName} {session.AwayScore} - {session.HomeScore} {game.HomeTeamName}";
+            var penalty = GameDayCommentaryService.Penalty(snap);
+            var team = penalty?.TeamName ?? (snap.Outcome is SnapOutcome.Interception or SnapOutcome.Fumble
+                ? snap.DefenseTeamName : snap.OffenseTeamName);
+            highlightText.Text = period is null ? penalty?.Banner ?? $"{headline}\n{team}" : $"{headline}\n{game.AwayTeamName} {session.AwayScore} - {session.HomeScore} {game.HomeTeamName}";
             highlight.BackgroundColor = TeamColor(team).WithAlpha(.94f);
             highlight.Opacity = 0;
             highlight.Scale = .72;
@@ -875,7 +876,7 @@ public sealed partial class FoundationPage
             {
                 highlight.Opacity = progress < .25 ? progress / .25 : progress > .82 ? (1 - progress) / .18 : 1;
                 highlight.Scale = .72 + Math.Min(1, progress / .30) * .28 + Math.Sin(progress * Math.PI * 2) * .025;
-            }).Commit(highlight, "game-highlight", 16, 1250, Easing.CubicOut,
+            }).Commit(highlight, "game-highlight", 16, penalty is not null && period is null ? 2100u : 1250u, Easing.CubicOut,
                 (_, _) => completion.TrySetResult());
             await completion.Task;
             highlight.IsVisible = false;

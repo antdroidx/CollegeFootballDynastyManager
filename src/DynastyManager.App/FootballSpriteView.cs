@@ -3,7 +3,7 @@ using Microsoft.Maui.Graphics;
 
 namespace DynastyManager.App;
 
-/// <summary>Original palette-based pixel player. No bitmap sheets, downloads or simulation state.</summary>
+/// <summary>Original shaded three-quarter pixel player. No bitmap sheets, downloads or simulation state.</summary>
 internal sealed class FootballSpriteView : GraphicsView
 {
     private readonly PlayerDrawable art;
@@ -34,59 +34,103 @@ internal sealed class FootballSpriteView : GraphicsView
         public int Frame { get; set; }
         public void Draw(ICanvas canvas, RectF dirtyRect)
         {
-            var scale = Math.Min(dirtyRect.Width, dirtyRect.Height) / 32f;
-            canvas.SaveState();
-            canvas.Translate(dirtyRect.X, dirtyRect.Y); canvas.Scale(scale, scale);
-            var ink = Color.FromArgb("#111923");
-            var skinColor = Color.FromArgb(new[] { "#E4B58D", "#C5895C", "#905C3B", "#603D2C" }[Math.Clamp(skin, 0, 3)]);
+            var scale = Math.Min(dirtyRect.Width, dirtyRect.Height) / 64f;
+            canvas.SaveState(); canvas.Translate(dirtyRect.X, dirtyRect.Y); canvas.Scale(scale, scale);
+            // Upright three-quarter camera: facing changes the pose, never rotates a person onto their side.
+            var radians = (Heading - 90) * Math.PI / 180;
+            var fx = Math.Cos(radians); var fy = Math.Sin(radians);
+            var sx = -fy; var sy = fx * .45;
+            var front = fy >= -.3;
+            var ink = Color.FromArgb("#101923");
+            var skinColor = Color.FromArgb(new[] { "#E9B98E", "#C78B60", "#956343", "#65432F" }[Math.Clamp(skin, 0, 3)]);
             var jersey = away ? Colors.White : primary;
-            var pants = away ? Color.FromArgb("#E0E4E9") : secondary;
-            canvas.FillColor = Color.FromRgba(0, 0, 0, .24); canvas.FillEllipse(5, 4, 23, 25);
-            if (Active)
+            var pants = away ? Color.FromArgb("#E3E7EB") : secondary;
+            Color Shade(Color c, float amount) => new(c.Red * amount, c.Green * amount, c.Blue * amount);
+            void Box(Color color, double x, double y, double w, double h)
+            { canvas.FillColor = color; canvas.FillRectangle((float)Math.Round(x), (float)Math.Round(y), (float)Math.Ceiling(w), (float)Math.Ceiling(h)); }
+            void Oval(Color color, int x, int y, int w, int h)
             {
-                canvas.StrokeColor = Color.FromArgb("#FFDE59"); canvas.StrokeSize = 1.6f;
-                canvas.DrawEllipse(2, 2, 28, 28);
+                for (var row = 0; row < h; row++)
+                {
+                    var v = (row + .5 - h / 2d) / (h / 2d);
+                    var half = Math.Sqrt(Math.Max(0, 1 - v * v)) * w / 2;
+                    Box(color, x + w / 2d - half, y + row, half * 2, 1);
+                }
             }
-            canvas.SaveState();
-            canvas.Rotate((float)Heading, 16, 16);
-            void Pixel(Color color, int x, int y, int w, int h)
-            { canvas.FillColor = color; canvas.FillRectangle(x, y, w, h); }
-            // Cleats, knees and pants alternate without changing the player's field position.
-            var stride = Blocking ? Frame % 2 : Frame switch { 0 => -2, 2 => 2, _ => 0 };
-            Pixel(ink, 9 + stride, 24, 6, 5); Pixel(ink, 20 - stride, 23, 6, 5);
-            Pixel(pants, 10 + stride, 21, 5, 5); Pixel(pants, 19 - stride, 20, 5, 5);
-            Pixel(Colors.White, 10 + stride, 25, 3, 1); Pixel(Colors.White, 20 - stride, 24, 3, 1);
-            Pixel(ink, 8, 11, 16, 11); Pixel(jersey, 9, 12, 14, 9);
-            Pixel(primary, 9, 12, 3, 3); Pixel(primary, 21, 12, 3, 3);
-            Pixel(secondary, 12, 20, 9, 2);
-            if (Blocking)
+            void Limb(Color color, double ax, double ay, double bx, double by, int width)
             {
-                Pixel(skinColor, 6, 9 - stride, 4, 7); Pixel(Colors.White, 6, 7 - stride, 4, 3);
-                Pixel(skinColor, 23, 9 - stride, 4, 7); Pixel(Colors.White, 23, 7 - stride, 4, 3);
+                var steps = Math.Max(1, (int)(Math.Max(Math.Abs(bx-ax), Math.Abs(by-ay)) / 2));
+                for (var step = 0; step <= steps; step++)
+                    Box(color, ax + (bx-ax)*step/steps-width/2d, ay+(by-ay)*step/steps-width/2d, width, width);
             }
-            else if (Passing)
+            void OutlinedLimb(Color color, double ax, double ay, double bx, double by, int width)
+            { Limb(ink, ax, ay, bx, by, width+2); Limb(Shade(color,.7f),ax,ay,bx,by,width); Limb(color,ax-1,ay-1,bx-1,by-1,Math.Max(2,width-2)); }
+            canvas.FillColor = Color.FromRgba(0,0,0,.26); canvas.FillEllipse(15,49,35,11);
+            if (Active) { canvas.StrokeColor=Color.FromArgb("#FFDE59"); canvas.StrokeSize=2; canvas.DrawEllipse(11,47,43,14); }
+            var stride = Blocking ? (Frame % 2 == 0 ? 1d : -1d) : Frame switch { 0 => -7d, 2 => 7d, _ => 0d };
+            var lean = Passing ? 1 : Blocking ? 3 : 2;
+            var bodyX = 32 + fx * lean;
+            // Far leg first. Feet advance along the ground heading; the torso stays upright.
+            for (var leg=0; leg<2; leg++)
             {
-                Pixel(skinColor, 5, 16, 5, 7); Pixel(Colors.White, 4, 21, 4, 3);
-                Pixel(skinColor, 23, 10, 5, 7); Pixel(Colors.White, 25, 8, 3, 4);
+                var side = leg==0 ? -1 : 1; var gait = stride*side;
+                var hipX=32+sx*side*5; var hipY=40+sy*side*5;
+                var footX=32+sx*side*7+fx*gait; var footY=54+sy*side*7+fy*gait*.45;
+                var kneeX=(hipX+footX)/2; var kneeY=47-Math.Max(0,gait)*.5;
+                OutlinedLimb(pants,hipX,hipY,kneeX,kneeY,7);
+                OutlinedLimb(pants,kneeX,kneeY,footX,footY-3,6);
+                Box(Colors.White,footX-3,footY-5,6,3);
+                Box(ink,footX-4+fx*2,footY-1,9,4); Box(Color.FromArgb("#667383"),footX-3,footY-1,4,1);
             }
-            else
+            var torsoWidth=Math.Abs(fy)>.6?22:18;
+            Box(ink,bodyX-torsoWidth/2-1,23,torsoWidth+2,18);
+            Box(Shade(jersey,.6f),bodyX-torsoWidth/2,24,torsoWidth,16);
+            Box(jersey,bodyX-torsoWidth/2+1,24,torsoWidth-4,13);
+            Box(Shade(jersey,.85f),bodyX-torsoWidth/2+2,36,torsoWidth-3,4);
+            Box(pants,bodyX-torsoWidth/2+1,40,torsoWidth-2,3);
+            Box(ink,bodyX-7,40,14,1); Box(Colors.White,bodyX-1,40,3,2);
+            // Shoulder pads and bent arms are posed in screen space for eight facings.
+            for (var arm=0; arm<2; arm++)
             {
-                Pixel(skinColor, 6, 12 + stride, 4, 6); Pixel(Colors.White, 5, 10 + stride, 4, 3);
-                Pixel(skinColor, 23, 12 - stride, 4, 6); Pixel(Colors.White, 24, 16 - stride, 4, 3);
+                var side=arm==0?-1:1;
+                var shoulderX=bodyX+sx*side*10; var shoulderY=26+sy*side*6;
+                var swing=Blocking?4:stride*-side*.6;
+                var elbowX=shoulderX+sx*side*4+fx*swing;
+                var elbowY=34+sy*side*5+fy*swing*.5;
+                var handX=elbowX+fx*4; var handY=elbowY-2;
+                if (Blocking) { elbowX=shoulderX+fx*8; elbowY=shoulderY+fy*5+3; handX=elbowX+fx*5; handY=elbowY+fy*3; }
+                if (Passing && side>0) { elbowX=bodyX-fx*9; elbowY=20; handX=elbowX-fx*3; handY=10; }
+                OutlinedLimb(jersey,shoulderX,shoulderY,elbowX,elbowY,8);
+                OutlinedLimb(skinColor,elbowX,elbowY,handX,handY,5);
+                Oval(ink,(int)handX-3,(int)handY-3,7,7); Oval(Colors.White,(int)handX-2,(int)handY-2,5,5);
+                Box(primary,shoulderX-3,shoulderY-2,6,2); Box(secondary,shoulderX-3,shoulderY+1,6,1);
             }
-            // Overhead helmet crown: front is screen-up before the body rotates to its heading.
-            Pixel(ink, 10, 3, 13, 10); Pixel(ink, 9, 5, 15, 6);
-            Pixel(primary, 11, 4, 11, 8); Pixel(primary, 10, 6, 13, 4);
-            Pixel(secondary, 15, 4, 3, 8); Pixel(Colors.White, 11, 5, 2, 2);
-            Pixel(ink, 11, 3, 11, 2);
-            Pixel(Color.FromArgb("#C9D0D7"), 10, 2, 14, 1);
-            Pixel(Color.FromArgb("#C9D0D7"), 10, 2, 1, 4); Pixel(Color.FromArgb("#C9D0D7"), 23, 2, 1, 4);
-            canvas.RestoreState();
-            // Numbers remain upright rather than spinning with overhead artwork.
-            canvas.FontColor = away ? primary : Colors.White;
-            canvas.FontSize = Label.Length > 2 ? 5.5f : 7;
-            canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
-            canvas.DrawString(Label, 10, 13, 13, 8, HorizontalAlignment.Center, VerticalAlignment.Center);
+            // Helmet shading, crown stripe, earhole and facemask replace the flat prototype crown.
+            var headX=(int)Math.Round(bodyX+fx*2); var headY=15;
+            if(front) { Oval(ink,headX-7,headY+1,15,14); Oval(skinColor,headX-6,headY+2,13,11); }
+            Oval(ink,headX-12,headY-12,25,23);
+            Oval(Shade(primary,.55f),headX-11,headY-11,23,20);
+            Oval(primary,headX-10,headY-11,20,17);
+            Oval(new Color(Math.Min(1,primary.Red+.23f),Math.Min(1,primary.Green+.23f),Math.Min(1,primary.Blue+.23f)),headX-8,headY-10,10,5);
+            Box(secondary,headX-2-fx*3,headY-11,4,17);
+            if(Math.Abs(fx)>.4)
+            {
+                var faceX=headX+fx*10;
+                Box(ink,faceX-2,headY-1,5,6); Box(skinColor,faceX-1,headY+1,4,4);
+                Box(Color.FromArgb("#D6DDE4"),faceX+fx*4-1,headY,2,10);
+                Box(Color.FromArgb("#D6DDE4"),Math.Min(faceX,faceX+fx*5),headY+7,6,2);
+                Box(ink,headX-fx*5,headY+1,3,3);
+            }
+            else if(front)
+            {
+                Box(ink,headX-7,headY+3,15,3);
+                Box(Color.FromArgb("#D6DDE4"),headX-8,headY+5,2,8); Box(Color.FromArgb("#D6DDE4"),headX+7,headY+5,2,8);
+                Box(Color.FromArgb("#D6DDE4"),headX-7,headY+10,15,2);
+            }
+            // Back/chest number remains readable; the art changes facing rather than rotating text.
+            canvas.FontColor=away?primary:Colors.White; canvas.Font=Microsoft.Maui.Graphics.Font.DefaultBold;
+            canvas.FontSize=Label.Length>2?10:13;
+            canvas.DrawString(Label,(float)bodyX-12,27,24,13,HorizontalAlignment.Center,VerticalAlignment.Center);
             canvas.RestoreState();
         }
     }

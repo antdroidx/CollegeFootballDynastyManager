@@ -2,8 +2,24 @@ using DynastyManager.Core.Models;
 
 namespace DynastyManager.Core.Simulation;
 
+public sealed record PenaltyPresentation(string TeamName, string Foul, int Yards)
+{
+    public string Banner => $"PENALTY\n{Yards} {(Yards == 1 ? "yard" : "yards")} {Foul}\n{TeamName}";
+    public string Commentary => $"{Foul} on {TeamName}: {Yards} {(Yards == 1 ? "yard" : "yards")}.";
+}
+
 public static class GameDayCommentaryService
 {
+    public static PenaltyPresentation? Penalty(GameSnapEvent snap)
+    {
+        if (snap.Outcome != SnapOutcome.Penalty) return null;
+        var delta = snap.BallEndYardLine - snap.StartYardLine;
+        var team = snap.PenalizedTeamName ?? (delta > 0 ? snap.DefenseTeamName : delta < 0 ? snap.OffenseTeamName : "Team not recorded");
+        var foul = snap.PenaltyName ?? (snap.Description?.Contains("offside", StringComparison.OrdinalIgnoreCase) == true ? "Offside" :
+            snap.Description?.Contains("false start", StringComparison.OrdinalIgnoreCase) == true ? "False start" : "Penalty");
+        return new(team, foul, snap.PenaltyYards ?? Math.Abs(delta));
+    }
+
     public static string Describe(GameSnapEvent snap, IReadOnlyDictionary<Guid, DynastyPlayer> players)
     {
         string Name(Guid? id, string fallback) => id is Guid value && players.TryGetValue(value, out var player)
@@ -34,7 +50,7 @@ public static class GameDayCommentaryService
             SnapOutcome.Kneel => $"{quarterback} takes a knee.",
             SnapOutcome.Spike => $"{quarterback} spikes the ball to stop the clock.",
             SnapOutcome.ClockStoppage => snap.Description ?? "Clock stopped.",
-            SnapOutcome.Penalty => snap.Description ?? "Penalty.",
+            SnapOutcome.Penalty => Penalty(snap)!.Commentary,
             SnapOutcome.FieldGoal => $"{kicker} makes the field goal.",
             SnapOutcome.MissedFieldGoal => $"{kicker} misses the field goal.",
             SnapOutcome.Sack => $"{defender} sacks {quarterback} {YardPhrase(snap.Yards)}.",
