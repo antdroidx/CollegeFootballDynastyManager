@@ -6,21 +6,53 @@ namespace DynastyManager.App;
 
 public static class DynastyTheme
 {
-    public static readonly Color Background = Color.FromArgb("#101318");
-    public static readonly Color Surface = Color.FromArgb("#191F27");
-    public static readonly Color Accent = Color.FromArgb("#89ADD2");
-    public static readonly Color Muted = Color.FromArgb("#9BA6B5");
+    public static bool IsLight => Microsoft.Maui.Storage.Preferences.Default.Get("app-theme", "Dark") == "Light";
+    public static Color Text => IsLight ? Color.FromArgb("#182638") : Color.FromArgb("#E6EBF1");
+    public static Color Background => IsLight ? Color.FromArgb("#F1F4F8") : Color.FromArgb("#101318");
+    public static Color Surface => IsLight ? Colors.White : Color.FromArgb("#191F27");
+    public static Color Accent => IsLight ? Color.FromArgb("#245E99") : Color.FromArgb("#89ADD2");
+    public static Color Muted => IsLight ? Color.FromArgb("#526377") : Color.FromArgb("#9BA6B5");
+
+    // Only UI literals pass through here; team colors and field graphics remain unchanged.
+    public static Color Palette(string hex)
+    {
+        var original = Color.FromArgb(hex);
+        if (!IsLight) return original;
+        var r = original.Red; var g = original.Green; var b = original.Blue;
+        // Navy/neutral UI surfaces, excluding grass and team brand values.
+        if (Math.Max(r, Math.Max(g, b)) < .34f && b >= r && b >= g * .92f)
+            return Color.FromRgba(.88f + r * .3f, .90f + g * .25f, .93f + b * .2f, original.Alpha);
+        return original;
+    }
+
+    public static Color ReadableInk(Color ink, VisualElement view)
+    {
+        if (!IsLight) return ink;
+        Color background = Background;
+        for (Element? item = view; item is not null; item = item.Parent)
+            if (item is VisualElement element && element.BackgroundColor is { Alpha: > .95f } color)
+            { background = color; break; }
+        var luminance = background.Red * .2126f + background.Green * .7152f + background.Blue * .0722f;
+        if (luminance < .55f)
+            return ink.Red * .2126f + ink.Green * .7152f + ink.Blue * .0722f < .35f
+                ? Color.FromArgb("#E6EBF1") : ink;
+        if (ink.Red > .65f && ink.Green > .65f && ink.Blue > .65f) return Text;
+        if (ink.Red > .7f && ink.Green > .45f && ink.Blue < .65f) return Color.FromArgb("#765609");
+        if (ink.Green > .6f && ink.Red < .6f) return Color.FromArgb("#146B40");
+        var inkLuminance = ink.Red * .2126f + ink.Green * .7152f + ink.Blue * .0722f;
+        return inkLuminance > .55f ? Color.FromRgb(ink.Red * .55f, ink.Green * .55f, ink.Blue * .55f) : ink;
+    }
 
     public static ResourceDictionary CreateResources() => new()
     {
         new Style(typeof(ContentPage)) { ApplyToDerivedTypes = true, Setters = { new Setter { Property = VisualElement.BackgroundColorProperty, Value = Background } } },
         new Style(typeof(Label)) { Setters = {
-            new Setter { Property = Label.TextColorProperty, Value = Color.FromArgb("#E6EBF1") },
+            new Setter { Property = Label.TextColorProperty, Value = Text },
             new Setter { Property = Label.FontSizeProperty, Value = 13.0 },
             new Setter { Property = Label.LineHeightProperty, Value = 1.1 } } },
         new Style(typeof(Button)) { Setters = {
-            new Setter { Property = VisualElement.BackgroundColorProperty, Value = Color.FromArgb("#263342") },
-            new Setter { Property = Button.TextColorProperty, Value = Colors.White },
+            new Setter { Property = VisualElement.BackgroundColorProperty, Value = Palette("#263342") },
+            new Setter { Property = Button.TextColorProperty, Value = Text },
             new Setter { Property = View.VerticalOptionsProperty, Value = LayoutOptions.Center },
             new Setter { Property = View.HorizontalOptionsProperty, Value = LayoutOptions.Start },
             new Setter { Property = Button.CornerRadiusProperty, Value = 8 },
@@ -35,13 +67,13 @@ public static class DynastyTheme
             new Setter { Property = Border.PaddingProperty, Value = new Thickness(10) } } },
         new Style(typeof(Picker)) { Setters = {
             new Setter { Property = Picker.FontSizeProperty, Value = 13.0 },
-            new Setter { Property = Picker.TextColorProperty, Value = Colors.White },
+            new Setter { Property = Picker.TextColorProperty, Value = Text },
             new Setter { Property = Picker.TitleColorProperty, Value = Muted },
-            new Setter { Property = VisualElement.BackgroundColorProperty, Value = Color.FromArgb("#202A36") },
+            new Setter { Property = VisualElement.BackgroundColorProperty, Value = Palette("#202A36") },
             new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 36.0 } } },
         new Style(typeof(Entry)) { Setters = {
             new Setter { Property = Entry.FontSizeProperty, Value = 13.0 },
-            new Setter { Property = Entry.TextColorProperty, Value = Colors.White },
+            new Setter { Property = Entry.TextColorProperty, Value = Text },
             new Setter { Property = Entry.PlaceholderColorProperty, Value = Muted },
             new Setter { Property = VisualElement.BackgroundColorProperty, Value = Surface },
             new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 36.0 } } },

@@ -12,9 +12,9 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage : ContentPage
 {
-    private static readonly Color PositiveChangeColor = Color.FromArgb("#22C55E");
-    private static readonly Color NegativeChangeColor = Color.FromArgb("#EF4444");
-    private static readonly Color NeutralChangeColor = Color.FromArgb("#94A3B8");
+    private static Color PositiveChangeColor => DynastyTheme.Palette("#22C55E");
+    private static Color NegativeChangeColor => DynastyTheme.Palette("#EF4444");
+    private static Color NeutralChangeColor => DynastyTheme.Palette("#94A3B8");
     private enum AppSection
     {
         Home,
@@ -81,6 +81,7 @@ public sealed partial class FoundationPage : ContentPage
         Title = "League structure", ItemsSource = new[] { "Modern FBS (2026) - 138 teams", "Legacy FBS - 130 teams" },
         SelectedIndex = 0
     };
+    private IReadOnlyList<RealCoachSeed> _realCoachSeeds = [];
     private IReadOnlyList<Team> _legacyTeams = Array.Empty<Team>();
     private IReadOnlyList<Team> _newDynastyTeams = Array.Empty<Team>();
     private readonly Button _newDynastyButton;
@@ -525,7 +526,7 @@ public sealed partial class FoundationPage : ContentPage
         };
         _recruitingLoadingOverlay = new Grid
         {
-            IsVisible = false, BackgroundColor = Color.FromArgb("#F010243E"), Padding = 24,
+            IsVisible = false, BackgroundColor = DynastyTheme.Palette("#F010243E"), Padding = 24,
             Children =
             {
                 new VerticalStackLayout
@@ -552,7 +553,7 @@ public sealed partial class FoundationPage : ContentPage
         _advanceOverlay = new Grid
         {
             IsVisible = false,
-            BackgroundColor = Color.FromArgb("#D910243E"),
+            BackgroundColor = DynastyTheme.Palette("#D910243E"),
             Padding = new Thickness(32),
             Children =
             {
@@ -921,6 +922,7 @@ public sealed partial class FoundationPage : ContentPage
                     FontAttributes = FontAttributes.Bold
                 },
 
+                BuildThemeSettings(),
                 BuildLeagueFeatureSettings(),
                 new Label
                 {
@@ -1000,6 +1002,9 @@ public sealed partial class FoundationPage : ContentPage
                 StringComparer.OrdinalIgnoreCase);
 
             _legacyRosterRows = roster.Players;
+            using (var coachStream = await FileSystem.OpenAppPackageFileAsync("coaches_2025.csv"))
+            using (var coachReader = new StreamReader(coachStream))
+                _realCoachSeeds = RealCoachCsvImporter.Read(coachReader);
 
             await ShowAdvanceProgressAsync("Building simulation profiles...", 0.72);
             _simulationProfiles = LegacyRosterSimulationProfileBuilder.Build(
@@ -1149,6 +1154,7 @@ public sealed partial class FoundationPage : ContentPage
                 _currentDynasty, _teamsByName.Values);
             _currentDynasty = StaffManagementService.EnsureLeagueStaff(
                 _currentDynasty, _teamsByName.Values);
+            _currentDynasty = RealCoachCsvImporter.ApplyToNewDynasty(_currentDynasty, _realCoachSeeds);
             await ShowAdvanceProgressAsync("Hiring scouting department...", 0.88);
             _currentDynasty = ScoutingDepartmentService.EnsureDepartment(
                 _currentDynasty, _teamsByName[teamName]);
@@ -2682,11 +2688,11 @@ public sealed partial class FoundationPage : ContentPage
 
         static View Metric(string label, string value) => new Border
         {
-            StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#182630"),
+            StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = DynastyTheme.Palette("#182630"),
             Content = new VerticalStackLayout { Spacing = 2, Children =
             {
-                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
-                new Label { Text = value, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap, TextColor = Color.FromArgb("#E6EBF1") }
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#8FAABD") },
+                new Label { Text = value, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap, TextColor = DynastyTheme.Palette("#E6EBF1") }
             } }
         };
         var metrics = new Grid { ColumnSpacing = 7, RowSpacing = 7,
@@ -2696,12 +2702,12 @@ public sealed partial class FoundationPage : ContentPage
         metrics.Add(Metric("SCOUTED PROJECTION", presentation.Projection), 1, 0);
         metrics.Add(Metric("ORIGIN", presentation.Origin), 0, 1);
         metrics.Add(Metric("SCOUTING", presentation.Scouting), 1, 1);
-        var statusPanel = new Border { StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#1B3039"),
+        var statusPanel = new Border { StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = DynastyTheme.Palette("#1B3039"),
             Content = new VerticalStackLayout { Spacing = 3, Children =
             {
                 new Label { Text = presentation.UserStatus, FontSize = 12, FontAttributes = FontAttributes.Bold,
-                    TextColor = interaction.CommittedTeamName is not null ? Color.FromArgb("#E8C979") : Color.FromArgb("#83D6B6") },
-                new Label { Text = presentation.MarketStatus, FontSize = 11, TextColor = Color.FromArgb("#BDE5F5"), LineBreakMode = LineBreakMode.WordWrap }
+                    TextColor = interaction.CommittedTeamName is not null ? DynastyTheme.Palette("#E8C979") : DynastyTheme.Palette("#83D6B6") },
+                new Label { Text = presentation.MarketStatus, FontSize = 11, TextColor = DynastyTheme.Palette("#BDE5F5"), LineBreakMode = LineBreakMode.WordWrap }
             } } };
         var info = new VerticalStackLayout
         {
@@ -3206,23 +3212,23 @@ public sealed partial class FoundationPage : ContentPage
         static View RecruitMetric(string label, string value, Color? accent = null) => new Border
         {
             StrokeThickness = 0,
-            BackgroundColor = Color.FromArgb("#182630"),
+            BackgroundColor = DynastyTheme.Palette("#182630"),
             Padding = new Thickness(10, 8),
             Content = new VerticalStackLayout { Spacing = 2, Children =
             {
-                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#8FAABD") },
                 new Label { Text = value, FontSize = 13, FontAttributes = FontAttributes.Bold,
-                    TextColor = accent ?? Color.FromArgb("#E6EBF1"), LineBreakMode = LineBreakMode.WordWrap }
+                    TextColor = accent ?? DynastyTheme.Palette("#E6EBF1"), LineBreakMode = LineBreakMode.WordWrap }
             } }
         };
         static View RecruitSection(string title, View content) => new Border
         {
             StrokeThickness = 0,
-            BackgroundColor = Color.FromArgb("#17242E"),
+            BackgroundColor = DynastyTheme.Palette("#17242E"),
             Padding = new Thickness(10, 8),
             Content = new VerticalStackLayout { Spacing = 5, Children =
             {
-                new Label { Text = title, FontSize = 10, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") },
+                new Label { Text = title, FontSize = 10, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#9EC6E7") },
                 content
             } }
         };
@@ -3235,8 +3241,8 @@ public sealed partial class FoundationPage : ContentPage
         };
         metricGrid.Add(RecruitMetric("SCOUTED OVR", range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum}"), 0, 0);
         metricGrid.Add(RecruitMetric("POTENTIAL", potentialVisible ? $"{potentialRange.Minimum}-{potentialRange.Maximum}" : "Unknown"), 1, 0);
-        metricGrid.Add(RecruitMetric("YOUR INTEREST", $"{currentUserInterest}%", Color.FromArgb("#83D6B6")), 0, 1);
-        metricGrid.Add(RecruitMetric("BEST OFFERED RIVAL", $"{currentRivalInterest}%", Color.FromArgb("#E8C979")), 1, 1);
+        metricGrid.Add(RecruitMetric("YOUR INTEREST", $"{currentUserInterest}%", DynastyTheme.Palette("#83D6B6")), 0, 1);
+        metricGrid.Add(RecruitMetric("BEST OFFERED RIVAL", $"{currentRivalInterest}%", DynastyTheme.Palette("#E8C979")), 1, 1);
 
         var marketGrid = new Grid
         {
@@ -3256,7 +3262,7 @@ public sealed partial class FoundationPage : ContentPage
             {
                 StrokeThickness = 0,
                 Padding = new Thickness(12, 10),
-                BackgroundColor = Color.FromArgb("#202B37"),
+                BackgroundColor = DynastyTheme.Palette("#202B37"),
                 Content = new VerticalStackLayout
                 {
                     Spacing = 9,
@@ -3270,14 +3276,14 @@ public sealed partial class FoundationPage : ContentPage
                                 $"{publicRecruitRatingText} • " +
                                 $"{prospect.Subtitle} • {FormatClassYear(prospect.ClassYear, prospect.HasRedshirted)}",
                             FontSize = 11,
-                            TextColor = Color.FromArgb("#B8D8FA")
+                            TextColor = DynastyTheme.Palette("#B8D8FA")
                         },
                         metricGrid,
                         new Label
                         {
                             Text = $"SCOUTED {interaction.ScoutingPercent}%{evaluationText}{lastPitchText}",
                             FontSize = 10, FontAttributes = FontAttributes.Bold,
-                            TextColor = recruitingOpen ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted
+                            TextColor = recruitingOpen ? DynastyTheme.Palette("#83D6B6") : DynastyTheme.Muted
                         },
                         marketGrid,
                         new Label
@@ -3611,7 +3617,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             Text = "YOUR COMMITMENTS",
             FontAttributes = FontAttributes.Bold,
-            TextColor = Color.FromArgb("#9EC6E7"),
+            TextColor = DynastyTheme.Palette("#9EC6E7"),
             Margin = new Thickness(0, 8, 0, 2)
         });
         foreach (var commitment in userCommitments)
@@ -3621,7 +3627,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             Text = "AROUND THE NATION",
             FontAttributes = FontAttributes.Bold,
-            TextColor = Color.FromArgb("#9EC6E7"),
+            TextColor = DynastyTheme.Palette("#9EC6E7"),
             Margin = new Thickness(0, 10, 0, 2)
         });
         foreach (var commitment in allCommitments
@@ -4694,7 +4700,8 @@ public sealed partial class FoundationPage : ContentPage
                 {
                     CloseRosterDetailButton(),
                     IdentityHeader(player.PlayerId, player.FullName, player.TeamName,
-                        $"{player.Position} · {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} · OVR {player.OverallRating}", appearance: player.Appearance),
+                        $"{OffensiveLineService.Label(player)} · {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} · OVR {player.OverallRating}", appearance: player.Appearance),
+                    PlayerMoraleSummary(player),
                     new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), TextColor = DynastyTheme.Accent },
                     new Label
                     {
@@ -4717,7 +4724,6 @@ public sealed partial class FoundationPage : ContentPage
                             $"INJ {player.InjuryRating}",
                         FontSize = 12
                     },
-                    new Label { Text = $"Morale {GameMoraleService.PlayerMorale(_currentDynasty!, player)}/100 · Season OVR Δ {FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty!, player))}", FontSize = 12, TextColor = DynastyTheme.Accent },
                     CreateCareerStatsButton(player),
                     new Label
                     {
@@ -5202,7 +5208,7 @@ public sealed partial class FoundationPage : ContentPage
             [("Rank", 45), ("School", 195), ("W", 38), ("L", 38), ("Conference", 110), ("PPG", 60), ("Opp PPG", 75), ("Score", 70)],
             shown.Select(ranking => new View[]
             {
-                TableText($"#{ranking.Rank}", true, ranking.Rank <= 4 ? Color.FromArgb("#F4CC66") : DynastyTheme.Accent),
+                TableText($"#{ranking.Rank}", true, ranking.Rank <= 4 ? DynastyTheme.Palette("#F4CC66") : DynastyTheme.Accent),
                 SchoolCell(ranking.TeamName, false), TableText(ranking.Wins.ToString()), TableText(ranking.Losses.ToString()),
                 TableText(ranking.ConferenceName), TableText(ranking.PointsPerGame.ToString("F1")),
                 TableText(ranking.OpponentPointsPerGame.ToString("F1")), TableText(ranking.Score.ToString("F1"))
@@ -5287,7 +5293,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             var column = new VerticalStackLayout { Spacing = 8, WidthRequest = 235 };
             column.Children.Add(new Label { Text = FormatPostseasonRound(round).ToUpperInvariant(), FontSize = 11,
-                FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") });
+                FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#9EC6E7") });
             var roundGames = games.Where(game => game.PostseasonRound == round).OrderBy(game => game.PlayoffBracketSlot).ToArray();
             if (roundGames.Length == 0)
                 column.Children.Add(new Label { Text = "Matchups pending", FontSize = 11, TextColor = DynastyTheme.Muted });
@@ -5295,7 +5301,7 @@ public sealed partial class FoundationPage : ContentPage
             {
                 var awaySeed = game.AwaySeed is int away ? $"#{away} " : string.Empty;
                 var homeSeed = game.HomeSeed is int home ? $"#{home} " : string.Empty;
-                column.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = 9,
+                column.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Padding = 9,
                     Content = new VerticalStackLayout { Spacing = 5, Children =
                     {
                         new Label { Text = $"{awaySeed}{game.AwayTeamName}  {(game.HasPlayed ? game.AwayScore : "—")}",
@@ -5303,7 +5309,7 @@ public sealed partial class FoundationPage : ContentPage
                         new Label { Text = $"{homeSeed}{game.HomeTeamName}  {(game.HasPlayed ? game.HomeScore : "—")}",
                             FontAttributes = game.HasPlayed && game.HomeScore > game.AwayScore ? FontAttributes.Bold : FontAttributes.None },
                         new Label { Text = game.HasPlayed ? "FINAL" : "UPCOMING", FontSize = 9,
-                            TextColor = game.HasPlayed ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted }
+                            TextColor = game.HasPlayed ? DynastyTheme.Palette("#83D6B6") : DynastyTheme.Muted }
                     } } });
             }
             tree.Children.Add(column);

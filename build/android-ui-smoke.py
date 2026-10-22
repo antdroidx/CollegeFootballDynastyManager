@@ -314,6 +314,39 @@ def main():
     assert "Hall of Fame" in texts(capture("hall-portrait"))
     tap(capture("hall-close"), "Return to season")
     print("Season-baseline roster, phase-aware recruiting, departures and Hall of Fame navigation passed.")
+    # Theme changes rebuild view controls around the live unsaved state.
+    tap(capture("before-theme"), "Settings")
+    settings = wait_for("appearance-settings", lambda r: "Appearance" in texts(r) and "Dark" in texts(r))
+    before_theme = calendar(settings)
+    tap(settings, "Dark")
+    choices = wait_for("theme-choices", lambda r: "Light" in texts(r))
+    tap(choices, "Light")
+    light = wait_for("light-settings-portrait", lambda r: "Light" in texts(r) and "Appearance" in texts(r))
+    assert calendar(light) == before_theme, "Theme switch changed unsaved career/calendar"
+    tap(light, "Overview")
+    light_overview = wait_for("light-overview", lambda r: overview_ready(r))
+    assert enabled(light_overview, advance_action(light_overview)), "Theme rebuild disabled dynasty controls"
+    tap(light_overview, "Roster")
+    roster = wait_for("light-roster-portrait", lambda r: "Morale" in texts(r))
+    player_button = next(n for n in roster.iter("node") if (n.get("content-desc") or "").startswith("View player "))
+    tap(roster, player_button.get("text"))
+    profile = wait_for("light-player-profile-portrait", lambda r: any((t or "").startswith("Morale · ") for t in texts(r)))
+    assert any("Season OVR" in (t or "") for t in texts(profile))
+    adb("shell", "settings", "put", "system", "user_rotation", "1")
+    time.sleep(2)
+    profile = capture("light-player-profile-landscape")
+    assert any((t or "").startswith("Morale · ") for t in texts(profile))
+    adb("shell", "input", "keyevent", "4")
+    time.sleep(1.5)
+    tap(capture("light-after-profile"), "Settings")
+    light_settings = wait_for("light-settings-landscape", lambda r: "Light" in texts(r))
+    tap(light_settings, "Light")
+    dark_choice = wait_for("theme-dark-choice", lambda r: "Dark" in texts(r))
+    tap(dark_choice, "Dark")
+    dark = wait_for("dark-restored", lambda r: "Dark" in texts(r) and "Appearance" in texts(r))
+    assert calendar(dark) == before_theme
+    print("Light/dark theme, live-state preservation, enabled controls and player-profile morale passed in both layouts.")
+
 
 
 if __name__ == "__main__":

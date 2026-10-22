@@ -50,7 +50,7 @@ public static class StaffMarketService
             }
         }
 
-        foreach (var staff in state.Staff)
+        foreach (var staff in state.Staff.Where(s => !s.IsHeadCoachRoleAssignment))
         {
             if (!teamsByName.TryGetValue(staff.TeamName, out var sourceTeam))
                 continue;
@@ -169,7 +169,7 @@ public static class StaffMarketService
             var winDelta = (season?.Wins ?? expectedWins) - expectedWins;
 
             var teamStaff = staff
-                .Where(item => item.TeamName.Equals(
+                .Where(item => !item.IsHeadCoachRoleAssignment && item.TeamName.Equals(
                     team.Name,
                     StringComparison.OrdinalIgnoreCase))
                 .ToArray();
@@ -497,6 +497,8 @@ public static class StaffMarketService
         {
             TeamName = userTeam.Name,
             Role = candidate.TargetRole,
+            SharedRoleCoaches = [],
+            IsHeadCoachRoleAssignment = false,
             TenureYears = 0,
             ContractYearsRemaining =
                 candidate.TargetRole == StaffRole.HeadCoach ? 5 : 3
@@ -798,6 +800,8 @@ public static class StaffMarketService
             {
                 TeamName = vacancy.TeamName,
                 Role = vacancy.Role,
+                SharedRoleCoaches = [],
+                IsHeadCoachRoleAssignment = false,
                 TenureYears = 0,
                 ContractYearsRemaining =
                     vacancy.Role == StaffRole.HeadCoach ? 5 : 3

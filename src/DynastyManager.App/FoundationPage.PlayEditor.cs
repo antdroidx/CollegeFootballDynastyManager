@@ -59,7 +59,7 @@ public sealed partial class FoundationPage
         var concept = new Picker { Title = "Concept", ItemsSource = Enum.GetNames<OffensiveConcept>(), SelectedIndex = (int)source.Concept };
         var assignments = source.Assignments.ToDictionary(a => (a.Position, a.RoleIndex));
         var rows = new VerticalStackLayout { Spacing = 8 };
-        var preview = new GraphicsView { HeightRequest = 180, BackgroundColor = Color.FromArgb("#102A24") };
+        var preview = new GraphicsView { HeightRequest = 180, BackgroundColor = DynastyTheme.Palette("#102A24") };
         OffensivePlayDefinition Draft() => source with { Id = "custom-" + Guid.NewGuid().ToString("N"), Name = name.Text?.Trim() ?? "",
             Formation = (OffensiveFormation)Math.Max(0, formation.SelectedIndex),
             Personnel = (OffensiveFormation)formation.SelectedIndex switch { OffensiveFormation.Flexbone => OffensivePersonnel.TripleBack, OffensiveFormation.IForm => OffensivePersonnel.TwentyOne, OffensiveFormation.Empty => OffensivePersonnel.Empty, _ => source.Personnel is OffensivePersonnel.Empty or OffensivePersonnel.TripleBack ? OffensivePersonnel.Eleven : source.Personnel }, Concept = (OffensiveConcept)Math.Max(0, concept.SelectedIndex),
@@ -96,7 +96,7 @@ public sealed partial class FoundationPage
                 }
                 task.SelectedIndexChanged += (_, _) => Update(); route.SelectedIndexChanged += (_, _) => Update();
 
-                rows.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = Color.FromArgb("#1B2B37"),
+                rows.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = DynastyTheme.Palette("#1B2B37"),
                     Content = new VerticalStackLayout { Spacing = 3, Children = { label, task, route } } });
                 Update();
             }

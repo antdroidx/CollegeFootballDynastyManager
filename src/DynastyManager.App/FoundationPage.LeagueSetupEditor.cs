@@ -32,7 +32,7 @@ public sealed partial class FoundationPage
                 var edit = new Button { Text = "Edit" }; var remove = new Button { Text = "Remove" };
                 edit.Clicked += async (_, _) => await EditTeamAsync(team);
                 remove.Clicked += (_, _) => { teams.Remove(team); Render(); };
-                list.Children.Add(new Border { StrokeThickness = 0, Padding = 8, BackgroundColor = Color.FromArgb("#1B2B37"), Content = new VerticalStackLayout { Spacing = 3, Children =
+                list.Children.Add(new Border { StrokeThickness = 0, Padding = 8, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = new VerticalStackLayout { Spacing = 3, Children =
                 { new Label { Text = $"{team.Name} ({team.Abbreviation})", FontAttributes = FontAttributes.Bold },
                     new Label { Text = $"{team.ConferenceName}{(team.DivisionName is null ? "" : " · " + team.DivisionName)} · Prestige {team.Prestige}", FontSize = 11 },
                     new HorizontalStackLayout { Children = { edit, remove } } } } });

@@ -8,7 +8,7 @@ public sealed class App : Application
     public App()
     {
         Resources = DynastyTheme.CreateResources();
-        UserAppTheme = AppTheme.Dark;
+        UserAppTheme = DynastyTheme.IsLight ? AppTheme.Light : AppTheme.Dark;
     }
 
     protected override Window CreateWindow(IActivationState? activationState) =>

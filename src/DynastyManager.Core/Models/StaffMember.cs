@@ -17,6 +17,14 @@ public sealed record StaffMember
     public required string FullName { get; init; }
     public required string TeamName { get; init; }
     public NcaaPlayerAppearance? Appearance { get; init; }
+    public bool IsHeadCoachRoleAssignment { get; init; }
+    public Guid? FormerPlayerId { get; init; }
+    public int? GraduationYear { get; init; }
+    public string? AlmaMater { get; init; }
+    public string? DataSourceUrl { get; init; }
+    public int? DataSeason { get; init; }
+    public string? PublishedTitle { get; init; }
+    public IReadOnlyList<SharedCoachRole> SharedRoleCoaches { get; init; } = [];
     public StaffRole Role { get; init; }
     public int Reputation { get; init; }
     public int Leadership { get; init; }
@@ -52,3 +60,5 @@ public sealed record StaffMember
     private static int Average(params int[] values) =>
         values.Length == 0 ? 0 : (int)Math.Round(values.Average());
 }
+
+public sealed record SharedCoachRole(string FullName, string PublishedTitle, string SourceUrl);

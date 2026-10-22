@@ -10,7 +10,7 @@ public static class PlayerRatingService
 
         return state with
         {
-            ActiveRoster = PlayerJerseyService.Assign(state.ActiveRoster
+            ActiveRoster = PlayerJerseyService.Assign(OffensiveLineService.AssignMissingRoles(state.ActiveRoster)
                 .Select(player => WithSeasonBaseline(state, EnsureInitialized(state, player))).ToArray())
         };
     }

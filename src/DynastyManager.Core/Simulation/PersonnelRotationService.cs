@@ -68,6 +68,20 @@ public static class PersonnelRotationService
         {
             var pool = depthChart.TryGetValue(position, out var players)
                 ? players : Array.Empty<DynastyPlayer>();
+            if (position == Position.OL)
+            {
+                var starters = OffensiveLineService.Lineup(pool);
+                foreach (var starter in starters)
+                {
+                    var choice = starter;
+                    if (ShouldRotate(starter, fatigue.Energy(starter.PlayerId), random))
+                        choice = pool.FirstOrDefault(p => starters.All(s => s.PlayerId != p.PlayerId) && !selected.Contains(p.PlayerId) &&
+                            OffensiveLineService.Label(p) == OffensiveLineService.Label(starter)) ?? starter;
+                    selected.Add(choice.PlayerId);
+                    if (choice.PlayerId != starter.PlayerId) substitutes.Add(choice.PlayerId);
+                }
+                continue;
+            }
             for (var slot = 0; slot < Math.Min(count, pool.Count); slot++)
             {
                 var starter = pool[Math.Min(slot, pool.Count - 1)];

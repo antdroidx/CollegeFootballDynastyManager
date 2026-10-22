@@ -140,7 +140,7 @@ public sealed partial class FoundationPage
             var entries = state.HallOfFame.Where(p => scope.SelectedIndex == 0 || p.TeamName == (string)scope.SelectedItem).OrderByDescending(p => p.CareerScore + p.HonorsScore * 10).ToArray();
             if (entries.Length == 0) list.Children.Add(new Label { Text = "No inductees yet. Exceptional completed careers and final honors earn induction." });
             foreach (var p in entries)
-                list.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = Color.FromArgb("#203342"), Content =
+                list.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = DynastyTheme.Palette("#203342"), Content =
                     new VerticalStackLayout { Spacing = 4, Children = { PlayerLink(p.PlayerId, p.PlayerName),
                         new Label { Text = $"{p.InductionYear} · {p.TeamName} · {p.Position}", TextColor = DynastyTheme.Accent },
                         new Label { Text = p.Citation, FontSize = 11, TextColor = DynastyTheme.Muted } } } });
@@ -178,16 +178,16 @@ public sealed partial class FoundationPage
                 name.Clicked += async (_, _) => await ShowPlayerProfileAsync(a.PlayerId);
                 var details = new VerticalStackLayout { Spacing = 3, Children =
                 {
-                    new Label { Text = a.AwardName, FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#E8C979") },
+                    new Label { Text = a.AwardName, FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#E8C979") },
                     name, new Label { Text = a.Summary, FontSize = 11, TextColor = DynastyTheme.Muted }
                 } };
                 if (!a.IsAllAmerican && a.ConferenceName is null)
                 {
                     var row = new Grid { ColumnSpacing = 12, ColumnDefinitions = new() { new(64), new(GridLength.Star) } };
                     row.Add(new GraphicsView { Drawable = new RetroTrophyDrawable(a.AwardName == "Heisman Trophy"), HeightRequest = 80, WidthRequest = 64 },0,0); row.Add(details,1,0);
-                    list.Children.Add(new Border { Padding = 10, StrokeThickness = 0, BackgroundColor = Color.FromArgb("#302C24"), Content = row });
+                    list.Children.Add(new Border { Padding = 10, StrokeThickness = 0, BackgroundColor = DynastyTheme.Palette("#302C24"), Content = row });
                 }
-                else list.Children.Add(new Border { Padding = 10, StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Content = details });
+                else list.Children.Add(new Border { Padding = 10, StrokeThickness = 0, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = details });
             }
             if (list.Children.Count == 0) list.Children.Add(new Label { Text = "No selections recorded for this season and scope." });
         }
@@ -229,15 +229,15 @@ public sealed partial class FoundationPage
             var record = state.ProgramConduct.FirstOrDefault(p => p.TeamName == team);
             var score = record?.Score ?? 80;
             list.Children.Add(new Label { Text = $"{team} · Conduct {score}/100 · {(score >= 70 ? "Healthy" : score >= 40 ? "Needs attention" : "Under scrutiny")}", FontSize = 17, FontAttributes = FontAttributes.Bold });
-            list.Children.Add(new ProgressBar { Progress = score / 100.0, ProgressColor = score >= 70 ? Color.FromArgb("#72D4B2") : Color.FromArgb("#F4BC68"), HeightRequest = 12 });
-            if (!ProgramDisciplineService.PostseasonEligible(state, team)) list.Children.Add(new Label { Text = "Postseason ban this season", TextColor = Color.FromArgb("#F4A6A6") });
+            list.Children.Add(new ProgressBar { Progress = score / 100.0, ProgressColor = score >= 70 ? DynastyTheme.Palette("#72D4B2") : DynastyTheme.Palette("#F4BC68"), HeightRequest = 12 });
+            if (!ProgramDisciplineService.PostseasonEligible(state, team)) list.Children.Add(new Label { Text = "Postseason ban this season", TextColor = DynastyTheme.Palette("#F4A6A6") });
             if (team == state.UserTeamName && state.LeagueRules.ProgramDiscipline)
             {
                 var improve = new Button { Text = "Strengthen oversight (+8, once per season)", IsEnabled = !state.DisciplineHistory.Any(i => i.TeamName == team && i.SeasonYear == state.SeasonYear && i.EventId == "oversight") };
                 improve.Clicked += (_, _) => { _currentDynasty = ProgramDisciplineService.ImproveOversight(_currentDynasty!, team); state = _currentDynasty; Render(); }; list.Children.Add(improve);
             }
             foreach (var incident in state.DisciplineHistory.Where(i => i.TeamName == team).Reverse().Take(30))
-                list.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = Color.FromArgb("#1B2B37"), Content = new VerticalStackLayout { Spacing = 4, Children =
+                list.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = new VerticalStackLayout { Spacing = 4, Children =
                 {
                     new Label { Text = $"{incident.SeasonYear} · W{incident.Week} · {incident.Title}", FontAttributes = FontAttributes.Bold, FontSize = 13 },
                     new Label { Text = incident.Description, FontSize = 12, TextColor = DynastyTheme.Muted }
@@ -258,7 +258,7 @@ public sealed partial class FoundationPage
         void Render()
         {
             list.Children.Clear(); var games = GameHighlightService.WeeklyGames(state, (int)week.SelectedItem);
-            var show = new Button { Text = "Watch weekly highlight show", BackgroundColor = Color.FromArgb("#6A4B2B") };
+            var show = new Button { Text = "Watch weekly highlight show", BackgroundColor = DynastyTheme.Palette("#6A4B2B") };
             show.Clicked += async (_, _) =>
             {
                 show.IsEnabled = false;
@@ -268,7 +268,7 @@ public sealed partial class FoundationPage
             list.Children.Add(TrendChart(games.Take(8).Select(g => ((g.WinnerTeamName ?? g.HomeTeamName), (double)(g.HomeScore + g.AwayScore ?? 0))).ToArray(), "Featured games · combined points"));
             foreach (var g in games)
             {
-                var open = new Button { Text = $"{(GameHighlightService.IsUpset(g) ? "UPSET · " : "")}{g.AwayTeamName} {g.AwayScore}–{g.HomeScore} {g.HomeTeamName} ›", FontSize = 12, BackgroundColor = Color.FromArgb("#1D3446") };
+                var open = new Button { Text = $"{(GameHighlightService.IsUpset(g) ? "UPSET · " : "")}{g.AwayTeamName} {g.AwayScore}–{g.HomeScore} {g.HomeTeamName} ›", FontSize = 12, BackgroundColor = DynastyTheme.Palette("#1D3446") };
                 open.Clicked += async (_, _) => await ShowRecordedGameAsync(g); list.Children.Add(open);
             }
         }
@@ -324,7 +324,7 @@ public sealed partial class FoundationPage
     private static View TrendChart((string Label, double Value)[] points, string caption, bool ranks = false) => new VerticalStackLayout { Spacing = 6, Children =
     {
         new Label { Text = caption, FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent },
-        new GraphicsView { Drawable = new SeasonChartDrawable(points, ranks), HeightRequest = 185, BackgroundColor = Color.FromArgb("#142530") },
+        new GraphicsView { Drawable = new SeasonChartDrawable(points, ranks), HeightRequest = 185, BackgroundColor = DynastyTheme.Palette("#142530") },
         new Label { Text = points.Length == 0 ? "Data appears as the season progresses." : string.Join(" · ", points.Select(p => $"{p.Label}: {p.Value:F0}")), FontSize = 10, TextColor = DynastyTheme.Muted }
     } };
 
@@ -334,7 +334,7 @@ public sealed partial class FoundationPage
         {
             if (points.Length == 0) return;
             var max = Math.Max(1, points.Max(p => p.Value)); var width = Math.Max(1, rect.Width - 32); var height = rect.Height - 35;
-            c.StrokeColor = Color.FromArgb("#385365"); c.StrokeSize = 1;
+            c.StrokeColor = DynastyTheme.Palette("#385365"); c.StrokeSize = 1;
             for (var i = 0; i < 4; i++) c.DrawLine(16,15 + height*i/3,rect.Width-16,15+height*i/3);
             c.FontColor = Colors.White; c.FontSize = 9;
             for (var i = 0; i < points.Length; i++)
@@ -345,7 +345,7 @@ public sealed partial class FoundationPage
                 if (ranks)
                 {
                     c.FillCircle(x,y,4);
-                    if (i > 0) { c.StrokeColor = Color.FromArgb("#6CD2BC"); c.StrokeSize = 2; c.DrawLine(16+width*(i-.5f)/points.Length,15+height*(float)(points[i-1].Value/max),x,y); }
+                    if (i > 0) { c.StrokeColor = DynastyTheme.Palette("#6CD2BC"); c.StrokeSize = 2; c.DrawLine(16+width*(i-.5f)/points.Length,15+height*(float)(points[i-1].Value/max),x,y); }
                 }
                 else c.FillRoundedRectangle(x-width/points.Length*.3f,y,width/points.Length*.6f,Math.Max(2,height*(1-(y-15)/height)),3);
                 if (points.Length <= 15) c.DrawString(points[i].Value.ToString("F0"),x-15,Math.Max(0,y-15),30,15,HorizontalAlignment.Center,VerticalAlignment.Center);

@@ -6,7 +6,8 @@ public enum StaffMovementType
     Hired,
     Promoted,
     Poached,
-    Retained
+    Retained,
+    Retired
 }
 
 public sealed record StaffMovementRecord

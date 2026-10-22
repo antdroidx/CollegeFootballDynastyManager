@@ -1,3 +1,21 @@
+# Current work: morale, line roles, light theme and 2025 coaches
+
+Status: IMPLEMENTED, validation/release IN PROGRESS. Branch game-day-2-test. Do not repeat Build 285's completed work.
+
+Requested by user: morale happiness icons in both detailed profiles and league rosters; league development deltas; OT/OG/OC mapping 5/9,6/8,7; light theme; graduates becoming coaches, coach retirement; real 2025 HC/OC/DC/ST data matching NEXT26. Scouts/support generated. Retention unchanged; save-size question answered in commentary (small departure records; season histories and multiple snapshots dominate).
+
+Implemented this task (uncommitted as of checkpoint):
+- Morale face drawable and accessible numeric/mood label on both profiles, icons in user/league tables; league OVR deltas.
+- OL source codes preserved; generated role assignment; 2 OT/2 OG/1 OC line selection and role-group depth arrows/drag. Internal OL enum retained to preserve engine/recruiting counts.
+- Dark/light preference, shared surfaces/contrast and state-preserving root rebuild. Needs cloud screenshot review.
+- Annual AI/support retirement from age 62, increasing chance, by 80. Human head coach exempt from automatic retirement. Persistent retirement and staff movement history. Leadership/awareness/discipline snapshots on departures. Eligible graduates (75/75/60, 25% deterministic career interest, 6-20 years apprenticeship) may replace retiring coordinators in positional phase. Linked former-player identity, modest initial ratings, no instant graduate HC/medical jobs.
+- 2025 identity seed CSV covers 138 actual bundled team names and four game role slots. Real coordinator/assistant titles and shared-role names retained; six HC-run OC slots labeled game assignments, not invented OC titles. Analysts filling ST slots retain analyst title. Human HC remains YOU. Ages/ratings/portraits are generated game estimates, not asserted real data. Seed only applied during new dynasty creation; loads/evolved dynasties untouched.
+- Research: official archives often silently contain 2026 hires or 2025 interims; cross-checked season-specific team pages and manually curated overrides (docs/data). Primary sources and secondary 2025 season URLs retained in CSV; don't claim every entry independently verified against a frozen primary source. Research caches under .artifacts are ignored; build/*2025_coaches.py research helpers require bs4 and cached discovery data.
+
+Validation so far: 592 regular core tests passed before final UI-control/movement tweaks; Android Compile succeeded before those tweaks, pending final rerun. Nine Python smoke helper tests had Windows sandbox temp-directory permissions errors; rerun escalated. Expanded cloud smoke added light/dark state preservation, enabled controls, player morale in portrait/landscape. Need run GitHub Actions APK + emulator, inspect screenshots, fix errors, provide artifact link and update PR19/handoff. No new build published yet. sources/ untouched.
+
+Prior completed release reference follows:
+
 # Current work: completed after Build 281
 
 Status: COMPLETE. All items requested for this update have been implemented and validated. No pending code work or emulator sessions.

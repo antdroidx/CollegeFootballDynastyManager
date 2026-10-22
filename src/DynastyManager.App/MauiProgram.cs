@@ -12,6 +12,16 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
+        Microsoft.Maui.Handlers.LabelHandler.Mapper.AppendToMapping("ThemeContrast", (_, view) =>
+        {
+            if (view is Microsoft.Maui.Controls.Label label)
+                label.Loaded += (_, _) => label.TextColor = DynastyTheme.ReadableInk(label.TextColor, label);
+        });
+        Microsoft.Maui.Handlers.ButtonHandler.Mapper.AppendToMapping("ThemeContrast", (_, view) =>
+        {
+            if (view is Microsoft.Maui.Controls.Button button)
+                button.Loaded += (_, _) => button.TextColor = DynastyTheme.ReadableInk(button.TextColor, button);
+        });
 #if ANDROID
         PickerHandler.Mapper.AppendToMapping("FlatPicker", (handler, _) =>
             handler.PlatformView.BackgroundTintList = ColorStateList.ValueOf(Android.Graphics.Color.Transparent));

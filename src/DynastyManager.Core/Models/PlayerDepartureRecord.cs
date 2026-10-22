@@ -8,5 +8,9 @@ public sealed record PlayerDepartureRecord
     public required string TeamName { get; init; }
     public required Position Position { get; init; }
     public int OverallRating { get; init; }
+    public int Leadership { get; init; }
+    public int Awareness { get; init; }
+    public int Discipline { get; init; }
+    public NcaaPlayerAppearance? Appearance { get; init; }
     public PlayerDepartureReason Reason { get; init; }
 }

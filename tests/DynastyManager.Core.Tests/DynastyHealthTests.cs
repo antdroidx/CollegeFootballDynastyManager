@@ -60,6 +60,7 @@ public class DynastyHealthTests(ITestOutputHelper output)
                 Assert.Equal(state.PendingTransferCommitments.Count,
                     state.PendingTransferCommitments.Select(item => item.Player.PlayerId).Distinct().Count());
                 state = DynastyHistoryService.FinalizeSeason(state, teams);
+                state = StaffManagementService.AdvanceSeason(state);
                 state = ProgramPrestigeService.ApplySeasonResults(state, teams);
                 state = state with { Phase = SeasonPhase.TransferPortal, Week = 19 };
                 state = OffseasonPlayerLifecycleService.EnterTransferPortal(state);

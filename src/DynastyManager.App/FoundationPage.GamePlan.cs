@@ -19,7 +19,7 @@ public sealed partial class FoundationPage
         layout.Children.Add(new Label { Text = title, TextColor = DynastyTheme.Accent,
             FontSize = 11, CharacterSpacing = 0, FontAttributes = FontAttributes.Bold });
         foreach (var view in content) layout.Children.Add(view);
-        return new Border { Content = layout, Padding = 14, BackgroundColor = Color.FromArgb("#1B2632"), StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 } };
+        return new Border { Content = layout, Padding = 14, BackgroundColor = DynastyTheme.Palette("#1B2632"), StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 } };
     }
 
     private void RenderGamePlanScreen()
@@ -30,9 +30,9 @@ public sealed partial class FoundationPage
             _gamePlanHost.Children.Add(new Label { Text = "Create or load a dynasty to build your game plan." });
             return;
         }
-        var program = new Button { Text = "Program & staff", BackgroundColor = Color.FromArgb("#493D65") };
+        var program = new Button { Text = "Program & staff", BackgroundColor = DynastyTheme.Palette("#493D65") };
         program.Clicked += (_, _) => ShowSection(AppSection.Program);
-        var depthChart = new Button { Text = "Manage depth chart", BackgroundColor = Color.FromArgb("#315D59") };
+        var depthChart = new Button { Text = "Manage depth chart", BackgroundColor = DynastyTheme.Palette("#315D59") };
         depthChart.Clicked += (_, _) => { _showDepthChartOrganizer = true; ShowSection(AppSection.Roster); };
         _gamePlanHost.Children.Add(new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { program, depthChart } });
         var careerTools = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
@@ -96,7 +96,7 @@ public sealed partial class FoundationPage
                 var matchup = new Grid { ColumnSpacing = 8, RowSpacing = 8,
                     ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
                     RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
-                View Matchup(string heading, double theirs, double ours) => new Border { BackgroundColor = Color.FromArgb("#142C35"), Padding = 10,
+                View Matchup(string heading, double theirs, double ours) => new Border { BackgroundColor = DynastyTheme.Palette("#142C35"), Padding = 10,
                     Content = new VerticalStackLayout { Spacing = 3, Children = {
                         new Label { Text = heading, FontSize = 10, TextColor = DynastyTheme.Accent },
                         new Label { Text = $"{theirs:F0}  vs  {ours:F0}", FontSize = 18, FontAttributes = FontAttributes.Bold },
@@ -109,7 +109,7 @@ public sealed partial class FoundationPage
                 scouting.Children.Add(new Label { Text = $"Scheme: {GamePlanService.Label(rivalPlan.Offense)} / {GamePlanService.Label(rivalPlan.Defense)} · {GamePlanService.Label(rivalPlan.Approach)}", TextColor = DynastyTheme.Muted });
                 var passEdge = profile.PassOffenseRating - rival.PassDefenseRating;
                 var runEdge = profile.RushOffenseRating - rival.RushDefenseRating;
-                scouting.Children.Add(new Label { Text = passEdge >= runEdge ? "Matchup focus: your passing game has the better relative matchup." : "Matchup focus: your running game has the better relative matchup.", TextColor = Color.FromArgb("#8CDBC0") });
+                scouting.Children.Add(new Label { Text = passEdge >= runEdge ? "Matchup focus: your passing game has the better relative matchup." : "Matchup focus: your running game has the better relative matchup.", TextColor = DynastyTheme.Palette("#8CDBC0") });
             }
             scouting.Children.Add(new Label { Text = report.Games == 0 ? "No games played this season. Tendencies appear after results are recorded."
                 : $"{report.PointsFor:F1} points/game · {report.PointsAgainst:F1} allowed · {report.Turnovers} giveaways" +
@@ -162,7 +162,7 @@ public sealed partial class FoundationPage
             new Label { Text = "Offensive tempo — controls time used before the snap; trailing teams hurry and leading teams protect the clock late.", TextColor = DynastyTheme.Muted }, tempo, new Label { Text = "Offensive playbook — available calls and CPU run/pass tendencies", FontAttributes = FontAttributes.Bold }, offense, description,
             new Label { Text = "Preferred offensive formation — CPU starting point", TextColor = DynastyTheme.Muted }, offensiveFormation, new Label { Text = "Defensive playbook — available fronts and coverages", FontAttributes = FontAttributes.Bold }, defense, new Label { Text = "Defensive tendency — how aggressively the CPU calls defense", TextColor = DynastyTheme.Muted }, approach, new Label { Text = "Preferred defensive formation", TextColor = DynastyTheme.Muted }, defensiveFormation,
             new Label { Text = "4-3 strengthens the run front; Nickel helps coverage. Run/pass focus gives up strength elsewhere. Pressure creates takeaways but risks bigger gains.", TextColor = DynastyTheme.Muted }));
-        var editor = new Button { Text = "Open Playbook Editor", BackgroundColor = Color.FromArgb("#315D59") };
+        var editor = new Button { Text = "Open Playbook Editor", BackgroundColor = DynastyTheme.Palette("#315D59") };
         editor.Clicked += async (_, _) => await OpenPlaybookEditorAsync(plan, dynastyId);
         settingsHost.Children.Add(CoachingCard("CUSTOM PLAYBOOK",
             new Label { Text = "Build a Custom offense and defense from the full play catalog. Custom books replace the standard book and use the same 17-offense / 14-defense call limits.", TextColor = DynastyTheme.Muted }, editor));
@@ -215,7 +215,7 @@ public sealed partial class FoundationPage
     {
         var favorite = favorites.Contains(id);
         var toggle = new Button { Text = favorite ? "★" : "☆", FontSize = 20, Padding = new Thickness(8, 2),
-            BackgroundColor = Colors.Transparent, TextColor = favorite ? Color.FromArgb("#E8C979") : DynastyTheme.Muted };
+            BackgroundColor = Colors.Transparent, TextColor = favorite ? DynastyTheme.Palette("#E8C979") : DynastyTheme.Muted };
         toggle.Clicked += (_, _) =>
         {
             if (favorites.Contains(id)) favorites.Remove(id);
@@ -227,7 +227,7 @@ public sealed partial class FoundationPage
             Drawable = new PlayArtDrawable(id, name, offense, styleKey, definition, defensiveDefinition),
             HeightRequest = 92,
             WidthRequest = 150,
-            BackgroundColor = Color.FromArgb("#102A24")
+            BackgroundColor = DynastyTheme.Palette("#102A24")
         };
         SemanticProperties.SetDescription(art, $"{name} play diagram");
         var grid = new Grid { ColumnSpacing = 10, RowSpacing = 6,
@@ -236,11 +236,11 @@ public sealed partial class FoundationPage
         grid.Add(new VerticalStackLayout { Spacing = 3, Children =
         {
             new Label { Text = name, FontAttributes = FontAttributes.Bold, FontSize = 13 },
-            new Label { Text = details, FontSize = 10, TextColor = Color.FromArgb("#B8D8FA") },
+            new Label { Text = details, FontSize = 10, TextColor = DynastyTheme.Palette("#B8D8FA") },
             new Label { Text = description, FontSize = 11, TextColor = DynastyTheme.Muted, LineBreakMode = LineBreakMode.WordWrap }
         } }, 1, 0);
         grid.Add(toggle, 2, 0);
-        return new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = new Thickness(10, 10), Content = grid };
+        return new Border { StrokeThickness = 0, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Padding = new Thickness(10, 10), Content = grid };
     }
 
     private sealed class PlayArtDrawable(string id, string playName, bool offense, string styleKey, OffensivePlayDefinition? definition = null, DefensivePlayDefinition? defensiveDefinition = null) : IDrawable
@@ -261,14 +261,14 @@ public sealed partial class FoundationPage
         {
             var width = dirtyRect.Width;
             var height = dirtyRect.Height;
-            canvas.StrokeColor = Color.FromArgb("#3E675B");
+            canvas.StrokeColor = DynastyTheme.Palette("#3E675B");
             canvas.StrokeSize = 1;
             for (var yard = 1; yard < 5; yard++)
             {
                 var y = height * yard / 5f;
                 canvas.DrawLine(0, y, width, y);
             }
-            canvas.StrokeColor = Color.FromArgb("#D8E5E2");
+            canvas.StrokeColor = DynastyTheme.Palette("#D8E5E2");
             canvas.StrokeSize = 1.5f;
             canvas.DrawLine(8, height * .58f, width - 8, height * .58f);
 
@@ -276,7 +276,7 @@ public sealed partial class FoundationPage
             if (offense) DrawOffense(canvas, width, height, id, definition);
             else if (defensiveDefinition?.Assignments.Count > 0)
             {
-                canvas.StrokeColor = Color.FromArgb("#7CC6FF"); canvas.StrokeSize = 2;
+                canvas.StrokeColor = DynastyTheme.Palette("#7CC6FF"); canvas.StrokeSize = 2;
                 foreach (var a in defensiveDefinition.Assignments)
                 {
                     var x = width * (float)a.Lane; var y = height * (.55f - (float)a.Depth * .014f);
@@ -294,7 +294,7 @@ public sealed partial class FoundationPage
             var play = definition ?? PlaybookCatalog.OffensivePlays.FirstOrDefault(item => item.Id == playId);
             if (play is null) return;
             var family = GameDayAnimationPlanner.RouteFamily(play);
-            canvas.FillColor = Color.FromArgb("#F2F5F4");
+            canvas.FillColor = DynastyTheme.Palette("#F2F5F4");
             for (var player = 0; player < 5; player++)
             {
                 var lineman = GameDayAnimationPlanner.OffensiveAlignment(play, Position.OL, player);
@@ -317,20 +317,20 @@ public sealed partial class FoundationPage
                 var depth = GameDayAnimationPlanner.RouteDepthShare(assigned, position, false);
                 var end = new GameFieldPoint(depth, GameDayAnimationPlanner.RouteEndLane(assigned, position, i, start.Y, false));
                 var startY = .61f - (float)alignment.X * .03f;
-                canvas.FillColor = Color.FromArgb("#F2F5F4");
+                canvas.FillColor = DynastyTheme.Palette("#F2F5F4");
                 canvas.FillCircle(width * (float)start.Y, height * startY, 3.5f);
                 if (custom?.Task == AssignmentTask.Block) continue;
                 if (family == GameDayRouteFamily.Run)
                 {
                     if (i == 0 && position == Position.RB)
                     {
-                        canvas.StrokeColor = Color.FromArgb("#F4CC66"); canvas.StrokeSize = 2;
+                        canvas.StrokeColor = DynastyTheme.Palette("#F4CC66"); canvas.StrokeSize = 2;
                         DrawRoute(canvas, width * (float)start.Y, height * startY,
                             width * (play.Concept == OffensiveConcept.OutsideRun ? .80f : .50f), height * .38f);
                     }
                     continue;
                 }
-                canvas.StrokeColor = Color.FromArgb("#F4CC66");
+                canvas.StrokeColor = DynastyTheme.Palette("#F4CC66");
                 canvas.StrokeSize = 1.8f;
                 var previousX = width * (float)start.Y;
                 var previousY = height * startY;
@@ -355,7 +355,7 @@ public sealed partial class FoundationPage
 
         private static void DrawDefense(ICanvas canvas, float width, float height, int seed, string approach, string name)
         {
-            canvas.StrokeColor = Color.FromArgb("#7CC6FF");
+            canvas.StrokeColor = DynastyTheme.Palette("#7CC6FF");
             canvas.StrokeSize = 2;
             var pressure = approach.Contains("Pressure", StringComparison.OrdinalIgnoreCase);
             var protect = approach.Contains("Protect", StringComparison.OrdinalIgnoreCase);
@@ -371,19 +371,19 @@ public sealed partial class FoundationPage
             canvas.DrawCircle(width * .82f, height * .2f, 4);
             if (name.Contains("Cover 3", StringComparison.OrdinalIgnoreCase))
             {
-                canvas.StrokeColor = Color.FromArgb("#99E0D0");
+                canvas.StrokeColor = DynastyTheme.Palette("#99E0D0");
                 for (var zone = 0; zone < 3; zone++)
                     canvas.DrawArc(width * (.06f + zone * .30f), height * .06f, width * .28f, height * .30f, 190, 160, false, false);
             }
             else if (name.Contains("Quarters", StringComparison.OrdinalIgnoreCase))
             {
-                canvas.StrokeColor = Color.FromArgb("#99E0D0");
+                canvas.StrokeColor = DynastyTheme.Palette("#99E0D0");
                 for (var zone = 0; zone < 4; zone++)
                     canvas.DrawArc(width * (.03f + zone * .24f), height * .07f, width * .22f, height * .27f, 190, 160, false, false);
             }
             else if (protect)
             {
-                canvas.StrokeColor = Color.FromArgb("#99E0D0");
+                canvas.StrokeColor = DynastyTheme.Palette("#99E0D0");
                 canvas.DrawArc(width * .1f, height * .08f, width * .8f, height * .32f, 190, 160, false, false);
             }
             else if (seed % 2 == 0)

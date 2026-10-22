@@ -88,9 +88,15 @@ public static class StaffManagementService
             return state.UserHeadCoach;
         }
 
-        return state.Staff.FirstOrDefault(item =>
-            item.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
-            item.Role == role);
+        var member = state.Staff.FirstOrDefault(item =>
+            item.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) && item.Role == role);
+        if (member?.IsHeadCoachRoleAssignment == true && role != StaffRole.HeadCoach)
+        {
+            var head = GetStaff(state, teamName, StaffRole.HeadCoach);
+            if (head is not null) return head with { Role = role, IsHeadCoachRoleAssignment = true,
+                PublishedTitle = member.PublishedTitle };
+        }
+        return member;
     }
 
     public static int GetRoleRating(
@@ -106,7 +112,7 @@ public static class StaffManagementService
         state.Staff
             .Where(item => item.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase))
             .OrderBy(item => item.Role)
-            .ToArray();
+            .Select(item => GetStaff(state, teamName, item.Role) ?? item).ToArray();
 
     public static StaffMember GenerateCandidate(
         DynastyState state,
@@ -190,11 +196,11 @@ public static class StaffManagementService
             };
         }).ToArray();
 
-        return state with
+        return CoachSuccessionService.ResolveRetirements(state with
         {
             Staff = staff,
             StaffLastAdvancedSeasonYear = state.SeasonYear
-        };
+        });
     }
 
     public static DynastyState EnsureUserHeadCoach(

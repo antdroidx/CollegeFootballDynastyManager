@@ -62,6 +62,7 @@ public sealed record DynastyState
         Array.Empty<RecruitingCommitmentRecord>();
     public IReadOnlyList<StaffMember> Staff { get; init; } =
         Array.Empty<StaffMember>();
+    public IReadOnlyList<StaffRetirementRecord> StaffRetirements { get; init; } = [];
     public StaffMember? UserHeadCoach { get; init; }
     public int UserCoachJobSecurity { get; init; } = 70;
     public bool UserCoachIsFired { get; init; }

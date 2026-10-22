@@ -16,8 +16,11 @@ public static class RosterManagementService
                 player.Position
             })
             .SelectMany(group =>
-                group
+            {
+                var starters = group.Key.Position == Position.OL ? LineStarters(group) : [];
+                return group
                     .OrderBy(player => player.IsRedshirted ? 1 : 0)
+                    .ThenBy(player => group.Key.Position == Position.OL && !starters.Contains(player.PlayerId) ? 1 : 0)
                     .ThenBy(player =>
                         player.DepthChartOrder > 0
                             ? player.DepthChartOrder
@@ -31,13 +34,18 @@ public static class RosterManagementService
                         player with
                         {
                             DepthChartOrder = index + 1
-                        }))
+                        });
+            })
             .ToArray();
 
         return state with
         {
             ActiveRoster = normalized
         };
+
+        static HashSet<Guid> LineStarters(IEnumerable<DynastyPlayer> players) => OffensiveLineService.Lineup(players
+            .Where(p => !p.IsRedshirted && p.CurrentInjury is null).OrderBy(p => p.DepthChartOrder <= 0 ? int.MaxValue : p.DepthChartOrder)
+            .ThenByDescending(p => p.OverallRating).ToArray()).Select(p => p.PlayerId).ToHashSet();
     }
 
     public static DynastyState MovePlayer(
@@ -68,6 +76,7 @@ public static class RosterManagementService
                     teamName,
                     StringComparison.OrdinalIgnoreCase) &&
                 candidate.Position == player.Position &&
+                OffensiveLineService.Label(candidate) == OffensiveLineService.Label(player) &&
                 !candidate.IsRedshirted)
             .OrderBy(candidate => candidate.DepthChartOrder)
             .ToArray();

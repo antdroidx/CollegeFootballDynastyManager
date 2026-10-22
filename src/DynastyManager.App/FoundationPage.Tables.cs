@@ -36,7 +36,7 @@ public sealed partial class FoundationPage
     private static Label TableText(string text, bool bold = false, Color? color = null) => new()
     {
         Text = text, FontSize = 12, FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None,
-        TextColor = color ?? Color.FromArgb("#E6EBF1"), VerticalOptions = LayoutOptions.Center,
+        TextColor = color ?? DynastyTheme.Palette("#E6EBF1"), VerticalOptions = LayoutOptions.Center,
         LineBreakMode = LineBreakMode.TailTruncation, Margin = new Thickness(8, 6)
     };
 
@@ -99,7 +99,7 @@ public sealed partial class FoundationPage
         headers = columns.Select((column, index) =>
         {
             var button = new Button { Text = column.Title, FontSize = 10, FontAttributes = FontAttributes.Bold,
-                BackgroundColor = Colors.Transparent, TextColor = Color.FromArgb("#B8D8FA"),
+                BackgroundColor = Colors.Transparent, TextColor = DynastyTheme.Palette("#B8D8FA"),
                 HorizontalOptions = LayoutOptions.Fill, VerticalOptions = LayoutOptions.Fill,
                 Padding = new Thickness(5, 6), CornerRadius = 0, MinimumHeightRequest = 34,
                 IsEnabled = column.Title is not ("Details" or "Stats" or "Profile") };
@@ -117,12 +117,12 @@ public sealed partial class FoundationPage
         {
             grid.Children.Clear(); grid.RowDefinitions.Clear();
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            var heading = new BoxView { Color = Color.FromArgb("#253E59") };
+            var heading = new BoxView { Color = DynastyTheme.Palette("#253E59") };
             grid.Add(heading, 0, 0); Grid.SetColumnSpan(heading, columns.Length);
             for (var column = 0; column < headers.Length; column++)
             {
                 headers[column].Text = columns[column].Title + (order.Column == column ? order.Descending ? " ↓" : " ↑" : "");
-                headers[column].BackgroundColor = order.Column == column ? Color.FromArgb("#31597D") : Colors.Transparent;
+                headers[column].BackgroundColor = order.Column == column ? DynastyTheme.Palette("#31597D") : Colors.Transparent;
                 grid.Add(headers[column], column, 0);
             }
             var ordered = order.Column >= 0 && sortRequested is null
@@ -160,7 +160,7 @@ public sealed partial class FoundationPage
 
     private static View SectionTitle(string title, string description) => new VerticalStackLayout { Spacing = 3, Children =
     {
-        new Label { Text = title, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#A9CEF3") },
+        new Label { Text = title, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#A9CEF3") },
         new Label { Text = description, FontSize = 11, TextColor = DynastyTheme.Muted }
     } };
 

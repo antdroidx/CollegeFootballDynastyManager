@@ -23,7 +23,7 @@ public sealed partial class FoundationPage
             new Label { Text = subtitle, FontSize = 12, TextColor = Colors.White },
             new Label { Text = school, FontSize = 12, TextColor = DynastyTheme.Muted }
         } }, 1, 0);
-        return new Border { Content = row, Padding = 14, BackgroundColor = Color.FromArgb("#203342") };
+        return new Border { Content = row, Padding = 14, BackgroundColor = DynastyTheme.Palette("#203342") };
     }
 
     private View PlayerLink(DynastyPlayer player) => PersonLink(player.PlayerId, player.FullName, player.TeamName,
@@ -75,7 +75,7 @@ public sealed partial class FoundationPage
         if (active is not null) player = PlayerRatingService.EnsureInitialized(state, player);
         var close = new Button { Text = "‹ Back" };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
-        View PlayerHeader() => IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{(player.JerseyNumber is int number ? $"#{number} · " : "")}{player.Position} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance);
+        View PlayerHeader() => IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{(player.JerseyNumber is int number ? $"#{number} · " : "")}{OffensiveLineService.Label(player)} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance);
         var portraitHeader = new ContentView { Content = PlayerHeader() };
         var editPortrait = new Button { Text = "Edit portrait", FontSize = 11 };
         editPortrait.Clicked += async (_, _) =>
@@ -88,12 +88,13 @@ public sealed partial class FoundationPage
         {
             close, portraitHeader, editPortrait,
             new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), FontSize = 13, TextColor = DynastyTheme.Accent },
-            new Label { Text = FormatOriginalRecruitingStars(player), TextColor = Color.FromArgb("#E8C979") }
+            new Label { Text = FormatOriginalRecruitingStars(player), TextColor = DynastyTheme.Palette("#E8C979") }
         } };
         var hallEntry = state.HallOfFame.FirstOrDefault(e => e.PlayerId == id);
         if (hallEntry is not null) content.Children.Add(SectionTitle($"Hall of Fame · {hallEntry.InductionYear}", hallEntry.Citation));
         if (active is not null)
         {
+            content.Children.Add(PlayerMoraleSummary(player));
             player = PlayerRatingService.EnsureInitialized(state, player);
             content.Children.Add(SectionTitle("Player attributes", $"OVR {player.OverallRating} · Potential {FormatPotentialStars(player.PotentialRating)} · Depth {player.DepthChartOrder}"));
             content.Children.Add(AttributeGroup("Character traits", "Decision-making and team influence",
@@ -115,26 +116,24 @@ public sealed partial class FoundationPage
             content.Children.Add(new Label { Text = "Higher ratings are better. Injury represents resistance to injury and wear.", FontSize = 11, TextColor = DynastyTheme.Muted });
             content.Children.Add(new Label { Text = player.CurrentInjury is null ? "Status: healthy" :
                 $"Status: {player.CurrentInjury.Severity} {player.CurrentInjury.BodyArea} injury · {player.CurrentInjury.WeeksRemaining} weeks remaining",
-                TextColor = player.CurrentInjury is null ? Color.FromArgb("#83D6B6") : Color.FromArgb("#E5A1B7"), FontSize = 12 });
+                TextColor = player.CurrentInjury is null ? DynastyTheme.Palette("#83D6B6") : DynastyTheme.Palette("#E5A1B7"), FontSize = 12 });
         }
         else content.Children.Add(new Label { Text = "This is a recorded career. Current attributes are unavailable after departure.", FontSize = 12, TextColor = DynastyTheme.Muted });
         var honors = state.PlayerAwardHistory.Where(a => a.PlayerId == id).OrderByDescending(a => a.SeasonYear).ThenBy(a => a.IsPreseason).ToArray();
         if (honors.Length > 0)
         {
             content.Children.Add(SectionTitle("Honors & awards", "Permanent season selections"));
-            foreach (var honor in honors) content.Children.Add(new Label { Text = $"{honor.SeasonYear} · {honor.AwardName}{(honor.ConferenceName is null ? "" : " · " + honor.ConferenceName)}", FontSize = 12, TextColor = Color.FromArgb("#E8C979") });
+            foreach (var honor in honors) content.Children.Add(new Label { Text = $"{honor.SeasonYear} · {honor.AwardName}{(honor.ConferenceName is null ? "" : " · " + honor.ConferenceName)}", FontSize = 12, TextColor = DynastyTheme.Palette("#E8C979") });
         }
         var gameAwards = PlayerOfGameService.All(state).Where(a => a.PlayerId == id).OrderByDescending(a => a.SeasonYear).ThenByDescending(a => a.Week).ToArray();
         if (gameAwards.Length > 0)
         {
             content.Children.Add(SectionTitle("Player of the Game", $"{gameAwards.Length} game award{(gameAwards.Length == 1 ? "" : "s")}"));
-            foreach (var a in gameAwards) content.Children.Add(new Label { Text = $"{a.SeasonYear} · Week {a.Week} · {a.TeamName}\n{a.Summary}", FontSize = 12, TextColor = Color.FromArgb("#E8C979") });
+            foreach (var a in gameAwards) content.Children.Add(new Label { Text = $"{a.SeasonYear} · Week {a.Week} · {a.TeamName}\n{a.Summary}", FontSize = 12, TextColor = DynastyTheme.Palette("#E8C979") });
         }
-        var morale = GameMoraleService.PlayerMorale(state, player);
-        content.Children.Add(new Label { Text = $"Morale: {GameMoraleService.Label(morale)} ({morale}/100) · Season OVR Δ {FormatSigned(GameMoraleService.SeasonDelta(state, player))} · automatic staff-led training", FontSize = 11, TextColor = DynastyTheme.Muted });
         var totals = visibleStats.Where(line => line.PlayerId == id).ToArray();
         content.Children.Add(SectionTitle("Career snapshot", $"{totals.Sum(line => line.Games)} recorded games · {totals.Sum(line => line.ScrimmageYards):N0} yards · {totals.Sum(line => line.Touchdowns)} TD"));
-        var stats = new Button { Text = "Season & career statistics", BackgroundColor = Color.FromArgb("#315D59") };
+        var stats = new Button { Text = "Season & career statistics", BackgroundColor = DynastyTheme.Palette("#315D59") };
         stats.Clicked += async (_, _) => await ShowPlayerStatisticsAsync(player);
         content.Children.Add(stats);
         var school = new Button { Text = "View team roster & staff", IsEnabled = _teamsByName.ContainsKey(player.TeamName) };
@@ -161,7 +160,7 @@ public sealed partial class FoundationPage
                     ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
                 row.Add(new Label { Text = attribute.Name, FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
                 row.Add(RatingCell(attribute.Rating), 1, 0);
-                tiles.Add(new Border { Padding = new Thickness(10, 7), BackgroundColor = Color.FromArgb("#1D2C38"), Content = row }, i % columns, i / columns);
+                tiles.Add(new Border { Padding = new Thickness(10, 7), BackgroundColor = DynastyTheme.Palette("#1D2C38"), Content = row }, i % columns, i / columns);
             }
         }
         Arrange(2);
@@ -195,6 +194,12 @@ public sealed partial class FoundationPage
                 ("Potential evaluation", coach.PotentialEvaluation), ("Regional knowledge", coach.RegionalKnowledge), ("Staff management", coach.StaffManagement)),
             SectionTitle("Head-coaching career", $"{summary.HeadCoachWins}–{summary.HeadCoachLosses} · {summary.HeadCoachSeasons} seasons · {summary.ConferenceTitles} conference titles · {summary.NationalTitles} national titles")
         } };
+        if (coach.FormerPlayerId is not null)
+            content.Children.Insert(4, new Label { Text = $"Former {coach.AlmaMater} player · Class of {coach.GraduationYear} · entered coaching after apprenticeship", TextColor = DynastyTheme.Accent });
+        if (coach.SharedRoleCoaches.Count > 0)
+            content.Children.Insert(4, new Label { Text = "Shared coordinator role: " + string.Join(" · ", coach.SharedRoleCoaches.Select(c => $"{c.FullName} ({c.PublishedTitle})")), TextColor = DynastyTheme.Muted });
+        if (coach.DataSeason is int dataSeason)
+            content.Children.Insert(4, new Label { Text = $"{dataSeason} staff · {coach.PublishedTitle} · age and coaching ratings are game estimates", TextColor = DynastyTheme.Muted });
         if (summary.Seasons.Count == 0) content.Children.Add(new Label { Text = "No completed seasons recorded yet." });
         else content.Children.Add(DataTable([("Year", 60), ("School", 195), ("Role", 160), ("W", 40), ("L", 40), ("Rank", 50)],
             summary.Seasons.OrderByDescending(season => season.SeasonYear).Select(season => new View[]

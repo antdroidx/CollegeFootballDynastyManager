@@ -26,7 +26,7 @@ public sealed partial class FoundationPage
         };
         void Refresh() => preview.Content = PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 136, staff, age, Selection());
         facial.SelectedIndexChanged += (_, _) => Refresh(); hairColor.SelectedIndexChanged += (_, _) => Refresh(); hairStyle.SelectedIndexChanged += (_, _) => Refresh();
-        var save = new Button { Text = "Save appearance", BackgroundColor = Color.FromArgb("#315D59") };
+        var save = new Button { Text = "Save appearance", BackgroundColor = DynastyTheme.Palette("#315D59") };
         var cancel = new Button { Text = "Cancel" };
         var page = new PortraitEditorPage { Content = new ScrollView { Content = new VerticalStackLayout { Padding = 18, Spacing = 12, MaximumWidthRequest = 540, Children =
         {

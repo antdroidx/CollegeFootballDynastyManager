@@ -57,7 +57,7 @@ public sealed partial class FoundationPage
         var toGoValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
         var ballValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
         Border SituationCell(string heading, Label value) => new() { StrokeThickness = 0, Padding = 7,
-            BackgroundColor = Color.FromArgb("#172733"), Content = new VerticalStackLayout { Spacing = 1, Children =
+            BackgroundColor = DynastyTheme.Palette("#172733"), Content = new VerticalStackLayout { Spacing = 1, Children =
             { new Label { Text = heading, FontSize = 9, TextColor = DynastyTheme.Muted, HorizontalTextAlignment = TextAlignment.Center }, value } } };
         var situation = new Grid { ColumnSpacing = 7,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
@@ -65,14 +65,14 @@ public sealed partial class FoundationPage
         situation.Add(SituationCell("DOWN", downValue), 1, 0);
         situation.Add(SituationCell("YARDS TO GO", toGoValue), 2, 0);
         situation.Add(SituationCell("BALL ON", ballValue), 3, 0);
-        var possession = new Label { FontSize = 11, HorizontalTextAlignment = TextAlignment.Center, TextColor = Color.FromArgb("#E8C979") };
+        var possession = new Label { FontSize = 11, HorizontalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Palette("#E8C979") };
         var result = new Label { HorizontalTextAlignment = TextAlignment.Center, FontSize = 14,
             FontAttributes = FontAttributes.Bold, TextColor = Colors.White, MaxLines = 3 };
         var commentaryPanel = new Border { StrokeThickness = 0, Padding = new Thickness(10, 6),
-            BackgroundColor = Color.FromArgb("#203645"), Content = result };
-        var conditionsHud = new Label { FontSize = 9, MaxLines = 2, TextColor = Color.FromArgb("#B8D8FA"),
+            BackgroundColor = DynastyTheme.Palette("#203645"), Content = result };
+        var conditionsHud = new Label { FontSize = 9, MaxLines = 2, TextColor = DynastyTheme.Palette("#B8D8FA"),
             HorizontalTextAlignment = TextAlignment.Center };
-        var timeoutsHud = new Label { FontSize = 10, TextColor = Color.FromArgb("#E8C979"),
+        var timeoutsHud = new Label { FontSize = 10, TextColor = DynastyTheme.Palette("#E8C979"),
             HorizontalTextAlignment = TextAlignment.Center, AutomationId = "game-day-timeouts" };
         var homeBrand = TeamBrandCatalog.Get(game.HomeTeamName);
         var fieldArt = new GameFieldDrawable
@@ -82,7 +82,7 @@ public sealed partial class FoundationPage
             HomeName = game.HomeTeamName.ToUpperInvariant(),
             HomeInitial = TeamBrandCatalog.Initial(game.HomeTeamName)
         };
-        var field = new Grid { HeightRequest = 330, BackgroundColor = Color.FromArgb("#245B38") };
+        var field = new Grid { HeightRequest = 330, BackgroundColor = DynastyTheme.Palette("#245B38") };
         var fieldLines = new GraphicsView { Drawable = fieldArt };
         var fieldPlayers = new AbsoluteLayout();
         var highlightText = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold,
@@ -91,7 +91,7 @@ public sealed partial class FoundationPage
             Padding = new Thickness(22, 12), HorizontalOptions = LayoutOptions.Center,
             VerticalOptions = LayoutOptions.Center, Content = highlightText };
         var replayChip = new Label { Text = "INSTANT REPLAY", IsVisible = false, FontSize = 12,
-            FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#FFE194"), BackgroundColor = Color.FromArgb("#E0101F2C"),
+            FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#FFE194"), BackgroundColor = DynastyTheme.Palette("#E0101F2C"),
             Padding = new Thickness(12, 4), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Start, Margin = 6 };
         field.Add(fieldLines); field.Add(fieldPlayers); field.Add(highlight); field.Add(replayChip);
 
@@ -103,18 +103,18 @@ public sealed partial class FoundationPage
         var selectedCallId = selectedPlay.Id;
         var call = new Button { Text = "Call play", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
         var selectedDefense = GamePlanService.RecommendDefensivePlay(controlledPlan, session.Down, session.Distance);
-        var selectedArt = new GraphicsView { HeightRequest = 112, WidthRequest = 185, BackgroundColor = Color.FromArgb("#102A24") };
-        var selectedHeading = new Label { Text = "RECOMMENDED OFFENSIVE CALL", FontSize = 9, TextColor = Color.FromArgb("#E8C979") };
+        var selectedArt = new GraphicsView { HeightRequest = 112, WidthRequest = 185, BackgroundColor = DynastyTheme.Palette("#102A24") };
+        var selectedHeading = new Label { Text = "RECOMMENDED OFFENSIVE CALL", FontSize = 9, TextColor = DynastyTheme.Palette("#E8C979") };
         var selectedName = new Label { FontAttributes = FontAttributes.Bold, FontSize = 15 };
-        var selectedDetails = new Label { FontSize = 11, TextColor = Color.FromArgb("#B8D8FA") };
+        var selectedDetails = new Label { FontSize = 11, TextColor = DynastyTheme.Palette("#B8D8FA") };
         var selectedDescription = new Label { FontSize = 11, TextColor = DynastyTheme.Muted };
-        var choose = new Button { Text = "Choose play", BackgroundColor = Color.FromArgb("#315D59") };
+        var choose = new Button { Text = "Choose play", BackgroundColor = DynastyTheme.Palette("#315D59") };
         var playInfo = new VerticalStackLayout { Spacing = 4, Children = { selectedHeading, selectedName, selectedDetails, selectedDescription, choose } };
         var playGrid = new Grid { ColumnSpacing = 12,
             ColumnDefinitions = new ColumnDefinitionCollection { new(new GridLength(185)), new(GridLength.Star) } };
         playGrid.Add(selectedArt, 0, 0); playGrid.Add(playInfo, 1, 0);
         var playCard = new Border { StrokeThickness = 0, Padding = 10,
-            BackgroundColor = Color.FromArgb("#1B2B37"), Content = playGrid };
+            BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = playGrid };
         void SelectPlay(OffensivePlayDefinition play, bool recommended = false)
         {
             selectedPlay = play;
@@ -150,19 +150,19 @@ public sealed partial class FoundationPage
             call.Text = fieldGoal ? "Kick field goal" : "Call punt";
         }
 
-        var defenseArt = new GraphicsView { HeightRequest = 112, WidthRequest = 185, BackgroundColor = Color.FromArgb("#102A24") };
-        var defenseHeading = new Label { Text = "RECOMMENDED DEFENSIVE CALL", FontSize = 9, TextColor = Color.FromArgb("#E8C979") };
+        var defenseArt = new GraphicsView { HeightRequest = 112, WidthRequest = 185, BackgroundColor = DynastyTheme.Palette("#102A24") };
+        var defenseHeading = new Label { Text = "RECOMMENDED DEFENSIVE CALL", FontSize = 9, TextColor = DynastyTheme.Palette("#E8C979") };
         var defenseName = new Label { FontAttributes = FontAttributes.Bold, FontSize = 15 };
-        var defenseDetails = new Label { FontSize = 11, TextColor = Color.FromArgb("#B8D8FA") };
+        var defenseDetails = new Label { FontSize = 11, TextColor = DynastyTheme.Palette("#B8D8FA") };
         var defenseDescription = new Label { FontSize = 11, TextColor = DynastyTheme.Muted };
-        var chooseDefense = new Button { Text = "Choose defense", BackgroundColor = Color.FromArgb("#315D59") };
+        var chooseDefense = new Button { Text = "Choose defense", BackgroundColor = DynastyTheme.Palette("#315D59") };
         var defenseInfo = new VerticalStackLayout { Spacing = 4, Children =
             { defenseHeading, defenseName, defenseDetails, defenseDescription, chooseDefense } };
         var defenseGrid = new Grid { ColumnSpacing = 12,
             ColumnDefinitions = new ColumnDefinitionCollection { new(new GridLength(185)), new(GridLength.Star) } };
         defenseGrid.Add(defenseArt, 0, 0); defenseGrid.Add(defenseInfo, 1, 0);
         var defenseCard = new Border { StrokeThickness = 0, Padding = 10,
-            BackgroundColor = Color.FromArgb("#1B2B37"), Content = defenseGrid, IsVisible = false };
+            BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = defenseGrid, IsVisible = false };
         void SelectDefense(DefensivePlayDefinition play, bool recommended = false)
         {
             selectedDefense = play;
@@ -175,8 +175,8 @@ public sealed partial class FoundationPage
         SelectDefense(selectedDefense, true);
 
         var callDefense = new Button { Text = "Call defense", BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background };
-        var delegateOffense = new Button { Text = "Offense: You", BackgroundColor = Color.FromArgb("#315D59") };
-        var delegateDefense = new Button { Text = "Defense: You", BackgroundColor = Color.FromArgb("#315D59") };
+        var delegateOffense = new Button { Text = "Offense: You", BackgroundColor = DynastyTheme.Palette("#315D59") };
+        var delegateDefense = new Button { Text = "Defense: You", BackgroundColor = DynastyTheme.Palette("#315D59") };
         var watch = new Button { Text = "Watch / Pause" };
         var takeover = new Button { Text = "Take over", IsVisible = false };
         var punt = new Button { Text = "Punt", IsVisible = false };
@@ -235,9 +235,9 @@ public sealed partial class FoundationPage
         controls.Children.Add(more);
         var tray = new VerticalStackLayout { Spacing = 4, Children = { quickCalls, controls } };
         var traySurface = new Border { StrokeThickness = 0, Padding = 7,
-            BackgroundColor = Color.FromArgb("#F0101F2C"), Content = tray,
+            BackgroundColor = DynastyTheme.Palette("#F0101F2C"), Content = tray,
             VerticalOptions = LayoutOptions.End, Margin = new Thickness(8) };
-        var pickerLayer = new Grid { IsVisible = false, BackgroundColor = Color.FromArgb("#88000000"), Padding = 10 };
+        var pickerLayer = new Grid { IsVisible = false, BackgroundColor = DynastyTheme.Palette("#88000000"), Padding = 10 };
         expand.Clicked += (_, _) => ExpandCalls(!ControlledOnOffense());
         var moreOpen = false;
         void ClosePicker() { pickerLayer.IsVisible = false; pickerLayer.Children.Clear(); }
@@ -290,7 +290,7 @@ public sealed partial class FoundationPage
                 offense ? selectedDetails.Text : defenseDetails.Text, $"{badge} · {type}",
                 offense ? selectedArt.IsVisible ? selectedArt.Drawable : null : defenseArt.Drawable,
                 () => { if (!session.TryPending) ExpandCalls(!offense); }, compact: true, portrait: compactLayout != true);
-            current.Stroke = Color.FromArgb("#E8C979"); current.StrokeThickness = 1;
+            current.Stroke = DynastyTheme.Palette("#E8C979"); current.StrokeThickness = 1;
             quickCalls.Add(current, 0, 0);
             if (session.TryPending) { Grid.SetColumnSpan(current, 3); return; }
             if (offense)
@@ -847,8 +847,8 @@ public sealed partial class FoundationPage
                 }
                 AddMovement(view, from, to, movements, fieldPlayers);
             }
-            var ball = new Border { WidthRequest = 14, HeightRequest = 9, BackgroundColor = Color.FromArgb("#8B4D24"),
-                Stroke = Color.FromArgb("#F5D8B5"), StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 5 } };
+            var ball = new Border { WidthRequest = 14, HeightRequest = 9, BackgroundColor = DynastyTheme.Palette("#8B4D24"),
+                Stroke = DynastyTheme.Palette("#F5D8B5"), StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 5 } };
             // Ball starts on the center, goes to the QB, then follows the handoff
             // or pass target. Its position is computed from the same player movement.
             var center = movements.Where(m => m.From.Y >= .35 && m.From.Y <= .65 &&
@@ -1193,7 +1193,7 @@ public sealed partial class FoundationPage
             replayChip.IsVisible = true;
             highlightText.Text = "INSTANT REPLAY";
             highlightText.FontSize = 30;
-            highlight.BackgroundColor = Color.FromArgb("#ED102B40"); highlight.Opacity = 1; highlight.Scale = 1;
+            highlight.BackgroundColor = DynastyTheme.Palette("#ED102B40"); highlight.Opacity = 1; highlight.Scale = 1;
             highlight.IsVisible = true;
             await Task.Delay(850);
             highlight.IsVisible = false; highlightText.FontSize = 22;
@@ -1392,7 +1392,7 @@ public sealed partial class FoundationPage
         foreach (var formation in plays.GroupBy(play => play.Formation))
         {
             sections.Children.Add(new Label { Text = GamePlanService.Label(formation.Key).ToUpperInvariant(),
-                FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#E8C979") });
+                FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#E8C979") });
             var grid = new Grid { ColumnSpacing = 10, RowSpacing = 10,
                 ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) } };
             var formationPlays = formation.ToArray();
@@ -1402,15 +1402,15 @@ public sealed partial class FoundationPage
                 var play = formationPlays[index];
                 var type = play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun ? "RUN" : "PASS";
                 var badge = new Label { Text = type, FontSize = 9, FontAttributes = FontAttributes.Bold,
-                    TextColor = type == "RUN" ? Color.FromArgb("#B9F6CA") : Color.FromArgb("#B8D8FA") };
+                    TextColor = type == "RUN" ? DynastyTheme.Palette("#B9F6CA") : DynastyTheme.Palette("#B8D8FA") };
                 var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString(), play),
-                    HeightRequest = 105, BackgroundColor = Color.FromArgb("#102A24") };
+                    HeightRequest = 105, BackgroundColor = DynastyTheme.Palette("#102A24") };
                 var card = new Border { StrokeThickness = play.Id == selected.Id ? 2 : 0,
-                    Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = Color.FromArgb("#1B2B37"), Content =
+                    Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content =
                     new VerticalStackLayout { Spacing = 4, Children =
                     {
                         art, badge, new Label { Text = play.Name, FontAttributes = FontAttributes.Bold, FontSize = 13 },
-                        new Label { Text = GamePlanService.Label(play.Concept), FontSize = 10, TextColor = Color.FromArgb("#B8D8FA") },
+                        new Label { Text = GamePlanService.Label(play.Concept), FontSize = 10, TextColor = DynastyTheme.Palette("#B8D8FA") },
                         new Label { Text = play.Description, FontSize = 10, TextColor = DynastyTheme.Muted, MaxLines = 2 }
                     } } };
                 var tap = new TapGestureRecognizer();
@@ -1444,7 +1444,7 @@ public sealed partial class FoundationPage
         foreach (var formation in plays.GroupBy(play => play.Formation))
         {
             sections.Children.Add(new Label { Text = GamePlanService.Label(formation.Key).ToUpperInvariant(),
-                FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#E8C979") });
+                FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#E8C979") });
             var grid = new Grid { ColumnSpacing = 10, RowSpacing = 10,
                 ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) } };
             var formationPlays = formation.ToArray();
@@ -1454,16 +1454,16 @@ public sealed partial class FoundationPage
                 var play = formationPlays[index];
                 var badgeText = play.Approach switch { DefensiveApproach.StopRun => "RUN", DefensiveApproach.ProtectPass => "PASS", _ => "BALANCED" };
                 var art = new GraphicsView { Drawable = new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString(), defensiveDefinition: play),
-                    HeightRequest = 105, BackgroundColor = Color.FromArgb("#102A24") };
+                    HeightRequest = 105, BackgroundColor = DynastyTheme.Palette("#102A24") };
                 var card = new Border { StrokeThickness = play.Id == selected.Id ? 2 : 0,
-                    Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = Color.FromArgb("#1B2B37"), Content =
+                    Stroke = DynastyTheme.Accent, Padding = 9, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content =
                     new VerticalStackLayout { Spacing = 4, Children =
                     {
                         art, new Label { Text = badgeText, FontSize = 9, FontAttributes = FontAttributes.Bold,
-                            TextColor = Color.FromArgb("#F4C97A") },
+                            TextColor = DynastyTheme.Palette("#F4C97A") },
                         new Label { Text = play.Name, FontAttributes = FontAttributes.Bold, FontSize = 13 },
                         new Label { Text = $"{GamePlanService.Label(play.Personnel)} · {GamePlanService.Label(play.Approach)}",
-                            FontSize = 10, TextColor = Color.FromArgb("#B8D8FA") },
+                            FontSize = 10, TextColor = DynastyTheme.Palette("#B8D8FA") },
                         new Label { Text = play.Description, FontSize = 10, TextColor = DynastyTheme.Muted, MaxLines = 2 }
                     } } };
                 var tap = new TapGestureRecognizer();
@@ -1526,7 +1526,7 @@ public sealed partial class FoundationPage
 
         public void Draw(ICanvas canvas, RectF rect)
         {
-            canvas.FillColor = Color.FromArgb("#245B38"); canvas.FillRectangle(rect);
+            canvas.FillColor = DynastyTheme.Palette("#245B38"); canvas.FillRectangle(rect);
             // Stable procedural turf: mowing bands, subtle blades and five-yard lines.
             for (var band = 0; band < 20; band++)
             {
@@ -1565,7 +1565,7 @@ public sealed partial class FoundationPage
             canvas.DrawRectangle(1, 1, rect.Width - 2, rect.Height - 2);
             canvas.DrawLine(rect.Width * leftGoal, 0, rect.Width * leftGoal, rect.Height);
             canvas.DrawLine(rect.Width * rightGoal, 0, rect.Width * rightGoal, rect.Height);
-            canvas.StrokeColor = Color.FromArgb("#FFD447"); canvas.StrokeSize = 4;
+            canvas.StrokeColor = DynastyTheme.Palette("#FFD447"); canvas.StrokeSize = 4;
             var leftPost = rect.Width * .026f;
             var rightPost = rect.Width * .974f;
             var postTop = rect.Height * .41f;
@@ -1578,18 +1578,18 @@ public sealed partial class FoundationPage
             canvas.DrawLine(rightPost, postTop, rightPost, postBottom);
             canvas.DrawLine(rightPost, postTop, rect.Width * .954f, postTop);
             canvas.DrawLine(rightPost, postBottom, rect.Width * .954f, postBottom);
-            canvas.StrokeColor = Color.FromArgb("#A8CBB5"); canvas.StrokeSize = 1;
+            canvas.StrokeColor = DynastyTheme.Palette("#A8CBB5"); canvas.StrokeSize = 1;
             for (var yard = 10; yard < 100; yard += 10)
             {
                 var x = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(yard, 1);
                 canvas.DrawLine(x, 0, x, rect.Height);
-                canvas.FontColor = Color.FromArgb("#D5E6DB"); canvas.FontSize = 11;
+                canvas.FontColor = DynastyTheme.Palette("#D5E6DB"); canvas.FontSize = 11;
                 canvas.DrawString((yard <= 50 ? yard : 100 - yard).ToString(), x - 10, 8, 24, 18,
                     HorizontalAlignment.Center, VerticalAlignment.Center);
                 canvas.DrawString((yard <= 50 ? yard : 100 - yard).ToString(), x - 10, rect.Height - 26, 24, 18,
                     HorizontalAlignment.Center, VerticalAlignment.Center);
             }
-            canvas.StrokeColor = Color.FromArgb("#D5E6DB"); canvas.StrokeSize = 1;
+            canvas.StrokeColor = DynastyTheme.Palette("#D5E6DB"); canvas.StrokeSize = 1;
             for (var yard = 1; yard < 100; yard++)
             {
                 var x = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(yard, 1);
@@ -1606,8 +1606,8 @@ public sealed partial class FoundationPage
                 HorizontalAlignment.Center, VerticalAlignment.Center);
             var line = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(YardLine, Direction);
             var gain = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(Math.Min(100, YardLine + Distance), Direction);
-            canvas.StrokeColor = Color.FromArgb("#4FA8FF"); canvas.StrokeSize = 3; canvas.DrawLine(line, 0, line, rect.Height);
-            canvas.StrokeColor = Color.FromArgb("#E7C45B"); canvas.StrokeSize = 3; canvas.DrawLine(gain, 0, gain, rect.Height);
+            canvas.StrokeColor = DynastyTheme.Palette("#4FA8FF"); canvas.StrokeSize = 3; canvas.DrawLine(line, 0, line, rect.Height);
+            canvas.StrokeColor = DynastyTheme.Palette("#E7C45B"); canvas.StrokeSize = 3; canvas.DrawLine(gain, 0, gain, rect.Height);
         }
     }
 }

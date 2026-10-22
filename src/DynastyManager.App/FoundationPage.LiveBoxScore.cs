@@ -35,9 +35,9 @@ public sealed partial class FoundationPage
             $"Paused · {(box.Quarter > 4 ? $"OT {box.Quarter-4}" : $"Q{box.Quarter}")} {TimeSpan.FromSeconds(box.ClockSeconds):m\\:ss} · returns to the same game");
         if (box.Weather is not null) content.Children.Add(new Label { Text = box.Weather.Summary, FontSize = 11, TextColor = DynastyTheme.Muted });
         content.Children.Add(new Label { Text = $"Morale · {box.AwayTeamName}: {GameMoraleService.Label(box.AwayMorale)} ({box.AwayMorale}) · {box.HomeTeamName}: {GameMoraleService.Label(box.HomeMorale)} ({box.HomeMorale})", FontSize = 11, TextColor = DynastyTheme.Muted });
-        if (box.PlayerOfGame is { } award) content.Children.Add(new Border { Padding = 12, StrokeThickness = 0, BackgroundColor = Color.FromArgb("#343B28"),
+        if (box.PlayerOfGame is { } award) content.Children.Add(new Border { Padding = 12, StrokeThickness = 0, BackgroundColor = DynastyTheme.Palette("#343B28"),
             Content = new VerticalStackLayout { Spacing = 4, Children = {
-                new Label { Text = "★ PLAYER OF THE GAME", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#E8C979") },
+                new Label { Text = "★ PLAYER OF THE GAME", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#E8C979") },
                 new Label { Text = $"{award.PlayerName} · {award.TeamName}", FontSize = 16, FontAttributes = FontAttributes.Bold },
                 new Label { Text = award.Summary, FontSize = 12 } } } });
         var scoreColumns = new[] { (Title:"Team",Width:140d) }.Concat(box.Periods.Select(p=>(Title:p.Period<=4?$"Q{p.Period}":$"OT{p.Period-4}",Width:38d)))
@@ -81,8 +81,8 @@ public sealed partial class FoundationPage
         void SelectPlayers(bool selected)
         {
             teamHost.IsVisible = !selected; playerHost.IsVisible = selected;
-            teamTab.BackgroundColor = selected ? Color.FromArgb("#253E59") : DynastyTheme.Accent;
-            playerTab.BackgroundColor = selected ? DynastyTheme.Accent : Color.FromArgb("#253E59");
+            teamTab.BackgroundColor = selected ? DynastyTheme.Palette("#253E59") : DynastyTheme.Accent;
+            playerTab.BackgroundColor = selected ? DynastyTheme.Accent : DynastyTheme.Palette("#253E59");
             teamTab.TextColor = selected ? Colors.White : DynastyTheme.Background;
             playerTab.TextColor = selected ? DynastyTheme.Background : Colors.White;
         }

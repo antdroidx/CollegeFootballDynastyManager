@@ -260,6 +260,10 @@ public static class OffseasonPlayerLifecycleService
             TeamName = player.TeamName,
             Position = player.Position,
             OverallRating = player.OverallRating,
+            Leadership = player.Skills?.Leadership ?? 0,
+            Awareness = player.AwarenessRating,
+            Discipline = player.Skills?.Discipline ?? 0,
+            Appearance = player.Appearance,
             Reason = reason
         };
 }

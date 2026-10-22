@@ -56,7 +56,7 @@ public sealed partial class FoundationPage
 
     private Button StartingLibraryButton()
     {
-        var button = new Button { Text = "Starting rosters & league setups", BackgroundColor = Color.FromArgb("#315D59") };
+        var button = new Button { Text = "Starting rosters & league setups", BackgroundColor = DynastyTheme.Palette("#315D59") };
         button.Clicked += async (_, _) => await OpenStartingLibraryAsync();
         return button;
     }
@@ -107,7 +107,7 @@ public sealed partial class FoundationPage
                 var defaultId = _startingLibrary.DefaultRosterBySetup.TryGetValue(setup.Id, out var rosterId)
                     ? rosterId : _bundledStartingRoster?.Id ?? Guid.Empty;
                 var defaultName = AvailableStartingRosters().FirstOrDefault(r => r.Id == defaultId)?.Name ?? "Legacy / generated";
-                rows.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = Color.FromArgb("#1B2B37"), Content = new VerticalStackLayout { Spacing = 5, Children =
+                rows.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = new VerticalStackLayout { Spacing = 5, Children =
                 { new Label { Text = setup.Name, FontAttributes = FontAttributes.Bold }, new Label { Text = $"{setup.Teams.Count} teams · {setup.Rules.GamesPerTeam} games · {setup.Rules.PlayoffTeams}-team playoff · Roster: {defaultName}", FontSize = 11 },
                     new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { edit, defaults, remove } } } } });
             }

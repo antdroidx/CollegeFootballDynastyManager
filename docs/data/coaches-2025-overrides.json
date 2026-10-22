@@ -1,0 +1,465 @@
+[
+  {
+    "Team": "Arkansas",
+    "Role": "HC",
+    "Names": [
+      "Sam Pittman"
+    ],
+    "SourceUrl": "https://arkansasrazorbacks.com/pdf/mediaguide/football/2025/History.pdf"
+  },
+  {
+    "Team": "Arkansas",
+    "Role": "OC",
+    "Names": [
+      "Bobby Petrino"
+    ],
+    "SourceUrl": "https://arkansasrazorbacks.com/pdf/mediaguide/football/2025/Coaches_Staff.pdf"
+  },
+  {
+    "Team": "Arkansas",
+    "Role": "DC",
+    "Names": [
+      "Travis Williams",
+      "Marcus Woodson"
+    ],
+    "SourceUrl": "https://arkansasrazorbacks.com/pdf/mediaguide/football/2025/History.pdf"
+  },
+  {
+    "Team": "Arkansas",
+    "Role": "ST",
+    "Names": [
+      "Scott Fountain"
+    ],
+    "SourceUrl": "https://arkansasrazorbacks.com/pdf/mediaguide/football/2025/History.pdf",
+    "Title": "Assistant Head Coach / Special Teams Coordinator"
+  },
+  {
+    "Team": "Kentucky",
+    "Role": "HC",
+    "Names": [
+      "Mark Stoops"
+    ],
+    "SourceUrl": "https://ukathletics.com/news/2025/08/12/jack-ray-joins-uk-football-as-assistant-special-teams-coach/"
+  },
+  {
+    "Team": "Kentucky",
+    "Role": "OC",
+    "Names": [
+      "Bush Hamdan"
+    ],
+    "SourceUrl": "https://ukathletics.com/news/2025/08/01/white-hamdan-optimistic-as-2025-camp-begins/"
+  },
+  {
+    "Team": "Kentucky",
+    "Role": "DC",
+    "Names": [
+      "Brad White"
+    ],
+    "SourceUrl": "https://ukathletics.com/news/2025/08/01/white-hamdan-optimistic-as-2025-camp-begins/"
+  },
+  {
+    "Team": "Kentucky",
+    "Role": "ST",
+    "Names": [
+      "Jay Boulware"
+    ],
+    "SourceUrl": "https://ukathletics.com/sports/football/roster/coach/jay-boulware/",
+    "Title": "Running Backs / Special Teams Coordinator"
+  },
+  {
+    "Team": "Akron",
+    "Role": "ST",
+    "Names": [
+      "Ryan Matviko"
+    ],
+    "SourceUrl": "https://ballstatesports.com/documents/download/2025/10/15/GM8_vs_Ball_State.pdf"
+  },
+  {
+    "Team": "Arizona State",
+    "Role": "ST",
+    "Names": [
+      "Charlie Ragle"
+    ],
+    "SourceUrl": "https://en.wikipedia.org/wiki/2025_Arizona_State_Sun_Devils_football_team",
+    "Title": "Assistant Head Coach / Special Teams Coordinator"
+  },
+  {
+    "Team": "Buffalo",
+    "Role": "ST",
+    "Names": [
+      "Chris Monfiletto"
+    ],
+    "SourceUrl": "https://cmuchippewas.com/documents/download/2025/11/10/Flip_Card_Buffalo.pdf"
+  },
+  {
+    "Team": "California",
+    "Role": "ST",
+    "Names": [
+      "Michael Frisina"
+    ],
+    "SourceUrl": "https://calbears.com/sports/football/coaches/2025",
+    "Title": "Assistant Special Teams (game ST lead; no separately titled coordinator)"
+  },
+  {
+    "Team": "East Carolina",
+    "Role": "ST",
+    "Names": [
+      "Ryan Smith"
+    ],
+    "SourceUrl": "https://ecupirates.com/sports/football/roster/staff/ryan-smith/357",
+    "Title": "Senior Special Teams Analyst (2025 game ST lead)"
+  },
+  {
+    "Team": "Florida State",
+    "Role": "ST",
+    "Names": [
+      "John Papuchis"
+    ],
+    "SourceUrl": "https://seminoles.com/documents/download/2025/7/21/4_-_Coaches.pdf",
+    "Title": "Special Teams Coordinator / Linebackers"
+  },
+  {
+    "Team": "Georgia State",
+    "Role": "ST",
+    "Names": [
+      "Carter Blount"
+    ],
+    "SourceUrl": "https://gotigersgo.com/documents/download/2025/9/3/2025_FB_GAME_NOTES-MEMPHIS.pdf"
+  },
+  {
+    "Team": "Georgia Tech",
+    "Role": "ST",
+    "Names": [
+      "Tim Salem"
+    ],
+    "SourceUrl": "https://ramblinwreck.com/wp-content/uploads/2025/09/2025-GT-FB-Info-Guide-v2.pdf"
+  },
+  {
+    "Team": "Iowa State",
+    "Role": "ST",
+    "Names": [
+      "Rob Grande"
+    ],
+    "SourceUrl": "https://cyclones.com/news/2026/1/5/football-cyclone-special-teams-coaches-announced",
+    "Title": "Special Teams Quality Control (2025 game ST lead; coordinator title from 2026)"
+  },
+  {
+    "Team": "LSU",
+    "Role": "ST",
+    "Names": [
+      "Aman Anand"
+    ],
+    "SourceUrl": "https://lsusports.net/staff/aman-anand",
+    "Title": "Senior Special Teams Analyst (2025 game ST lead)"
+  },
+  {
+    "Team": "LSU",
+    "Role": "OC",
+    "Names": [
+      "Joe Sloan",
+      "Cortez Hankton"
+    ],
+    "SourceUrl": "https://static.lsusports.net/assets/docs/fb/pdf/25guide.pdf"
+  },
+  {
+    "Team": "Miami",
+    "Role": "ST",
+    "Names": [
+      "Danny Kalter"
+    ],
+    "SourceUrl": "https://storage.googleapis.com/hurricanesports-com/2025/08/d8221793-2025-media-guide-football.pdf"
+  },
+  {
+    "Team": "North Carolina",
+    "Role": "ST",
+    "Names": [
+      "Mike Priefer"
+    ],
+    "SourceUrl": "https://goheels.com/news/2025/3/3/football-belichick-announces-coaching-staff"
+  },
+  {
+    "Team": "Oklahoma State",
+    "Role": "ST",
+    "Names": [
+      "Sean Snyder"
+    ],
+    "SourceUrl": "https://okstate.com/news/2025/1/15/cowboy-football-assistant-coaches-added-to-oklahoma-state-football-staff",
+    "Title": "Special Teams / Punters / Kickers"
+  },
+  {
+    "Team": "Oregon State",
+    "Role": "ST",
+    "Names": [
+      "Jamie Christian"
+    ],
+    "SourceUrl": "https://osubeavers.com/documents/download/2025/7/31/Section_3_-_Coach_Bios.pdf"
+  },
+  {
+    "Team": "Penn State",
+    "Role": "ST",
+    "Names": [
+      "Justin Lustig"
+    ],
+    "SourceUrl": "https://gopsusports.com/staff/justin-lustig"
+  },
+  {
+    "Team": "Pittsburgh",
+    "Role": "ST",
+    "Names": [
+      "Jacob Bronowski"
+    ],
+    "SourceUrl": "https://pittsburghpanthers.com/documents/download/2025/7/22/_2_Coaches_Section_2025.pdf"
+  },
+  {
+    "Team": "Rutgers",
+    "Role": "ST",
+    "Names": [
+      "Eddie Allen"
+    ],
+    "SourceUrl": "https://scarletknights.com/sports/football/coaches/2025"
+  },
+  {
+    "Team": "Rutgers",
+    "Role": "DC",
+    "Names": [
+      "Robb Smith",
+      "Zach Sparber"
+    ],
+    "SourceUrl": "https://scarletknights.com/news/2025/2/7/football-smith-sparber-named-co-defensive-coordinators",
+    "Title": "Co-Defensive Coordinator"
+  },
+  {
+    "Team": "San Jose State",
+    "Role": "ST",
+    "Names": [
+      "Joe Palcic"
+    ],
+    "SourceUrl": "https://sjsuspartans.com/staff/joe-palcic",
+    "Title": "Senior Football Analyst - Special Teams (2025 game ST lead)"
+  },
+  {
+    "Team": "South Carolina",
+    "Role": "ST",
+    "Names": [
+      "Joe DeCamillis"
+    ],
+    "SourceUrl": "https://storage.googleapis.com/gamecocksonline-com/2025/07/6ac5ec4f-2025fbmediaguide.pdf"
+  },
+  {
+    "Team": "Stanford",
+    "Role": "ST",
+    "Names": [
+      "Fred Guidici"
+    ],
+    "SourceUrl": "https://gostanford.com/sports/football/roster/season/2025",
+    "Title": "Senior Special Teams Quality Control Analyst (2025 game ST lead)"
+  },
+  {
+    "Team": "Syracuse",
+    "Role": "ST",
+    "Names": [
+      "Ricky Brumfield"
+    ],
+    "SourceUrl": "https://cuse.com/news/2025/2/7/football-brown-taps-brumfield-to-lead-special-teams"
+  },
+  {
+    "Team": "TCU",
+    "Role": "ST",
+    "Names": [
+      "Casey Petree"
+    ],
+    "SourceUrl": "https://gofrogs.com/documents/download/2025/12/16/2025_Valero_Bowl_Guide.pdf",
+    "Title": "Assistant Special Teams Coach (2025 game ST lead)"
+  },
+  {
+    "Team": "UCLA",
+    "Role": "ST",
+    "Names": [
+      "Bailey McElwain"
+    ],
+    "SourceUrl": "https://uclabruins.com/news/2025/01/02/bailey-mcelwain-named-senior-special-teams-analyst-for-ucla-football",
+    "Title": "Senior Special Teams Analyst (2025 game ST lead)"
+  },
+  {
+    "Team": "USC",
+    "Role": "ST",
+    "Names": [
+      "Ryan Dougherty"
+    ],
+    "SourceUrl": "https://usctrojans.com/documents/download/2025/8/28/Salute_to_Troy_Program_2025__1_.pdf"
+  },
+  {
+    "Team": "UT El Paso",
+    "Role": "ST",
+    "Names": [
+      "Joe Pappalardo"
+    ],
+    "SourceUrl": "https://utepminers.com/sports/football/roster/2025",
+    "Title": "Wefense Coordinator / Miner Backs / Inside WRs / Pass Game Coordinator"
+  },
+  {
+    "Team": "Utah State",
+    "Role": "ST",
+    "Names": [
+      "Shane Hunter"
+    ],
+    "SourceUrl": "https://utahstateaggies.com/news/2025/1/15/utah-states-bronco-mendenhall-announces-football-coaching-and-support-staff"
+  },
+  {
+    "Team": "Wyoming",
+    "Role": "HC",
+    "Names": [
+      "Jay Sawvel"
+    ],
+    "SourceUrl": "https://gowyo.com/news/2025/7/16/pokes-insider-restoring-wyomings-rich-history.aspx"
+  },
+  {
+    "Team": "Wyoming",
+    "Role": "OC",
+    "Names": [
+      "Jay Johnson"
+    ],
+    "SourceUrl": "https://gowyo.com/news/2025/7/16/pokes-insider-restoring-wyomings-rich-history.aspx"
+  },
+  {
+    "Team": "Wyoming",
+    "Role": "DC",
+    "Names": [
+      "Aaron Bohl"
+    ],
+    "SourceUrl": "https://gowyo.com/news/2025/7/16/pokes-insider-restoring-wyomings-rich-history.aspx"
+  },
+  {
+    "Team": "Wyoming",
+    "Role": "ST",
+    "Names": [
+      "Benny Boyd"
+    ],
+    "SourceUrl": "https://gowyo.com/sports/football/roster/coaches/benny-boyd/3188",
+    "Title": "Co-Special Teams Coordinator / Cornerbacks"
+  },
+  {
+    "Team": "Marshall",
+    "Role": "DC",
+    "Names": [
+      "Shannon Morrison"
+    ],
+    "SourceUrl": "https://herdzone.com/news/2025/1/10/football-marshall-head-coach-tony-gibson-finalizes-2025-staff?path=stunt"
+  },
+  {
+    "Team": "Troy",
+    "Role": "ST",
+    "Names": [
+      "Tyler Hancock"
+    ],
+    "SourceUrl": "https://troytrojans.com/podcasts/2025-season-preview-special-teams/139"
+  },
+  {
+    "Team": "Auburn",
+    "Role": "HC",
+    "Names": [
+      "Hugh Freeze"
+    ],
+    "SourceUrl": "https://auburntigers.com/sports/football/roster/season/2025?view=card"
+  },
+  {
+    "Team": "Missouri",
+    "Role": "HC",
+    "Names": [
+      "Eliah Drinkwitz"
+    ],
+    "SourceUrl": "https://mutigers.com/news/2025/7/23/mizzou-extends-contract-of-head-football-coach-eliah-drinkwitz"
+  },
+  {
+    "Team": "LA Tech",
+    "Role": "ST",
+    "Names": [
+      "Dan Sharp"
+    ],
+    "SourceUrl": "https://latechsports.com/sports/football/roster/2025",
+    "Title": "Assistant Head Coach / Special Teams"
+  },
+  {
+    "Team": "Sacramento State",
+    "Role": "OC",
+    "Names": [
+      "Kenneth Merchant",
+      "AC Patterson"
+    ],
+    "SourceUrl": "https://hornetsports.com/sports/football/roster/2025",
+    "Title": "Offensive Coordinator / Co-Offensive Coordinator"
+  },
+  {
+    "Team": "Sacramento State",
+    "Role": "DC",
+    "Names": [
+      "Marcus Patton",
+      "Josh Brown"
+    ],
+    "SourceUrl": "https://hornetsports.com/sports/football/roster/2025",
+    "Title": "Defensive Coordinator / Co-Defensive Coordinator"
+  },
+  {
+    "Team": "Akron",
+    "Role": "OC",
+    "Names": [
+      "Joe Moorhead"
+    ],
+    "SourceUrl": "https://gozips.com/sports/football/roster/2025",
+    "Title": "Head Coach (game OC assignment; no separately titled offensive coordinator)"
+  },
+  {
+    "Team": "Appalachian State",
+    "Role": "OC",
+    "Names": [
+      "Dowell Loggains"
+    ],
+    "SourceUrl": "https://appstatesports.com/sports/football/roster/2025",
+    "Title": "Head Coach (game OC assignment; no separately titled offensive coordinator)"
+  },
+  {
+    "Team": "Ball State",
+    "Role": "OC",
+    "Names": [
+      "Mike Uremovich"
+    ],
+    "SourceUrl": "https://ballstatesports.com/sports/football/roster/2025",
+    "Title": "Head Coach (game OC assignment; no separately titled offensive coordinator)"
+  },
+  {
+    "Team": "Florida Atl",
+    "Role": "OC",
+    "Names": [
+      "Zach Kittley"
+    ],
+    "SourceUrl": "https://fausports.com/sports/football/roster/2025",
+    "Title": "Head Coach (game OC assignment; no separately titled offensive coordinator)"
+  },
+  {
+    "Team": "Mississippi State",
+    "Role": "OC",
+    "Names": [
+      "Jeff Lebby"
+    ],
+    "SourceUrl": "https://hailstate.com/sports/football/roster/2025",
+    "Title": "Head Coach (game OC assignment; no separately titled offensive coordinator)"
+  },
+  {
+    "Team": "West Virginia",
+    "Role": "OC",
+    "Names": [
+      "Rich Rodriguez"
+    ],
+    "SourceUrl": "https://wvusports.com/sports/football/roster/2025",
+    "Title": "Head Coach (game OC assignment; no separately titled offensive coordinator)"
+  },
+  {
+    "Team": "Colorado State",
+    "Role": "OC",
+    "Names": [
+      "Matt Mumme"
+    ],
+    "SourceUrl": "https://csurams.com/sports/football/roster/2025",
+    "Title": "Associate Head Coach / Pass-Game Coordinator (game OC lead)"
+  }
+]
