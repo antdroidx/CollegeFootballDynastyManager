@@ -22,6 +22,11 @@ public static class MauiProgram
             if (view is Microsoft.Maui.Controls.Button button)
                 button.Loaded += (_, _) => button.TextColor = DynastyTheme.ReadableInk(button.TextColor, button);
         });
+        Microsoft.Maui.Handlers.SearchBarHandler.Mapper.AppendToMapping("ThemeContrast", (_, view) =>
+        {
+            if (view is Microsoft.Maui.Controls.SearchBar search)
+                search.Loaded += (_, _) => search.TextColor = DynastyTheme.ReadableInk(search.TextColor, search);
+        });
 #if ANDROID
         PickerHandler.Mapper.AppendToMapping("FlatPicker", (handler, _) =>
             handler.PlatformView.BackgroundTintList = ColorStateList.ValueOf(Android.Graphics.Color.Transparent));

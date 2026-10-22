@@ -350,4 +350,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        Path("android-logcat.txt").write_bytes(adb("logcat", "-d"))

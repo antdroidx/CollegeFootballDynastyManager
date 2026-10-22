@@ -28,6 +28,8 @@ public class RealCoachImportTests
         Assert.Contains(seeds, s => s.Team == "Arkansas" && s.Role == StaffRole.OffensiveCoordinator && s.FullName == "Bobby Petrino");
         Assert.Contains(seeds, s => s.Team == "Penn State" && s.Role == StaffRole.HeadCoach && s.FullName == "James Franklin");
         Assert.Contains(seeds, s => s.Team == "Northern Illinois" && s.Role == StaffRole.HeadCoach && s.FullName == "Thomas Hammock");
+        Assert.Contains(seeds, s => s.Team == "Southern Miss" && s.Role == StaffRole.HeadCoach && s.FullName == "Charles Huff");
+        Assert.Contains(seeds, s => s.Team == "Coastal Carolina" && s.Role == StaffRole.HeadCoach && s.FullName == "Tim Beck");
         Assert.DoesNotContain(seeds, s => s.Team == "North Carolina" && s.FullName == "Bobby Petrino");
     }
 

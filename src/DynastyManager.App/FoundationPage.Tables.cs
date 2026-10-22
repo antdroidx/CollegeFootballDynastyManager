@@ -132,7 +132,7 @@ public sealed partial class FoundationPage
             {
                 grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
                 var user = cells.Any(cell => TableValue(cell) == _currentDynasty?.UserTeamName);
-                var background = new BoxView { Color = Color.FromArgb(user ? "#203D50" : index % 2 == 0 ? "#1E2936" : "#17212D"), MinimumHeightRequest = 42 };
+                var background = new BoxView { Color = DynastyTheme.Palette(user ? "#203D50" : index % 2 == 0 ? "#1E2936" : "#17212D"), MinimumHeightRequest = 42 };
                 grid.Add(background, 0, index); Grid.SetColumnSpan(background, columns.Length);
                 for (var column = 0; column < cells.Length; column++) grid.Add(cells[column], column, index);
                 index++;

@@ -2731,7 +2731,7 @@ public sealed partial class FoundationPage : ContentPage
         _recruitingList.Children.Add(
             new Border
             {
-                BackgroundColor = Color.FromArgb(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
+                BackgroundColor = DynastyTheme.Palette(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
                 Stroke = Color.FromArgb(interaction.ScholarshipOffered ? "#5A9B83" : "#486677"),
                 StrokeThickness = 0,
                 Padding = new Thickness(12, 10),

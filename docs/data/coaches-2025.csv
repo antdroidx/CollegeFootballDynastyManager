@@ -39,10 +39,10 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Army,HC,Jeff Monken,Head Coach,https://goarmywestpoint.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Army_Black_Knights_football_team
 2025,Army,OC,Cody Worley,Offensive Coordinator / Quarterbacks,https://goarmywestpoint.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Army_Black_Knights_football_team
 2025,Army,ST,Sean Saturnio,Special Teams Coordinator,https://goarmywestpoint.com/sports/football/roster/2025,
-2025,Auburn,DC,DJ Durkin,DJ Durkin Twitter Opens in a new window Defensive Coordinator / Linebackers,https://auburntigers.com/sports/football/roster/season/2025,
+2025,Auburn,DC,DJ Durkin,Defensive Coordinator / Linebackers,https://auburntigers.com/sports/football/roster/season/2025,
 2025,Auburn,HC,Hugh Freeze,Head Coach,https://auburntigers.com/sports/football/roster/season/2025?view=card,
-2025,Auburn,OC,Derrick Nix,Derrick Nix Twitter Opens in a new window Offensive Coordinator / Running Backs,https://auburntigers.com/sports/football/roster/season/2025,
-2025,Auburn,ST,Chad Lunsford,Chad Lunsford Twitter Opens in a new window Special Teams Coordinator,https://auburntigers.com/sports/football/roster/season/2025,
+2025,Auburn,OC,Derrick Nix,Offensive Coordinator / Running Backs,https://auburntigers.com/sports/football/roster/season/2025,
+2025,Auburn,ST,Chad Lunsford,Special Teams Coordinator,https://auburntigers.com/sports/football/roster/season/2025,
 2025,BYU,DC,Jay Hill,Defensive coordinator,https://en.wikipedia.org/wiki/2025_BYU_Cougars_football_team,https://en.wikipedia.org/wiki/2025_BYU_Cougars_football_team
 2025,BYU,HC,Kalani Sitake,Head Coach,https://byucougars.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_BYU_Cougars_football_team
 2025,BYU,OC,Aaron Roderick,"Offensive Coordinator, Quarterbacks Coach",https://byucougars.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_BYU_Cougars_football_team
@@ -106,7 +106,7 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Clemson,OC,Matt Luke,"Assistant Head Coach, Co-Offensive Coordinator, Offensive Linemen",https://clemsontigers.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_Clemson_Tigers_football_team
 2025,Clemson,ST,Mickey Conn,"Defensive Pass Game Coordinator, Co-Special Teams Coordinator, Safeties",https://clemsontigers.com/sports/football/roster/season/2025,
 2025,Coastal Carolina,DC,Jeremiah Johnson,Interim Head Coach / Defensive Coordinator,https://goccusports.com/sports/football/roster/2025,
-2025,Coastal Carolina,HC,Jeremiah Johnson,Interim Head Coach / Defensive Coordinator,https://goccusports.com/sports/football/roster/2025,
+2025,Coastal Carolina,HC,Tim Beck,Head Coach,https://goccusports.com/news/2025/1/11/football-announces-defensive-coordinator-change,
 2025,Coastal Carolina,OC,Drew Hollingshead,Offensive Coordinator,https://goccusports.com/sports/football/roster/2025,
 2025,Coastal Carolina,ST,Josh Miller,Special Teams Coordinator / Outside Linebackers,https://goccusports.com/sports/football/roster/2025,
 2025,Colorado,DC,Robert Livingston,Defensive Coordinator/Safeties,https://cubuffs.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Colorado_Buffaloes_football_team
@@ -117,10 +117,10 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Colorado State,HC,Jay Norvell,Head Coach,https://csurams.com/sports/football/roster/2025,
 2025,Colorado State,OC,Matt Mumme,Associate Head Coach / Pass-Game Coordinator (game OC lead),https://csurams.com/sports/football/roster/2025,
 2025,Colorado State,ST,Tommy Perry,Special Teams Coordinator,https://csurams.com/sports/football/roster/2025,
-2025,UConn,DC,Matt Brock,Assistant Coach Defensive Coordinator football@uconn.edu,https://uconnhuskies.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_UConn_Huskies_football_team
+2025,UConn,DC,Matt Brock,Assistant Coach Defensive Coordinator,https://uconnhuskies.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_UConn_Huskies_football_team
 2025,UConn,HC,Jim L. Mora,Head coach,https://en.wikipedia.org/wiki/2025_UConn_Huskies_football_team,https://en.wikipedia.org/wiki/2025_UConn_Huskies_football_team
-2025,UConn,OC,Gordon Sammis,Interim Head Coach Offensive Coordinator football@uconn.edu,https://uconnhuskies.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_UConn_Huskies_football_team
-2025,UConn,ST,Doug Shearer,Assistant Coach Special Teams Coordinator / Sam's football@uconn.edu,https://uconnhuskies.com/sports/football/coaches/2025,
+2025,UConn,OC,Gordon Sammis,Offensive Coordinator,https://uconnhuskies.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_UConn_Huskies_football_team
+2025,UConn,ST,Doug Shearer,Assistant Coach Special Teams Coordinator / Sam's,https://uconnhuskies.com/sports/football/coaches/2025,
 2025,Delaware,DC,Manny Rojas,Defensive Coordinator,https://bluehens.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Delaware_Fightin'_Blue_Hens_football_team
 2025,Delaware,HC,Ryan Carty,Head Football Coach,https://bluehens.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Delaware_Fightin'_Blue_Hens_football_team
 2025,Delaware,OC,Terence Archer,Assistant Head Coach - Offense / Offensive Coordinator / Wide Receivers,https://bluehens.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Delaware_Fightin'_Blue_Hens_football_team
@@ -230,7 +230,8 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Kent State,HC,Mark Carney,Head Coach,https://kentstatesports.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Kent_State_Golden_Flashes_football_team
 2025,Kent State,OC,Clay Patterson,Offensive Coordinator/Quarterbacks,https://kentstatesports.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Kent_State_Golden_Flashes_football_team
 2025,Kent State,ST,CJ Conrad,Special Teams Coordinator / Tight Ends Coach,https://kentstatesports.com/sports/football/roster/2025,
-2025,Kentucky,DC,Brad White,Defensive Coordinator,https://ukathletics.com/news/2025/08/01/white-hamdan-optimistic-as-2025-camp-begins/,
+2025,Kentucky,DC,Brad White,Defensive Coordinator / Co-Defensive Coordinator,https://storage.googleapis.com/ukathletics-com/2025/10/1f5985a6-game-8-auburn.pdf,
+2025,Kentucky,DC,Chris Collins,Defensive Coordinator / Co-Defensive Coordinator,https://storage.googleapis.com/ukathletics-com/2025/10/1f5985a6-game-8-auburn.pdf,
 2025,Kentucky,HC,Mark Stoops,Head Coach,https://ukathletics.com/news/2025/08/12/jack-ray-joins-uk-football-as-assistant-special-teams-coach/,
 2025,Kentucky,OC,Bush Hamdan,Offensive Coordinator,https://ukathletics.com/news/2025/08/01/white-hamdan-optimistic-as-2025-camp-begins/,
 2025,Kentucky,ST,Jay Boulware,Running Backs / Special Teams Coordinator,https://ukathletics.com/sports/football/roster/coach/jay-boulware/,
@@ -316,7 +317,7 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Missouri,DC,Corey Batoon,Defensive Coordinator,https://mutigers.com/sports/football/roster/2025,
 2025,Missouri,HC,Eliah Drinkwitz,Head Coach,https://mutigers.com/news/2025/7/23/mizzou-extends-contract-of-head-football-coach-eliah-drinkwitz,
 2025,Missouri,OC,Kirby Moore,Offensive Coordinator,https://mutigers.com/sports/football/roster/2025,
-2025,Missouri,ST,Erik Link,Erik Link Twitter Opens in a new window Special Teams Coordinator,https://mutigers.com/sports/football/roster/2025,
+2025,Missouri,ST,Erik Link,Special Teams Coordinator,https://mutigers.com/sports/football/roster/2025,
 2025,Missouri State,DC,L.D. Scott,Defensive Coordinator / Defensive Line Coach,https://missouristatebears.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Missouri_State_Bears_football_team
 2025,Missouri State,HC,Ryan Beard,Head Coach,https://missouristatebears.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Missouri_State_Bears_football_team
 2025,Missouri State,OC,Nick Petrino,Offensive Coordinator / Quarterbacks Coach,https://missouristatebears.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Missouri_State_Bears_football_team
@@ -340,10 +341,10 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Nevada,HC,Jeff Choate,Head Coach,https://nevadawolfpack.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Nevada_Wolf_Pack_football_team
 2025,Nevada,OC,David Gilbertson,Offensive Coordinator/Quarterbacks,https://nevadawolfpack.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Nevada_Wolf_Pack_football_team
 2025,Nevada,ST,Parker Henry,Special Teams Coordinator/Nickels,https://nevadawolfpack.com/sports/football/roster/2025,
-2025,New Mexico,DC,Spence Nowinsky,Spence Nowinsky Instagram Opens in a new window Spence Nowinsky X Opens in a new window Defensive Coordinator,https://golobos.com/sports/football/roster/season/2025-26,https://en.wikipedia.org/wiki/2025_New_Mexico_Lobos_football_team
+2025,New Mexico,DC,Spence Nowinsky,Spence Nowinsky X Opens in a new window Defensive Coordinator,https://golobos.com/sports/football/roster/season/2025-26,https://en.wikipedia.org/wiki/2025_New_Mexico_Lobos_football_team
 2025,New Mexico,HC,Jason Eck,Head coach,https://en.wikipedia.org/wiki/2025_New_Mexico_Lobos_football_team,https://en.wikipedia.org/wiki/2025_New_Mexico_Lobos_football_team
 2025,New Mexico,OC,Luke Schleusner,Luke Schleusner X Opens in a new window Offensive Coordinator/QBs,https://golobos.com/sports/football/roster/season/2025-26,https://en.wikipedia.org/wiki/2025_New_Mexico_Lobos_football_team
-2025,New Mexico,ST,Daniel Da Prato,Daniel Da Prato Instagram Opens in a new window Daniel Da Prato X Opens in a new window Assoc. Head Coach/Special Teams Coordinator,https://golobos.com/sports/football/roster/season/2025-26,
+2025,New Mexico,ST,Daniel Da Prato,Daniel Da Prato X Opens in a new window Assoc. Head Coach/Special Teams Coordinator,https://golobos.com/sports/football/roster/season/2025-26,
 2025,New Mexico St,DC,Joe Morris,Defensive Coordinator,https://nmstatesports.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_New_Mexico_State_Aggies_football_team
 2025,New Mexico St,HC,Tony Sanchez,Head Coach,https://nmstatesports.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_New_Mexico_State_Aggies_football_team
 2025,New Mexico St,OC,David Yost,Offensive Coordinator/Quarterbacks,https://nmstatesports.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_New_Mexico_State_Aggies_football_team
@@ -364,10 +365,10 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Northern Illinois,HC,Thomas Hammock,Head coach,https://en.wikipedia.org/wiki/2025_Northern_Illinois_Huskies_football_team,https://en.wikipedia.org/wiki/2025_Northern_Illinois_Huskies_football_team
 2025,Northern Illinois,OC,Quinn Sanders,Offensive Coordinator/Quarterbacks,https://niuhuskies.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Northern_Illinois_Huskies_football_team
 2025,Northern Illinois,ST,Cory Connolly,Special Teams Coordinator/Linebackers,https://niuhuskies.com/sports/football/roster/2025,
-2025,Northwestern,DC,Tim McGarigle,Tim McGarigle Twitter Opens in a new window Defensive Coordinator/Linebackers Coach,https://nusports.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_Northwestern_Wildcats_football_team
+2025,Northwestern,DC,Tim McGarigle,Defensive Coordinator/Linebackers Coach,https://nusports.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_Northwestern_Wildcats_football_team
 2025,Northwestern,HC,David Braun,Head coach,https://en.wikipedia.org/wiki/2025_Northwestern_Wildcats_football_team,https://en.wikipedia.org/wiki/2025_Northwestern_Wildcats_football_team
-2025,Northwestern,OC,Zach Lujan,Zach Lujan Twitter Opens in a new window Offensive Coordinator/Quarterbacks Coach,https://nusports.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_Northwestern_Wildcats_football_team
-2025,Northwestern,ST,Paul Creighton,Paul Creighton Twitter Opens in a new window Special Teams Coordinator/Tight Ends Coach,https://nusports.com/sports/football/roster/season/2025,
+2025,Northwestern,OC,Zach Lujan,Offensive Coordinator/Quarterbacks Coach,https://nusports.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_Northwestern_Wildcats_football_team
+2025,Northwestern,ST,Paul Creighton,Special Teams Coordinator/Tight Ends Coach,https://nusports.com/sports/football/roster/season/2025,
 2025,Notre Dame,DC,Chris Ash,Bob Hinton Defensive Coordinator Chris Ash - Open Info,https://fightingirish.com/sports/football/roster/season/2025-26,https://en.wikipedia.org/wiki/2025_Notre_Dame_Fighting_Irish_football_team
 2025,Notre Dame,HC,Marcus Freeman,Head coach,https://en.wikipedia.org/wiki/2025_Notre_Dame_Fighting_Irish_football_team,https://en.wikipedia.org/wiki/2025_Notre_Dame_Fighting_Irish_football_team
 2025,Notre Dame,OC,Mike Denbrock,John and Bobbie Arlotta Family Offensive Coordinator/Tight Ends Coach Mike Denbrock - Open Info,https://fightingirish.com/sports/football/roster/season/2025-26,https://en.wikipedia.org/wiki/2025_Notre_Dame_Fighting_Irish_football_team
@@ -478,7 +479,7 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Southern Methodist,ST,Kyle Cooper,Special Teams Coordinator / Running Backs,https://smumustangs.com/sports/football/roster/2025,
 2025,Southern Methodist,ST,Casey Horny,Assistant Special Teams Coordinator,https://smumustangs.com/sports/football/roster/2025,
 2025,Southern Miss,DC,Jason Semore,Defensive Coordinator/Linebackers,https://southernmiss.com/sports/football/coaches/2025,
-2025,Southern Miss,HC,Blake Anderson,Head Coach/Offensive Coordinator/Quarterbacks,https://southernmiss.com/sports/football/coaches/2025,
+2025,Southern Miss,HC,Charles Huff,Head Coach,https://southernmiss.com/documents/download/2025/11/17/2025_Football_Notes_-_South_Alabama_Game.pdf,
 2025,Southern Miss,OC,Blake Anderson,Head Coach/Offensive Coordinator/Quarterbacks,https://southernmiss.com/sports/football/coaches/2025,
 2025,Southern Miss,ST,Joe Bolden,Special Teams Coordinator,https://southernmiss.com/sports/football/coaches/2025,
 2025,Stanford,DC,Bobby April,Defensive coordinator,https://en.wikipedia.org/wiki/2025_Stanford_Cardinal_football_team,https://en.wikipedia.org/wiki/2025_Stanford_Cardinal_football_team
@@ -487,10 +488,10 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Stanford,OC,Nate Byham,Offensive coordinator,https://en.wikipedia.org/wiki/2025_Stanford_Cardinal_football_team,https://en.wikipedia.org/wiki/2025_Stanford_Cardinal_football_team
 2025,Stanford,ST,Fred Guidici,Senior Special Teams Quality Control Analyst (2025 game ST lead),https://gostanford.com/sports/football/roster/season/2025,
 2025,Syracuse,DC,Elijah Robinson,Assistant Head Coach/co-Defensive Coordinator/Defensive Line,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
-2025,Syracuse,DC,Robert Wright,Co-Defensive Coordinator/Linebackers rwrigh09@syr.edu,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
+2025,Syracuse,DC,Robert Wright,Co-Defensive Coordinator/Linebackers,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
 2025,Syracuse,HC,Fran Brown,Head Coach 4791,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
-2025,Syracuse,OC,Jeff Nixon,Offensive Coordinator/Running Backs janixon@syr.edu,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
-2025,Syracuse,OC,Michael Johnson,Co-Offensive Coordinator/Tight Ends mjohn120@syr.edu,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
+2025,Syracuse,OC,Jeff Nixon,Offensive Coordinator/Running Backs,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
+2025,Syracuse,OC,Michael Johnson,Co-Offensive Coordinator/Tight Ends,https://cuse.com/sports/football/coaches/2025,https://en.wikipedia.org/wiki/2025_Syracuse_Orange_football_team
 2025,Syracuse,ST,Ricky Brumfield,Special Teams Coordinator,https://cuse.com/news/2025/2/7/football-brown-taps-brumfield-to-lead-special-teams,
 2025,TCU,DC,Andy Avalos,Defensive Coordinator,https://gofrogs.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_TCU_Horned_Frogs_football_team
 2025,TCU,HC,Sonny Dykes,Head Coach,https://gofrogs.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_TCU_Horned_Frogs_football_team
@@ -511,12 +512,12 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Texas,OC,Kyle Flood,"Assistant Coach, Football - Offensive Coordinator / OL",https://texaslonghorns.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_Longhorns_football_team
 2025,Texas,OC,AJ Milwee,"Assistant Coach, Football - Co-Offensive Coordinator / QB",https://texaslonghorns.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_Longhorns_football_team
 2025,Texas,ST,Jeff Banks,"Assistant Coach, Football - Special Teams Coordinator / TE",https://texaslonghorns.com/sports/football/roster/2025,
-2025,Texas AM,DC,Jay Bateman,Jay Bateman Twitter Opens in a new window Defensive Coordinator/Linebackers,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
-2025,Texas AM,DC,Jordan Peterson,Jordan Peterson Twitter Opens in a new window Jordan Peterson Instagram Opens in a new window Co-Defensive Coordinator/Defensive Backs,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
+2025,Texas AM,DC,Jay Bateman,Defensive Coordinator/Linebackers,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
+2025,Texas AM,DC,Jordan Peterson,Co-Defensive Coordinator/Defensive Backs,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
 2025,Texas AM,HC,Mike Elko,Head coach,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
-2025,Texas AM,OC,Collin Klein,Collin Klein Twitter Opens in a new window Offensive Coordinator/Quarterbacks,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
-2025,Texas AM,OC,Holmon Wiggins,Holmon Wiggins Twitter Opens in a new window Holmon Wiggins Instagram Opens in a new window Co-Offensive Coordinator/Wide Receivers,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
-2025,Texas AM,ST,Patrick Dougherty,Patrick Dougherty Twitter Opens in a new window Special Teams Coordinator,https://12thman.com/sports/football/roster/2025,
+2025,Texas AM,OC,Collin Klein,Offensive Coordinator/Quarterbacks,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
+2025,Texas AM,OC,Holmon Wiggins,Co-Offensive Coordinator/Wide Receivers,https://12thman.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Texas_A&M_Aggies_football_team
+2025,Texas AM,ST,Patrick Dougherty,Special Teams Coordinator,https://12thman.com/sports/football/roster/2025,
 2025,Texas State,DC,Matthew Gregg,Co-Defensive Coordinator / Linebackers / Defensive Recruiting Coordinator,https://txst.com/sports/football/roster/2025,
 2025,Texas State,HC,GJ Kinne,Head Coach,https://txst.com/sports/football/roster/2025,
 2025,Texas State,OC,Landon Keopple,Offensive Coordinator,https://txst.com/sports/football/roster/2025,
@@ -604,7 +605,7 @@ Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl
 2025,Virginia Tech,DC,Sam Siefkes,Defensive Coordinator,https://hokiesports.com/sports/football/roster/season/2025,https://en.wikipedia.org/wiki/2025_Virginia_Tech_Hokies_football_team
 2025,Virginia Tech,HC,Brent Pry,Head coach,https://en.wikipedia.org/wiki/2025_Virginia_Tech_Hokies_football_team,https://en.wikipedia.org/wiki/2025_Virginia_Tech_Hokies_football_team
 2025,Virginia Tech,OC,Philip Montgomery,Offensive coordinator,https://en.wikipedia.org/wiki/2025_Virginia_Tech_Hokies_football_team,https://en.wikipedia.org/wiki/2025_Virginia_Tech_Hokies_football_team
-2025,Virginia Tech,ST,Stu Holt,Stu Holt Twitter Opens in a new window Special Teams Coordinator/Offensive Assistant,https://hokiesports.com/sports/football/roster/season/2025,
+2025,Virginia Tech,ST,Stu Holt,Special Teams Coordinator/Offensive Assistant,https://hokiesports.com/sports/football/roster/season/2025,
 2025,Wake Forest,DC,Scottie Hazelton,Defensive Coordinator / Linebackers,https://godeacs.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Wake_Forest_Demon_Deacons_football_team
 2025,Wake Forest,HC,Jake Dickert,Head Coach,https://godeacs.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Wake_Forest_Demon_Deacons_football_team
 2025,Wake Forest,OC,Rob Ezell,Offensive Coordinator / Tight Ends,https://godeacs.com/sports/football/roster/2025,https://en.wikipedia.org/wiki/2025_Wake_Forest_Demon_Deacons_football_team

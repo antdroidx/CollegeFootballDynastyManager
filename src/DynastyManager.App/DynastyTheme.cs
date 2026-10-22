@@ -25,8 +25,9 @@ public static class DynastyTheme
         return original;
     }
 
-    public static Color ReadableInk(Color ink, VisualElement view)
+    public static Color ReadableInk(Color? ink, VisualElement view)
     {
+        if (ink is null) return Text;
         if (!IsLight) return ink;
         Color background = Background;
         for (Element? item = view; item is not null; item = item.Parent)
@@ -38,6 +39,7 @@ public static class DynastyTheme
                 ? Color.FromArgb("#E6EBF1") : ink;
         if (ink.Red > .65f && ink.Green > .65f && ink.Blue > .65f) return Text;
         if (ink.Red > .7f && ink.Green > .45f && ink.Blue < .65f) return Color.FromArgb("#765609");
+        if (ink.Red > .7f && ink.Green < .4f) return Color.FromArgb("#A52828");
         if (ink.Green > .6f && ink.Red < .6f) return Color.FromArgb("#146B40");
         var inkLuminance = ink.Red * .2126f + ink.Green * .7152f + ink.Blue * .0722f;
         return inkLuminance > .55f ? Color.FromRgb(ink.Red * .55f, ink.Green * .55f, ink.Blue * .55f) : ink;

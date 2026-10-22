@@ -461,5 +461,31 @@
     ],
     "SourceUrl": "https://csurams.com/sports/football/roster/2025",
     "Title": "Associate Head Coach / Pass-Game Coordinator (game OC lead)"
+  },
+  {
+    "Team": "Southern Miss",
+    "Role": "HC",
+    "Names": [
+      "Charles Huff"
+    ],
+    "SourceUrl": "https://southernmiss.com/documents/download/2025/11/17/2025_Football_Notes_-_South_Alabama_Game.pdf"
+  },
+  {
+    "Team": "Coastal Carolina",
+    "Role": "HC",
+    "Names": [
+      "Tim Beck"
+    ],
+    "SourceUrl": "https://goccusports.com/news/2025/1/11/football-announces-defensive-coordinator-change"
+  },
+  {
+    "Team": "Kentucky",
+    "Role": "DC",
+    "Names": [
+      "Brad White",
+      "Chris Collins"
+    ],
+    "Title": "Defensive Coordinator / Co-Defensive Coordinator",
+    "SourceUrl": "https://storage.googleapis.com/ukathletics-com/2025/10/1f5985a6-game-8-auburn.pdf"
   }
 ]

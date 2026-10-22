@@ -36,7 +36,7 @@ if manual.exists():
   result[item['Team'],item['Role']]=[dict(Season='2025',Team=item['Team'],Role=item['Role'],Name=n,Title=item.get('Title',{'HC':'Head Coach','OC':'Offensive Coordinator','DC':'Defensive Coordinator','ST':'Special Teams Coordinator'}[item['Role']]),SourceUrl=item['SourceUrl'],CrossCheckUrl=item.get('CrossCheckUrl','')) for n in item['Names']]
 fields=['Season','Team','Role','Name','Title','SourceUrl','CrossCheckUrl']
 rows=[dict(r, Team='UConn' if r['Team']=='Connecticut' else r['Team']) for key,items in sorted(result.items()) for r in items]
-for path in [Path('src/DynastyManager.App/Resources/Raw/coaches-2025.csv'),Path('docs/data/coaches-2025.csv')]:
+for path in [Path('.artifacts/proposed-coaches-2025.csv')]:
  path.parent.mkdir(parents=True,exist_ok=True)
  with path.open('w',encoding='utf-8',newline='') as f:
   w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(rows)

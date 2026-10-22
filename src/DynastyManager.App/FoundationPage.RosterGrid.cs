@@ -157,7 +157,7 @@ public sealed partial class FoundationPage
                 row.Add(new Label { Text = FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted), FontSize = 11, TextColor = DynastyTheme.Muted,
                     VerticalTextAlignment = TextAlignment.Center }, 3, 0);
                 row.Add(RatingCell(player.OverallRating), 4, 0); row.Add(up, 5, 0); row.Add(down, 6, 0);
-                var card = new Border { BackgroundColor = Color.FromArgb(RosterManagementService.IsStarter(player) ? "#244B45" : "#243542"),
+                var card = new Border { BackgroundColor = DynastyTheme.Palette(RosterManagementService.IsStarter(player) ? "#244B45" : "#243542"),
                     Stroke = DynastyTheme.Palette("#527185"), Content = row };
                 var drag = new DragGestureRecognizer { CanDrag = true };
                 drag.DragStarting += (_, args) => args.Data.Properties["DepthPlayerId"] = player.PlayerId.ToString();

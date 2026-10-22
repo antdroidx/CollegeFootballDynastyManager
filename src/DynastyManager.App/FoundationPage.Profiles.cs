@@ -219,7 +219,7 @@ public sealed partial class FoundationPage
         (_currentDynasty is null ? Enumerable.Empty<StaffMember>() : Enum.GetValues<StaffRole>()
             .Select(role => StaffManagementService.GetStaff(_currentDynasty, school, role)).OfType<StaffMember>()).OrderBy(coach => coach.Role).Select(coach => new View[]
         {
-            TableText(FormatStaffRole(coach.Role)), CoachLink(coach), RatingCell(coach.OverallRating), TableText(coach.Age.ToString()),
+            TableText(FormatStaffRole(coach.Role)), CoachLink(coach), RatingCell(coach.OverallRating), TableText(coach.DataSeason is null ? coach.Age.ToString() : $"~{coach.Age}"),
             TableText(coach.Recruiting.ToString()), TableText(coach.PlayerDevelopment.ToString())
         }));
 }

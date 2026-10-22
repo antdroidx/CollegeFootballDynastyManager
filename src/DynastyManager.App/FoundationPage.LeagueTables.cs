@@ -69,7 +69,7 @@ public sealed partial class FoundationPage
             for (var item = 0; item < panels.Length; item++)
             {
                 panels[item].IsVisible = item == index;
-                buttons[item].BackgroundColor = Color.FromArgb(item == index ? "#31597D" : "#253342");
+                buttons[item].BackgroundColor = DynastyTheme.Palette(item == index ? "#31597D" : "#253342");
             }
         };
         return new VerticalStackLayout { Spacing = 12, Children = { tabs, panels[0], panels[1], panels[2] } };

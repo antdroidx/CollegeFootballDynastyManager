@@ -54,6 +54,21 @@ public class CoachSuccessionAndLineRolesTests
     }
 
     [Fact]
+    public void RetirementReplacementDoesNotInheritOutgoingCoachesBadSeason()
+    {
+        var team = new Team { Name = "CPU", Abbreviation = "CPU", ConferenceName = "Test", Prestige = 95 };
+        var state = State() with { LeagueTeams = [team], Staff = [new StaffMember { FullName = "Retiring",
+            TeamName = "CPU", Role = StaffRole.HeadCoach, Age = 80 }],
+            TeamSeasonHistory = [new TeamSeasonHistoryRecord { SeasonYear = 2035, TeamName = "CPU", Wins = 0, Losses = 12 }] };
+        var retired = StaffManagementService.AdvanceSeason(state);
+        var replacement = Assert.Single(retired.Staff);
+        var result = StaffMarketService.RunCpuCarousel(retired, new Dictionary<string, Team> { [team.Name] = team });
+        Assert.Contains(result.Staff, s => s.StaffId == replacement.StaffId);
+        Assert.DoesNotContain(result.StaffMovementHistory, m => m.StaffId == replacement.StaffId && m.MovementType == StaffMovementType.Fired);
+        Assert.Equal("New Staff", StaffMarketService.GetHeadCoachStatus(result, team));
+    }
+
+    [Fact]
     public void TalentedGraduatesNeedApprenticeshipAndOnlyFillTheirFootballRole()
     {
         var state = State();
