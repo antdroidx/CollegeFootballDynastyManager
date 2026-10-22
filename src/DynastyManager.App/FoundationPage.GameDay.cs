@@ -211,7 +211,8 @@ public sealed partial class FoundationPage
             {
                 button.FontSize = compact ? 10 : 13;
                 button.Padding = compact ? new Thickness(7, 4) : new Thickness(12, 8);
-                button.MinimumHeightRequest = compact ? 30 : 42;
+                button.MinimumHeightRequest = compact ? 26 : 42;
+                button.HeightRequest = compact ? 26 : -1;
                 button.Margin = compact ? new Thickness(0, 0, 4, 4) : new Thickness(0, 0, 8, 8);
             }
             score.FontSize = compact ? 16 : 22;
@@ -219,10 +220,23 @@ public sealed partial class FoundationPage
             ballValue.FontSize = compact ? 14 : 18;
             result.FontSize = compact ? 11 : 14;
             selectedDescription.IsVisible = defenseDescription.IsVisible = !compact;
-            selectedArt.HeightRequest = defenseArt.HeightRequest = compact ? 68 : 112;
-            selectedArt.WidthRequest = defenseArt.WidthRequest = compact ? 92 : 185;
-            playGrid.ColumnDefinitions[0].Width = new GridLength(selectedArt.IsVisible ? compact ? 92 : 185 : 0);
-            defenseGrid.ColumnDefinitions[0].Width = new GridLength(compact ? 92 : 185);
+            selectedHeading.FontSize = defenseHeading.FontSize = compact ? 8 : 9;
+            selectedName.FontSize = defenseName.FontSize = compact ? 13 : 15;
+            selectedDetails.FontSize = defenseDetails.FontSize = compact ? 10 : 11;
+            selectedDetails.MaxLines = defenseDetails.MaxLines = compact ? 2 : -1;
+            playInfo.Spacing = defenseInfo.Spacing = compact ? 2 : 4;
+            playGrid.ColumnSpacing = defenseGrid.ColumnSpacing = compact ? 7 : 12;
+            foreach (var pickerButton in new[] { choose, chooseDefense })
+            {
+                pickerButton.FontSize = compact ? 10 : 14;
+                pickerButton.Padding = compact ? new Thickness(6, 3) : new Thickness(12, 8);
+                pickerButton.HeightRequest = compact ? 26 : -1;
+                pickerButton.MinimumHeightRequest = compact ? 26 : 42;
+            }
+            selectedArt.HeightRequest = defenseArt.HeightRequest = compact ? 54 : 112;
+            selectedArt.WidthRequest = defenseArt.WidthRequest = compact ? 72 : 185;
+            playGrid.ColumnDefinitions[0].Width = new GridLength(selectedArt.IsVisible ? compact ? 72 : 185 : 0);
+            defenseGrid.ColumnDefinitions[0].Width = new GridLength(compact ? 72 : 185);
             playCard.Padding = defenseCard.Padding = compact ? 6 : 10;
             if (!compact)
             {
