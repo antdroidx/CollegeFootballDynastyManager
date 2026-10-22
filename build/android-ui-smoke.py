@@ -173,6 +173,36 @@ def main():
             if node.get("text") == label:
                 left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
                 assert screen_top <= top < bottom <= screen_bottom, f"Landscape control is off-screen: {label}"
+    # The hybrid tray exposes the full call sheet over the existing field. Merely
+    # choosing/canceling a play or filtering formations must not advance the game.
+    before_picker_clock = next(t for t in texts(landscape) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
+    choose_label = "Choose play" if "Choose play" in texts(landscape) else "Choose defense"
+    tap(landscape, choose_label)
+    picker = wait_for("expanded-play-picker", lambda r: "Close playbook" in texts(r))
+    assert "All formations" in texts(picker)
+    assert any(n.get("scrollable") == "true" for n in picker.iter("node")), "Play library must scroll"
+    adb("shell", "input", "keyevent", "4")
+    collapsed = wait_for("play-picker-back", lambda r: "Close playbook" not in texts(r) and "BALL ON" in texts(r))
+    assert before_picker_clock in texts(collapsed), "Browsing the playbook advanced the clock"
+    # Select a real card in the expanded library and verify it only changes the
+    # pending call, rather than running a snap or consuming time.
+    tap(collapsed, choose_label)
+    selection = capture("play-picker-selection")
+    card_node = next(n for n in selection.iter("node") if n.get("content-desc", "").startswith("Select "))
+    left, top, right, bottom = map(int, re.findall(r"\d+", card_node.get("bounds")))
+    adb("shell", "input", "tap", str((left + right)//2), str((top + bottom)//2))
+    collapsed = wait_for("play-selected", lambda r: "Close playbook" not in texts(r) and choose_label in texts(r))
+    assert before_picker_clock in texts(collapsed), "Selecting a play advanced the game clock"
+    assert any("SELECTED" in (value or "") for value in texts(collapsed))
+    tap(collapsed, "More")
+    utilities = capture("game-day-more")
+    assert {"Players: Sprites", "Offense: You", "Defense: You"} <= texts(utilities)
+    assert {"Markers: Positions", "Markers: Numbers"} & texts(utilities)
+    tap(utilities, "Less")
+    landscape = capture("game-day-tray-restored")
+    assert "Players: Sprites" not in texts(landscape), "Utility controls should collapse during play selection"
+    assert choose_label in texts(landscape)
+    print("Hybrid play overlay, Android Back, compact utility menu and paused-clock checks passed.")
     # Inspect in-progress totals without finishing the match or advancing the play clock.
     before_clock = next(t for t in texts(landscape) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
     tap(landscape, "Box score")

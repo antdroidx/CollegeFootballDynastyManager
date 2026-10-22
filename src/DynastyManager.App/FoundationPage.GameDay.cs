@@ -44,7 +44,7 @@ public sealed partial class FoundationPage
             return;
         }
 
-        var page = new ContentPage { BackgroundColor = DynastyTheme.Background };
+        var page = new GameDayViewerPage { BackgroundColor = DynastyTheme.Background };
         var score = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
         var quarterClock = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
         var downValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
@@ -199,13 +199,110 @@ public sealed partial class FoundationPage
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
         foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, numbers, spriteMode, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
+        var coachCallsOffense = false;
+        var coachCallsDefense = false;
+        var quickCalls = new Grid { ColumnSpacing = 6,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
+        var expand = new Button { Text = "Choose play" };
+        controls.Children.Insert(1, expand);
+        var more = new Button { Text = "More", AutomationId = "game-day-more" };
+        controls.Children.Add(more);
+        var tray = new VerticalStackLayout { Spacing = 4, Children = { quickCalls, controls } };
+        var traySurface = new Border { StrokeThickness = 0, Padding = 7,
+            BackgroundColor = Color.FromArgb("#F0101F2C"), Content = tray,
+            VerticalOptions = LayoutOptions.End, Margin = new Thickness(8) };
+        var pickerLayer = new Grid { IsVisible = false, BackgroundColor = Color.FromArgb("#88000000"), Padding = 10 };
+        expand.Clicked += (_, _) => ExpandCalls(!ControlledOnOffense());
+        var moreOpen = false;
         bool? compactLayout = null;
+        void ClosePicker() { pickerLayer.IsVisible = false; pickerLayer.Children.Clear(); }
+        page.BackHandler = () =>
+        {
+            if (pickerLayer.IsVisible) { ClosePicker(); return true; }
+            if (moreOpen) { moreOpen = false; UpdateOverlay(); return true; }
+            return false;
+        };
+        void UpdateOverlay()
+        {
+            var landscape = compactLayout == true;
+            var deciding = !animating && replay is null && !session.IsComplete && session.Mode == GameDayMode.Play && !session.KickoffPending &&
+                (session.PossessionTeamName.Equals(controlledTeamName, StringComparison.OrdinalIgnoreCase) ? !coachCallsOffense : !coachCallsDefense);
+            quickCalls.IsVisible = landscape && deciding && !moreOpen;
+            // In portrait the selected card retains its larger, readable layout.
+            playCard.IsVisible = !landscape && deciding && ControlledOnOffense();
+            defenseCard.IsVisible = !landscape && deciding && !ControlledOnOffense();
+            expand.IsVisible = landscape && deciding && !session.TryPending;
+            expand.Text = ControlledOnOffense() ? "Choose play" : "Choose defense";
+            extraPoint.IsVisible = deciding && ControlledOnOffense() && session.TryPending && session.OvertimeRound < 2;
+            twoPoint.IsVisible = deciding && ControlledOnOffense() && session.TryPending;
+            call.IsVisible = deciding && ControlledOnOffense();
+            callDefense.IsVisible = deciding && !ControlledOnOffense();
+            more.IsVisible = landscape && !animating && !session.IsComplete && replay is null;
+            more.Text = moreOpen ? "Less" : "More";
+            foreach (var utility in new[] { punt, kick, kneel, spike, onside, delegateOffense, delegateDefense, numbers, spriteMode })
+            {
+                var eligible = utility == punt || utility == kick || utility == kneel || utility == spike
+                    ? deciding && ControlledOnOffense() && !session.TryPending && (utility != kneel && utility != spike || session.OvertimeRound == 0)
+                    : utility == numbers || utility == spriteMode || session.Mode == GameDayMode.Play && !session.IsComplete;
+                utility.IsVisible = eligible && (!landscape || moreOpen) && !animating;
+            }
+            foreach (var action in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, delegateOffense, delegateDefense, takeover, onside, skip })
+                action.IsEnabled = !animating;
+            if (animating) { quickCalls.IsVisible = false; playCard.IsVisible = defenseCard.IsVisible = false; moreOpen = false; ClosePicker(); }
+        }
+        more.Clicked += (_, _) => { moreOpen = !moreOpen; UpdateOverlay(); };
+        void UpdateQuickCalls()
+        {
+            quickCalls.Children.Clear();
+            if (replay is not null) return;
+            var offense = ControlledOnOffense();
+            var heading = offense ? selectedHeading.Text : defenseHeading.Text;
+            var badge = heading.StartsWith("RECOMMENDED", StringComparison.Ordinal) ? "COACH PICK" : "SELECTED";
+            var type = offense ? selectedCallId.StartsWith("special-", StringComparison.Ordinal) ? "SPECIAL TEAMS"
+                : selectedPlay.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun ? "RUN" : "PASS"
+                : GamePlanService.Label(selectedDefense.Approach);
+            var current = GameDayCallPicker.Card(offense ? selectedName.Text : defenseName.Text,
+                offense ? selectedDetails.Text : defenseDetails.Text, $"{badge} · {type}",
+                offense ? selectedArt.IsVisible ? selectedArt.Drawable : null : defenseArt.Drawable,
+                () => { if (!session.TryPending) ExpandCalls(!offense); }, compact: true);
+            current.Stroke = Color.FromArgb("#E8C979"); current.StrokeThickness = 1;
+            quickCalls.Add(current, 0, 0);
+            if (session.TryPending) { Grid.SetColumnSpan(current, 3); return; }
+            if (offense)
+            {
+                var choices = availablePlays.Where(p => p.Id != selectedCallId)
+                    .OrderBy(p => p.Concept == selectedPlay.Concept ? 1 : 0).Take(2).ToArray();
+                for (var i = 0; i < choices.Length; i++)
+                {
+                    var play = choices[i];
+                    quickCalls.Add(GameDayCallPicker.Card(play.Name, GamePlanService.Label(play.Formation),
+                        play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun ? "RUN" : "PASS",
+                        new PlayArtDrawable(play.Id, play.Name, true, play.Concept.ToString(), play),
+                        () => { SelectPlay(play); UpdateQuickCalls(); }, compact: true), i + 1, 0);
+                }
+            }
+            else
+            {
+                var choices = availableDefenses.Where(p => p.Id != selectedDefense.Id)
+                    .OrderBy(p => p.Approach == selectedDefense.Approach ? 1 : 0).Take(2).ToArray();
+                for (var i = 0; i < choices.Length; i++)
+                {
+                    var play = choices[i];
+                    quickCalls.Add(GameDayCallPicker.Card(play.Name, GamePlanService.Label(play.Formation),
+                        GamePlanService.Label(play.Approach),
+                        new PlayArtDrawable(play.Id, play.Name, false, play.Approach.ToString(), defensiveDefinition: play),
+                        () => { SelectDefense(play); UpdateQuickCalls(); }, compact: true), i + 1, 0);
+                }
+            }
+        }
+
         void ArrangeViewer(bool compact)
         {
             if (compactLayout == compact) return;
             compactLayout = compact;
+            ClosePicker();
             page.Content = null;
-            foreach (var view in new View[] { scoreHeader, situation, possession, field, result, playCard, defenseCard, controls })
+            foreach (var view in new View[] { scoreHeader, situation, possession, field, result, playCard, defenseCard, controls, quickCalls, traySurface, pickerLayer })
                 if (view.Parent is Layout parent) parent.Children.Remove(view);
             foreach (var button in controls.Children.OfType<Button>())
             {
@@ -240,6 +337,7 @@ public sealed partial class FoundationPage
             playCard.Padding = defenseCard.Padding = compact ? 6 : 10;
             if (!compact)
             {
+                UpdateOverlay();
                 field.HeightRequest = 330;
                 page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 10,
                     Children = { scoreHeader, situation, possession, field, result, playCard, defenseCard, controls } } };
@@ -250,15 +348,18 @@ public sealed partial class FoundationPage
                 new ColumnDefinitionCollection { new(new GridLength(2, GridUnitType.Star)), new(new GridLength(3, GridUnitType.Star)) } };
             heading.Add(new VerticalStackLayout { Spacing = 1, Children = { scoreHeader, possession } }, 0, 0);
             heading.Add(situation, 1, 0);
-            var body = new Grid { ColumnSpacing = 8, ColumnDefinitions =
-                new ColumnDefinitionCollection { new(new GridLength(2.2, GridUnitType.Star)), new(GridLength.Star) } };
-            body.Add(field, 0, 0);
-            body.Add(new ScrollView { Content = new VerticalStackLayout { Spacing = 5,
-                Children = { playCard, defenseCard, controls } } }, 1, 0);
-            var root = new Grid { Padding = 8, RowSpacing = 5, RowDefinitions =
+            if (playCard.Parent is Layout oldPlay) oldPlay.Children.Remove(playCard);
+            if (defenseCard.Parent is Layout oldDefense) oldDefense.Children.Remove(defenseCard);
+            if (controls.Parent is Layout oldControls) oldControls.Children.Remove(controls);
+            if (quickCalls.Parent is Layout oldQuick) oldQuick.Children.Remove(quickCalls);
+            tray.Children.Clear(); tray.Children.Add(quickCalls); tray.Children.Add(controls);
+            var body = new Grid();
+            body.Add(field); body.Add(traySurface); body.Add(pickerLayer);
+            var root = new Grid { Padding = 4, RowSpacing = 3, RowDefinitions =
                 new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
             root.Add(heading, 0, 0); root.Add(body, 0, 1); root.Add(result, 0, 2);
             page.Content = root;
+            UpdateOverlay();
         }
         ArrangeViewer(false);
         page.SizeChanged += (_, _) =>
@@ -881,8 +982,6 @@ public sealed partial class FoundationPage
             await completion.Task;
             highlight.IsVisible = false;
         }
-        var coachCallsOffense = false;
-        var coachCallsDefense = false;
         bool ControlledOnOffense() => session.PossessionTeamName.Equals(controlledTeamName, StringComparison.OrdinalIgnoreCase);
         bool NeedsUserCall() => session.Mode == GameDayMode.Play && !session.IsComplete && !session.KickoffPending &&
             (ControlledOnOffense() ? !coachCallsOffense : !coachCallsDefense);
@@ -945,6 +1044,8 @@ public sealed partial class FoundationPage
             timeout.Text = $"Timeout ({remaining})";
             timeout.IsVisible = !session.IsComplete;
             timeout.IsEnabled = !animating && !session.KickoffPending && (!session.ClockStopped || session.ClockRestartsOnReady) && remaining > 0;
+            UpdateQuickCalls();
+            UpdateOverlay();
         }
         async Task ShowSnapAsync(GameSnapEvent snap)
         {
@@ -952,7 +1053,7 @@ public sealed partial class FoundationPage
             currentSnapFinished = finished.Task;
             try
             {
-                animating = true; timeout.IsEnabled = false;
+                animating = true; timeout.IsEnabled = false; UpdateOverlay();
                 await AnimateSnapAsync(snap);
                 await ShowHighlightAsync(snap);
                 var period = GameDayAnimationPlanner.PeriodHeadline(snap.Quarter, session.Quarter, session.IsComplete);
@@ -961,7 +1062,7 @@ public sealed partial class FoundationPage
                 Refresh(snap);
                 await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
             }
-            finally { animating = false; finished.TrySetResult(); }
+            finally { animating = false; UpdateOverlay(); finished.TrySetResult(); }
         }
         async Task FinishIfNeeded()
         {
@@ -1028,15 +1129,36 @@ public sealed partial class FoundationPage
             else await Clip();
             return;
         }
+        void ExpandCalls(bool defense)
+        {
+            if (animating || session.IsComplete) return;
+            var choices = defense
+                ? availableDefenses.Select(p => new GameDayCallChoice(p.Id, p.Name, GamePlanService.Label(p.Formation),
+                    GamePlanService.Label(p.Approach), new PlayArtDrawable(p.Id, p.Name, false, p.Approach.ToString(), defensiveDefinition: p))).ToArray()
+                : availablePlays.Select(p => new GameDayCallChoice(p.Id, p.Name, GamePlanService.Label(p.Formation),
+                    p.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun ? "RUN" : "PASS",
+                    new PlayArtDrawable(p.Id, p.Name, true, p.Concept.ToString(), p))).ToArray();
+            pickerLayer.Children.Clear();
+            pickerLayer.Add(new GameDayCallPicker(defense ? "Choose defense" : "Choose play", choices,
+                defense ? selectedDefense.Id : selectedCallId, id =>
+                {
+                    if (defense) SelectDefense(availableDefenses.Single(p => p.Id == id));
+                    else SelectPlay(availablePlays.Single(p => p.Id == id));
+                    ClosePicker(); UpdateQuickCalls();
+                }, ClosePicker));
+            pickerLayer.IsVisible = true;
+        }
         choose.Clicked += async (_, _) =>
         {
+            if (compactLayout == true) { ExpandCalls(false); return; }
             var choice = await ShowPlayCallSheetAsync(availablePlays, selectedPlay);
-            if (choice is not null) SelectPlay(choice);
+            if (choice is not null) { SelectPlay(choice); UpdateQuickCalls(); }
         };
         chooseDefense.Clicked += async (_, _) =>
         {
+            if (compactLayout == true) { ExpandCalls(true); return; }
             var choice = await ShowDefensiveCallSheetAsync(availableDefenses, selectedDefense);
-            if (choice is not null) SelectDefense(choice);
+            if (choice is not null) { SelectDefense(choice); UpdateQuickCalls(); }
         };
         call.Clicked += async (_, _) =>
         {
@@ -1065,7 +1187,7 @@ public sealed partial class FoundationPage
             session.Mode = session.Mode == GameDayMode.Watch ? GameDayMode.Play : GameDayMode.Watch;
             Refresh();
             if (session.Mode == GameDayMode.Watch) await WatchLoop();
-            else await RunCpuUntilUserDecision();
+            else if (!animating) await RunCpuUntilUserDecision();
         };
         takeover.Clicked += async (_, _) => { session.Mode = GameDayMode.Play; Refresh(); await RunCpuUntilUserDecision(); };
         punt.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-punt")); await RunCpuUntilUserDecision(); };

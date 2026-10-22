@@ -67,3 +67,12 @@ Use **Players: Sprites / Players: Circles** in the viewer to switch immediately;
 Penalty events retain the offending team, foul name and enforced yards. The banner uses three lines, e.g. **PENALTY / 5 yards Offside / Washington**, and commentary repeats the same attribution. Defensive offside advances the offense; a false start moves the offense backward. No-play penalties do not become rushing/passing attempts. Snapshot/replay serialization retains the details; earlier events infer the team from enforcement direction when metadata is absent.
 
 The current engine generates pre-snap false starts and defensive offside. Whole-yard half-distance enforcement is capped before either goal line; at the one-yard line the integer field model retains the spot rather than manufacturing a goal-line crossing. Fractional-yard spots and a complete live-ball foul catalog remain follow-ups.
+
+
+## Hybrid landscape game-day layout
+
+The landscape field spans the available width, with a compact score/situation header and commentary below it. Between user decisions a translucent bottom tray shows the selected/recommended call and two alternatives with play art. Selecting an alternative changes the selected call; **Call play / Call defense** still explicitly starts the snap.
+
+**Choose play / Choose defense** expands a field overlay with a scrollable three-column library and formation filter. It uses only the controlled coach's available plays. Selecting a play closes the overlay without consuming game time. **Close playbook** or Android Back dismisses it. Portrait retains the larger scrolling cards and existing formation-grouped call sheets.
+
+The tray's play cards disappear during a snap and while watching CPU play. **More** reveals special teams, kneel/spike, offense/defense delegation, onside preference, jersey labels and renderer options. The scoreboard's box-score control and compact watch/timeout/end-game controls remain accessible. This is an in-game layout change; the concept image's stadium surroundings and illustrated sprite assets are not bundled artwork.
