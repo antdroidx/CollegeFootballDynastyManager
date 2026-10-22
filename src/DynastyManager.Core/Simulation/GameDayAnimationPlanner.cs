@@ -269,6 +269,42 @@ public static class GameDayAnimationPlanner
         return new(from.X + (to.X - from.X) * fraction, from.Y + (to.Y - from.Y) * fraction);
     }
 
+    /// <summary>Stay on the defensive shoulder of a moving blocker until the recorded pursuit releases.</summary>
+    public static GameFieldPoint BlockedRusherPoint(GameFieldPoint start, GameFieldPoint blockerStart,
+        GameFieldPoint blockerEnd, GameFieldPoint finish, int direction, double progress, double release)
+    {
+        var p = Math.Clamp(progress, 0, 1);
+        var freed = Math.Clamp(release, .25, 1);
+        GameFieldPoint Engagement(double t)
+        {
+            var push = Math.Sin(t * Math.PI * 6) * .0015;
+            return new(blockerStart.X + (blockerEnd.X - blockerStart.X) * t + direction * (.020 + push),
+                blockerStart.Y + (blockerEnd.Y - blockerStart.Y) * t + Math.Clamp((start.Y - blockerStart.Y) * .08, -.02, .02));
+        }
+        if (p <= .22)
+        {
+            var target = Engagement(p); var approach = p / .22;
+            return new(start.X + (target.X - start.X) * approach, start.Y + (target.Y - start.Y) * approach);
+        }
+        if (p <= freed || freed == 1) return Engagement(p);
+        var from = Engagement(freed); var fraction = (p - freed) / (1 - freed);
+        // Recorded winners work around a shoulder before crossing the blocker's plane.
+        var shoulder = Math.Clamp(from.Y + (start.Y <= blockerStart.Y ? -.08 : .08), .05, .95);
+        var slide = new GameFieldPoint(from.X, shoulder);
+        var cleared = new GameFieldPoint(from.X - direction * .045, shoulder);
+        GameFieldPoint Lerp(GameFieldPoint a, GameFieldPoint b, double t) => new(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+        return fraction < .25 ? Lerp(from, slide, fraction / .25) :
+            fraction < .5 ? Lerp(slide, cleared, (fraction - .25) / .25) : Lerp(cleared, finish, (fraction - .5) / .5);
+    }
+
+    /// <summary>Overhead artwork points up at zero degrees. Use actual screen displacement, not route endpoints.</summary>
+    public static double SpriteHeading(double dx, double dy, double previousHeading)
+    {
+        if (dx * dx + dy * dy < .0001) return previousHeading;
+        var angle = Math.Atan2(dy, dx) * 180 / Math.PI + 90;
+        return (Math.Round(angle / 45) * 45 + 360) % 360;
+    }
+
     public static double PursuitProgress(double animationProgress, bool primaryDefender)
     {
         return Math.Clamp(animationProgress, 0, 1);
