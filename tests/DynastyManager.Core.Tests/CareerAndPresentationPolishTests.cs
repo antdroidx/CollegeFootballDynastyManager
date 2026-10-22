@@ -155,6 +155,20 @@ public class CareerAndPresentationPolishTests(ITestOutputHelper output)
         Assert.Equal(result.PlayerDepartureHistory,JsonSerializer.Deserialize<DynastyState>(JsonSerializer.Serialize(result))!.PlayerDepartureHistory);
     }
 
+    [Fact]
+    public void AutomaticRosterRebalancingAlsoRecordsReleasedPlayers()
+    {
+        var team=new Team{Name="Home",Abbreviation="H",ConferenceName="Test",Prestige=60};
+        var source=LegacyDynastyRosterFactory.Create([],[team],Guid.NewGuid(),2026);
+        var roster=source.Select(p=>p.Position==Position.QB ? p with{Position=Position.WR} : p).ToArray();
+        var state=new DynastyState{DynastyName="Rebalance",UserTeamName="Home",SeasonYear=2026,ActiveRoster=roster};
+        var result=WalkOnRosterService.FillAllTeams(state,new Dictionary<string,Team>{{team.Name,team}});
+        var removed=roster.Where(p=>result.ActiveRoster.All(r=>r.PlayerId!=p.PlayerId)).ToArray();
+        Assert.NotEmpty(removed);
+        foreach(var p in removed)Assert.Contains(result.PlayerDepartureHistory,d=>d.PlayerId==p.PlayerId && d.Reason==PlayerDepartureReason.Released);
+        Assert.Equal(result.PlayerDepartureHistory,WalkOnRosterService.FillAllTeams(result,new Dictionary<string,Team>{{team.Name,team}}).PlayerDepartureHistory);
+    }
+
 }
 
 

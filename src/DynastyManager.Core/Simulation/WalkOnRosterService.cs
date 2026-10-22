@@ -126,9 +126,17 @@ public static class WalkOnRosterService
                 AddWalkOn(SelectMostNeededPosition(roster, team.Name));
         }
 
+        var retainedIds = roster.Select(p => p.PlayerId).ToHashSet();
+        var released = state.ActiveRoster.Where(p => !retainedIds.Contains(p.PlayerId)).Select(p => new PlayerDepartureRecord
+        {
+            SeasonYear = state.SeasonYear, PlayerId = p.PlayerId, FullName = p.FullName,
+            TeamName = p.TeamName, Position = p.Position, OverallRating = p.OverallRating, Reason = PlayerDepartureReason.Released
+        }).ToArray();
         return PlayerRatingService.EnsureProfiles(state with
         {
-            ActiveRoster = roster
+            ActiveRoster = roster,
+            RecentPlayerDepartures = state.RecentPlayerDepartures.Concat(released).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray(),
+            PlayerDepartureHistory = state.PlayerDepartureHistory.Concat(released).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray()
         });
     }
 
