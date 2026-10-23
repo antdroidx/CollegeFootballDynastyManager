@@ -29,7 +29,7 @@ Compile Android after integration; run existing core/data tests, resource and sy
 Final Phase1–2 evidence: [Build306 validation and screenshots](validation/management-ui-phase-1-2/README.md).
 
 
-## Remaining management phases (Build 309 candidate)
+## Remaining management phases (Build 309)
 
 The Oct23 follow-up extends the existing components rather than introducing a second UI framework. Sidebar identity uses only the team initial/year, with the full name retained in accessibility text and normal page banners. Dense person links use text-only buttons aligned to the start of their cells; deterministic portraits remain in profiles and news. This removes repeated avatar measurement and appearance lookups from recruit table construction.
 
@@ -50,3 +50,5 @@ Management tabs remember selection across model refreshes and explicit theme reb
 The Game Day field and play-calling UI remain excluded. No simulation, POCI, development, recruiting, generation, persistence schema or signing changes are part of this follow-up. Validation records distinguish emulator coverage from physical-device/hinge testing; the latter still needs real hardware.
 
 Compact navigation now overlays the full-width page as a drawer with a scrim, explicit close control and Back handling. Only persistent sidebars consume a layout column, preventing squeezed headers on narrow phones.
+
+Final follow-up validation: [Build309 report and matching screenshots](validation/management-ui-phase-3-5/README.md). The requested management UI pass is complete; no subsequent work starts without user direction.
