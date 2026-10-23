@@ -11,6 +11,10 @@ public sealed partial class FoundationPage
     private static readonly BindableProperty TableValueProperty = BindableProperty.CreateAttached("TableValue", typeof(string), typeof(FoundationPage), null);
     private readonly Dictionary<string, (int Column, bool Descending)> _tableOrders = new();
 
+    private static bool TextColumn(string title) => title is "Player" or "Prospect" or "Coach" or "School" or "Team" or "Opponent"
+        or "Role" or "Style" or "Source" or "Availability" or "Status" or "Origin" or "Competition" or "Interest / status"
+        or "Honors / postseason" or "Bowl";
+
     private static string? TableValue(View view) => view.GetValue(TableValueProperty) as string ?? view switch
     {
         Label label => label.Text,
@@ -35,9 +39,9 @@ public sealed partial class FoundationPage
 
     private static Label TableText(string text, bool bold = false, Color? color = null) => new()
     {
-        Text = text, FontSize = 12, FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None,
+        Text = text, FontSize = 11, FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None,
         TextColor = color ?? DynastyTheme.Palette("#E6EBF1"), VerticalOptions = LayoutOptions.Center,
-        LineBreakMode = LineBreakMode.TailTruncation, Margin = new Thickness(8, 6)
+        LineBreakMode = LineBreakMode.TailTruncation, Margin = new Thickness(7, 4)
     };
 
     private View SchoolCell(string name, bool includeRank = true)
@@ -62,33 +66,35 @@ public sealed partial class FoundationPage
 
     private View SchoolBanner(string name, string subtitle)
     {
-        var brand = TeamBrandCatalog.Get(name);
-        var primary = Color.FromArgb(brand.Primary);
-        var ink = BrandInk(primary);
-        return new Border { BackgroundColor = primary, Stroke = Color.FromArgb(brand.Secondary),
-            Padding = 0, Content = new VerticalStackLayout { Spacing = 0, Children =
-            {
-                new VerticalStackLayout { Padding = new Thickness(14, 10), Spacing = 3, Children =
-                {
-                    new Label { Text = _currentDynasty is null ? name : CollegePollService.RankedName(name, BuildCurrentNationalRankings()), FontSize = 18, FontAttributes = FontAttributes.Bold, TextColor = ink },
-                    new Label { Text = subtitle, FontSize = 12, TextColor = ink }
-                } },
-                new BoxView { Color = Color.FromArgb(brand.Secondary), HeightRequest = 3 }
-            } } };
+        var brand=TeamBrandCatalog.Get(name);var primary=Color.FromArgb(brand.Primary);var ink=BrandInk(primary);
+        var initial=_teamsByName.TryGetValue(name,out var team)?team.Abbreviation[..1]:name[..1];
+        var identity=new Grid { ColumnSpacing=10, ColumnDefinitions=new() {new(42),new(GridLength.Star)} };
+        identity.Add(new Border { WidthRequest=40,HeightRequest=44,Padding=0,BackgroundColor=primary,
+            Stroke=Color.FromArgb(brand.Secondary),StrokeThickness=1,
+            Content=new Label {Text=initial,FontSize=30,FontAttributes=FontAttributes.Bold,TextColor=Color.FromArgb(brand.Secondary),
+                HorizontalTextAlignment=TextAlignment.Center,VerticalTextAlignment=TextAlignment.Center} },0,0);
+        identity.Add(new VerticalStackLayout {Spacing=3,VerticalOptions=LayoutOptions.Center,Children={
+            new Label {Text=_currentDynasty is null?name:CollegePollService.RankedName(name,BuildCurrentNationalRankings()),
+                FontSize=15,FontAttributes=FontAttributes.Bold,TextColor=ink},
+            new Label {Text=subtitle,FontSize=11,TextColor=ink} } },1,0);
+        return new Border {BackgroundColor=primary,Padding=new Thickness(12,10),Content=identity};
     }
 
     private static View RatingCell(int rating)
     {
-        var color = Color.FromArgb(rating >= 90 ? "#F4CC66" : rating >= 80 ? "#74D6AA" : rating >= 70 ? "#8EBEEB" : "#B6BFCD");
+        var color = Color.FromArgb(DynastyTheme.IsLight
+            ? rating >= 90 ? "#7B5B00" : rating >= 80 ? "#116540" : rating >= 70 ? "#225D9A" : "#526377"
+            : rating >= 90 ? "#F4CC66" : rating >= 80 ? "#74D6AA" : rating >= 70 ? "#8EBEEB" : "#B6BFCD");
         return new Border { BackgroundColor = color.WithAlpha(.13f), StrokeThickness = 0,
             HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center, Padding = new Thickness(7, 4),
             Content = new Label { Text = rating.ToString(), FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = color } };
     }
 
     private View DataTable((string Title, double Width)[] columns, IEnumerable<View[]> rows,
-        Action<int, bool>? sortRequested = null, int initialSortColumn = -1, bool initialDescending = false)
+        Action<int, bool>? sortRequested = null, int initialSortColumn = -1, bool initialDescending = false, bool configureColumns = false)
     {
         var materialized = rows.ToArray();
+        bool allColumns = !configureColumns || Microsoft.Maui.Storage.Preferences.Default.Get("columns-" + string.Join("/", columns.Select(c=>c.Title)), false);
         var key = string.Join("/", columns.Select(column => column.Title));
         var order = sortRequested is null && _tableOrders.TryGetValue(key, out var saved)
             ? saved : (Column: initialSortColumn, Descending: initialDescending);
@@ -100,7 +106,7 @@ public sealed partial class FoundationPage
         {
             var button = new Button { Text = column.Title, FontSize = 10, FontAttributes = FontAttributes.Bold,
                 BackgroundColor = Colors.Transparent, TextColor = DynastyTheme.Palette("#B8D8FA"),
-                HorizontalOptions = LayoutOptions.Fill, VerticalOptions = LayoutOptions.Fill,
+                HorizontalOptions = TextColumn(column.Title) ? LayoutOptions.Start : LayoutOptions.Fill, VerticalOptions = LayoutOptions.Fill,
                 Padding = new Thickness(5, 6), CornerRadius = 0, MinimumHeightRequest = 34,
                 IsEnabled = column.Title is not ("Details" or "Stats" or "Profile") };
             SemanticProperties.SetDescription(button, "Sort " + column.Title);
@@ -110,6 +116,8 @@ public sealed partial class FoundationPage
                 if (sortRequested is not null) { sortRequested(index, order.Descending); return; }
                 _tableOrders[key] = order;
                 Render();
+                // Column visibility is reapplied by the table layout after sorting.
+                foreach(var cell in grid.Children.OfType<View>()) if(cell is not BoxView) cell.IsVisible=allColumns || Grid.GetColumn(cell)<7;
             };
             return button;
         }).ToArray();
@@ -117,7 +125,7 @@ public sealed partial class FoundationPage
         {
             grid.Children.Clear(); grid.RowDefinitions.Clear();
             grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            var heading = new BoxView { Color = DynastyTheme.Palette("#253E59") };
+            var heading = new BoxView { Color = DynastyTheme.Panel };
             grid.Add(heading, 0, 0); Grid.SetColumnSpan(heading, columns.Length);
             for (var column = 0; column < headers.Length; column++)
             {
@@ -132,9 +140,14 @@ public sealed partial class FoundationPage
             {
                 grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
                 var user = cells.Any(cell => TableValue(cell) == _currentDynasty?.UserTeamName);
-                var background = new BoxView { Color = DynastyTheme.Palette(user ? "#203D50" : index % 2 == 0 ? "#1E2936" : "#17212D"), MinimumHeightRequest = 42 };
+                var background = new BoxView { Color = user ? DynastyTheme.Selected : index % 2 == 0 ? DynastyTheme.Panel : DynastyTheme.Surface, MinimumHeightRequest = 44 };
                 grid.Add(background, 0, index); Grid.SetColumnSpan(background, columns.Length);
-                for (var column = 0; column < cells.Length; column++) grid.Add(cells[column], column, index);
+                for (var column = 0; column < cells.Length; column++)
+                {
+                    if (cells[column] is Label label)
+                        label.HorizontalTextAlignment = TextColumn(columns[column].Title) ? TextAlignment.Start : TextAlignment.Center;
+                    grid.Add(cells[column], column, index);
+                }
                 index++;
             }
         }
@@ -146,22 +159,37 @@ public sealed partial class FoundationPage
             Content = grid
         };
         var naturalWidth = columns.Sum(column => column.Width);
+        void ApplyColumns()
+        {
+            naturalWidth = columns.Where((c,i)=>allColumns || i<7).Sum(c=>c.Width);
+            for(var i=0;i<columns.Length;i++) grid.ColumnDefinitions[i].Width = allColumns || i<7 ? columns[i].Width : 0;
+            foreach(var cell in grid.Children.OfType<View>())
+                if(cell is not BoxView) cell.IsVisible=allColumns || Grid.GetColumn(cell)<7;
+            grid.WidthRequest=naturalWidth;
+        }
+        ApplyColumns();
         scroll.SizeChanged += (_, _) =>
         {
             var width = Math.Max(naturalWidth, scroll.Width);
             if (Math.Abs(grid.WidthRequest - width) < 1) return;
             grid.WidthRequest = width;
-            var extra = (width - naturalWidth) / columns.Length;
+            var extra = (width - naturalWidth) / (allColumns ? columns.Length : Math.Min(7, columns.Length));
             for (var column = 0; column < columns.Length; column++)
-                grid.ColumnDefinitions[column].Width = columns[column].Width + extra;
+                grid.ColumnDefinitions[column].Width = allColumns || column < 7 ? columns[column].Width + extra : 0;
         };
-        return scroll;
+        if (!configureColumns) return scroll;
+        var columnsToggle = new Button { Text=allColumns ? "Columns: All" : "Columns: Essential", FontSize=11,
+            BackgroundColor=Colors.Transparent, TextColor=DynastyTheme.Accent };
+        columnsToggle.Clicked += (_,_) => { allColumns=!allColumns;
+            Microsoft.Maui.Storage.Preferences.Default.Set("columns-" + string.Join("/", columns.Select(c=>c.Title)),allColumns);
+            columnsToggle.Text=allColumns ? "Columns: All" : "Columns: Essential"; ApplyColumns(); };
+        return new VerticalStackLayout { Spacing=3, Children={columnsToggle,scroll} };
     }
 
     private static View SectionTitle(string title, string description) => new VerticalStackLayout { Spacing = 3, Children =
     {
         new Label { Text = title, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#A9CEF3") },
-        new Label { Text = description, FontSize = 11, TextColor = DynastyTheme.Muted }
+        new Label { Text = description, IsVisible=!string.IsNullOrWhiteSpace(description), FontSize = 11, TextColor = DynastyTheme.Muted }
     } };
 
     private static View ResponsiveTableHeader(View summary, View controls)

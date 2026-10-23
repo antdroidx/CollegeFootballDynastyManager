@@ -23,12 +23,13 @@ public sealed partial class FoundationPage
     private View BuildOrganizedRosterSection()
     {
         ConfigureDepthChartControls();
+        _offseasonRosterStatus.FontSize=11;
         _rosterSearch.TextChanged += (_, _) => RenderCurrentDynasty();
         _rosterPosition.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
         _rosterStatus.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
         _rosterSort.SelectedIndexChanged += (_, _) =>
         {
-            foreach (var key in _tableOrders.Keys.Where(key => key.StartsWith("Pos/Player/OVR/", StringComparison.Ordinal)).ToArray()) _tableOrders.Remove(key);
+            foreach (var key in _tableOrders.Keys.Where(key => key.StartsWith("Pos/Player/", StringComparison.Ordinal)).ToArray()) _tableOrders.Remove(key);
             RenderCurrentDynasty();
         };
         var filters = new Grid { ColumnSpacing = 8, RowSpacing = 8,
@@ -51,7 +52,7 @@ public sealed partial class FoundationPage
                 new VerticalStackLayout { Spacing = 8, Children = { _rosterBanner, _offseasonRosterStatus } },
                 new VerticalStackLayout { Spacing = 8, Children = { filters,
                     new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _rosterSort, _depthChartOrganizerButton, stats } } } }),
-            _depthChartOrganizer, _rosterDetail, _transferPortalList
+            _depthChartOrganizer, BuildRosterWorkspace()
         } };
     }
 
@@ -70,9 +71,10 @@ public sealed partial class FoundationPage
         var development = GetLatestUserDevelopmentRecords().ToDictionary(record => record.PlayerId);
         var selected = roster.FirstOrDefault(player => player.PlayerId == _selectedRosterPlayer);
         _rosterDetail.IsVisible = selected is not null;
-        _rosterDetail.Content = selected is null ? null : CreateRosterPlayerDetail(selected,
-            roster.Count(p => p.Position == selected.Position && !p.IsRedshirted), development.GetValueOrDefault(selected.PlayerId));
+        _rosterDetail.Content = selected is null ? null : CreatePlayerProfileView(selected.PlayerId,
+            () => { _selectedRosterPlayer=null; RenderCurrentDynasty(); });
 
+        ArrangeRosterWorkspace();
         var players = roster.Where(p => (_rosterPosition.SelectedIndex <= 0 || (p.Position.ToString() == (string)_rosterPosition.SelectedItem || OffensiveLineService.Label(p) == (string)_rosterPosition.SelectedItem))
             && MatchesRosterStatus(p)
             && (string.IsNullOrWhiteSpace(_rosterSearch.Text) || p.FullName.Contains(_rosterSearch.Text.Trim(), StringComparison.OrdinalIgnoreCase)));
@@ -90,6 +92,7 @@ public sealed partial class FoundationPage
             SemanticProperties.SetDescription(details, "Open " + player.FullName);
             details.Clicked += async (_, _) =>
             {
+                if (!DynastyManager.Data.Presentation.ManagementLayout.SplitProfile(_rosterWorkspace.Width)) { await ShowPlayerProfileAsync(player.PlayerId); return; }
                 _selectedRosterPlayer = player.PlayerId;
                 RenderCurrentDynasty();
                 if (_sectionViews[AppSection.Roster] is ScrollView scroll) await scroll.ScrollToAsync(0, 0, false);
@@ -100,19 +103,20 @@ public sealed partial class FoundationPage
             var seasonDelta = GameMoraleService.SeasonDelta(_currentDynasty, player);
             var morale = GameMoraleService.PlayerMorale(_currentDynasty, player);
             rows.Add([TableText(OffensiveLineService.Label(player)), PlayerLink(player),
+                TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)),
                 RatingCell(player.OverallRating),
                 TableText(FormatSigned(seasonDelta), true, GetChangeColor(seasonDelta)),
                 MoraleIcon(player),
                 details, TableText(player.IsRedshirted ? "RS" : DisplayDepthOrder(player).ToString()),
-                TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating), color: DynastyTheme.Palette("#E9C76C")),
+                TableText(FormatPotentialStars(player.PotentialRating), color: DynastyTheme.Palette("#E9C76C")),
                 TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"),
                 TableText(status, color: player.CurrentInjury is not null ? NegativeChangeColor : player.IsRedshirted ? DynastyTheme.Palette("#D6A3EB") : DynastyTheme.Muted),
                 HeightCell(player.HeightInches), TableText(player.WeightPounds > 0 ? player.WeightPounds.ToString() : "—")]);
         }
         _transferPortalList.Children.Add(SectionTitle($"Depth chart · {rows.Count} players", "Δ = change from season start · Morale responds to form and injury · swipe for more columns"));
         if (rows.Count == 0) _transferPortalList.Children.Add(new Label { Text = "No players match these filters." });
-        else _transferPortalList.Children.Add(DataTable([("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Morale", 60), ("Details", 64),
-            ("Depth", 54), ("Year", 50), ("Potential", 75), ("HS", 45), ("Status", 105), ("Height", 64), ("Wt lb", 60)], rows));
+        else _transferPortalList.Children.Add(DataTable([("Pos", 36), ("Player", 136), ("Year", 52), ("OVR", 44), ("Δ", 36), ("Morale", 50), ("Details", 56),
+            ("Depth", 54), ("Potential", 75), ("HS", 45), ("Status", 105), ("Height", 64), ("Wt lb", 60)], rows, configureColumns: true));
     }
 
     private bool MatchesRosterStatus(DynastyPlayer player) => _rosterStatus.SelectedIndex switch

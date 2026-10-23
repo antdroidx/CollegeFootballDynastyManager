@@ -9,12 +9,13 @@ public class Ncaa06RatingTests
     [Fact]
     public void GeneratedTalentTargetsAreCalibratedOnTheSamePositionWeightedScale()
     {
-        var state = new DynastyState { DynastyName = "Talent", UserTeamName = "Home" };
+        var state = new DynastyState { DynastyId=Guid.Parse("77777777-8888-9999-aaaa-bbbbbbbbbbbb"), DynastyName = "Talent", UserTeamName = "Home" };
         foreach (var position in Enum.GetValues<Position>())
         {
             var player = PlayerRatingService.EnsureInitialized(state, new DynastyPlayer
             {
-                PlayerId = Guid.NewGuid(), FullName = "Generated Recruit", TeamName = "Home",
+                // Stable identities keep this positional regression reproducible.
+                PlayerId = Guid.Parse($"00000000-0000-0000-0000-{(int)position+1:D12}"), FullName = "Generated Recruit", TeamName = "Home",
                 Position = position, OverallRating = 84, TalentLevel = 7, ClassYear = 1
             });
             Assert.InRange(player.OverallRating, 83, 85);

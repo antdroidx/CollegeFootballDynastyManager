@@ -20,50 +20,56 @@ public sealed partial class FoundationPage
             new Label { Text = staff ? "COACH PROFILE" : "PLAYER PROFILE", FontSize = 10,
                 FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent },
             new Label { Text = name, FontSize = 21, FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.WordWrap },
-            new Label { Text = subtitle, FontSize = 12, TextColor = Colors.White },
+            new Label { Text = subtitle, FontSize = 12, TextColor = DynastyTheme.Text },
             new Label { Text = school, FontSize = 12, TextColor = DynastyTheme.Muted }
         } }, 1, 0);
         return new Border { Content = row, Padding = 14, BackgroundColor = DynastyTheme.Palette("#203342") };
     }
 
-    private View PlayerLink(DynastyPlayer player) => PersonLink(player.PlayerId, player.FullName, player.TeamName,
-        () => ShowPlayerProfileAsync(player.PlayerId), appearance: player.Appearance);
+    private View PlayerLink(DynastyPlayer player) => PersonLink(player.FullName, () => ShowPlayerProfileAsync(player.PlayerId));
 
-    private View PlayerLink(Guid id, string name) => PersonLink(id, name,
-        _currentDynasty?.ActiveRoster.FirstOrDefault(player => player.PlayerId == id)?.TeamName ?? "",
-        () => ShowPlayerProfileAsync(id), appearance: _currentDynasty?.ActiveRoster.FirstOrDefault(player => player.PlayerId == id)?.Appearance
-            ?? _currentDynasty?.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id)?.Appearance);
+    private View PlayerLink(Guid id, string name) => PersonLink(name, () => ShowPlayerProfileAsync(id));
 
-    private View CoachLink(StaffMember coach) => PersonLink(coach.StaffId, coach.FullName, coach.TeamName,
-        () => ShowCoachProfileAsync(coach), true, coach.Age, coach.Appearance);
+    private View CoachLink(StaffMember coach) => PersonLink(coach.FullName, () => ShowCoachProfileAsync(coach), true);
 
-    private static View PersonLink(Guid id, string name, string school, Func<Task> open, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
+    private static View PersonLink(string name, Func<Task> open, bool staff = false)
     {
-        var brand = TeamBrandCatalog.Get(school);
-        var row = new Grid { ColumnSpacing = 6, Padding = new Thickness(5, 3), MinimumHeightRequest = 48,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(36), new(GridLength.Star) } };
-        row.Add(PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 36, staff, age, appearance), 0, 0);
         // A real button retains keyboard, screen-reader and touch behavior inside sortable tables.
-        var button = new Button { Text = name, FontSize = 12,
-            TextColor = Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
-            HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(0, 4), MinimumHeightRequest = 44 };
+        var displayName=staff || !name.Contains(' ') ? name : name[..1]+". "+name[(name.IndexOf(' ')+1)..];
+        var button = new Button { Text = displayName, FontSize = 12,
+            TextColor = DynastyTheme.IsLight ? Color.FromArgb(staff ? "#623794" : "#23587D") : Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
+            HorizontalOptions = LayoutOptions.Start, Padding = new Thickness(6, 4), MinimumHeightRequest = 44 };
         SemanticProperties.SetDescription(button, (staff ? "View coach " : "View player ") + name);
         button.Clicked += async (_, _) => await open();
-        row.Add(button, 1, 0);
-        row.SetValue(TableValueProperty, name);
-        return row;
+        button.SetValue(TableValueProperty, name);
+        return button;
     }
 
     private async Task ShowPlayerProfileAsync(Guid id)
     {
-        if (_currentDynasty is null) return;
+        if (_activeSection == AppSection.Roster && DynastyManager.Data.Presentation.ManagementLayout.SplitProfile(_rosterWorkspace.Width))
+        {
+            _selectedRosterPlayer=id; RenderCurrentDynasty(); return;
+        }
+        var host=new ContentView();
+        void RefreshProfile() => host.Content=CreatePlayerProfileView(id,()=>{ _=Navigation.PopModalAsync(); });
+        RefreshProfile(); if(host.Content is null)return;
+        var page=new ContentPage { AutomationId="player-profile",Content=new ScrollView {Content=host} };
+        _refreshOpenPlayerProfile=RefreshProfile;
+        page.Disappearing+=(_,_)=>Dispatcher.Dispatch(()=>{if(!Navigation.ModalStack.Contains(page))_refreshOpenPlayerProfile=null;});
+        await Navigation.PushModalAsync(page);
+    }
+
+    private View? CreatePlayerProfileView(Guid id, Action closeProfile)
+    {
+        if (_currentDynasty is null) return null;
         var state = _currentDynasty;
         var visibleStats = VisiblePlayerStatistics();
         var active = state.ActiveRoster.FirstOrDefault(player => player.PlayerId == id);
         var career = state.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id);
         var latest = visibleStats.Where(line => line.PlayerId == id).OrderByDescending(line => line.SeasonYear).FirstOrDefault();
         var departure = state.PlayerDepartureHistory.Concat(state.RecentPlayerDepartures).Where(p => p.PlayerId == id).OrderByDescending(p => p.SeasonYear).FirstOrDefault();
-        if (active is null && career is null && latest is null && departure is null) return;
+        if (active is null && career is null && latest is null && departure is null) return null;
         var player = active ?? new DynastyPlayer
         {
             PlayerId = id, FullName = career?.PlayerName ?? latest?.PlayerName ?? departure!.FullName, TeamName = latest?.TeamName ?? departure?.TeamName ?? "Recorded career",
@@ -74,7 +80,7 @@ public sealed partial class FoundationPage
         };
         if (active is not null) player = PlayerRatingService.EnsureInitialized(state, player);
         var close = new Button { Text = "‹ Back" };
-        close.Clicked += async (_, _) => await Navigation.PopModalAsync();
+        close.Clicked += (_, _) => closeProfile();
         View PlayerHeader() => IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{(player.JerseyNumber is int number ? $"#{number} · " : "")}{OffensiveLineService.Label(player)} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance);
         var portraitHeader = new ContentView { Content = PlayerHeader() };
         var editPortrait = new Button { Text = "Edit portrait", FontSize = 11 };
@@ -137,9 +143,10 @@ public sealed partial class FoundationPage
         stats.Clicked += async (_, _) => await ShowPlayerStatisticsAsync(player);
         content.Children.Add(stats);
         var school = new Button { Text = "View team roster & staff", IsEnabled = _teamsByName.ContainsKey(player.TeamName) };
-        school.Clicked += async (_, _) => { await Navigation.PopModalAsync(); OpenSchool(player.TeamName); };
+        school.Clicked += (_, _) => OpenSchool(player.TeamName);
         content.Children.Add(school);
-        await Navigation.PushModalAsync(new ContentPage { Content = new ScrollView { Content = content } });
+        return OrganizePlayerProfile(content, player, active is not null);
+
     }
 
     private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes)
@@ -159,8 +166,11 @@ public sealed partial class FoundationPage
                 var row = new Grid { ColumnSpacing = 6,
                     ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
                 row.Add(new Label { Text = attribute.Name, FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
-                row.Add(RatingCell(attribute.Rating), 1, 0);
-                tiles.Add(new Border { Padding = new Thickness(10, 7), BackgroundColor = DynastyTheme.Palette("#1D2C38"), Content = row }, i % columns, i / columns);
+                row.Add(new Label { Text=attribute.Rating.ToString(), FontSize=12, FontAttributes=FontAttributes.Bold,
+                    TextColor=DynastyTheme.IsLight ? Color.FromArgb("#166841") : Color.FromArgb("#70D4AD"), VerticalTextAlignment=TextAlignment.Center },1,0);
+                tiles.Add(new VerticalStackLayout { Spacing=5, Padding=new Thickness(4,5), Children={row,
+                    new ProgressBar { Progress=Math.Clamp(attribute.Rating/99.0,0,1), HeightRequest=4,
+                        ProgressColor=attribute.Rating>=85 ? Color.FromArgb("#38B888") : attribute.Rating>=70 ? Color.FromArgb("#599BDB") : Color.FromArgb("#B49C61") } } },i%columns,i/columns);
             }
         }
         Arrange(2);
@@ -183,35 +193,35 @@ public sealed partial class FoundationPage
             if (next is null) return;
             coach = coach with { Appearance = next }; portraitHeader.Content = CoachHeader(); RenderCurrentDynasty();
         };
-        var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
-        {
-            close, portraitHeader, editPortrait,
+        var overview = new VerticalStackLayout { Spacing = 10, Children = {
             SectionTitle("Coach profile", $"Age {coach.Age} · OVR {coach.OverallRating} · {coach.CareerYears} career years · {coach.ContractYearsRemaining} contract years"),
-            AttributeGroup("Coaching traits", "Leadership, strategy, development and program management",
-                ("Leadership", coach.Leadership), ("Recruiting", coach.Recruiting), ("Player development", coach.PlayerDevelopment),
-                ("Game management", coach.GameManagement), ("Scheme", coach.Scheme), ("Special teams", coach.SpecialTeams),
-                ("Medical", coach.Medical), ("Conditioning", coach.Conditioning), ("Talent evaluation", coach.TalentEvaluation),
-                ("Potential evaluation", coach.PotentialEvaluation), ("Regional knowledge", coach.RegionalKnowledge), ("Staff management", coach.StaffManagement)),
+            editPortrait
+        } };
+        if (coach.FormerPlayerId is not null) overview.Add(new Label { Text = $"Former {coach.AlmaMater} player · Class of {coach.GraduationYear} · entered coaching after apprenticeship", TextColor = DynastyTheme.Accent });
+        if (coach.SharedRoleCoaches.Count > 0) overview.Add(new Label { Text = "Shared coordinator role: " + string.Join(" · ", coach.SharedRoleCoaches.Select(c => $"{c.FullName} ({c.PublishedTitle})")), TextColor = DynastyTheme.Muted });
+        if (coach.DataSeason is int dataSeason) overview.Add(new Label { Text = $"{dataSeason} staff · {coach.PublishedTitle} · age and coaching ratings are game estimates", TextColor = DynastyTheme.Muted });
+        var traits = AttributeGroup("Coaching traits", "Leadership, strategy, development and program management",
+            ("Leadership", coach.Leadership), ("Recruiting", coach.Recruiting), ("Player development", coach.PlayerDevelopment),
+            ("Game management", coach.GameManagement), ("Scheme", coach.Scheme), ("Special teams", coach.SpecialTeams),
+            ("Medical", coach.Medical), ("Conditioning", coach.Conditioning), ("Talent evaluation", coach.TalentEvaluation),
+            ("Potential evaluation", coach.PotentialEvaluation), ("Regional knowledge", coach.RegionalKnowledge), ("Staff management", coach.StaffManagement));
+        var history = new VerticalStackLayout { Spacing = 10, Children = {
             SectionTitle("Head-coaching career", $"{summary.HeadCoachWins}–{summary.HeadCoachLosses} · {summary.HeadCoachSeasons} seasons · {summary.ConferenceTitles} conference titles · {summary.NationalTitles} national titles")
         } };
-        if (coach.FormerPlayerId is not null)
-            content.Children.Insert(4, new Label { Text = $"Former {coach.AlmaMater} player · Class of {coach.GraduationYear} · entered coaching after apprenticeship", TextColor = DynastyTheme.Accent });
-        if (coach.SharedRoleCoaches.Count > 0)
-            content.Children.Insert(4, new Label { Text = "Shared coordinator role: " + string.Join(" · ", coach.SharedRoleCoaches.Select(c => $"{c.FullName} ({c.PublishedTitle})")), TextColor = DynastyTheme.Muted });
-        if (coach.DataSeason is int dataSeason)
-            content.Children.Insert(4, new Label { Text = $"{dataSeason} staff · {coach.PublishedTitle} · age and coaching ratings are game estimates", TextColor = DynastyTheme.Muted });
-        if (summary.Seasons.Count == 0) content.Children.Add(new Label { Text = "No completed seasons recorded yet." });
-        else content.Children.Add(DataTable([("Year", 60), ("School", 195), ("Role", 160), ("W", 40), ("L", 40), ("Rank", 50)],
-            summary.Seasons.OrderByDescending(season => season.SeasonYear).Select(season => new View[]
-            {
+        if (summary.Seasons.Count == 0) history.Add(new Label { Text = "No completed seasons recorded yet." });
+        else history.Add(DataTable([("Year", 60), ("School", 195), ("Role", 160), ("W", 40), ("L", 40), ("Rank", 50)],
+            summary.Seasons.OrderByDescending(season => season.SeasonYear).Select(season => new View[] {
                 TableText(season.SeasonYear.ToString()), SchoolCell(season.TeamName), TableText(FormatStaffRole(season.Role)),
                 TableText(season.Wins.ToString()), TableText(season.Losses.ToString()), TableText(season.FinalRanking > 0 ? $"#{season.FinalRanking}" : "—")
             })));
-        content.Children.Add(new Label { Text = "Career totals count recorded head-coaching seasons. Other staff roles retain team results in the season table.", FontSize = 11, TextColor = DynastyTheme.Muted });
+        history.Add(new Label { Text = "Career totals count recorded head-coaching seasons. Other staff roles retain team results in the season table.", FontSize = 11, TextColor = DynastyTheme.Muted });
         var school = new Button { Text = "View team roster & staff" };
-        school.Clicked += async (_, _) => { await Navigation.PopModalAsync(); OpenSchool(coach.TeamName); };
-        content.Children.Add(school);
-        await Navigation.PushModalAsync(new ContentPage { Content = new ScrollView { Content = content } });
+        school.Clicked += (_, _) => OpenSchool(coach.TeamName);
+        overview.Add(school);
+        var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children = {
+            close, ResponsivePanels(portraitHeader, ProfileTabs(("Overview", overview), ("Attributes", traits), ("Career history", history)))
+        } };
+        await Navigation.PushModalAsync(new ContentPage { AutomationId = "coach-profile", Content = new ScrollView { Content = content } });
     }
 
     private View TeamStaffTable(string school) => DataTable(
