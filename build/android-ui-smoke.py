@@ -168,6 +168,7 @@ def main():
     toss = capture("coin-toss-portrait-ready")
     tap(toss, "Start game")
     viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
+    opening_touchback = any("TOUCHBACK" in (value or "") for value in texts(viewer))
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
     assert len([n for n in viewer.iter("node") if n.get("content-desc", "").startswith("Select ")]) == 3, "Portrait must show three play choices"
     tap(viewer, "More")
@@ -258,7 +259,10 @@ def main():
     tap(players, "Passing")
     tap(scroll_to_text("live-box-category", "Returns"), "Returns")
     returns = capture("live-box-returns")
-    assert {"KR", "KR yds"} <= texts(returns), "The opening kick return must appear in the live box score"
+    if opening_touchback:
+        assert "No recorded statistics in this category yet." in texts(returns), "A touchback must not create a kick-return statistic"
+    else:
+        assert {"KR", "KR yds"} <= texts(returns), "The opening kick return must appear in the live box score"
     tap(returns, "Return to game")
     returned = wait_for("live-box-returned", lambda r: "BALL ON" in texts(r))
     assert before_clock in texts(returned), "Reading the box score advanced a paused game"
