@@ -12,6 +12,7 @@ public static class DynastyTheme
         if (Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.Window is { } window)
         {
             var bars = AndroidX.Core.View.WindowCompat.GetInsetsController(window, window.DecorView);
+            if (bars is null) return;
             bars.AppearanceLightStatusBars = IsLight;
             bars.AppearanceLightNavigationBars = IsLight;
         }
