@@ -10,4 +10,4 @@ Implemented the requested foundation and core management screens using existing 
 
 No production Core engine/generation/rating, persistence schema, package identity/signing or Game Day visualization/playcalling source changed from base1dd2b72. Two previously random fixture cases now have fixed IDs; original assertions retained. `sources/` untouched.
 
-Phases3–5 are not started; await user direction. Do not repeat completed work or start unsolicited follow-up. Scoped hourly auto-resume `resume-management-ui-phases-1-2` should be paused after delivery; never redeem reset credits. See architecture audit and validation report for limitations and future scope.
+Phases3–5 are not started; await user direction. Do not repeat completed work or start unsolicited follow-up. Scoped hourly auto-resume `resume-management-ui-phases-1-2` is paused now that this scoped delivery is complete; no reset credits were redeemed. See architecture audit and validation report for limitations and future scope.
