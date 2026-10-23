@@ -81,7 +81,7 @@ public sealed partial class FoundationPage
         foreach (var (section, button) in _managementLinks)
         {
             var selected = section == _activeSection;
-            button.BackgroundColor = selected ? DynastyTheme.Selected : Colors.Transparent;
+            button.BackgroundColor = selected ? ManagementAccent.WithAlpha(.16f) : Colors.Transparent;
             button.TextColor = selected ? ManagementAccent : DynastyTheme.Muted;
             button.FontAttributes = selected ? FontAttributes.Bold : FontAttributes.None;
         }
@@ -92,7 +92,7 @@ public sealed partial class FoundationPage
 
     private static View ManagementPanel(string title, View content, string? subtitle = null) => new Border
     {
-        Padding = 12, BackgroundColor = DynastyTheme.Surface, Content = new VerticalStackLayout { Spacing = 9, Children =
+        Padding = 10, BackgroundColor = DynastyTheme.Surface, Content = new VerticalStackLayout { Spacing = 6, Children =
         { SectionTitle(title, subtitle ?? ""), content } }
     };
 
@@ -114,7 +114,7 @@ public sealed partial class FoundationPage
         Arrange(1); grid.SizeChanged+=(_,_)=>Arrange(grid.Width>=1100?3:grid.Width>=600?2:1);return grid;
     }
 
-    private static View ProfileTabs(params (string Title, View Content)[] panels)
+    private View ProfileTabs(params (string Title, View Content)[] panels)
     {
         var body = new ContentView();
         var tabs = new HorizontalStackLayout { Spacing = 4 };
@@ -123,7 +123,7 @@ public sealed partial class FoundationPage
         {
             body.Content = panels[index].Content;
             for (var i=0;i<buttons.Count;i++)
-            { buttons[i].BackgroundColor = i == index ? DynastyTheme.Selected : Colors.Transparent;
+            { buttons[i].BackgroundColor = i == index ? ManagementAccent.WithAlpha(.16f) : Colors.Transparent;
               buttons[i].TextColor = i == index ? DynastyTheme.Text : DynastyTheme.Muted; }
         }
         for (var i=0;i<panels.Length;i++)

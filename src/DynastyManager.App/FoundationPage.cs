@@ -752,7 +752,7 @@ public sealed partial class FoundationPage : ContentPage
                     : FontAttributes.None;
             var selected = pair.Key == PrimarySection(section);
             pair.Value.Opacity = 1.0;
-            pair.Value.BackgroundColor = selected ? DynastyTheme.Selected : Colors.Transparent;
+            pair.Value.BackgroundColor = selected ? ManagementAccent.WithAlpha(.16f) : Colors.Transparent;
             pair.Value.TextColor = selected ? DynastyTheme.Accent : DynastyTheme.Muted;
             _navIndicators[pair.Key].IsVisible = selected;
         }

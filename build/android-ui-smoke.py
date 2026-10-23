@@ -152,6 +152,9 @@ def main():
         tap(overview, advance_action(overview))
         overview = wait_for(f"overview-week-{week}", lambda r: overview_ready(r, previous), timeout=300)
     assert "Play game" in texts(overview), "Expected a current-week user matchup"
+    tap(overview,"Settings")
+    wait_for("management-before-layouts",lambda r:"Appearance" in texts(r))
+    overview=check_management_layouts()
     tap(overview, "Play game")
     toss = wait_for("coin-toss", lambda r: "Heads" in texts(r) or "Receive" in texts(r) or "Start game" in texts(r))
     assert any((n.get("resource-id") or "").endswith("coin-toss-field") for n in toss.iter("node")), "Coin toss must be on the field"
@@ -305,12 +308,23 @@ def main():
     assert texts(resumed) != snapshot, "Watch did not advance after returning from the box score"
     assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip()
     print("Watch mode box-score pause/resume passed.")
-    # Cancel a skip, then confirm it while Watch may still have a play in progress.
+    # Finish the Watch pause/resume check, then reopen the uncommitted game in Play mode.
+    # UIAutomator waits for idle, so a continuously animated Watch game is unsuitable
+    # for capturing confirmation controls. Never reuse Play-mode bounds after mode changes.
     adb("shell", "input", "keyevent", "4")
-    # UIAutomator waits for idle and can miss an entire continuously animated Watch game.
-    # Pause using the watch control's last observed bounds, then test confirmation at a decision.
-    tap(ready, "Watch CPU")
-    watch_view = wait_for("skip-watch-ready", lambda r: enabled(r, "Skip to end"))
+    time.sleep(1)
+    adb("shell", "input", "keyevent", "4")
+    overview=wait_for("skip-reopen-overview",overview_ready,timeout=300)
+    tap(overview,"Play game")
+    toss=wait_for("skip-reopen-toss",lambda r:"Heads" in texts(r) or "Receive" in texts(r) or "Start game" in texts(r))
+    if "Heads" in texts(toss):
+        tap(toss,"Heads")
+        toss=wait_for("skip-reopen-result",lambda r:"Receive" in texts(r) or "Start game" in texts(r))
+    if "Receive" in texts(toss):
+        tap(toss,"Receive")
+        toss=wait_for("skip-reopen-ready",lambda r:"Start game" in texts(r))
+    tap(toss,"Start game")
+    watch_view = wait_for("skip-play-ready", lambda r: enabled(r, "Skip to end"))
     tap(watch_view, "Skip to end")
     confirmation = wait_for("skip-confirm-cancel", lambda r: "Skip to end?" in texts(r), timeout=300)
     cancel_label = next(t for t in texts(confirmation) if (t or "").casefold() == "keep playing")
@@ -458,7 +472,15 @@ def check_management_layouts():
     tap(tablet,person.get("text"))
     split=wait_for("management-tablet-split-profile",lambda r:"Stats & history" in texts(r))
     assert any((n.get("resource-id") or "").endswith("nav-roster") for n in split.iter("node")), "Tablet profile became a full-screen modal"
-    tap(split,"Settings")
+    tap(split,"‹ Back")
+    tap(capture("management-tablet-profile-closed"),"Recruit")
+    recruits=wait_for("management-tablet-recruiting",lambda r:any((n.get("content-desc") or "").startswith("View recruit ") for n in r.iter("node")))
+    recruit=next(n for n in recruits.iter("node") if (n.get("content-desc") or "").startswith("View recruit "))
+    tap(recruits,recruit.get("text"))
+    detail=wait_for("management-tablet-split-recruit",lambda r:"Back to prospects" in texts(r))
+    assert any((n.get("resource-id") or "").endswith("nav-recruiting") for n in detail.iter("node"))
+    tap(detail,"Back to prospects")
+    tap(capture("management-tablet-before-settings"),"Settings")
     settings=wait_for("management-system-settings",lambda r:"Appearance" in texts(r))
     tap(settings,"Dark")
     options=wait_for("management-system-choice",lambda r:"System" in texts(r))
@@ -474,15 +496,21 @@ def check_management_layouts():
     light=capture("management-system-light")
     assert calendar(light)==before
     assert "System" in texts(light)
+    tap(light,"System")
+    choices=wait_for("management-restore-dark-choice",lambda r:"Dark" in texts(r))
+    tap(choices,"Dark")
+    dark=wait_for("management-restore-dark",lambda r:"Dark" in texts(r) and "Appearance" in texts(r))
     adb("shell","wm","size","reset")
     adb("shell","wm","density","reset")
+    time.sleep(2)
+    tap(capture("management-layout-reset"),"Overview")
     print("Management compact/foldable/tablet, profile tabs, recruit actions, split panes and System theme passed.")
+    return wait_for("management-returned-overview",overview_ready)
 
 
 
 if __name__ == "__main__":
     try:
         main()
-        check_management_layouts()
     finally:
         Path("android-logcat.txt").write_bytes(adb("logcat", "-d"))

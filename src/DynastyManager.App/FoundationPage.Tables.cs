@@ -180,7 +180,7 @@ public sealed partial class FoundationPage
     private static View SectionTitle(string title, string description) => new VerticalStackLayout { Spacing = 3, Children =
     {
         new Label { Text = title, FontSize = 15, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#A9CEF3") },
-        new Label { Text = description, FontSize = 11, TextColor = DynastyTheme.Muted }
+        new Label { Text = description, IsVisible=!string.IsNullOrWhiteSpace(description), FontSize = 11, TextColor = DynastyTheme.Muted }
     } };
 
     private static View ResponsiveTableHeader(View summary, View controls)

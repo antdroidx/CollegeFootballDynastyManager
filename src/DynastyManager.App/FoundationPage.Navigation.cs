@@ -70,8 +70,8 @@ public sealed partial class FoundationPage
 
     private static View NavigationCard(string title, string value, string hint, string color, Action open)
     {
-        var card = new Border { BackgroundColor = DynastyTheme.Surface, Stroke = DynastyTheme.Palette("#497088"), Padding = 12,
-            Content = new VerticalStackLayout { Spacing = 5, Children =
+        var card = new Border { BackgroundColor = DynastyTheme.Surface, Stroke = DynastyTheme.Palette("#497088"), Padding = 8,
+            Content = new VerticalStackLayout { Spacing = 2, Children =
             {
                 new Label { Text = title, FontSize = 11, TextColor = DynastyTheme.Muted },
                 new Label { Text = value, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text },
@@ -127,12 +127,13 @@ public sealed partial class FoundationPage
         cards.Add(NavigationCard("NEXT GAME", opponent, next is null ? "Open schedule ›" : $"Week {next.Week} · Matchup & prep ›", "#234A43",
             () => ShowSection(next is null ? AppSection.Schedule : AppSection.GameDay)), 0, 1);
         cards.Add(NavigationCard("INJURIES", $"{injuries} active", "Team & league report ›", "#443657", () => ShowSection(AppSection.Injuries)), 1, 1);
-        var tasks = new VerticalStackLayout { Spacing=7 };
+        var tasks = new Grid { ColumnSpacing=6,RowSpacing=6,ColumnDefinitions=new() {new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new() {new(GridLength.Auto),new(GridLength.Auto)} };
+        var taskIndex=0;
         foreach(var task in new[] { ("Recruiting & scouting", AppSection.Recruiting), ("Roster & depth",AppSection.Roster),
             ("Staff & game plan",AppSection.Playbook), ("Injury report",AppSection.Injuries) })
         {
-            var button=new Button { Text=task.Item1+" ›", HorizontalOptions=LayoutOptions.Fill, BackgroundColor=DynastyTheme.Panel, TextColor=DynastyTheme.Text };
-            button.Clicked+=(_,_)=>ShowSection(task.Item2); tasks.Add(button);
+            var button=new Button { Text=task.Item1+" ›", FontSize=11, HorizontalOptions=LayoutOptions.Fill, BackgroundColor=DynastyTheme.Panel, TextColor=DynastyTheme.Text };
+            button.Clicked+=(_,_)=>ShowSection(task.Item2); tasks.Add(button,taskIndex%2,taskIndex/2);taskIndex++;
         }
         var standings=new VerticalStackLayout { Spacing=5 };
         var conferenceName=school?.ConferenceName;
@@ -141,9 +142,11 @@ public sealed partial class FoundationPage
             var row=new Grid { ColumnDefinitions=new() {new(GridLength.Star),new(GridLength.Auto)} };
             row.Add(SchoolCell(entry.TeamName),0,0); row.Add(TableText("#"+entry.Rank,true),1,0); standings.Add(row);
         }
-        _homeHighlights.Children.Add(ResponsivePanels(
-            ManagementPanel("Season overview", cards), ManagementPanel("Weekly tasks",tasks,"Shortcuts to your management work"),
-            ManagementPanel(conferenceName+" · Poll positions",standings,"Conference teams in the national poll")));
+        var pollPanel=ManagementPanel(conferenceName+" · Poll positions",standings,"Conference teams in the national poll");
+        pollPanel.IsVisible=false;
+        var dashboard=ResponsivePanels(ManagementPanel("Season overview", cards),ManagementPanel("Weekly tasks",tasks),pollPanel);
+        dashboard.SizeChanged+=(_,_)=>pollPanel.IsVisible=dashboard.Width>=600;
+        _homeHighlights.Children.Add(dashboard);
         if (state.UserCoachIsFired || state.UserCoachJobOffers.Any(o => o.Status == UserCoachJobOfferStatus.Pending))
             _homeHighlights.Children.Add(NavigationCard(state.UserCoachIsFired ? "ACTION REQUIRED" : "COACHING CAROUSEL", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
         else if (state.Phase is SeasonPhase.TransferPortal or SeasonPhase.Recruiting or SeasonPhase.RosterManagement)
