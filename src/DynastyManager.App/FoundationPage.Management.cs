@@ -24,11 +24,8 @@ public sealed partial class FoundationPage
         get
         {
             var brand = TeamBrandCatalog.Get(_currentDynasty?.UserTeamName ?? "Washington");
-            var color = Color.FromArgb(brand.Primary);
-            // Keep brand color on badges; blend navigation accents toward readable ink.
-            var target = DynastyTheme.IsLight ? Colors.Black : Colors.White;
-            var mix = DynastyTheme.IsLight ? .18f : .62f;
-            return Color.FromRgb(color.Red * (1-mix) + target.Red*mix, color.Green*(1-mix)+target.Green*mix, color.Blue*(1-mix)+target.Blue*mix);
+            return Color.FromArgb(ManagementColors.ReadableAccent(brand.Primary,
+                DynastyTheme.IsLight ? "#E7EEF6" : "#192E43"));
         }
     }
 
@@ -81,7 +78,7 @@ public sealed partial class FoundationPage
         foreach (var (section, button) in _managementLinks)
         {
             var selected = section == _activeSection;
-            button.BackgroundColor = selected ? ManagementAccent.WithAlpha(.16f) : Colors.Transparent;
+            button.BackgroundColor = selected ? DynastyTheme.Panel : Colors.Transparent;
             button.TextColor = selected ? ManagementAccent : DynastyTheme.Muted;
             button.FontAttributes = selected ? FontAttributes.Bold : FontAttributes.None;
         }
@@ -123,7 +120,7 @@ public sealed partial class FoundationPage
         {
             body.Content = panels[index].Content;
             for (var i=0;i<buttons.Count;i++)
-            { buttons[i].BackgroundColor = i == index ? ManagementAccent.WithAlpha(.16f) : Colors.Transparent;
+            { buttons[i].BackgroundColor = i == index ? DynastyTheme.Panel : Colors.Transparent;
               buttons[i].TextColor = i == index ? DynastyTheme.Text : DynastyTheme.Muted; }
         }
         for (var i=0;i<panels.Length;i++)
