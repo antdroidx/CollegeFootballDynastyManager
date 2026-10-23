@@ -32,4 +32,18 @@ public class ManagementPresentationTests
         Assert.Equal("#250047",ManagementColors.ReadableAccent("#250047","#FFFFFF"));
         Assert.True(ManagementColors.ContrastRatio(ManagementColors.ReadableAccent("#FFD700","#FFFFFF"),"#FFFFFF")>=4.5);
     }
+    [Theory]
+    [InlineData("Injuries")]
+    [InlineData("Recruiting")]
+    [InlineData("Upset")]
+    [InlineData("Preview")]
+    [InlineData("Playoff")]
+    [InlineData("Result")]
+    public void EditorialColorIsStableAndDoesNotInventStatistics(string category)
+    {
+        var context = NewsEditorial.Context(category, "Washington");
+        Assert.Contains("Washington", context);
+        Assert.Equal(context, NewsEditorial.Context(category, "Washington"));
+        Assert.DoesNotContain(context, char.IsDigit);
+    }
 }

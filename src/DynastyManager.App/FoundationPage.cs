@@ -915,71 +915,26 @@ public sealed partial class FoundationPage : ContentPage
         return button;
     }
 
-    private View BuildMoreSection() =>
-        new VerticalStackLayout
-        {
-            Spacing = 12,
-            Children =
-            {
-                new Label
-                {
-                    Text = "Preferences",
-                    FontAttributes = FontAttributes.Bold
-                },
-
-                BuildThemeSettings(),
-                BuildLeagueFeatureSettings(),
-                new Label
-                {
-                    Text = "RECRUITING ASSISTANCE",
-                    FontAttributes = FontAttributes.Bold
-                },
-                new HorizontalStackLayout
-                {
-                    Spacing = 10,
-                    Children =
-                    {
-                        _recruitingAssistanceSwitch,
-                        new Label
-                        {
-                            Text = "Staff can run recruiting for you",
-                            VerticalTextAlignment = TextAlignment.Center,
-                            FontAttributes = FontAttributes.Bold
-                        }
-                    }
-                },
-                _recruitingAssistanceWorkloadLabel,
-                _recruitingAssistanceWorkloadSlider,
-                new Label
-                {
-                    Text = "0% = manual only. 100% = full delegation. Staff can use the selected share of recruiting points for realistic targets, scholarship offers, scouting, and pitches. Your manually managed prospects are not overwritten.",
-                    FontSize = 12
-                },
-                new Label
-                {
-                    Text = "AUTOSAVE",
-                    FontAttributes = FontAttributes.Bold,
-                    Margin = new Thickness(0, 10, 0, 0)
-                },
-                new HorizontalStackLayout
-                {
-                    Spacing = 10,
-                    Children =
-                    {
-                        _rollingAutosaveSwitch,
-                        new Label
-                        {
-                            Text = "3-slot rolling weekly autosave",
-                            VerticalTextAlignment = TextAlignment.Center,
-                            FontAttributes = FontAttributes.Bold
-                        }
-                    }
-                },
-                _rollingAutosaveStatus,
-                _autosaveButton,
-
-            }
-        };
+    private View BuildMoreSection()
+    {
+        var delegation = new VerticalStackLayout { Spacing = 9, Children = {
+            new HorizontalStackLayout { Spacing = 8, Children = { _recruitingAssistanceSwitch,
+                new Label { Text = "Staff can run recruiting for you", FontSize = 12, VerticalTextAlignment = TextAlignment.Center } } },
+            _recruitingAssistanceWorkloadLabel, _recruitingAssistanceWorkloadSlider,
+            new Label { Text = "0% = manual only. 100% = full delegation. Staff use their share of points for targets, offers, scouting and pitches. Manually managed prospects stay under your control.", FontSize = 12, TextColor = DynastyTheme.Muted }
+        } };
+        var save = new VerticalStackLayout { Spacing = 9, Children = {
+            new HorizontalStackLayout { Spacing = 8, Children = { _rollingAutosaveSwitch,
+                new Label { Text = "3-slot rolling weekly autosave", FontSize = 12, VerticalTextAlignment = TextAlignment.Center } } },
+            _rollingAutosaveStatus, _autosaveButton
+        } };
+        return new VerticalStackLayout { Spacing = 12, Children = {
+            SectionTitle("Preferences", "Appearance, delegation and dynasty rules"),
+            ResponsivePanels(ManagementPanel("Display", BuildThemeSettings()), ManagementPanel("Recruiting assistance", delegation),
+                ManagementPanel("Save protection", save)),
+            ManagementPanel("League configuration", BuildLeagueFeatureSettings())
+        } };
+    }
 
     private async void OnLoaded(object? sender, EventArgs e)
     {
@@ -3441,84 +3396,27 @@ public sealed partial class FoundationPage : ContentPage
                 _teamNames)
             .ToArray();
 
-        _recruitingList.Children.Add(new Label
-        {
-            Text = "247-STYLE OVERALL CLASS RANKINGS",
-            FontAttributes = FontAttributes.Bold
-        });
-        _recruitingList.Children.Add(new Label
-        {
-            Text =
-                "Best recruits carry the most weight; later commits receive diminishing Gaussian value.",
-            FontSize = 11,
-            Opacity = 0.75
-        });
-
-        foreach (var item in classRankings.Take(25))
-        {
-            _recruitingList.Children.Add(new Label
-            {
-                Text =
-                    $"#{item.Rank} {item.TeamName} • " +
-                    $"{item.TeamScore:0.00} pts • " +
-                    $"Avg {item.AverageRecruitRating:0.00} • " +
-                    $"{item.CommitCount} commits " +
-                    $"({item.HighSchoolCount} HS / {item.TransferCount} portal)",
-                FontAttributes = item.TeamName.Equals(
-                    _currentDynasty.UserTeamName,
-                    StringComparison.OrdinalIgnoreCase)
-                    ? FontAttributes.Bold
-                    : FontAttributes.None
-            });
-        }
-
-        var userClass = classRankings.FirstOrDefault(item =>
-            item.TeamName.Equals(
-                _currentDynasty.UserTeamName,
-                StringComparison.OrdinalIgnoreCase));
-        if (userClass is not null &&
-            userClass.Rank > 25)
-        {
-            _recruitingList.Children.Add(new Label
-            {
-                Text =
-                    $"#{userClass.Rank} {userClass.TeamName} • " +
-                    $"{userClass.TeamScore:0.00} pts • " +
-                    $"Avg {userClass.AverageRecruitRating:0.00} • " +
-                    $"{userClass.CommitCount} commits " +
-                    $"({userClass.HighSchoolCount} HS / {userClass.TransferCount} portal)",
-                FontAttributes = FontAttributes.Bold
-            });
-        }
-
-        _recruitingList.Children.Add(new Label
-        {
-            Text = "YOUR COMMITMENTS",
-            FontAttributes = FontAttributes.Bold,
-            TextColor = DynastyTheme.Palette("#9EC6E7"),
-            Margin = new Thickness(0, 8, 0, 2)
-        });
-        foreach (var commitment in userCommitments)
-            AddCommitmentRow(commitment, false);
-
-        _recruitingList.Children.Add(new Label
-        {
-            Text = "AROUND THE NATION",
-            FontAttributes = FontAttributes.Bold,
-            TextColor = DynastyTheme.Palette("#9EC6E7"),
-            Margin = new Thickness(0, 10, 0, 2)
-        });
-        foreach (var commitment in allCommitments
-                     .Where(record => !record.TeamName.Equals(
-                         _currentDynasty.UserTeamName,
-                         StringComparison.OrdinalIgnoreCase))
-                     .OrderByDescending(record => record.OverallRating)
-                     .ThenBy(record => record.TeamName,
-                         StringComparer.OrdinalIgnoreCase)
-                     .Take(100))
-        {
-            AddCommitmentRow(commitment, true);
-        }
+        View CommitmentTable(IEnumerable<RecruitingCommitmentRecord> records) => DataTable(
+            [("Player", 165), ("Pos", 45), ("School", 170), ("Stars", 65), ("Rating", 65), ("OVR", 50), ("Source", 100), ("Joins", 60), ("Assisted", 65)],
+            records.Select(record => {
+                var rating = RecruitingRankingService.GetCommitmentRating(_currentDynasty, record);
+                return new View[] { TableText(record.PlayerName, true), TableText(record.Position.ToString()), SchoolCell(record.TeamName),
+                    TableText(new string('★', RecruitingRankingService.GetStars(rating))), TableText(rating.ToString("0.00")),
+                    RatingCell(record.OverallRating), TableText(record.Source.ToString()), TableText(record.JoinSeasonYear.ToString()),
+                    TableText(record.WasCpuAssisted ? "Yes" : "—") };
+            }));
+        var classes = new VerticalStackLayout { Spacing = 8, Children = {
+            SectionTitle("Class rankings", "Best recruits carry the most weight; later commits receive diminishing Gaussian value."),
+            DataTable([("Rank", 50), ("School", 180), ("Points", 75), ("Average", 75), ("Commits", 65), ("HS", 50), ("Portal", 60)],
+                classRankings.Take(25).Select(item => new View[] { TableText(item.Rank.ToString()), SchoolCell(item.TeamName),
+                    TableText(item.TeamScore.ToString("0.00")), TableText(item.AverageRecruitRating.ToString("0.00")),
+                    TableText(item.CommitCount.ToString()), TableText(item.HighSchoolCount.ToString()), TableText(item.TransferCount.ToString()) }))
+        } };
+        var yours = new VerticalStackLayout { Spacing = 8, Children = { SectionTitle("Your commitments", $"{userCommitments.Length} players"), CommitmentTable(userCommitments) } };
+        var national = new VerticalStackLayout { Spacing = 8, Children = { SectionTitle("Around the nation", "Top 100 commitments outside your program"),
+            CommitmentTable(allCommitments.Where(record => !record.TeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(record => record.OverallRating).ThenBy(record => record.TeamName).Take(100)) } };
+        _recruitingList.Children.Add(ProfileTabs("commitments", ("Your class", yours), ("Class rankings", classes), ("National", national)));
     }
 
     private void AddCommitmentRow(
@@ -3628,9 +3526,13 @@ public sealed partial class FoundationPage : ContentPage
             FontAttributes = FontAttributes.Bold
         });
 
+        var careerStart = _programList.Children.Count;
         RenderUserCoachCareer(team);
+        var staffStart = _programList.Children.Count;
         RenderProgramStaff(team);
+        var historyStart = _programList.Children.Count;
         RenderProgramHistory(team);
+        var developmentStart = _programList.Children.Count;
 
         var latestDevelopment = GetLatestUserDevelopmentRecords();
         if (latestDevelopment.Count > 0)
@@ -3645,6 +3547,7 @@ public sealed partial class FoundationPage : ContentPage
             });
         }
 
+        var titlesStart = _programList.Children.Count;
         if (titles.Length > 0)
         {
             _programList.Children.Add(new Label
@@ -3685,6 +3588,33 @@ public sealed partial class FoundationPage : ContentPage
                 });
             }
         }
+        var generated = _programList.Children.OfType<View>().ToArray();
+        _programList.Children.Clear();
+        VerticalStackLayout Group(int start, int end)
+        {
+            var panel = new VerticalStackLayout { Spacing = 10 };
+            foreach (var view in generated[start..end]) panel.Children.Add(view);
+            return panel;
+        }
+        var careerPanel = Group(careerStart, staffStart);
+        var staffPanel = Group(staffStart, historyStart);
+        var historyPanel = Group(historyStart, developmentStart);
+        var developmentPanel = Group(developmentStart, titlesStart);
+        foreach (var view in generated[titlesStart..]) historyPanel.Children.Add(view);
+        var injuries = new Button { Text = "Injuries & availability", HorizontalOptions = LayoutOptions.Start };
+        injuries.Clicked += (_, _) => ShowSection(AppSection.Injuries);
+        developmentPanel.Children.Insert(0, injuries);
+        developmentPanel.Children.Add(SectionTitle("Player development", "Change from season start · staff-led training · current morale"));
+        developmentPanel.Children.Add(DataTable([("Player", 155), ("Pos", 45), ("Year", 60), ("OVR", 50), ("Δ", 50), ("Morale", 60), ("Availability", 115)],
+            _currentDynasty.ActiveRoster.Where(p => p.TeamName == team.Name).OrderBy(p => p.Position).ThenByDescending(p => p.OverallRating).Select(player => new View[] {
+                PlayerLink(player), TableText(OffensiveLineService.Label(player)), TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)),
+                RatingCell(player.OverallRating), TableText(FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty, player))), MoraleIcon(player),
+                TableText(player.CurrentInjury is null ? "Available" : $"Injured · {player.CurrentInjury.WeeksRemaining}w")
+            })));
+        historyPanel.Children.Insert(0, generated[0]);
+        _programList.Children.Add(SchoolBanner(team.Name, team.ConferenceName + " · Program headquarters"));
+        _programList.Children.Add(ProfileTabs("program", ("Your career", careerPanel), ("Staff & hiring", staffPanel),
+            ("History & titles", historyPanel), ("Development", developmentPanel)));
     }
 
     private void RenderUserCoachCareer(Team team)
@@ -4070,11 +4000,7 @@ public sealed partial class FoundationPage : ContentPage
             })
             .ToArray();
 
-        var selected = await DisplayActionSheet(
-            $"{FormatStaffRole(role)} Candidates",
-            "Cancel",
-            null,
-            choices);
+        var selected = await ShowStaffMarketListAsync(team, role, candidates, choices);
 
         if (string.IsNullOrWhiteSpace(selected) ||
             selected.Equals("Cancel", StringComparison.OrdinalIgnoreCase))
@@ -4276,28 +4202,18 @@ public sealed partial class FoundationPage : ContentPage
                 Margin = new Thickness(0, 10, 0, 0)
             });
 
-            foreach (var season in seasons)
-            {
-                var achievements = new List<string>();
-                if (season.NationalChampion) achievements.Add("National Champion");
-                else if (season.PlayoffParticipant) achievements.Add("CFP");
-                if (season.ConferenceChampion) achievements.Add("Conference Champion");
-                if (season.FinalRanking > 0) achievements.Add($"#{season.FinalRanking}");
-                if (!string.IsNullOrWhiteSpace(season.BowlName))
-                    achievements.Add(
-                        $"{season.BowlName} {(season.WonBowl == true ? "W" : "L")}");
+            _programList.Children.Add(DataTable([("Season", 60), ("W", 40), ("L", 40), ("Conf W", 60), ("Conf L", 60), ("Rank", 55), ("Honors / postseason", 260)],
+                seasons.Select(season => {
+                    var achievements = new List<string>();
+                    if (season.NationalChampion) achievements.Add("National Champion");
+                    else if (season.PlayoffParticipant) achievements.Add("CFP");
+                    if (season.ConferenceChampion) achievements.Add("Conference Champion");
+                    if (!string.IsNullOrWhiteSpace(season.BowlName)) achievements.Add($"{season.BowlName} {(season.WonBowl == true ? "W" : "L")}");
+                    return new View[] { TableText(season.SeasonYear.ToString()), TableText(season.Wins.ToString()), TableText(season.Losses.ToString()),
+                        TableText(season.ConferenceWins.ToString()), TableText(season.ConferenceLosses.ToString()),
+                        TableText(season.FinalRanking > 0 ? $"#{season.FinalRanking}" : "—"), TableText(string.Join(" · ", achievements)) };
+                })));
 
-                _programList.Children.Add(new Label
-                {
-                    Text =
-                        $"{season.SeasonYear} • {season.Wins}-{season.Losses} " +
-                        $"({season.ConferenceWins}-{season.ConferenceLosses} conf)" +
-                        (achievements.Count > 0
-                            ? $" • {string.Join(" • ", achievements)}"
-                            : string.Empty),
-                    FontSize = 12
-                });
-            }
         }
 
         if (_currentDynasty.PlayerSeasonStats.Count > 0)
@@ -5008,6 +4924,7 @@ public sealed partial class FoundationPage : ContentPage
                 });
         }
 
+        var staffStart = _teamBrowserList.Children.Count;
         _teamBrowserList.Children.Add(
             new Label
             {
@@ -5020,6 +4937,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _teamBrowserList.Children.Add(TeamStaffTable(team.Name));
 
+        var rosterStart = _teamBrowserList.Children.Count;
         var injuries =
             roster.Where(player =>
                     player.CurrentInjury is not null)
@@ -5052,6 +4970,14 @@ public sealed partial class FoundationPage : ContentPage
             });
 
         _teamBrowserList.Children.Add(CreateTeamRosterTable(roster));
+        var views = _teamBrowserList.Children.OfType<View>().ToArray();
+        _teamBrowserList.Children.Clear();
+        var rosterPanel = new VerticalStackLayout { Spacing = 10 };
+        var staffPanel = new VerticalStackLayout { Spacing = 10 };
+        foreach (var view in views[..staffStart]) _teamBrowserList.Children.Add(view);
+        foreach (var view in views[staffStart..rosterStart]) staffPanel.Add(view);
+        foreach (var view in views[rosterStart..]) rosterPanel.Add(view);
+        _teamBrowserList.Children.Add(ProfileTabs("team-browser", ("Roster", rosterPanel), ("Staff", staffPanel)));
     }
 
     private void RenderNationalRankings()

@@ -83,8 +83,23 @@ public sealed partial class FoundationPage
             button.FontAttributes = selected ? FontAttributes.Bold : FontAttributes.None;
         }
         if (_currentDynasty is not null)
-            _managementBadge.Content = SchoolBanner(_currentDynasty.UserTeamName, _currentDynasty.SeasonYear.ToString());
+            _managementBadge.Content = SidebarIdentity(_currentDynasty.UserTeamName, _currentDynasty.SeasonYear);
         ArrangeManagementShell();
+    }
+
+    private static View SidebarIdentity(string school, int year)
+    {
+        var brand = TeamBrandCatalog.Get(school);
+        var badge = new VerticalStackLayout { Spacing = 6, HorizontalOptions = LayoutOptions.Center, Children =
+        {
+            new Label { Text = school[..1], FontSize = 26, FontAttributes = FontAttributes.Bold,
+                TextColor = Color.FromArgb(brand.Secondary), HorizontalTextAlignment = TextAlignment.Center,
+                LineBreakMode = LineBreakMode.NoWrap },
+            new Label { Text = year.ToString(), FontSize = 11, TextColor = Colors.White,
+                HorizontalTextAlignment = TextAlignment.Center }
+        } };
+        SemanticProperties.SetDescription(badge, school + " · " + year);
+        return new Border { Content = badge, Padding = 12, BackgroundColor = Color.FromArgb(brand.Primary) };
     }
 
     private static View ManagementPanel(string title, View content, string? subtitle = null) => new Border
@@ -111,7 +126,11 @@ public sealed partial class FoundationPage
         Arrange(1); grid.SizeChanged+=(_,_)=>Arrange(Math.Min(panels.Length,grid.Width>=1100?3:grid.Width>=600?2:1));return grid;
     }
 
-    private View ProfileTabs(params (string Title, View Content)[] panels)
+    private readonly Dictionary<string, int> _managementTabs = new();
+
+    private View ProfileTabs(params (string Title, View Content)[] panels) => ProfileTabs(null, panels);
+
+    private View ProfileTabs(string? key, params (string Title, View Content)[] panels)
     {
         var body = new ContentView();
         var tabs = new HorizontalStackLayout { Spacing = 4 };
@@ -119,6 +138,7 @@ public sealed partial class FoundationPage
         void Select(int index)
         {
             body.Content = panels[index].Content;
+            if (key is not null) _managementTabs[key] = index;
             for (var i=0;i<buttons.Count;i++)
             { buttons[i].BackgroundColor = i == index ? DynastyTheme.Panel : Colors.Transparent;
               buttons[i].TextColor = i == index ? DynastyTheme.Text : DynastyTheme.Muted; }
@@ -129,7 +149,7 @@ public sealed partial class FoundationPage
             var button = new Button { Text = panels[i].Title, FontSize = 11, Padding = new Thickness(10,5), MinimumHeightRequest = 44 };
             button.Clicked += (_, _) => Select(index); buttons.Add(button); tabs.Add(button);
         }
-        Select(0);
+        Select(key is not null && _managementTabs.TryGetValue(key, out var saved) ? Math.Clamp(saved, 0, panels.Length - 1) : 0);
         return new VerticalStackLayout { Spacing = 10, Children = {
             new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = tabs }, body } };
     }
@@ -190,11 +210,9 @@ public sealed partial class FoundationPage
             board.Clicked+=(_,_)=>{ if(_currentDynasty is null)return;
                 _currentDynasty=InteractiveRecruitingService.ToggleTargetBoard(_currentDynasty,prospect.Source,prospect.ProspectId);RenderRecruitingScreen(); };
             var actions=new HorizontalStackLayout { Spacing=3,Children={quick,board} };
-            var appearance=_currentDynasty?.TransferPortalEntries.FirstOrDefault(p=>p.Player.PlayerId==prospect.ProspectId)?.Player.Appearance
-                ?? _currentDynasty?.ActiveRoster.FirstOrDefault(p=>p.PlayerId==prospect.ProspectId)?.Appearance;
-            var portrait = PersonPortrait.Create(prospect.ProspectId,prospect.FullName,Color.FromArgb("#31566C"),Color.FromArgb("#A9CEF3"),28,appearance:appearance);
-            var identity=new Grid { ColumnSpacing=3,ColumnDefinitions=new() {new(28),new(GridLength.Star)} };
-            identity.Add(portrait,0,0);identity.Add(name,1,0); identity.SetValue(TableValueProperty,prospect.FullName);
+            name.HorizontalOptions = LayoutOptions.Start;
+            name.MinimumHeightRequest = 44;
+            name.SetValue(TableValueProperty, prospect.FullName);
             var starsCell=TableText(new string('★',item.PublicStars), color: DynastyTheme.IsLight ? Color.FromArgb("#806000") : Color.FromArgb("#F4CC66"));
             starsCell.SetValue(TableValueProperty,item.PublicStars.ToString());
             var projection=TableText(item.Projection);projection.SetValue(TableValueProperty,item.Projection.Split('-', ' ')[0]);
@@ -202,7 +220,7 @@ public sealed partial class FoundationPage
             var interest=TableText(item.UserStatus);
             var percentage=System.Text.RegularExpressions.Regex.Match(item.UserStatus,@"\d+(?=%)").Value;
             interest.SetValue(TableValueProperty,percentage.Length>0?percentage:null);
-            rows.Add([TableText(prospect.Position.ToString()), identity,
+            rows.Add([TableText(prospect.Position.ToString()), name,
                 starsCell, projection, scouting, interest, actions,
                 TableText("#"+item.NationalRank), TableText(item.Origin), TableText(item.MarketStatus)]);
             if (rows.Count % 12 == 0) await Task.Delay(1,cancellation);

@@ -449,6 +449,36 @@ def main():
     print("System appearance refresh preserved the completed week while processing was active.")
 
 
+def check_remaining_management():
+    tap(capture("remaining-before-program"), "Program & staff")
+    program=wait_for("management-program-career",lambda r:"Staff & hiring" in texts(r))
+    tap(program,"Staff & hiring")
+    staff=wait_for("management-program-staff",lambda r:any((n.get("content-desc") or "").startswith("View coach ") for n in r.iter("node")))
+    coach=next(n for n in staff.iter("node") if (n.get("content-desc") or "").startswith("View coach "))
+    tap(staff,coach.get("text"))
+    profile=wait_for("management-coach-profile",lambda r:"Career history" in texts(r))
+    tap(profile,"Attributes")
+    wait_for("management-coach-attributes",lambda r:"Coaching traits" in texts(r))
+    adb("shell","input","keyevent","4")
+    staff=scroll_to_text("management-staff-candidates-button","Candidates")
+    tap(staff,"Candidates")
+    market=wait_for("management-staff-market",lambda r:"Find a coach" in texts(r))
+    assert "Fit" in texts(market) and "Review hire" in texts(market)
+    tap(market,"Cancel")
+    program=wait_for("management-staff-cancel",lambda r:"History & titles" in texts(r))
+    tap(program,"History & titles")
+    wait_for("management-program-history",lambda r:any(t and "National titles:" in t for t in texts(r)))
+    tap(capture("management-before-development"),"Development")
+    wait_for("management-program-development",lambda r:"Availability" in texts(r) and "Morale" in texts(r))
+    tap(capture("management-before-news"),"News")
+    news=wait_for("management-news-cards",lambda r:"Read story ›" in texts(r))
+    tap(news,"Read story ›")
+    story=wait_for("management-news-story",lambda r:"‹ Back to headlines" in texts(r))
+    assert any("Dynasty Wire" in (t or "") for t in texts(story))
+    tap(story,"‹ Back to headlines")
+    wait_for("management-news-return",lambda r:"News & headlines" in texts(r))
+
+
 def check_management_layouts():
     # Use the same saved dynasty while resizing the Android window in dp.
     adb("shell", "settings", "put", "system", "user_rotation", "0")
@@ -511,6 +541,7 @@ def check_management_layouts():
     detail=wait_for("management-tablet-split-recruit",lambda r:"Back to prospects" in texts(r))
     assert any((n.get("resource-id") or "").endswith("nav-recruiting") for n in detail.iter("node"))
     tap(detail,"Back to prospects")
+    check_remaining_management()
     tap(capture("management-tablet-before-settings"),"Settings")
     settings=wait_for("management-system-settings",lambda r:"Appearance" in texts(r))
     tap(settings,"Dark")

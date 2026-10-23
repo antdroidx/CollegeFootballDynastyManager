@@ -39,20 +39,15 @@ public sealed partial class FoundationPage
 
     private static View PersonLink(Guid id, string name, string school, Func<Task> open, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
     {
-        var brand = TeamBrandCatalog.Get(school);
-        var row = new Grid { ColumnSpacing = 6, Padding = new Thickness(5, 3), MinimumHeightRequest = 48,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(36), new(GridLength.Star) } };
-        row.Add(PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 36, staff, age, appearance), 0, 0);
         // A real button retains keyboard, screen-reader and touch behavior inside sortable tables.
         var displayName=staff || !name.Contains(' ') ? name : name[..1]+". "+name[(name.IndexOf(' ')+1)..];
         var button = new Button { Text = displayName, FontSize = 12,
             TextColor = DynastyTheme.IsLight ? Color.FromArgb(staff ? "#623794" : "#23587D") : Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
-            HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(0, 4), MinimumHeightRequest = 44 };
+            HorizontalOptions = LayoutOptions.Start, Padding = new Thickness(6, 4), MinimumHeightRequest = 44 };
         SemanticProperties.SetDescription(button, (staff ? "View coach " : "View player ") + name);
         button.Clicked += async (_, _) => await open();
-        row.Add(button, 1, 0);
-        row.SetValue(TableValueProperty, name);
-        return row;
+        button.SetValue(TableValueProperty, name);
+        return button;
     }
 
     private async Task ShowPlayerProfileAsync(Guid id)
@@ -203,35 +198,35 @@ public sealed partial class FoundationPage
             if (next is null) return;
             coach = coach with { Appearance = next }; portraitHeader.Content = CoachHeader(); RenderCurrentDynasty();
         };
-        var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children =
-        {
-            close, portraitHeader, editPortrait,
+        var overview = new VerticalStackLayout { Spacing = 10, Children = {
             SectionTitle("Coach profile", $"Age {coach.Age} · OVR {coach.OverallRating} · {coach.CareerYears} career years · {coach.ContractYearsRemaining} contract years"),
-            AttributeGroup("Coaching traits", "Leadership, strategy, development and program management",
-                ("Leadership", coach.Leadership), ("Recruiting", coach.Recruiting), ("Player development", coach.PlayerDevelopment),
-                ("Game management", coach.GameManagement), ("Scheme", coach.Scheme), ("Special teams", coach.SpecialTeams),
-                ("Medical", coach.Medical), ("Conditioning", coach.Conditioning), ("Talent evaluation", coach.TalentEvaluation),
-                ("Potential evaluation", coach.PotentialEvaluation), ("Regional knowledge", coach.RegionalKnowledge), ("Staff management", coach.StaffManagement)),
+            editPortrait
+        } };
+        if (coach.FormerPlayerId is not null) overview.Add(new Label { Text = $"Former {coach.AlmaMater} player · Class of {coach.GraduationYear} · entered coaching after apprenticeship", TextColor = DynastyTheme.Accent });
+        if (coach.SharedRoleCoaches.Count > 0) overview.Add(new Label { Text = "Shared coordinator role: " + string.Join(" · ", coach.SharedRoleCoaches.Select(c => $"{c.FullName} ({c.PublishedTitle})")), TextColor = DynastyTheme.Muted });
+        if (coach.DataSeason is int dataSeason) overview.Add(new Label { Text = $"{dataSeason} staff · {coach.PublishedTitle} · age and coaching ratings are game estimates", TextColor = DynastyTheme.Muted });
+        var traits = AttributeGroup("Coaching traits", "Leadership, strategy, development and program management",
+            ("Leadership", coach.Leadership), ("Recruiting", coach.Recruiting), ("Player development", coach.PlayerDevelopment),
+            ("Game management", coach.GameManagement), ("Scheme", coach.Scheme), ("Special teams", coach.SpecialTeams),
+            ("Medical", coach.Medical), ("Conditioning", coach.Conditioning), ("Talent evaluation", coach.TalentEvaluation),
+            ("Potential evaluation", coach.PotentialEvaluation), ("Regional knowledge", coach.RegionalKnowledge), ("Staff management", coach.StaffManagement));
+        var history = new VerticalStackLayout { Spacing = 10, Children = {
             SectionTitle("Head-coaching career", $"{summary.HeadCoachWins}–{summary.HeadCoachLosses} · {summary.HeadCoachSeasons} seasons · {summary.ConferenceTitles} conference titles · {summary.NationalTitles} national titles")
         } };
-        if (coach.FormerPlayerId is not null)
-            content.Children.Insert(4, new Label { Text = $"Former {coach.AlmaMater} player · Class of {coach.GraduationYear} · entered coaching after apprenticeship", TextColor = DynastyTheme.Accent });
-        if (coach.SharedRoleCoaches.Count > 0)
-            content.Children.Insert(4, new Label { Text = "Shared coordinator role: " + string.Join(" · ", coach.SharedRoleCoaches.Select(c => $"{c.FullName} ({c.PublishedTitle})")), TextColor = DynastyTheme.Muted });
-        if (coach.DataSeason is int dataSeason)
-            content.Children.Insert(4, new Label { Text = $"{dataSeason} staff · {coach.PublishedTitle} · age and coaching ratings are game estimates", TextColor = DynastyTheme.Muted });
-        if (summary.Seasons.Count == 0) content.Children.Add(new Label { Text = "No completed seasons recorded yet." });
-        else content.Children.Add(DataTable([("Year", 60), ("School", 195), ("Role", 160), ("W", 40), ("L", 40), ("Rank", 50)],
-            summary.Seasons.OrderByDescending(season => season.SeasonYear).Select(season => new View[]
-            {
+        if (summary.Seasons.Count == 0) history.Add(new Label { Text = "No completed seasons recorded yet." });
+        else history.Add(DataTable([("Year", 60), ("School", 195), ("Role", 160), ("W", 40), ("L", 40), ("Rank", 50)],
+            summary.Seasons.OrderByDescending(season => season.SeasonYear).Select(season => new View[] {
                 TableText(season.SeasonYear.ToString()), SchoolCell(season.TeamName), TableText(FormatStaffRole(season.Role)),
                 TableText(season.Wins.ToString()), TableText(season.Losses.ToString()), TableText(season.FinalRanking > 0 ? $"#{season.FinalRanking}" : "—")
             })));
-        content.Children.Add(new Label { Text = "Career totals count recorded head-coaching seasons. Other staff roles retain team results in the season table.", FontSize = 11, TextColor = DynastyTheme.Muted });
+        history.Add(new Label { Text = "Career totals count recorded head-coaching seasons. Other staff roles retain team results in the season table.", FontSize = 11, TextColor = DynastyTheme.Muted });
         var school = new Button { Text = "View team roster & staff" };
         school.Clicked += async (_, _) => { await Navigation.PopModalAsync(); OpenSchool(coach.TeamName); };
-        content.Children.Add(school);
-        await Navigation.PushModalAsync(new ContentPage { Content = new ScrollView { Content = content } });
+        overview.Add(school);
+        var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children = {
+            close, ResponsivePanels(portraitHeader, ProfileTabs(("Overview", overview), ("Attributes", traits), ("Career history", history)))
+        } };
+        await Navigation.PushModalAsync(new ContentPage { AutomationId = "coach-profile", Content = new ScrollView { Content = content } });
     }
 
     private View TeamStaffTable(string school) => DataTable(

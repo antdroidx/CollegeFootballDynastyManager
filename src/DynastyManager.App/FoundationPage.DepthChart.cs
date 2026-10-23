@@ -62,7 +62,7 @@ public sealed partial class FoundationPage
         {
             var active = code >= first && code <= last;
             var button = new Button { Text = name, FontSize = 12, Padding = new Thickness(14, 7), Margin = new Thickness(0, 0, 6, 0),
-                BackgroundColor = active ? DynastyTheme.Accent : DynastyTheme.Palette("#243542"), TextColor = active ? Colors.Black : DynastyTheme.Text };
+                BackgroundColor = active ? DynastyTheme.Accent : DynastyTheme.Palette("#243542"), TextColor = active ? BrandInk(DynastyTheme.Accent) : DynastyTheme.Text };
             button.Clicked += (_, _) => _depthPositionPicker.SelectedIndex = first;
             units.Children.Add(button);
         }

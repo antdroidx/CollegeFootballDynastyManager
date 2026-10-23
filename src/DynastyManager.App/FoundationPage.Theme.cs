@@ -61,6 +61,7 @@ public sealed partial class FoundationPage
                 _startingLibrary = _startingLibrary, _bundledStartingRoster = _bundledStartingRoster,
                 _startingLibraryRepository = _startingLibraryRepository, _startingLibraryError = _startingLibraryError
             };
+            foreach (var item in _managementTabs) next._managementTabs[item.Key] = item.Value;
             next.RefreshStartingChoices(SelectedStartingSetup?.Id, SelectedStartingRoster?.Id);
             next.ConfigureLeague(_teamsByName.Values.ToArray());
             next._importStatus.Text = _importStatus.Text;

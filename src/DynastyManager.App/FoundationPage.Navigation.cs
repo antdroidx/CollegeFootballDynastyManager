@@ -306,13 +306,27 @@ public sealed partial class FoundationPage
 
     private View NewsCard(DynastyNewsStory story)
     {
-        var card = new Border { BackgroundColor = DynastyTheme.Palette("#253642"), Stroke = DynastyTheme.Palette("#527185"), Content =
-            new VerticalStackLayout { Spacing = 5, Children =
-            {
-                new Label { Text = $"{story.Category.ToUpperInvariant()} · {story.SeasonYear} · Week {story.Week}", FontSize = 10, TextColor = DynastyTheme.Palette("#E8C979") },
-                new Label { Text = story.Headline, FontSize = 14, FontAttributes = FontAttributes.Bold },
-                new Label { Text = "Read story ›", FontSize = 11, TextColor = DynastyTheme.Accent }
+        var brand = DynastyManager.Data.Branding.TeamBrandCatalog.Get(story.TeamName);
+        var player = story.PlayerId is Guid id ? _currentDynasty?.ActiveRoster.FirstOrDefault(p => p.PlayerId == id) : null;
+        View icon = player is not null
+            ? PersonPortrait.Create(player.PlayerId, player.FullName, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 44, appearance: player.Appearance)
+            : new Border { WidthRequest = 44, HeightRequest = 44, Padding = 0, BackgroundColor = Color.FromArgb(brand.Primary),
+                Content = new Label { Text = story.TeamName.Length > 0 ? story.TeamName[..1] : "•", FontSize = 27,
+                    FontAttributes = FontAttributes.Bold, TextColor = BrandInk(Color.FromArgb(brand.Primary)),
+                    HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center } };
+        var heading = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(44), new(GridLength.Star) } };
+        heading.Add(icon, 0, 0);
+        heading.Add(new VerticalStackLayout { Spacing = 4, Children = {
+            new Label { Text = $"{story.Category.ToUpperInvariant()} · {story.SeasonYear} · Week {story.Week}", FontSize = 10, TextColor = ManagementAccent },
+            new Label { Text = story.Headline, FontSize = 15, FontAttributes = FontAttributes.Bold }
+        } }, 1, 0);
+        var card = new Border { Padding = 12, BackgroundColor = DynastyTheme.Surface, StrokeThickness = 0,
+            Content = new VerticalStackLayout { Spacing = 9, Children = {
+                heading, NewsIllustration.Create(story.TeamName, story.Category, 100),
+                new Label { Text = story.Body, FontSize = 12, MaxLines = 3, LineBreakMode = LineBreakMode.TailTruncation, TextColor = DynastyTheme.Muted },
+                new Label { Text = "Read story ›", FontSize = 12, TextColor = ManagementAccent }
             } } };
+        SemanticProperties.SetDescription(card, story.Category + ": " + story.Headline + ". Open story.");
         var open = new TapGestureRecognizer(); open.Tapped += async (_, _) =>
         {
             var close = new Button { Text = "‹ Back to headlines" };
@@ -327,7 +341,10 @@ public sealed partial class FoundationPage
             {
                 close, SchoolBanner(story.TeamName, $"{story.Category} · {story.SeasonYear} · Week {story.Week}"),
                 new Label { Text = story.Headline, FontSize = 18, FontAttributes = FontAttributes.Bold },
-                new Label { Text = story.Body, FontSize = 14 }, destination
+                NewsIllustration.Create(story.TeamName, story.Category, 180),
+                new Label { Text = story.Body, FontSize = 14 },
+                new Label { Text = DynastyManager.Data.Presentation.NewsEditorial.Context(story.Category, story.TeamName), FontSize = 14 },
+                new Label { Text = "Dynasty Wire · fictional in-world coverage based on your save. Artwork is an illustration.", FontSize = 11, TextColor = DynastyTheme.Muted }, destination
             } } };
             await Navigation.PushModalAsync(page);
         };
@@ -339,9 +356,9 @@ public sealed partial class FoundationPage
     {
         _newsRows.Children.Clear();
         if (_currentDynasty is null) return;
-        _newsRows.Children.Add(SectionTitle("News & headlines", "Generated from recorded results, commitments and current injury reports"));
+        _newsRows.Children.Add(SectionTitle("News & headlines", "Dynasty Wire · results, people and stories from around the league"));
         var stories = DynastyNewsService.Build(_currentDynasty);
-        foreach (var story in stories) _newsRows.Children.Add(NewsCard(story));
+        if (stories.Count > 0) _newsRows.Children.Add(ResponsivePanels(stories.Select(NewsCard).ToArray()));
         if (stories.Count == 0) _newsRows.Children.Add(new Label { Text = "No stories yet. Check back as your season develops." });
     }
 
