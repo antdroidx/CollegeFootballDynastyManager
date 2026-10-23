@@ -427,6 +427,26 @@ def main():
     dark = wait_for("dark-restored", lambda r: "Dark" in texts(r) and "Appearance" in texts(r))
     assert calendar(dark) == before_theme
     print("Light/dark theme, live-state preservation, enabled controls and player-profile morale passed in both layouts.")
+    # A system appearance change during processing must not clone the pre-advance state.
+    tap(dark,"Dark")
+    choices=wait_for("busy-theme-system-choice",lambda r:"System" in texts(r))
+    tap(choices,"System")
+    system=wait_for("busy-theme-system",lambda r:"System" in texts(r) and "Appearance" in texts(r))
+    tap(system,"Overview")
+    ready=wait_for("busy-theme-before-advance",overview_ready)
+    previous=calendar(ready)
+    action=advance_action(ready)
+    node=next(n for n in ready.iter("node") if n.get("text")==action)
+    left,top,right,bottom=map(int,re.findall(r"\d+",node.get("bounds")))
+    adb("shell","input","tap",str((left+right)//2),str((top+bottom)//2))
+    adb("shell","cmd","uimode","night","yes")
+    advanced=wait_for("busy-theme-advanced",lambda r:overview_ready(r,previous),timeout=300)
+    after=calendar(advanced)
+    adb("shell","cmd","uimode","night","no")
+    time.sleep(2)
+    stable=wait_for("busy-theme-light-stable",lambda r:overview_ready(r) and calendar(r)==after)
+    assert adb("shell","pidof","antdroid.cfbcoach.dev").strip()
+    print("System appearance refresh preserved the completed week while processing was active.")
 
 
 def check_management_layouts():

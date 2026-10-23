@@ -1,22 +1,50 @@
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
+using Microsoft.Maui.Dispatching;
 
 namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
     private bool _systemThemePending;
+    private bool _themeWaitScheduled;
     public Task RefreshSystemThemeAsync()
     {
+        // Replacing the page during an awaited dynasty update would leave its
+        // continuation updating the old page's state. Refresh after it commits.
+        if (_isAdvancing || _advanceOverlay.IsVisible)
+        {
+            _systemThemePending = true;
+            if (!_themeWaitScheduled)
+            {
+                _themeWaitScheduled = true;
+                Dispatcher.StartTimer(TimeSpan.FromMilliseconds(100), () =>
+                {
+                    if (Window?.Page != this) { _themeWaitScheduled = false; return false; }
+                    if (_isAdvancing || _advanceOverlay.IsVisible) return true;
+                    _themeWaitScheduled = false;
+                    _ = RefreshPendingThemeAsync();
+                    return false;
+                });
+            }
+            return Task.CompletedTask;
+        }
         if (Navigation.ModalStack.Count > 0) { _systemThemePending = true; return Task.CompletedTask; }
+        _systemThemePending = false;
         return Window is { } window ? RebuildThemeAsync(window, _activeSection) : Task.CompletedTask;
+    }
+
+    private async Task RefreshPendingThemeAsync()
+    {
+        try { await RefreshSystemThemeAsync(); }
+        catch (Exception error) { System.Diagnostics.Trace.WriteLine("Deferred appearance refresh: " + error); }
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
         DynastyTheme.ApplyNativeAppearance();
-        if (_systemThemePending) { _systemThemePending = false; _ = RefreshSystemThemeAsync(); }
+        if (_systemThemePending) _ = RefreshPendingThemeAsync();
     }
 
     private async Task RebuildThemeAsync(Window hostWindow, AppSection section)
