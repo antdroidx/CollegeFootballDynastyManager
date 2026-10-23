@@ -51,7 +51,7 @@ public static class WeekSimulation
                     if (!teamsByName.ContainsKey(homeTeam.Name)) homeProfile = externalProfiles[homeTeam.Name];
                     if (!teamsByName.ContainsKey(awayTeam.Name)) awayProfile = externalProfiles[awayTeam.Name];
                 }
-                var session = GameDayEngine.Start(game, homeProfile, awayProfile, roster, GameDayMode.Simulate);
+                var session = GameDayEngine.Start(game, homeProfile, awayProfile, roster, GameDayMode.Simulate, state.DepthChartAssignments);
                 GameDayEngine.SimulateToEnd(session);
                 return GameDayEngine.Finish(session);
             })

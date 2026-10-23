@@ -31,7 +31,8 @@ public static class OffensiveLineService
         {
             var role = code is 5 or 9 ? "OT" : code == 7 ? "OC" : "OG";
             var next = pool.Where(p => p.Position == Position.OL && chosen.All(c => c.PlayerId != p.PlayerId))
-                .OrderBy(p => Label(p) == role ? 0 : 1).FirstOrDefault();
+                .OrderBy(p => p.PlayingPositionCode is int ? p.PlayingPositionCode == code ? 0 : Label(p) == role ? 1 : 2
+                    : Label(p) == role ? 0 : 1).FirstOrDefault();
             if (next is not null) chosen.Add(next);
         }
         return chosen;

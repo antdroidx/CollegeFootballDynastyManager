@@ -18,9 +18,11 @@ public sealed partial class FoundationPage
     private readonly VerticalStackLayout _depthChartOrganizer = new() { Spacing = 10, IsVisible = false };
     private bool _showDepthChartOrganizer;
     private Guid? _selectedRosterPlayer;
+    private IReadOnlyDictionary<Guid, DynastyPlayer> _effectiveDepthPlayers = new Dictionary<Guid, DynastyPlayer>();
 
     private View BuildOrganizedRosterSection()
     {
+        ConfigureDepthChartControls();
         _rosterSearch.TextChanged += (_, _) => RenderCurrentDynasty();
         _rosterPosition.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
         _rosterStatus.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
@@ -56,12 +58,15 @@ public sealed partial class FoundationPage
     private void RenderRosterGrid(IReadOnlyList<DynastyPlayer> roster)
     {
         if (_currentDynasty is null) return;
+        _rosterSearch.IsVisible = _rosterPosition.IsVisible = _rosterStatus.IsVisible = _rosterSort.IsVisible = !_showDepthChartOrganizer;
         _rosterBanner.Content = SchoolBanner(_currentDynasty.UserTeamName,
             $"{_currentDynasty.SeasonYear} roster · {roster.Count}/{DynastyRosterRules.MaximumRosterSize} players · {roster.Count(p => p.IsRedshirted)} redshirts · {roster.Count(p => p.IsWalkOn)} walk-ons");
         var warnings = RosterManagementService.GetPositionWarnings(_currentDynasty, _currentDynasty.UserTeamName);
         _offseasonRosterStatus.Text = warnings.Count == 0 ? "Depth chart ready. Open a player to manage depth, redshirts and career history."
             : "Depth needs: " + string.Join(" · ", warnings);
         RenderDepthChartOrganizer(roster);
+        if (_showDepthChartOrganizer) { _rosterDetail.IsVisible = false; return; }
+        _effectiveDepthPlayers = DepthChartService.ProjectRoster(_currentDynasty.ActiveRoster, _currentDynasty.DepthChartAssignments).ToDictionary(p => p.PlayerId);
         var development = GetLatestUserDevelopmentRecords().ToDictionary(record => record.PlayerId);
         var selected = roster.FirstOrDefault(player => player.PlayerId == _selectedRosterPlayer);
         _rosterDetail.IsVisible = selected is not null;
@@ -90,7 +95,7 @@ public sealed partial class FoundationPage
                 if (_sectionViews[AppSection.Roster] is ScrollView scroll) await scroll.ScrollToAsync(0, 0, false);
             };
             var status = player.CurrentInjury is not null ? $"Injured {player.CurrentInjury.WeeksRemaining}w"
-                : player.IsRedshirted ? "Redshirt" : player.IsWalkOn ? "Walk-on" : RosterManagementService.IsStarter(player) ? "Starter" : "Depth";
+                : player.IsRedshirted ? "Redshirt" : player.IsWalkOn ? "Walk-on" : EffectiveRosterStarter(player) ? "Starter" : "Depth";
             var playerDevelopment = development.GetValueOrDefault(player.PlayerId);
             var seasonDelta = GameMoraleService.SeasonDelta(_currentDynasty, player);
             var morale = GameMoraleService.PlayerMorale(_currentDynasty, player);
@@ -112,79 +117,14 @@ public sealed partial class FoundationPage
 
     private bool MatchesRosterStatus(DynastyPlayer player) => _rosterStatus.SelectedIndex switch
     {
-        1 => RosterManagementService.IsStarter(player),
-        2 => !player.IsRedshirted && player.DepthChartOrder == DynastyRosterRules.StarterPositionCounts.GetValueOrDefault(player.Position, 1) + 1,
-        3 => !player.IsRedshirted && !RosterManagementService.IsStarter(player),
+        1 => EffectiveRosterStarter(player),
+        2 => !player.IsRedshirted && EffectiveDepthPlayer(player).DepthChartOrder == DynastyRosterRules.StarterPositionCounts.GetValueOrDefault(player.Position, 1) + 1,
+        3 => !player.IsRedshirted && !EffectiveRosterStarter(player),
         4 => player.IsRedshirted,
         5 => player.CurrentInjury is not null,
         6 => player.IsWalkOn,
         _ => true
     };
-
-    private void RenderDepthChartOrganizer(IReadOnlyList<DynastyPlayer> roster)
-    {
-        _depthChartOrganizer.Children.Clear();
-        _depthChartOrganizer.IsVisible = _showDepthChartOrganizer;
-        _depthChartOrganizerButton.Text = _showDepthChartOrganizer ? "Close depth chart" : "Organize depth chart";
-        if (!_showDepthChartOrganizer || _currentDynasty is null) return;
-
-        _depthChartOrganizer.Children.Add(SectionTitle("Depth chart organizer",
-            "Drag a player onto another player at the same position, or use the arrow buttons. Changes apply immediately."));
-        foreach (var group in roster.Where(player => !player.IsRedshirted)
-                     .GroupBy(player => OffensiveLineService.Label(player)).OrderBy(group => group.Key))
-        {
-            var players = group.OrderBy(player => player.DepthChartOrder).ToArray();
-            _depthChartOrganizer.Children.Add(new Label
-            {
-                Text = $"{group.Key} · {(group.Key is "OT" or "OG" ? 2 : group.Key == "OC" ? 1 : DynastyRosterRules.StarterPositionCounts.GetValueOrDefault(Enum.Parse<Position>(group.Key), 1))} starter(s)",
-                FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent
-            });
-            foreach (var player in players)
-            {
-                var up = new Button { Text = "↑", FontSize = 12, Padding = new Thickness(10, 4), IsEnabled = Array.IndexOf(players, player) > 0 };
-                var down = new Button { Text = "↓", FontSize = 12, Padding = new Thickness(10, 4), IsEnabled = Array.IndexOf(players, player) < players.Length - 1 };
-                up.Clicked += (_, _) => MoveDepthPlayer(player.PlayerId, -1);
-                down.Clicked += (_, _) => MoveDepthPlayer(player.PlayerId, 1);
-                var row = new Grid { Padding = new Thickness(8, 5), ColumnSpacing = 8,
-                    ColumnDefinitions = new ColumnDefinitionCollection { new(32), new(38), new(GridLength.Star), new(42), new(55), new(GridLength.Auto), new(GridLength.Auto) } };
-                var handle = new Label { Text = "☰", FontSize = 20, VerticalTextAlignment = TextAlignment.Center,
-                    TextColor = DynastyTheme.Accent };
-                SemanticProperties.SetDescription(handle, $"Drag {player.FullName}");
-                row.Add(handle, 0, 0);
-                row.Add(new Label { Text = (Array.IndexOf(players, player) + 1).ToString(), FontAttributes = FontAttributes.Bold,
-                    VerticalTextAlignment = TextAlignment.Center }, 1, 0);
-                row.Add(new Label { Text = player.FullName, VerticalTextAlignment = TextAlignment.Center }, 2, 0);
-                row.Add(new Label { Text = FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted), FontSize = 11, TextColor = DynastyTheme.Muted,
-                    VerticalTextAlignment = TextAlignment.Center }, 3, 0);
-                row.Add(RatingCell(player.OverallRating), 4, 0); row.Add(up, 5, 0); row.Add(down, 6, 0);
-                var card = new Border { BackgroundColor = DynastyTheme.Palette(RosterManagementService.IsStarter(player) ? "#244B45" : "#243542"),
-                    Stroke = DynastyTheme.Palette("#527185"), Content = row };
-                var drag = new DragGestureRecognizer { CanDrag = true };
-                drag.DragStarting += (_, args) => args.Data.Properties["DepthPlayerId"] = player.PlayerId.ToString();
-                var drop = new DropGestureRecognizer { AllowDrop = true };
-                drop.Drop += (_, args) =>
-                {
-                    if (_currentDynasty is null || !args.Data.Properties.TryGetValue("DepthPlayerId", out var value) ||
-                        !Guid.TryParse(value?.ToString(), out var sourceId)) return;
-                    var source = _currentDynasty.ActiveRoster.FirstOrDefault(candidate => candidate.PlayerId == sourceId);
-                    if (source is null || OffensiveLineService.Label(source) != OffensiveLineService.Label(player)) return;
-                    _currentDynasty = RosterManagementService.MovePlayerToOrder(_currentDynasty,
-                        _currentDynasty.UserTeamName, sourceId, player.DepthChartOrder);
-                    RenderCurrentDynasty();
-                };
-                card.GestureRecognizers.Add(drag); card.GestureRecognizers.Add(drop);
-                _depthChartOrganizer.Children.Add(card);
-            }
-        }
-    }
-
-    private void MoveDepthPlayer(Guid playerId, int direction)
-    {
-        if (_currentDynasty is null) return;
-        _currentDynasty = RosterManagementService.MovePlayer(_currentDynasty,
-            _currentDynasty.UserTeamName, playerId, direction);
-        RenderCurrentDynasty();
-    }
 
     private Button CloseRosterDetailButton()
     {
@@ -192,7 +132,11 @@ public sealed partial class FoundationPage
         close.Clicked += (_, _) => { _selectedRosterPlayer = null; RenderCurrentDynasty(); };
         return close;
     }
-    private int DisplayDepthOrder(DynastyPlayer player) => player.Position == Position.OL && _currentDynasty is not null
+    private DynastyPlayer EffectiveDepthPlayer(DynastyPlayer player) => _effectiveDepthPlayers.GetValueOrDefault(player.PlayerId) ?? player;
+    private bool EffectiveRosterStarter(DynastyPlayer player) => RosterManagementService.IsStarter(EffectiveDepthPlayer(player));
+    private int DisplayDepthOrder(DynastyPlayer player) => _currentDynasty is not null && _currentDynasty.DepthChartAssignments.Any(a => a.TeamName == player.TeamName)
+        ? DepthChartService.AtPosition(_currentDynasty, player.TeamName, DepthChartService.AssignedCode(_currentDynasty, player)).Select((p, i) => (p.PlayerId, Rank: i + 1)).First(p => p.PlayerId == player.PlayerId).Rank
+        : player.Position == Position.OL && _currentDynasty is not null
         ? _currentDynasty.ActiveRoster.Where(p => p.TeamName == player.TeamName && !p.IsRedshirted &&
             OffensiveLineService.Label(p) == OffensiveLineService.Label(player)).OrderBy(p => p.DepthChartOrder)
             .Select((p, index) => (p.PlayerId, Order: index + 1)).FirstOrDefault(p => p.PlayerId == player.PlayerId).Order

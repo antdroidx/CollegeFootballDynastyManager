@@ -152,7 +152,7 @@ public static class ConferenceChampionshipService
                 changed = true;
                 homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
                 awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
-                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate, state.DepthChartAssignments);
                 GameDayEngine.SimulateToEnd(session);
                 return GameDayEngine.Finish(session);
             })

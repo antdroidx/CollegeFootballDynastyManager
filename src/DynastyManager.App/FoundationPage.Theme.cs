@@ -26,6 +26,7 @@ public sealed partial class FoundationPage
             var next = new FoundationPage
             {
                 _selectedRosterPlayer = _selectedRosterPlayer, _showDepthChartOrganizer = _showDepthChartOrganizer,
+                _depthPositionCode = _depthPositionCode,
                 _loaded = _loaded, _currentDynasty = _currentDynasty, _saveRepository = _saveRepository,
                 _teamsByName = _teamsByName, _teamNames = _teamNames, _simulationProfiles = _simulationProfiles,
                 _realCoachSeeds = _realCoachSeeds, _legacyRosterRows = _legacyRosterRows, _legacyTeams = _legacyTeams,

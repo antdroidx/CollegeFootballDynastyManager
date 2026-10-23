@@ -2,6 +2,8 @@ namespace DynastyManager.Core.Models;
 
 public sealed record DynastyPlayer
 {
+    // Set on derived game personnel only; natural roster data remains unchanged.
+    public int? PlayingPositionCode { get; init; }
     public Guid PlayerId { get; init; }
     public required string FullName { get; init; }
     public required string TeamName { get; init; }

@@ -30,7 +30,7 @@ public sealed partial class FoundationPage
         var home = GamePlanService.Attach(_currentDynasty, homeTeam, profiles[game.HomeTeamName]);
         var away = GamePlanService.Attach(_currentDynasty, awayTeam, profiles[game.AwayTeamName]);
         if (replay is not null) { home = home with { GamePlan = game.HomeGamePlan ?? home.GamePlan }; away = away with { GamePlan = game.AwayGamePlan ?? away.GamePlan }; }
-        var session = GameDayEngine.Start(game, home, away, roster, mode);
+        var session = GameDayEngine.Start(game, home, away, roster, mode, replay is null ? _currentDynasty.DepthChartAssignments : null);
         session.ControlledTeamName = controlledTeamName;
         var gameRanks = BuildCurrentNationalRankings();
         var animating = false;

@@ -17,8 +17,10 @@ public static partial class GameDayEngine
             kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating, kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating));
     }
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
-        TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode)
+        TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode,
+        IReadOnlyList<DepthChartAssignment>? assignments = null)
     {
+        roster = DepthChartService.ProjectRoster(roster, assignments ?? []);
         roster = PlayerJerseyService.Assign(roster.Where(p => p.TeamName.Equals(game.HomeTeamName, StringComparison.OrdinalIgnoreCase) ||
             p.TeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase)).ToArray());
         var homeRoster = roster.Where(player =>
@@ -105,7 +107,7 @@ public static partial class GameDayEngine
         if (special is not null)
         {
             var kickStart = session.YardLine;
-            var kicker = Kicker(offenseRoster);
+            var kicker = Kicker(offenseRoster, special == "special-punt");
             var made = special == "special-field-goal" &&
                 session.Random.NextDouble() < FieldGoalProbability(session);
             var puntLanding = special == "special-punt"
@@ -448,23 +450,24 @@ public static partial class GameDayEngine
         }
         foreach (var team in new[] { session.Game.HomeTeamName, session.Game.AwayTeamName })
         {
-            var kicker = session.Roster.Where(player => player.TeamName.Equals(team, StringComparison.OrdinalIgnoreCase) &&
-                    player.Position == Position.K && player.CurrentInjury is null && !player.IsRedshirted)
-                .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).FirstOrDefault();
-            if (kicker is null) continue;
-            var teamEvents = session.Events.Where(item => item.OffenseTeamName.Equals(team, StringComparison.OrdinalIgnoreCase)).ToArray();
-            var fieldGoals = teamEvents.Count(item => item.Outcome == SnapOutcome.FieldGoal);
-            var fieldGoalAttempts = teamEvents.Count(item => item.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal);
-            var puntEvents = teamEvents.Where(item => item.Outcome == SnapOutcome.Punt).ToArray();
-            var punts = puntEvents.Length;
-            var touchdowns = teamEvents.Count(item => item.Outcome == SnapOutcome.Touchdown);
-            if (fieldGoalAttempts + punts + touchdowns == 0) continue;
-            Save(Line(kicker.PlayerId) with { FieldGoalsMade = fieldGoals, FieldGoalsAttempted = fieldGoalAttempts,
-                ExtraPointsMade = teamEvents.Count(e => e.Outcome == SnapOutcome.ExtraPoint), ExtraPointsAttempted = teamEvents.Count(e => e.Outcome is SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint), Punts = punts,
-                PuntYards = puntEvents.Sum(item => Math.Max(0, item.KickLandingYardLine - item.StartYardLine)),
-                LongPunt = puntEvents.Select(item => Math.Max(0, item.KickLandingYardLine - item.StartYardLine)).DefaultIfEmpty().Max(),
-                PuntsInside20 = puntEvents.Count(item => !item.IsTouchback && item.KickLandingYardLine >= 80),
-                PuntsInside10 = puntEvents.Count(item => !item.IsTouchback && item.KickLandingYardLine >= 90) });
+            var roster = session.Roster.Where(p => p.TeamName.Equals(team, StringComparison.OrdinalIgnoreCase)).ToArray();
+            var specialEvents = session.Events.Where(e => e.OffenseTeamName.Equals(team, StringComparison.OrdinalIgnoreCase) &&
+                e.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint or SnapOutcome.Punt);
+            foreach (var group in specialEvents.GroupBy(e => e.KickerId ?? Kicker(roster, e.Outcome == SnapOutcome.Punt)?.PlayerId))
+            {
+                if (group.Key is not Guid id) continue;
+                var events = group.ToArray();
+                var punts = events.Where(e => e.Outcome == SnapOutcome.Punt).ToArray();
+                Save(Line(id) with {
+                    FieldGoalsMade = events.Count(e => e.Outcome == SnapOutcome.FieldGoal),
+                    FieldGoalsAttempted = events.Count(e => e.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal),
+                    ExtraPointsMade = events.Count(e => e.Outcome == SnapOutcome.ExtraPoint),
+                    ExtraPointsAttempted = events.Count(e => e.Outcome is SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint),
+                    Punts = punts.Length, PuntYards = punts.Sum(e => Math.Max(0, e.KickLandingYardLine - e.StartYardLine)),
+                    LongPunt = punts.Select(e => Math.Max(0, e.KickLandingYardLine - e.StartYardLine)).DefaultIfEmpty().Max(),
+                    PuntsInside20 = punts.Count(e => !e.IsTouchback && e.KickLandingYardLine >= 80),
+                    PuntsInside10 = punts.Count(e => !e.IsTouchback && e.KickLandingYardLine >= 90) });
+            }
         }
         return lines.Values.ToArray();
     }
@@ -633,9 +636,11 @@ public static partial class GameDayEngine
         session.YardLine = 25; session.Down = 1; session.Distance = 10;
     }
 
-    private static DynastyPlayer? Kicker(IReadOnlyList<DynastyPlayer> roster) => roster
+    private static DynastyPlayer? Kicker(IReadOnlyList<DynastyPlayer> roster, bool punting = false) => roster
         .Where(player => player.CurrentInjury is null && !player.IsRedshirted)
         .OrderBy(player => player.Position == Position.K ? 0 : 1)
+        .ThenBy(player => player.NcaaPositionCode == (punting ? 20 : 19) ? 0 : 1)
+        .ThenBy(player => player.DepthChartOrder > 0 ? player.DepthChartOrder : int.MaxValue)
         .ThenByDescending(player => player.OverallRating).FirstOrDefault();
 
     private static DynastyPlayer? Returner(IReadOnlyList<DynastyPlayer> roster) => roster

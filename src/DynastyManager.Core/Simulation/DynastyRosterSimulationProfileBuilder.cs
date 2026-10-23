@@ -13,7 +13,7 @@ public static class DynastyRosterSimulationProfileBuilder
 
         var teamArray = teams.ToArray();
 
-        var rosterByTeam = state.ActiveRoster
+        var rosterByTeam = DepthChartService.ProjectRoster(state.ActiveRoster, state.DepthChartAssignments)
             .Where(player =>
                 !player.IsRedshirted &&
                 player.CurrentInjury is null)

@@ -40,7 +40,9 @@ public static class RosterManagementService
 
         return state with
         {
-            ActiveRoster = normalized
+            ActiveRoster = normalized,
+            DepthChartAssignments = state.DepthChartAssignments.Where(a => normalized.Any(p => p.PlayerId == a.PlayerId &&
+                p.TeamName.Equals(a.TeamName, StringComparison.OrdinalIgnoreCase))).ToArray()
         };
 
         static HashSet<Guid> LineStarters(IEnumerable<DynastyPlayer> players) => OffensiveLineService.Lineup(players
@@ -59,6 +61,15 @@ public static class RosterManagementService
         if (direction == 0)
             return state;
 
+        if (state.DepthChartAssignments.Any(a => a.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)))
+        {
+            var current = state.ActiveRoster.FirstOrDefault(p => p.PlayerId == playerId && p.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+            if (current is null || current.IsRedshirted) return state;
+            var code = DepthChartService.AssignedCode(state, current);
+            var group = DepthChartService.AtPosition(state, teamName, code);
+            var rank = group.Select((p, i) => (p.PlayerId, Rank: i + 1)).First(p => p.PlayerId == playerId).Rank;
+            return DepthChartService.Assign(state, teamName, playerId, code, rank + Math.Sign(direction));
+        }
         state = NormalizeAllDepthCharts(state);
 
         var player = state.ActiveRoster.FirstOrDefault(candidate =>
