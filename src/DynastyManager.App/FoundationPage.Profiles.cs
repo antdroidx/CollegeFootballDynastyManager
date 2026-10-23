@@ -20,7 +20,7 @@ public sealed partial class FoundationPage
             new Label { Text = staff ? "COACH PROFILE" : "PLAYER PROFILE", FontSize = 10,
                 FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Accent },
             new Label { Text = name, FontSize = 21, FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.WordWrap },
-            new Label { Text = subtitle, FontSize = 12, TextColor = Colors.White },
+            new Label { Text = subtitle, FontSize = 12, TextColor = DynastyTheme.Text },
             new Label { Text = school, FontSize = 12, TextColor = DynastyTheme.Muted }
         } }, 1, 0);
         return new Border { Content = row, Padding = 14, BackgroundColor = DynastyTheme.Palette("#203342") };
@@ -45,7 +45,7 @@ public sealed partial class FoundationPage
         row.Add(PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 36, staff, age, appearance), 0, 0);
         // A real button retains keyboard, screen-reader and touch behavior inside sortable tables.
         var button = new Button { Text = name, FontSize = 12,
-            TextColor = Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
+            TextColor = DynastyTheme.IsLight ? Color.FromArgb(staff ? "#623794" : "#23587D") : Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
             HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(0, 4), MinimumHeightRequest = 44 };
         SemanticProperties.SetDescription(button, (staff ? "View coach " : "View player ") + name);
         button.Clicked += async (_, _) => await open();
@@ -56,14 +56,29 @@ public sealed partial class FoundationPage
 
     private async Task ShowPlayerProfileAsync(Guid id)
     {
-        if (_currentDynasty is null) return;
+        if (_activeSection == AppSection.Roster && Width >= 1000)
+        {
+            _selectedRosterPlayer=id; RenderCurrentDynasty(); return;
+        }
+        var host=new ContentView();
+        void RefreshProfile() => host.Content=CreatePlayerProfileView(id,()=>{ _=Navigation.PopModalAsync(); });
+        RefreshProfile(); if(host.Content is null)return;
+        var page=new ContentPage { AutomationId="player-profile",Content=new ScrollView {Content=host} };
+        _refreshOpenPlayerProfile=RefreshProfile;
+        page.Disappearing+=(_,_)=>Dispatcher.Dispatch(()=>{if(!Navigation.ModalStack.Contains(page))_refreshOpenPlayerProfile=null;});
+        await Navigation.PushModalAsync(page);
+    }
+
+    private View? CreatePlayerProfileView(Guid id, Action closeProfile)
+    {
+        if (_currentDynasty is null) return null;
         var state = _currentDynasty;
         var visibleStats = VisiblePlayerStatistics();
         var active = state.ActiveRoster.FirstOrDefault(player => player.PlayerId == id);
         var career = state.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id);
         var latest = visibleStats.Where(line => line.PlayerId == id).OrderByDescending(line => line.SeasonYear).FirstOrDefault();
         var departure = state.PlayerDepartureHistory.Concat(state.RecentPlayerDepartures).Where(p => p.PlayerId == id).OrderByDescending(p => p.SeasonYear).FirstOrDefault();
-        if (active is null && career is null && latest is null && departure is null) return;
+        if (active is null && career is null && latest is null && departure is null) return null;
         var player = active ?? new DynastyPlayer
         {
             PlayerId = id, FullName = career?.PlayerName ?? latest?.PlayerName ?? departure!.FullName, TeamName = latest?.TeamName ?? departure?.TeamName ?? "Recorded career",
@@ -74,7 +89,7 @@ public sealed partial class FoundationPage
         };
         if (active is not null) player = PlayerRatingService.EnsureInitialized(state, player);
         var close = new Button { Text = "‹ Back" };
-        close.Clicked += async (_, _) => await Navigation.PopModalAsync();
+        close.Clicked += (_, _) => closeProfile();
         View PlayerHeader() => IdentityHeader(player.PlayerId, player.FullName, player.TeamName, $"{(player.JerseyNumber is int number ? $"#{number} · " : "")}{OffensiveLineService.Label(player)} · {(active is null ? "Archived player" : FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted))}", appearance: player.Appearance);
         var portraitHeader = new ContentView { Content = PlayerHeader() };
         var editPortrait = new Button { Text = "Edit portrait", FontSize = 11 };
@@ -137,9 +152,10 @@ public sealed partial class FoundationPage
         stats.Clicked += async (_, _) => await ShowPlayerStatisticsAsync(player);
         content.Children.Add(stats);
         var school = new Button { Text = "View team roster & staff", IsEnabled = _teamsByName.ContainsKey(player.TeamName) };
-        school.Clicked += async (_, _) => { await Navigation.PopModalAsync(); OpenSchool(player.TeamName); };
+        school.Clicked += (_, _) => { closeProfile(); OpenSchool(player.TeamName); };
         content.Children.Add(school);
-        await Navigation.PushModalAsync(new ContentPage { Content = new ScrollView { Content = content } });
+        return OrganizePlayerProfile(content, player, active is not null);
+
     }
 
     private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes)
@@ -159,8 +175,11 @@ public sealed partial class FoundationPage
                 var row = new Grid { ColumnSpacing = 6,
                     ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
                 row.Add(new Label { Text = attribute.Name, FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
-                row.Add(RatingCell(attribute.Rating), 1, 0);
-                tiles.Add(new Border { Padding = new Thickness(10, 7), BackgroundColor = DynastyTheme.Palette("#1D2C38"), Content = row }, i % columns, i / columns);
+                row.Add(new Label { Text=attribute.Rating.ToString(), FontSize=12, FontAttributes=FontAttributes.Bold,
+                    TextColor=DynastyTheme.IsLight ? Color.FromArgb("#166841") : Color.FromArgb("#70D4AD"), VerticalTextAlignment=TextAlignment.Center },1,0);
+                tiles.Add(new VerticalStackLayout { Spacing=5, Padding=new Thickness(4,5), Children={row,
+                    new ProgressBar { Progress=Math.Clamp(attribute.Rating/99.0,0,1), HeightRequest=4,
+                        ProgressColor=attribute.Rating>=85 ? Color.FromArgb("#38B888") : attribute.Rating>=70 ? Color.FromArgb("#599BDB") : Color.FromArgb("#B49C61") } } },i%columns,i/columns);
             }
         }
         Arrange(2);

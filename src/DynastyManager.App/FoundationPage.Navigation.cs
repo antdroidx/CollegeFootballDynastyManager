@@ -70,12 +70,12 @@ public sealed partial class FoundationPage
 
     private static View NavigationCard(string title, string value, string hint, string color, Action open)
     {
-        var card = new Border { BackgroundColor = Color.FromArgb(color), Stroke = DynastyTheme.Palette("#497088"), Padding = 12,
+        var card = new Border { BackgroundColor = DynastyTheme.Surface, Stroke = DynastyTheme.Palette("#497088"), Padding = 12,
             Content = new VerticalStackLayout { Spacing = 5, Children =
             {
-                new Label { Text = title, FontSize = 11, TextColor = DynastyTheme.Palette("#B8D8E6") },
-                new Label { Text = value, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = Colors.White },
-                new Label { Text = hint, FontSize = 11, TextColor = DynastyTheme.Palette("#BDE7E1") }
+                new Label { Text = title, FontSize = 11, TextColor = DynastyTheme.Muted },
+                new Label { Text = value, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text },
+                new Label { Text = hint, FontSize = 11, TextColor = DynastyTheme.Accent }
             } } };
         var tap = new TapGestureRecognizer(); tap.Tapped += (_, _) => open(); card.GestureRecognizers.Add(tap);
         SemanticProperties.SetDescription(card, $"{title}. {value}. {hint}");
@@ -127,7 +127,23 @@ public sealed partial class FoundationPage
         cards.Add(NavigationCard("NEXT GAME", opponent, next is null ? "Open schedule ›" : $"Week {next.Week} · Matchup & prep ›", "#234A43",
             () => ShowSection(next is null ? AppSection.Schedule : AppSection.GameDay)), 0, 1);
         cards.Add(NavigationCard("INJURIES", $"{injuries} active", "Team & league report ›", "#443657", () => ShowSection(AppSection.Injuries)), 1, 1);
-        _homeHighlights.Children.Add(cards);
+        var tasks = new VerticalStackLayout { Spacing=7 };
+        foreach(var task in new[] { ("Recruiting & scouting", AppSection.Recruiting), ("Roster & depth",AppSection.Roster),
+            ("Staff & game plan",AppSection.Playbook), ("Injury report",AppSection.Injuries) })
+        {
+            var button=new Button { Text=task.Item1+" ›", HorizontalOptions=LayoutOptions.Fill, BackgroundColor=DynastyTheme.Panel, TextColor=DynastyTheme.Text };
+            button.Clicked+=(_,_)=>ShowSection(task.Item2); tasks.Add(button);
+        }
+        var standings=new VerticalStackLayout { Spacing=5 };
+        var conferenceName=school?.ConferenceName;
+        foreach(var entry in BuildCurrentNationalRankings().Where(r=>_teamsByName.TryGetValue(r.TeamName,out var t)&&t.ConferenceName==conferenceName).Take(5))
+        {
+            var row=new Grid { ColumnDefinitions=new() {new(GridLength.Star),new(GridLength.Auto)} };
+            row.Add(SchoolCell(entry.TeamName),0,0); row.Add(TableText("#"+entry.Rank,true),1,0); standings.Add(row);
+        }
+        _homeHighlights.Children.Add(ResponsivePanels(
+            ManagementPanel("Season overview", cards), ManagementPanel("Weekly tasks",tasks,"Shortcuts to your management work"),
+            ManagementPanel(conferenceName+" · Poll positions",standings,"Conference teams in the national poll")));
         if (state.UserCoachIsFired || state.UserCoachJobOffers.Any(o => o.Status == UserCoachJobOfferStatus.Pending))
             _homeHighlights.Children.Add(NavigationCard(state.UserCoachIsFired ? "ACTION REQUIRED" : "COACHING CAROUSEL", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
         else if (state.Phase is SeasonPhase.TransferPortal or SeasonPhase.Recruiting or SeasonPhase.RosterManagement)
@@ -143,7 +159,7 @@ public sealed partial class FoundationPage
             _homeHighlights.Children.Add(recap);
         }
         var stories = DynastyNewsService.BuildOverview(state);
-        foreach (var story in stories) _homeHighlights.Children.Add(NewsCard(story));
+        if(stories.Count>0) _homeHighlights.Children.Add(ResponsivePanels(stories.Select(NewsCard).ToArray()));
         if (stories.Count == 0) _homeHighlights.Children.Add(new Label { Text = "Results, recruiting and injury updates will appear as your dynasty develops.", TextColor = DynastyTheme.Muted });
     }
 

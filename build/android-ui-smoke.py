@@ -65,7 +65,10 @@ def scroll_to_text(name, text, max_swipes=6):
         scrollables = [node for node in root.iter("node") if node.get("scrollable") == "true"]
         if not scrollables or attempt == max_swipes:
             raise AssertionError(f"Could not find visible {text}: {sorted(texts(root))}")
-        left, top, right, bottom = map(int, re.findall(r"\d+", scrollables[-1].get("bounds")))
+        def area(node):
+            x1,y1,x2,y2=map(int,re.findall(r"\d+",node.get("bounds")))
+            return (x2-x1)*(y2-y1)
+        left, top, right, bottom = map(int, re.findall(r"\d+", max(scrollables,key=area).get("bounds")))
         x = str((left + right) // 2)
         adb("shell", "input", "swipe", x, str(top + (bottom-top)*3//4), x, str(top + (bottom-top)//4), "350")
 
@@ -304,6 +307,9 @@ def main():
     print("Watch mode box-score pause/resume passed.")
     # Cancel a skip, then confirm it while Watch may still have a play in progress.
     adb("shell", "input", "keyevent", "4")
+    # UIAutomator waits for idle and can miss an entire continuously animated Watch game.
+    # Pause using the watch control's last observed bounds, then test confirmation at a decision.
+    tap(ready, "Watch CPU")
     watch_view = wait_for("skip-watch-ready", lambda r: enabled(r, "Skip to end"))
     tap(watch_view, "Skip to end")
     confirmation = wait_for("skip-confirm-cancel", lambda r: "Skip to end?" in texts(r), timeout=300)
@@ -358,7 +364,7 @@ def main():
     tap(roster, "Recruit")
     recruit_hub = wait_for("recruit-hub", lambda r: "High School" in texts(r), timeout=120)
     tap(recruit_hub, "High School")
-    recruits = wait_for("season-recruits", lambda r: any((t or "").startswith("Scout weekly") for t in texts(r)), timeout=120)
+    recruits = wait_for("season-recruits", lambda r: any((n.get("content-desc") or "").startswith("View recruit ") for n in r.iter("node")), timeout=120)
     assert "Offer Scholarship" not in texts(recruits) and "Choose pitch" not in texts(recruits)
     tap(recruits, "Season")
     season = scroll_to_text("season-careers", "Player departures ›")
@@ -409,9 +415,74 @@ def main():
     print("Light/dark theme, live-state preservation, enabled controls and player-profile morale passed in both layouts.")
 
 
+def check_management_layouts():
+    # Use the same saved dynasty while resizing the Android window in dp.
+    adb("shell", "settings", "put", "system", "user_rotation", "0")
+    adb("shell", "wm", "size", "1080x1920")
+    adb("shell", "wm", "density", "480")
+    time.sleep(3)
+    tap(capture("management-compact-settings"), "Overview")
+    compact=wait_for("management-compact-dashboard", overview_ready)
+    assert any((n.get("resource-id") or "").endswith("management-menu") for n in compact.iter("node"))
+    tap(compact,"Roster")
+    roster=wait_for("management-compact-roster",lambda r:"Columns: Essential" in texts(r) and "Morale" in texts(r))
+    person=next(n for n in roster.iter("node") if (n.get("content-desc") or "").startswith("View player "))
+    tap(roster,person.get("text"))
+    profile=wait_for("management-compact-profile",lambda r:"Stats & history" in texts(r))
+    tap(profile,"Attributes")
+    attrs=wait_for("management-compact-attributes",lambda r:"Character traits" in texts(r))
+    assert "Awareness" in texts(attrs)
+    adb("shell","input","keyevent","4")
+    tap(capture("management-after-profile"),"Recruit")
+    recruits=wait_for("management-compact-recruiting",lambda r:"High School" in texts(r))
+    tap(recruits,"High School")
+    recruits=wait_for("management-recruit-table",lambda r:any((n.get("content-desc") or "").startswith("View recruit ") for n in r.iter("node")))
+    recruit=next(n for n in recruits.iter("node") if (n.get("content-desc") or "").startswith("View recruit "))
+    tap(recruits,recruit.get("text"))
+    detail=wait_for("management-compact-recruit-profile",lambda r:"Back to prospects" in texts(r))
+    tap(detail,"Recruitment")
+    detail=wait_for("management-recruit-actions",lambda r:"Priority Scout" in texts(r) or "Priority On" in texts(r))
+    assert "Offer Scholarship" not in texts(detail), "In-season actions leaked into recruit profile"
+    tap(detail,"Back to prospects")
+    adb("shell","wm","size","1400x1800")
+    adb("shell","wm","density","320")
+    time.sleep(3)
+    fold=capture("management-foldable-recruiting")
+    assert any((n.get("resource-id") or "").endswith("nav-roster") for n in fold.iter("node")), "Foldable sidebar missing"
+    tap(fold,"Roster")
+    capture("management-foldable-roster")
+    adb("shell","wm","size","2400x1600")
+    time.sleep(3)
+    tablet=capture("management-tablet-roster")
+    person=next(n for n in tablet.iter("node") if (n.get("content-desc") or "").startswith("View player "))
+    tap(tablet,person.get("text"))
+    split=wait_for("management-tablet-split-profile",lambda r:"Stats & history" in texts(r))
+    assert any((n.get("resource-id") or "").endswith("nav-roster") for n in split.iter("node")), "Tablet profile became a full-screen modal"
+    tap(split,"Settings")
+    settings=wait_for("management-system-settings",lambda r:"Appearance" in texts(r))
+    tap(settings,"Dark")
+    options=wait_for("management-system-choice",lambda r:"System" in texts(r))
+    tap(options,"System")
+    system=wait_for("management-system-selected",lambda r:"System" in texts(r) and "Appearance" in texts(r))
+    before=calendar(system)
+    adb("shell","cmd","uimode","night","yes")
+    time.sleep(3)
+    dark=capture("management-system-dark")
+    assert calendar(dark)==before
+    adb("shell","cmd","uimode","night","no")
+    time.sleep(3)
+    light=capture("management-system-light")
+    assert calendar(light)==before
+    assert "System" in texts(light)
+    adb("shell","wm","size","reset")
+    adb("shell","wm","density","reset")
+    print("Management compact/foldable/tablet, profile tabs, recruit actions, split panes and System theme passed.")
+
+
 
 if __name__ == "__main__":
     try:
         main()
+        check_management_layouts()
     finally:
         Path("android-logcat.txt").write_bytes(adb("logcat", "-d"))

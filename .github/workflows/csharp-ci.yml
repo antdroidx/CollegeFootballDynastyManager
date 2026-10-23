@@ -158,7 +158,7 @@ jobs:
     needs: build-test-android
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout UI smoke test
         uses: actions/checkout@v4

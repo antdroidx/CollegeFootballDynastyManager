@@ -720,6 +720,7 @@ public sealed partial class FoundationPage : ContentPage
         root.Add(_navigationBar);
         Grid.SetRow(_navigationBar, 2);
 
+        ConfigureManagementShell(root, header, pages);
         var shell = new Grid();
         shell.Children.Add(root);
         shell.Children.Add(_advanceOverlay);
@@ -735,6 +736,7 @@ public sealed partial class FoundationPage : ContentPage
         RememberSection(section);
         _activeSection = section;
         UpdateShellContext();
+        RefreshManagementNavigation();
         if (section != AppSection.Recruiting)
         {
             _recruitingLoadCancellation?.Cancel();
@@ -750,7 +752,7 @@ public sealed partial class FoundationPage : ContentPage
                     : FontAttributes.None;
             var selected = pair.Key == PrimarySection(section);
             pair.Value.Opacity = 1.0;
-            pair.Value.BackgroundColor = Colors.Transparent;
+            pair.Value.BackgroundColor = selected ? DynastyTheme.Selected : Colors.Transparent;
             pair.Value.TextColor = selected ? DynastyTheme.Accent : DynastyTheme.Muted;
             _navIndicators[pair.Key].IsVisible = selected;
         }
@@ -847,7 +849,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             Content = new VerticalStackLayout { Spacing = 7, Children =
             {
-                _recruitingDetailHost, _recruitingResultsStatus, _recruitingList
+                _recruitingResultsStatus, _recruitingList
             } }
         };
         _recruitingDetailHost.PropertyChanged += (_, args) =>
@@ -862,7 +864,8 @@ public sealed partial class FoundationPage : ContentPage
             RowSpacing = 7, ColumnSpacing = 0
         };
         root.Add(controls, 0, 0);
-        root.Add(results, 0, 1);
+        var prospectWorkspace = BuildRecruitWorkspace(results);
+        root.Add(prospectWorkspace, 0, 1);
         root.Add(_recruitingLoadingOverlay, 0, 0);
         Grid.SetRowSpan(_recruitingLoadingOverlay, 2);
         Grid.SetColumnSpan(_recruitingLoadingOverlay, 2);
@@ -877,8 +880,8 @@ public sealed partial class FoundationPage : ContentPage
             root.ColumnDefinitions[1].Width = wide ? GridLength.Star : new GridLength(0);
             root.RowDefinitions[0].Height = wide ? GridLength.Star : GridLength.Auto;
             root.RowDefinitions[1].Height = wide ? new GridLength(0) : GridLength.Star;
-            Grid.SetColumn(results, wide ? 1 : 0);
-            Grid.SetRow(results, wide ? 0 : 1);
+            Grid.SetColumn(prospectWorkspace, wide ? 1 : 0);
+            Grid.SetRow(prospectWorkspace, wide ? 0 : 1);
         };
         return root;
     }
@@ -1826,7 +1829,9 @@ public sealed partial class FoundationPage : ContentPage
             $"{_currentDynasty.LeagueName} · {_teamsByName.Count} teams";
 
         UpdateShellContext();
+        RefreshManagementNavigation();
         RenderSection(_activeSection);
+        _refreshOpenPlayerProfile?.Invoke();
     }
 
     private void RenderSection(AppSection section)
@@ -2138,16 +2143,8 @@ public sealed partial class FoundationPage : ContentPage
                 : result.Total > result.Rows.Length
                     ? $"Showing {result.Rows.Length} of {result.Total:N0} • use search/filters to narrow the list"
                     : $"{result.Total:N0} players";
-            for (var index = 0; index < result.Rows.Length; index++)
-            {
-                cancellation.Token.ThrowIfCancellationRequested();
-                AddRecruitingCompactRow(result.Rows[index]);
-                if (index % 8 == 7)
-                {
-                    _recruitingLoadingStatus.Text = $"Displaying recruits… {index + 1}/{result.Rows.Length}";
-                    await Task.Delay(1, cancellation.Token);
-                }
-            }
+            await RenderRecruitingTableAsync(result.Rows, cancellation.Token);
+
         }
         catch (OperationCanceledException) { }
         catch (Exception error)
@@ -3298,6 +3295,7 @@ public sealed partial class FoundationPage : ContentPage
                 }
             };
 
+        PolishRecruitProfile(prospect, interaction, metricGrid, marketGrid, actions);
         _recruitingDetailHost.IsVisible = true;
     }
 

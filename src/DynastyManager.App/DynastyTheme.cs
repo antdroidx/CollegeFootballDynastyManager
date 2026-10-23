@@ -6,11 +6,15 @@ namespace DynastyManager.App;
 
 public static class DynastyTheme
 {
-    public static bool IsLight => Microsoft.Maui.Storage.Preferences.Default.Get("app-theme", "Dark") == "Light";
+    public static string Preference => Microsoft.Maui.Storage.Preferences.Default.Get("app-theme", "Dark");
+    public static AppTheme RequestedTheme => Preference switch { "Light" => AppTheme.Light, "Dark" => AppTheme.Dark, _ => AppTheme.Unspecified };
+    public static bool IsLight => Preference == "Light" || (Preference == "System" && Application.Current?.RequestedTheme == AppTheme.Light);
     public static Color Text => IsLight ? Color.FromArgb("#182638") : Color.FromArgb("#E6EBF1");
-    public static Color Background => IsLight ? Color.FromArgb("#F1F4F8") : Color.FromArgb("#101318");
-    public static Color Surface => IsLight ? Colors.White : Color.FromArgb("#191F27");
-    public static Color Accent => IsLight ? Color.FromArgb("#245E99") : Color.FromArgb("#89ADD2");
+    public static Color Background => IsLight ? Color.FromArgb("#F2F5FA") : Color.FromArgb("#09121F");
+    public static Color Surface => IsLight ? Colors.White : Color.FromArgb("#122233");
+    public static Color Accent => IsLight ? Color.FromArgb("#245E99") : Color.FromArgb("#ADC9EF");
+    public static Color Panel => IsLight ? Color.FromArgb("#E7EEF6") : Color.FromArgb("#192E43");
+    public static Color Selected => IsLight ? Color.FromArgb("#E7E0F8") : Color.FromArgb("#38245F");
     public static Color Muted => IsLight ? Color.FromArgb("#526377") : Color.FromArgb("#9BA6B5");
 
     // Only UI literals pass through here; team colors and field graphics remain unchanged.
@@ -60,7 +64,7 @@ public static class DynastyTheme
             new Setter { Property = Button.CornerRadiusProperty, Value = 8 },
             new Setter { Property = Button.FontSizeProperty, Value = 12.0 },
             new Setter { Property = Button.PaddingProperty, Value = new Thickness(10, 5) },
-            new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 36.0 } } },
+            new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 44.0 } } },
         new Style(typeof(Border)) { Setters = {
             new Setter { Property = VisualElement.BackgroundColorProperty, Value = Surface },
             new Setter { Property = Border.StrokeProperty, Value = new SolidColorBrush(Colors.Transparent) },
@@ -72,13 +76,13 @@ public static class DynastyTheme
             new Setter { Property = Picker.TextColorProperty, Value = Text },
             new Setter { Property = Picker.TitleColorProperty, Value = Muted },
             new Setter { Property = VisualElement.BackgroundColorProperty, Value = Palette("#202A36") },
-            new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 36.0 } } },
+            new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 44.0 } } },
         new Style(typeof(Entry)) { Setters = {
             new Setter { Property = Entry.FontSizeProperty, Value = 13.0 },
             new Setter { Property = Entry.TextColorProperty, Value = Text },
             new Setter { Property = Entry.PlaceholderColorProperty, Value = Muted },
             new Setter { Property = VisualElement.BackgroundColorProperty, Value = Surface },
-            new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 36.0 } } },
+            new Setter { Property = VisualElement.MinimumHeightRequestProperty, Value = 44.0 } } },
         new Style(typeof(ProgressBar)) { Setters = { new Setter { Property = ProgressBar.ProgressColorProperty, Value = Accent } } },
         new Style(typeof(Switch)) { Setters = { new Setter { Property = Switch.OnColorProperty, Value = Accent } } }
     };

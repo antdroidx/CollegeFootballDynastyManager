@@ -5,23 +5,21 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
-    private View BuildThemeSettings()
+    private bool _systemThemePending;
+    public Task RefreshSystemThemeAsync()
     {
-        var picker = new Picker { Title = "Appearance", ItemsSource = new[] { "Dark", "Light" },
-            SelectedIndex = DynastyTheme.IsLight ? 1 : 0, AutomationId = "theme-picker" };
-        picker.SelectedIndexChanged += async (_, _) =>
-        {
-            if (picker.SelectedIndex < 0 || (picker.SelectedIndex == 1) == DynastyTheme.IsLight) return;
-            var hostWindow = Window;
-            if (hostWindow is null) return;
-            // Let Android dismiss its native picker before replacing its owning page.
-            await Task.Delay(150);
-            try
-            {
-            Preferences.Default.Set("app-theme", picker.SelectedIndex == 1 ? "Light" : "Dark");
-            var app = Application.Current!;
-            app.Resources = DynastyTheme.CreateResources();
-            app.UserAppTheme = DynastyTheme.IsLight ? AppTheme.Light : AppTheme.Dark;
+        if (Navigation.ModalStack.Count > 0) { _systemThemePending = true; return Task.CompletedTask; }
+        return Window is { } window ? RebuildThemeAsync(window, _activeSection) : Task.CompletedTask;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        if (_systemThemePending) { _systemThemePending = false; _ = RefreshSystemThemeAsync(); }
+    }
+
+    private async Task RebuildThemeAsync(Window hostWindow, AppSection section)
+    {
             // Rebuild explicit-color views using the SAME live state, including unsaved changes.
             var next = new FoundationPage
             {
@@ -40,11 +38,31 @@ public sealed partial class FoundationPage
             next._newDynastyButton.IsEnabled = _newDynastyButton.IsEnabled;
             next.SetDynastyControlsEnabled(_currentDynasty is not null);
             next.RenderCurrentDynasty();
-            next.ShowSection(AppSection.Settings);
+            next.ShowSection(section);
             next._sectionTrail.Clear();
-            foreach (var section in _sectionTrail.Reverse()) next._sectionTrail.Push(section);
+            foreach (var previousSection in _sectionTrail.Reverse()) next._sectionTrail.Push(previousSection);
             hostWindow.Page = next;
             if (_saveRepository is not null) await next.RefreshSaveSlotsAsync();
+    }
+
+    private View BuildThemeSettings()
+    {
+        var picker = new Picker { Title = "Appearance", ItemsSource = new[] { "Dark", "Light", "System" },
+            SelectedIndex = DynastyTheme.Preference == "System" ? 2 : DynastyTheme.Preference == "Light" ? 1 : 0, AutomationId = "theme-picker" };
+        picker.SelectedIndexChanged += async (_, _) =>
+        {
+            if (picker.SelectedIndex < 0 || picker.SelectedItem?.ToString() == DynastyTheme.Preference) return;
+            var hostWindow = Window;
+            if (hostWindow is null) return;
+            // Let Android dismiss its native picker before replacing its owning page.
+            await Task.Delay(150);
+            try
+            {
+            Preferences.Default.Set("app-theme", picker.SelectedItem?.ToString() ?? "System");
+            var app = Application.Current!;
+            app.Resources = DynastyTheme.CreateResources();
+            app.UserAppTheme = DynastyTheme.RequestedTheme;
+            await RebuildThemeAsync(hostWindow, AppSection.Settings);
             }
             catch (Exception ex)
             {
