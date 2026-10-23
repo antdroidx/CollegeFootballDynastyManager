@@ -302,15 +302,30 @@ def main():
     assert texts(resumed) != snapshot, "Watch did not advance after returning from the box score"
     assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip()
     print("Watch mode box-score pause/resume passed.")
-    # Close the box, then leave the incomplete watched game. Advance the actual league
-    # calendar as well, so a repeated numeric zero cannot silently pass this smoke test.
+    # Cancel a skip, then confirm it while Watch may still have a play in progress.
     adb("shell", "input", "keyevent", "4")
-    # The box closes asynchronously through MAUI modal navigation. A second Back
-    # during that transition can be discarded by Android, leaving Watch running.
-    # Match normal touch sequencing instead of issuing overlapping navigation.
-    time.sleep(1.5)
-    adb("shell", "input", "keyevent", "4")
+    watch_view = wait_for("skip-watch-ready", lambda r: enabled(r, "Skip to end"))
+    tap(watch_view, "Skip to end")
+    confirmation = wait_for("skip-confirm-cancel", lambda r: "Skip to end?" in texts(r), timeout=300)
+    cancel_label = next(t for t in texts(confirmation) if (t or "").casefold() == "keep playing")
+    tap(confirmation, cancel_label)
+    cancelled = wait_for("skip-cancelled", lambda r: enabled(r, "Skip to end") and "BALL ON" in texts(r))
+    assert "Close" not in texts(cancelled), "Cancelling Skip unexpectedly finished the game"
+    tap(cancelled, "Skip to end")
+    confirmation = wait_for("skip-confirm-finish", lambda r: "Skip to end?" in texts(r), timeout=300)
+    accept_label = next(t for t in texts(confirmation) if (t or "").casefold() == "simulate remainder")
+    tap(confirmation, accept_label)
+    final = wait_for("skip-final-saved", lambda r: enabled(r, "Close") and "BALL ON" in texts(r), timeout=300)
+    assert not enabled(final, "Skip to end")
+    tap(final, "Box score")
+    final_box = wait_for("skip-final-box", lambda r: "Final statistics" in texts(r))
+    tap(final_box, "Return to game")
+    final = wait_for("skip-final-close", lambda r: enabled(r, "Close"))
+    tap(final, "Close")
     overview = wait_for("after-live-view", lambda r: overview_ready(r), timeout=300)
+    assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip(), "Closing the saved final crashed the app"
+    assert "Play game" not in texts(overview), "Saved game was not marked completed"
+    print("Skip cancellation, confirmed simulation, saved final box score and Close without crash passed.")
     previous = calendar(overview)
     tap(overview, advance_action(overview))
     advanced = wait_for("calendar-advanced", lambda r: overview_ready(r, previous), timeout=300)

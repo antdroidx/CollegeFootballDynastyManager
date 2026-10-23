@@ -37,7 +37,12 @@ public sealed partial class FoundationPage
         var boxScoreOpen = false;
         var driving = false;
         bool? compactLayout = null;
-        var gameSaved = false;
+        var completion = new GameDayCompletionService();
+        var skipPending = false;
+        var finalizing = false;
+        var finalPresented = false;
+        var viewerClosed = false;
+        var closingViewer = false;
         Task currentSnapFinished = Task.CompletedTask;
         GameSnapEvent? lastPlayedSnap = null;
         var instantReplays = Microsoft.Maui.Storage.Preferences.Default.Get("live-instant-replays", true);
@@ -244,12 +249,16 @@ public sealed partial class FoundationPage
         void ClosePicker() { pickerLayer.IsVisible = false; pickerLayer.Children.Clear(); }
         page.BackHandler = () =>
         {
+            if (skipPending || finalizing || closingViewer) return true;
+            if (session.IsComplete) { _ = CloseViewerAsync(); return true; }
             if (pickerLayer.IsVisible) { ClosePicker(); return true; }
             if (moreOpen) { moreOpen = false; UpdateOverlay(); return true; }
+            if (replay is null) { _ = CloseViewerAsync(); return true; }
             return false;
         };
         void UpdateOverlay()
         {
+            if (viewerClosed) return;
             var landscape = compactLayout == true;
             var deciding = !animating && replay is null && !session.IsComplete && session.Mode == GameDayMode.Play && !session.KickoffPending &&
                 (session.PossessionTeamName.Equals(controlledTeamName, StringComparison.OrdinalIgnoreCase) ? !coachCallsOffense : !coachCallsDefense);
@@ -274,6 +283,13 @@ public sealed partial class FoundationPage
             }
             foreach (var action in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, delegateOffense, delegateDefense, takeover, onside, skip })
                 action.IsEnabled = !animating;
+            controls.IsEnabled = !skipPending && !finalizing && !closingViewer;
+            boxScore.IsEnabled = !skipPending && !finalizing && !closingViewer && !boxScoreOpen;
+            // Skip remains reachable during Watch animations; its handler waits for the current play.
+            skip.IsEnabled = !skipPending && !finalizing && !session.IsComplete;
+            skip.Text = skipPending ? "Please wait…" : "Skip to end";
+            close.Text = session.IsComplete && !completion.IsSaved && !finalizing ? "Retry save" : "Close";
+            close.IsEnabled = !skipPending && !finalizing && !animating && !closingViewer;
             if (animating) { quickCalls.IsVisible = false; playCard.IsVisible = defenseCard.IsVisible = false; moreOpen = false; ClosePicker(); }
         }
         more.Clicked += (_, _) => { moreOpen = !moreOpen; UpdateOverlay(); };
@@ -445,7 +461,7 @@ public sealed partial class FoundationPage
         };
         void RenderHuddles()
         {
-            if (replay is not null || animating || session.IsComplete || !NeedsUserCall()) return;
+            if (viewerClosed || replay is not null || animating || session.IsComplete || !NeedsUserCall()) return;
             fieldPlayers.Children.Clear(); markerLabels.Clear(); spritePlayers.Clear(); markerHosts.Clear(); activeBallOwners.Clear();
             var direction = (session.PossessionTeamName == game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1);
             fieldArt.YardLine = session.YardLine; fieldArt.Distance = session.Distance; fieldArt.Direction = direction; fieldLines.Invalidate();
@@ -1144,6 +1160,7 @@ public sealed partial class FoundationPage
         }
         async Task ShowHighlightAsync(GameSnapEvent snap, string? period = null)
         {
+            if (viewerClosed) return;
             var headline = period ?? (snap.IsTouchback ? $"TOUCHBACK\nBall at {(snap.Outcome == SnapOutcome.Kickoff ? 25 : 20)}" : snap.Points >= 6 ? "TOUCHDOWN" : snap.Outcome == SnapOutcome.ClockStoppage
                 ? snap.TimeoutTeamName is not null ? "TIMEOUT" : snap.Description?.Contains("Two-minute", StringComparison.OrdinalIgnoreCase) == true ? "TWO-MINUTE TIMEOUT" : null
                 : GameDayAnimationPlanner.OutcomeHeadline(snap.Outcome));
@@ -1173,6 +1190,7 @@ public sealed partial class FoundationPage
             (ControlledOnOffense() ? !coachCallsOffense : !coachCallsDefense);
         void Refresh(GameSnapEvent? snap = null)
         {
+            if (viewerClosed) return;
             var homeMorale = GameMoraleService.InGame(session, game.HomeTeamName);
             var awayMorale = GameMoraleService.InGame(session, game.AwayTeamName);
             conditionsHud.Text = $"{session.Weather.Summary} · Morale {awayTeam.Abbreviation} {awayMorale} / {homeTeam.Abbreviation} {homeMorale}";
@@ -1249,6 +1267,7 @@ public sealed partial class FoundationPage
                     lastPlayedSnap = snap;
                 animating = true; timeout.IsEnabled = false; UpdateOverlay();
                 await AnimateSnapAsync(snap);
+                if (viewerClosed) return;
                 await ShowHighlightAsync(snap);
                 if (instantReplays && GameDayLivePresentation.InstantReplay(snap)) await ReplaySnapAsync(snap);
                 var period = GameDayAnimationPlanner.PeriodHeadline(snap.Quarter, session.Quarter, session.IsComplete);
@@ -1284,29 +1303,80 @@ public sealed partial class FoundationPage
         };
         async Task FinishIfNeeded()
         {
-            if (!session.IsComplete || gameSaved) return;
-            gameSaved = true;
-            await CompleteGameDayAsync(session);
-            var award = GameDayEngine.BoxScore(session).PlayerOfGame;
-            if (award is not null)
+            if (!session.IsComplete || viewerClosed) return;
+            finalizing = true; UpdateOverlay();
+            try
             {
-                animating = true; UpdateOverlay();
-                highlightText.Text = $"PLAYER OF THE GAME\n{award.PlayerName}\n{award.Summary}";
-                highlightText.FontSize = 18; highlight.BackgroundColor = TeamColor(award.TeamName).WithAlpha(.96f);
-                highlight.Opacity = 1; highlight.Scale = 1; highlight.IsVisible = true;
-                await Task.Delay(2200);
-                highlight.IsVisible = false; highlightText.FontSize = 22; animating = false;
+                await completion.EnsureSavedAsync(() => CompleteGameDayAsync(session));
+                if (viewerClosed || finalPresented) return;
+                finalPresented = true;
+                var award = GameDayEngine.BoxScore(session).PlayerOfGame;
+                if (award is not null)
+                {
+                    animating = true; UpdateOverlay();
+                    highlightText.Text = $"PLAYER OF THE GAME\n{award.PlayerName}\n{award.Summary}";
+                    highlightText.FontSize = 18; highlight.BackgroundColor = TeamColor(award.TeamName).WithAlpha(.96f);
+                    highlight.Opacity = 1; highlight.Scale = 1; highlight.IsVisible = true;
+                    await Task.Delay(2200);
+                    if (viewerClosed) return;
+                    highlight.IsVisible = false; highlightText.FontSize = 22; animating = false;
+                }
+                result.Text = award is null ? "Final · result saved" : $"PLAYER OF THE GAME · {award.PlayerName} · {award.Summary}";
+                Refresh();
             }
-            result.Text = award is null ? "Final · result saved" : $"PLAYER OF THE GAME · {award.PlayerName} · {award.Summary}";
-            Refresh();
+            catch (Exception error)
+            {
+                System.Diagnostics.Trace.WriteLine(error);
+                if (!viewerClosed)
+                {
+                    result.Text = "Final · save failed. Use Retry save before leaving.";
+                    await page.DisplayAlertAsync("Could not save game", "Your result is still in memory. Tap Retry save to try again.", "OK");
+                }
+            }
+            finally { animating = false; finalizing = false; UpdateOverlay(); }
         }
+        async Task CloseViewerAsync()
+        {
+            if (closingViewer || viewerClosed || skipPending || finalizing) return;
+            closingViewer = true; UpdateOverlay();
+            try
+            {
+                await currentSnapFinished;
+                async Task PopViewer()
+                {
+                    viewerClosed = true;
+                    fieldPlayers.AbortAnimation("snap-movement");
+                    if (Navigation.ModalStack.LastOrDefault() == page) await Navigation.PopModalAsync();
+                }
+                if (session.IsComplete)
+                {
+                    await FinishIfNeeded();
+                    if (!completion.IsSaved) return;
+                    await completion.CloseAsync(() => CompleteGameDayAsync(session), PopViewer);
+                }
+                else await PopViewer();
+            }
+            catch (Exception error)
+            {
+                viewerClosed = false;
+                System.Diagnostics.Trace.WriteLine(error);
+                await page.DisplayAlertAsync("Could not close game", "The game view could not close. Please try again.", "OK");
+            }
+            finally { closingViewer = false; UpdateOverlay(); }
+        }
+        page.Disappearing += (_, _) => Dispatcher.Dispatch(() =>
+        {
+            // A box score covers this page too; only detach playback after the viewer itself leaves the stack.
+            if (!Navigation.ModalStack.Contains(page))
+            { viewerClosed = true; fieldPlayers.AbortAnimation("snap-movement"); }
+        });
         async Task DriveGameAsync()
         {
-            if (driving || animating) return;
+            if (driving || animating || skipPending || viewerClosed || finalizing || closingViewer) return;
             driving = true;
             try
             {
-                while (!session.IsComplete && !boxScoreOpen && page.Parent is not null &&
+                while (!session.IsComplete && !boxScoreOpen && !skipPending && !viewerClosed && !closingViewer && page.Parent is not null &&
                     (session.Mode == GameDayMode.Watch || !NeedsUserCall()))
                     await ShowSnapAsync(GameDayEngine.Step(session));
                 await FinishIfNeeded();
@@ -1447,8 +1517,35 @@ public sealed partial class FoundationPage
             finally { boxScoreOpen = false; controls.IsEnabled = true; boxScore.IsEnabled = true; }
             if (session.Mode == GameDayMode.Watch) await WatchLoop(); else await RunCpuUntilUserDecision();
         };
-        skip.Clicked += async (_, _) => { GameDayEngine.SimulateToEnd(session); await FinishIfNeeded(); };
-        close.Clicked += async (_, _) => await Navigation.PopModalAsync();
+        skip.Clicked += async (_, _) =>
+        {
+            if (skipPending || viewerClosed || session.IsComplete) return;
+            skipPending = true; UpdateOverlay();
+            try
+            {
+                await currentSnapFinished;
+                if (viewerClosed) return;
+                if (!session.IsComplete)
+                {
+                    var confirmed = await page.DisplayAlertAsync("Skip to end?", "Simulate the rest of this game and save the final result?", "Simulate remainder", "Keep playing");
+                    if (!confirmed) return;
+                    result.Text = "Simulating remaining game…";
+                    await Task.Run(() => GameDayEngine.SimulateToEnd(session));
+                }
+                await FinishIfNeeded();
+            }
+            catch (Exception error)
+            {
+                System.Diagnostics.Trace.WriteLine(error);
+                if (!viewerClosed) await page.DisplayAlertAsync("Could not skip game", "The game is still open. Please try again.", "OK");
+            }
+            finally
+            {
+                skipPending = false; UpdateOverlay();
+                if (!viewerClosed && !session.IsComplete) await DriveGameAsync();
+            }
+        };
+        close.Clicked += async (_, _) => await CloseViewerAsync();
         Refresh();
         await ShowCoinTossAsync(session, controlledTeamName, mode == GameDayMode.Play);
         Refresh();
