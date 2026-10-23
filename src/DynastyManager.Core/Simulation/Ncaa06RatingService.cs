@@ -2,7 +2,7 @@ using DynastyManager.Core.Models;
 
 namespace DynastyManager.Core.Simulation;
 
-/// <summary>NCAA 06 NEXT NCAA06_POCI.csv (2026-10-22), using the DB Editor's centered 98-point calculation.</summary>
+/// <summary>Corrected NCAA 06 POCI attribute weights with fixed NEXT26 score-to-OVR curves.</summary>
 public static class Ncaa06RatingService
 {
     // PLDH, PLDL, followed by PCAR PKAC PTHA PPBK PRBK PACC PAGI PTAK PINJ PKPR PSPD PTHP PBTK PCTH PSTR PJMP PAWR.
@@ -37,7 +37,10 @@ public static class Ncaa06RatingService
         Position.CB => 16, Position.FS => 17, Position.SS => 18, Position.K => 19,
         _ => throw new ArgumentOutOfRangeException(nameof(player))
     };
-    public static int CalculateOverall(DynastyPlayer player)
+    public static int CalculateOverall(DynastyPlayer player) =>
+        Next26OverallCalibration.Calculate(PositionCode(player), CalculateWeightedScore(player));
+
+    public static double CalculateWeightedScore(DynastyPlayer player)
     {
         var skills = PlayerSkillService.EnsureInitialized(player).Skills!;
         var values = new[] { skills.BallCarrying, skills.KickAccuracy, skills.PassingAccuracy,
@@ -48,11 +51,10 @@ public static class Ncaa06RatingService
         var position = PositionCode(player);
         if (position < 0 || position >= Weights.Length) throw new ArgumentOutOfRangeException(nameof(player.NcaaPositionCode));
         var row = Weights[position];
-        var center = (row[0] + row[1]) / 2;
         var sum = row.Skip(2).Sum();
-        var overall = 50d;
+        var score = 0d;
         for (var i = 0; i < values.Length; i++)
-            overall += (Math.Clamp(values[i], 1, 99) - center) * row[i + 2] / sum * (98 / (row[0] - row[1]));
-        return Math.Clamp((int)Math.Round(overall, MidpointRounding.ToEven), 40, 99);
+            score += Math.Clamp(values[i], 1, 99) * row[i + 2] / sum;
+        return score;
     }
 }

@@ -17,6 +17,8 @@ public class DynastyHealthTests(ITestOutputHelper output)
     [InlineData(0, 130, 10, 4)]
     [InlineData(6, 130, 10, 5)]
     [InlineData(11, 130, 10, 6)]
+    [InlineData(0, 12, 20, 7)]
+    [InlineData(11, 12, 20, 8)]
     public async Task CareersPreserveDynastyHealth(int userIndex, int teamCount, int years, int seed)
     {
         var teams = Enumerable.Range(0, teamCount).Select(index => new Team
@@ -104,6 +106,10 @@ public class DynastyHealthTests(ITestOutputHelper output)
                 var peers = teams.Values.Where(team => team.Name != user.Name &&
                     Math.Abs(ProgramPrestigeService.GetCurrentPrestige(state, team) -
                         ProgramPrestigeService.GetCurrentPrestige(state, user)) <= 10).Select(team => team.Name).ToHashSet();
+                if (peers.Count == 0)
+                    peers = teams.Values.Where(team => team.Name != user.Name).OrderBy(team => Math.Abs(
+                        ProgramPrestigeService.GetCurrentPrestige(state, team) - ProgramPrestigeService.GetCurrentPrestige(state, user)))
+                        .Take(3).Select(team => team.Name).ToHashSet();
                 var peerAverage = state.ActiveRoster.Where(player => peers.Contains(player.TeamName))
                     .Average(player => player.OverallRating);
                 Assert.True(roster.Average(player => player.OverallRating) >= peerAverage - 10,

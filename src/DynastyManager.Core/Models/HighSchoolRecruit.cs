@@ -13,4 +13,6 @@ public sealed record HighSchoolRecruit
     public int PotentialRating { get; init; }
     public int HomeRegion { get; init; }
     public int HomeState { get; init; }
+    // Optional for saves created before attribute-backed recruiting.
+    public DynastyPlayer? AttributeProfile { get; init; }
 }

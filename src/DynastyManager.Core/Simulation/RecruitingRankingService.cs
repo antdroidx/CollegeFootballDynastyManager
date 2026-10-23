@@ -105,7 +105,7 @@ public static class RecruitingRankingService
         var (ratingMin, ratingMax, overallMin, overallMax) =
             recruit.StarRating switch
             {
-                >= 5 => (98.00, 100.00, 82, 91),
+                >= 5 => (98.00, 100.00, 76, 90),
                 4 => (90.00, 97.99, 75, 85),
                 3 => (80.00, 89.99, 68, 79),
                 2 => (72.00, 79.99, 59, 73),

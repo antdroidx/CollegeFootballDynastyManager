@@ -49,7 +49,7 @@ public static class WalkOnRosterService
                         "talent") % 2;
 
                 var overall =
-                    51 +
+                    53 +
                     talentLevel * 4 +
                     team.Prestige / 25 +
                     DeterministicValue(

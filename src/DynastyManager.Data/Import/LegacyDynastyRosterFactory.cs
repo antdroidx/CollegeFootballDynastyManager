@@ -242,7 +242,7 @@ public static class LegacyDynastyRosterFactory
     {
         var baseline = Math.Clamp(
             (int)Math.Round(
-                prestige / 10.0,
+                3 + prestige / 30.0,
                 MidpointRounding.AwayFromZero),
             1,
             10);

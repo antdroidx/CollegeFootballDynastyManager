@@ -27,13 +27,11 @@ public class Ncaa06RatingTests
             .Append(new KeyValuePair<string, int>("PPOS", position)).ToDictionary(p => p.Key, p => p.Value));
 
     [Theory]
-    [InlineData(0, 67, 49)]
-    [InlineData(0, 92, 99)]
-    [InlineData(0, 43, 40)]
-    [InlineData(7, 68, 50)]
-    [InlineData(19, 96, 99)]
-    [InlineData(20, 50, 40)]
-    public void PociEndpointsAndMidpointsMatchTheWorkbook(int position, int value, int expected)
+    [InlineData(0, 1, 40)]
+    [InlineData(0, 99, 99)]
+    [InlineData(7, 99, 99)]
+    [InlineData(19, 99, 99)]
+    public void CalibratedEndpointsHaveExplicitLimits(int position, int value, int expected)
         => Assert.Equal(expected, Player(position, value).OverallRating);
 
     [Fact]
@@ -41,8 +39,9 @@ public class Ncaa06RatingTests
     {
         var player = Player(0, 67);
         player = player with { Skills = player.Skills! with { PassingAccuracy = 87, PassingPower = 77 } };
-        // QB: center=67.5, spread=49; weighted rating=76.3; 50+(76.3-67.5)*98/49=67.6.
-        Assert.Equal(68, Ncaa06RatingService.CalculateOverall(player));
+        // Retain QB THA 33%, THP 27%; 67 + 20*.33 + 10*.27 = 76.3.
+        Assert.Equal(76.3, Ncaa06RatingService.CalculateWeightedScore(player), 8);
+        Assert.Equal(72, Ncaa06RatingService.CalculateOverall(player));
     }
 
     [Fact]
@@ -66,7 +65,7 @@ public class Ncaa06RatingTests
         var fields = Ncaa06RosterRatings.RatingFields.ToDictionary(f => f, _ => 0);
         fields["PPOS"] = 0;
         var player = Ncaa06RosterRatings.Apply(Player(0, 80), fields, new[] { 67 });
-        Assert.Equal(49, player.OverallRating);
+        Assert.Equal(Next26OverallCalibration.Calculate(0, 67), player.OverallRating);
         Assert.Equal(67, player.Skills!.PassingAccuracy);
         fields.Remove("PSPD");
         Assert.Throws<ArgumentException>(() => Ncaa06RosterRatings.Apply(player, fields));
@@ -98,8 +97,8 @@ public class Ncaa06RatingTests
                 values["PPOS"] = row["PPOS"];
                 var player = Ncaa06RosterRatings.Apply(Player(row["PPOS"], 70), values);
                 var weighted = Ncaa06RosterRatings.RatingFields.Select((f, i) => values[f] * row[weights[i]]).Sum() / 100d;
-                var expected = Math.Clamp((int)Math.Round(50 + (weighted - (row["PLDH"] + row["PLDL"]) / 2d) * 98 / (row["PLDH"] - row["PLDL"]), MidpointRounding.ToEven), 40, 99);
-                Assert.Equal(expected, player.OverallRating);
+                Assert.Equal(weighted, Ncaa06RatingService.CalculateWeightedScore(player), 8);
+                Assert.Equal(Next26OverallCalibration.Calculate(row["PPOS"], weighted), player.OverallRating);
             }
         }
     }

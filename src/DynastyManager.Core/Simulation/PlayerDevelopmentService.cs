@@ -84,7 +84,10 @@ public static class PlayerDevelopmentService
         return RosterManagementService.NormalizeAllDepthCharts(
             state with
             {
-                ActiveRoster = updatedPlayers,
+                // CPU coaches reassess their depth each offseason. Preserve the
+                // human's manual ordering; new recruits must be able to beat a
+                // returning low-rated backup for an AI starting job.
+                ActiveRoster = updatedPlayers.Select(p => p.TeamName == state.UserTeamName ? p : p with { DepthChartOrder = 0 }).ToArray(),
                 PlayerDevelopmentHistory = history
             });
     }
