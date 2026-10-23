@@ -75,3 +75,5 @@ Machine-readable evidence: [starting roster](starting-roster.json), [seed 1](dyn
 - Two seeds provide a reproducible balance check, not a guarantee for every custom league, import or user strategy. Optional realignment and extreme custom rosters can change league distributions.
 
 Validation: 608 core tests and nine Android smoke-helper tests passed. Android APK packaging succeeded. Emulator validation is recorded in the linked build. Final application source: 2837732.
+
+Final result: Android emulator validation also passed. [Download Build 291 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39886044927/artifacts/12473218579). The light landscape player-profile screenshot was visually reviewed. Main remains unmerged.
