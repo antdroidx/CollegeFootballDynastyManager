@@ -45,8 +45,10 @@ public class PlayerDevelopmentAndInjuryTests
     {
         var players = new[]
         {
-            RatedPlayer("Young QB", Position.QB, 70, 95, 1),
-            RatedPlayer("Senior QB", Position.QB, 88, 84, 4)
+            // Identity seeds skill generation and development. Random GUIDs could leave
+            // both players unchanged after OVR rounding, making this fixture flaky.
+            RatedPlayer("Young QB", Position.QB, 70, 95, 1) with { PlayerId=Guid.Parse("00000000-0000-0000-0000-000000000001") },
+            RatedPlayer("Senior QB", Position.QB, 88, 84, 4) with { PlayerId=Guid.Parse("00000000-0000-0000-0000-000000000002") }
         };
         var state = RosterManagementService.NormalizeAllDepthCharts(
             State(SeasonPhase.RegularSeason, players) with { Week = 6 });
