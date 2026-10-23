@@ -108,7 +108,7 @@ public sealed partial class FoundationPage
                 grid.Add(panels[i],i%columns,i/columns);
             }
         }
-        Arrange(1); grid.SizeChanged+=(_,_)=>Arrange(grid.Width>=1100?3:grid.Width>=600?2:1);return grid;
+        Arrange(1); grid.SizeChanged+=(_,_)=>Arrange(Math.Min(panels.Length,grid.Width>=1100?3:grid.Width>=600?2:1));return grid;
     }
 
     private View ProfileTabs(params (string Title, View Content)[] panels)
@@ -263,6 +263,7 @@ public sealed partial class FoundationPage
             tabs.Add(("Manage",new VerticalStackLayout {Spacing=10,Children={
                 SectionTitle("Roster management","Availability follows the current dynasty phase"),controls[0],controls[1]} }));
         }
-        return new VerticalStackLayout { Padding=12, Spacing=12, Children={parts[0],parts[1],parts[2],ProfileTabs(tabs.ToArray())} };
+        var identity=new VerticalStackLayout {Spacing=10,Children={parts[1],parts[2]}};
+        return new VerticalStackLayout { Padding=12, Spacing=12, Children={parts[0],ResponsivePanels(identity,ProfileTabs(tabs.ToArray()))} };
     }
 }
