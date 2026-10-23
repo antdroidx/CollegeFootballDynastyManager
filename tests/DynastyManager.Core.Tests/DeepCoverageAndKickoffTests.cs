@@ -80,4 +80,13 @@ public sealed class DeepCoverageAndKickoffTests
             Assert.InRange(read.CatchChance, .08, .88);
         }
     }
+    [Theory]
+    [InlineData(SnapOutcome.Kickoff, "Receive")]
+    [InlineData(SnapOutcome.Punt, "Kick")]
+    public void TouchbackNotificationNamesTheReceivingTeam(SnapOutcome outcome, string expected)
+    {
+        var snap = new GameSnapEvent { OffenseTeamName = "Receive", DefenseTeamName = "Kick", OffensivePlayId = "", DefensivePlayId = "", Outcome = outcome, IsTouchback = true };
+        Assert.Equal(expected, LiveFootballChoreography.NotificationTeam(snap));
+        Assert.Equal(outcome == SnapOutcome.Kickoff ? -3 : 103, LiveFootballChoreography.KickLandingYardLine(snap));
+    }
 }

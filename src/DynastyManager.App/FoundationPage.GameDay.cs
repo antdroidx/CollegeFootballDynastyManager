@@ -870,7 +870,9 @@ public sealed partial class FoundationPage
                 }
                 if (passRushSnap && !passRusher && player is not null && snap.Outcome is not (SnapOutcome.Kickoff or SnapOutcome.Punt) && routeViews.Count > 0 && player.PlayerId != snap.ReturnerId)
                 {
-                    var match = movements.Where(m => routeViews.Contains(m.View)).OrderBy(m => Math.Abs(m.From.Y - y)).First();
+                    var match = movements.Where(m => routeViews.Contains(m.View))
+                        .OrderBy(m => player.PlayerId == snap.PrimaryDefenderId && snap.TargetId.HasValue && m.View is Border marker && markerHosts[marker].Player?.PlayerId == snap.TargetId ? 0 : 1)
+                        .ThenBy(m => Math.Abs(m.From.Y - y)).First();
                     var assignment = calledDefensivePlay?.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == defensiveRole);
                     var zone = calledDefensivePlay is not null && LiveFootballChoreography.Zone(calledDefensivePlay, assignment);
                     coverageTracks[view] = (match.From, match.To, assignedRoutes[match.View], new(x, y), zone, hasPursuitTarget);
@@ -1147,8 +1149,7 @@ public sealed partial class FoundationPage
                 : GameDayAnimationPlanner.OutcomeHeadline(snap.Outcome));
             if (headline is null) return;
             var penalty = GameDayCommentaryService.Penalty(snap);
-            var team = snap.TimeoutTeamName ?? penalty?.TeamName ?? (snap.Outcome is SnapOutcome.Interception or SnapOutcome.Fumble
-                ? snap.DefenseTeamName : snap.OffenseTeamName);
+            var team = snap.TimeoutTeamName ?? penalty?.TeamName ?? LiveFootballChoreography.NotificationTeam(snap);
             highlightText.Text = snap.TimeoutTeamName is not null && period is null
                 ? $"TIMEOUT\n{snap.TimeoutTeamName}\n{(team == game.HomeTeamName ? snap.HomeTimeoutsRemaining : snap.AwayTimeoutsRemaining)} remaining" : period is null ? penalty?.Banner ?? $"{headline}\n{team}" : $"{headline}\n{game.AwayTeamName} {session.AwayScore} - {session.HomeScore} {game.HomeTeamName}";
             highlight.BackgroundColor = TeamColor(team);
