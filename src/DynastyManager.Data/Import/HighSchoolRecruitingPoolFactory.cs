@@ -70,7 +70,8 @@ public static class HighSchoolRecruitingPoolFactory
                 Position = position,
                 StarRating = stars,
                 TrueOverallRating = overall,
-                PotentialRating = Math.Clamp(
+                PotentialRating = Value(dynastyId, seasonYear, index, "generational-potential") % 100000 <
+                    (stars switch { 5 => 500, 4 => 20, 3 => 5, _ => 0 }) ? 99 : Math.Clamp(
                     Math.Max(overall + 2, 58 + stars * 6 +
                     Value(dynastyId, seasonYear, index, "potential") % 17 - 8),
                     overall,

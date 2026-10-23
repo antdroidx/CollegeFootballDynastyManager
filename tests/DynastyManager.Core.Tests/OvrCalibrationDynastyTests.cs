@@ -9,12 +9,9 @@ namespace DynastyManager.Core.Tests;
 
 /// <summary>Full FBS roster lifecycle/market stress test, without the cost of playing 20 national schedules.
 /// The separate DynastyHealthTests run complete schedules, stats, injuries and save/load.</summary>
-public class OvrCalibrationDynastyTests(ITestOutputHelper output)
+public abstract class OvrCalibrationDynastyTests(ITestOutputHelper output)
 {
-    [Theory]
-    [InlineData(1)]
-    [InlineData(17)]
-    public void TwentyYearFbsRatingsRemainStable(int seed)
+    protected void RunCareer(int seed)
     {
         var teams = OvrCalibrationTests.Teams().ToDictionary(t => t.Name);
         var user = teams["Washington"];
@@ -87,4 +84,15 @@ public class OvrCalibrationDynastyTests(ITestOutputHelper output)
             Assert.True(metrics.SeniorAverage > metrics.FreshmanAverage);
         }
     }
+}
+
+// Separate xUnit collections allow the independent seeds to run concurrently.
+public sealed class OvrCalibrationDynastyTestsSeedOne(ITestOutputHelper output) : OvrCalibrationDynastyTests(output)
+{
+    [Fact] public void TwentyYearFbsRatingsRemainStable() => RunCareer(1);
+}
+
+public sealed class OvrCalibrationDynastyTestsSeedSeventeen(ITestOutputHelper output) : OvrCalibrationDynastyTests(output)
+{
+    [Fact] public void TwentyYearFbsRatingsRemainStable() => RunCareer(17);
 }

@@ -143,6 +143,21 @@ public class OvrCalibrationTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void GenerationalPotentialIsPossibleButRareAndDoesNotOverrideCurrentAbility()
+    {
+        var id = Guid.Parse("b1000000-2222-3333-4444-555555555555");
+        var prospects = Enumerable.Range(2026, 20).SelectMany(year => HighSchoolRecruitingPoolFactory.Create(id, year, 138, [])).ToArray();
+        var generational = prospects.Where(p => p.PotentialRating == 99).ToArray();
+        Assert.NotEmpty(generational);
+        Assert.True(generational.Length < prospects.Length * .001);
+        Assert.All(generational, p =>
+        {
+            Assert.True(p.TrueOverallRating < 95);
+            Assert.Equal(p.TrueOverallRating, PlayerRatingService.CalculateOverall(p.AttributeProfile!));
+        });
+    }
+
+    [Fact]
     public void OffseasonCpuDepthReassessmentKeepsUserOrdering()
     {
         var state = StartingState();
