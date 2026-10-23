@@ -12,6 +12,8 @@ public sealed partial class FoundationPage
     private int _managementActionDepth;
     private Grid? _managementRoot;
     private Border? _managementSidebar;
+    private BoxView? _managementScrim;
+    private readonly Button _drawerClose = new() { Text = "Close menu", AutomationId = "management-menu-close", IsVisible = false, MinimumHeightRequest = 44 };
     private readonly Dictionary<AppSection, Button> _managementLinks = new();
     private readonly ContentView _managementBadge = new();
     private bool _navigationExpanded;
@@ -36,7 +38,7 @@ public sealed partial class FoundationPage
         root.ColumnDefinitions.Add(new ColumnDefinition(0));
         root.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         Grid.SetColumn(header, 1); Grid.SetColumn(pages, 1); Grid.SetColumn(_navigationBar, 1);
-        var links = new VerticalStackLayout { Spacing = 3, Padding = 8, Children = { _managementBadge } };
+        var links = new VerticalStackLayout { Spacing = 3, Padding = 8, Children = { _drawerClose, _managementBadge } };
         foreach (var (section, title) in new[] {
             (AppSection.Dynasty, "Overview"), (AppSection.Roster, "Roster"), (AppSection.Recruiting, "Recruit"),
             (AppSection.Playbook, "Coach"), (AppSection.Season, "Season"), (AppSection.Schedule, "Schedule"),
@@ -49,7 +51,13 @@ public sealed partial class FoundationPage
             button.Clicked += (_, _) => { _navigationExpanded = false; ShowSection(section); };
             _managementLinks[section] = button; links.Add(button);
         }
-        _managementSidebar = new Border { Padding = 0, BackgroundColor = DynastyTheme.Surface,
+        _managementScrim = new BoxView { Color = Colors.Black.WithAlpha(.4f), IsVisible = false, ZIndex = 50 };
+        var dismiss = new TapGestureRecognizer();
+        dismiss.Tapped += (_, _) => { _navigationExpanded = false; ArrangeManagementShell(); };
+        _managementScrim.GestureRecognizers.Add(dismiss);
+        root.Add(_managementScrim, 1, 0); Grid.SetRowSpan(_managementScrim, 3);
+        _drawerClose.Clicked += (_, _) => { _navigationExpanded = false; ArrangeManagementShell(); };
+        _managementSidebar = new Border { Padding = 0, ZIndex = 51, BackgroundColor = DynastyTheme.Surface,
             StrokeShape = new RoundRectangle { CornerRadius = 0 }, Content = new ScrollView { Content = links } };
         root.Add(_managementSidebar, 0, 0); Grid.SetRowSpan(_managementSidebar, 3);
         // Exit remains in its original position; menu occupies a separate leading cell.
@@ -66,8 +74,15 @@ public sealed partial class FoundationPage
         var inDynasty = _currentDynasty is not null && _activeSection is not (AppSection.Home or AppSection.NewDynasty);
         var width = _managementRoot.Width;
         var side = inDynasty && ManagementLayout.Sidebar(width, _navigationExpanded);
+        var drawer = side && width < 600;
         _managementSidebar.IsVisible = side;
-        _managementRoot.ColumnDefinitions[0].Width = side ? ManagementLayout.NavigationWidth(width) : 0;
+        // Compact navigation overlays the page; it must never squeeze the header or tables.
+        _managementRoot.ColumnDefinitions[0].Width = side && !drawer ? ManagementLayout.NavigationWidth(width) : 0;
+        Grid.SetColumn(_managementSidebar, drawer ? 1 : 0);
+        _managementSidebar.WidthRequest = drawer ? Math.Min(264, width * .8) : -1;
+        _managementSidebar.HorizontalOptions = drawer ? LayoutOptions.Start : LayoutOptions.Fill;
+        _drawerClose.IsVisible = drawer;
+        if (_managementScrim is not null) _managementScrim.IsVisible = drawer;
         _menuButton.IsVisible = inDynasty && width < 600;
         _navigationBar.IsVisible = inDynasty && !side;
         SemanticProperties.SetDescription(_menuButton, side ? "Collapse navigation" : "Expand navigation");

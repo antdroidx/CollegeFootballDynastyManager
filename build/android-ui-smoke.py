@@ -514,8 +514,17 @@ def check_management_layouts():
     menu=next(n for n in compact.iter("node") if (n.get("resource-id") or "").endswith("management-menu"))
     tap(compact,menu.get("text"))
     expanded=wait_for("management-compact-sidebar",lambda r:any((n.get("resource-id") or "").endswith("sidebar-identity") for n in r.iter("node")))
+    context=calendar(compact)[0]
+    before=next(n for n in compact.iter("node") if n.get("text")==context)
+    after=next(n for n in expanded.iter("node") if n.get("text")==context)
+    assert before.get("bounds")==after.get("bounds"), "Compact drawer squeezed the page header"
     badge=next(n for n in expanded.iter("node") if (n.get("resource-id") or "").endswith("sidebar-identity"))
     assert "Air Force" not in texts(badge), "Full team name returned to the narrow sidebar"
+    tap(expanded,"Close menu")
+    closed=wait_for("management-compact-drawer-closed",lambda r:"Close menu" not in texts(r))
+    menu=next(n for n in closed.iter("node") if (n.get("resource-id") or "").endswith("management-menu"))
+    tap(closed,menu.get("text"))
+    expanded=wait_for("management-compact-drawer-reopened",lambda r:"Close menu" in texts(r))
     tap(expanded,"Roster")
     roster=wait_for("management-compact-roster",lambda r:"Columns: Essential" in texts(r) and "Morale" in texts(r))
     tap(roster,"Columns: Essential")

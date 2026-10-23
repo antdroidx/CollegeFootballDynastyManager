@@ -79,6 +79,8 @@ public sealed partial class FoundationPage
     protected override bool OnBackButtonPressed()
     {
         if (_advanceOverlay.IsVisible || _isAdvancing) return true;
+        if (_navigationExpanded && _managementRoot is { Width: < 600 })
+        { _navigationExpanded = false; ArrangeManagementShell(); return true; }
         if (_activeSection == AppSection.Recruiting && _selectedRecruitId is not null)
         {
             _selectedRecruitId=null;_selectedRecruitSource=null;
