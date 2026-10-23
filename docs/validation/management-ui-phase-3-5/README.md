@@ -1,8 +1,8 @@
-# Management UI follow-up — Build 307 candidate
+# Management UI follow-up — Build 309 candidate
 
-Application source `e65c03b`, branch `feature/management-ui-overhaul`, PR20 targeting `game-day-2-test`. No merge performed.
+Application source `6a0540e`, branch `feature/management-ui-overhaul`, PR20 targeting `game-day-2-test`. No merge performed.
 
-[Actions run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40022397222)
+[Actions run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40027935772)
 
 ## Changes
 
@@ -18,7 +18,7 @@ Application source `e65c03b`, branch `feature/management-ui-overhaul`, PR20 targ
 
 Local:647 core/data tests passed;9 UI synchronization helpers passed; packaged resources and diff checks passed. Android compile passed with five existing warnings. The expensive long-term rating suites are excluded for this presentation-only change.
 
-GitHub: signed APK built and build/test job passed. Full emulator verification and screenshot review are pending; do not treat this candidate report as a completed delivery yet.
+GitHub: Builds307 and308 passed build/test and the entire Android36 emulator flow; their screenshots were reviewed. Final309 fixes the compact menu pushing/squeezing the header by using an overlay drawer with scrim, close and Back actions. Its final APK/device/screenshot verification is pending; this is not a completed delivery yet.
 
 Production Core formulas/generation, save/persistence models, package/signing identity and Game Day visualization/playcalling are unchanged from UI base `1dd2b72`. No synced reference files under sources/ were edited.
 

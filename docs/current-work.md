@@ -1,23 +1,15 @@
-# Management UI Phases 3–5 — in progress
+# Management UI overhaul — final drawer validation pending
 
-Branch `feature/management-ui-overhaul`, PR20 targeting `game-day-2-test`. Build306 baseline below. User explicitly authorized remaining phases and polish on Oct23.
+Branch `feature/management-ui-overhaul`, PR20 targeting `game-day-2-test`. Latest application source `6a0540e`. No merge into main/game-day-2-test.
 
-Current uncommitted work: initial/year-only sidebar badge, text-only aligned dense table identity cells, news icons/illustrated previews and contextual fictional editorial, responsive program tabs (career/staff/history/development), staff candidate comparison table with existing hire confirmation, tabbed coach profiles, responsive schedule filters, panel-based settings. Preserve all engine formulas/save schema/Game Day source.
+Implemented requested Phases3–5 and follow-up: initial/year-only sidebar badge, text-only aligned dense roster/recruit links, matching text/numeric column alignment, icon/illustration/contextual news cards, program career/staff/history/development tabs, searchable staff candidate comparison and existing hire confirmation, tabbed coach profiles, team roster/staff tabs, commitment/class/national tables (retains own class rank outside Top25), responsive schedule filters, panel-based settings and guarded management theme refresh.
 
-Build307 source e65c03b passed the entire Android36 emulator flow: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40022397222 . Screenshots downloaded to .artifacts/ui-307 and reviewed (news icons/images and program tabs work). Final uncommitted follow-up restores own class rank outside Top25, removes unused appearance lookups from text links, aligns table headings/numeric cells, and defers theme replacement through active management actions. Extended smoke adds direct compact sidebar, league-screen navigation and Light news/staff checks. Compile and run final Actions APK, inspect screenshots, update PR20/report, then pause scoped follow-up. No main merge. Never redeem credits. Sources remain read-only.
+Build307 sourcee65c03b passed all tests and the full Android36 emulator flow. Build308 sourcedcf8ae6 also passed the expanded flow including Light news/staff and league navigation: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40024920329 . Screenshots downloaded/reviewed in .artifacts/ui-307 and ui-308. Review exposed a compact menu defect: opening the sidebar squeezed the main header. Source6a0540e fixes this with a compact overlay drawer, scrim/close action and Back handling; persistent wide sidebars remain. Added device assertion that opening the drawer preserves the header bounds, plus close/reopen checks.
 
----
+Final Build309 is running: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40027935772 . Compile passed with five existing warnings; nine Python helpers passed. 647 core/data tests passed in previous builds; no Core changes. Remaining: wait for Build309, inspect matching screenshots (especially compact drawer), update validation report/PR20 with final APK/evidence, commit docs only and pause the scoped heartbeat. Never claim the final candidate validated until the run passes. Do not repeat completed work or add scope. Never redeem credits.
 
-# Management UI Phases 1–2 — complete (Build 306)
+Final validation report draft: docs/validation/management-ui-phase-3-5/README.md. PR body draft .artifacts/pr20-complete.md currently references Build308 and must be updated to final309.
 
-Branch `feature/management-ui-overhaul`, PR20 targeting `game-day-2-test`. Application source `d41060a`; later commits are documentation only. No merge into main or game-day-2-test.
+Preserve all simulation/generation/ratings/recruiting, persistence models, package/signing and Game Day visualization/playcalling sources. `sources/` is read-only and untouched. Sources under Core and GameDay have no diff from UI base1dd2b72. Earlier Phase1–2 delivery: docs/validation/management-ui-phase-1-2/README.md (Build306).
 
-[APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39996702027/artifacts/12521215150) · [Passing run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39996702027) · [Validation/screenshots](validation/management-ui-phase-1-2/README.md)
-
-Implemented the requested foundation and core management screens using existing .NET MAUI: System/Light/Dark themes and native bar contrast, readable team accents, responsive navigation/panels, sortable compact tables and column presets, dashboard, roster/player profiles, recruiting/recruit profiles, existing cartoon portraits and team-initial branding. Actual data/actions and scouting/phase rules preserved. Automatic System refresh waits for active model updates and modal exit.
-
-641 core/data tests,9 Python helpers, packaged resources, Android compile/APK and the entire Android emulator flow passed. Verified360/700/1200dp windows, profile panes/tabs, sorting, theme retention, short-landscape morale, OS theme change during week advancement, Game Day entry/controls/stats/replays/watch, Skip cancel/confirm, saved final stats, Close without crash, week advance, depth Auto Set, recruiting/departures/Hall of Fame. Matching screenshots reviewed.
-
-No production Core engine/generation/rating, persistence schema, package identity/signing or Game Day visualization/playcalling source changed from base1dd2b72. Two previously random fixture cases now have fixed IDs; original assertions retained. `sources/` untouched.
-
-Build306 historical checkpoint: Phases3–5 had not started. User has now authorized them. Do not repeat completed work or start unsolicited follow-up. Scoped hourly auto-resume `resume-management-ui-phases-1-2` is paused now that this scoped delivery is complete; no reset credits were redeemed. See architecture audit and validation report for limitations and future scope.
+Scoped hourly resume-management-ui-phases-1-2 was renamed/reactivated for remaining management UI; pause only after this delivery completes or user cancels. No reset credits redeemed.

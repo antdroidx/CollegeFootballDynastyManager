@@ -20,7 +20,7 @@ Recruiting uses the same existing source/view filters and mechanics. Prospect ro
 
 ## Boundaries and remaining phases
 
-This phase changes presentation only. Simulation, POCI/calibration, recruitment logic, generation, persistence models and package/signing identity are unchanged. Game Day field visualization and playcalling source files are unchanged by the overhaul; existing Skip/Close fixes are inherited from the branch base. Shared branding/styles can also appear in existing secondary screens; those screens are not claimed as individually redesigned. Staff, league information and final polish continue in Phases 3–5 when requested.
+This phase changes presentation only. Simulation, POCI/calibration, recruitment logic, generation, persistence models and package/signing identity are unchanged. Game Day field visualization and playcalling source files are unchanged by the overhaul; existing Skip/Close fixes are inherited from the branch base. Shared branding/styles can also appear in existing secondary screens; those screens are not claimed as individually redesigned. Staff, league information and final polish were extended in the follow-up described below.
 
 ## Validation
 
@@ -29,7 +29,7 @@ Compile Android after integration; run existing core/data tests, resource and sy
 Final Phase1–2 evidence: [Build306 validation and screenshots](validation/management-ui-phase-1-2/README.md).
 
 
-## Remaining management phases (Build 307 candidate)
+## Remaining management phases (Build 309 candidate)
 
 The Oct23 follow-up extends the existing components rather than introducing a second UI framework. Sidebar identity uses only the team initial/year, with the full name retained in accessibility text and normal page banners. Dense person links use text-only buttons aligned to the start of their cells; deterministic portraits remain in profiles and news. This removes repeated avatar measurement and appearance lookups from recruit table construction.
 
@@ -48,3 +48,5 @@ The Oct23 follow-up extends the existing components rather than introducing a se
 Management tabs remember selection across model refreshes and explicit theme rebuilding. Existing bounded recruiting preparation, table presets, horizontal scrolling, rating indicators and accessible button identities are shared across these screens. Graphics are offline code-native illustrations and deterministic cartoon portraits; no licensed sports-game assets, photographs or real team logos are added.
 
 The Game Day field and play-calling UI remain excluded. No simulation, POCI, development, recruiting, generation, persistence schema or signing changes are part of this follow-up. Validation records distinguish emulator coverage from physical-device/hinge testing; the latter still needs real hardware.
+
+Compact navigation now overlays the full-width page as a drawer with a scrim, explicit close control and Back handling. Only persistent sidebars consume a layout column, preventing squeezed headers on narrow phones.
