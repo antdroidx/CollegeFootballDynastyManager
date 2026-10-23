@@ -83,8 +83,8 @@ public sealed partial class FoundationPage
             teamHost.IsVisible = !selected; playerHost.IsVisible = selected;
             teamTab.BackgroundColor = selected ? DynastyTheme.Palette("#253E59") : DynastyTheme.Accent;
             playerTab.BackgroundColor = selected ? DynastyTheme.Accent : DynastyTheme.Palette("#253E59");
-            teamTab.TextColor = selected ? Colors.White : DynastyTheme.Background;
-            playerTab.TextColor = selected ? DynastyTheme.Background : Colors.White;
+            teamTab.TextColor = selected ? DynastyTheme.Text : DynastyTheme.Background;
+            playerTab.TextColor = selected ? DynastyTheme.Background : DynastyTheme.Text;
         }
         teamTab.Clicked+=(_,_)=>SelectPlayers(false);playerTab.Clicked+=(_,_)=>SelectPlayers(true);SelectPlayers(false);
         void RenderPlayers()

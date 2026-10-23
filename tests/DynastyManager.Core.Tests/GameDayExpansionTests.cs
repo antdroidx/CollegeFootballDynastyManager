@@ -29,7 +29,7 @@ public class GameDayExpansionTests
             foreach (var team in new[] { "Home", "Away" })
             {
                 var events = s.Events.Where(e => e.OffenseTeamName == team).ToArray();
-                var points = events.Sum(e => e.Outcome == SnapOutcome.Touchdown ? 6 : e.Outcome == SnapOutcome.FieldGoal ? 3 : e.Points);
+                var points = s.Events.Where(e => (e.DefensiveScore ? e.DefenseTeamName : e.OffenseTeamName) == team).Sum(e => e.Outcome == SnapOutcome.Touchdown ? 6 : e.Outcome == SnapOutcome.FieldGoal ? 3 : e.Points);
                 Assert.Equal(team == "Home" ? s.HomeScore : s.AwayScore, points);
                 var game = GameDayEngine.Finish(s);
                 var stats = team == "Home" ? game.HomeStats! : game.AwayStats!;

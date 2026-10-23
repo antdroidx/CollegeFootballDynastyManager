@@ -32,6 +32,12 @@ public static class GameDayCommentaryService
         var returner = Name(snap.ReturnerId, "the returner");
         var gain = YardPhrase(snap.Yards);
 
+        if (snap.TurnoverYardLine.HasValue)
+        {
+            var turnover = snap.Outcome == SnapOutcome.Interception ? $"{defender} intercepts {quarterback}'s pass intended for {target}" : $"{carrier} fumbles; {defender} recovers";
+            return turnover + (snap.IsTouchback ? " for a touchback." : snap.DefensiveScore ? $" and returns it {snap.ReturnYards} yards for a TOUCHDOWN!" :
+                snap.ReturnYards > 0 ? $" and returns it {snap.ReturnYards} yards before {Name(snap.ReturnTacklerId, "the offense")} makes the tackle." : " and is down at the recovery spot.");
+        }
         return snap.Outcome switch
         {
             SnapOutcome.Kickoff when snap.Points >= 6 => $"{returner} takes the kickoff {snap.ReturnYards} yards for a TOUCHDOWN!",

@@ -23,8 +23,8 @@ public static partial class GameDayEngine
     {
         int Points(GameSnapEvent s) => s.Outcome == SnapOutcome.Touchdown ? 6 : s.Outcome == SnapOutcome.FieldGoal ? 3 : s.Points;
         return Enumerable.Range(1, Math.Max(4, session.Quarter)).Select(q => new GamePeriodScore(q,
-            session.Events.Where(s => s.Quarter == q && s.OffenseTeamName == session.Game.HomeTeamName).Sum(Points),
-            session.Events.Where(s => s.Quarter == q && s.OffenseTeamName == session.Game.AwayTeamName).Sum(Points))).ToArray();
+            session.Events.Where(s => s.Quarter == q && (s.DefensiveScore ? s.DefenseTeamName : s.OffenseTeamName) == session.Game.HomeTeamName).Sum(Points),
+            session.Events.Where(s => s.Quarter == q && (s.DefensiveScore ? s.DefenseTeamName : s.OffenseTeamName) == session.Game.AwayTeamName).Sum(Points))).ToArray();
     }
 
 }

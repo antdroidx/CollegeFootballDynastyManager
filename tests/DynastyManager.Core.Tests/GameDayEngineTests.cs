@@ -370,6 +370,7 @@ public class GameDayEngineTests
         var session = GameDayEngine.Start(new ScheduledGame { GameId = "game-day", SeasonYear = 2026, Week = 1,
                 HomeTeamName = "Home", AwayTeamName = "Away", SimulationSeed = seed, IsNeutralSite = neutral },
             Profile("Home", homePlan), Profile("Away", awayPlan), Roster(), mode);
+        session.PossessionTeamName = "Home"; session.OpeningReceivingTeam = "Home"; session.KickoffTeamName = "Away";
         session.KickoffPending = includeOpeningKickoff;
         return session;
     }

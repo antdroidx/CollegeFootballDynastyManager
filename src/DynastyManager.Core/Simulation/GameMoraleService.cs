@@ -38,7 +38,8 @@ public static class GameMoraleService
             var scoring = e.Outcome == SnapOutcome.Touchdown || e.Points >= 6;
             var turnover = e.Outcome is SnapOutcome.Interception or SnapOutcome.Fumble or SnapOutcome.Turnover;
             var delta = scoring ? 5 : turnover ? -4 : e.IsPassBreakup || e.Outcome == SnapOutcome.Sack ? -1.5 : e.Yards >= 20 ? 2 : 0;
-            change += e.OffenseTeamName == team ? delta : -delta;
+            var beneficiary = e.DefensiveScore ? e.DefenseTeamName : e.OffenseTeamName;
+            change += beneficiary == team ? delta : -delta;
         }
         var steadiness = Math.Clamp(1.2 - profile.HeadCoachLeadership * .005, .65, 1);
         return (int)Math.Round(Math.Clamp(profile.Morale + Math.Clamp(change * steadiness, -12, 12), 20, 80));

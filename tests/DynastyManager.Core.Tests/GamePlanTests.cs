@@ -246,7 +246,7 @@ public class GamePlanTests
             _ => CollegeFootballPlayoffService.SimulateCurrentRound(state, Teams())
         };
         Assert.True(result.Schedule[0].HasPlayed);
-        Assert.Equal(OffensiveConcept.OutsideRun, result.Schedule[0].Drives[0].Concept);
+        Assert.Equal(OffensiveConcept.OutsideRun, result.Schedule[0].Drives.First(d => d.TeamName == "Home").Concept);
     }
 
     private static TeamGamePlan Plan(string name, OffensivePlaybook book) => new() { TeamName = name, Offense = book };

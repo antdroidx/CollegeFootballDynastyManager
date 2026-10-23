@@ -10,6 +10,9 @@ public enum SnapOutcome
 
 public sealed record GameSnapEvent
 {
+    public int? TurnoverYardLine { get; init; }
+    public Guid? ReturnTacklerId { get; init; }
+    public bool DefensiveScore => TurnoverYardLine.HasValue && Points >= 6;
     public bool BrokeTackle { get; init; }
     public int Sequence { get; init; }
     public int PossessionNumber { get; init; }
@@ -96,6 +99,8 @@ public sealed class GameDaySession
     public int YardLine { get; set; } = 25;
     public int PossessionNumber { get; set; } = 1;
     public bool KickoffPending { get; set; } = true;
+    public CoinTossResult? CoinToss { get; set; }
+    public string OpeningReceivingTeam { get; set; } = string.Empty;
     public string KickoffTeamName { get; set; } = string.Empty;
     public string? ControlledTeamName { get; set; }
     public int HomeTimeouts { get; set; } = 3;

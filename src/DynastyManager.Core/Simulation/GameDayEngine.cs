@@ -28,7 +28,7 @@ public static partial class GameDayEngine
         var awayRoster = roster.Where(player =>
             player.TeamName.Equals(game.AwayTeamName, StringComparison.OrdinalIgnoreCase)).ToArray();
         var gameRoster = homeRoster.Concat(awayRoster).ToArray();
-        return new GameDaySession
+        var session = new GameDaySession
         {
             Game = game, HomeProfile = home, AwayProfile = away, Roster = gameRoster,
             HomeRoster = homeRoster, AwayRoster = awayRoster,
@@ -39,6 +39,8 @@ public static partial class GameDayEngine
             Mode = mode, Random = new Random(game.SimulationSeed), PossessionTeamName = game.HomeTeamName,
             KickoffTeamName = game.AwayTeamName, KickoffPending = true
         };
+        CoinTossService.Apply(session, CoinTossService.Toss(game));
+        return session;
     }
 
     public static GameSnapEvent Step(GameDaySession session, string? userPlayId = null,
@@ -259,13 +261,16 @@ public static partial class GameDayEngine
             PrimaryDefenderId = defender?.PlayerId, OffensePersonnel = offensePersonnel.PlayerIds,
             DefensePersonnel = defensePersonnel.PlayerIds
         };
+        if (turnover && defender is not null)
+            snap = TurnoverReturnService.Resolve(snap, defender, offensePlayers, call.Offense.Concept, session.Random);
         snap = snap with { IsPassBreakup = snap.Outcome == SnapOutcome.Incompletion && !snap.IsDrop &&
             defender is not null && read.Separation <= 1.5 };
         session.Events.Add(snap);
         PersonnelRotationService.ApplySnap(offenseFatigue, offenseRoster, offensePersonnel, Math.Abs(yards) >= 20);
         PersonnelRotationService.ApplySnap(defenseFatigue, defenseRoster, defensePersonnel, Math.Abs(yards) >= 20);
-        ConsumeLiveClock(session, liveSeconds);
-        AdvanceState(session, homeOnOffense, yards, turnover, touchdown, outcome == SnapOutcome.Incompletion);
+        ConsumeLiveClock(session, snap.LiveBallSeconds);
+        if (turnover && snap.TurnoverYardLine.HasValue) ApplyTurnoverReturn(session, snap);
+        else AdvanceState(session, homeOnOffense, yards, turnover, touchdown, outcome == SnapOutcome.Incompletion);
         return session.Events[^1];
     }
 
@@ -325,7 +330,7 @@ public static partial class GameDayEngine
             bool IsPass(GameSnapEvent item) => !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
                 ConceptOf(session, item) is
                     OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
-            var points = group.Sum(item => item.Outcome == SnapOutcome.Touchdown ? 6 : item.Outcome == SnapOutcome.FieldGoal ? 3 : item.Points);
+            var points = group.Where(item => !item.DefensiveScore).Sum(item => item.Outcome == SnapOutcome.Touchdown ? 6 : item.Outcome == SnapOutcome.FieldGoal ? 3 : item.Points);
             return new GameDriveSummary
             {
                 TeamName = group.Key.OffenseTeamName, PossessionNumber = group.Key.PossessionNumber,
@@ -437,6 +442,9 @@ public static partial class GameDayEngine
                     TacklesForLoss = Line(defenderId).TacklesForLoss + (snap.Yards < 0 ? 1 : 0),
                     Sacks = Line(defenderId).Sacks + (snap.Outcome == SnapOutcome.Sack ? 1 : 0),
                     Interceptions = Line(defenderId).Interceptions + (snap.Outcome == SnapOutcome.Interception || pass && snap.Outcome == SnapOutcome.Turnover ? 1 : 0),
+                    DefensiveReturnYards = Line(defenderId).DefensiveReturnYards + (snap.TurnoverYardLine.HasValue ? snap.ReturnYards : 0),
+                    DefensiveTouchdowns = Line(defenderId).DefensiveTouchdowns + (snap.DefensiveScore ? 1 : 0),
+                    Touchdowns = Line(defenderId).Touchdowns + (snap.DefensiveScore ? 1 : 0),
                     FumbleRecoveries = Line(defenderId).FumbleRecoveries + (snap.Outcome == SnapOutcome.Fumble || !pass && snap.Outcome == SnapOutcome.Turnover ? 1 : 0)
                 };
                 Save(defender);
@@ -469,6 +477,8 @@ public static partial class GameDayEngine
                     PuntsInside10 = punts.Count(e => !e.IsTouchback && e.KickLandingYardLine >= 90) });
             }
         }
+        foreach (var snap in session.Events.Where(e => e.TurnoverYardLine.HasValue && !e.DefensiveScore && e.ReturnTacklerId.HasValue))
+        { var tackle = Line(snap.ReturnTacklerId!.Value); Save(tackle with { Tackles = tackle.Tackles + 1 }); }
         return lines.Values.ToArray();
     }
 
@@ -558,10 +568,27 @@ public static partial class GameDayEngine
         if (session.Quarter == 3)
         {
             session.HomeTimeouts = session.AwayTimeouts = 3;
-            session.PossessionTeamName = session.Game.AwayTeamName;
+            var firstReceiver = string.IsNullOrEmpty(session.OpeningReceivingTeam) ? session.Game.HomeTeamName : session.OpeningReceivingTeam;
+            session.PossessionTeamName = firstReceiver == session.Game.HomeTeamName ? session.Game.AwayTeamName : session.Game.HomeTeamName;
             session.PossessionNumber++;
-            QueueKickoff(session, session.Game.HomeTeamName);
+            QueueKickoff(session, firstReceiver);
         }
+    }
+
+    public static void ApplyTurnoverReturn(GameDaySession session, GameSnapEvent snap)
+    {
+        if (snap.TurnoverYardLine is null) throw new ArgumentException("Turnover spot is missing.");
+        if (snap.DefensiveScore)
+        {
+            if (snap.DefenseTeamName == session.Game.HomeTeamName) session.HomeScore += 6; else session.AwayScore += 6;
+            session.PossessionTeamName = snap.DefenseTeamName; session.PossessionNumber++;
+            session.YardLine = 97; session.Down = 1; session.Distance = 3;
+            session.ClockStopped = true; session.ClockRestartsOnReady = false;
+            if (session.OvertimeRound > 0) { session.IsComplete = true; session.KickoffPending = false; }
+            else session.TryPending = true;
+        }
+        else ChangePossession(session, snap.IsTouchback ? 20 : Math.Clamp(100 - snap.BallEndYardLine, 1, 99));
+        CheckTwoMinuteTimeout(session); AdvanceQuarter(session);
     }
 
     private static void ChangePossession(GameDaySession session, int yardLine)

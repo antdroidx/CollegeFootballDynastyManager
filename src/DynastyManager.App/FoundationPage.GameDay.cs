@@ -80,9 +80,10 @@ public sealed partial class FoundationPage
             HomeColor = Color.FromArgb(homeBrand.Primary),
             HomeSecondaryColor = Color.FromArgb(homeBrand.Secondary),
             HomeName = game.HomeTeamName.ToUpperInvariant(),
-            HomeInitial = TeamBrandCatalog.Initial(game.HomeTeamName)
+            HomeInitial = TeamBrandCatalog.Initial(game.HomeTeamName),
+            Weather = session.Weather
         };
-        var field = new Grid { HeightRequest = 330, BackgroundColor = DynastyTheme.Palette("#245B38") };
+        var field = new Grid { AutomationId = "game-day-field", HeightRequest = 330, BackgroundColor = DynastyTheme.Palette("#245B38") };
         var fieldLines = new GraphicsView { Drawable = fieldArt };
         var fieldPlayers = new AbsoluteLayout();
         var highlightText = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold,
@@ -91,7 +92,7 @@ public sealed partial class FoundationPage
             Padding = new Thickness(22, 12), HorizontalOptions = LayoutOptions.Center,
             VerticalOptions = LayoutOptions.Center, Content = highlightText };
         var replayChip = new Label { Text = "INSTANT REPLAY", IsVisible = false, FontSize = 12,
-            FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#FFE194"), BackgroundColor = DynastyTheme.Palette("#E0101F2C"),
+            FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#FFE194"), BackgroundColor = Color.FromArgb("#101F2C"),
             Padding = new Thickness(12, 4), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Start, Margin = 6 };
         field.Add(fieldLines); field.Add(fieldPlayers); field.Add(highlight); field.Add(replayChip);
 
@@ -234,8 +235,8 @@ public sealed partial class FoundationPage
         var more = new Button { Text = "More", AutomationId = "game-day-more" };
         controls.Children.Add(more);
         var tray = new VerticalStackLayout { Spacing = 4, Children = { quickCalls, controls } };
-        var traySurface = new Border { StrokeThickness = 0, Padding = 7,
-            BackgroundColor = DynastyTheme.Palette("#F0101F2C"), Content = tray,
+        var traySurface = new Border { AutomationId = "game-day-controls", StrokeThickness = 0, Padding = 7,
+            BackgroundColor = DynastyTheme.Surface, Content = tray,
             VerticalOptions = LayoutOptions.End, Margin = new Thickness(8) };
         var pickerLayer = new Grid { IsVisible = false, BackgroundColor = DynastyTheme.Palette("#88000000"), Padding = 10 };
         expand.Clicked += (_, _) => ExpandCalls(!ControlledOnOffense());
@@ -381,8 +382,9 @@ public sealed partial class FoundationPage
             if (controls.Parent is Layout oldControls) oldControls.Children.Remove(controls);
             if (quickCalls.Parent is Layout oldQuick) oldQuick.Children.Remove(quickCalls);
             tray.Children.Clear(); tray.Children.Add(quickCalls); tray.Children.Add(controls);
-            var body = new Grid();
-            body.Add(field); body.Add(traySurface); body.Add(pickerLayer);
+            var body = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
+            body.Add(field, 0, 0); body.Add(traySurface, 0, 1); body.Add(pickerLayer, 0, 0);
+            Grid.SetRowSpan(pickerLayer, 2);
             var root = new Grid { Padding = 4, RowSpacing = 3, RowDefinitions =
                 new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
             root.Add(heading, 0, 0); root.Add(body, 0, 1); root.Add(commentaryPanel, 0, 2);
@@ -541,7 +543,7 @@ public sealed partial class FoundationPage
             var calledPlay = PlayEditorService.OffensiveLibrary((snap.OffenseTeamName == game.HomeTeamName ? home : away).GamePlan ?? controlledPlan).FirstOrDefault(play => play.Id == snap.OffensivePlayId);
             var routeFamily = calledPlay is null ? GameDayRouteFamily.Run : GameDayAnimationPlanner.RouteFamily(calledPlay);
             var receiverFamily = routeFamily;
-            var passRelease = snap.PassReleaseProgress > 0 ? snap.PassReleaseProgress : calledPlay is null ? .54 : GameDayAnimationPlanner.PassReleaseProgress(calledPlay);
+            var passRelease = snap.TurnoverYardLine.HasValue ? .30 : snap.PassReleaseProgress > 0 ? snap.PassReleaseProgress : calledPlay is null ? .54 : GameDayAnimationPlanner.PassReleaseProgress(calledPlay);
             var catchProgress = GameDayAnimationPlanner.CatchProgress(passRelease);
             var caught = snap.TargetId.HasValue && snap.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown;
             var terminalCarrierId = snap.BallCarrierId ?? snap.ReturnerId ??
@@ -726,6 +728,8 @@ public sealed partial class FoundationPage
             }
             GameFieldPoint? interceptionPoint = (snap.Outcome == SnapOutcome.Interception || snap.IsPassBreakup) && receiverFrom is Rect rf && receiverTo is Rect rt
                 ? GameDayAnimationPlanner.RoutePoint(new(rf.X, rf.Y), new(rt.X, rt.Y), receiverFamily, catchProgress) : null;
+            if (snap.TurnoverYardLine is int turnoverSpot)
+                interceptionPoint = new(GameDayAnimationPlanner.ProjectYardLine(turnoverSpot, direction), snap.CarrierLane ?? .5);
             Rect? interceptorFrom = null, interceptorTo = null;
             View? interceptorView = null;
             var contact = GameDayAnimationPlanner.ContactPoint(snap, direction, isReturnTackle ? .50 : terminalCarrierTo?.Y ?? .50);
@@ -915,7 +919,15 @@ public sealed partial class FoundationPage
                     snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt ? .35 : ReferenceEquals(m.View, interceptorView) ? catchProgress : 1;
                 return (distance, movementSpeeds[m.View], active);
             }));
+            if (snap.TurnoverYardLine.HasValue) durationSeconds = Math.Max(durationSeconds, snap.ReturnYards / 9d / (1 - catchProgress));
             if (instantReplay) durationSeconds *= 1.2;
+            Rect TurnoverTrack(double progress)
+            {
+                var pickup = interceptorTo ?? new Rect(GameDayAnimationPlanner.ProjectYardLine(snap.TurnoverYardLine ?? snap.StartYardLine, direction), snap.CarrierLane ?? .5, 28, 28);
+                var end = pickup with { X = GameDayAnimationPlanner.ProjectYardLine(snap.BallEndYardLine, direction) };
+                return Interpolate(pickup, end, Math.Clamp((progress - catchProgress) / (1 - catchProgress), 0, 1));
+            }
+            var turnoverPickupPositions = new Dictionary<View, Rect>();
             var previousPositions = movements.ToDictionary(m => m.View, m => m.From);
             var completion = new TaskCompletionSource();
             var animation = new Animation(progress =>
@@ -934,6 +946,20 @@ public sealed partial class FoundationPage
                         ? RouteTrack(movement.From, movement.To, movementProgress, assignedRoutes.GetValueOrDefault(movement.View, routeFamily))
                         : (ReferenceEquals(movement.View, terminalCarrierView) && !isPass || ReferenceEquals(movement.View, specialReturnerView))
                         ? CarrierTrack(movement.From, movement.To, movementProgress) : Interpolate(movement.From, movement.To, movementProgress);
+                    if (snap.TurnoverYardLine.HasValue && progress >= catchProgress)
+                    {
+                        var athlete = movement.View is Border marker ? markerHosts.GetValueOrDefault(marker).Player : null;
+                        if (athlete?.PlayerId == snap.ReturnerId) position = TurnoverTrack(progress);
+                        else if (athlete?.PlayerId == snap.ReturnTacklerId)
+                        {
+                            var carrierAt = TurnoverTrack(progress);
+                            var chase = Math.Clamp((progress - catchProgress) / (1 - catchProgress), 0, 1);
+                            // Pursuer closes from their actual pickup-time position; no teleport to the carrier.
+                            if (!turnoverPickupPositions.TryGetValue(movement.View, out var pickup))
+                                turnoverPickupPositions[movement.View] = pickup = previousPositions[movement.View];
+                            position = Interpolate(pickup, carrierAt, chase);
+                        }
+                    }
                     AbsoluteLayout.SetLayoutBounds(movement.View, position);
                     if (movement.View is Border host && host.Content is FootballSpriteView sprite)
                     {
@@ -1058,7 +1084,10 @@ public sealed partial class FoundationPage
                         ? Interpolate(BallAt(Track(qbFrom, qbTo, 0)), BallAt(Track(runnerFrom, runnerTo, .25)), (progress - .13) / .12)
                         : BallAt(Track(runnerFrom, runnerTo, progress));
                 else currentBall = BallAt(Track(qbFrom, qbTo, progress));
+                if (snap.TurnoverYardLine.HasValue && progress >= catchProgress) currentBall = BallAt(TurnoverTrack(progress));
                 AbsoluteLayout.SetLayoutBounds(ball, currentBall);
+                fieldArt.WeatherPhase = progress * durationSeconds;
+                if (session.Weather.Precipitation != GamePrecipitation.Clear) fieldLines.Invalidate();
                 if (isTackle && terminalCarrierView is not null && primaryTacklerView is not null && progress >= .84)
                 {
                     var impact = Math.Clamp((progress - .84) / .16, 0, 1);
@@ -1083,7 +1112,9 @@ public sealed partial class FoundationPage
                 ? snap.DefenseTeamName : snap.OffenseTeamName);
             highlightText.Text = snap.TimeoutTeamName is not null && period is null
                 ? $"TIMEOUT\n{snap.TimeoutTeamName}\n{(team == game.HomeTeamName ? snap.HomeTimeoutsRemaining : snap.AwayTimeoutsRemaining)} remaining" : period is null ? penalty?.Banner ?? $"{headline}\n{team}" : $"{headline}\n{game.AwayTeamName} {session.AwayScore} - {session.HomeScore} {game.HomeTeamName}";
-            highlight.BackgroundColor = TeamColor(team).WithAlpha(.94f);
+            highlight.BackgroundColor = TeamColor(team);
+            var color = TeamColor(team);
+            highlightText.TextColor = color.Red * .2126 + color.Green * .7152 + color.Blue * .0722 > .55 ? Colors.Black : Colors.White;
             highlight.Opacity = 0;
             highlight.Scale = .72;
             highlight.IsVisible = true;
@@ -1379,6 +1410,8 @@ public sealed partial class FoundationPage
         skip.Clicked += async (_, _) => { GameDayEngine.SimulateToEnd(session); await FinishIfNeeded(); };
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         Refresh();
+        await ShowCoinTossAsync(session, controlledTeamName, mode == GameDayMode.Play);
+        Refresh();
         await Navigation.PushModalAsync(page);
         if (mode == GameDayMode.Watch) await WatchLoop(); else await RunCpuUntilUserDecision();
     }
@@ -1523,6 +1556,8 @@ public sealed partial class FoundationPage
         public Color HomeSecondaryColor { get; set; } = Colors.White;
         public string HomeInitial { get; set; } = "H";
         public string HomeName { get; set; } = "HOME";
+        public GameWeather Weather { get; set; } = new();
+        public double WeatherPhase { get; set; }
 
         public void Draw(ICanvas canvas, RectF rect)
         {
@@ -1608,6 +1643,19 @@ public sealed partial class FoundationPage
             var gain = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(Math.Min(100, YardLine + Distance), Direction);
             canvas.StrokeColor = DynastyTheme.Palette("#4FA8FF"); canvas.StrokeSize = 3; canvas.DrawLine(line, 0, line, rect.Height);
             canvas.StrokeColor = DynastyTheme.Palette("#E7C45B"); canvas.StrokeSize = 3; canvas.DrawLine(gain, 0, gain, rect.Height);
+            if (!Weather.Indoors && Weather.Precipitation != GamePrecipitation.Clear)
+            {
+                var snow = Weather.Precipitation == GamePrecipitation.Snow;
+                canvas.FillColor = Color.FromRgba(1, 1, 1, .75);
+                canvas.StrokeColor = Color.FromRgba(.75, .88, 1, .65); canvas.StrokeSize = 1;
+                for (var i = 0; i < 100; i++)
+                {
+                    var x = rect.Width * (float)((i * .618033 + WeatherPhase * .07 * Weather.WindFieldDirection + 10) % 1);
+                    var y = rect.Height * (float)((i * .41321 + WeatherPhase * (snow ? .18 : .8)) % 1);
+                    if (snow) canvas.FillCircle(x, y, 1.7f);
+                    else canvas.DrawLine(x, y, x + Weather.WindFieldDirection * 3, y + 9);
+                }
+            }
         }
     }
 }

@@ -83,11 +83,11 @@ public class GameConditionsAndAwardsTests
             if(e.BallEndYardLine>50)crossed++;
             if(e.Points>=6)scored=s;
         }
-        Assert.True(crossed>0);Assert.NotNull(scored);Assert.True(scored.TryPending);Assert.Equal(6,scored.HomeScore);
+        Assert.True(crossed>0);Assert.NotNull(scored);Assert.True(scored.TryPending);Assert.Equal(6,scored.PossessionTeamName=="Home"?scored.HomeScore:scored.AwayScore);
         var snap=Assert.Single(scored.Events);Assert.Null(snap.PrimaryDefenderId);
         var line=GameDayEngine.BoxScore(scored).Players.Single(p=>p.PlayerId==snap.ReturnerId);
         Assert.Equal(1,line.KickReturnTouchdowns);Assert.Equal(snap.ReturnYards,line.KickReturnYards);
-        Assert.Equal(6,GameDayEngine.BoxScore(scored).Periods.Sum(p=>p.HomePoints));
+        Assert.Equal(6,GameDayEngine.BoxScore(scored).Periods.Sum(p=>scored.PossessionTeamName=="Home"?p.HomePoints:p.AwayPoints));
         Assert.True(GameDayAnimationPlanner.CarrierDestinationYardLine(snap)>100);
     }
     [Fact]

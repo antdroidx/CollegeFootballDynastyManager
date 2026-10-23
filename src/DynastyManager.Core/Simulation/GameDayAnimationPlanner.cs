@@ -191,6 +191,7 @@ public static class GameDayAnimationPlanner
 
     public static Guid? BallOwner(GameSnapEvent snap, double progress, double release)
     {
+        if (snap.TurnoverYardLine.HasValue && progress >= CatchProgress(release)) return snap.ReturnerId;
         if (snap.Outcome is SnapOutcome.Kickoff or SnapOutcome.Punt)
             return progress < .10 ? snap.KickerId : progress < .65 ? null : snap.ReturnerId;
         if (IsPlaceKick(snap)) return progress < .20 ? snap.KickerId : null;

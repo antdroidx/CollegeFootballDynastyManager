@@ -150,6 +150,14 @@ def main():
         overview = wait_for(f"overview-week-{week}", lambda r: overview_ready(r, previous), timeout=300)
     assert "Play game" in texts(overview), "Expected a current-week user matchup"
     tap(overview, "Play game")
+    toss = wait_for("coin-toss", lambda r: "Heads" in texts(r) or "Receive" in texts(r) or "Start game" in texts(r))
+    if "Heads" in texts(toss):
+        tap(toss, "Heads")
+        toss = wait_for("coin-result", lambda r: "Receive" in texts(r) or "Start game" in texts(r))
+    if "Receive" in texts(toss):
+        tap(toss, "Receive")
+        toss = wait_for("coin-ready", lambda r: "Start game" in texts(r))
+    tap(toss, "Start game")
     viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
     assert len([n for n in viewer.iter("node") if n.get("content-desc", "").startswith("Select ")]) == 3, "Portrait must show three play choices"
@@ -169,6 +177,11 @@ def main():
     landscape = capture("game-day-landscape")
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(landscape)
     assert "Call play" in texts(landscape) or "Call defense" in texts(landscape)
+    field_node = next(n for n in landscape.iter("node") if (n.get("resource-id") or "").endswith("game-day-field"))
+    dock_node = next(n for n in landscape.iter("node") if (n.get("resource-id") or "").endswith("game-day-controls"))
+    field_bounds = list(map(int, re.findall(r"\d+", field_node.get("bounds"))))
+    dock_bounds = list(map(int, re.findall(r"\d+", dock_node.get("bounds"))))
+    assert field_bounds[3] <= dock_bounds[1], "Controls overlap the live field"
     screen = next(landscape.iter("node"))
     screen_left, screen_top, screen_right, screen_bottom = map(int, re.findall(r"\d+", screen.get("bounds")))
     assert screen_right - screen_left > screen_bottom - screen_top, "Viewer did not rotate to landscape"

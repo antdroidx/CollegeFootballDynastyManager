@@ -345,6 +345,7 @@ public static class DynastyHistoryService
         ReceivingFumbles = a.ReceivingFumbles + b.ReceivingFumbles, Receiving20Plus = a.Receiving20Plus + b.Receiving20Plus,
         Tackles = a.Tackles + b.Tackles, TacklesForLoss = a.TacklesForLoss + b.TacklesForLoss,
         Sacks = a.Sacks + b.Sacks, PassesDefended = a.PassesDefended + b.PassesDefended,
+        DefensiveReturnYards = a.DefensiveReturnYards + b.DefensiveReturnYards, DefensiveTouchdowns = a.DefensiveTouchdowns + b.DefensiveTouchdowns,
         Interceptions = a.Interceptions + b.Interceptions, FumbleRecoveries = a.FumbleRecoveries + b.FumbleRecoveries,
         ExtraPointsMade = a.ExtraPointsMade + b.ExtraPointsMade, ExtraPointsAttempted = a.ExtraPointsAttempted + b.ExtraPointsAttempted,
         FieldGoalsMade = a.FieldGoalsMade + b.FieldGoalsMade, FieldGoalsAttempted = a.FieldGoalsAttempted + b.FieldGoalsAttempted,

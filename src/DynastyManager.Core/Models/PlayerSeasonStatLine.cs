@@ -36,6 +36,8 @@ public sealed record PlayerSeasonStatLine
     public int Sacks { get; init; }
     public int PassesDefended { get; init; }
     public int Interceptions { get; init; }
+    public int DefensiveReturnYards { get; init; }
+    public int DefensiveTouchdowns { get; init; }
     public int FumbleRecoveries { get; init; }
     public int ExtraPointsMade { get; init; }
     public int ExtraPointsAttempted { get; init; }
