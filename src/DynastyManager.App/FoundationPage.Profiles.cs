@@ -26,18 +26,13 @@ public sealed partial class FoundationPage
         return new Border { Content = row, Padding = 14, BackgroundColor = DynastyTheme.Palette("#203342") };
     }
 
-    private View PlayerLink(DynastyPlayer player) => PersonLink(player.PlayerId, player.FullName, player.TeamName,
-        () => ShowPlayerProfileAsync(player.PlayerId), appearance: player.Appearance);
+    private View PlayerLink(DynastyPlayer player) => PersonLink(player.FullName, () => ShowPlayerProfileAsync(player.PlayerId));
 
-    private View PlayerLink(Guid id, string name) => PersonLink(id, name,
-        _currentDynasty?.ActiveRoster.FirstOrDefault(player => player.PlayerId == id)?.TeamName ?? "",
-        () => ShowPlayerProfileAsync(id), appearance: _currentDynasty?.ActiveRoster.FirstOrDefault(player => player.PlayerId == id)?.Appearance
-            ?? _currentDynasty?.PlayerCareerHistory.FirstOrDefault(player => player.PlayerId == id)?.Appearance);
+    private View PlayerLink(Guid id, string name) => PersonLink(name, () => ShowPlayerProfileAsync(id));
 
-    private View CoachLink(StaffMember coach) => PersonLink(coach.StaffId, coach.FullName, coach.TeamName,
-        () => ShowCoachProfileAsync(coach), true, coach.Age, coach.Appearance);
+    private View CoachLink(StaffMember coach) => PersonLink(coach.FullName, () => ShowCoachProfileAsync(coach), true);
 
-    private static View PersonLink(Guid id, string name, string school, Func<Task> open, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
+    private static View PersonLink(string name, Func<Task> open, bool staff = false)
     {
         // A real button retains keyboard, screen-reader and touch behavior inside sortable tables.
         var displayName=staff || !name.Contains(' ') ? name : name[..1]+". "+name[(name.IndexOf(' ')+1)..];
@@ -221,7 +216,7 @@ public sealed partial class FoundationPage
             })));
         history.Add(new Label { Text = "Career totals count recorded head-coaching seasons. Other staff roles retain team results in the season table.", FontSize = 11, TextColor = DynastyTheme.Muted });
         var school = new Button { Text = "View team roster & staff" };
-        school.Clicked += async (_, _) => { await Navigation.PopModalAsync(); OpenSchool(coach.TeamName); };
+        school.Clicked += (_, _) => OpenSchool(coach.TeamName);
         overview.Add(school);
         var content = new VerticalStackLayout { Padding = 14, Spacing = 12, Children = {
             close, ResponsivePanels(portraitHeader, ProfileTabs(("Overview", overview), ("Attributes", traits), ("Career history", history)))

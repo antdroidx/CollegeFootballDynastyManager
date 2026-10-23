@@ -1,4 +1,4 @@
-# Management UI architecture and Phase 1–2 scope
+# Management UI architecture
 
 ## Audit
 
@@ -27,3 +27,24 @@ This phase changes presentation only. Simulation, POCI/calibration, recruitment 
 Compile Android after integration; run existing core/data tests, resource and synchronization helper checks. GitHub Actions installs the signed test APK into Android 36 and exercises career navigation, Game Day skip/close, depth chart, recruiting and theme retention, then 360dp compact, 700dp foldable and 1200dp tablet window sizes. Inspect screenshots and runtime failures before delivering the artifact. Window resizing validates responsive policy; physical fold hinge/cutout behavior still requires device testing.
 
 Final Phase1–2 evidence: [Build306 validation and screenshots](validation/management-ui-phase-1-2/README.md).
+
+
+## Remaining management phases (Build 307 candidate)
+
+The Oct23 follow-up extends the existing components rather than introducing a second UI framework. Sidebar identity uses only the team initial/year, with the full name retained in accessibility text and normal page banners. Dense person links use text-only buttons aligned to the start of their cells; deterministic portraits remain in profiles and news. This removes repeated avatar measurement and appearance lookups from recruit table construction.
+
+| Area | Presentation and existing actions |
+| --- | --- |
+| Portal / commitments | Portal shares the recruiting workspace and phase-aware actions. Commitments, national commitments and class rankings now have separate sortable table tabs. |
+| Staff / hiring / carousel | Program tabs separate career, staff/hiring, history/titles and development. Carousel records remain in staff. Candidate comparison is a searchable, sortable table with profile links and the existing confirmed hiring path; dismissing it makes no hire. |
+| Coach profile | Responsive identity/details layout with overview, attributes and career-history tabs; real staff labels, shared roles and generated estimates remain disclosed. |
+| Team browser | Team ratings and banner precede roster/staff tabs, preserving league-wide profile links and roster morale/deltas. |
+| Depth / injuries / development | Existing legal PPOS organizer and Auto Set stay intact. Program development adds actual season deltas, morale, availability and injury-report navigation in a sortable table. |
+| Schedule / standings / postseason | Existing organized tables, conference picker and postseason panels reuse shared styling. Schedule/poll filters wrap within narrow content widths. All-team schedule still defaults to the current week. |
+| Statistics / history | Existing paged, searchable category statistics retain their fields and sorting. Program season history now uses a sortable record/honors table. |
+| News / weekly coverage | Team or player icons, recorded-event previews and native vector stadium illustrations. Responsive card columns lead to detailed articles with recorded facts plus explicitly fictional editorial context. No quotations, results or stats are invented. |
+| Preferences / saves | Responsive display, recruiting-delegation, save-protection and league-configuration panels. Existing System/Light/Dark rebuilding, autosave controls, save/start library and package identity remain intact. |
+
+Management tabs remember selection across model refreshes and explicit theme rebuilding. Existing bounded recruiting preparation, table presets, horizontal scrolling, rating indicators and accessible button identities are shared across these screens. Graphics are offline code-native illustrations and deterministic cartoon portraits; no licensed sports-game assets, photographs or real team logos are added.
+
+The Game Day field and play-calling UI remain excluded. No simulation, POCI, development, recruiting, generation, persistence schema or signing changes are part of this follow-up. Validation records distinguish emulator coverage from physical-device/hinge testing; the latter still needs real hardware.

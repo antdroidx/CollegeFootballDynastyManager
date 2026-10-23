@@ -9,6 +9,7 @@ namespace DynastyManager.App;
 public sealed partial class FoundationPage
 {
     private Action? _refreshOpenPlayerProfile;
+    private int _managementActionDepth;
     private Grid? _managementRoot;
     private Border? _managementSidebar;
     private readonly Dictionary<AppSection, Button> _managementLinks = new();
@@ -99,7 +100,7 @@ public sealed partial class FoundationPage
                 HorizontalTextAlignment = TextAlignment.Center }
         } };
         SemanticProperties.SetDescription(badge, school + " · " + year);
-        return new Border { Content = badge, Padding = 12, BackgroundColor = Color.FromArgb(brand.Primary) };
+        return new Border { AutomationId = "sidebar-identity", Content = badge, Padding = 12, BackgroundColor = Color.FromArgb(brand.Primary) };
     }
 
     private static View ManagementPanel(string title, View content, string? subtitle = null) => new Border

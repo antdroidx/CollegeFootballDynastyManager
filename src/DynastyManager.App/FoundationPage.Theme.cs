@@ -12,7 +12,7 @@ public sealed partial class FoundationPage
     {
         // Replacing the page during an awaited dynasty update would leave its
         // continuation updating the old page's state. Refresh after it commits.
-        if (_isAdvancing || _advanceOverlay.IsVisible)
+        if (_isAdvancing || _advanceOverlay.IsVisible || _managementActionDepth > 0 || _openingSchool)
         {
             _systemThemePending = true;
             if (!_themeWaitScheduled)
@@ -21,7 +21,7 @@ public sealed partial class FoundationPage
                 Dispatcher.StartTimer(TimeSpan.FromMilliseconds(100), () =>
                 {
                     if (Window?.Page != this) { _themeWaitScheduled = false; return false; }
-                    if (_isAdvancing || _advanceOverlay.IsVisible) return true;
+                    if (_isAdvancing || _advanceOverlay.IsVisible || _managementActionDepth > 0 || _openingSchool) return true;
                     _themeWaitScheduled = false;
                     _ = RefreshPendingThemeAsync();
                     return false;

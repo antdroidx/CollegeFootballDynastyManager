@@ -11,6 +11,10 @@ public sealed partial class FoundationPage
     private static readonly BindableProperty TableValueProperty = BindableProperty.CreateAttached("TableValue", typeof(string), typeof(FoundationPage), null);
     private readonly Dictionary<string, (int Column, bool Descending)> _tableOrders = new();
 
+    private static bool TextColumn(string title) => title is "Player" or "Prospect" or "Coach" or "School" or "Team" or "Opponent"
+        or "Role" or "Style" or "Source" or "Availability" or "Status" or "Origin" or "Competition" or "Interest / status"
+        or "Honors / postseason" or "Bowl";
+
     private static string? TableValue(View view) => view.GetValue(TableValueProperty) as string ?? view switch
     {
         Label label => label.Text,
@@ -102,7 +106,7 @@ public sealed partial class FoundationPage
         {
             var button = new Button { Text = column.Title, FontSize = 10, FontAttributes = FontAttributes.Bold,
                 BackgroundColor = Colors.Transparent, TextColor = DynastyTheme.Palette("#B8D8FA"),
-                HorizontalOptions = LayoutOptions.Fill, VerticalOptions = LayoutOptions.Fill,
+                HorizontalOptions = TextColumn(column.Title) ? LayoutOptions.Start : LayoutOptions.Fill, VerticalOptions = LayoutOptions.Fill,
                 Padding = new Thickness(5, 6), CornerRadius = 0, MinimumHeightRequest = 34,
                 IsEnabled = column.Title is not ("Details" or "Stats" or "Profile") };
             SemanticProperties.SetDescription(button, "Sort " + column.Title);
@@ -138,7 +142,12 @@ public sealed partial class FoundationPage
                 var user = cells.Any(cell => TableValue(cell) == _currentDynasty?.UserTeamName);
                 var background = new BoxView { Color = user ? DynastyTheme.Selected : index % 2 == 0 ? DynastyTheme.Panel : DynastyTheme.Surface, MinimumHeightRequest = 44 };
                 grid.Add(background, 0, index); Grid.SetColumnSpan(background, columns.Length);
-                for (var column = 0; column < cells.Length; column++) grid.Add(cells[column], column, index);
+                for (var column = 0; column < cells.Length; column++)
+                {
+                    if (cells[column] is Label label)
+                        label.HorizontalTextAlignment = TextColumn(columns[column].Title) ? TextAlignment.Start : TextAlignment.Center;
+                    grid.Add(cells[column], column, index);
+                }
                 index++;
             }
         }

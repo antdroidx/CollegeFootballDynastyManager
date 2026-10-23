@@ -4,7 +4,7 @@ Branch `feature/management-ui-overhaul`, PR20 targeting `game-day-2-test`. Build
 
 Current uncommitted work: initial/year-only sidebar badge, text-only aligned dense table identity cells, news icons/illustrated previews and contextual fictional editorial, responsive program tabs (career/staff/history/development), staff candidate comparison table with existing hire confirmation, tabbed coach profiles, responsive schedule filters, panel-based settings. Preserve all engine formulas/save schema/Game Day source.
 
-Next: compile and run tests, extend Android smoke for news/staff/program/settings, Actions APK and visual QA in compact/tablet/light/dark; fix issues and finish remaining management screens. Do not claim complete until validated. Existing scoped heartbeat renamed/reactivated for remaining phases; never redeem credits. Sources remain read-only.
+Build307 source e65c03b passed the entire Android36 emulator flow: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40022397222 . Screenshots downloaded to .artifacts/ui-307 and reviewed (news icons/images and program tabs work). Final uncommitted follow-up restores own class rank outside Top25, removes unused appearance lookups from text links, aligns table headings/numeric cells, and defers theme replacement through active management actions. Extended smoke adds direct compact sidebar, league-screen navigation and Light news/staff checks. Compile and run final Actions APK, inspect screenshots, update PR20/report, then pause scoped follow-up. No main merge. Never redeem credits. Sources remain read-only.
 
 ---
 

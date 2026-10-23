@@ -3412,7 +3412,9 @@ public sealed partial class FoundationPage : ContentPage
                     TableText(item.TeamScore.ToString("0.00")), TableText(item.AverageRecruitRating.ToString("0.00")),
                     TableText(item.CommitCount.ToString()), TableText(item.HighSchoolCount.ToString()), TableText(item.TransferCount.ToString()) }))
         } };
-        var yours = new VerticalStackLayout { Spacing = 8, Children = { SectionTitle("Your commitments", $"{userCommitments.Length} players"), CommitmentTable(userCommitments) } };
+        var userClass = classRankings.FirstOrDefault(item => item.TeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase));
+        var classSummary = userClass is null ? $"{userCommitments.Length} players" : $"Class rank #{userClass.Rank} · {userClass.TeamScore:0.00} points · {userCommitments.Length} players";
+        var yours = new VerticalStackLayout { Spacing = 8, Children = { SectionTitle("Your commitments", classSummary), CommitmentTable(userCommitments) } };
         var national = new VerticalStackLayout { Spacing = 8, Children = { SectionTitle("Around the nation", "Top 100 commitments outside your program"),
             CommitmentTable(allCommitments.Where(record => !record.TeamName.Equals(_currentDynasty.UserTeamName, StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(record => record.OverallRating).ThenBy(record => record.TeamName).Take(100)) } };
@@ -3967,6 +3969,9 @@ public sealed partial class FoundationPage : ContentPage
         if (_currentDynasty is null)
             return;
 
+        _managementActionDepth++;
+        try
+        {
         _currentDynasty = StaffMarketService.EnsureMarket(
             _currentDynasty, _teamsByName);
 
@@ -4058,6 +4063,12 @@ public sealed partial class FoundationPage : ContentPage
         }
 
         RenderCurrentDynasty();
+        }
+        finally
+        {
+            _managementActionDepth--;
+            if (_systemThemePending) await RefreshPendingThemeAsync();
+        }
     }
 
     private static string GetStaffCandidateDetail(

@@ -334,8 +334,17 @@ public sealed partial class FoundationPage
             var destination = new Button { Text = story.Category == "Injuries" ? "Open injury report" : story.Category == "Recruiting" ? "Open recruiting" : "Open schedule" };
             destination.Clicked += async (_, _) =>
             {
-                await Navigation.PopModalAsync();
-                ShowSection(story.Category == "Injuries" ? AppSection.Injuries : story.Category == "Recruiting" ? AppSection.Recruiting : AppSection.Schedule);
+                _managementActionDepth++;
+                try
+                {
+                    await Navigation.PopModalAsync();
+                    ShowSection(story.Category == "Injuries" ? AppSection.Injuries : story.Category == "Recruiting" ? AppSection.Recruiting : AppSection.Schedule);
+                }
+                finally
+                {
+                    _managementActionDepth--;
+                    if (_systemThemePending) await RefreshPendingThemeAsync();
+                }
             };
             page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 14, Children =
             {
