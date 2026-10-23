@@ -12,9 +12,9 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage : ContentPage
 {
-    private static readonly Color PositiveChangeColor = Color.FromArgb("#22C55E");
-    private static readonly Color NegativeChangeColor = Color.FromArgb("#EF4444");
-    private static readonly Color NeutralChangeColor = Color.FromArgb("#94A3B8");
+    private static Color PositiveChangeColor => DynastyTheme.Palette("#22C55E");
+    private static Color NegativeChangeColor => DynastyTheme.Palette("#EF4444");
+    private static Color NeutralChangeColor => DynastyTheme.Palette("#94A3B8");
     private enum AppSection
     {
         Home,
@@ -81,6 +81,7 @@ public sealed partial class FoundationPage : ContentPage
         Title = "League structure", ItemsSource = new[] { "Modern FBS (2026) - 138 teams", "Legacy FBS - 130 teams" },
         SelectedIndex = 0
     };
+    private IReadOnlyList<RealCoachSeed> _realCoachSeeds = [];
     private IReadOnlyList<Team> _legacyTeams = Array.Empty<Team>();
     private IReadOnlyList<Team> _newDynastyTeams = Array.Empty<Team>();
     private readonly Button _newDynastyButton;
@@ -165,6 +166,7 @@ public sealed partial class FoundationPage : ContentPage
     private IReadOnlyList<NationalChampionRecord>? _cachedRankingNationalHistory;
     private IReadOnlyDictionary<string, TeamSimulationProfile>? _cachedRankingProfiles;
     private IReadOnlyList<NationalRanking>? _cachedNationalRankings;
+    private IReadOnlyList<PollSnapshot>? _cachedRankingPollHistory;
     private bool _loaded;
     private bool _isAdvancing;
 
@@ -312,7 +314,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _postseasonStatus = new Label
         {
-            Text = "The 12-team CFP field is selected after conference championships.",
+            Text = "The playoff field is selected after conference championships.",
             FontSize = 13
         };
 
@@ -524,7 +526,7 @@ public sealed partial class FoundationPage : ContentPage
         };
         _recruitingLoadingOverlay = new Grid
         {
-            IsVisible = false, BackgroundColor = Color.FromArgb("#F010243E"), Padding = 24,
+            IsVisible = false, BackgroundColor = DynastyTheme.Palette("#F010243E"), Padding = 24,
             Children =
             {
                 new VerticalStackLayout
@@ -551,7 +553,7 @@ public sealed partial class FoundationPage : ContentPage
         _advanceOverlay = new Grid
         {
             IsVisible = false,
-            BackgroundColor = Color.FromArgb("#D910243E"),
+            BackgroundColor = DynastyTheme.Palette("#D910243E"),
             Padding = new Thickness(32),
             Children =
             {
@@ -895,7 +897,7 @@ public sealed partial class FoundationPage : ContentPage
         };
 
     private static string FormatOriginalRecruitingStars(DynastyPlayer player) =>
-        player.OriginalRecruitingStars is int stars ? $"HS recruit: {stars} stars"
+        player.OriginalRecruitingStars is int stars ? player.RecruitingStarsEstimated ? $"Estimated HS stars: {stars}★" : $"HS recruit: {stars} stars"
             : player.IsWalkOn ? "Walk-on" : "HS recruit: unknown";
 
     private static string FormatClassYear(int classYear, bool redshirted = false)
@@ -920,6 +922,8 @@ public sealed partial class FoundationPage : ContentPage
                     FontAttributes = FontAttributes.Bold
                 },
 
+                BuildThemeSettings(),
+                BuildLeagueFeatureSettings(),
                 new Label
                 {
                     Text = "RECRUITING ASSISTANCE",
@@ -998,6 +1002,9 @@ public sealed partial class FoundationPage : ContentPage
                 StringComparer.OrdinalIgnoreCase);
 
             _legacyRosterRows = roster.Players;
+            using (var coachStream = await FileSystem.OpenAppPackageFileAsync("coaches_2025.csv"))
+            using (var coachReader = new StreamReader(coachStream))
+                _realCoachSeeds = RealCoachCsvImporter.Read(coachReader);
 
             await ShowAdvanceProgressAsync("Building simulation profiles...", 0.72);
             _simulationProfiles = LegacyRosterSimulationProfileBuilder.Build(
@@ -1009,7 +1016,18 @@ public sealed partial class FoundationPage : ContentPage
                 .ToArray();
 
             _legacyTeams = universe.Teams;
-            UpdateNewDynastyTeams();
+            await ShowAdvanceProgressAsync("Loading NCAA NEXT starting roster...", 0.80);
+            var nextRosterCsv = await ReadAssetAsync("next26_roster.csv");
+            var nextRosterTeams = ModernFbsUniverseFactory.Create(_legacyTeams).Select(t => t.Name).ToArray();
+            _bundledStartingRoster = await Task.Run(() => Next26RosterCsvImporter.LoadPack(new StringReader(nextRosterCsv), nextRosterTeams));
+            _startingLibraryRepository = new StartingLibraryRepository(Path.Combine(FileSystem.Current.AppDataDirectory, "starting-library.json"));
+            try { _startingLibrary = await _startingLibraryRepository.LoadAsync(); }
+            catch (Exception ex)
+            {
+                _startingLibraryRepository = null;
+                _startingLibraryError = $"Could not load starting-library.json: {ex.Message}. The original library file was preserved. Saved dynasties can still be loaded.";
+            }
+            RefreshStartingChoices();
             _teamBrowserPicker.ItemsSource = _teamNames.ToList();
 
             _importStatus.Text =
@@ -1040,11 +1058,11 @@ public sealed partial class FoundationPage : ContentPage
     {
         if (_legacyTeams.Count == 0) return;
         var previous = _teamPicker.SelectedItem as string;
-        _newDynastyTeams = _leaguePicker.SelectedIndex == 0
-            ? ModernFbsUniverseFactory.Create(_legacyTeams) : _legacyTeams;
+        _newDynastyTeams = SelectedStartingSetup?.Teams ?? [];
         _teamPicker.ItemsSource = _newDynastyTeams.Select(team => team.Name)
             .OrderBy(name => name).ToList();
         if (previous is not null) _teamPicker.SelectedItem = previous;
+        UpdateStartingRosterChoices();
     }
 
     private void ConfigureLeague(IReadOnlyList<Team> teams)
@@ -1064,6 +1082,9 @@ public sealed partial class FoundationPage : ContentPage
             _newDynastyStatus.Text = "Choose a school before starting your dynasty.";
             return;
         }
+        var startingSetup = SelectedStartingSetup;
+        if (startingSetup is null) { _newDynastyStatus.Text = "Add a league setup from the main screen."; return; }
+        var startingRoster = SelectedStartingRoster;
         _newDynastyStatus.Text = "";
         ConfigureLeague(_newDynastyTeams);
         var dynastyName = string.IsNullOrWhiteSpace(_dynastyNameEntry.Text)
@@ -1084,7 +1105,7 @@ public sealed partial class FoundationPage : ContentPage
             await ShowAdvanceProgressAsync("Generating league schedule...", 0.18);
             var schedule = await GenerateScheduleAsync(
                 dynastyId,
-                startingYear);
+                startingYear, startingSetup.Rules);
 
             await ShowAdvanceProgressAsync("Building team rosters...", 0.42);
             var activeRoster = LegacyDynastyRosterFactory.Create(
@@ -1093,12 +1114,14 @@ public sealed partial class FoundationPage : ContentPage
                 dynastyId,
                 startingYear);
 
+            activeRoster = StartingLibraryService.CreateRoster(startingSetup, startingRoster, activeRoster);
             _currentDynasty = new DynastyState
             {
                 DynastyId = dynastyId,
                 DynastyName = dynastyName,
                 LeagueTeams = _newDynastyTeams.ToArray(),
-                LeagueName = _leaguePicker.SelectedIndex == 0 ? "Modern FBS (2026)" : "Legacy FBS",
+                LeagueName = startingSetup.Name, LeagueRules = startingSetup.Rules with { },
+                StartingRosterName = startingRoster?.Name ?? "Default roster",
                 UserTeamName = teamName,
                 SeasonYear = startingYear,
                 Week = 0,
@@ -1131,10 +1154,13 @@ public sealed partial class FoundationPage : ContentPage
                 _currentDynasty, _teamsByName.Values);
             _currentDynasty = StaffManagementService.EnsureLeagueStaff(
                 _currentDynasty, _teamsByName.Values);
+            _currentDynasty = RealCoachCsvImporter.ApplyToNewDynasty(_currentDynasty, _realCoachSeeds);
             await ShowAdvanceProgressAsync("Hiring scouting department...", 0.88);
             _currentDynasty = ScoutingDepartmentService.EnsureDepartment(
                 _currentDynasty, _teamsByName[teamName]);
 
+            _currentDynasty = SeasonAwardsService.EnsurePreseason(_currentDynasty);
+            _currentDynasty = CollegePollService.Record(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
             await ShowAdvanceProgressAsync("Dynasty ready", 1.0);
             SetDynastyControlsEnabled(true);
             RenderCurrentDynasty();
@@ -1292,10 +1318,11 @@ public sealed partial class FoundationPage : ContentPage
             }
 
             await ShowAdvanceProgressAsync("Simulating games...", 0.48);
-            _currentDynasty = WeekSimulation.SimulateCurrentRegularSeasonWeek(
-                _currentDynasty,
-                _teamsByName,
-                BuildCurrentSimulationProfiles());
+            var simulationState = _currentDynasty;
+            var simulationTeams = _teamsByName;
+            var simulationProfiles = BuildCurrentSimulationProfiles();
+            _currentDynasty = await Task.Run(() => WeekSimulation.SimulateCurrentRegularSeasonWeek(
+                simulationState, simulationTeams, simulationProfiles));
 
             _currentDynasty = InjuryService
                 .AdvanceAndGenerateForCurrentWeek(_currentDynasty);
@@ -1304,10 +1331,10 @@ public sealed partial class FoundationPage : ContentPage
             _currentDynasty = TransferPortalMarketService
                 .AdvanceRegularSeasonWeek(_currentDynasty);
 
-            if (weekAtStart == 6)
+            if (weekAtStart is 3 or 6 or 9 or 12)
             {
                 await ShowAdvanceProgressAsync(
-                    "Applying midseason player development...", 0.68);
+                    "Applying automatic player training...", 0.68);
                 var midseasonState = _currentDynasty;
                 _currentDynasty = await Task.Run(() =>
                     PlayerDevelopmentService.ApplyMidseasonDevelopment(
@@ -1368,6 +1395,8 @@ public sealed partial class FoundationPage : ContentPage
 
         var wasOffseason = phaseBeforeAdvance == SeasonPhase.Offseason;
         await ShowAdvanceProgressAsync("Updating rankings, stats, and calendar...", 0.72);
+        _currentDynasty = ProgramDisciplineService.AdvanceWeek(_currentDynasty);
+        _currentDynasty = CollegePollService.Record(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
         _currentDynasty = SeasonProgression.Advance(_currentDynasty);
 
         if (phaseBeforeAdvance == SeasonPhase.Postseason &&
@@ -1518,6 +1547,8 @@ public sealed partial class FoundationPage : ContentPage
 
         if (wasOffseason && _currentDynasty.Phase == SeasonPhase.Preseason)
         {
+            _currentDynasty = LeagueEvolutionService.AdvanceOffseason(_currentDynasty);
+            ConfigureLeague(_currentDynasty.LeagueTeams);
             SetDynastyControlsEnabled(false);
             _rollingAutosaveStatus.Text =
                 $"Generating {_currentDynasty.SeasonYear} schedule…";
@@ -1562,8 +1593,16 @@ public sealed partial class FoundationPage : ContentPage
             SetDynastyControlsEnabled(true);
         }
 
+        if (_currentDynasty.Phase == SeasonPhase.Preseason)
+        {
+            _currentDynasty = SeasonAwardsService.EnsurePreseason(_currentDynasty);
+            _currentDynasty = CollegePollService.Record(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
+        }
         await ShowAdvanceProgressAsync("Saving weekly progress...", 0.90);
         RenderCurrentDynasty();
+
+        if (_rollingAutosaveSwitch.IsToggled && _saveRepository is not null && _currentDynasty.Week == 0)
+            await SaveCurrentAsync(SaveKind.AutosaveCurrent);
 
         if (_rollingAutosaveSwitch.IsToggled &&
             _saveRepository is not null &&
@@ -1650,6 +1689,7 @@ public sealed partial class FoundationPage : ContentPage
 
         await ShowAdvanceProgressAsync("Preparing dynasty screen...", 0.90);
         _currentDynasty = state;
+        _currentDynasty = CollegePollService.EnsurePublished(_currentDynasty, _teamsByName, BuildCurrentSimulationProfiles());
         _recruitingAssistanceSwitch.IsToggled =
             state.RecruitingAssistanceEnabled;
         _recruitingAssistanceWorkloadSlider.Value =
@@ -1749,7 +1789,7 @@ public sealed partial class FoundationPage : ContentPage
                 "National rankings will appear after a dynasty is created.";
             _nationalRankingsList.Children.Clear();
             _postseasonStatus.Text =
-                "The 12-team CFP field is selected after conference championships.";
+                "The playoff field is selected after conference championships.";
             _postseasonList.Children.Clear();
             _conferenceChampionshipStatus.Text =
                 "Conference standings will appear after a dynasty is created.";
@@ -2622,7 +2662,7 @@ public sealed partial class FoundationPage : ContentPage
             FontSize = 11,
             Padding = new Thickness(10, 5),
             TextColor = Colors.White,
-            IsVisible = _recruitingView == RecruitingView.Board,
+            IsVisible = _recruitingView == RecruitingView.Board && IsRecruitingOpen(prospect.Source),
             IsEnabled =
                 interaction.CommittedTeamName is null &&
                 IsRecruitingOpen(prospect.Source)
@@ -2648,11 +2688,11 @@ public sealed partial class FoundationPage : ContentPage
 
         static View Metric(string label, string value) => new Border
         {
-            StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#182630"),
+            StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = DynastyTheme.Palette("#182630"),
             Content = new VerticalStackLayout { Spacing = 2, Children =
             {
-                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
-                new Label { Text = value, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap, TextColor = Color.FromArgb("#E6EBF1") }
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#8FAABD") },
+                new Label { Text = value, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap, TextColor = DynastyTheme.Palette("#E6EBF1") }
             } }
         };
         var metrics = new Grid { ColumnSpacing = 7, RowSpacing = 7,
@@ -2662,37 +2702,36 @@ public sealed partial class FoundationPage : ContentPage
         metrics.Add(Metric("SCOUTED PROJECTION", presentation.Projection), 1, 0);
         metrics.Add(Metric("ORIGIN", presentation.Origin), 0, 1);
         metrics.Add(Metric("SCOUTING", presentation.Scouting), 1, 1);
-        var statusPanel = new Border { StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = Color.FromArgb("#1B3039"),
+        var statusPanel = new Border { StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = DynastyTheme.Palette("#1B3039"),
             Content = new VerticalStackLayout { Spacing = 3, Children =
             {
                 new Label { Text = presentation.UserStatus, FontSize = 12, FontAttributes = FontAttributes.Bold,
-                    TextColor = interaction.CommittedTeamName is not null ? Color.FromArgb("#E8C979") : Color.FromArgb("#83D6B6") },
-                new Label { Text = presentation.MarketStatus, FontSize = 11, TextColor = Color.FromArgb("#BDE5F5"), LineBreakMode = LineBreakMode.WordWrap }
+                    TextColor = interaction.CommittedTeamName is not null ? DynastyTheme.Palette("#E8C979") : DynastyTheme.Palette("#83D6B6") },
+                new Label { Text = presentation.MarketStatus, FontSize = 11, TextColor = DynastyTheme.Palette("#BDE5F5"), LineBreakMode = LineBreakMode.WordWrap }
             } } };
         var info = new VerticalStackLayout
         {
             Spacing = 8,
             Children =
             {
-                new Label
-                {
-                    Text =
-                        presentation.Title,
-                    FontAttributes =
-                        FontAttributes.Bold,
-                    FontSize = 16
-                }, metrics, statusPanel
+                RecruitIdentity(prospect.ProspectId, prospect.FullName, presentation.Title,
+                    prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT")
             }
         };
-        var actions = new HorizontalStackLayout { Spacing = 8, HorizontalOptions = LayoutOptions.End,
-            Children = { viewButton, boardButton } };
+        var actions = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.End };
+        var quickScout = new Button { Text = interaction.IsPriorityScout ? "Scout weekly ✓" : "Scout weekly", FontSize = 11,
+            Padding = new Thickness(10, 5), IsEnabled = interaction.CommittedTeamName is null && interaction.ScoutingPercent < 100 };
+        quickScout.Opacity = quickScout.IsEnabled ? 1 : .4;
+        quickScout.Clicked += (_, _) => { if (_currentDynasty is null) return;
+            _currentDynasty = ScoutingDepartmentService.TogglePriority(_currentDynasty, prospect.Source, prospect.ProspectId); RenderCurrentDynasty(); };
+        foreach (var action in new[] { viewButton, boardButton, quickScout }) { action.Margin = new Thickness(3); actions.Children.Add(action); }
         if (_recruitingView == RecruitingView.Board) actions.Children.Add(quickOfferButton);
-        var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions } };
+        var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions, metrics, statusPanel } };
 
         _recruitingList.Children.Add(
             new Border
             {
-                BackgroundColor = Color.FromArgb(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
+                BackgroundColor = DynastyTheme.Palette(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
                 Stroke = Color.FromArgb(interaction.ScholarshipOffered ? "#5A9B83" : "#486677"),
                 StrokeThickness = 0,
                 Padding = new Thickness(12, 10),
@@ -3115,6 +3154,10 @@ public sealed partial class FoundationPage : ContentPage
             actions.Children.Add(button);
         }
 
+        scoutButton.IsVisible = offerButton.IsVisible = pitchButton.IsVisible = pitchPicker.IsVisible = recruitingOpen;
+        pitchPicker.IsEnabled = pitchButton.IsEnabled;
+        foreach (var action in new[] { scoutButton, offerButton, pitchButton, priorityButton, boardButton })
+            action.Opacity = action.IsEnabled ? 1 : .4;
         pitchPicker.Margin =
             new Thickness(0, 0, 6, 6);
         pitchPicker.WidthRequest = 170;
@@ -3169,23 +3212,23 @@ public sealed partial class FoundationPage : ContentPage
         static View RecruitMetric(string label, string value, Color? accent = null) => new Border
         {
             StrokeThickness = 0,
-            BackgroundColor = Color.FromArgb("#182630"),
+            BackgroundColor = DynastyTheme.Palette("#182630"),
             Padding = new Thickness(10, 8),
             Content = new VerticalStackLayout { Spacing = 2, Children =
             {
-                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#8FAABD") },
+                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#8FAABD") },
                 new Label { Text = value, FontSize = 13, FontAttributes = FontAttributes.Bold,
-                    TextColor = accent ?? Color.FromArgb("#E6EBF1"), LineBreakMode = LineBreakMode.WordWrap }
+                    TextColor = accent ?? DynastyTheme.Palette("#E6EBF1"), LineBreakMode = LineBreakMode.WordWrap }
             } }
         };
         static View RecruitSection(string title, View content) => new Border
         {
             StrokeThickness = 0,
-            BackgroundColor = Color.FromArgb("#17242E"),
+            BackgroundColor = DynastyTheme.Palette("#17242E"),
             Padding = new Thickness(10, 8),
             Content = new VerticalStackLayout { Spacing = 5, Children =
             {
-                new Label { Text = title, FontSize = 10, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") },
+                new Label { Text = title, FontSize = 10, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#9EC6E7") },
                 content
             } }
         };
@@ -3198,8 +3241,8 @@ public sealed partial class FoundationPage : ContentPage
         };
         metricGrid.Add(RecruitMetric("SCOUTED OVR", range.Minimum == range.Maximum ? range.Minimum.ToString() : $"{range.Minimum}-{range.Maximum}"), 0, 0);
         metricGrid.Add(RecruitMetric("POTENTIAL", potentialVisible ? $"{potentialRange.Minimum}-{potentialRange.Maximum}" : "Unknown"), 1, 0);
-        metricGrid.Add(RecruitMetric("YOUR INTEREST", $"{currentUserInterest}%", Color.FromArgb("#83D6B6")), 0, 1);
-        metricGrid.Add(RecruitMetric("BEST OFFERED RIVAL", $"{currentRivalInterest}%", Color.FromArgb("#E8C979")), 1, 1);
+        metricGrid.Add(RecruitMetric("YOUR INTEREST", $"{currentUserInterest}%", DynastyTheme.Palette("#83D6B6")), 0, 1);
+        metricGrid.Add(RecruitMetric("BEST OFFERED RIVAL", $"{currentRivalInterest}%", DynastyTheme.Palette("#E8C979")), 1, 1);
 
         var marketGrid = new Grid
         {
@@ -3219,34 +3262,28 @@ public sealed partial class FoundationPage : ContentPage
             {
                 StrokeThickness = 0,
                 Padding = new Thickness(12, 10),
-                BackgroundColor = Color.FromArgb("#202B37"),
+                BackgroundColor = DynastyTheme.Palette("#202B37"),
                 Content = new VerticalStackLayout
                 {
                     Spacing = 9,
                     Children =
                     {
-                        new Label
-                        {
-                            Text =
-                                $"{prospect.Position} {prospect.FullName}",
-                            FontAttributes =
-                                FontAttributes.Bold,
-                            FontSize = 17
-                        },
+                        RecruitIdentity(prospect.ProspectId, prospect.FullName, $"{prospect.Position} {prospect.FullName}",
+                            prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT"),
                         new Label
                         {
                             Text =
                                 $"{publicRecruitRatingText} • " +
                                 $"{prospect.Subtitle} • {FormatClassYear(prospect.ClassYear, prospect.HasRedshirted)}",
                             FontSize = 11,
-                            TextColor = Color.FromArgb("#B8D8FA")
+                            TextColor = DynastyTheme.Palette("#B8D8FA")
                         },
                         metricGrid,
                         new Label
                         {
                             Text = $"SCOUTED {interaction.ScoutingPercent}%{evaluationText}{lastPitchText}",
                             FontSize = 10, FontAttributes = FontAttributes.Bold,
-                            TextColor = recruitingOpen ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted
+                            TextColor = recruitingOpen ? DynastyTheme.Palette("#83D6B6") : DynastyTheme.Muted
                         },
                         marketGrid,
                         new Label
@@ -3580,7 +3617,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             Text = "YOUR COMMITMENTS",
             FontAttributes = FontAttributes.Bold,
-            TextColor = Color.FromArgb("#9EC6E7"),
+            TextColor = DynastyTheme.Palette("#9EC6E7"),
             Margin = new Thickness(0, 8, 0, 2)
         });
         foreach (var commitment in userCommitments)
@@ -3590,7 +3627,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             Text = "AROUND THE NATION",
             FontAttributes = FontAttributes.Bold,
-            TextColor = Color.FromArgb("#9EC6E7"),
+            TextColor = DynastyTheme.Palette("#9EC6E7"),
             Margin = new Thickness(0, 10, 0, 2)
         });
         foreach (var commitment in allCommitments
@@ -4040,7 +4077,7 @@ public sealed partial class FoundationPage : ContentPage
 
             var title = staff is null
                 ? $"{FormatStaffRole(role)} • VACANT"
-                : $"{FormatStaffRole(role)} • {staff.FullName} • OVR {staff.OverallRating}{status}";
+                : $"{FormatStaffRole(role)} · OVR {staff.OverallRating}{status}";
 
             var subtext = staff is null
                 ? detail
@@ -4075,7 +4112,7 @@ public sealed partial class FoundationPage : ContentPage
                 }
             };
 
-            if (staff is not null) info.Children.Add(CreateCoachCareerButton(staff));
+            if (staff is not null) info.Children.Insert(0, CoachLink(staff));
 
             var row = new Grid
             {
@@ -4090,7 +4127,7 @@ public sealed partial class FoundationPage : ContentPage
             row.Add(candidatesButton);
             Grid.SetColumn(candidatesButton, 1);
 
-            _programList.Children.Add(row);
+            _programList.Children.Add(new Border { Padding = 12, Content = row });
         }
 
         RenderStaffCarouselHistory();
@@ -4662,11 +4699,14 @@ public sealed partial class FoundationPage : ContentPage
                 Children =
                 {
                     CloseRosterDetailButton(),
+                    IdentityHeader(player.PlayerId, player.FullName, player.TeamName,
+                        $"{OffensiveLineService.Label(player)} · {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} · OVR {player.OverallRating}", appearance: player.Appearance),
+                    PlayerMoraleSummary(player),
+                    new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), TextColor = DynastyTheme.Accent },
                     new Label
                     {
                         Text =
-                            $"{depthLabel} {player.FullName} • OVR {player.OverallRating} • " +
-                            $"POT {FormatPotentialStars(player.PotentialRating)} • {FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)} • " +
+                            $"{depthLabel} • Potential {FormatPotentialStars(player.PotentialRating)} • " +
                             FormatOriginalRecruitingStars(player) +
                             (status.Count > 0
                                 ? $" • {string.Join(" • ", status)}"
@@ -4681,7 +4721,7 @@ public sealed partial class FoundationPage : ContentPage
                         Text =
                             $"SPD {player.SpeedRating} • STR {player.StrengthRating} • " +
                             $"AGI {player.AgilityRating} • AWR {player.AwarenessRating} • " +
-                            $"TECH {player.TechniqueRating} • DUR {player.DurabilityRating}",
+                            $"INJ {player.InjuryRating}",
                         FontSize = 12
                     },
                     CreateCareerStatsButton(player),
@@ -4894,7 +4934,7 @@ public sealed partial class FoundationPage : ContentPage
         var profiles =
             BuildCurrentSimulationProfiles();
 
-        if (_cachedNationalRankings is not null &&
+        if (_cachedNationalRankings is not null && ReferenceEquals(_cachedRankingPollHistory, _currentDynasty.PollHistory) &&
             ReferenceEquals(
                 _cachedRankingSchedule,
                 _currentDynasty.Schedule) &&
@@ -4914,11 +4954,12 @@ public sealed partial class FoundationPage : ContentPage
         }
 
         _cachedNationalRankings =
-            NationalRankingService.Build(
+            CollegePollService.GetPublished(
                 _currentDynasty,
-                _teamsByName,
+                _teamsByName, PollKind.Media,
                 profiles);
 
+        _cachedRankingPollHistory = _currentDynasty.PollHistory;
         _cachedRankingSchedule =
             _currentDynasty.Schedule;
         _cachedRankingConferenceHistory =
@@ -5146,7 +5187,7 @@ public sealed partial class FoundationPage : ContentPage
             return;
         }
 
-        var rankings = BuildCurrentNationalRankings();
+        var rankings = _pollKind.SelectedIndex <= 0 ? BuildCurrentNationalRankings() : CollegePollService.GetPublished(_currentDynasty, _teamsByName, (PollKind)_pollKind.SelectedIndex, BuildCurrentSimulationProfiles());
 
         var userRanking = rankings.FirstOrDefault(ranking =>
             ranking.TeamName.Equals(
@@ -5160,13 +5201,15 @@ public sealed partial class FoundationPage : ContentPage
                     ? $"Your team: #{userRanking.Rank} {userRanking.TeamName}"
                     : $"Your team: NR ({userRanking.Rank}) {userRanking.TeamName}";
 
+        _nationalRankingStatus.Text += " · Polls update on week advancement";
+
         var shown = _rankingsRange.SelectedIndex == 1 ? rankings : rankings.Take(25);
         _nationalRankingsList.Children.Add(DataTable(
             [("Rank", 45), ("School", 195), ("W", 38), ("L", 38), ("Conference", 110), ("PPG", 60), ("Opp PPG", 75), ("Score", 70)],
             shown.Select(ranking => new View[]
             {
-                TableText($"#{ranking.Rank}", true, ranking.Rank <= 4 ? Color.FromArgb("#F4CC66") : DynastyTheme.Accent),
-                SchoolCell(ranking.TeamName), TableText(ranking.Wins.ToString()), TableText(ranking.Losses.ToString()),
+                TableText($"#{ranking.Rank}", true, ranking.Rank <= 4 ? DynastyTheme.Palette("#F4CC66") : DynastyTheme.Accent),
+                SchoolCell(ranking.TeamName, false), TableText(ranking.Wins.ToString()), TableText(ranking.Losses.ToString()),
                 TableText(ranking.ConferenceName), TableText(ranking.PointsPerGame.ToString("F1")),
                 TableText(ranking.OpponentPointsPerGame.ToString("F1")), TableText(ranking.Score.ToString("F1"))
             })));
@@ -5200,15 +5243,16 @@ public sealed partial class FoundationPage : ContentPage
                 $"{champion.ChampionScore}-{champion.RunnerUpScore} " +
                 $"over {champion.RunnerUpTeamName}";
         }
-        else if (field.Length == CollegeFootballPlayoffService.PlayoffTeamCount)
+        else if (field.Length >= 2)
         {
-            _postseasonStatus.Text =
-                "12-team CFP field: five highest-ranked conference champions + seven at-large teams.";
+            _postseasonStatus.Text = field.Length == 12
+                ? "12-team CFP field: five highest-ranked conference champions + seven at-large teams."
+                : $"{field.Length}-team playoff field.";
         }
         else
         {
             _postseasonStatus.Text =
-                "The 12-team CFP field is selected after conference championships.";
+                $"The {_currentDynasty.LeagueRules.PlayoffTeams}-team playoff field is selected after conference championships.";
             return;
         }
 
@@ -5217,7 +5261,7 @@ public sealed partial class FoundationPage : ContentPage
                 field.Select(selection => new View[]
                 {
                     TableText(selection.Seed.ToString(), true), SchoolCell(selection.TeamName), TableText($"#{selection.NationalRank}"),
-                    TableText(selection.IsAutomaticBid ? "Automatic" : "At-large"), TableText(selection.Seed <= 4 ? "Bye" : "First round")
+                    TableText(selection.IsAutomaticBid ? "Automatic" : "At-large"), TableText(field.Length == 12 ? selection.Seed <= 4 ? "Bye" : "First round" : field.Length == 8 ? "Quarterfinal" : field.Length == 4 ? "Semifinal" : "Final")
                 })));
         var playoffGames = _currentDynasty.Schedule.Where(game => game.SeasonYear == _currentDynasty.SeasonYear &&
                 game.GameType == ScheduledGameType.CollegeFootballPlayoff)
@@ -5244,11 +5288,12 @@ public sealed partial class FoundationPage : ContentPage
         var rounds = new[] { PostseasonRound.FirstRound, PostseasonRound.Quarterfinal,
             PostseasonRound.Semifinal, PostseasonRound.NationalChampionship };
         var tree = new HorizontalStackLayout { Spacing = 10 };
-        foreach (var round in rounds)
+        var initialRound = _currentDynasty?.LeagueRules.PlayoffTeams switch { 2 => PostseasonRound.NationalChampionship, 4 => PostseasonRound.Semifinal, 8 => PostseasonRound.Quarterfinal, _ => PostseasonRound.FirstRound };
+        foreach (var round in rounds.Where(r => r >= initialRound))
         {
             var column = new VerticalStackLayout { Spacing = 8, WidthRequest = 235 };
             column.Children.Add(new Label { Text = FormatPostseasonRound(round).ToUpperInvariant(), FontSize = 11,
-                FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#9EC6E7") });
+                FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#9EC6E7") });
             var roundGames = games.Where(game => game.PostseasonRound == round).OrderBy(game => game.PlayoffBracketSlot).ToArray();
             if (roundGames.Length == 0)
                 column.Children.Add(new Label { Text = "Matchups pending", FontSize = 11, TextColor = DynastyTheme.Muted });
@@ -5256,7 +5301,7 @@ public sealed partial class FoundationPage : ContentPage
             {
                 var awaySeed = game.AwaySeed is int away ? $"#{away} " : string.Empty;
                 var homeSeed = game.HomeSeed is int home ? $"#{home} " : string.Empty;
-                column.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = Color.FromArgb("#1B2B37"), Padding = 9,
+                column.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Padding = 9,
                     Content = new VerticalStackLayout { Spacing = 5, Children =
                     {
                         new Label { Text = $"{awaySeed}{game.AwayTeamName}  {(game.HasPlayed ? game.AwayScore : "—")}",
@@ -5264,7 +5309,7 @@ public sealed partial class FoundationPage : ContentPage
                         new Label { Text = $"{homeSeed}{game.HomeTeamName}  {(game.HasPlayed ? game.HomeScore : "—")}",
                             FontAttributes = game.HasPlayed && game.HomeScore > game.AwayScore ? FontAttributes.Bold : FontAttributes.None },
                         new Label { Text = game.HasPlayed ? "FINAL" : "UPCOMING", FontSize = 9,
-                            TextColor = game.HasPlayed ? Color.FromArgb("#83D6B6") : DynastyTheme.Muted }
+                            TextColor = game.HasPlayed ? DynastyTheme.Palette("#83D6B6") : DynastyTheme.Muted }
                     } } });
             }
             tree.Children.Add(column);
@@ -5413,26 +5458,25 @@ public sealed partial class FoundationPage : ContentPage
 
     private Task<IReadOnlyList<ScheduledGame>> GenerateScheduleAsync(
         Guid dynastyId,
-        int seasonYear)
+        int seasonYear, LeagueRules? rules = null)
     {
         // The conference/OOC scheduler is CPU-bound. Running it on the UI
         // thread makes Android appear frozen while the full 130-team slate is
         // constructed, especially on lower-power devices.
         var teams = _teamsByName.Values.ToArray();
+        rules ??= _currentDynasty?.LeagueRules ?? new LeagueRules();
 
         return Task.Run<IReadOnlyList<ScheduledGame>>(() =>
-            SeasonScheduleBuilder.BuildRegularSeason(
-                teams,
-                dynastyId,
-                seasonYear));
+            FcsLeagueService.BuildSchedule(teams, dynastyId, seasonYear, rules));
     }
 
     private void SetNewDynastyControlsEnabled(bool enabled)
     {
-        _newDynastyButton.IsEnabled = enabled;
+        _newDynastyButton.IsEnabled = enabled && SelectedStartingSetup is not null;
         _dynastyNameEntry.IsEnabled = enabled;
         _teamPicker.IsEnabled = enabled;
         _leaguePicker.IsEnabled = enabled;
+        _startingRosterPicker.IsEnabled = enabled;
     }
 
     private void SetDynastyControlsEnabled(bool enabled)

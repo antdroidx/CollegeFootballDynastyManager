@@ -16,12 +16,9 @@ public static class PlayerSkillService
             complete.PassBlocking is >= 1 and <= 99 &&
             complete.BallCarrying is >= 1 and <= 99 &&
             complete.Acceleration is >= 1 and <= 99 &&
-            complete.Stamina is >= 1 and <= 99 &&
             complete.Leadership is >= 1 and <= 99 &&
             complete.Discipline is >= 1 and <= 99 &&
             complete.Jumping is >= 1 and <= 99 &&
-            complete.ManCoverage is >= 1 and <= 99 &&
-            complete.ZoneCoverage is >= 1 and <= 99 &&
             complete.KickPower is >= 1 and <= 99 &&
             complete.KickAccuracy is >= 1 and <= 99) return player;
         var old = player.Skills ?? new PlayerSkillRatings();
@@ -43,12 +40,9 @@ public static class PlayerSkillService
             PassBlocking = Skill(old.PassBlocking, "PassBlocking", player.Position is Position.OL),
             BallCarrying = Skill(old.BallCarrying, "BallCarrying", player.Position is Position.RB or Position.QB),
             Acceleration = Skill(old.Acceleration, "Acceleration", null),
-            Stamina = Skill(old.Stamina, "Stamina", null),
             Leadership = Skill(old.Leadership, "Leadership", null),
             Discipline = Skill(old.Discipline, "Discipline", null),
             Jumping = Skill(old.Jumping, "Jumping", player.Position is Position.WR or Position.CB or Position.FS or Position.SS),
-            ManCoverage = Skill(old.ManCoverage, "ManCoverage", player.Position is Position.CB or Position.FS or Position.SS),
-            ZoneCoverage = Skill(old.ZoneCoverage, "ZoneCoverage", player.Position is Position.CB or Position.FS or Position.SS or Position.OLB or Position.MLB),
             KickPower = Skill(old.KickPower, "KickPower", player.Position is Position.K),
             KickAccuracy = Skill(old.KickAccuracy, "KickAccuracy", player.Position is Position.K),
         } };
@@ -62,20 +56,17 @@ public static class PlayerSkillService
         return skills with
         {
             PassingPower = Shift(skills.PassingPower, after.StrengthRating - before.StrengthRating),
-            PassingAccuracy = Shift(skills.PassingAccuracy, after.TechniqueRating - before.TechniqueRating),
-            Catching = Shift(skills.Catching, after.TechniqueRating - before.TechniqueRating),
+            PassingAccuracy = Shift(skills.PassingAccuracy, after.AwarenessRating - before.AwarenessRating),
+            Catching = Shift(skills.Catching, after.AwarenessRating - before.AwarenessRating),
             BreakTackle = Shift(skills.BreakTackle, after.StrengthRating - before.StrengthRating),
-            Tackling = Shift(skills.Tackling, after.TechniqueRating - before.TechniqueRating),
+            Tackling = Shift(skills.Tackling, after.AwarenessRating - before.AwarenessRating),
             RunBlocking = Shift(skills.RunBlocking, after.StrengthRating - before.StrengthRating),
-            PassBlocking = Shift(skills.PassBlocking, after.TechniqueRating - before.TechniqueRating),
+            PassBlocking = Shift(skills.PassBlocking, after.AwarenessRating - before.AwarenessRating),
             BallCarrying = Shift(skills.BallCarrying, after.AgilityRating - before.AgilityRating),
             Acceleration = Shift(skills.Acceleration, after.SpeedRating - before.SpeedRating),
-            Stamina = Shift(skills.Stamina, after.DurabilityRating - before.DurabilityRating),
             Jumping = Shift(skills.Jumping, after.AgilityRating - before.AgilityRating),
-            ManCoverage = Shift(skills.ManCoverage, after.AgilityRating - before.AgilityRating),
-            ZoneCoverage = Shift(skills.ZoneCoverage, after.AwarenessRating - before.AwarenessRating),
             KickPower = Shift(skills.KickPower, after.StrengthRating - before.StrengthRating),
-            KickAccuracy = Shift(skills.KickAccuracy, after.TechniqueRating - before.TechniqueRating),
+            KickAccuracy = Shift(skills.KickAccuracy, after.AwarenessRating - before.AwarenessRating),
         };
     }
 
@@ -95,8 +86,6 @@ public static class PlayerSkillService
                 "Catching" or "Jumping" => player.Position is Position.WR or Position.TE or Position.CB or Position.FS or Position.SS,
                 "RunBlocking" or "PassBlocking" => player.Position is Position.OL or Position.TE,
                 "BreakTackle" or "BallCarrying" => player.Position is Position.RB or Position.QB or Position.TE,
-                "ManCoverage" => player.Position is Position.CB or Position.FS or Position.SS,
-                "ZoneCoverage" => player.Position is Position.CB or Position.FS or Position.SS or Position.OLB or Position.MLB,
                 "Tackling" => player.Position is Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS,
                 "KickPower" or "KickAccuracy" => player.Position == Position.K,
                 _ => true
@@ -116,12 +105,9 @@ public static class PlayerSkillService
             PassBlocking = Gain("PassBlocking", skills.PassBlocking),
             BallCarrying = Gain("BallCarrying", skills.BallCarrying),
             Acceleration = Gain("Acceleration", skills.Acceleration),
-            Stamina = Gain("Stamina", skills.Stamina),
             Leadership = Gain("Leadership", skills.Leadership, true),
             Discipline = Gain("Discipline", skills.Discipline, true),
             Jumping = Gain("Jumping", skills.Jumping),
-            ManCoverage = Gain("ManCoverage", skills.ManCoverage),
-            ZoneCoverage = Gain("ZoneCoverage", skills.ZoneCoverage),
             KickPower = Gain("KickPower", skills.KickPower),
             KickAccuracy = Gain("KickAccuracy", skills.KickAccuracy),
         };
@@ -138,12 +124,9 @@ public static class PlayerSkillService
         PassBlocking = Math.Clamp(skills.PassBlocking + change, 1, 99),
         BallCarrying = Math.Clamp(skills.BallCarrying + change, 1, 99),
         Acceleration = Math.Clamp(skills.Acceleration + change, 1, 99),
-        Stamina = Math.Clamp(skills.Stamina + change, 1, 99),
         Leadership = Math.Clamp(skills.Leadership + change, 1, 99),
         Discipline = Math.Clamp(skills.Discipline + change, 1, 99),
         Jumping = Math.Clamp(skills.Jumping + change, 1, 99),
-        ManCoverage = Math.Clamp(skills.ManCoverage + change, 1, 99),
-        ZoneCoverage = Math.Clamp(skills.ZoneCoverage + change, 1, 99),
         KickPower = Math.Clamp(skills.KickPower + change, 1, 99),
         KickAccuracy = Math.Clamp(skills.KickAccuracy + change, 1, 99),
     };
@@ -158,8 +141,8 @@ public static class PlayerSkillService
             Position.WR => s.Catching * .8 + s.Jumping * .2,
             Position.TE => passing ? s.Catching * .6 + s.PassBlocking * .4 : s.RunBlocking,
             Position.OL => passing ? s.PassBlocking : s.RunBlocking,
-            Position.CB or Position.FS or Position.SS => passing ? (s.ManCoverage + s.ZoneCoverage) / 2.0 : s.Tackling,
-            Position.OLB or Position.MLB => passing ? s.Tackling * .4 + s.ZoneCoverage * .6 : s.Tackling,
+            Position.CB or Position.FS or Position.SS => passing ? player.AwarenessRating * .65 + player.AgilityRating * .35 : s.Tackling,
+            Position.OLB or Position.MLB => passing ? s.Tackling * .4 + player.AwarenessRating * .6 : s.Tackling,
             Position.DE or Position.DT => s.Tackling,
             Position.K => (s.KickPower + s.KickAccuracy) / 2.0,
             _ => player.OverallRating
@@ -171,7 +154,7 @@ public static class PlayerSkillService
             Position.K => player.StrengthRating * .5 + player.AwarenessRating * .5,
             _ => player.SpeedRating * .4 + player.AgilityRating * .3 + s.Acceleration * .3
         };
-        var support = s.Stamina * .4 + player.DurabilityRating * .2 + s.Leadership * .2 + s.Discipline * .2;
+        var support = player.InjuryRating * .6 + s.Leadership * .2 + s.Discipline * .2;
         return Math.Clamp(role * .65 + athletic * .20 + player.AwarenessRating * .10 + support * .05, 1, 99);
     }
 }

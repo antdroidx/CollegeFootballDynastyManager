@@ -49,7 +49,7 @@ public static class BowlService
         var eligible = NationalRankingService
             .Build(state, teamsByName, profilesByTeam)
             .Where(ranking =>
-                ranking.Wins >= MinimumWins &&
+                ranking.Wins >= MinimumWins && ProgramDisciplineService.PostseasonEligible(state, ranking.TeamName) &&
                 !playoffTeams.Contains(ranking.TeamName))
             .Take(BowlNames.Length * 2)
             .ToList();
@@ -136,7 +136,7 @@ public static class BowlService
 
             homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
             awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
-            var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+            var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate, state.DepthChartAssignments);
             GameDayEngine.SimulateToEnd(session);
             var played = GameDayEngine.Finish(session);
 

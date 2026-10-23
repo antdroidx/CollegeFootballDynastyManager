@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - fix-live-field-formations
+      - game-day-2-test
   pull_request:
     branches:
       - main
@@ -19,6 +20,10 @@ on:
         description: Include the extended five/ten-year career simulations
         type: boolean
         default: true
+      run_rating_calibration:
+        description: Run 20-year FBS calibration plus complete 12-team career tests
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,7 +34,7 @@ concurrency:
 
 jobs:
   build-test-android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
 
     steps:
@@ -38,6 +43,9 @@ jobs:
 
       - name: Check packaged resources
         run: python3 build/check-packaged-resources.py
+
+      - name: Test Android UI synchronization helpers
+        run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -68,12 +76,25 @@ jobs:
       - name: Run core tests
         env:
           SKIP_CAREER_HEALTH: ${{ github.event_name == 'workflow_dispatch' && !inputs.run_career_health }}
+          RUN_RATING_CALIBRATION: ${{ github.event_name == 'workflow_dispatch' && inputs.run_rating_calibration }}
+          CFDM_CALIBRATION_REPORT_DIR: ${{ github.workspace }}/artifacts/calibration
         run: |
-          if [ "$SKIP_CAREER_HEALTH" = "true" ]; then
-            dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter 'FullyQualifiedName!~DynastyHealthTests'
+          if [ "$RUN_RATING_CALIBRATION" = "true" ]; then
+            dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter '(FullyQualifiedName!~DynastyHealthTests|DisplayName~teamCount: 12)'
+          elif [ "$SKIP_CAREER_HEALTH" = "true" ]; then
+            dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter 'FullyQualifiedName!~DynastyHealthTests&FullyQualifiedName!~OvrCalibrationDynastyTests'
           else
             dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore
           fi
+
+      - name: Upload rating calibration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ovr-calibration-${{ github.run_number }}
+          path: artifacts/calibration/*.json
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Ensure Android SDK dependencies
         run: >
@@ -136,7 +157,7 @@ jobs:
   android-launch:
     needs: build-test-android
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout UI smoke test

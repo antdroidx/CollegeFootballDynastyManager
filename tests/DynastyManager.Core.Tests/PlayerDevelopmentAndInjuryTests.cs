@@ -68,7 +68,7 @@ public class PlayerDevelopmentAndInjuryTests
         var playerId = Guid.NewGuid();
         var history = new[]
         {
-            DevelopmentRecord(playerId, PlayerDevelopmentStage.Midseason, 70, 72),
+            DevelopmentRecord(playerId, PlayerDevelopmentStage.Midseason, 70, 72) with { Week = 12 },
             DevelopmentRecord(playerId, PlayerDevelopmentStage.Offseason, 72, 75)
         };
 
@@ -88,7 +88,14 @@ public class PlayerDevelopmentAndInjuryTests
             Position.RB,
             overall: 90,
             potential: 96,
-            classYear: 2);
+            classYear: 2) with
+        {
+            // Generate attributes for a 90 OVR target. Raw 90s plus randomly
+            // generated skills can exceed the POCI cap and hide a real loss.
+            PlayerId = Guid.Parse("88888888-1111-2222-3333-444444444444"),
+            SpeedRating = 0, StrengthRating = 0, AgilityRating = 0,
+            AwarenessRating = 0, InjuryRating = 0
+        };
 
         var state = State(
             SeasonPhase.RegularSeason,
@@ -96,6 +103,9 @@ public class PlayerDevelopmentAndInjuryTests
         {
             Week = 4
         };
+
+        state = PlayerRatingService.EnsureProfiles(state);
+        player = Assert.Single(state.ActiveRoster);
 
         var injured = InjuryService.ApplyInjury(
             state,
@@ -109,7 +119,7 @@ public class PlayerDevelopmentAndInjuryTests
         Assert.NotNull(result.CurrentInjury);
         Assert.True(result.SpeedRating < player.SpeedRating);
         Assert.True(result.AgilityRating < player.AgilityRating);
-        Assert.True(result.DurabilityRating < player.DurabilityRating);
+        Assert.True(result.InjuryRating < player.InjuryRating);
         Assert.True(result.PotentialRating < player.PotentialRating);
         Assert.True(result.OverallRating < player.OverallRating);
         Assert.True(result.IsRedshirted);
@@ -274,8 +284,7 @@ public class PlayerDevelopmentAndInjuryTests
             StrengthRating = overall,
             AgilityRating = overall,
             AwarenessRating = overall,
-            TechniqueRating = overall,
-            DurabilityRating = overall
+            InjuryRating = overall
         };
 
     private static PlayerDevelopmentRecord DevelopmentRecord(

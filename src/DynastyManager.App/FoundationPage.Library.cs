@@ -1,4 +1,5 @@
 using DynastyManager.Data.Persistence;
+using DynastyManager.Core.Seasons;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 
@@ -23,6 +24,7 @@ public sealed partial class FoundationPage
         {
             heading,
             new Label { Text = "Load a saved career or start a new one.", FontSize = 12, TextColor = DynastyTheme.Muted },
+            new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { StartingLibraryButton(), RosterImportButton() } },
             _saveList, _libraryStatus
         } };
     }
@@ -36,6 +38,8 @@ public sealed partial class FoundationPage
             new Label { Text = "Choose your league and school.", FontSize = 13, TextColor = DynastyTheme.Muted },
             new Label { Text = "Dynasty name", FontSize = 12, FontAttributes = FontAttributes.Bold }, _dynastyNameEntry,
             new Label { Text = "League structure", FontSize = 12, FontAttributes = FontAttributes.Bold }, _leaguePicker,
+            new Label { Text = "Starting roster", FontSize = 12, FontAttributes = FontAttributes.Bold }, _startingRosterPicker,
+            new Label { Text = "Import and manage reusable rosters and league setups from the main screen.", FontSize = 11, TextColor = DynastyTheme.Muted },
             new Label { Text = "Your school", FontSize = 12, FontAttributes = FontAttributes.Bold }, _teamPicker,
             new Label { Text = "Staff and recruiting preferences can be changed after starting.", FontSize = 11, TextColor = DynastyTheme.Muted },
             _newDynastyButton, _newDynastyStatus
@@ -51,7 +55,9 @@ public sealed partial class FoundationPage
         _headerContext.IsVisible = !library && _currentDynasty is not null;
         _settingsButton.IsVisible = !library && _currentDynasty is not null && _activeSection != AppSection.Settings;
         if (_currentDynasty is not null)
-            _headerContext.Text = $"{_currentDynasty.UserTeamName} · {_currentDynasty.SeasonYear} · Week {_currentDynasty.Week}";
+            _headerContext.Text = $"{_currentDynasty.UserTeamName} · {_currentDynasty.SeasonYear} · {SeasonProgression.PeriodLabel(_currentDynasty.Phase, _currentDynasty.Week)}";
+        if (_currentDynasty is not null)
+            _advanceWeekButton.Text = SeasonProgression.AdvanceLabel(_currentDynasty.Phase, _currentDynasty.Week);
     }
 
     private async Task ReturnToLibraryAsync()

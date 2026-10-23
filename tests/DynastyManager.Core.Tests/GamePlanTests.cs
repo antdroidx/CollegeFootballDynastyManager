@@ -8,6 +8,49 @@ namespace DynastyManager.Core.Tests;
 public class GamePlanTests
 {
     [Fact]
+    public void CustomBooksReplaceRatherThanAppendToTheCoachBook()
+    {
+        var plan = Plan("Home", OffensivePlaybook.Custom) with
+        {
+            Defense = DefensivePlaybook.Custom,
+            CustomOffensivePlayIds = ["off-flexbone-triple", "off-singleback-curl"],
+            CustomDefensivePlayIds = ["def-34-cross"]
+        };
+        var saved = GamePlanService.GetPlan(GamePlanService.SetPlan(State(), plan), Profile("Home"));
+        Assert.Equal(2, GamePlanService.AvailableOffensivePlays(saved).Count);
+        Assert.Single(GamePlanService.AvailableDefensivePlays(saved));
+        for (var seed = 0; seed < 20; seed++)
+        {
+            var call = GamePlanService.ResolvePlayCall(saved, saved, seed, new Random(seed));
+            Assert.Contains(call.Offense.Id, plan.CustomOffensivePlayIds);
+            Assert.Contains(call.Defense.Id, plan.CustomDefensivePlayIds);
+        }
+        Assert.Throws<ArgumentException>(() => GamePlanService.SetPlan(State(), plan with
+        { CustomOffensivePlayIds = PlaybookCatalog.OffensivePlays.Take(18).Select(p => p.Id).ToArray() }));
+    }
+
+    [Fact]
+    public void CoachPlaybooksExposeACuratedFormationMix()
+    {
+        var plan = Plan("Home", OffensivePlaybook.PowerRun) with
+        {
+            OffensiveFormation = OffensiveFormation.IForm,
+            Defense = DefensivePlaybook.ThreeFour,
+            DefensiveFormation = DefensiveFormation.ThreeFour
+        };
+
+        var offense = GamePlanService.AvailableOffensivePlays(plan);
+        var defense = GamePlanService.AvailableDefensivePlays(plan);
+
+        Assert.True(offense.Count < PlaybookCatalog.OffensivePlays.Count);
+        Assert.InRange(offense.Select(play => play.Formation).Distinct().Count(), 2, 3);
+        Assert.Contains(offense, play => play.Concept is OffensiveConcept.InsideRun or OffensiveConcept.OutsideRun);
+        Assert.Contains(offense, play => play.Concept is OffensiveConcept.QuickPass or OffensiveConcept.DeepPass or OffensiveConcept.PlayAction);
+        Assert.True(defense.Count < PlaybookCatalog.DefensivePlays.Count);
+        Assert.InRange(defense.Select(play => play.Formation).Distinct().Count(), 2, 3);
+    }
+
+    [Fact]
     public void SavedPlansOwnTheirCallSheetAndStayWithTheirSchool()
     {
         var calls = new List<OffensiveConcept> { OffensiveConcept.DeepPass, OffensiveConcept.InsideRun };
@@ -28,14 +71,15 @@ public class GamePlanTests
         {
             OffensiveFormation = OffensiveFormation.Pistol,
             DefensiveFormation = DefensiveFormation.Nickel,
-            FavoritePlayIds = ["off-pistol-read", "def-nickel-two", "off-pistol-read"]
+            CustomOffensivePlayIds = ["off-pistol-read", "off-pistol-read"], CustomDefensivePlayIds = ["def-nickel-two"]
         };
         var saved = GamePlanService.GetPlan(GamePlanService.SetPlan(State(), plan), Profile("Home"));
 
         Assert.Equal(OffensiveFormation.Pistol, saved.OffensiveFormation);
         Assert.Equal(DefensiveFormation.Nickel, saved.DefensiveFormation);
-        Assert.Equal(new[] { "off-pistol-read", "def-nickel-two" }, saved.FavoritePlayIds);
-        Assert.Throws<ArgumentException>(() => GamePlanService.SetPlan(State(), plan with { FavoritePlayIds = ["unknown-play"] }));
+        Assert.Equal(new[] { "off-pistol-read" }, saved.CustomOffensivePlayIds);
+        Assert.Equal(new[] { "def-nickel-two" }, saved.CustomDefensivePlayIds);
+        Assert.Throws<ArgumentException>(() => GamePlanService.SetPlan(State(), plan with { CustomOffensivePlayIds = ["unknown-play"] }));
         Assert.Contains(PlaybookCatalog.OffensivePlays, play => play.Formation == OffensiveFormation.Pistol && play.Personnel == OffensivePersonnel.Eleven);
     }
 
@@ -202,7 +246,7 @@ public class GamePlanTests
             _ => CollegeFootballPlayoffService.SimulateCurrentRound(state, Teams())
         };
         Assert.True(result.Schedule[0].HasPlayed);
-        Assert.Equal(OffensiveConcept.OutsideRun, result.Schedule[0].Drives[0].Concept);
+        Assert.Equal(OffensiveConcept.OutsideRun, result.Schedule[0].Drives.First(d => d.TeamName == "Home").Concept);
     }
 
     private static TeamGamePlan Plan(string name, OffensivePlaybook book) => new() { TeamName = name, Offense = book };

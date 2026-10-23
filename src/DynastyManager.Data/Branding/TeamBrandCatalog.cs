@@ -151,5 +151,11 @@ public static class TeamBrandCatalog
     };
     public static TeamBrand Get(string? name) => name is not null && Brands.TryGetValue(name.Trim(), out var brand)
         ? brand : Fallback;
+    public static string Initial(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var initial = name.Trim().FirstOrDefault(char.IsLetter);
+        return initial == default ? "?" : char.ToUpperInvariant(initial).ToString();
+    }
     public static bool Contains(string name) => Brands.ContainsKey(name);
 }

@@ -1,3 +1,4 @@
+using Microsoft.Maui.Layouts;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
 using DynastyManager.Data.Presentation;
@@ -26,7 +27,7 @@ public sealed partial class FoundationPage
         return new VerticalStackLayout { Spacing = 10, Children =
         {
             ResponsiveTableHeader(SectionTitle("Player statistics", "Season/career totals · tap a column heading to sort ↑↓"),
-                new HorizontalStackLayout { Spacing = 8, Children = { _statisticsSeason, _statisticsScope, _statisticsCategory } }),
+                new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _statisticsSeason, _statisticsScope, _statisticsCategory } }),
             _statisticsRows
         } };
     }
@@ -63,6 +64,7 @@ public sealed partial class FoundationPage
                 YardsAfterCatch = group.Sum(s => s.YardsAfterCatch), Drops = group.Sum(s => s.Drops),
                 ReceivingFumbles = group.Sum(s => s.ReceivingFumbles), Receiving20Plus = group.Sum(s => s.Receiving20Plus),
                 TacklesForLoss = group.Sum(s => s.TacklesForLoss), PassesDefended = group.Sum(s => s.PassesDefended),
+                DefensiveReturnYards = group.Sum(s => s.DefensiveReturnYards), DefensiveTouchdowns = group.Sum(s => s.DefensiveTouchdowns),
                 FumbleRecoveries = group.Sum(s => s.FumbleRecoveries), ExtraPointsMade = group.Sum(s => s.ExtraPointsMade),
                 ExtraPointsAttempted = group.Sum(s => s.ExtraPointsAttempted), FieldGoalsMade = group.Sum(s => s.FieldGoalsMade),
                 FieldGoalsAttempted = group.Sum(s => s.FieldGoalsAttempted), Punts = group.Sum(s => s.Punts),
@@ -83,6 +85,7 @@ public sealed partial class FoundationPage
         _statisticsPage = Math.Min(_statisticsPage, Math.Max(0, (ordered.Length - 1) / pageSize));
         var rows = ordered.Skip(_statisticsPage * pageSize).Take(pageSize).Select(line => CategoryCells(line, category)).ToArray();
         _statisticsRows.Children.Add(new Label { Text = $"{ordered.Length} players · {category} · {_statisticsSeason.SelectedItem} · {_statisticsScope.SelectedItem}", TextColor = DynastyTheme.Muted, FontSize = 12 });
+        if (category == "Defense") _statisticsRows.Children.Add(new Label { Text = "PBU = passes broken up / defended · recorded even when the defender has no tackles.", FontSize = 11, TextColor = DynastyTheme.Muted });
         if (rows.Length == 0) _statisticsRows.Children.Add(new Label { Text = "No player statistics yet. Current-season totals appear after the first completed game." });
         else _statisticsRows.Children.Add(DataTable(CategoryColumns(category), rows, (column, descending) =>
             {
@@ -94,7 +97,7 @@ public sealed partial class FoundationPage
             var next = new Button { Text = "Next", IsEnabled = (_statisticsPage + 1) * pageSize < ordered.Length };
             previousPage.Clicked += (_, _) => { _statisticsPage--; RenderStatistics(); };
             next.Clicked += (_, _) => { _statisticsPage++; RenderStatistics(); };
-            _statisticsRows.Children.Insert(1, new HorizontalStackLayout { Spacing = 8, Children =
+            _statisticsRows.Children.Insert(1, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children =
             {
                 previousPage, new Label { Text = $"{_statisticsPage * pageSize + 1}–{Math.Min(ordered.Length, (_statisticsPage + 1) * pageSize)} of {ordered.Length}", FontSize = 12, VerticalOptions = LayoutOptions.Center }, next
             } });
@@ -107,7 +110,7 @@ public sealed partial class FoundationPage
         "Passing" => line.PassAttempts > 0,
         "Rushing" => line.RushAttempts > 0,
         "Receiving" => line.Receptions > 0 || line.ReceivingYards > 0,
-        "Defense" => line.Tackles > 0 || line.Sacks > 0 || line.Interceptions > 0,
+        "Defense" => line.Tackles > 0 || line.Sacks > 0 || line.Interceptions > 0 || line.PassesDefended > 0 || line.FumbleRecoveries > 0,
         "Kicking" => line.ExtraPointsAttempted > 0 || line.FieldGoalsAttempted > 0,
         "Punting" => line.Punts > 0,
         "Returns" => line.KickReturns > 0 || line.PuntReturns > 0,
@@ -123,7 +126,7 @@ public sealed partial class FoundationPage
         "Receiving" => [("Player", 165), ("School", 195), ("GP", 45), ("Rec", 55), ("Yds", 75), ("TD", 45),
             ("YPR", 55), ("YAC", 60), ("Drop", 50), ("Fum", 48), ("20+", 48), ("YPG", 60)],
         "Defense" => [("Player", 165), ("School", 195), ("GP", 45), ("Tkl", 55), ("TFL", 50), ("Sack", 55),
-            ("PD", 48), ("INT", 48), ("FR", 45)],
+            ("PBU", 56), ("INT", 48), ("FR", 45), ("Ret yd", 65), ("Def TD", 65)],
         "Kicking" => [("Player", 165), ("School", 195), ("GP", 45), ("XPM", 50), ("XPA", 50),
             ("FGM", 50), ("FGA", 50), ("FG%", 60)],
         "Punting" => [("Player", 165), ("School", 195), ("GP", 45), ("Punts", 55), ("Avg", 55),
@@ -152,7 +155,7 @@ public sealed partial class FoundationPage
                 Add(line.ReceivingFumbles); Add(line.Receiving20Plus); Add(Average(line.ReceivingYards, line.Games)); break;
             case "Defense":
                 Add(line.Tackles); Add(line.TacklesForLoss); Add(line.Sacks); Add(line.PassesDefended);
-                Add(line.Interceptions); Add(line.FumbleRecoveries); break;
+                Add(line.Interceptions); Add(line.FumbleRecoveries); Add(line.DefensiveReturnYards); Add(line.DefensiveTouchdowns); break;
             case "Kicking":
                 Add(line.ExtraPointsMade); Add(line.ExtraPointsAttempted); Add(line.FieldGoalsMade);
                 Add(line.FieldGoalsAttempted); Add(Percent(line.FieldGoalsMade, line.FieldGoalsAttempted)); break;
@@ -183,7 +186,7 @@ public sealed partial class FoundationPage
                 6 => Ratio(line.ReceivingYards, line.Receptions), 7 => line.YardsAfterCatch, 8 => line.Drops,
                 9 => line.ReceivingFumbles, 10 => line.Receiving20Plus, _ => Ratio(line.ReceivingYards, line.Games) },
             "Defense" => column switch { 3 => line.Tackles, 4 => line.TacklesForLoss, 5 => line.Sacks,
-                6 => line.PassesDefended, 7 => line.Interceptions, _ => line.FumbleRecoveries },
+                6 => line.PassesDefended, 7 => line.Interceptions, 8 => line.FumbleRecoveries, 9 => line.DefensiveReturnYards, _ => line.DefensiveTouchdowns },
             "Kicking" => column switch { 3 => line.ExtraPointsMade, 4 => line.ExtraPointsAttempted, 5 => line.FieldGoalsMade,
                 6 => line.FieldGoalsAttempted, _ => Ratio(line.FieldGoalsMade, line.FieldGoalsAttempted) },
             "Punting" => column switch { 3 => line.Punts, 4 => Ratio(line.PuntYards, line.Punts), 5 => line.LongPunt,

@@ -7,6 +7,11 @@ public sealed record PlayerSeasonStatLine
     public required string PlayerName { get; init; }
     public required string TeamName { get; init; }
     public int? OriginalRecruitingStars { get; init; }
+    public bool RecruitingStarsEstimated { get; init; }
+    public int? JerseyNumber { get; init; }
+    public int HeightInches { get; init; }
+    public int WeightPounds { get; init; }
+    public NcaaPlayerAppearance? Appearance { get; init; }
     public Position Position { get; init; }
     public int Games { get; init; }
     public int PassAttempts { get; init; }
@@ -31,6 +36,8 @@ public sealed record PlayerSeasonStatLine
     public int Sacks { get; init; }
     public int PassesDefended { get; init; }
     public int Interceptions { get; init; }
+    public int DefensiveReturnYards { get; init; }
+    public int DefensiveTouchdowns { get; init; }
     public int FumbleRecoveries { get; init; }
     public int ExtraPointsMade { get; init; }
     public int ExtraPointsAttempted { get; init; }

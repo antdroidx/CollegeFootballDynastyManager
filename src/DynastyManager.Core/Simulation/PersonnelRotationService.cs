@@ -52,8 +52,8 @@ public static class PersonnelRotationService
                 Position.CB or Position.FS or Position.SS => 2.4,
                 Position.OL => 1.25, Position.QB => 1.0, _ => 1.5
             };
-            var stamina = player.Skills?.Stamina ?? player.DurabilityRating;
-            var durabilityFactor = 1.25 - Math.Clamp((stamina + player.DurabilityRating) / 200d, .35, 1);
+            var stamina = player.InjuryRating;
+            var durabilityFactor = 1.25 - Math.Clamp((stamina + player.InjuryRating) / 200d, .35, 1);
             fatigue.Set(player.PlayerId, energy - load * (1 + durabilityFactor) * (longPlay ? 1.3 : 1));
         }
     }
@@ -68,6 +68,20 @@ public static class PersonnelRotationService
         {
             var pool = depthChart.TryGetValue(position, out var players)
                 ? players : Array.Empty<DynastyPlayer>();
+            if (position == Position.OL)
+            {
+                var starters = OffensiveLineService.Lineup(pool);
+                foreach (var starter in starters)
+                {
+                    var choice = starter;
+                    if (ShouldRotate(starter, fatigue.Energy(starter.PlayerId), random))
+                        choice = pool.FirstOrDefault(p => starters.All(s => s.PlayerId != p.PlayerId) && !selected.Contains(p.PlayerId) &&
+                            OffensiveLineService.Label(p) == OffensiveLineService.Label(starter)) ?? starter;
+                    selected.Add(choice.PlayerId);
+                    if (choice.PlayerId != starter.PlayerId) substitutes.Add(choice.PlayerId);
+                }
+                continue;
+            }
             for (var slot = 0; slot < Math.Min(count, pool.Count); slot++)
             {
                 var starter = pool[Math.Min(slot, pool.Count - 1)];
@@ -107,12 +121,15 @@ public static class PersonnelRotationService
 
     private static (Position, int)[] OffensiveNeeds(OffensivePersonnel package) => package switch
     {
+        OffensivePersonnel.TripleBack => [(Position.QB, 1), (Position.RB, 3), (Position.WR, 2), (Position.OL, 5)],
         OffensivePersonnel.Ten => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 4), (Position.OL, 5)],
         OffensivePersonnel.Twelve => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 2), (Position.TE, 2), (Position.OL, 5)],
         OffensivePersonnel.TwentyOne => [(Position.QB, 1), (Position.RB, 2), (Position.WR, 2), (Position.TE, 1), (Position.OL, 5)],
         OffensivePersonnel.Empty => [(Position.QB, 1), (Position.WR, 5), (Position.OL, 5)],
         _ => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 3), (Position.TE, 1), (Position.OL, 5)]
     };
+
+    public static IReadOnlyList<Position> DefensivePositions(DefensivePersonnel package) => DefensiveNeeds(package).SelectMany(p => Enumerable.Repeat(p.Item1, p.Item2)).ToArray();
 
     private static (Position, int)[] DefensiveNeeds(DefensivePersonnel package) => package switch
     {

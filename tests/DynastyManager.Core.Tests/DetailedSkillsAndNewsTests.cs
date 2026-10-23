@@ -11,7 +11,7 @@ public sealed class DetailedSkillsAndNewsTests
     private static DynastyState State() => new() { DynastyName = "Skills", UserTeamName = "A", SeasonYear = 2026, Week = 6 };
     private static DynastyPlayer Player(Position position = Position.QB) => new() { PlayerId = Guid.Parse("99999999-1111-2222-3333-444444444444"),
         FullName = "Test Player", TeamName = "A", Position = position, OverallRating = 75, PotentialRating = 90,
-        SpeedRating = 75, StrengthRating = 75, AgilityRating = 75, AwarenessRating = 75, TechniqueRating = 75, DurabilityRating = 75 };
+        SpeedRating = 75, StrengthRating = 75, AgilityRating = 75, AwarenessRating = 75, InjuryRating = 75 };
     private static ScheduledGame Game(string id, int week = 6, int home = 24, int away = 21) => new() {
         GameId = id, SeasonYear = 2026, Week = week, HomeTeamName = "A", AwayTeamName = "B", HasPlayed = true, HomeScore = home, AwayScore = away };
 
@@ -50,7 +50,7 @@ public sealed class DetailedSkillsAndNewsTests
     public void InjuryAttributeChangesCarryToRelatedSkills()
     {
         var player = PlayerSkillService.EnsureInitialized(Player());
-        var updated = PlayerSkillService.ApplyInjuryRegression(player, player with { TechniqueRating = 80, SpeedRating = 78, StrengthRating = 77 });
+        var updated = PlayerSkillService.ApplyInjuryRegression(player, player with { AwarenessRating = 80, SpeedRating = 78, StrengthRating = 77 });
         Assert.Equal(player.Skills!.PassingAccuracy + 5, updated!.PassingAccuracy);
         Assert.Equal(player.Skills.Acceleration + 3, updated.Acceleration);
         Assert.Equal(player.Skills.PassingPower + 2, updated.PassingPower);
@@ -137,7 +137,7 @@ public sealed class DetailedSkillsAndNewsTests
         {
             Position.QB => skills with { PassingAccuracy = value },
             Position.OL => skills with { PassBlocking = value },
-            Position.CB => skills with { ManCoverage = value },
+            Position.CB => skills with { Tackling = value },
             _ => skills with { KickAccuracy = value }
         };
         Assert.True(PlayerRatingService.CalculateOverall(player with { Skills = Set(95) }) >
@@ -158,7 +158,7 @@ public sealed class DetailedSkillsAndNewsTests
             (int)property.GetValue(trained)! - (int)property.GetValue(qb.Skills)!).ToArray();
         Assert.True(deltas.Distinct().Count() > 1);
         Assert.True(trained.PassingAccuracy > qb.Skills!.PassingAccuracy);
-        Assert.InRange(trained.ManCoverage - qb.Skills.ManCoverage, 0, 2);
+        Assert.InRange(trained.Tackling - qb.Skills.Tackling, 0, 2);
         var midseason = PlayerSkillService.Train(State(), qb, 1, true);
         Assert.Equal(qb.Skills.Leadership, midseason.Leadership);
         Assert.Equal(qb.Skills.Discipline, midseason.Discipline);

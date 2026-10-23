@@ -879,7 +879,7 @@ public static class CpuRecruitingService
                     entry.Player.PotentialRating,
                     entry.Player.TalentLevel,
                     entry.Player.ClassYear,
-                    entry.OriginTeamName))
+                    entry.OriginTeamName, entry.Player.HeightInches, entry.Player.WeightPounds, entry.Player.Appearance))
                 .GroupBy(candidate => candidate.ProspectId)
                 .Select(group => group
                     .OrderByDescending(candidate => candidate.OverallRating)
@@ -899,7 +899,7 @@ public static class CpuRecruitingService
                 recruit.PotentialRating,
                 Math.Clamp(recruit.StarRating * 2, 1, 10),
                 1,
-                string.Empty))
+                string.Empty, recruit.HeightInches, recruit.WeightPounds))
             .GroupBy(candidate => candidate.ProspectId)
             .Select(group => group
                 .OrderByDescending(candidate => candidate.OverallRating)
@@ -919,7 +919,7 @@ public static class CpuRecruitingService
         int PotentialRating,
         int TalentLevel,
         int ClassYear,
-        string OriginTeamName)
+        string OriginTeamName, int HeightInches = 0, int WeightPounds = 0, NcaaPlayerAppearance? Appearance = null)
     {
         public DynastyPlayer ToPlayer(string teamName) =>
             new()
@@ -931,7 +931,7 @@ public static class CpuRecruitingService
                 ClassYear = ClassYear,
                 TalentLevel = TalentLevel,
                 OverallRating = OverallRating,
-                PotentialRating = PotentialRating
+                PotentialRating = PotentialRating, HeightInches = HeightInches, WeightPounds = WeightPounds, Appearance = Appearance
             };
     }
 }

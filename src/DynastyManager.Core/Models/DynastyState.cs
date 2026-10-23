@@ -2,7 +2,15 @@ namespace DynastyManager.Core.Models;
 
 public sealed record DynastyState
 {
-    public const int CurrentSchemaVersion = 24;
+    public const int CurrentSchemaVersion = 26;
+    public int OverallCalibrationVersion { get; init; }
+    public IReadOnlyList<DepthChartAssignment> DepthChartAssignments { get; init; } = [];
+    public IReadOnlyList<PlayerGameAward> PlayerGameAwardHistory { get; init; } = [];
+    public IReadOnlyList<PollSnapshot> PollHistory { get; init; } = [];
+    public IReadOnlyList<ProgramConductRecord> ProgramConduct { get; init; } = [];
+    public IReadOnlyList<DisciplineIncident> DisciplineHistory { get; init; } = [];
+    public IReadOnlyList<LeagueMovementRecord> LeagueMovementHistory { get; init; } = [];
+    public int LeagueMovementProcessedYear { get; init; }
 
     public Guid DynastyId { get; init; } = Guid.NewGuid();
     public required string DynastyName { get; init; }
@@ -10,6 +18,8 @@ public sealed record DynastyState
     public IReadOnlyList<Team> LeagueTeams { get; init; } = Array.Empty<Team>();
     public IReadOnlyList<TeamGamePlan> TeamGamePlans { get; init; } = Array.Empty<TeamGamePlan>();
     public string LeagueName { get; init; } = "Legacy FBS";
+    public LeagueRules LeagueRules { get; init; } = new();
+    public string StartingRosterName { get; init; } = "Default roster";
     public int SeasonYear { get; init; }
     public int Week { get; init; }
     public SeasonPhase Phase { get; init; } = SeasonPhase.Preseason;
@@ -31,6 +41,8 @@ public sealed record DynastyState
     public IReadOnlyList<PendingTransferCommitment> PendingTransferCommitments { get; init; } =
         Array.Empty<PendingTransferCommitment>();
     public int TransferPortalEntryWindowSeasonYear { get; init; }
+    public IReadOnlyList<PlayerDepartureRecord> PlayerDepartureHistory { get; init; } = [];
+    public IReadOnlyList<HallOfFameEntry> HallOfFame { get; init; } = [];
     public IReadOnlyList<PlayerDepartureRecord> RecentPlayerDepartures { get; init; } =
         Array.Empty<PlayerDepartureRecord>();
     public IReadOnlyList<PlayerInjuryRecord> InjuryHistory { get; init; } =
@@ -52,6 +64,7 @@ public sealed record DynastyState
         Array.Empty<RecruitingCommitmentRecord>();
     public IReadOnlyList<StaffMember> Staff { get; init; } =
         Array.Empty<StaffMember>();
+    public IReadOnlyList<StaffRetirementRecord> StaffRetirements { get; init; } = [];
     public StaffMember? UserHeadCoach { get; init; }
     public int UserCoachJobSecurity { get; init; } = 70;
     public bool UserCoachIsFired { get; init; }

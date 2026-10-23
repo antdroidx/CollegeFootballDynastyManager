@@ -1,3 +1,4 @@
+using Microsoft.Maui.Layouts;
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
 using Microsoft.Maui.Controls;
@@ -62,19 +63,19 @@ public sealed partial class FoundationPage
         _manualSaveButton.Text = "Save";
         return new VerticalStackLayout { Spacing = 12, Children =
         {
-            _overviewBanner, new HorizontalStackLayout { Spacing = 8, Children = { _advanceWeekButton, _manualSaveButton } },
+            _overviewBanner, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _advanceWeekButton, _manualSaveButton } },
             _overviewGameActions, _homeHighlights
         } };
     }
 
     private static View NavigationCard(string title, string value, string hint, string color, Action open)
     {
-        var card = new Border { BackgroundColor = Color.FromArgb(color), Stroke = Color.FromArgb("#497088"), Padding = 12,
+        var card = new Border { BackgroundColor = Color.FromArgb(color), Stroke = DynastyTheme.Palette("#497088"), Padding = 12,
             Content = new VerticalStackLayout { Spacing = 5, Children =
             {
-                new Label { Text = title, FontSize = 11, TextColor = Color.FromArgb("#B8D8E6") },
+                new Label { Text = title, FontSize = 11, TextColor = DynastyTheme.Palette("#B8D8E6") },
                 new Label { Text = value, FontSize = 17, FontAttributes = FontAttributes.Bold, TextColor = Colors.White },
-                new Label { Text = hint, FontSize = 11, TextColor = Color.FromArgb("#BDE7E1") }
+                new Label { Text = hint, FontSize = 11, TextColor = DynastyTheme.Palette("#BDE7E1") }
             } } };
         var tap = new TapGestureRecognizer(); tap.Tapped += (_, _) => open(); card.GestureRecognizers.Add(tap);
         SemanticProperties.SetDescription(card, $"{title}. {value}. {hint}");
@@ -127,14 +128,20 @@ public sealed partial class FoundationPage
             () => ShowSection(next is null ? AppSection.Schedule : AppSection.GameDay)), 0, 1);
         cards.Add(NavigationCard("INJURIES", $"{injuries} active", "Team & league report ›", "#443657", () => ShowSection(AppSection.Injuries)), 1, 1);
         _homeHighlights.Children.Add(cards);
-        if (state.UserCoachIsFired)
-            _homeHighlights.Children.Add(NavigationCard("ACTION REQUIRED", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
+        if (state.UserCoachIsFired || state.UserCoachJobOffers.Any(o => o.Status == UserCoachJobOfferStatus.Pending))
+            _homeHighlights.Children.Add(NavigationCard(state.UserCoachIsFired ? "ACTION REQUIRED" : "COACHING CAROUSEL", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
         else if (state.Phase is SeasonPhase.TransferPortal or SeasonPhase.Recruiting or SeasonPhase.RosterManagement)
             _homeHighlights.Children.Add(NavigationCard("OFFSEASON", PhaseLabel(state.Phase), "Review your roster and recruiting ›", "#4C432A",
                 () => ShowSection(state.Phase == SeasonPhase.RosterManagement ? AppSection.Roster : AppSection.Recruiting)));
-        var all = new Button { Text = "News & headlines ›", TextColor = Color.FromArgb("#E8C979"), BackgroundColor = Colors.Transparent };
+        var all = new Button { Text = "News & headlines ›", TextColor = DynastyTheme.Palette("#E8C979"), BackgroundColor = Colors.Transparent };
         all.Clicked += (_, _) => ShowSection(AppSection.News);
         _homeHighlights.Children.Add(all);
+        if (state.Schedule.Any(g => g.SeasonYear == state.SeasonYear && g.HasPlayed))
+        {
+            var recap = new Button { Text = "Weekly recap & highlights ›", FontSize = 12, TextColor = DynastyTheme.Accent, BackgroundColor = Colors.Transparent };
+            recap.Clicked += async (_, _) => await ShowCollegeCenterAsync(3);
+            _homeHighlights.Children.Add(recap);
+        }
         var stories = DynastyNewsService.BuildOverview(state);
         foreach (var story in stories) _homeHighlights.Children.Add(NewsCard(story));
         if (stories.Count == 0) _homeHighlights.Children.Add(new Label { Text = "Results, recruiting and injury updates will appear as your dynasty develops.", TextColor = DynastyTheme.Muted });
@@ -169,28 +176,38 @@ public sealed partial class FoundationPage
             }), index % 2, index / 2);
         }
         _seasonHub.Children.Add(grid);
+        var college = new Button { Text = "Awards, polls & program center ›", BackgroundColor = DynastyTheme.Palette("#645025") };
+        college.Clicked += async (_, _) => await ShowCollegeCenterAsync();
+        _seasonHub.Children.Add(college);
+        var careers = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
+        foreach (var item in new[] { ("Player departures", 5), ("Hall of Fame", 6) })
+        {
+            var open = new Button { Text = item.Item1 + " ›", FontSize = 12, Margin = new Thickness(3) };
+            open.Clicked += async (_, _) => await ShowCollegeCenterAsync(item.Item2); careers.Children.Add(open);
+        }
+        _seasonHub.Children.Add(careers);
     }
 
     private View BuildMatchupHub() => _matchupHub;
 
     private void RenderOverviewGameActions(ScheduledGame? game)
     {
-        if (_currentDynasty is null || game is null)
+        if (_currentDynasty is null || game is null || !GameDayEngine.IsAvailable(game, _currentDynasty.SeasonYear, _currentDynasty.Week, _currentDynasty.Phase))
         {
             _overviewGameActions.Content = null;
             _overviewGameActions.IsVisible = false;
             return;
         }
         var title = new Label { Text = $"WEEK {game.Week} GAME DAY · {game.AwayTeamName} at {game.HomeTeamName}",
-            FontSize = 11, FontAttributes = FontAttributes.Bold, TextColor = Color.FromArgb("#E8C979") };
+            FontSize = 11, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#E8C979") };
         var simulate = GameModeButton("Sim game", DynastyTheme.Accent, async () => await OpenGameDayAsync(game, GameDayMode.Simulate));
         simulate.TextColor = DynastyTheme.Background;
-        var watch = GameModeButton("Watch game", Color.FromArgb("#315D59"), async () => await OpenGameDayAsync(game, GameDayMode.Watch));
-        var play = GameModeButton("Play game", Color.FromArgb("#8A6234"), async () => await OpenGameDayAsync(game, GameDayMode.Play));
+        var watch = GameModeButton("Watch game", DynastyTheme.Palette("#315D59"), async () => await OpenGameDayAsync(game, GameDayMode.Watch));
+        var play = GameModeButton("Play game", DynastyTheme.Palette("#8A6234"), async () => await OpenGameDayAsync(game, GameDayMode.Play));
         _overviewGameActions.Content = new Border { StrokeThickness = 0, Padding = 10,
-            BackgroundColor = Color.FromArgb("#172733"), Content = new VerticalStackLayout { Spacing = 8, Children =
+            BackgroundColor = DynastyTheme.Palette("#172733"), Content = new VerticalStackLayout { Spacing = 8, Children =
             {
-                title, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+                title, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
             } } };
         _overviewGameActions.IsVisible = true;
     }
@@ -202,10 +219,15 @@ public sealed partial class FoundationPage
         var unplayed = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear && !g.HasPlayed)
             .OrderBy(g => g.Week).ThenBy(g => g.AwayTeamName).ToArray();
         if (unplayed.Length == 0) { _matchupHub.Children.Add(new Label { Text = "No upcoming game is scheduled." }); return; }
-        var week = unplayed.FirstOrDefault(g => g.Week == _currentDynasty.Week)?.Week ?? unplayed[0].Week;
-        var games = unplayed.Where(g => g.Week == week)
+        var week = _currentDynasty.Week;
+        var games = unplayed.Where(g => GameDayEngine.IsAvailable(g, _currentDynasty.SeasonYear, week, _currentDynasty.Phase))
             .OrderByDescending(g => g.InvolvesTeam(_currentDynasty.UserTeamName)).ThenBy(g => g.AwayTeamName).ToArray();
         var userGame = games.FirstOrDefault(g => g.InvolvesTeam(_currentDynasty.UserTeamName));
+        if (games.Length == 0)
+        {
+            _matchupHub.Children.Add(new Label { Text = $"No games to play in Week {week}. Advance the week to reach the next matchup.", TextColor = DynastyTheme.Muted });
+            return;
+        }
         _matchupHub.Children.Add(SectionTitle($"Week {week} Game Day", "Sim, watch, or take control of any league matchup"));
         if (userGame is not null)
         {
@@ -214,7 +236,7 @@ public sealed partial class FoundationPage
         }
         var schedule = new Button { Text = "View schedule & results" };
         schedule.Clicked += (_, _) => ShowSection(AppSection.Schedule);
-        var prep = new Button { Text = "Prepare game plan", BackgroundColor = Color.FromArgb("#315D59") };
+        var prep = new Button { Text = "Prepare game plan", BackgroundColor = DynastyTheme.Palette("#315D59") };
         prep.Clicked += (_, _) => ShowSection(AppSection.Playbook);
         if (userGame is not null) _matchupHub.Children.Add(prep);
         _matchupHub.Children.Add(schedule);
@@ -228,15 +250,15 @@ public sealed partial class FoundationPage
         var matchup = new Label { Text = $"{game.AwayTeamName}  at  {game.HomeTeamName}",
             FontSize = 15, FontAttributes = FontAttributes.Bold };
         var note = new Label { Text = userGame ? "YOUR GAME" : "CPU vs CPU · choose either school in Play mode",
-            FontSize = 10, TextColor = userGame ? Color.FromArgb("#E8C979") : DynastyTheme.Muted };
+            FontSize = 10, TextColor = userGame ? DynastyTheme.Palette("#E8C979") : DynastyTheme.Muted };
         var simulate = GameModeButton("Sim", DynastyTheme.Accent, async () => await OpenGameDayAsync(game, GameDayMode.Simulate));
         simulate.TextColor = DynastyTheme.Background;
-        var watch = GameModeButton("Watch", Color.FromArgb("#315D59"), async () => await OpenGameDayAsync(game, GameDayMode.Watch));
-        var play = GameModeButton("Play", Color.FromArgb("#8A6234"), async () => await OpenPlayModeAsync(game));
-        return new Border { StrokeThickness = 0, Padding = 11, BackgroundColor = Color.FromArgb("#1B2B37"),
+        var watch = GameModeButton("Watch", DynastyTheme.Palette("#315D59"), async () => await OpenGameDayAsync(game, GameDayMode.Watch));
+        var play = GameModeButton("Play", DynastyTheme.Palette("#8A6234"), async () => await OpenPlayModeAsync(game));
+        return new Border { StrokeThickness = 0, Padding = 11, BackgroundColor = DynastyTheme.Palette("#1B2B37"),
             Content = new VerticalStackLayout { Spacing = 7, Children =
             {
-                matchup, note, new HorizontalStackLayout { Spacing = 8, Children = { simulate, watch, play } }
+                matchup, note, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
             } } };
     }
 
@@ -265,10 +287,10 @@ public sealed partial class FoundationPage
 
     private View NewsCard(DynastyNewsStory story)
     {
-        var card = new Border { BackgroundColor = Color.FromArgb("#253642"), Stroke = Color.FromArgb("#527185"), Content =
+        var card = new Border { BackgroundColor = DynastyTheme.Palette("#253642"), Stroke = DynastyTheme.Palette("#527185"), Content =
             new VerticalStackLayout { Spacing = 5, Children =
             {
-                new Label { Text = $"{story.Category.ToUpperInvariant()} · {story.SeasonYear} · Week {story.Week}", FontSize = 10, TextColor = Color.FromArgb("#E8C979") },
+                new Label { Text = $"{story.Category.ToUpperInvariant()} · {story.SeasonYear} · Week {story.Week}", FontSize = 10, TextColor = DynastyTheme.Palette("#E8C979") },
                 new Label { Text = story.Headline, FontSize = 14, FontAttributes = FontAttributes.Bold },
                 new Label { Text = "Read story ›", FontSize = 11, TextColor = DynastyTheme.Accent }
             } } };
@@ -319,10 +341,10 @@ public sealed partial class FoundationPage
         if (_currentDynasty is null) return;
         var injuries = _currentDynasty.ActiveRoster.Where(p => p.CurrentInjury is not null &&
             (_injuryScope.SelectedIndex == 1 || p.TeamName == _currentDynasty.UserTeamName)).OrderBy(p => p.TeamName).ThenBy(p => p.FullName).ToArray();
-        _injuryRows.Children.Add(new Label { Text = $"{injuries.Length} active injuries", TextColor = Color.FromArgb("#E2ABBC") });
+        _injuryRows.Children.Add(new Label { Text = $"{injuries.Length} active injuries", TextColor = DynastyTheme.Palette("#E2ABBC") });
         if (injuries.Length == 0) { _injuryRows.Children.Add(new Label { Text = "No current injuries in this selection." }); return; }
         _injuryRows.Children.Add(DataTable([("Player", 175), ("School", 195), ("Pos", 45), ("Severity", 85), ("Area", 90), ("Weeks", 60)],
             injuries.Select(player => new View[] { PlayerLink(player), SchoolCell(player.TeamName), TableText(player.Position.ToString()),
-                TableText(player.CurrentInjury!.Severity.ToString(), color: Color.FromArgb("#E5A1B7")), TableText(player.CurrentInjury.BodyArea.ToString()), TableText(player.CurrentInjury.WeeksRemaining.ToString()) })));
+                TableText(player.CurrentInjury!.Severity.ToString(), color: DynastyTheme.Palette("#E5A1B7")), TableText(player.CurrentInjury.BodyArea.ToString()), TableText(player.CurrentInjury.WeeksRemaining.ToString()) })));
     }
 }

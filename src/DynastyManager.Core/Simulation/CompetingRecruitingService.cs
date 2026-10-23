@@ -343,11 +343,11 @@ public static class CompetingRecruitingService
 
     private static Dictionary<(RecruitingSource, Guid), Prospect> Prospects(DynastyState state) =>
         state.HighSchoolRecruitingPool.Where(item => (item.SeasonYear == 0 || item.SeasonYear == state.SeasonYear))
-            .Select(item => new Prospect(RecruitingSource.HighSchool, item.RecruitId, new DynastyPlayer
+            .Select(item => new Prospect(RecruitingSource.HighSchool, item.RecruitId, item.AttributeProfile ?? new DynastyPlayer
             {
                 PlayerId = item.RecruitId, FullName = item.FullName, Position = item.Position, TeamName = "",
                 ClassYear = 1, OverallRating = item.TrueOverallRating, PotentialRating = item.PotentialRating,
-                OriginalRecruitingStars = item.StarRating,
+                OriginalRecruitingStars = item.StarRating, HeightInches = item.HeightInches, WeightPounds = item.WeightPounds,
                 TalentLevel = Math.Clamp(item.StarRating * 2, 1, 10)
             }, "", RecruitGeography.GetRegion(item)))
             .Concat(state.TransferPortalEntries.Where(item => item.Player.ClassYear <= 4)

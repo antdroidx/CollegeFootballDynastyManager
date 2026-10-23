@@ -14,6 +14,10 @@ public sealed record ScheduledGame
     public int? AwaySeed { get; init; }
     public bool IsNeutralSite { get; init; }
     public string? BowlName { get; init; }
+    public GameWeather? Weather { get; init; }
+    public PlayerGameAward? PlayerOfGame { get; init; }
+    public int HomeEndingMorale { get; init; } = 50;
+    public int AwayEndingMorale { get; init; } = 50;
     public int SimulationSeed { get; init; }
     public TeamGamePlan? HomeGamePlan { get; init; }
     public TeamGamePlan? AwayGamePlan { get; init; }
@@ -26,6 +30,10 @@ public sealed record ScheduledGame
     public GameTeamStats? HomeStats { get; init; }
     public GameTeamStats? AwayStats { get; init; }
     public IReadOnlyList<PlayerSeasonStatLine> PlayerStats { get; init; } = Array.Empty<PlayerSeasonStatLine>();
+    public IReadOnlyList<GameSnapEvent> Highlights { get; init; } = [];
+    public IReadOnlyList<ReplayPlayer> HighlightPlayers { get; init; } = [];
+    public bool IsFcsGame { get; init; }
+    public IReadOnlyList<GamePeriodScore> PeriodScores { get; init; } = [];
 
     public bool InvolvesTeam(string teamName) =>
         HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ||

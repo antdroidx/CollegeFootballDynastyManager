@@ -14,7 +14,8 @@ public static class CoachCareerService
         var history = state.CoachSeasonHistory.ToList();
         var keys = history.Select(item => (item.StaffId, item.SeasonYear, item.TeamName, item.Role)).ToHashSet();
         var staff = state.Staff.Where(item => !(item.Role == StaffRole.HeadCoach && state.UserHeadCoach is not null &&
-            item.TeamName.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase))).ToList();
+            item.TeamName.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase)))
+            .Select(item => StaffManagementService.GetStaff(state, item.TeamName, item.Role) ?? item).ToList();
         if (state.UserHeadCoach is not null && !state.UserCoachIsFired) staff.Add(state.UserHeadCoach);
         // A team's first snapshot owns the year; replaying after a carousel cannot attach it to new hires.
         var recordedTeams = history.Where(item => item.SeasonYear == state.SeasonYear)

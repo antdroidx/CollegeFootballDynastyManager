@@ -50,30 +50,12 @@ public static class NationalRankingService
                      game.HomeScore is not null &&
                      game.AwayScore is not null))
         {
-            if (!accumulators.TryGetValue(game.HomeTeamName, out var home) ||
-                !accumulators.TryGetValue(game.AwayTeamName, out var away))
-            {
-                continue;
-            }
-
+            accumulators.TryGetValue(game.HomeTeamName, out var home);
+            accumulators.TryGetValue(game.AwayTeamName, out var away);
             var homeScore = game.HomeScore!.Value;
             var awayScore = game.AwayScore!.Value;
-
-            RecordGame(
-                home,
-                away.Team.Name,
-                homeScore,
-                awayScore,
-                game.HomeStats,
-                game.AwayStats);
-
-            RecordGame(
-                away,
-                home.Team.Name,
-                awayScore,
-                homeScore,
-                game.AwayStats,
-                game.HomeStats);
+            if (home is not null) RecordGame(home, game.AwayTeamName, homeScore, awayScore, game.HomeStats, game.AwayStats);
+            if (away is not null) RecordGame(away, game.HomeTeamName, awayScore, homeScore, game.AwayStats, game.HomeStats);
         }
 
         var preseasonOrder = accumulators.Values
@@ -146,10 +128,10 @@ public static class NationalRankingService
                     (teamCount - opponentYardsRanks[value.Team.Name]);
 
                 var strengthOfWins = value.WinsAgainst.Sum(opponent =>
-                    5 + (teamCount - preseasonRanks[opponent]));
+                    5 + (teamCount - preseasonRanks.GetValueOrDefault(opponent, teamCount)));
 
                 var strengthOfLosses = value.LossesAgainst.Sum(opponent =>
-                    preseasonRanks[opponent]);
+                    preseasonRanks.GetValueOrDefault(opponent, teamCount));
 
                 var preseasonBias =
                     Math.Max(3.0, 15.0 - value.GamesPlayed) / 15.0;

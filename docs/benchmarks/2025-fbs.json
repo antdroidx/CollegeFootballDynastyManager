@@ -1,0 +1,26 @@
+{
+  "Season": 2025,
+  "Teams": 136,
+  "TeamGames": 1742,
+  "CombinedPlays": 133.92996555683123,
+  "PointsPerTeam": 27.510907003444316,
+  "YardsPerTeam": 383.5419058553387,
+  "PassYards": 224.56888633754306,
+  "RushYards": 158.97301951779565,
+  "YardsPerPlay": 5.727499507085116,
+  "CompletionPct": 62.30601154126282,
+  "YardsPerPassAttempt": 7.3057127383420175,
+  "YardsPerRush": 4.388346591449308,
+  "Sacks": 2.0700344431687716,
+  "ExplosivePasses": 3.111940298507463,
+  "ExplosiveRuns": 1.30654420206659,
+  "Sources": [
+    "https://cfbstats.com/2025/leader/national/team/offense/split01/category10/sort01.html",
+    "https://cfbstats.com/2025/leader/national/team/offense/split01/category02/sort01.html",
+    "https://cfbstats.com/2025/leader/national/team/offense/split01/category01/sort01.html",
+    "https://cfbstats.com/2025/leader/national/team/offense/split01/category09/sort01.html",
+    "https://cfbstats.com/2025/leader/national/team/offense/split01/category20/sort01.html",
+    "https://cfbstats.com/2025/leader/national/team/offense/split01/category31/sort01.html",
+    "https://cfbstats.com/2025/leader/national/team/offense/split01/category32/sort01.html"
+  ]
+}

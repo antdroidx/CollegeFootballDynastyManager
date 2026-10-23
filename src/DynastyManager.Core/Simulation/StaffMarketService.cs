@@ -50,7 +50,7 @@ public static class StaffMarketService
             }
         }
 
-        foreach (var staff in state.Staff)
+        foreach (var staff in state.Staff.Where(s => !s.IsHeadCoachRoleAssignment && !HiredThisOffseason(state, s)))
         {
             if (!teamsByName.TryGetValue(staff.TeamName, out var sourceTeam))
                 continue;
@@ -169,7 +169,7 @@ public static class StaffMarketService
             var winDelta = (season?.Wins ?? expectedWins) - expectedWins;
 
             var teamStaff = staff
-                .Where(item => item.TeamName.Equals(
+                .Where(item => !item.IsHeadCoachRoleAssignment && item.TeamName.Equals(
                     team.Name,
                     StringComparison.OrdinalIgnoreCase))
                 .ToArray();
@@ -497,6 +497,8 @@ public static class StaffMarketService
         {
             TeamName = userTeam.Name,
             Role = candidate.TargetRole,
+            SharedRoleCoaches = [],
+            IsHeadCoachRoleAssignment = false,
             TenureYears = 0,
             ContractYearsRemaining =
                 candidate.TargetRole == StaffRole.HeadCoach ? 5 : 3
@@ -665,7 +667,7 @@ public static class StaffMarketService
             return "Vacant";
 
         var season = GetLatestSeason(state, team.Name);
-        if (season is null)
+        if (season is null || HiredThisOffseason(state, coach))
             return "New Staff";
 
         var expected = GetExpectedWins(state, team);
@@ -798,6 +800,8 @@ public static class StaffMarketService
             {
                 TeamName = vacancy.TeamName,
                 Role = vacancy.Role,
+                SharedRoleCoaches = [],
+                IsHeadCoachRoleAssignment = false,
                 TenureYears = 0,
                 ContractYearsRemaining =
                     vacancy.Role == StaffRole.HeadCoach ? 5 : 3
@@ -848,6 +852,10 @@ public static class StaffMarketService
         }
     }
 
+    private static bool HiredThisOffseason(DynastyState state, StaffMember member) =>
+        state.StaffMovementHistory.Any(m => m.SeasonYear == state.SeasonYear && m.StaffId == member.StaffId &&
+            m.MovementType is StaffMovementType.Hired or StaffMovementType.Promoted);
+
     private static bool ShouldCpuFire(
         DynastyState state,
         StaffMember member,
@@ -855,7 +863,7 @@ public static class StaffMarketService
         TeamSeasonHistoryRecord? season,
         int winDelta)
     {
-        if (season is null)
+        if (season is null || HiredThisOffseason(state, member))
             return false;
 
         if (member.OverallRating < 48)

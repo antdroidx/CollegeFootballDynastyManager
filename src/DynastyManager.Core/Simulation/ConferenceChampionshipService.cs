@@ -14,7 +14,7 @@ public static class ConferenceChampionshipService
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(teamsByName);
 
-        if (state.Phase != SeasonPhase.ConferenceChampionship)
+        if (state.Phase != SeasonPhase.ConferenceChampionship || !state.LeagueRules.ConferenceChampionships)
             return state;
 
         if (state.Schedule.Any(game =>
@@ -49,9 +49,9 @@ public static class ConferenceChampionshipService
                 state,
                 teamsByName,
                 conference.Key,
-                nationalRanks);
+                nationalRanks).Where(s => ProgramDisciplineService.PostseasonEligible(state, s.TeamName)).ToArray();
 
-            if (standings.Count < 2)
+            if (standings.Length < 2)
                 continue;
 
             IReadOnlyList<ConferenceStanding> finalists = standings;
@@ -59,8 +59,9 @@ public static class ConferenceChampionshipService
             if (conference.All(team => team.ConferenceGamesPerSeason.HasValue) &&
                 divisions.Length == 2 && divisions.All(division => !string.IsNullOrWhiteSpace(division)))
             {
-                finalists = divisions.OrderBy(division => division).Select(division => standings.First(standing =>
-                    conference.Any(team => team.Name == standing.TeamName && team.DivisionName == division))).ToArray();
+                finalists = divisions.OrderBy(division => division).Select(division => standings.FirstOrDefault(standing =>
+                    conference.Any(team => team.Name == standing.TeamName && team.DivisionName == division))).OfType<ConferenceStanding>().ToArray();
+                if (finalists.Count < 2) continue;
             }
             var home = finalists[0].TeamName;
             var away = finalists[1].TeamName;
@@ -151,7 +152,7 @@ public static class ConferenceChampionshipService
                 changed = true;
                 homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
                 awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
-                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+                var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate, state.DepthChartAssignments);
                 GameDayEngine.SimulateToEnd(session);
                 return GameDayEngine.Finish(session);
             })

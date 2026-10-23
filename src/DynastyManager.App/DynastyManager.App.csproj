@@ -48,6 +48,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <MauiAsset Include="Resources\Raw\coaches-2025.csv" LogicalName="coaches_2025.csv" />
+    <MauiAsset Include="Resources\Raw\next26-aug26-2025.csv" LogicalName="next26_roster.csv" />
     <MauiAsset Include="..\main\assets\universe.csv" LogicalName="legacy_universe.csv" />
     <MauiAsset Include="..\main\assets\roster.csv" LogicalName="legacy_roster.csv" />
     <MauiAsset Include="..\main\assets\coach.csv" LogicalName="legacy_coach.csv" />

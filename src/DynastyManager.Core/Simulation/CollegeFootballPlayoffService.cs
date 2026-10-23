@@ -2,7 +2,7 @@ using DynastyManager.Core.Models;
 
 namespace DynastyManager.Core.Simulation;
 
-public static class CollegeFootballPlayoffService
+public static partial class CollegeFootballPlayoffService
 {
     public const int PlayoffTeamCount = 12;
     public const int AutomaticConferenceChampionBids = 5;
@@ -14,7 +14,7 @@ public static class CollegeFootballPlayoffService
     public static IReadOnlyList<CollegeFootballPlayoffSeedRecord> SelectField(
         int seasonYear,
         IReadOnlyList<NationalRanking> rankings,
-        IReadOnlyList<ConferenceChampionRecord> conferenceChampions)
+        IReadOnlyList<ConferenceChampionRecord> conferenceChampions, int fieldSize = PlayoffTeamCount)
     {
         ArgumentNullException.ThrowIfNull(rankings);
         ArgumentNullException.ThrowIfNull(conferenceChampions);
@@ -26,7 +26,7 @@ public static class CollegeFootballPlayoffService
 
         var automaticBidNames = rankings
             .Where(ranking => championNames.Contains(ranking.TeamName))
-            .Take(AutomaticConferenceChampionBids)
+            .Take(Math.Min(AutomaticConferenceChampionBids, fieldSize))
             .Select(ranking => ranking.TeamName)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -36,7 +36,7 @@ public static class CollegeFootballPlayoffService
 
         foreach (var ranking in rankings)
         {
-            if (selected.Count >= PlayoffTeamCount)
+            if (selected.Count >= fieldSize)
                 break;
 
             if (selected.Any(item => item.TeamName.Equals(
@@ -51,7 +51,7 @@ public static class CollegeFootballPlayoffService
 
         return selected
             .OrderBy(ranking => ranking.Rank)
-            .Take(PlayoffTeamCount)
+            .Take(fieldSize)
             .Select((ranking, index) => new CollegeFootballPlayoffSeedRecord
             {
                 SeasonYear = seasonYear,
@@ -84,12 +84,13 @@ public static class CollegeFootballPlayoffService
             .OrderBy(record => record.Seed)
             .ToArray();
 
-        var field = existingField.Length == PlayoffTeamCount
+        var fieldSize = FieldSize(state.LeagueRules.PlayoffTeams, teamsByName.Count);
+        var field = existingField.Length == fieldSize
             ? existingField
             : SelectField(
                 state.SeasonYear,
-                NationalRankingService.Build(state, teamsByName, profilesByTeam),
-                state.ConferenceChampionshipHistory);
+                CollegePollService.Build(state, teamsByName, PollKind.Computer, profilesByTeam).Where(r => ProgramDisciplineService.PostseasonEligible(state, r.TeamName)).ToArray(),
+                state.ConferenceChampionshipHistory, fieldSize);
 
         var playoffHistory = state.CollegeFootballPlayoffHistory
             .Where(record => record.SeasonYear != state.SeasonYear)
@@ -102,6 +103,8 @@ public static class CollegeFootballPlayoffService
         {
             return state with { CollegeFootballPlayoffHistory = playoffHistory };
         }
+
+        if (fieldSize < PlayoffTeamCount) return InitializeSmallField(state with { CollegeFootballPlayoffHistory = playoffHistory }, field);
 
         var firstRound = new[]
         {
@@ -159,13 +162,13 @@ public static class CollegeFootballPlayoffService
             changed = true;
             homeProfile = GamePlanService.Attach(state, homeTeam, homeProfile);
             awayProfile = GamePlanService.Attach(state, awayTeam, awayProfile);
-            var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate);
+            var session = GameDayEngine.Start(game, homeProfile, awayProfile, state.ActiveRoster, GameDayMode.Simulate, state.DepthChartAssignments);
             GameDayEngine.SimulateToEnd(session);
             return GameDayEngine.Finish(session);
         }).ToArray();
 
         if (!changed)
-            return state;
+            return state.Week == NationalChampionshipWeek ? RecordNationalChampion(state) : state;
 
         var updated = state with { Schedule = schedule };
 
@@ -186,6 +189,7 @@ public static class CollegeFootballPlayoffService
             .OrderBy(record => record.Seed)
             .ToArray();
 
+        if (field.Length is 2 or 4 or 8) return ScheduleSmallField(state, field);
         if (field.Length != PlayoffTeamCount)
             return state;
 
@@ -277,7 +281,7 @@ public static class CollegeFootballPlayoffService
         return state with { Schedule = state.Schedule.Append(game).ToArray() };
     }
 
-    private static DynastyState RecordNationalChampion(DynastyState state)
+    public static DynastyState RecordNationalChampion(DynastyState state)
     {
         if (state.NationalChampionshipHistory.Any(record =>
                 record.SeasonYear == state.SeasonYear))

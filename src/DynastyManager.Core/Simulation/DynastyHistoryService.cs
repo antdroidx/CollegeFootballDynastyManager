@@ -88,15 +88,18 @@ public static class DynastyHistoryService
             {
                 PlayerId = player.PlayerId, PlayerName = player.FullName, Position = player.Position,
                 OriginalRecruitingStars = previous?.OriginalRecruitingStars ?? player.OriginalRecruitingStars,
+                RecruitingStarsEstimated = previous?.OriginalRecruitingStars is not null ? previous.RecruitingStarsEstimated : player.RecruitingStarsEstimated,
+                HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                 FirstRecordedSeason = previous?.FirstRecordedSeason ?? state.SeasonYear,
                 LastRecordedSeason = state.SeasonYear
             };
         }
         var playerStats = BuildCurrentPlayerStats(state);
-        var awards = BuildAwards(state, playerStats);
+        var awards = SeasonAwardsService.Build(state, false);
 
         return CoachCareerService.RecordCompletedSeason(state with
         {
+            PlayerGameAwardHistory = PlayerOfGameService.All(state),
             TeamSeasonHistory = teamHistory,
             PlayerCareerHistory = careers.Values.OrderBy(item => item.PlayerId).ToArray(),
             PlayerSeasonStats = state.PlayerSeasonStats
@@ -104,6 +107,7 @@ public static class DynastyHistoryService
                 .Concat(playerStats)
                 .ToArray(),
             PlayerAwardHistory = state.PlayerAwardHistory
+                .Where(a => a.SeasonYear != state.SeasonYear || a.IsPreseason)
                 .Concat(awards)
                 .ToArray()
         });
@@ -170,7 +174,7 @@ public static class DynastyHistoryService
                 {
                     SeasonYear = state.SeasonYear,
                     PlayerId = qb.PlayerId,
-                    OriginalRecruitingStars = qb.OriginalRecruitingStars,
+                    OriginalRecruitingStars = qb.OriginalRecruitingStars, RecruitingStarsEstimated = qb.RecruitingStarsEstimated, HeightInches = qb.HeightInches, WeightPounds = qb.WeightPounds, Appearance = qb.Appearance, JerseyNumber = qb.JerseyNumber,
                     PlayerName = qb.FullName,
                     TeamName = qb.TeamName,
                     Position = qb.Position,
@@ -202,7 +206,7 @@ public static class DynastyHistoryService
                 {
                     SeasonYear = state.SeasonYear,
                     PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                     PlayerName = player.FullName,
                     TeamName = player.TeamName,
                     Position = player.Position,
@@ -224,7 +228,7 @@ public static class DynastyHistoryService
                 result.Add(new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                     PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
                     Games = games.Length, Receptions = passCompletions * receivingWeights[i] / 100,
                     ReceivingYards = passYards * receivingWeights[i] / 100,
@@ -250,7 +254,7 @@ public static class DynastyHistoryService
                 result.Add(new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber,
                     PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
                     Games = games.Length, Tackles = estimatedTackles * tackleWeight / 100,
                     TacklesForLoss = Math.Max(0, opponentRushAttempts / 12 * tackleWeight / 100),
@@ -271,7 +275,7 @@ public static class DynastyHistoryService
                 result.Add(new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = kicker.PlayerId,
-                    OriginalRecruitingStars = kicker.OriginalRecruitingStars, PlayerName = kicker.FullName,
+                    OriginalRecruitingStars = kicker.OriginalRecruitingStars, RecruitingStarsEstimated = kicker.RecruitingStarsEstimated, HeightInches = kicker.HeightInches, WeightPounds = kicker.WeightPounds, Appearance = kicker.Appearance, JerseyNumber = kicker.JerseyNumber, PlayerName = kicker.FullName,
                     TeamName = kicker.TeamName, Position = kicker.Position, Games = games.Length,
                     ExtraPointsMade = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsMade ?? 0),
                     ExtraPointsAttempted = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsAttempted ?? 0),
@@ -293,7 +297,7 @@ public static class DynastyHistoryService
                 var baseLine = index >= 0 ? result[index] : new PlayerSeasonStatLine
                 {
                     SeasonYear = state.SeasonYear, PlayerId = returner.PlayerId,
-                    OriginalRecruitingStars = returner.OriginalRecruitingStars, PlayerName = returner.FullName,
+                    OriginalRecruitingStars = returner.OriginalRecruitingStars, RecruitingStarsEstimated = returner.RecruitingStarsEstimated, HeightInches = returner.HeightInches, WeightPounds = returner.WeightPounds, Appearance = returner.Appearance, JerseyNumber = returner.JerseyNumber, PlayerName = returner.FullName,
                     TeamName = returner.TeamName, Position = returner.Position, Games = games.Length
                 };
                 var returnLine = baseLine with
@@ -312,7 +316,7 @@ public static class DynastyHistoryService
                 line.TeamName.Equals(teamGroup.Key, StringComparison.OrdinalIgnoreCase)).Select(line => line.PlayerId).ToHashSet();
             foreach (var player in players.Where(player => !recorded.Contains(player.PlayerId)))
                 result.Add(new PlayerSeasonStatLine { SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
-                    OriginalRecruitingStars = player.OriginalRecruitingStars, PlayerName = player.FullName,
+                    OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber, PlayerName = player.FullName,
                     TeamName = player.TeamName, Position = player.Position, Games = games.Length });
         }
 
@@ -341,6 +345,7 @@ public static class DynastyHistoryService
         ReceivingFumbles = a.ReceivingFumbles + b.ReceivingFumbles, Receiving20Plus = a.Receiving20Plus + b.Receiving20Plus,
         Tackles = a.Tackles + b.Tackles, TacklesForLoss = a.TacklesForLoss + b.TacklesForLoss,
         Sacks = a.Sacks + b.Sacks, PassesDefended = a.PassesDefended + b.PassesDefended,
+        DefensiveReturnYards = a.DefensiveReturnYards + b.DefensiveReturnYards, DefensiveTouchdowns = a.DefensiveTouchdowns + b.DefensiveTouchdowns,
         Interceptions = a.Interceptions + b.Interceptions, FumbleRecoveries = a.FumbleRecoveries + b.FumbleRecoveries,
         ExtraPointsMade = a.ExtraPointsMade + b.ExtraPointsMade, ExtraPointsAttempted = a.ExtraPointsAttempted + b.ExtraPointsAttempted,
         FieldGoalsMade = a.FieldGoalsMade + b.FieldGoalsMade, FieldGoalsAttempted = a.FieldGoalsAttempted + b.FieldGoalsAttempted,
@@ -354,58 +359,6 @@ public static class DynastyHistoryService
 
     private static GameTeamStats? GetOpponentStats(ScheduledGame game, string teamName) =>
         game.HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ? game.AwayStats : game.HomeStats;
-
-    private static IReadOnlyList<PlayerAwardRecord> BuildAwards(
-        DynastyState state,
-        IReadOnlyList<PlayerSeasonStatLine> stats)
-    {
-        var awards = new List<PlayerAwardRecord>();
-        var skill = stats
-            .Where(item => item.Position is Position.QB or Position.RB)
-            .OrderByDescending(item =>
-                item.ScrimmageYards + item.Touchdowns * 120 - item.Turnovers * 80)
-            .ToArray();
-
-        if (skill.Length > 0)
-        {
-            var winner = skill[0];
-            awards.Add(new PlayerAwardRecord
-            {
-                SeasonYear = state.SeasonYear,
-                AwardName = "National Player of the Year",
-                PlayerId = winner.PlayerId,
-                PlayerName = winner.PlayerName,
-                TeamName = winner.TeamName,
-                Position = winner.Position,
-                Summary = $"{winner.ScrimmageYards:N0} yards • {winner.Touchdowns} TD"
-            });
-        }
-
-        foreach (var position in Enum.GetValues<Position>())
-        {
-            var candidate = state.ActiveRoster
-                .Where(player => !player.IsRedshirted && player.Position == position)
-                .OrderByDescending(player => player.OverallRating)
-                .ThenByDescending(player => player.PotentialRating)
-                .FirstOrDefault();
-            if (candidate is null)
-                continue;
-
-            awards.Add(new PlayerAwardRecord
-            {
-                SeasonYear = state.SeasonYear,
-                AwardName = "First Team All-American",
-                PlayerId = candidate.PlayerId,
-                PlayerName = candidate.FullName,
-                TeamName = candidate.TeamName,
-                Position = candidate.Position,
-                IsAllAmerican = true,
-                Summary = $"OVR {candidate.OverallRating} • POT {candidate.PotentialRating}"
-            });
-        }
-
-        return awards;
-    }
 
     private static GameTeamStats? GetTeamStats(ScheduledGame game, string teamName) =>
         game.HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)

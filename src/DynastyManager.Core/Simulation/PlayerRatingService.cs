@@ -10,10 +10,40 @@ public static class PlayerRatingService
 
         return state with
         {
-            ActiveRoster = state.ActiveRoster
-                .Select(player => EnsureInitialized(state, player))
-                .ToArray()
+            OverallCalibrationVersion = 1,
+            ActiveRoster = PlayerJerseyService.Assign(OffensiveLineService.AssignMissingRoles(state.ActiveRoster)
+                .Select(player =>
+                {
+                    var updated = InitializeForScale(state, player);
+                    if (state.OverallCalibrationVersion == 0 && updated.OverallRating != player.OverallRating)
+                        updated = updated with { RatingBaselineSeason = state.SeasonYear, SeasonStartOverall = updated.OverallRating };
+                    return WithSeasonBaseline(state, updated);
+                }).ToArray()),
+            TransferPortalEntries = state.TransferPortalEntries.Select(e => e with { Player = InitializeForScale(state, e.Player) }).ToArray(),
+            PendingTransferCommitments = state.PendingTransferCommitments.Select(e => e with { Player = InitializeForScale(state, e.Player) }).ToArray(),
+            HighSchoolRecruitingPool = state.OverallCalibrationVersion == 0
+                ? state.HighSchoolRecruitingPool.Select(r =>
+                {
+                    var profile = InitializeForScale(state, r.AttributeProfile ?? new DynastyPlayer
+                    {
+                        PlayerId = r.RecruitId, FullName = r.FullName, TeamName = "", Position = r.Position,
+                        ClassYear = 1, OverallRating = r.TrueOverallRating, PotentialRating = r.PotentialRating,
+                        TalentLevel = r.StarRating * 2, OriginalRecruitingStars = r.StarRating,
+                        HeightInches = r.HeightInches, WeightPounds = r.WeightPounds
+                    });
+                    return r with { AttributeProfile = profile, TrueOverallRating = profile.OverallRating, PotentialRating = profile.PotentialRating };
+                }).ToArray() : state.HighSchoolRecruitingPool
         };
+    }
+
+    private static DynastyPlayer InitializeForScale(DynastyState state, DynastyPlayer player)
+    {
+        var updated = EnsureInitialized(state, player);
+        // A one-time scale migration preserves remaining development headroom.
+        // It never trains attributes or rebalances a population of players.
+        if (state.OverallCalibrationVersion == 0 && player.Skills is not null && player.SpeedRating > 0 && player.PotentialRating > 0)
+            updated = updated with { PotentialRating = Math.Clamp(player.PotentialRating + updated.OverallRating - player.OverallRating, updated.OverallRating, 99) };
+        return updated;
     }
 
     public static DynastyPlayer EnsureInitialized(
@@ -22,19 +52,29 @@ public static class PlayerRatingService
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(player);
+        player = PlayerPhysicalService.EnsureMeasurements(player);
 
         if (player.PotentialRating > 0 &&
             player.SpeedRating > 0 &&
             player.StrengthRating > 0 &&
             player.AgilityRating > 0 &&
             player.AwarenessRating > 0 &&
-            player.TechniqueRating > 0 &&
-            player.DurabilityRating > 0)
+            player.InjuryRating > 0)
         {
             return RecalculateOverall(PlayerSkillService.EnsureInitialized(player));
         }
 
         var target = Math.Clamp(player.OverallRating, 50, 99);
+        if (player.NcaaPositionCode is null)
+        {
+            var role = Deterministic(state, player, "position-code");
+            player = player with { NcaaPositionCode = player.Position switch
+            {
+                Position.RB => role % 8 == 0 ? 2 : 1, Position.OL => 5 + role % 5,
+                Position.DE => 10 + role % 2, Position.OLB => role % 2 == 0 ? 13 : 15,
+                Position.K => 19 + role % 2, _ => Ncaa06RatingService.PositionCode(player)
+            } };
+        }
 
         var speed = ClampRating(target + PositionBias(player.Position, "speed") +
             Offset(state, player, "speed"));
@@ -44,8 +84,6 @@ public static class PlayerRatingService
             Offset(state, player, "agility"));
         var awareness = ClampRating(target + PositionBias(player.Position, "awareness") +
             Offset(state, player, "awareness"));
-        var technique = ClampRating(target + PositionBias(player.Position, "technique") +
-            Offset(state, player, "technique"));
         var durability = ClampRating(
             Math.Max(
                 55,
@@ -58,8 +96,7 @@ public static class PlayerRatingService
             StrengthRating = strength,
             AgilityRating = agility,
             AwarenessRating = awareness,
-            TechniqueRating = technique,
-            DurabilityRating = durability
+            InjuryRating = durability
         };
 
         var potential = player.PotentialRating > 0
@@ -74,25 +111,68 @@ public static class PlayerRatingService
                 99);
 
         initialized = PlayerSkillService.EnsureInitialized(initialized);
+        // Generated recruiting OVR is a talent target. Fit the generated attributes
+        // to that target on the NCAA scale; imported or already initialized ratings
+        // take the earlier branch and are never altered by this calibration.
+        var basis = initialized;
+        var bestDistance = Math.Abs(CalculateOverall(initialized) - target);
+        var lowShift = -98;
+        var highShift = 98;
+        while (lowShift <= highShift)
+        {
+            var shift = (lowShift + highShift) / 2;
+            var skills = basis.Skills!;
+            var candidate = basis with
+            {
+                SpeedRating = ClampRating(basis.SpeedRating + shift),
+                StrengthRating = ClampRating(basis.StrengthRating + shift),
+                AgilityRating = ClampRating(basis.AgilityRating + shift),
+                AwarenessRating = ClampRating(basis.AwarenessRating + shift),
+                Skills = PlayerSkillService.Shift(skills, shift) with
+                { Leadership = skills.Leadership, Discipline = skills.Discipline }
+            };
+            var current = CalculateOverall(candidate);
+            if (Math.Abs(current - target) < bestDistance)
+            {
+                initialized = candidate;
+                bestDistance = Math.Abs(current - target);
+            }
+            if (current == target) break;
+            if (current < target) lowShift = shift + 1;
+            else highShift = shift - 1;
+        }
+        // Steep curve segments can skip an integer under a uniform shift.
+        // Refine individual attributes instead of overwriting the calculated OVR.
+        for (var attempt = 0; attempt < 4 && bestDistance > 1; attempt++)
+        {
+            var direction = Math.Sign(target - CalculateOverall(initialized));
+            var improved = false;
+            foreach (var field in Ncaa06RosterRatings.RatingFields)
+            {
+                var values = Ncaa06RosterRatings.Export(initialized).ToDictionary(p => p.Key, p => p.Value);
+                values[field] = Math.Clamp(values[field] + direction, 40, 99);
+                var candidate = Ncaa06RosterRatings.Apply(initialized, values);
+                var distance = Math.Abs(candidate.OverallRating - target);
+                if (distance >= bestDistance) continue;
+                initialized = candidate;
+                bestDistance = distance;
+                improved = true;
+                if (bestDistance <= 1) break;
+            }
+            if (!improved) break;
+        }
         var overall = CalculateOverall(initialized);
         return initialized with { OverallRating = overall, PotentialRating = Math.Max(overall, potential) };
     }
 
+    private static DynastyPlayer WithSeasonBaseline(DynastyState state, DynastyPlayer player) =>
+        player.RatingBaselineSeason == state.SeasonYear && player.SeasonStartOverall > 0 ? player :
+            player with { RatingBaselineSeason = state.SeasonYear, SeasonStartOverall = player.OverallRating };
+
     public static int CalculateOverall(DynastyPlayer player)
     {
         ArgumentNullException.ThrowIfNull(player);
-        var passingWeight = player.Position switch
-        {
-            Position.QB or Position.WR => .85,
-            Position.RB => .20,
-            Position.TE => .55,
-            Position.DE or Position.DT or Position.MLB => .35,
-            Position.CB => .80,
-            Position.FS or Position.SS => .65,
-            _ => .50
-        };
-        return Math.Clamp((int)Math.Round(PlayerSkillService.GameRating(player, true) * passingWeight +
-            PlayerSkillService.GameRating(player, false) * (1 - passingWeight), MidpointRounding.AwayFromZero), 40, 99);
+        return Ncaa06RatingService.CalculateOverall(player);
     }
 
     public static DynastyPlayer RecalculateOverall(DynastyPlayer player) =>

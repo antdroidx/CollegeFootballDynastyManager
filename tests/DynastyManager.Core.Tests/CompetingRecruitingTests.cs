@@ -273,7 +273,8 @@ public class CompetingRecruitingTests
     [Theory]
     [InlineData(17)]
     [InlineData(22)]
-    [InlineData(25)]
+    [InlineData(24)]
+    [InlineData(DynastyState.CurrentSchemaVersion + 1)]
     public async Task DifferentSaveFormatsRequireANewDynastyWithoutDeletingTheSave(int schema)
     {
         var path = Path.Combine(Path.GetTempPath(), $"legacy-offers-{Guid.NewGuid():N}.db");

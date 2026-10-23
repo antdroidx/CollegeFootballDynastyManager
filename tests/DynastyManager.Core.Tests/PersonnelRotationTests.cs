@@ -50,7 +50,7 @@ public class PersonnelRotationTests
                 PlayerId = Guid.NewGuid(), FullName = $"{position} {i}", TeamName = "Test", Position = position,
                 ClassYear = 2, TalentLevel = 70, OverallRating = 90 - i, PotentialRating = 90,
                 SpeedRating = 70, StrengthRating = 70, AgilityRating = 70, AwarenessRating = 70,
-                TechniqueRating = 70, DurabilityRating = 80, DepthChartOrder = i
+                InjuryRating = 80, DepthChartOrder = i
             });
         }
     }

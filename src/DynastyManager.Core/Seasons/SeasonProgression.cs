@@ -32,7 +32,7 @@ public static class SeasonProgression
         {
             SeasonPhase.Preseason => state with
             {
-                Week = 0,
+                Week = state.Schedule.Any(game => game.SeasonYear == state.SeasonYear && game.Week == 0) ? 0 : 1,
                 Phase = SeasonPhase.RegularSeason
             },
 
@@ -104,6 +104,23 @@ public static class SeasonProgression
                 "Unknown season phase.")
         };
     }
+
+    public static string PeriodLabel(SeasonPhase phase, int week) => phase switch
+    {
+        SeasonPhase.Preseason => "Preseason",
+        SeasonPhase.RegularSeason when week == 0 => "Week 0 · Opening week",
+        SeasonPhase.RegularSeason => $"Week {week}",
+        SeasonPhase.ConferenceChampionship => "Conference championships",
+        SeasonPhase.Postseason => $"Postseason · Week {week}",
+        SeasonPhase.TransferPortal => "Transfer portal",
+        SeasonPhase.Recruiting => $"Recruiting Week {Math.Clamp(week - FirstRecruitingWeek + 1, 1, RecruitingWeekCount)}",
+        SeasonPhase.RosterManagement => "Roster management",
+        SeasonPhase.Offseason => "Offseason",
+        _ => $"Week {week}"
+    };
+
+    public static string AdvanceLabel(SeasonPhase phase, int week) => phase == SeasonPhase.Preseason
+        ? "Start season" : phase == SeasonPhase.RegularSeason && week == 0 ? "Advance to Week 1" : "Advance Week";
 
     public static int GetRecruitingWeekNumber(
         DynastyState state)

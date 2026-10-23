@@ -504,6 +504,29 @@ public class CpuRecruitingAndWalkOnTests
             player => Assert.Equal(1, player.ClassYear));
     }
 
+    [Fact]
+    public void FullRosterReplacesSurplusDepthWhenARequiredStarterIsMissing()
+    {
+        var user = Team("User", 80);
+        var teams = new[] { user }.ToDictionary(team => team.Name, StringComparer.OrdinalIgnoreCase);
+        var roster = BuildRoster(user.Name, 85)
+            .Select(player => player.Position == Position.K ? player with { Position = Position.WR } : player)
+            .ToArray();
+        Assert.DoesNotContain(roster, player => player.Position == Position.K);
+        var state = new DynastyState
+        {
+            DynastyId = Guid.Parse("acacacac-cdcd-efef-1212-343434343434"),
+            DynastyName = "Missing Kicker Test", UserTeamName = user.Name, SeasonYear = 2027,
+            Week = 21, Phase = SeasonPhase.RosterManagement, ActiveRoster = roster
+        };
+
+        var updated = WalkOnRosterService.FillAllTeams(state, teams);
+
+        Assert.Equal(85, updated.ActiveRoster.Count);
+        Assert.Contains(updated.ActiveRoster, player => player.TeamName == user.Name &&
+            player.Position == Position.K && player.IsWalkOn);
+    }
+
     private static IReadOnlyList<DynastyPlayer> BuildRoster(
         string teamName,
         int count) =>

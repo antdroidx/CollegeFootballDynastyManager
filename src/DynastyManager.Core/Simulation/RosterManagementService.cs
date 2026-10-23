@@ -16,8 +16,11 @@ public static class RosterManagementService
                 player.Position
             })
             .SelectMany(group =>
-                group
+            {
+                var starters = group.Key.Position == Position.OL ? LineStarters(group) : [];
+                return group
                     .OrderBy(player => player.IsRedshirted ? 1 : 0)
+                    .ThenBy(player => group.Key.Position == Position.OL && !starters.Contains(player.PlayerId) ? 1 : 0)
                     .ThenBy(player =>
                         player.DepthChartOrder > 0
                             ? player.DepthChartOrder
@@ -31,13 +34,20 @@ public static class RosterManagementService
                         player with
                         {
                             DepthChartOrder = index + 1
-                        }))
+                        });
+            })
             .ToArray();
 
         return state with
         {
-            ActiveRoster = normalized
+            ActiveRoster = normalized,
+            DepthChartAssignments = state.DepthChartAssignments.Where(a => normalized.Any(p => p.PlayerId == a.PlayerId &&
+                p.TeamName.Equals(a.TeamName, StringComparison.OrdinalIgnoreCase))).ToArray()
         };
+
+        static HashSet<Guid> LineStarters(IEnumerable<DynastyPlayer> players) => OffensiveLineService.Lineup(players
+            .Where(p => !p.IsRedshirted && p.CurrentInjury is null).OrderBy(p => p.DepthChartOrder <= 0 ? int.MaxValue : p.DepthChartOrder)
+            .ThenByDescending(p => p.OverallRating).ToArray()).Select(p => p.PlayerId).ToHashSet();
     }
 
     public static DynastyState MovePlayer(
@@ -51,6 +61,15 @@ public static class RosterManagementService
         if (direction == 0)
             return state;
 
+        if (state.DepthChartAssignments.Any(a => a.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)))
+        {
+            var current = state.ActiveRoster.FirstOrDefault(p => p.PlayerId == playerId && p.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+            if (current is null || current.IsRedshirted) return state;
+            var code = DepthChartService.AssignedCode(state, current);
+            var group = DepthChartService.AtPosition(state, teamName, code);
+            var rank = group.Select((p, i) => (p.PlayerId, Rank: i + 1)).First(p => p.PlayerId == playerId).Rank;
+            return DepthChartService.Assign(state, teamName, playerId, code, rank + Math.Sign(direction));
+        }
         state = NormalizeAllDepthCharts(state);
 
         var player = state.ActiveRoster.FirstOrDefault(candidate =>
@@ -68,6 +87,7 @@ public static class RosterManagementService
                     teamName,
                     StringComparison.OrdinalIgnoreCase) &&
                 candidate.Position == player.Position &&
+                OffensiveLineService.Label(candidate) == OffensiveLineService.Label(player) &&
                 !candidate.IsRedshirted)
             .OrderBy(candidate => candidate.DepthChartOrder)
             .ToArray();
@@ -224,10 +244,16 @@ public static class RosterManagementService
         if (roster.Length == state.ActiveRoster.Count)
             return state;
 
+        var player = state.ActiveRoster.First(p => p.PlayerId == playerId && p.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+        var departure = new PlayerDepartureRecord { SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
+            FullName = player.FullName, TeamName = player.TeamName, Position = player.Position,
+            OverallRating = player.OverallRating, Reason = PlayerDepartureReason.Released };
         return NormalizeAllDepthCharts(
             state with
             {
-                ActiveRoster = roster
+                ActiveRoster = roster,
+                RecentPlayerDepartures = state.RecentPlayerDepartures.Append(departure).ToArray(),
+                PlayerDepartureHistory = state.PlayerDepartureHistory.Append(departure).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray()
             });
     }
 

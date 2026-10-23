@@ -13,7 +13,7 @@ public static class DynastyRosterSimulationProfileBuilder
 
         var teamArray = teams.ToArray();
 
-        var rosterByTeam = state.ActiveRoster
+        var rosterByTeam = DepthChartService.ProjectRoster(state.ActiveRoster, state.DepthChartAssignments)
             .Where(player =>
                 !player.IsRedshirted &&
                 player.CurrentInjury is null)
@@ -150,6 +150,7 @@ public static class DynastyRosterSimulationProfileBuilder
                     kicker * .85 +
                     fallback * .15 +
                     specialTeamsModifier,
+                Morale = GameMoraleService.SeasonMorale(state, team.Name),
                 RosterSize = roster.Length
             };
             profiles[team.Name] = profiles[team.Name] with { GamePlan = GamePlanService.GetPlan(state, profiles[team.Name]) };

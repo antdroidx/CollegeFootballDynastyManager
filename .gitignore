@@ -20,3 +20,7 @@ Thumbs.db
 # Local Android visual QA output
 artifacts/qa-build-*/
 __pycache__/
+
+# Local source/workbook analysis cache
+.artifacts/
+**/TestResults/

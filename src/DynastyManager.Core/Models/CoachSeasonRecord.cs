@@ -33,5 +33,7 @@ public sealed record CoachCareerSummary
     public int NationalTitles => Seasons.Count(season => season.Role == StaffRole.HeadCoach && season.NationalChampion);
     public int BowlWins => Seasons.Count(season => season.Role == StaffRole.HeadCoach && season.WonBowl == true);
     public int BowlLosses => Seasons.Count(season => season.Role == StaffRole.HeadCoach && season.WonBowl == false);
-    public int StaffSeasons => Seasons.Count - HeadCoachSeasons;
+    public int StaffSeasons => Seasons.Where(s => s.Role != StaffRole.HeadCoach &&
+        !Seasons.Any(h => h.Role == StaffRole.HeadCoach && h.SeasonYear == s.SeasonYear))
+        .Select(s => s.SeasonYear).Distinct().Count();
 }
