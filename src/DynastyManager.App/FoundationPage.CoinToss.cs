@@ -52,9 +52,10 @@ public sealed partial class FoundationPage
         start.Clicked += async (_, _) => { start.IsEnabled = false; await Navigation.PopModalAsync(); ready.TrySetResult(); };
         var home = TeamBrandCatalog.Get(session.Game.HomeTeamName);
         var field = new Grid { AutomationId = "coin-toss-field", BackgroundColor = Color.FromArgb("#245B38") };
-        field.Add(new GraphicsView { Drawable = new GameFieldDrawable { CoinCeremony = true, YardLine = 50, Distance = 0,
+        var fieldDiagram = new GraphicsView { Drawable = new GameFieldDrawable { CoinCeremony = true, YardLine = 50, Distance = 0,
             HomeColor = Color.FromArgb(home.Primary), HomeSecondaryColor = Color.FromArgb(home.Secondary),
-            HomeInitial = TeamBrandCatalog.Initial(session.Game.HomeTeamName), HomeName = session.Game.HomeTeamName.ToUpperInvariant() } });
+            HomeInitial = TeamBrandCatalog.Initial(session.Game.HomeTeamName), HomeName = session.Game.HomeTeamName.ToUpperInvariant() } };
+        field.Add(fieldDiagram);
         var ceremony = new AbsoluteLayout { InputTransparent = true };
         var captainPositions = new List<(FootballSpriteView View, double X, int Slot)>();
         foreach (var (name, away, x) in new[] { (session.Game.HomeTeamName, false, .42), (session.Game.AwayTeamName, true, .58) })
@@ -87,9 +88,11 @@ public sealed partial class FoundationPage
             panel.HorizontalOptions = wide ? LayoutOptions.End : LayoutOptions.Center;
             panel.WidthRequest = wide ? Math.Min(350, field.Width * .44) : -1;
             panel.MaximumHeightRequest = wide ? field.Height - 16 : field.Height * .48;
+            var visibleField = wide ? Math.Max(.50, 1 - (panel.WidthRequest + 20) / field.Width) : 1;
+            fieldDiagram.Margin = new Thickness(0, 0, field.Width * (1 - visibleField), 0);
             foreach (var c in captainPositions)
-                AbsoluteLayout.SetLayoutBounds(c.View, new Rect(wide ? c.X * .5 + .04 : c.X, wide ? .30 + c.Slot * .22 : .25 + c.Slot * .12, 46, 46));
-            AbsoluteLayout.SetLayoutBounds(official, new Rect(wide ? .29 : .5, wide ? .4 : .30, 32, 48));
+                AbsoluteLayout.SetLayoutBounds(c.View, new Rect(c.X * visibleField, wide ? .30 + c.Slot * .22 : .25 + c.Slot * .12, 46, 46));
+            AbsoluteLayout.SetLayoutBounds(official, new Rect(.5 * visibleField, wide ? .4 : .30, 32, 48));
         };
         field.Add(panel); page.Content = field;
         await Navigation.PushModalAsync(page);
