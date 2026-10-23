@@ -147,7 +147,7 @@ public sealed partial class FoundationPage
 
     private void ArrangeRosterWorkspace()
     {
-        var wide = ManagementLayout.SplitProfile(Width);
+        var wide = ManagementLayout.SplitProfile(_rosterWorkspace.Width);
         _transferPortalList.IsVisible = wide || !_rosterDetail.IsVisible;
         _rosterWorkspace.ColumnDefinitions[1].Width = wide && _rosterDetail.IsVisible ? new GridLength(380) : 0;
         Grid.SetColumn(_rosterDetail, wide ? 1 : 0); Grid.SetRow(_rosterDetail, wide ? 0 : 1);
@@ -162,7 +162,7 @@ public sealed partial class FoundationPage
         void Arrange()
         {
             var selected = _recruitingDetailHost.IsVisible && _recruitingDetailHost.Content is not null;
-            var wide = ManagementLayout.SplitProfile(Width);
+            var wide = ManagementLayout.SplitProfile(grid.Width);
             _recruitWorkspaceList.IsVisible = wide || !selected;
             detail.IsVisible = selected;
             grid.ColumnDefinitions[1].Width = selected && wide ? new GridLength(370) : 0;
@@ -185,7 +185,7 @@ public sealed partial class FoundationPage
             SemanticProperties.SetDescription(name, "View recruit " + prospect.FullName);
             name.Clicked += (_,_) => { _selectedRecruitSource=prospect.Source; _selectedRecruitId=prospect.ProspectId; RenderSelectedRecruitDetail(); };
             var quick = new Button { Text = item.Interaction.IsPriorityScout ? "Scouting" : "Scout weekly", FontSize = 10,
-                IsEnabled = item.Interaction.CommittedTeamName is null, Padding = new Thickness(5,2) };
+                IsEnabled = item.Interaction.CommittedTeamName is null && item.Interaction.ScoutingPercent < 100, Padding = new Thickness(5,2) };
             quick.Clicked += (_,_) => { if (_currentDynasty is null) return;
                 _currentDynasty=ScoutingDepartmentService.TogglePriority(_currentDynasty,prospect.Source,prospect.ProspectId); RenderRecruitingScreen(); };
             var board = new Button { Text=item.Interaction.IsOnTargetBoard ? "On board" : "Add", FontSize=10, Padding=new Thickness(5,2),
@@ -193,28 +193,37 @@ public sealed partial class FoundationPage
             board.Clicked+=(_,_)=>{ if(_currentDynasty is null)return;
                 _currentDynasty=InteractiveRecruitingService.ToggleTargetBoard(_currentDynasty,prospect.Source,prospect.ProspectId);RenderRecruitingScreen(); };
             var actions=new HorizontalStackLayout { Spacing=3,Children={quick,board} };
-            var portrait = PersonPortrait.Create(prospect.ProspectId,prospect.FullName,Color.FromArgb("#31566C"),Color.FromArgb("#A9CEF3"),28);
+            var appearance=_currentDynasty?.TransferPortalEntries.FirstOrDefault(p=>p.Player.PlayerId==prospect.ProspectId)?.Player.Appearance
+                ?? _currentDynasty?.ActiveRoster.FirstOrDefault(p=>p.PlayerId==prospect.ProspectId)?.Appearance;
+            var portrait = PersonPortrait.Create(prospect.ProspectId,prospect.FullName,Color.FromArgb("#31566C"),Color.FromArgb("#A9CEF3"),28,appearance:appearance);
             var identity=new Grid { ColumnSpacing=3,ColumnDefinitions=new() {new(28),new(GridLength.Star)} };
             identity.Add(portrait,0,0);identity.Add(name,1,0); identity.SetValue(TableValueProperty,prospect.FullName);
+            var starsCell=TableText(new string('★',item.PublicStars), color: DynastyTheme.IsLight ? Color.FromArgb("#806000") : Color.FromArgb("#F4CC66"));
+            starsCell.SetValue(TableValueProperty,item.PublicStars.ToString());
+            var projection=TableText(item.Projection);projection.SetValue(TableValueProperty,item.Projection.Split('-', ' ')[0]);
+            var scouting=TableText(item.Scouting);scouting.SetValue(TableValueProperty,item.Interaction.ScoutingPercent.ToString());
+            var interest=TableText(item.UserStatus);
+            var percentage=System.Text.RegularExpressions.Regex.Match(item.UserStatus,@"\d+(?=%)").Value;
+            interest.SetValue(TableValueProperty,percentage.Length>0?percentage:null);
             rows.Add([TableText(prospect.Position.ToString()), identity,
-                TableText(prospect.StarRating is int stars ? new string('★',stars) : "—", color: DynastyTheme.IsLight ? Color.FromArgb("#806000") : Color.FromArgb("#F4CC66")),
-                TableText(item.Projection), TableText(item.Scouting), TableText(item.UserStatus), actions,
-                TableText(item.Origin), TableText(item.MarketStatus)]);
+                starsCell, projection, scouting, interest, actions,
+                TableText("#"+item.NationalRank), TableText(item.Origin), TableText(item.MarketStatus)]);
             if (rows.Count % 12 == 0) await Task.Delay(1,cancellation);
         }
         _recruitingList.Add(DataTable([("Pos",44),("Prospect",174),("Stars",76),("Scouted OVR",104),("Scouting",95),
-            ("Interest / status",195),("Action",182),("Origin",175),("Competition",250)],rows, configureColumns:true));
+            ("Interest / status",195),("Action",182),("Rank",60),("Origin",175),("Competition",250)],rows, configureColumns:true));
     }
 
     private void PolishRecruitProfile(RecruitingProspectDisplay prospect, RecruitingInteraction interaction, View metrics, View market, View actions)
     {
         if (_recruitingDetailHost.Content is not Border { Content: VerticalStackLayout old }) return;
         var parts = old.Children.OfType<View>().ToArray(); old.Children.Clear();
-        var overview = new VerticalStackLayout { Spacing=10, Children={parts[1],metrics,parts[3],parts[5]} };
+        var overview = new VerticalStackLayout { Spacing=10, Children={
+            new Label { Text="#"+GetProspectNationalRank(_currentDynasty!,prospect)+" nationally",TextColor=DynastyTheme.Accent,FontAttributes=FontAttributes.Bold },
+            parts[1],metrics,parts[3],parts[5]} };
         var recruitment = new VerticalStackLayout { Spacing=10, Children={market,actions} };
-        _recruitingDetailHost.Content = new VerticalStackLayout { Spacing=10, Children={parts[0],
-            ProfileTabs(("Overview",overview),("Recruitment",recruitment)),
-            RecruitCloseButton() } };
+        _recruitingDetailHost.Content = new VerticalStackLayout { Spacing=10, Children={RecruitCloseButton(),parts[0],
+            ProfileTabs(("Overview",overview),("Recruitment",recruitment)) } };
     }
 
     private Button RecruitCloseButton()
@@ -250,8 +259,12 @@ public sealed partial class FoundationPage
         if(active && player.TeamName==_currentDynasty?.UserTeamName)
         {
             var roster=_currentDynasty.ActiveRoster.Where(p=>p.TeamName==player.TeamName).ToArray();
-            tabs.Add(("Manage",CreateRosterPlayerDetail(player,roster.Count(p=>p.Position==player.Position&&!p.IsRedshirted),
-                GetLatestUserDevelopmentRecords().FirstOrDefault(r=>r.PlayerId==player.PlayerId))));
+            var management=(Border)CreateRosterPlayerDetail(player,roster.Count(p=>p.Position==player.Position&&!p.IsRedshirted),
+                GetLatestUserDevelopmentRecords().FirstOrDefault(r=>r.PlayerId==player.PlayerId));
+            var source=(VerticalStackLayout)management.Content!;
+            var controls=source.Children.OfType<View>().TakeLast(2).ToArray();source.Children.Clear();
+            tabs.Add(("Manage",new VerticalStackLayout {Spacing=10,Children={
+                SectionTitle("Roster management","Availability follows the current dynasty phase"),controls[0],controls[1]} }));
         }
         return new VerticalStackLayout { Padding=12, Spacing=12, Children={parts[0],parts[1],parts[2],ProfileTabs(tabs.ToArray())} };
     }

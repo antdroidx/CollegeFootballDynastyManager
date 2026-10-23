@@ -2539,7 +2539,7 @@ public sealed partial class FoundationPage : ContentPage
 
     private sealed record RecruitingRowPresentation(RecruitingProspectDisplay Prospect,
         RecruitingInteraction Interaction, string Title, string Ranking, string Projection,
-        string Origin, string Scouting, string UserStatus, string MarketStatus);
+        string Origin, string Scouting, string UserStatus, string MarketStatus, int PublicStars, int NationalRank);
 
     private static RecruitingRowPresentation PrepareRecruitingRow(DynastyState state,
         IReadOnlyDictionary<string, Team> teams, RecruitingProspectDisplay prospect)
@@ -2611,129 +2611,7 @@ public sealed partial class FoundationPage : ContentPage
         return new(prospect, interaction,
             $"{boardMarker}{prospect.Position} {prospect.FullName}",
             $"#{nationalRank} nationally · {publicRatingText}", overallText,
-            prospect.Subtitle, $"{interaction.ScoutingPercent}% complete", userStatus, marketStatus);
-    }
-
-    private void AddRecruitingCompactRow(RecruitingRowPresentation presentation)
-    {
-        var prospect = presentation.Prospect;
-        var interaction = presentation.Interaction;
-        var viewButton = new Button
-        {
-            Text = "View",
-            FontSize = 11,
-            Padding = new Thickness(12, 5),
-            TextColor = Colors.White
-        };
-
-        viewButton.Clicked += (_, _) =>
-        {
-            _selectedRecruitSource =
-                prospect.Source;
-            _selectedRecruitId =
-                prospect.ProspectId;
-            RenderRecruitingScreen();
-        };
-
-        var boardButton = new Button
-        {
-            Text = interaction.IsOnTargetBoard ? "On Board" : "Add",
-            FontSize = 11,
-            Padding = new Thickness(10, 5),
-            TextColor = Colors.White,
-            IsEnabled = interaction.CommittedTeamName is null &&
-                        !interaction.IsOnTargetBoard
-        };
-        boardButton.Clicked += (_, _) =>
-        {
-            if (_currentDynasty is null)
-                return;
-            _currentDynasty = InteractiveRecruitingService.ToggleTargetBoard(
-                _currentDynasty, prospect.Source, prospect.ProspectId);
-            RenderCurrentDynasty();
-        };
-
-        var quickOfferButton = new Button
-        {
-            Text = interaction.ScholarshipOffered ? "Withdraw" : "Offer",
-            FontSize = 11,
-            Padding = new Thickness(10, 5),
-            TextColor = Colors.White,
-            IsVisible = _recruitingView == RecruitingView.Board && IsRecruitingOpen(prospect.Source),
-            IsEnabled =
-                interaction.CommittedTeamName is null &&
-                IsRecruitingOpen(prospect.Source)
-        };
-        quickOfferButton.Clicked += (_, _) =>
-        {
-            if (_currentDynasty is null ||
-                !_teamsByName.TryGetValue(
-                    _currentDynasty.UserTeamName,
-                    out var userTeam))
-            {
-                return;
-            }
-
-            _currentDynasty =
-                InteractiveRecruitingService.ToggleScholarship(
-                    _currentDynasty,
-                    userTeam,
-                    prospect.Source,
-                    prospect.ProspectId);
-            RenderCurrentDynasty();
-        };
-
-        static View Metric(string label, string value) => new Border
-        {
-            StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = DynastyTheme.Palette("#182630"),
-            Content = new VerticalStackLayout { Spacing = 2, Children =
-            {
-                new Label { Text = label, FontSize = 9, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#8FAABD") },
-                new Label { Text = value, FontSize = 12, LineBreakMode = LineBreakMode.WordWrap, TextColor = DynastyTheme.Palette("#E6EBF1") }
-            } }
-        };
-        var metrics = new Grid { ColumnSpacing = 7, RowSpacing = 7,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) },
-            RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto) } };
-        metrics.Add(Metric("RANK & RATING", presentation.Ranking), 0, 0);
-        metrics.Add(Metric("SCOUTED PROJECTION", presentation.Projection), 1, 0);
-        metrics.Add(Metric("ORIGIN", presentation.Origin), 0, 1);
-        metrics.Add(Metric("SCOUTING", presentation.Scouting), 1, 1);
-        var statusPanel = new Border { StrokeThickness = 0, Padding = new Thickness(9, 7), BackgroundColor = DynastyTheme.Palette("#1B3039"),
-            Content = new VerticalStackLayout { Spacing = 3, Children =
-            {
-                new Label { Text = presentation.UserStatus, FontSize = 12, FontAttributes = FontAttributes.Bold,
-                    TextColor = interaction.CommittedTeamName is not null ? DynastyTheme.Palette("#E8C979") : DynastyTheme.Palette("#83D6B6") },
-                new Label { Text = presentation.MarketStatus, FontSize = 11, TextColor = DynastyTheme.Palette("#BDE5F5"), LineBreakMode = LineBreakMode.WordWrap }
-            } } };
-        var info = new VerticalStackLayout
-        {
-            Spacing = 8,
-            Children =
-            {
-                RecruitIdentity(prospect.ProspectId, prospect.FullName, presentation.Title,
-                    prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT")
-            }
-        };
-        var actions = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.End };
-        var quickScout = new Button { Text = interaction.IsPriorityScout ? "Scout weekly ✓" : "Scout weekly", FontSize = 11,
-            Padding = new Thickness(10, 5), IsEnabled = interaction.CommittedTeamName is null && interaction.ScoutingPercent < 100 };
-        quickScout.Opacity = quickScout.IsEnabled ? 1 : .4;
-        quickScout.Clicked += (_, _) => { if (_currentDynasty is null) return;
-            _currentDynasty = ScoutingDepartmentService.TogglePriority(_currentDynasty, prospect.Source, prospect.ProspectId); RenderCurrentDynasty(); };
-        foreach (var action in new[] { viewButton, boardButton, quickScout }) { action.Margin = new Thickness(3); actions.Children.Add(action); }
-        if (_recruitingView == RecruitingView.Board) actions.Children.Add(quickOfferButton);
-        var cardContent = new VerticalStackLayout { Spacing = 8, Children = { info, actions, metrics, statusPanel } };
-
-        _recruitingList.Children.Add(
-            new Border
-            {
-                BackgroundColor = DynastyTheme.Palette(interaction.IsOnTargetBoard ? "#263F48" : "#202F39"),
-                Stroke = Color.FromArgb(interaction.ScholarshipOffered ? "#5A9B83" : "#486677"),
-                StrokeThickness = 0,
-                Padding = new Thickness(12, 10),
-                Content = cardContent
-            });
+            prospect.Subtitle, $"{interaction.ScoutingPercent}% complete", userStatus, marketStatus, recruitStars, nationalRank);
     }
 
     private static int GetProspectNationalRank(

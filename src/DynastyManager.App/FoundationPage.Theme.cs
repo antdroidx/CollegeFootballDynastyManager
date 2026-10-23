@@ -24,6 +24,7 @@ public sealed partial class FoundationPage
             var next = new FoundationPage
             {
                 _selectedRosterPlayer = _selectedRosterPlayer, _showDepthChartOrganizer = _showDepthChartOrganizer,
+                _selectedRecruitId = _selectedRecruitId, _selectedRecruitSource = _selectedRecruitSource, _recruitingView = _recruitingView,
                 _depthPositionCode = _depthPositionCode,
                 _loaded = _loaded, _currentDynasty = _currentDynasty, _saveRepository = _saveRepository,
                 _teamsByName = _teamsByName, _teamNames = _teamNames, _simulationProfiles = _simulationProfiles,
@@ -36,6 +37,15 @@ public sealed partial class FoundationPage
             next._importStatus.Text = _importStatus.Text;
             next._homeStatus.Text = _homeStatus.Text;
             next._newDynastyButton.IsEnabled = _newDynastyButton.IsEnabled;
+            foreach(var order in _tableOrders) next._tableOrders[order.Key]=order.Value;
+            next._rosterSearch.Text=_rosterSearch.Text;
+            next._rosterPosition.SelectedIndex=_rosterPosition.SelectedIndex;
+            next._rosterStatus.SelectedIndex=_rosterStatus.SelectedIndex;
+            next._rosterSort.SelectedIndex=_rosterSort.SelectedIndex;
+            next._recruitingSearch.Text=_recruitingSearch.Text;
+            next._recruitingPositionFilter.SelectedIndex=_recruitingPositionFilter.SelectedIndex;
+            next._recruitingStarFilter.SelectedIndex=_recruitingStarFilter.SelectedIndex;
+            next._recruitingScoutedFilter.SelectedIndex=_recruitingScoutedFilter.SelectedIndex;
             next.SetDynastyControlsEnabled(_currentDynasty is not null);
             next.RenderCurrentDynasty();
             next.ShowSection(section);
@@ -61,7 +71,7 @@ public sealed partial class FoundationPage
             Preferences.Default.Set("app-theme", picker.SelectedItem?.ToString() ?? "System");
             var app = Application.Current!;
             app.Resources = DynastyTheme.CreateResources();
-            app.UserAppTheme = DynastyTheme.RequestedTheme;
+            ((App)app).ApplyThemePreference();
             await RebuildThemeAsync(hostWindow, AppSection.Settings);
             }
             catch (Exception ex)

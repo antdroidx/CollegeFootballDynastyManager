@@ -91,7 +91,7 @@ public sealed partial class FoundationPage
             SemanticProperties.SetDescription(details, "Open " + player.FullName);
             details.Clicked += async (_, _) =>
             {
-                if (Width < 1000) { await ShowPlayerProfileAsync(player.PlayerId); return; }
+                if (!DynastyManager.Data.Presentation.ManagementLayout.SplitProfile(_rosterWorkspace.Width)) { await ShowPlayerProfileAsync(player.PlayerId); return; }
                 _selectedRosterPlayer = player.PlayerId;
                 RenderCurrentDynasty();
                 if (_sectionViews[AppSection.Roster] is ScrollView scroll) await scroll.ScrollToAsync(0, 0, false);

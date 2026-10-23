@@ -56,7 +56,7 @@ public sealed partial class FoundationPage
 
     private async Task ShowPlayerProfileAsync(Guid id)
     {
-        if (_activeSection == AppSection.Roster && Width >= 1000)
+        if (_activeSection == AppSection.Roster && DynastyManager.Data.Presentation.ManagementLayout.SplitProfile(_rosterWorkspace.Width))
         {
             _selectedRosterPlayer=id; RenderCurrentDynasty(); return;
         }
@@ -152,7 +152,7 @@ public sealed partial class FoundationPage
         stats.Clicked += async (_, _) => await ShowPlayerStatisticsAsync(player);
         content.Children.Add(stats);
         var school = new Button { Text = "View team roster & staff", IsEnabled = _teamsByName.ContainsKey(player.TeamName) };
-        school.Clicked += (_, _) => { closeProfile(); OpenSchool(player.TeamName); };
+        school.Clicked += (_, _) => OpenSchool(player.TeamName);
         content.Children.Add(school);
         return OrganizePlayerProfile(content, player, active is not null);
 
