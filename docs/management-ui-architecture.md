@@ -8,7 +8,7 @@ The Android client is .NET MAUI/C# with a single `FoundationPage` split into sec
 
 `ManagementLayout` documents 600/840dp breakpoints. `FoundationPage.Management` provides a persistent sidebar from 600dp, a compact expand/collapse menu plus familiar bottom navigation below 600dp, responsive panels, tabbed profiles and roster/recruit workspaces. A selected tablet player remains beside the roster; compact profiles open as full-screen modals. Resizing moves the same views; it does not mutate dynasty state.
 
-The existing palette now uses navy panels and off-white light surfaces. `System` follows Android appearance; explicit-color management controls rebuild around the same live dynasty and repository. OS theme changes while a modal is open are deferred until it closes. Brand accents are blended for readable navigation while school badges preserve original colors and initials. Existing cartoon portraits, including imported appearance, remain deterministic.
+The existing palette now uses navy panels and off-white light surfaces. `System` follows Android appearance; explicit-color management controls rebuild around the same live dynasty and repository. OS theme changes while a modal is open are deferred until it closes. Active dynasty updates also finish before the page rebuilds, so the current continuation commits to its original model owner. Native system-bar icons follow the selected appearance. Brand accents are blended for readable navigation while school badges preserve original colors and initials. Existing cartoon portraits, including imported appearance, remain deterministic.
 
 Shared tables retain keyboard/touch sorting and horizontal scrolling. Roster and recruit tables add saved Essential/All column presets. Important columns lead; extra physical, origin and competition details remain reachable. Recruiting retains the existing worker preparation, cancellation and 80-row bound and yields while constructing rows; no full-database native view inflation.
 
@@ -25,3 +25,5 @@ This phase changes presentation only. Simulation, POCI/calibration, recruitment 
 ## Validation
 
 Compile Android after integration; run existing core/data tests, resource and synchronization helper checks. GitHub Actions installs the signed test APK into Android 36 and exercises career navigation, Game Day skip/close, depth chart, recruiting and theme retention, then 360dp compact, 700dp foldable and 1200dp tablet window sizes. Inspect screenshots and runtime failures before delivering the artifact. Window resizing validates responsive policy; physical fold hinge/cutout behavior still requires device testing.
+
+Final Phase1–2 evidence: [Build306 validation and screenshots](validation/management-ui-phase-1-2/README.md).
