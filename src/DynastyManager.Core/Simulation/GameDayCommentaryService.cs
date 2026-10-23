@@ -40,6 +40,7 @@ public static class GameDayCommentaryService
         }
         return snap.Outcome switch
         {
+            SnapOutcome.Kickoff when snap.IsTouchback => $"{kicker} kicks into the end zone. TOUCHBACK — {snap.OffenseTeamName} takes over at its 25-yard line.",
             SnapOutcome.Kickoff when snap.Points >= 6 => $"{returner} takes the kickoff {snap.ReturnYards} yards for a TOUCHDOWN!",
             SnapOutcome.Kickoff when snap.IsOnsideKick => snap.KickingTeamRecovered ? $"{snap.DefenseTeamName} recovers the onside kick!" : $"{snap.OffenseTeamName} secures the onside kick.",
             SnapOutcome.Kickoff when snap.PrimaryDefenderId.HasValue =>

@@ -151,12 +151,21 @@ def main():
     assert "Play game" in texts(overview), "Expected a current-week user matchup"
     tap(overview, "Play game")
     toss = wait_for("coin-toss", lambda r: "Heads" in texts(r) or "Receive" in texts(r) or "Start game" in texts(r))
+    assert any((n.get("resource-id") or "").endswith("coin-toss-field") for n in toss.iter("node")), "Coin toss must be on the field"
     if "Heads" in texts(toss):
         tap(toss, "Heads")
         toss = wait_for("coin-result", lambda r: "Receive" in texts(r) or "Start game" in texts(r))
     if "Receive" in texts(toss):
         tap(toss, "Receive")
         toss = wait_for("coin-ready", lambda r: "Start game" in texts(r))
+    adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
+    adb("shell", "settings", "put", "system", "user_rotation", "1")
+    time.sleep(2)
+    toss = capture("coin-toss-landscape")
+    assert "Start game" in texts(toss)
+    adb("shell", "settings", "put", "system", "user_rotation", "0")
+    time.sleep(2)
+    toss = capture("coin-toss-portrait-ready")
     tap(toss, "Start game")
     viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)

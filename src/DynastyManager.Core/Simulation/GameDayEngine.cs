@@ -191,7 +191,7 @@ public static partial class GameDayEngine
         var sack = isPass && read.RusherCount > 0 && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - read.Protection * .0018 + (read.ReleaseSeconds - 2) * .015, .015, .18);
         var hailMary = call.Offense.Name == "Hail Mary";
         var complete = isPass && read.Target is not null && !turnover && !sack && session.Random.NextDouble() <
-            Math.Clamp(read.CatchChance - .055 + advantage * .0015 - (hailMary ? .25 : 0) -
+            Math.Clamp(read.CatchChance - .055 + advantage * .0015 - (hailMary ? read.Separation < 2 ? .18 : .05 : 0) -
                 GameWeatherService.CatchPenalty(session.Weather, call.Offense.Concept == OffensiveConcept.DeepPass), .06, .9);
         int RoundYards(double expected)
         {
@@ -486,7 +486,7 @@ public static partial class GameDayEngine
     {
         var snaps = session.Events.Where(item => item.OffenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
             item.Outcome != SnapOutcome.Kickoff).ToArray();
-        var kickReturns = session.Events.Where(item => item.Outcome == SnapOutcome.Kickoff && !item.IsOnsideKick &&
+        var kickReturns = session.Events.Where(item => item.Outcome == SnapOutcome.Kickoff && !item.IsOnsideKick && !item.IsTouchback &&
             item.OffenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)).ToArray();
         var puntReturns = session.Events.Where(item => item.Outcome == SnapOutcome.Punt &&
             item.DefenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) && item.ReturnYards > 0).ToArray();
@@ -622,8 +622,10 @@ public static partial class GameDayEngine
         var returnSpeed = returner?.SpeedRating ?? 70;
         if (kickoffRandom.NextDouble() < Math.Clamp(.025 + (returnSpeed - coverageSpeed) * .0004, .01, .05))
             returnYards += kickoffRandom.Next(18, 85);
-        var end = Math.Clamp(landing + returnYards, 1, 100);
-        returnYards = end - landing;
+        var touchback = kickoffRandom.NextDouble() < Math.Clamp(.40 + ((kicker?.Skills?.KickPower ?? 70) - 60) * .008 + GameWeatherService.Tailwind(session, session.KickoffTeamName) * .004, .20, .80);
+        var end = touchback ? 25 : Math.Clamp(landing + returnYards, 1, 100);
+        returnYards = touchback ? 0 : end - landing;
+        if (touchback) landing = -3;
         var touchdown = end == 100;
         var receivingUnit = SpecialTeam(receivingRoster, returner);
         var coverageUnit = SpecialTeam(kickingRoster, kicker);
@@ -637,8 +639,9 @@ public static partial class GameDayEngine
             Down = 0, Distance = 0, StartYardLine = start, BallEndYardLine = end,
             KickLandingYardLine = landing,
             Yards = 0, ReturnYards = returnYards, Outcome = SnapOutcome.Kickoff,
-            KickerId = kicker?.PlayerId, ReturnerId = returner?.PlayerId, BallCarrierId = returner?.PlayerId,
-            PrimaryDefenderId = touchdown ? null : coverageTackler?.PlayerId, Points = touchdown ? 6 : 0,
+            KickerId = kicker?.PlayerId, ReturnerId = touchback ? null : returner?.PlayerId, BallCarrierId = touchback ? null : returner?.PlayerId,
+            IsTouchback = touchback,
+            PrimaryDefenderId = touchdown || touchback ? null : coverageTackler?.PlayerId, Points = touchdown ? 6 : 0,
             OffensePersonnel = receivingUnit.Select(player => player.PlayerId).ToArray(),
             DefensePersonnel = coverageUnit.Select(player => player.PlayerId).ToArray()
         };
@@ -651,7 +654,7 @@ public static partial class GameDayEngine
             session.TryPending = true; session.YardLine = 97;
         }
         session.ClockStopped = true; session.ClockRestartsOnReady = false; session.PlayClockSeconds = 25;
-        ConsumeLiveClock(session, Math.Clamp(2 + returnYards / 6, 3, 9));
+        if (!touchback) ConsumeLiveClock(session, Math.Clamp(2 + returnYards / 6, 3, 9));
         CheckTwoMinuteTimeout(session); AdvanceQuarter(session);
         return kickoff;
     }

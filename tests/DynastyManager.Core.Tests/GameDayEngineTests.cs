@@ -106,12 +106,12 @@ public class GameDayEngineTests
 
         Assert.Equal(SnapOutcome.Kickoff, kickoff.Outcome);
         Assert.NotNull(kickoff.KickerId);
-        Assert.NotNull(kickoff.ReturnerId);
+        if (kickoff.IsTouchback) Assert.Null(kickoff.ReturnerId); else Assert.NotNull(kickoff.ReturnerId);
         Assert.Equal(kickoff.BallEndYardLine, session.YardLine);
         Assert.Equal(11, kickoff.OffensePersonnel.Count);
         Assert.Equal(11, kickoff.DefensePersonnel.Count);
-        Assert.NotNull(kickoff.PrimaryDefenderId);
-        Assert.Contains(kickoff.PrimaryDefenderId!.Value, kickoff.DefensePersonnel);
+        if (kickoff.IsTouchback) { Assert.Null(kickoff.PrimaryDefenderId); Assert.Equal(25, session.YardLine); }
+        else { Assert.NotNull(kickoff.PrimaryDefenderId); Assert.Contains(kickoff.PrimaryDefenderId!.Value, kickoff.DefensePersonnel); }
     }
 
     [Fact]
@@ -154,7 +154,7 @@ public class GameDayEngineTests
         GameDayEngine.SimulateToEnd(session);
 
         var game = GameDayEngine.Finish(session);
-        var homeKickoffs = session.Events.Where(play => play.Outcome == SnapOutcome.Kickoff && !play.IsOnsideKick && play.OffenseTeamName == "Home").ToArray();
+        var homeKickoffs = session.Events.Where(play => play.Outcome == SnapOutcome.Kickoff && !play.IsOnsideKick && !play.IsTouchback && play.OffenseTeamName == "Home").ToArray();
         var awayPuntReturns = session.Events.Where(play => play.Outcome == SnapOutcome.Punt &&
             play.DefenseTeamName == "Away" && play.ReturnYards > 0).ToArray();
 

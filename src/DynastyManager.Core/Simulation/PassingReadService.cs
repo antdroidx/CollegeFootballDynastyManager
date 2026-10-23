@@ -46,13 +46,15 @@ public static class PassingReadService
             var custom = offenseRoles[receiver.PlayerId];
             var lane = GameDayAnimationPlanner.OffensiveAlignment(play, receiver.Position, role).Y;
             // Match outside receivers to corners; safeties and linebackers handle inside routes.
+            var alignments = DefensivePursuitService.Alignments(coverage, defense);
             var defender = coverage.OrderBy(p => receiver.Position == Position.WR
-                    ? p.Position == Position.CB ? 0 : 1 : p.Position is Position.MLB or Position.OLB ? 0 : 1)
-                .ThenBy(p => Math.Abs(p.DepthChartOrder - role - 1)).ElementAtOrDefault(index % Math.Max(1, coverage.Length));
+                    ? p.Position == Position.CB ? 0 : p.Position is Position.FS or Position.SS ? 1 : 2
+                    : p.Position is Position.MLB or Position.OLB ? 0 : 1)
+                .ThenBy(p => Math.Abs(alignments[p.PlayerId].Y - lane)).FirstOrDefault();
             var defenderAssignment = defender is null ? null : defenseRoles[defender.PlayerId];
             var defenderAbility = defender is null ? 60 : (defender.SpeedRating + defender.AgilityRating + defender.AwarenessRating) / 3d;
             var routeAbility = (receiver.SpeedRating + receiver.AgilityRating + receiver.AwarenessRating) / 3d;
-            var zones = defenderAssignment?.Task == AssignmentTask.Zone || defense.Approach == DefensiveApproach.ProtectPass || defense.Name.Contains("Cover", StringComparison.OrdinalIgnoreCase);
+            var zones = LiveFootballChoreography.Zone(defense, defenderAssignment);
             var leverage = zones && route is GameDayRouteFamily.Curls or GameDayRouteFamily.Outs ? .35
                 : !zones && route is GameDayRouteFamily.Mesh or GameDayRouteFamily.Slants ? .4 : 0;
             var spacing = Math.Abs(lane - .5) * .3;

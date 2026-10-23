@@ -79,7 +79,7 @@ public class GameConditionsAndAwardsTests
         for(var seed=1;seed<=2000 && (scored is null || crossed==0);seed++)
         {
             var s=GameDayEngine.Start(source.Game with{SimulationSeed=seed,Weather=new()},source.HomeProfile,source.AwayProfile,source.Roster,GameDayMode.Play);
-            var e=GameDayEngine.Step(s);Assert.Equal(e.BallEndYardLine-e.KickLandingYardLine,e.ReturnYards);
+            var e=GameDayEngine.Step(s);if (!e.IsTouchback) Assert.Equal(e.BallEndYardLine-e.KickLandingYardLine,e.ReturnYards); else { Assert.Equal(25,s.YardLine); Assert.Equal(0,e.ReturnYards); }
             if(e.BallEndYardLine>50)crossed++;
             if(e.Points>=6)scored=s;
         }

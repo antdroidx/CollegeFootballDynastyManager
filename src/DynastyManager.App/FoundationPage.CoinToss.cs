@@ -1,6 +1,8 @@
 using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
+using DynastyManager.Data.Branding;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Layouts;
 using Microsoft.Maui.Graphics;
 namespace DynastyManager.App;
 
@@ -10,10 +12,10 @@ public sealed partial class FoundationPage
     {
         var ready = new TaskCompletionSource();
         var page = new GameDayViewerPage { BackgroundColor = DynastyTheme.Background, BackHandler = () => true };
-        var title = new Label { Text = "COIN TOSS", FontFamily = "monospace", FontSize = 26, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var coinText = new Label { Text = "★", FontSize = 42, TextColor = Color.FromArgb("#332500"), HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center };
+        var title = new Label { Text = "COIN TOSS", FontFamily = "monospace", FontSize = 20, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var coinText = new Label { Text = "★", FontSize = 28, TextColor = Color.FromArgb("#332500"), HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center };
         var coin = new Border { BackgroundColor = Color.FromArgb("#E8C979"), Stroke = Color.FromArgb("#94712D"), StrokeThickness = 3,
-            StrokeShape = new RoundRectangle { CornerRadius = 60 }, WidthRequest = 120, HeightRequest = 120, Padding = 2,
+            StrokeShape = new RoundRectangle { CornerRadius = 60 }, WidthRequest = 64, HeightRequest = 64, Padding = 2,
             HorizontalOptions = LayoutOptions.Center, Content = coinText };
         var result = new Label { Text = session.Game.AwayTeamName + " calls the toss", FontSize = 16, HorizontalTextAlignment = TextAlignment.Center };
         var heads = new Button { Text = "Heads", AutomationId = "coin-heads" };
@@ -48,8 +50,48 @@ public sealed partial class FoundationPage
         }
         heads.Clicked += async (_, _) => await Flip(true); tails.Clicked += async (_, _) => await Flip(false);
         start.Clicked += async (_, _) => { start.IsEnabled = false; await Navigation.PopModalAsync(); ready.TrySetResult(); };
-        page.Content = new ScrollView { Content = new VerticalStackLayout { Spacing = 18, Padding = 24, VerticalOptions = LayoutOptions.Center,
-            Children = { title, new Label { Text = $"{session.Game.AwayTeamName} at {session.Game.HomeTeamName}", HorizontalTextAlignment = TextAlignment.Center }, coin, result, calls, choices, start } } };
+        var home = TeamBrandCatalog.Get(session.Game.HomeTeamName);
+        var field = new Grid { AutomationId = "coin-toss-field", BackgroundColor = Color.FromArgb("#245B38") };
+        field.Add(new GraphicsView { Drawable = new GameFieldDrawable { CoinCeremony = true, YardLine = 50, Distance = 0,
+            HomeColor = Color.FromArgb(home.Primary), HomeSecondaryColor = Color.FromArgb(home.Secondary),
+            HomeInitial = TeamBrandCatalog.Initial(session.Game.HomeTeamName), HomeName = session.Game.HomeTeamName.ToUpperInvariant() } });
+        var ceremony = new AbsoluteLayout { InputTransparent = true };
+        var captainPositions = new List<(FootballSpriteView View, double X, int Slot)>();
+        foreach (var (name, away, x) in new[] { (session.Game.HomeTeamName, false, .42), (session.Game.AwayTeamName, true, .58) })
+        {
+            var brand = TeamBrandCatalog.Get(name);
+            for (var i = 0; i < 2; i++)
+            {
+                var captain = new FootballSpriteView(Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), away, i, "C") { WidthRequest = 46, HeightRequest = 46 };
+                captain.HuddleFacing(away ? -1 : 1, 0);
+                captainPositions.Add((captain, x, i));
+                AbsoluteLayout.SetLayoutFlags(captain, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(captain, new Rect(x, .25 + i * .12, 46, 46)); ceremony.Add(captain);
+            }
+        }
+        var official = new GraphicsView { Drawable = new FootballOfficialDrawable(), WidthRequest = 32, HeightRequest = 48 };
+        AbsoluteLayout.SetLayoutFlags(official, AbsoluteLayoutFlags.PositionProportional);
+        AbsoluteLayout.SetLayoutBounds(official, new Rect(.5, .30, 32, 48)); ceremony.Add(official);
+        field.Add(ceremony);
+        var panel = new Border { BackgroundColor = DynastyTheme.Surface, StrokeThickness = 0, Margin = 10, Padding = 12,
+            MaximumWidthRequest = 650, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.End,
+            Content = new VerticalStackLayout { Spacing = 8, Children = { title,
+                new Label { Text = $"{session.Game.AwayTeamName} at {session.Game.HomeTeamName} · Captains at midfield", HorizontalTextAlignment = TextAlignment.Center },
+                coin, result, calls, choices, start } } };
+        var panelBody = panel.Content;
+        panel.Content = new ScrollView { Content = panelBody };
+        field.SizeChanged += (_, _) =>
+        {
+            if (field.Width <= 0 || field.Height <= 0) return;
+            var wide = field.Width > field.Height;
+            panel.HorizontalOptions = wide ? LayoutOptions.End : LayoutOptions.Center;
+            panel.WidthRequest = wide ? Math.Min(350, field.Width * .44) : -1;
+            panel.MaximumHeightRequest = wide ? field.Height - 16 : field.Height * .48;
+            foreach (var c in captainPositions)
+                AbsoluteLayout.SetLayoutBounds(c.View, new Rect(wide ? c.X * .5 + .04 : c.X, wide ? .30 + c.Slot * .22 : .25 + c.Slot * .12, 46, 46));
+            AbsoluteLayout.SetLayoutBounds(official, new Rect(wide ? .29 : .5, wide ? .4 : .30, 32, 48));
+        };
+        field.Add(panel); page.Content = field;
         await Navigation.PushModalAsync(page);
         if (!interactive || controlledTeam != session.Game.AwayTeamName) await Flip(true);
         await ready.Task;
