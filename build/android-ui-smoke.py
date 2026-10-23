@@ -294,6 +294,8 @@ def main():
     tap(advanced, "Roster")
     roster = wait_for("roster-morale", lambda r: any("Δ = change from season start" in (t or "") for t in texts(r)))
     assert any("Morale responds" in (t or "") for t in texts(roster))
+    adb("shell", "settings", "put", "system", "user_rotation", "0")
+    time.sleep(2)
     organizer = scroll_to_text("depth-open-button", "Organize depth chart")
     tap(organizer, "Organize depth chart")
     chart = wait_for("depth-chart-portrait", lambda r: "PPOS 0 · QB" in texts(r))

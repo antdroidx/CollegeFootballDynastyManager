@@ -33,7 +33,6 @@ public sealed partial class FoundationPage
         _depthChartOrganizer.Children.Clear();
         _depthChartOrganizer.IsVisible = _showDepthChartOrganizer;
         _depthChartOrganizerButton.Text = _showDepthChartOrganizer ? "Close depth chart" : "Organize depth chart";
-        _depthChartOrganizerButton.AutomationId = "depth-chart-open";
         if (!_showDepthChartOrganizer || _currentDynasty is null) return;
         var state = _currentDynasty;
         var team = state.UserTeamName;
