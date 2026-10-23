@@ -79,6 +79,13 @@ public sealed partial class FoundationPage
     protected override bool OnBackButtonPressed()
     {
         if (_advanceOverlay.IsVisible || _isAdvancing) return true;
+        if (_activeSection == AppSection.Recruiting && _selectedRecruitId is not null)
+        {
+            _selectedRecruitId=null;_selectedRecruitSource=null;
+            _recruitingDetailHost.Content=null;_recruitingDetailHost.IsVisible=false;return true;
+        }
+        if (_activeSection == AppSection.Roster && _selectedRosterPlayer is not null)
+        { _selectedRosterPlayer=null;RenderCurrentDynasty();return true; }
         if (_activeSection == AppSection.Home) return base.OnBackButtonPressed();
         if (_activeSection != AppSection.NewDynasty && RestorePreviousSection()) return true;
         _ = ReturnToLibraryAsync();

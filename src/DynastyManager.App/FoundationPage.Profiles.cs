@@ -44,7 +44,8 @@ public sealed partial class FoundationPage
             ColumnDefinitions = new ColumnDefinitionCollection { new(36), new(GridLength.Star) } };
         row.Add(PersonPortrait.Create(id, name, Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), 36, staff, age, appearance), 0, 0);
         // A real button retains keyboard, screen-reader and touch behavior inside sortable tables.
-        var button = new Button { Text = name, FontSize = 12,
+        var displayName=staff || !name.Contains(' ') ? name : name[..1]+". "+name[(name.IndexOf(' ')+1)..];
+        var button = new Button { Text = displayName, FontSize = 12,
             TextColor = DynastyTheme.IsLight ? Color.FromArgb(staff ? "#623794" : "#23587D") : Color.FromArgb(staff ? "#D6C4F2" : "#BDE5F5"), BackgroundColor = Colors.Transparent,
             HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(0, 4), MinimumHeightRequest = 44 };
         SemanticProperties.SetDescription(button, (staff ? "View coach " : "View player ") + name);

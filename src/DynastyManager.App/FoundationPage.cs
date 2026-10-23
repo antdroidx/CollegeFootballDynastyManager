@@ -869,20 +869,22 @@ public sealed partial class FoundationPage : ContentPage
         root.Add(_recruitingLoadingOverlay, 0, 0);
         Grid.SetRowSpan(_recruitingLoadingOverlay, 2);
         Grid.SetColumnSpan(_recruitingLoadingOverlay, 2);
-        bool? sideBySide = null;
-        root.SizeChanged += (_, _) =>
+        void ArrangeRecruitingWorkspace()
         {
-            var wide = root.Width >= 650 && root.Height < 420;
-            if (sideBySide == wide) return;
-            sideBySide = wide;
-            root.ColumnSpacing = wide ? 14 : 0;
-            root.ColumnDefinitions[0].Width = wide ? new GridLength(260) : GridLength.Star;
-            root.ColumnDefinitions[1].Width = wide ? GridLength.Star : new GridLength(0);
-            root.RowDefinitions[0].Height = wide ? GridLength.Star : GridLength.Auto;
-            root.RowDefinitions[1].Height = wide ? new GridLength(0) : GridLength.Star;
-            Grid.SetColumn(prospectWorkspace, wide ? 1 : 0);
-            Grid.SetRow(prospectWorkspace, wide ? 0 : 1);
-        };
+            var selected=_recruitingDetailHost.IsVisible && _recruitingDetailHost.Content is not null;
+            var profileOnly=selected && root.Width<1000;
+            var wide=!profileOnly && root.Width>=650 && root.Height<420;
+            controls.IsVisible=!profileOnly;
+            root.ColumnSpacing=wide?14:0;
+            root.ColumnDefinitions[0].Width=wide?new GridLength(260):GridLength.Star;
+            root.ColumnDefinitions[1].Width=wide?GridLength.Star:new GridLength(0);
+            root.RowDefinitions[0].Height=wide?GridLength.Star:profileOnly?new GridLength(0):GridLength.Auto;
+            root.RowDefinitions[1].Height=wide?new GridLength(0):GridLength.Star;
+            Grid.SetColumn(prospectWorkspace,wide?1:0);Grid.SetRow(prospectWorkspace,wide?0:1);
+        }
+        root.SizeChanged+=(_,_)=>ArrangeRecruitingWorkspace();
+        _recruitingDetailHost.PropertyChanged+=(_,args)=>
+        {if(args.PropertyName is nameof(ContentView.Content) or nameof(IsVisible))ArrangeRecruitingWorkspace();};
         return root;
     }
 

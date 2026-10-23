@@ -432,8 +432,12 @@ def main():
 def check_management_layouts():
     # Use the same saved dynasty while resizing the Android window in dp.
     adb("shell", "settings", "put", "system", "user_rotation", "0")
-    adb("shell", "wm", "size", "1080x1920")
-    adb("shell", "wm", "density", "480")
+    # MAUI caches its initial pixel conversion. Change window dimensions at the
+    # startup density, as an actual resize/fold transition does; don't alter DPI.
+    density=int(re.search(r"Physical density: (\d+)",adb("shell","wm","density").decode()).group(1))/160
+    def resize(width,height):
+        adb("shell","wm","size",f"{round(width*density)}x{round(height*density)}")
+    resize(360,800)
     time.sleep(3)
     tap(capture("management-compact-settings"), "Overview")
     compact=wait_for("management-compact-dashboard", overview_ready)
@@ -466,14 +470,13 @@ def check_management_layouts():
     detail=wait_for("management-recruit-actions",lambda r:"Priority Scout" in texts(r) or "Priority On" in texts(r))
     assert "Offer Scholarship" not in texts(detail), "In-season actions leaked into recruit profile"
     tap(detail,"Back to prospects")
-    adb("shell","wm","size","1400x1800")
-    adb("shell","wm","density","320")
+    resize(700,900)
     time.sleep(3)
     fold=capture("management-foldable-recruiting")
     assert any((n.get("resource-id") or "").endswith("nav-roster") for n in fold.iter("node")), "Foldable sidebar missing"
     tap(fold,"Roster")
     capture("management-foldable-roster")
-    adb("shell","wm","size","2400x1600")
+    resize(1200,800)
     time.sleep(3)
     tablet=capture("management-tablet-roster")
     person=next(n for n in tablet.iter("node") if (n.get("content-desc") or "").startswith("View player "))

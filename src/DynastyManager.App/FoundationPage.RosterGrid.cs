@@ -23,6 +23,7 @@ public sealed partial class FoundationPage
     private View BuildOrganizedRosterSection()
     {
         ConfigureDepthChartControls();
+        _offseasonRosterStatus.FontSize=11;
         _rosterSearch.TextChanged += (_, _) => RenderCurrentDynasty();
         _rosterPosition.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
         _rosterStatus.SelectedIndexChanged += (_, _) => RenderCurrentDynasty();
@@ -114,7 +115,7 @@ public sealed partial class FoundationPage
         }
         _transferPortalList.Children.Add(SectionTitle($"Depth chart · {rows.Count} players", "Δ = change from season start · Morale responds to form and injury · swipe for more columns"));
         if (rows.Count == 0) _transferPortalList.Children.Add(new Label { Text = "No players match these filters." });
-        else _transferPortalList.Children.Add(DataTable([("Pos", 36), ("Player", 148), ("Year", 40), ("OVR", 44), ("Δ", 36), ("Morale", 50), ("Details", 56),
+        else _transferPortalList.Children.Add(DataTable([("Pos", 36), ("Player", 136), ("Year", 52), ("OVR", 44), ("Δ", 36), ("Morale", 50), ("Details", 56),
             ("Depth", 54), ("Potential", 75), ("HS", 45), ("Status", 105), ("Height", 64), ("Wt lb", 60)], rows, configureColumns: true));
     }
 
