@@ -6,6 +6,18 @@ namespace DynastyManager.App;
 
 public static class DynastyTheme
 {
+    public static void ApplyNativeAppearance()
+    {
+#if ANDROID
+        if (Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.Window is { } window)
+        {
+            var bars = AndroidX.Core.View.WindowCompat.GetInsetsController(window, window.DecorView);
+            bars.AppearanceLightStatusBars = IsLight;
+            bars.AppearanceLightNavigationBars = IsLight;
+        }
+#endif
+    }
+
     public static string Preference => Microsoft.Maui.Storage.Preferences.Default.Get("app-theme", "Dark");
     public static AppTheme RequestedTheme => Preference switch { "Light" => AppTheme.Light, "Dark" => AppTheme.Dark, _ => AppTheme.Unspecified };
     public static bool IsLight => Preference == "Light" || (Preference == "System" && Application.Current?.RequestedTheme == AppTheme.Light);

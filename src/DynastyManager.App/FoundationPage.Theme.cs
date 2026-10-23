@@ -15,6 +15,7 @@ public sealed partial class FoundationPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        DynastyTheme.ApplyNativeAppearance();
         if (_systemThemePending) { _systemThemePending = false; _ = RefreshSystemThemeAsync(); }
     }
 
@@ -53,6 +54,7 @@ public sealed partial class FoundationPage
             foreach (var previousSection in _sectionTrail.Reverse()) next._sectionTrail.Push(previousSection);
             hostWindow.Page = next;
             if (_saveRepository is not null) await next.RefreshSaveSlotsAsync();
+            DynastyTheme.ApplyNativeAppearance();
     }
 
     private View BuildThemeSettings()
