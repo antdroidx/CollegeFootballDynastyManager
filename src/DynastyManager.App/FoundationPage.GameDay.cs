@@ -300,9 +300,10 @@ public sealed partial class FoundationPage
         controls.Children.Insert(1, expand);
         var more = new Button { Text = "More", AutomationId = "game-day-more" };
         controls.Children.Add(more);
-        var tray = new VerticalStackLayout { Spacing = 4, Children = { quickCalls, controls } };
+        var tray = new VerticalStackLayout { Spacing = 8, Children = { quickCalls, controls } };
+        var trayScroll = new ScrollView { Content = tray, MaximumHeightRequest = 260 };
         var traySurface = new Border { AutomationId = "game-day-controls", StrokeThickness = 0, Padding = 7,
-            BackgroundColor = DynastyTheme.Surface, Content = new ScrollView { Content = tray, MaximumHeightRequest = 190 },
+            BackgroundColor = DynastyTheme.Surface, Content = trayScroll,
             VerticalOptions = LayoutOptions.End, Margin = new Thickness(8) };
         var pickerLayer = new Grid { IsVisible = false, BackgroundColor = DynastyTheme.Palette("#88000000"), Padding = 10 };
         expand.Clicked += (_, _) => ExpandCalls(!ControlledOnOffense());
@@ -407,6 +408,8 @@ public sealed partial class FoundationPage
         {
             if (compactLayout == compact) return;
             compactLayout = compact;
+            // Leave room for the play cards and two complete action rows in portrait.
+            trayScroll.MaximumHeightRequest = compact ? 190 : 260;
             ClosePicker();
             page.Content = null;
             foreach (var view in new View[] { scoreHeader, situation, possession, fieldFrame, commentaryPanel, playCard, defenseCard, controls, quickCalls, traySurface, pickerLayer })
