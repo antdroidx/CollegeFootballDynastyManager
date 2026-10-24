@@ -17,9 +17,13 @@ public sealed partial class FoundationPage
     private View PlayerMoraleSummary(DynastyPlayer player)
     {
         var value = GameMoraleService.PlayerMorale(_currentDynasty!, player);
+        var lastTalk = _currentDynasty!.CoachTalks.Concat(_currentDynasty.Schedule.Where(g => g.HasPlayed).SelectMany(g => g.CoachTalks))
+            .Where(t => t.TeamName == player.TeamName && t.SeasonYear == _currentDynasty.SeasonYear && t.Week <= _currentDynasty.Week && _currentDynasty.Week - t.Week < 3)
+            .OrderByDescending(t => t.Week).FirstOrDefault(t => t.Reactions.Any(r => r.PlayerId == player.PlayerId));
+        var response = lastTalk?.Reactions.FirstOrDefault(r => r.PlayerId == player.PlayerId)?.Response;
         var row = new Grid { ColumnDefinitions = new() { new(36), new(GridLength.Star) }, ColumnSpacing = 8 };
         row.Add(MoraleIcon(player), 0, 0);
-        row.Add(new Label { Text = $"Morale · {MoraleMood(value)} ({value}/100)\nSeason OVR Δ {FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty!, player))} · automatic training", FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 1, 0);
+        row.Add(new Label { Text = $"Morale · {MoraleMood(value)} ({value}/100)\nSeason OVR Δ {FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty!, player))} · automatic training" + (response is null ? "" : $"\nCoach talk: {response}"), FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 1, 0);
         return new Border { StrokeThickness = 0, Padding = 10, Content = row, AutomationId = "player-morale-summary" };
     }
     private sealed class MoraleFace(int value) : IDrawable

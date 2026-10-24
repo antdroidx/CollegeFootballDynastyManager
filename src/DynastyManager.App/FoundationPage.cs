@@ -3606,6 +3606,12 @@ public sealed partial class FoundationPage : ContentPage
         var injuries = new Button { Text = "Injuries & availability", HorizontalOptions = LayoutOptions.Start };
         injuries.Clicked += (_, _) => ShowSection(AppSection.Injuries);
         developmentPanel.Children.Insert(0, injuries);
+        if (team.Name == _currentDynasty.UserTeamName)
+        {
+            var talk = new Button { Text = "Team talk · morale", AutomationId = "season-coach-talk" };
+            talk.Clicked += async (_, _) => await ShowSeasonCoachTalkAsync();
+            developmentPanel.Children.Insert(1, talk);
+        }
         developmentPanel.Children.Add(SectionTitle("Player development", "Change from season start · staff-led training · current morale"));
         developmentPanel.Children.Add(DataTable([("Player", 155), ("Pos", 45), ("Year", 60), ("OVR", 50), ("Δ", 50), ("Morale", 60), ("Availability", 115)],
             _currentDynasty.ActiveRoster.Where(p => p.TeamName == team.Name).OrderBy(p => p.Position).ThenByDescending(p => p.OverallRating).Select(player => new View[] {

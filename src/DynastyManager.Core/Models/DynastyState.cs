@@ -2,6 +2,7 @@ namespace DynastyManager.Core.Models;
 
 public sealed record DynastyState
 {
+    public IReadOnlyList<DynastyManager.Core.Simulation.CoachTalkRecord> CoachTalks { get; init; } = [];
     public const int CurrentSchemaVersion = 26;
     public int OverallCalibrationVersion { get; init; }
     public IReadOnlyList<DepthChartAssignment> DepthChartAssignments { get; init; } = [];

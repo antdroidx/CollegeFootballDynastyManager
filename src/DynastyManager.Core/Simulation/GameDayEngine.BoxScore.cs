@@ -9,7 +9,7 @@ public static partial class GameDayEngine
         return new GameDayBoxScore
         {
             HomeTeamName = session.Game.HomeTeamName, AwayTeamName = session.Game.AwayTeamName,
-            Weather = session.Weather,
+            Weather = session.Weather, HomeStartingMorale = session.HomeProfile.Morale, AwayStartingMorale = session.AwayProfile.Morale,
             HomeMorale = GameMoraleService.InGame(session, session.Game.HomeTeamName), AwayMorale = GameMoraleService.InGame(session, session.Game.AwayTeamName),
             PlayerOfGame = session.IsComplete ? PlayerOfGameService.Select(session.Game with { HasPlayed=true, HomeScore=session.HomeScore, AwayScore=session.AwayScore }, BuildPlayerStats(session)) : null,
             HomeScore = session.HomeScore, AwayScore = session.AwayScore,

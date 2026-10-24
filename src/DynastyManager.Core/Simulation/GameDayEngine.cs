@@ -162,6 +162,8 @@ public static partial class GameDayEngine
             call.Offense.Personnel, offenseFatigue, session.Random);
         var defensePersonnel = PersonnelRotationService.SelectDefense(defenseDepthChart, defense.TeamName,
             call.Defense.Personnel, defenseFatigue, session.Random);
+        offensePersonnel = GameDayCoachingService.ApplySubstitutions(session, offensePersonnel);
+        defensePersonnel = GameDayCoachingService.ApplySubstitutions(session, defensePersonnel);
         var offensePlayers = Players(session, offensePersonnel);
         var defensePlayers = Players(session, defensePersonnel);
 
@@ -181,6 +183,7 @@ public static partial class GameDayEngine
         var advantage = isPass ? offense.PassOffenseRating - defense.PassDefenseRating : offense.RushOffenseRating - defense.RushDefenseRating;
         advantage += MatchupShift(call.Offense.Concept, call.Defense.Approach);
         advantage += GameMoraleService.MatchupShift(session, offense.TeamName, defense.TeamName);
+        advantage += GameDayCoachingService.IndividualTalkShift(session, offensePlayers) - GameDayCoachingService.IndividualTalkShift(session, defensePlayers);
         advantage += GameDayMatchupService.FormationAdvantage(call.Offense, call.Defense, isPass);
         advantage += GameDayMatchupService.PersonnelAdvantage(offensePlayers, defensePlayers, isPass);
         if (!session.Game.IsNeutralSite)
@@ -299,6 +302,7 @@ public static partial class GameDayEngine
         var awayStats = BuildStats(session, session.Game.AwayTeamName);
         var finished = session.Game with
         {
+            CoachTalks = session.CoachTalks.ToArray(),
             Weather = session.Weather, HomeEndingMorale = GameMoraleService.InGame(session, session.Game.HomeTeamName),
             AwayEndingMorale = GameMoraleService.InGame(session, session.Game.AwayTeamName),
             HasPlayed = true, HomeScore = session.HomeScore, AwayScore = session.AwayScore,

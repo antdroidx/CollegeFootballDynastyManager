@@ -50,11 +50,13 @@ public sealed partial class FoundationPage
         }
         heads.Clicked += async (_, _) => await Flip(true); tails.Clicked += async (_, _) => await Flip(false);
         start.Clicked += async (_, _) => { start.IsEnabled = false; await Navigation.PopModalAsync(); ready.TrySetResult(); };
+        var pregameTalk = new Button { Text = "Pregame team talk" };
+        pregameTalk.Clicked += async (_, _) => await ShowGameCoachTalkAsync(page, session, controlledTeam);
         var home = TeamBrandCatalog.Get(session.Game.HomeTeamName);
         var field = new Grid { AutomationId = "coin-toss-field", BackgroundColor = Color.FromArgb("#245B38") };
         var fieldDiagram = new GraphicsView { Drawable = new GameFieldDrawable { CoinCeremony = true, YardLine = 50, Distance = 0,
             HomeColor = Color.FromArgb(home.Primary), HomeSecondaryColor = Color.FromArgb(home.Secondary),
-            HomeInitial = TeamBrandCatalog.Initial(session.Game.HomeTeamName), HomeName = session.Game.HomeTeamName.ToUpperInvariant() } };
+            HomeInitial = TeamBrandCatalog.Monogram(session.Game.HomeTeamName), HomeName = session.Game.HomeTeamName.ToUpperInvariant() } };
         field.Add(fieldDiagram);
         var ceremony = new AbsoluteLayout { InputTransparent = true };
         var captainPositions = new List<(FootballSpriteView View, double X, int Slot)>();
@@ -78,7 +80,7 @@ public sealed partial class FoundationPage
             MaximumWidthRequest = 650, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.End,
             Content = new VerticalStackLayout { Spacing = 8, Children = { title,
                 new Label { Text = $"{session.Game.AwayTeamName} at {session.Game.HomeTeamName} · Captains at midfield", HorizontalTextAlignment = TextAlignment.Center },
-                coin, result, calls, choices, start } } };
+                coin, result, calls, choices, start, pregameTalk } } };
         var panelBody = panel.Content;
         panel.Content = new ScrollView { Content = panelBody };
         field.SizeChanged += (_, _) =>

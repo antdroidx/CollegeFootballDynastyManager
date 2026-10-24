@@ -8,9 +8,12 @@ public static class GameMoraleService
     {
         var games = state.Schedule.Where(g => g.SeasonYear == state.SeasonYear && g.HasPlayed && g.InvolvesTeam(team))
             .OrderByDescending(g => g.Week).ThenBy(g => g.GameId).Take(4).ToArray();
-        var form = games.Sum(g => g.WinnerTeamName == team ? 5 : -5);
+        var form = games.Sum(g => g.WinnerTeamName == team ? 6 : -4);
+        var recovery = games.Take(2).Sum(g => ((g.HomeTeamName == team ? g.HomeEndingMorale : g.AwayEndingMorale) - 50) / 8);
+        var talks = state.CoachTalks.Where(t => t.TeamName == team && t.SeasonYear == state.SeasonYear && t.Week <= state.Week && state.Week - t.Week < 3)
+            .Sum(t => t.Reactions.Select(r => (double)r.Change).DefaultIfEmpty().Average() * (3 - (state.Week - t.Week)) / 3);
         var coach = state.Staff.FirstOrDefault(s => s.TeamName == team && s.Role == StaffRole.HeadCoach);
-        return Math.Clamp(50 + form + ((coach?.Leadership ?? 60) - 60) / 12, 25, 75);
+        return Math.Clamp(50 + form + recovery + (int)Math.Round(talks) + ((coach?.Leadership ?? 60) - 60) / 12, 25, 75);
     }
     public static int PlayerMorale(DynastyState state, DynastyPlayer player)
     {
@@ -20,8 +23,11 @@ public static class GameMoraleService
         var success = recent.Sum(p => p.PassingTouchdowns + p.RushingTouchdowns + p.ReceivingTouchdowns + p.Interceptions + p.Sacks);
         var setbacks = recent.Sum(p => p.InterceptionsThrown + p.RushingFumbles + p.ReceivingFumbles);
         var steadiness = Math.Clamp((player.Skills?.Leadership ?? 60) / 100d, .4, .95);
+        var talkEffect = state.CoachTalks.Concat(state.Schedule.Where(g => g.HasPlayed && g.SeasonYear == state.SeasonYear).SelectMany(g => g.CoachTalks))
+            .Where(t => t.TeamName == player.TeamName && t.SeasonYear == state.SeasonYear && t.Week <= state.Week && state.Week - t.Week < 3)
+            .Sum(t => (t.Reactions.FirstOrDefault(r => r.PlayerId == player.PlayerId)?.Change ?? 0) * (3 - (state.Week - t.Week)) / 3d);
         var personal = Math.Clamp(success - setbacks * 2, -6, 6) * (1 - steadiness * .4);
-        return (int)Math.Round(Math.Clamp(50 + (SeasonMorale(state, player.TeamName) - 50) * .65 + personal -
+        return (int)Math.Round(Math.Clamp(50 + (SeasonMorale(state, player.TeamName) - 50) * .65 + personal + Math.Clamp(talkEffect, -8, 8) -
             (player.CurrentInjury is null ? 0 : 6), 25, 80));
     }
 
@@ -41,6 +47,7 @@ public static class GameMoraleService
             var beneficiary = e.DefensiveScore ? e.DefenseTeamName : e.OffenseTeamName;
             change += beneficiary == team ? delta : -delta;
         }
+        change += s.CoachTalks.Where(t => t.TeamName == team && t.Reactions.Count > 1).Sum(t => t.Reactions.Select(r => (double)r.Change).DefaultIfEmpty().Average() * Math.Max(0, 1 - (s.Events.Count - t.EventCount) / 24d));
         var steadiness = Math.Clamp(1.2 - profile.HeadCoachLeadership * .005, .65, 1);
         return (int)Math.Round(Math.Clamp(profile.Morale + Math.Clamp(change * steadiness, -12, 12), 20, 80));
     }
