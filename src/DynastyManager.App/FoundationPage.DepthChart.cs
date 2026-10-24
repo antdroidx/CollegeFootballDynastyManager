@@ -128,7 +128,7 @@ public sealed partial class FoundationPage
                 actions.Children.Add(move);
             }
         }
-        if (_currentDynasty is { } current && !UserCoachControlService.ControlsPosition(current, DepthChartService.PositionForCode(code))) actions.IsEnabled = false;
+        if (_currentDynasty is { } current && (!UserCoachControlService.ControlsPosition(current, DepthChartService.PositionForCode(code)) || !UserCoachControlService.ControlsPosition(current, DepthChartService.PositionForCode(DepthChartService.AssignedCode(current, player))))) actions.IsEnabled = false;
         row.Add(actions, 3);
         var card = new Border { StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = row,
             BackgroundColor = DynastyTheme.Palette(rank == 1 ? "#244B45" : "#243542"), Opacity = player.IsRedshirted ? .6 : 1 };

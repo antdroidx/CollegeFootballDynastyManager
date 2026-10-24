@@ -341,7 +341,9 @@ public static class UserCoachCareerService
                 var hasOpening =
                     currentHeadCoach is null ||
                     currentHeadCoach.ContractYearsRemaining <= 1 ||
-                    opportunity >= 8;
+                    opportunity >= 8 ||
+                    (state.UserCoachRole != StaffRole.HeadCoach &&
+                     StaffManagementService.GetStaff(state, team.Name, state.UserCoachRole) is null or { ContractYearsRemaining: <= 1 });
 
                 var reputationGap =
                     coach.Reputation - prestige;
@@ -447,9 +449,11 @@ public static class UserCoachCareerService
             }
         }
 
+        var promotionTeam = candidates.FirstOrDefault(item => item.Fit >= 100 &&
+            (StaffManagementService.GetStaff(state, item.Team.Name, StaffRole.HeadCoach) is null or { ContractYearsRemaining: <= 1 } || item.Opportunity >= 8))?.Team.Name;
         foreach (var candidate in candidates)
         {
-            var offeredRole = state.UserCoachRole == StaffRole.HeadCoach || (candidate.Fit >= 100 && !state.UserCoachIsFired && candidates.IndexOf(candidate) == 0)
+            var offeredRole = state.UserCoachRole == StaffRole.HeadCoach || (!state.UserCoachIsFired && candidate.Team.Name == promotionTeam)
                 ? StaffRole.HeadCoach : state.UserCoachRole;
             var direction =
                 candidate.Prestige >= currentPrestige + 6

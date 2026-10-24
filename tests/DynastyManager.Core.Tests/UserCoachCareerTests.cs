@@ -23,12 +23,26 @@ public sealed class UserCoachCareerTests
     }
 
     [Fact]
+    public void CoordinatorVacanciesDoNotRequireAHeadCoachVacancy()
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = StaffRole.DefensiveCoordinator }, teams.Values);
+        state = state with { UserHeadCoach = state.UserHeadCoach! with { Reputation = 95 },
+            TeamSeasonHistory = [Season("User", 14, 0, true, true, true, 1)],
+            Staff = state.Staff.Select(member => member with { ContractYearsRemaining = member.Role == StaffRole.DefensiveCoordinator ? 1 : 5 }).ToArray() };
+        var offers = UserCoachCareerService.GenerateJobOffers(state, teams).UserCoachJobOffers;
+        Assert.Contains(offers, o => o.Role == StaffRole.DefensiveCoordinator);
+        Assert.DoesNotContain(offers, o => o.Role == StaffRole.HeadCoach);
+    }
+
+    [Fact]
     public void SuccessfulCoordinatorReceivesBothCoordinatorAndHeadCoachOffers()
     {
         var teams = Teams();
         var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = StaffRole.OffensiveCoordinator }, teams.Values);
         state = state with { UserHeadCoach = state.UserHeadCoach! with { Reputation = 95 },
-            TeamSeasonHistory = [Season("User", 14, 0, true, true, true, 1)] };
+            TeamSeasonHistory = [Season("User", 14, 0, true, true, true, 1)],
+            Staff = state.Staff.Select(member => member with { ContractYearsRemaining = 1 }).ToArray() };
         var offered = UserCoachCareerService.GenerateJobOffers(state, teams);
         Assert.Contains(offered.UserCoachJobOffers, o => o.Role == StaffRole.HeadCoach);
         Assert.Contains(offered.UserCoachJobOffers, o => o.Role == StaffRole.OffensiveCoordinator);
@@ -71,13 +85,14 @@ public sealed class UserCoachCareerTests
     public void CoordinatorOccupiesTheirOwnRoleAndKeepsASeparateHeadCoach(StaffRole role)
     {
         var teams = Teams();
-        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = role }, teams.Values);
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = role, UserCoachFiringEnabled = false }, teams.Values);
         Assert.Equal(role, state.UserHeadCoach!.Role);
         Assert.Equal(state.UserHeadCoach.StaffId, StaffManagementService.GetStaff(state, "User", role)!.StaffId);
         Assert.NotEqual(state.UserHeadCoach.StaffId, StaffManagementService.GetStaff(state, "User", StaffRole.HeadCoach)!.StaffId);
         Assert.DoesNotContain(state.Staff, s => s.TeamName == "User" && s.Role == role);
         var restored = System.Text.Json.JsonSerializer.Deserialize<DynastyState>(System.Text.Json.JsonSerializer.Serialize(state))!;
         Assert.Equal(role, restored.UserCoachRole);
+        Assert.False(restored.UserCoachFiringEnabled);
         Assert.Equal(role, StaffManagementService.EnsureUserHeadCoach(restored, teams.Values).UserHeadCoach!.Role);
     }
 
