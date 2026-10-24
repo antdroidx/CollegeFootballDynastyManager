@@ -12,7 +12,7 @@ public static partial class GameDayEngine
     {
         var home = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var profile = home ? session.HomeProfile : session.AwayProfile;
-        var kicker = Kicker(home ? session.HomeRoster : session.AwayRoster);
+        var kicker = GameDayCoachingService.Specialist(session, session.PossessionTeamName, Kicker(home ? session.HomeRoster : session.AwayRoster));
         return GameWeatherService.KickProbability(session, GameDayMatchupService.FieldGoalProbability(117 - session.YardLine,
             kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating, kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating));
     }
@@ -109,7 +109,7 @@ public static partial class GameDayEngine
         if (special is not null)
         {
             var kickStart = session.YardLine;
-            var kicker = Kicker(offenseRoster, special == "special-punt");
+            var kicker = GameDayCoachingService.Specialist(session, offense.TeamName, Kicker(offenseRoster, special == "special-punt"));
             var made = special == "special-field-goal" &&
                 session.Random.NextDouble() < FieldGoalProbability(session);
             var puntLanding = special == "special-punt"
@@ -614,7 +614,7 @@ public static partial class GameDayEngine
         var receivingHome = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var receivingRoster = receivingHome ? session.HomeRoster : session.AwayRoster;
         var kickingRoster = receivingHome ? session.AwayRoster : session.HomeRoster;
-        var kicker = Kicker(kickingRoster);
+        var kicker = GameDayCoachingService.Specialist(session, kickingRoster.FirstOrDefault()?.TeamName ?? "", Kicker(kickingRoster));
         var returner = Returner(receivingRoster);
         var kickoffRandom = new Random(unchecked(session.Game.SimulationSeed * 397 ^ session.PossessionNumber * 7919 ^
             session.Quarter * 31 ^ 0x4B1C));

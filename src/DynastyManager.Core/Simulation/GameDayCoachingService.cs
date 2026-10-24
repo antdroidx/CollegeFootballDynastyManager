@@ -21,13 +21,19 @@ public static class GameDayCoachingService
         return true;
     }
 
+    public static DynastyPlayer? Specialist(GameDaySession s, string team, DynastyPlayer? fallback)
+    {
+        return s.ManualStarters.TryGetValue((team, Position.K), out var id) && s.PlayersById.TryGetValue(id, out var player) ? player : fallback;
+    }
+
     public static SnapPersonnel ApplySubstitutions(GameDaySession session, SnapPersonnel unit)
     {
         var ids = unit.PlayerIds.ToArray();
         foreach (var ((team, position), id) in session.ManualStarters)
         {
             if (team != unit.TeamName || ids.Contains(id)) continue;
-            var slot = Array.FindIndex(ids, current => session.PlayersById[current].Position == position);
+            var slot = Array.FindIndex(ids, current => session.PlayersById[current].Position == position && (position != Position.OL ||
+                OffensiveLineService.Label(session.PlayersById[current]) == OffensiveLineService.Label(session.PlayersById[id])));
             if (slot >= 0) ids[slot] = id;
         }
         return unit with { PlayerIds = ids };

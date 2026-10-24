@@ -1620,9 +1620,12 @@ public sealed partial class FoundationPage
                 {
                     var morale = GameDayCoachingService.LivePlayerMorale(session, player, GameMoraleService.PlayerMorale(_currentDynasty!, player));
                     var pinned = session.ManualStarters.GetValueOrDefault((controlledTeamName, player.Position));
-                    var starter = pinned == player.PlayerId || pinned == Guid.Empty && depth.GetValueOrDefault(player.Position)?.FirstOrDefault()?.PlayerId == player.PlayerId;
+                    var starter = pinned == player.PlayerId;
+                    var lastSnap = session.Events.LastOrDefault(e => e.OffenseTeamName == controlledTeamName || e.DefenseTeamName == controlledTeamName);
+                    var active = lastSnap is not null && (lastSnap.OffensePersonnel.Contains(player.PlayerId) || lastSnap.DefensePersonnel.Contains(player.PlayerId));
+                    var role = starter ? "Manual starter" : active ? "On field last snap" : depth.GetValueOrDefault(player.Position)?.FirstOrDefault()?.PlayerId == player.PlayerId ? "Depth lead" : "Reserve";
                     var stat = stats.GetValueOrDefault(player.PlayerId);
-                    var description = new Label { Text = $"{player.Position} · #{player.JerseyNumber} {player.FullName} · {(starter ? "Starter" : "Reserve")}\nOVR {player.OverallRating} · Energy {fatigue.Energy(player.PlayerId):0}% · Morale {morale} ({GameMoraleService.Label(morale)})\n{GameDayCoachingService.LiveReason(session, player)}" +
+                    var description = new Label { Text = $"{player.Position} · #{player.JerseyNumber} {player.FullName} · {role}\nOVR {player.OverallRating} · Energy {fatigue.Energy(player.PlayerId):0}% · Morale {morale} ({GameMoraleService.Label(morale)})\n{GameDayCoachingService.LiveReason(session, player)}" +
                         (player.Position == Position.QB && stat is not null ? $"\nPassing {stat.PassYards} yd · TD {stat.PassingTouchdowns} · INT {stat.InterceptionsThrown}" : ""), TextColor = DynastyTheme.Text, FontSize = 13 };
                     var sub = new Button { Text = starter ? "Restore automatic rotation" : "Make starter", IsEnabled = !player.IsRedshirted && player.CurrentInjury is null && !session.IsComplete };
                     sub.Clicked += async (_, _) =>
