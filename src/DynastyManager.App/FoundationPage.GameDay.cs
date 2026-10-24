@@ -72,7 +72,7 @@ public sealed partial class FoundationPage
         situation.Add(SituationCell("BALL ON", ballValue), 3, 0);
         var possession = new Label { FontSize = 11, HorizontalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Palette("#E8C979") };
         var result = new Label { HorizontalTextAlignment = TextAlignment.Center, FontSize = 14,
-            FontAttributes = FontAttributes.Bold, TextColor = Colors.White, MaxLines = 3 };
+            FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text, MaxLines = 3 };
         var commentaryPanel = new Border { StrokeThickness = 0, Padding = new Thickness(10, 6),
             BackgroundColor = DynastyTheme.Palette("#203645"), Content = result };
         var conditionsHud = new Label { FontSize = 9, MaxLines = 2, IsVisible = false, TextColor = DynastyTheme.Palette("#B8D8FA"),
@@ -91,6 +91,20 @@ public sealed partial class FoundationPage
         var field = new Grid { AutomationId = "game-day-field", HeightRequest = 330, BackgroundColor = DynastyTheme.Palette("#245B38") };
         var fieldLines = new GraphicsView { Drawable = fieldArt };
         var fieldPlayers = new AbsoluteLayout();
+        field.IsClippedToBounds = true;
+        var cameraMode = Math.Clamp(Microsoft.Maui.Storage.Preferences.Default.Get("live-camera", 0), 0, 2);
+        void FrameCamera(double x = .5, double y = .5)
+        {
+            if (field.Width <= 0 || field.Height <= 0) return;
+            var zoom = cameraMode == 0 ? 1 : cameraMode == 1 ? 1.15 : 1.35;
+            foreach (var layer in new View[] { fieldLines, fieldPlayers })
+            {
+                layer.Scale = zoom;
+                layer.TranslationX = Math.Clamp((.5 - x) * field.Width * zoom, -field.Width * (zoom - 1) / 2, field.Width * (zoom - 1) / 2);
+                layer.TranslationY = Math.Clamp((.5 - y) * field.Height * zoom, -field.Height * (zoom - 1) / 2, field.Height * (zoom - 1) / 2);
+            }
+        }
+        field.SizeChanged += (_, _) => FrameCamera();
         var highlightText = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold,
             TextColor = Colors.White, HorizontalTextAlignment = TextAlignment.Center };
         var highlight = new Border { IsVisible = false, StrokeThickness = 2, Stroke = Colors.White,
@@ -195,6 +209,15 @@ public sealed partial class FoundationPage
         onside.Clicked += (_, _) => { session.OnsideKickRequested = !session.OnsideKickRequested; onside.Text = session.OnsideKickRequested ? "Next kickoff: Onside" : "Next kickoff: Deep"; };
         var timeout = new Button { Text = "Timeout" };
         var replayLast = new Button { Text = "Replay last", IsVisible = false };
+        var replaySpeed = 1d;
+        var skipReplayRequested = false;
+        var replaySpeedButton = new Button { Text = "Replay speed: 1x" };
+        replaySpeedButton.Clicked += (_, _) => { replaySpeed = replaySpeed == 1 ? .5 : 1; replaySpeedButton.Text = $"Replay speed: {replaySpeed:0.0}x"; };
+        var skipReplay = new Button { Text = "Skip replay", IsVisible = false, AutomationId = "game-day-skip-replay" };
+        skipReplay.Clicked += (_, _) => { skipReplayRequested = true; fieldPlayers.AbortAnimation("snap-movement"); };
+        string CameraName() => cameraMode == 0 ? "Full field" : cameraMode == 1 ? "Broadcast" : "Follow ball";
+        var camera = new Button { Text = "Camera: " + CameraName(), AutomationId = "game-day-camera" };
+        camera.Clicked += (_, _) => { cameraMode = (cameraMode + 1) % 3; Microsoft.Maui.Storage.Preferences.Default.Set("live-camera", cameraMode); camera.Text = "Camera: " + CameraName(); FrameCamera(); };
         var replayToggle = new Button { Text = instantReplays ? "Auto replay: On" : "Auto replay: Off" };
         var carrierToggle = new Button { Text = showCarrierNames ? "Player names: On" : "Player names: Off" };
         replayToggle.Clicked += (_, _) => { instantReplays = !instantReplays;
@@ -232,13 +255,25 @@ public sealed partial class FoundationPage
             gameInfo.Text = conditionsHud.IsVisible ? "Hide info" : "Weather";
         };
         var scoreHeader = new Grid { ColumnSpacing = 5, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto), new(GridLength.Auto) } };
-        scoreHeader.Add(new VerticalStackLayout { Spacing = 0, Children = { score, timeoutsHud, conditionsHud } }, 0, 0);
+        Border TeamBadge(string team)
+        {
+            var brand = TeamBrandCatalog.Get(team);
+            var badge = new Border { WidthRequest = 30, HeightRequest = 30, Padding = 2,
+                Stroke = Colors.White, StrokeThickness = 1, BackgroundColor = Color.FromArgb(brand.Primary),
+                Content = new Label { Text = TeamBrandCatalog.Initial(team), TextColor = Colors.White,
+                    FontSize = 11, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center } };
+            SemanticProperties.SetDescription(badge, team + " team badge");
+            return badge;
+        }
+        var scoreRow = new Grid { ColumnSpacing = 4, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
+        scoreRow.Add(TeamBadge(game.AwayTeamName), 0, 0); scoreRow.Add(score, 1, 0); scoreRow.Add(TeamBadge(game.HomeTeamName), 2, 0);
+        scoreHeader.Add(new VerticalStackLayout { Spacing = 0, Children = { scoreRow, timeoutsHud, conditionsHud } }, 0, 0);
         scoreHeader.Add(gameInfo, 1, 0);
         scoreHeader.Add(boxScore, 2, 0);
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
-        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, replayLast, numbers, spriteMode, replayToggle, carrierToggle, skip, close })
+        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, replayLast, camera, replaySpeedButton, skipReplay, numbers, spriteMode, replayToggle, carrierToggle, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
         var coachCallsOffense = false;
         var coachCallsDefense = false;
@@ -280,15 +315,15 @@ public sealed partial class FoundationPage
             twoPoint.IsVisible = deciding && ControlledOnOffense() && session.TryPending;
             call.IsVisible = deciding && ControlledOnOffense();
             callDefense.IsVisible = deciding && !ControlledOnOffense();
-            replayLast.IsVisible = replay is null && lastPlayedSnap is not null && !animating && session.Mode != GameDayMode.Watch;
+            replayLast.IsVisible = replay is null && lastPlayedSnap is not null && !animating;
             more.IsVisible = !animating && !session.IsComplete && replay is null;
             more.Text = moreOpen ? "Less" : "More";
-            foreach (var utility in new[] { punt, kick, kneel, spike, onside, delegateOffense, delegateDefense, numbers, spriteMode, replayToggle, carrierToggle })
+            foreach (var utility in new[] { punt, kick, kneel, spike, onside, delegateOffense, delegateDefense, numbers, spriteMode, replayToggle, carrierToggle, camera, replaySpeedButton })
             {
                 var eligible = utility == punt || utility == kick || utility == kneel || utility == spike
                     ? deciding && ControlledOnOffense() && !session.TryPending && (utility != kneel && utility != spike || session.OvertimeRound == 0)
-                    : utility == numbers || utility == spriteMode || utility == replayToggle || utility == carrierToggle || session.Mode == GameDayMode.Play && !session.IsComplete;
-                utility.IsVisible = eligible && moreOpen && !animating;
+                    : utility == camera || utility == replaySpeedButton || utility == numbers || utility == spriteMode || utility == replayToggle || utility == carrierToggle || session.Mode == GameDayMode.Play && !session.IsComplete;
+                utility.IsVisible = eligible && (moreOpen || utility == camera || utility == replaySpeedButton) && !animating;
             }
             foreach (var action in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, delegateOffense, delegateDefense, takeover, onside, skip })
                 action.IsEnabled = !animating;
@@ -359,8 +394,8 @@ public sealed partial class FoundationPage
             {
                 button.FontSize = compact ? 10 : 11;
                 button.Padding = compact ? new Thickness(7, 4) : new Thickness(12, 8);
-                button.MinimumHeightRequest = compact ? 36 : 40;
-                button.HeightRequest = compact ? 36 : 40;
+                button.MinimumHeightRequest = 44;
+                button.HeightRequest = 44;
                 button.Margin = new Thickness(0, 0, 4, 4);
             }
             score.FontSize = compact ? 15 : 17;
@@ -419,7 +454,7 @@ public sealed partial class FoundationPage
         ArrangeViewer(false);
         page.SizeChanged += (_, _) =>
         {
-            if (page.Width > 0 && page.Height > 0) ArrangeViewer(page.Width > page.Height);
+            if (page.Width > 0 && page.Height > 0) ArrangeViewer(page.Width > page.Height || page.Width >= 700);
         };
 
         Color TeamColor(string teamName) => Color.FromArgb(TeamBrandCatalog.Get(teamName).Primary);
@@ -975,7 +1010,7 @@ public sealed partial class FoundationPage
                 return (distance, movementSpeeds[m.View], active);
             }));
             if (snap.TurnoverYardLine.HasValue) durationSeconds = Math.Max(durationSeconds, snap.ReturnYards / 9d / (1 - catchProgress));
-            if (instantReplay) durationSeconds *= 1.2;
+            if (instantReplay) durationSeconds /= replaySpeed;
             Rect TurnoverTrack(double progress)
             {
                 var pickup = interceptorTo ?? new Rect(GameDayAnimationPlanner.ProjectYardLine(snap.TurnoverYardLine ?? snap.StartYardLine, direction), snap.CarrierLane ?? .5, 28, 28);
@@ -1076,7 +1111,7 @@ public sealed partial class FoundationPage
                         var width = Math.Max(180, fieldPlayers.Width); var height = Math.Max(50, fieldPlayers.Height);
                         AbsoluteLayout.SetLayoutBounds(carrierLabel, new Rect(
                             Math.Clamp((pos.X * (width - 28) + 14 - 75) / (width - 150), 0, 1),
-                            Math.Clamp((pos.Y * (height - 28) - 20) / (height - 20), 0, 1), 150, 20));
+                            Math.Clamp((pos.Y * (height - 28) + (pos.Y < .5 ? 32 : -24)) / (height - 20), 0, 1), 150, 20));
                     }
                     else carrierLabel.IsVisible = false;
                 }
@@ -1152,6 +1187,7 @@ public sealed partial class FoundationPage
                 else currentBall = BallAt(Track(qbFrom, qbTo, progress));
                 if (snap.TurnoverYardLine.HasValue && progress >= catchProgress) currentBall = BallAt(TurnoverTrack(progress));
                 AbsoluteLayout.SetLayoutBounds(ball, currentBall);
+                if (cameraMode != 0) FrameCamera(cameraMode == 2 ? currentBall.X : (centerPoint.X + currentBall.X) / 2, cameraMode == 2 ? currentBall.Y : .5);
                 fieldArt.WeatherPhase = progress * durationSeconds;
                 if (session.Weather.Precipitation != GamePrecipitation.Clear) fieldLines.Invalidate();
                 if (isTackle && terminalCarrierView is not null && primaryTacklerView is not null && progress >= .84)
@@ -1203,7 +1239,7 @@ public sealed partial class FoundationPage
             var homeMorale = GameMoraleService.InGame(session, game.HomeTeamName);
             var awayMorale = GameMoraleService.InGame(session, game.AwayTeamName);
             conditionsHud.Text = $"{session.Weather.Summary} · Morale {awayTeam.Abbreviation} {awayMorale} / {homeTeam.Abbreviation} {homeMorale}";
-            score.Text = $"{CollegePollService.RankedName(game.AwayTeamName, gameRanks)} {session.AwayScore}  ·  {session.HomeScore} {CollegePollService.RankedName(game.HomeTeamName, gameRanks)}";
+            score.Text = $"{TeamBrandCatalog.Initial(game.AwayTeamName)} {session.AwayScore}  ·  {session.HomeScore} {TeamBrandCatalog.Initial(game.HomeTeamName)}";
             string Dots(int count) => new string('●', count) + new string('○', Math.Max(0, 3 - count));
             timeoutsHud.Text = $"TIMEOUTS  {awayTeam.Abbreviation} {Dots(session.AwayTimeouts)} ({session.AwayTimeouts})   ·   {homeTeam.Abbreviation} {Dots(session.HomeTimeouts)} ({session.HomeTimeouts})";
             quarterClock.Text = $"Q{session.Quarter}  {TimeSpan.FromSeconds(session.ClockSeconds):m\\:ss}";
@@ -1289,19 +1325,19 @@ public sealed partial class FoundationPage
         }
         async Task ReplaySnapAsync(GameSnapEvent snap)
         {
-            replayChip.IsVisible = true;
+            skipReplayRequested = false; skipReplay.IsVisible = true; replayChip.IsVisible = true;
             highlightText.Text = "INSTANT REPLAY";
             highlightText.FontSize = 30;
             highlight.BackgroundColor = DynastyTheme.Palette("#ED102B40"); highlight.Opacity = 1; highlight.Scale = 1;
             highlight.IsVisible = true;
             await Task.Delay(850);
             highlight.IsVisible = false; highlightText.FontSize = 22;
-            try { await AnimateSnapAsync(snap, true); }
-            finally { replayChip.IsVisible = false; }
+            try { if (!skipReplayRequested && !viewerClosed) await AnimateSnapAsync(snap, true); }
+            finally { skipReplay.IsVisible = false; replayChip.IsVisible = false; FrameCamera(); }
         }
         replayLast.Clicked += async (_, _) =>
         {
-            if (animating || lastPlayedSnap is null || session.Mode == GameDayMode.Watch) return;
+            if (animating || lastPlayedSnap is null) return;
             var commentary = result.Text;
             var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             currentSnapFinished = finished.Task;
