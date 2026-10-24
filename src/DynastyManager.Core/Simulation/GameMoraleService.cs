@@ -48,7 +48,7 @@ public static class GameMoraleService
             var beneficiary = e.DefensiveScore ? e.DefenseTeamName : e.OffenseTeamName;
             change += beneficiary == team ? delta : -delta;
         }
-        change += s.CoachTalks.Where(t => t.TeamName == team && t.Reactions.Count > 1).Sum(t => t.Reactions.Select(r => (double)r.Change).DefaultIfEmpty().Average() * Math.Max(0, 1 - (s.Events.Count - t.EventCount) / 24d));
+        change += s.CoachTalks.Where(t => t.TeamName == team && t.Audience == CoachTalkAudience.Team && t.Reactions.Count > 1).Sum(t => t.Reactions.Select(r => (double)r.Change).DefaultIfEmpty().Average() * Math.Max(0, 1 - (s.Events.Count - t.EventCount) / 24d));
         var steadiness = Math.Clamp(1.2 - profile.HeadCoachLeadership * .005, .65, 1);
         return (int)Math.Round(Math.Clamp(profile.Morale + Math.Clamp(change * steadiness, -12, 12), 20, 80));
     }

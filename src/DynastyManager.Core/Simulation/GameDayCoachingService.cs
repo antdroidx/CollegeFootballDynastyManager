@@ -4,14 +4,54 @@ using DynastyManager.Core.Models;
 
 namespace DynastyManager.Core.Simulation;
 
+public enum CoachTalkAudience { Team, Offense, Defense }
 public enum CoachTalkTone { Encourage, Praise, Challenge, StayComposed }
 public sealed record CoachTalkReaction(Guid PlayerId, string PlayerName, int Change, string Response);
 public sealed record CoachTalkRecord(string TeamName, CoachTalkTone Tone, int SeasonYear, int Week,
-    int Quarter, int EventCount, IReadOnlyList<CoachTalkReaction> Reactions);
+    int Quarter, int EventCount, IReadOnlyList<CoachTalkReaction> Reactions)
+{
+    public CoachTalkAudience Audience { get; init; } = CoachTalkAudience.Team;
+}
 
 /// <summary>Coaching decisions never consume the play simulation's random sequence.</summary>
 public static class GameDayCoachingService
 {
+    public static IReadOnlySet<Guid> Starters(GameDaySession s, string team)
+    {
+        var depth = team == s.Game.HomeTeamName ? s.HomeDepthChart : s.AwayDepthChart;
+        var ids = new HashSet<Guid>();
+        foreach (var (position, pool) in depth)
+        {
+            var count = position switch { Position.OL => 5, Position.RB or Position.WR or Position.DE or Position.DT or Position.OLB or Position.CB => 2, _ => 1 };
+            ids.UnionWith(position == Position.OL ? OffensiveLineService.Lineup(pool).Select(p => p.PlayerId) : pool.Take(count).Select(p => p.PlayerId));
+        }
+        foreach (var offense in new[] { true, false })
+        {
+            var snap = s.Events.LastOrDefault(e => GameDayEngine.IsScrimmage(e) && (offense ? e.OffenseTeamName : e.DefenseTeamName) == team);
+            if (snap is null) continue;
+            var active = offense ? snap.OffensePersonnel : snap.DefensePersonnel;
+            if (active.Count == 0) continue;
+            ids.RemoveWhere(id => IsOffense(s.PlayersById[id].Position) == offense && s.PlayersById[id].Position != Position.K);
+            ids.UnionWith(active);
+        }
+        return ApplySubstitutions(s, new SnapPersonnel { TeamName = team, PlayerIds = ids.ToArray() }).PlayerIds.ToHashSet();
+    }
+
+    public static bool IsOffense(Position position) => position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL;
+
+    public static string TalkAvailability(GameDaySession s, string team)
+    {
+        if (team != s.Game.HomeTeamName && team != s.Game.AwayTeamName) return "No team selected";
+        var stage = s.IsComplete ? 99 : s.Events.Count == 0 ? 0 : s.Quarter;
+        var last = s.Events.LastOrDefault();
+        var window = stage is 0 or 99 || last?.TimeoutTeamName is not null || last is not null && last.Quarter < s.Quarter;
+        if (!window) return "Available at timeouts and quarter breaks";
+        if (s.CoachTalks.Any(t => t.TeamName == team && t.EventCount == s.Events.Count && t.Quarter == stage)) return "Talk used for this break";
+        if (stage is not (0 or 99) && s.CoachTalks.Count(t => t.TeamName == team && t.Quarter is not (0 or 99) && (t.Quarter <= 2) == (stage <= 2)) >= 2)
+            return "Two talks used this half";
+        return "Available";
+    }
+
     public static bool Substitute(GameDaySession session, string team, Guid playerId)
     {
         if (session.IsComplete || !session.PlayersById.TryGetValue(playerId, out var player) ||
@@ -55,7 +95,7 @@ public static class GameDayCoachingService
     public static double IndividualTalkShift(GameDaySession session, IReadOnlyList<DynastyPlayer> unit)
     {
         if (unit.Count == 0) return 0;
-        return Math.Clamp(unit.Average(p => session.CoachTalks.Where(t => t.Reactions.Count == 1)
+        return Math.Clamp(unit.Average(p => session.CoachTalks.Where(t => t.Audience != CoachTalkAudience.Team || t.Reactions.Count == 1)
             .Sum(t => (t.Reactions.FirstOrDefault(r => r.PlayerId == p.PlayerId)?.Change ?? 0) *
                 Math.Max(0, 1 - (session.Events.Count - t.EventCount) / 24d))) / 5, -1, 1);
     }
@@ -91,19 +131,17 @@ public static class GameDayCoachingService
         return new(team, tone, year, week, quarter, eventCount, reactions);
     }
 
-    public static CoachTalkRecord? Talk(GameDaySession s, string team, CoachTalkTone tone, Guid? playerId = null)
+    public static CoachTalkRecord? Talk(GameDaySession s, string team, CoachTalkTone tone, CoachTalkAudience audience = CoachTalkAudience.Team)
     {
-        if (team != s.Game.HomeTeamName && team != s.Game.AwayTeamName) return null;
+        if (TalkAvailability(s, team) != "Available") return null;
         var quarter = s.IsComplete ? 99 : s.Events.Count == 0 ? 0 : s.Quarter;
-        var previous = s.CoachTalks.Where(t => t.TeamName == team &&
-            (playerId.HasValue ? t.Reactions.Count == 1 && t.Reactions[0].PlayerId == playerId : t.Reactions.Count > 1)).ToArray();
-        if (previous.Any(t => t.Quarter == quarter && (quarter is 0 or 99 || s.Events.Count - t.EventCount < 8)) ||
-            quarter is not (0 or 99) && previous.Count(t => t.Quarter is not (0 or 99) && (t.Quarter <= 2) == (quarter <= 2)) >= 2) return null;
+        var previous = s.CoachTalks.Where(t => t.TeamName == team).ToArray();
+        var roster = s.Roster.Where(p => audience == CoachTalkAudience.Team ||
+            (audience == CoachTalkAudience.Offense ? IsOffense(p.Position) : !IsOffense(p.Position) && p.Position != Position.K)).ToArray();
         var lead = team == s.Game.HomeTeamName ? s.HomeScore - s.AwayScore : s.AwayScore - s.HomeScore;
-        var talk = CreateTalk(playerId.HasValue ? s.Roster.Where(p => p.PlayerId == playerId).ToArray() : s.Roster, team, tone, s.Game.SeasonYear, s.Game.Week, quarter,
-            s.Events.Count, lead, previous.Count(t => t.Tone == tone));
+        var talk = CreateTalk(roster, team, tone, s.Game.SeasonYear, s.Game.Week, quarter,
+            s.Events.Count, lead, previous.Count(t => t.Tone == tone)) with { Audience = audience };
         if (talk.Reactions.Count == 0) return null;
-        s.CoachTalks.Add(talk);
-        return talk;
+        s.CoachTalks.Add(talk); return talk;
     }
 }

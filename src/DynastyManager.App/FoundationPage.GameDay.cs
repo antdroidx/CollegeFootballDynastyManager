@@ -1353,12 +1353,12 @@ public sealed partial class FoundationPage
                 if (instantReplays && GameDayLivePresentation.InstantReplay(snap)) await ReplaySnapAsync(snap);
                 var period = GameDayAnimationPlanner.PeriodHeadline(snap.Quarter, session.Quarter, session.IsComplete);
                 if (period is not null) await ShowHighlightAsync(snap, period);
-                var halftime = snap.Quarter == 2 && session.Quarter == 3;
+                var halftime = snap.Quarter < session.Quarter || snap.TimeoutTeamName is not null;
                 if (halftime && session.Mode == GameDayMode.Watch) watchPaused = true;
                 await Task.Delay((int)((session.Mode == GameDayMode.Watch ? 450 : 80) / gameSpeed));
                 animating = false;
                 Refresh(snap);
-                if (halftime) result.Text = "HALFTIME · Team → Coach talk or substitutions. Resume watch when ready.";
+                if (halftime) result.Text = "BREAK · Team → Coach talk or substitutions. Resume watch when ready.";
             }
             finally { animating = false; UpdateOverlay(); finished.TrySetResult(); }
         }
@@ -1597,7 +1597,7 @@ public sealed partial class FoundationPage
             if (!animating && GameDayEngine.TryCallTimeout(session, controlledTeamName))
             { await ShowSnapAsync(session.Events[^1]); }
         };
-        async Task GiveTalkAsync(Guid? playerId = null) => await ShowGameCoachTalkAsync(page, session, controlledTeamName, playerId);
+        async Task GiveTalkAsync() => await ShowGameCoachTalkAsync(page, session, controlledTeamName);
         async Task ShowTeamAsync()
         {
             var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -1606,56 +1606,78 @@ public sealed partial class FoundationPage
             teamPage.BackHandler = () => { _ = Back(); return true; };
             var back = new Button { Text = "Return to game" }; back.Clicked += async (_, _) => await Back();
             var talkButton = new Button { Text = "Coach talk" };
-            var filter = new Picker { Title = "Position", ItemsSource = Enum.GetNames<Position>().Prepend("All positions").ToArray(), SelectedIndex = 0 };
-            var rows = new VerticalStackLayout { Spacing = 8 };
+            var filter = new Picker { Title = "Position", ItemsSource = Enum.GetNames<Position>(), SelectedIndex = 0 };
+            var rows = new VerticalStackLayout { Spacing = 3 };
+            var availability = new Label { FontSize = 12, TextColor = DynastyTheme.Muted };
+            var showAll = false;
+            var expandRoster = new Button { Text = "Show all reserves" };
+            var automatic = new Button { Text = "Automatic rotation", FontSize = 12 };
             void Draw()
             {
                 rows.Children.Clear();
                 var depth = controlledTeamName == game.HomeTeamName ? session.HomeDepthChart : session.AwayDepthChart;
                 var fatigue = controlledTeamName == game.HomeTeamName ? session.HomeFatigue : session.AwayFatigue;
                 var stats = GameDayEngine.BoxScore(session).Players.ToDictionary(p => p.PlayerId);
-                foreach (var player in session.Roster.Where(p => p.TeamName == controlledTeamName)
-                    .Where(p => filter.SelectedIndex <= 0 || p.Position.ToString() == filter.SelectedItem?.ToString())
-                    .OrderBy(p => p.Position).ThenBy(p => p.DepthChartOrder))
+                var starters = GameDayCoachingService.Starters(session, controlledTeamName);
+                var selectedPosition = Enum.Parse<Position>(filter.SelectedItem?.ToString() ?? "QB");
+                var pool = session.Roster.Where(p => p.TeamName == controlledTeamName && p.Position == selectedPosition)
+                    .OrderByDescending(p => starters.Contains(p.PlayerId)).ThenBy(p => p.DepthChartOrder <= 0 ? int.MaxValue : p.DepthChartOrder).ThenByDescending(p => p.OverallRating).ToArray();
+                availability.Text = GameDayCoachingService.TalkAvailability(session, controlledTeamName);
+                var canTalk = availability.Text == "Available";
+                talkButton.IsEnabled = canTalk;
+                talkButton.BackgroundColor = canTalk ? DynastyTheme.Accent : DynastyTheme.Panel;
+                talkButton.TextColor = canTalk ? DynastyTheme.Background : DynastyTheme.Muted;
+                talkButton.Opacity = canTalk ? 1 : .55;
+                expandRoster.IsVisible = pool.Length > 3;
+                expandRoster.Text = showAll ? "Show top three" : $"Show all {pool.Length} players";
+                automatic.IsVisible = session.ManualStarters.ContainsKey((controlledTeamName, selectedPosition));
+                foreach (var player in pool.Take(showAll ? pool.Length : 3))
                 {
                     var morale = GameDayCoachingService.LivePlayerMorale(session, player, GameMoraleService.PlayerMorale(_currentDynasty!, player));
-                    var pinned = session.ManualStarters.GetValueOrDefault((controlledTeamName, player.Position));
-                    var starter = pinned == player.PlayerId;
-                    var lastSnap = session.Events.LastOrDefault(e => e.OffenseTeamName == controlledTeamName || e.DefenseTeamName == controlledTeamName);
-                    var active = lastSnap is not null && (lastSnap.OffensePersonnel.Contains(player.PlayerId) || lastSnap.DefensePersonnel.Contains(player.PlayerId));
-                    var role = starter ? "Manual starter" : active ? "On field last snap" : depth.GetValueOrDefault(player.Position)?.FirstOrDefault()?.PlayerId == player.PlayerId ? "Depth lead" : "Reserve";
-                    var stat = stats.GetValueOrDefault(player.PlayerId);
-                    var description = new Label { Text = $"{player.Position} · #{player.JerseyNumber} {player.FullName} · {role}\nOVR {player.OverallRating} · Energy {fatigue.Energy(player.PlayerId):0}% · Morale {morale} ({GameMoraleService.Label(morale)})\n{GameDayCoachingService.LiveReason(session, player)}" +
-                        (player.Position == Position.QB && stat is not null ? $"\nPassing {stat.PassYards} yd · TD {stat.PassingTouchdowns} · INT {stat.InterceptionsThrown}" : ""), TextColor = DynastyTheme.Text, FontSize = 13 };
-                    var sub = new Button { Text = starter ? "Restore automatic rotation" : "Make starter", IsEnabled = !player.IsRedshirted && player.CurrentInjury is null && !session.IsComplete };
+                    var starter = starters.Contains(player.PlayerId);
+                    var unavailable = player.IsRedshirted || player.CurrentInjury is not null;
+                    var name = new Label { Text = $"#{player.JerseyNumber} {player.FullName}", FontSize = 14, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text,
+                        LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
+                    var info = new Label { Text = $"OVR {player.OverallRating} · Energy {fatigue.Energy(player.PlayerId):0}% · Morale {morale}", FontSize = 12, TextColor = DynastyTheme.Muted };
+                    var sub = new Button { Text = unavailable ? "Unavailable" : starter ? "Starter" : "Sub in", FontSize = 12,
+                        IsEnabled = !starter && !unavailable && !session.IsComplete, MinimumHeightRequest = 44, Padding = new Thickness(10, 4),
+                        BackgroundColor = starter || unavailable ? DynastyTheme.Panel : DynastyTheme.Accent, TextColor = starter || unavailable ? DynastyTheme.Muted : DynastyTheme.Background };
                     sub.Clicked += async (_, _) =>
                     {
-                        if (starter) session.ManualStarters.Remove((controlledTeamName, player.Position));
-                        else
+                        var scope = await teamPage.DisplayActionSheetAsync($"Start {player.FullName} at {player.Position}", "Cancel", null, "This game only", "Also update season depth chart");
+                        if (scope is not ("This game only" or "Also update season depth chart")) return;
+                        if (!GameDayCoachingService.Substitute(session, controlledTeamName, player.PlayerId)) return;
+                        if (scope == "Also update season depth chart")
                         {
-                            var scope = await teamPage.DisplayActionSheetAsync($"Start {player.FullName} at {player.Position}", "Cancel", null, "This game only", "Also update season depth chart");
-                            if (scope is not ("This game only" or "Also update season depth chart")) return;
-                            if (!GameDayCoachingService.Substitute(session, controlledTeamName, player.PlayerId)) return;
-                            if (scope == "Also update season depth chart")
-                            {
-                                _currentDynasty = DepthChartService.Assign(_currentDynasty!, controlledTeamName, player.PlayerId, player.PlayingPositionCode ?? Ncaa06RatingService.PositionCode(player), 1);
-                                await SaveCurrentAsync(SaveKind.AutosaveCurrent);
-                            }
+                            _currentDynasty = DepthChartService.Assign(_currentDynasty!, controlledTeamName, player.PlayerId, player.PlayingPositionCode ?? Ncaa06RatingService.PositionCode(player), 1);
+                            await SaveCurrentAsync(SaveKind.AutosaveCurrent);
                         }
                         Draw();
                     };
-                    var individualTalk = new Button { Text = "Talk to player" };
-                    individualTalk.Clicked += async (_, _) => { await GiveTalkAsync(player.PlayerId); Draw(); };
-                    rows.Children.Add(new Border { Padding = 10, StrokeThickness = 0, BackgroundColor = DynastyTheme.Surface,
-                        Content = new VerticalStackLayout { Spacing = 5, Children = { description, sub, individualTalk } } });
+                    var detail = new TapGestureRecognizer();
+                    detail.Tapped += async (_, _) =>
+                    {
+                        var stat = stats.GetValueOrDefault(player.PlayerId);
+                        var summary = GameDayCoachingService.LiveReason(session, player);
+                        if (player.Position == Position.QB && stat is not null) summary += $"\nPassing {stat.PassYards} yd · TD {stat.PassingTouchdowns} · INT {stat.InterceptionsThrown}";
+                        await teamPage.DisplayAlertAsync(player.FullName, summary, "Close");
+                    };
+                    var text = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children = { name, info } };
+                    text.GestureRecognizers.Add(detail);
+                    var line = new Grid { Padding = 8, ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(new GridLength(92)) } };
+                    line.Add(text, 0, 0); line.Add(sub, 1, 0);
+                    rows.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = DynastyTheme.Surface, Content = line });
                 }
             }
             talkButton.Clicked += async (_, _) => { await GiveTalkAsync(); Draw(); };
-            filter.SelectedIndexChanged += (_, _) => Draw();
+            filter.SelectedIndexChanged += (_, _) => { showAll = false; Draw(); };
+            expandRoster.Clicked += (_, _) => { showAll = !showAll; Draw(); };
+            automatic.Clicked += (_, _) => { var pos = Enum.Parse<Position>(filter.SelectedItem?.ToString() ?? "QB"); session.ManualStarters.Remove((controlledTeamName, pos)); Draw(); };
             teamPage.Content = new Grid { Padding = 12, RowSpacing = 8, RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Star) } };
             var layout = (Grid)teamPage.Content;
             layout.Add(new HorizontalStackLayout { Spacing = 8, Children = { back, talkButton } }, 0, 0);
-            layout.Add(filter, 0, 1); layout.Add(new ScrollView { Content = rows }, 0, 2);
+            layout.Add(new VerticalStackLayout { Spacing = 5, Children = { availability, filter, automatic } }, 0, 1);
+            layout.Add(new ScrollView { Content = new VerticalStackLayout { Spacing = 6, Children = { rows, expandRoster } } }, 0, 2);
             Draw(); await Navigation.PushModalAsync(teamPage); await closed.Task;
         }
         async Task OpenViewingMenuAsync(bool team)

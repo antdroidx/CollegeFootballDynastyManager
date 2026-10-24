@@ -206,12 +206,19 @@ def main():
     tap(capture("team-ready"), "Team")
     team = wait_for("team-depth", lambda r: "Coach talk" in texts(r))
     assert any("Energy" in (t or "") and "Morale" in (t or "") for t in texts(team))
-    tap(team, "Coach talk")
-    talk = wait_for("talk-choice", lambda r: "Encourage" in texts(r))
-    tap(talk, "Challenge")
-    reactions = wait_for("talk-reactions", lambda r: "Player reactions" in texts(r))
-    assert any("positive" in (t or "") and "negative" in (t or "") for t in texts(reactions))
-    tap(reactions, "OK")
+    assert not enabled(team, "Coach talk"), "Coach talk must be disabled outside an eligible break"
+    assert "Available at timeouts and quarter breaks" in texts(team)
+    assert "Talk to player" not in texts(team), "Individual talks must not be offered"
+    assert "Starter" in texts(team) and not enabled(team, "Starter")
+    assert len([n for n in team.iter("node") if n.get("text") == "Sub in"]) <= 2, "Default QB list must stay compact"
+    if "Sub in" in texts(team):
+        tap(team, "Sub in")
+        scope = wait_for("live-substitution-scope", lambda r: "This game only" in texts(r))
+        tap(scope, "This game only")
+        switched = capture("live-substitution-applied")
+        assert "Starter" in texts(switched) and not enabled(switched, "Starter")
+        assert "Automatic rotation" in texts(switched)
+        tap(switched, "Automatic rotation")
     tap(capture("team-return-ready"), "Return to game")
     assert before_clock == game_clock(capture("team-returned")), "Team management advanced the game clock"
     for rotation, name in ((1, "landscape"), (0, "portrait-restored")):

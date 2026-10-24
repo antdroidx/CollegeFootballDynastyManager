@@ -82,17 +82,36 @@ public class GameDayCoachingTests
     }
 
     [Fact]
-    public void IndividualTalkAffectsOnlyRecipientAndPostgameTalkIsSeparate()
+    public void TalksRequireBreakAndShareOneUseAcrossAudiences()
     {
         var s = GameDayEngineTests.Session(GameDayMode.Play);
-        var player = s.Roster.First(p => p.TeamName == "Home");
-        var talk = GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Challenge, player.PlayerId)!;
-        Assert.Single(talk.Reactions);
-        Assert.Equal(player.PlayerId, talk.Reactions[0].PlayerId);
-        Assert.NotNull(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Encourage));
+        var first = GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Encourage, CoachTalkAudience.Offense)!;
+        Assert.All(first.Reactions, r => Assert.True(GameDayCoachingService.IsOffense(s.PlayersById[r.PlayerId].Position)));
+        Assert.Null(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Praise, CoachTalkAudience.Defense));
+        GameDayEngine.Step(s, "off-spread-verts");
+        Assert.NotEqual("Available", GameDayCoachingService.TalkAvailability(s, "Home"));
+        Assert.Null(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Challenge));
+        s.Quarter = s.Events[^1].Quarter + 1;
+        Assert.Equal("Available", GameDayCoachingService.TalkAvailability(s, "Home"));
+        var defense = GameDayCoachingService.Talk(s, "Home", CoachTalkTone.StayComposed, CoachTalkAudience.Defense)!;
+        Assert.All(defense.Reactions, r => Assert.False(GameDayCoachingService.IsOffense(s.PlayersById[r.PlayerId].Position)));
+        Assert.Null(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Praise));
         GameDayEngine.SimulateToEnd(s);
         Assert.NotNull(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Praise));
         Assert.Null(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Praise));
+    }
+
+    [Fact]
+    public void DepthChartRecognizesAutomaticAndManuallySelectedQuarterbacks()
+    {
+        var s = GameDayEngineTests.Session(GameDayMode.Play);
+        var qb = s.HomeDepthChart[Position.QB];
+        Assert.Contains(qb[0].PlayerId, GameDayCoachingService.Starters(s, "Home"));
+        Assert.DoesNotContain(qb[1].PlayerId, GameDayCoachingService.Starters(s, "Home"));
+        GameDayCoachingService.Substitute(s, "Home", qb[1].PlayerId);
+        var starters = GameDayCoachingService.Starters(s, "Home");
+        Assert.Contains(qb[1].PlayerId, starters);
+        Assert.DoesNotContain(qb[0].PlayerId, starters);
     }
 
     [Theory]

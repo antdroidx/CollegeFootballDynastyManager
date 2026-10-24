@@ -51,7 +51,7 @@ public sealed partial class FoundationPage
         heads.Clicked += async (_, _) => await Flip(true); tails.Clicked += async (_, _) => await Flip(false);
         start.Clicked += async (_, _) => { start.IsEnabled = false; await Navigation.PopModalAsync(); ready.TrySetResult(); };
         var pregameTalk = new Button { Text = "Pregame team talk" };
-        pregameTalk.Clicked += async (_, _) => await ShowGameCoachTalkAsync(page, session, controlledTeam);
+        pregameTalk.Clicked += async (_, _) => { await ShowGameCoachTalkAsync(page, session, controlledTeam); pregameTalk.IsEnabled = GameDayCoachingService.TalkAvailability(session, controlledTeam) == "Available"; pregameTalk.Opacity = pregameTalk.IsEnabled ? 1 : .5; };
         var home = TeamBrandCatalog.Get(session.Game.HomeTeamName);
         var field = new Grid { AutomationId = "coin-toss-field", BackgroundColor = Color.FromArgb("#245B38") };
         var fieldDiagram = new GraphicsView { Drawable = new GameFieldDrawable { CoinCeremony = true, YardLine = 50, Distance = 0,
