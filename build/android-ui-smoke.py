@@ -55,7 +55,7 @@ def tap(root, text):
     time.sleep(1)
 
 
-def scroll_to_text(name, text, max_swipes=6):
+def scroll_to_text(name, text, max_swipes=6, toward_start=False):
     for attempt in range(max_swipes + 1):
         root = capture(name)
         for node in root.iter("node"):
@@ -71,7 +71,8 @@ def scroll_to_text(name, text, max_swipes=6):
             return (x2-x1)*(y2-y1)
         left, top, right, bottom = map(int, re.findall(r"\d+", max(scrollables,key=area).get("bounds")))
         x = str((left + right) // 2)
-        adb("shell", "input", "swipe", x, str(top + (bottom-top)*3//4), x, str(top + (bottom-top)//4), "350")
+        start, end = (1, 3) if toward_start else (3, 1)
+        adb("shell", "input", "swipe", x, str(top + (bottom-top)*start//4), x, str(top + (bottom-top)*end//4), "350")
 
 
 def wait_for(name, predicate, timeout=120):
@@ -612,7 +613,7 @@ def check_career_options():
     for role, scope, expected_call in [("Offensive coordinator", "Offense", "Call play"), ("Defensive coordinator", "Defense", "Call defense")]:
         adb("shell", "pm", "clear", "antdroid.cfbcoach.dev")
         adb("shell", "monkey", "-p", "antdroid.cfbcoach.dev", "-c", "android.intent.category.LAUNCHER", "1")
-        home = wait_for("career-launch-"+scope, lambda r: "New dynasty" in texts(r) and "Options" in texts(r), timeout=300)
+        home = wait_for("career-launch-"+scope, lambda r: "New dynasty" in texts(r) and "Options" in texts(r) and not any(t and t.startswith("Loading ") for t in texts(r)), timeout=300)
         assert any(t and t.startswith("Pre-release 0.20 · Build ") for t in texts(home))
         node_with_id(home, "opening-logo")
         tap(home, "Options")
@@ -652,8 +653,8 @@ def check_career_options():
         settings = scroll_to_text("career-firing-restored-"+scope, "Coach can be fired")
         assert node_with_id(settings, "coach-firing-setting").get("checked") == "true"
         tap(settings, "Coach")
-        coach = wait_for("career-restored-coach-"+scope, lambda r: "Development" in texts(r))
-        tap(coach, "Development")
+        wait_for("career-restored-coach-"+scope, lambda r: "Coaching Hub" in texts(r))
+        tap(scroll_to_text("career-development-tab-"+scope, "Development", toward_start=True), "Development")
         development = wait_for("career-development-"+scope, lambda r: scope+" talk · morale" in texts(r))
         tap(development, scope+" talk · morale")
         tap(wait_for("career-talk-tone", lambda r: "Encourage" in texts(r)), "Encourage")

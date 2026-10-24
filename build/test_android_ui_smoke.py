@@ -60,6 +60,15 @@ class SmokeSynchronizationTests(unittest.TestCase):
             self.assertIs(second, smoke.scroll_to_text("picker", "Returns"))
             command.assert_called_once_with("shell", "input", "swipe", "300", "500", "300", "300", "350")
 
+    def test_retained_scroll_position_can_return_to_tabs_above(self):
+        first = ET.Element("hierarchy")
+        ET.SubElement(first, "node", attrib={"class":"android.widget.ScrollView", "scrollable":"true", "bounds":"[100,200][500,600]"})
+        second = ET.Element("hierarchy")
+        ET.SubElement(second, "node", text="Development", bounds="[100,200][500,280]")
+        with patch.object(smoke, "capture", side_effect=[first, second]), patch.object(smoke, "adb") as command:
+            self.assertIs(second, smoke.scroll_to_text("coach", "Development", toward_start=True))
+            command.assert_called_once_with("shell", "input", "swipe", "300", "300", "300", "500", "350")
+
     def test_system_ui_dialog_is_retried_but_game_anr_is_not_dismissed(self):
         for message, should_wait in (("System UI isn't responding", True), ("CF Dynasty Manager Dev isn't responding", False)):
             dialog = ET.Element("hierarchy")
