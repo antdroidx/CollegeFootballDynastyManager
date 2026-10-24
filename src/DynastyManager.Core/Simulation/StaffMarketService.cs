@@ -158,7 +158,7 @@ public static class StaffMarketService
         var vacancies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var team in teamsByName.Values
-                     .Where(team => !team.Name.Equals(
+                     .Where(team => state.UserCoachRole != StaffRole.HeadCoach || !team.Name.Equals(
                          state.UserTeamName,
                          StringComparison.OrdinalIgnoreCase))
                      .OrderByDescending(team =>
@@ -280,7 +280,7 @@ public static class StaffMarketService
         StaffRole role,
         int maximum = 8)
     {
-        if (role == StaffRole.HeadCoach &&
+        if (role == state.UserCoachRole &&
             team.Name.Equals(
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase))
@@ -699,9 +699,9 @@ public static class StaffMarketService
                 .Select(ParseVacancy)
                 .Where(item =>
                     teamsByName.ContainsKey(item.TeamName) &&
-                    !item.TeamName.Equals(
+                    (!item.TeamName.Equals(
                         state.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase))
+                        StringComparison.OrdinalIgnoreCase) || state.UserCoachRole != StaffRole.HeadCoach && item.Role != state.UserCoachRole))
                 .OrderByDescending(item =>
                     ProgramPrestigeService.GetCurrentPrestige(
                         state,
@@ -723,9 +723,9 @@ public static class StaffMarketService
                 .Where(item =>
                     item.IsAvailable &&
                     item.TargetRole == vacancy.Role &&
-                    item.SourceTeamName?.Equals(
+                    (item.SourceTeamName?.Equals(
                         state.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase) != true)
+                        StringComparison.OrdinalIgnoreCase) != true || state.UserCoachRole != StaffRole.HeadCoach && item.SourceRole != state.UserCoachRole))
                 .Where(item =>
                     item.MinimumProgramPrestige <= targetPrestige + 8)
                 .Where(item =>
@@ -784,12 +784,12 @@ public static class StaffMarketService
 
                 staff.Remove(sourceMember);
 
-                if (!selected.SourceTeamName.Equals(
+                if ((!selected.SourceTeamName.Equals(
                         vacancy.TeamName,
-                        StringComparison.OrdinalIgnoreCase) &&
-                    !selected.SourceTeamName.Equals(
+                        StringComparison.OrdinalIgnoreCase) || selected.SourceRole != vacancy.Role) &&
+                    (!selected.SourceTeamName.Equals(
                         state.UserTeamName,
-                        StringComparison.OrdinalIgnoreCase))
+                        StringComparison.OrdinalIgnoreCase) || state.UserCoachRole != StaffRole.HeadCoach))
                 {
                     vacancies.Add(VacancyKey(
                         selected.SourceTeamName,

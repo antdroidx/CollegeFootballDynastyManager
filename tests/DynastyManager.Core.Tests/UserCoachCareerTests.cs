@@ -22,6 +22,40 @@ public sealed class UserCoachCareerTests
         Assert.True(result.RecruitingPointsRemaining >= 200);
     }
 
+    [Theory]
+    [InlineData(StaffRole.OffensiveCoordinator)]
+    [InlineData(StaffRole.DefensiveCoordinator)]
+    public void CpuManagesTheRestOfTheStaffInCoordinatorCareers(StaffRole role)
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = role }, teams.Values);
+        var user = state.UserHeadCoach!;
+        var originalHead = StaffManagementService.GetStaff(state, "User", StaffRole.HeadCoach)!;
+        state = state with { TeamSeasonHistory = [Season("User", 0, 12)],
+            Staff = state.Staff.Select(member => member with { ContractYearsRemaining = 0 }).ToArray() };
+        var changed = StaffMarketService.RunCpuCarousel(state, teams);
+        Assert.Equal(user.StaffId, changed.UserHeadCoach!.StaffId);
+        Assert.DoesNotContain(changed.Staff, member => member.TeamName == "User" && member.Role == role);
+        var newHead = StaffManagementService.GetStaff(changed, "User", StaffRole.HeadCoach);
+        Assert.NotNull(newHead);
+        Assert.NotEqual(originalHead.StaffId, newHead!.StaffId);
+        Assert.All(Enum.GetValues<StaffRole>(), staffRole => Assert.NotNull(StaffManagementService.GetStaff(changed, "User", staffRole)));
+    }
+
+    [Fact]
+    public void CoordinatorDoesNotInheritTheCpuHeadCoachsSharedIdentity()
+    {
+        var teams = Teams();
+        var initial = StaffManagementService.EnsureLeagueStaff(State(), teams.Values);
+        var cpuHead = initial.UserHeadCoach! with { StaffId = Guid.Parse("aaaaaaaa-1111-2222-3333-444444444444"), FullName = "CPU Head", Role = StaffRole.HeadCoach };
+        var shared = cpuHead with { Role = StaffRole.OffensiveCoordinator, IsHeadCoachRoleAssignment = true };
+        var state = initial with { UserHeadCoach = null, UserCoachRole = StaffRole.OffensiveCoordinator, Staff = [cpuHead, shared] };
+        var ready = StaffManagementService.EnsureLeagueStaff(state, teams.Values);
+        Assert.NotEqual(cpuHead.StaffId, ready.UserHeadCoach!.StaffId);
+        Assert.False(ready.UserHeadCoach.IsHeadCoachRoleAssignment);
+        Assert.Equal(cpuHead.StaffId, StaffManagementService.GetStaff(ready, "User", StaffRole.HeadCoach)!.StaffId);
+    }
+
     [Fact]
     public void CoordinatorVacanciesDoNotRequireAHeadCoachVacancy()
     {

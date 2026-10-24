@@ -58,7 +58,7 @@ public static class StaffManagementService
                     continue;
                 }
 
-                if (preserveVacanciesForTeam is not null &&
+                if ((state.UserCoachRole == StaffRole.HeadCoach || !team.Name.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase)) && preserveVacanciesForTeam is not null &&
                     team.Name.Equals(
                         preserveVacanciesForTeam,
                         StringComparison.OrdinalIgnoreCase) &&
@@ -250,7 +250,9 @@ public static class StaffManagementService
 
         return state with
         {
-            UserHeadCoach = profile with { Role = state.UserCoachRole }
+            UserHeadCoach = profile with { Role = state.UserCoachRole, IsHeadCoachRoleAssignment = false,
+                StaffId = state.UserCoachRole == StaffRole.HeadCoach ? profile.StaffId : StableId(state.DynastyId, "user-head-coach"),
+                SharedRoleCoaches = [], PublishedTitle = UserCoachControlService.Label(state.UserCoachRole) }
         };
     }
 
