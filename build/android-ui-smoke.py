@@ -434,7 +434,7 @@ def check_remaining_management():
     tap(schedule,"Your team")
     options=wait_for("management-schedule-scope",lambda r:"All teams" in texts(r))
     assert any((n.get("resource-id") or "").endswith("game-dialog-surface") for n in options.iter("node")), "Picker must use themed choices"
-    scroll = next(n for n in options.iter("node") if n.get("scrollable") == "true")
+    scroll = next(n for n in options.iter("node") if "ScrollView" in n.get("class", "") and any(c.get("text") == "Your team" for c in n.iter("node")))
     left, top, right, bottom = map(int, re.findall(r"\d+", scroll.get("bounds")))
     first_choice = next(n for n in options.iter("node") if n.get("text") == "Your team")
     first_bounds = list(map(int, re.findall(r"\d+", first_choice.get("bounds"))))
