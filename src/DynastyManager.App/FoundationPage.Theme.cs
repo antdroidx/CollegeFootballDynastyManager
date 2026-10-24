@@ -77,8 +77,7 @@ public sealed partial class FoundationPage
             next._recruitingStarFilter.SelectedIndex=_recruitingStarFilter.SelectedIndex;
             next._recruitingScoutedFilter.SelectedIndex=_recruitingScoutedFilter.SelectedIndex;
             next.SetDynastyControlsEnabled(_currentDynasty is not null);
-            // ShowSection renders the requested view; avoid building the hidden overview first.
-            await Task.Delay(16);
+            // ShowSection renders the requested view; keep the live-state transfer synchronous.
             next.ShowSection(section);
             next._sectionTrail.Clear();
             foreach (var previousSection in _sectionTrail.Reverse()) next._sectionTrail.Push(previousSection);
