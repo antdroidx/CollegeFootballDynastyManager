@@ -1612,9 +1612,12 @@ public sealed partial class FoundationPage
             var showAll = false;
             var expandRoster = new Button { Text = "Show all reserves" };
             var automatic = new Button { Text = "Automatic rotation", FontSize = 12 };
+            var secondUnit = new Button { AutomationId = "live-second-unit", FontSize = 13, MinimumHeightRequest = 44 };
             void Draw()
             {
                 rows.Children.Clear();
+                secondUnit.Text = session.SecondUnits.Contains(controlledTeamName) ? "Return to starters" : "Use second unit";
+                secondUnit.IsEnabled = !session.IsComplete;
                 var depth = controlledTeamName == game.HomeTeamName ? session.HomeDepthChart : session.AwayDepthChart;
                 var fatigue = controlledTeamName == game.HomeTeamName ? session.HomeFatigue : session.AwayFatigue;
                 var stats = GameDayEngine.BoxScore(session).Players.ToDictionary(p => p.PlayerId);
@@ -1671,12 +1674,18 @@ public sealed partial class FoundationPage
             }
             talkButton.Clicked += async (_, _) => { await GiveTalkAsync(); Draw(); };
             filter.SelectedIndexChanged += (_, _) => { showAll = false; Draw(); };
+            secondUnit.Clicked += async (_, _) =>
+            {
+                var enabled = !session.SecondUnits.Contains(controlledTeamName);
+                if (enabled && !await teamPage.DisplayAlertAsync("Use second unit?", "Use eligible backups across offense and defense from the next snap, plus a backup kicker where available. Starters fill gaps where backups are unavailable. Season depth chart stays unchanged.", "Use second unit", "Cancel")) return;
+                GameDayCoachingService.UseSecondUnit(session, controlledTeamName, enabled); Draw();
+            };
             expandRoster.Clicked += (_, _) => { showAll = !showAll; Draw(); };
             automatic.Clicked += (_, _) => { var pos = Enum.Parse<Position>(filter.SelectedItem?.ToString() ?? "QB"); session.ManualStarters.Remove((controlledTeamName, pos)); Draw(); };
             teamPage.Content = new Grid { Padding = 12, RowSpacing = 8, RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Star) } };
             var layout = (Grid)teamPage.Content;
             layout.Add(new HorizontalStackLayout { Spacing = 8, Children = { back, talkButton } }, 0, 0);
-            layout.Add(new VerticalStackLayout { Spacing = 5, Children = { availability, filter, automatic } }, 0, 1);
+            layout.Add(new VerticalStackLayout { Spacing = 5, Children = { availability, secondUnit, filter, automatic } }, 0, 1);
             layout.Add(new ScrollView { Content = new VerticalStackLayout { Spacing = 6, Children = { rows, expandRoster } } }, 0, 2);
             Draw(); await Navigation.PushModalAsync(teamPage); await closed.Task;
         }

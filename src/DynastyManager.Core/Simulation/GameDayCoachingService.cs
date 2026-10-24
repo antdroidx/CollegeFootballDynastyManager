@@ -52,6 +52,14 @@ public static class GameDayCoachingService
         return "Available";
     }
 
+    public static bool UseSecondUnit(GameDaySession s, string team, bool enabled)
+    {
+        if (s.IsComplete || (team != s.Game.HomeTeamName && team != s.Game.AwayTeamName)) return false;
+        foreach (var key in s.ManualStarters.Keys.Where(k => k.Team == team).ToArray()) s.ManualStarters.Remove(key);
+        if (enabled) s.SecondUnits.Add(team); else s.SecondUnits.Remove(team);
+        return true;
+    }
+
     public static bool Substitute(GameDaySession session, string team, Guid playerId)
     {
         if (session.IsComplete || !session.PlayersById.TryGetValue(playerId, out var player) ||
@@ -63,12 +71,40 @@ public static class GameDayCoachingService
 
     public static DynastyPlayer? Specialist(GameDaySession s, string team, DynastyPlayer? fallback)
     {
-        return s.ManualStarters.TryGetValue((team, Position.K), out var id) && s.PlayersById.TryGetValue(id, out var player) ? player : fallback;
+        if (s.ManualStarters.TryGetValue((team, Position.K), out var id) && s.PlayersById.TryGetValue(id, out var player)) return player;
+        if (s.SecondUnits.Contains(team))
+        {
+            var depth = team == s.Game.HomeTeamName ? s.HomeDepthChart : s.AwayDepthChart;
+            return depth.GetValueOrDefault(Position.K)?.FirstOrDefault(p => p.PlayerId != fallback?.PlayerId &&
+                (p.NcaaPositionCode ?? 19) == (fallback?.NcaaPositionCode ?? 19)) ?? fallback;
+        }
+        return fallback;
     }
 
     public static SnapPersonnel ApplySubstitutions(GameDaySession session, SnapPersonnel unit)
     {
         var ids = unit.PlayerIds.ToArray();
+        if (session.SecondUnits.Contains(unit.TeamName))
+        {
+            var depth = unit.TeamName == session.Game.HomeTeamName ? session.HomeDepthChart : session.AwayDepthChart;
+            foreach (var group in unit.PlayerIds.GroupBy(id => session.PlayersById[id].Position))
+            {
+                if (!depth.TryGetValue(group.Key, out var pool)) continue;
+                var slots = group.Select(id => Array.IndexOf(ids, id)).ToArray();
+                var first = group.Key == Position.OL ? OffensiveLineService.Lineup(pool).Select(p => p.PlayerId).ToHashSet() : pool.Take(slots.Length).Select(p => p.PlayerId).ToHashSet();
+                var reserves = pool.Where(p => !first.Contains(p.PlayerId)).ToList();
+                var used = new HashSet<Guid>();
+                foreach (var slot in slots)
+                {
+                    var original = session.PlayersById[ids[slot]];
+                    bool Fits(DynastyPlayer p) => !used.Contains(p.PlayerId) &&
+                        (group.Key != Position.OL || OffensiveLineService.Label(p) == OffensiveLineService.Label(original));
+                    var next = reserves.FirstOrDefault(Fits) ?? pool.FirstOrDefault(p => first.Contains(p.PlayerId) && Fits(p)) ?? pool.FirstOrDefault(Fits);
+                    if (next is null) continue;
+                    ids[slot] = next.PlayerId; used.Add(next.PlayerId); reserves.Remove(next);
+                }
+            }
+        }
         foreach (var ((team, position), id) in session.ManualStarters)
         {
             if (team != unit.TeamName || ids.Contains(id)) continue;

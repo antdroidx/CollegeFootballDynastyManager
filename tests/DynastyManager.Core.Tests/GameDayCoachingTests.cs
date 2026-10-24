@@ -122,4 +122,39 @@ public class GameDayCoachingTests
     [InlineData("Oklahoma State", "OSU")]
     [InlineData("Ohio State", "O")]
     public void SchoolMonogramsFollowExplicitSchoolIdentity(string name, string expected) => Assert.Equal(expected, TeamBrandCatalog.Monogram(name));
+
+    [Fact]
+    public void SecondUnitChangesMultiplePositionsAndCanBeReversedWithoutChangingDepthChart()
+    {
+        var s = GameDayEngineTests.Session(GameDayMode.Play);
+        var originalQb = s.HomeDepthChart[Position.QB][0].PlayerId;
+        var backupQb = s.HomeDepthChart[Position.QB][1].PlayerId;
+        GameDayCoachingService.Substitute(s, "Home", originalQb);
+        Assert.True(GameDayCoachingService.UseSecondUnit(s, "Home", true));
+        Assert.Empty(s.ManualStarters);
+        var snap = GameDayEngine.Step(s, "off-spread-verts");
+        Assert.Equal(backupQb, snap.QuarterbackId);
+        Assert.Equal(11, snap.OffensePersonnel.Distinct().Count());
+        Assert.DoesNotContain(originalQb, snap.OffensePersonnel);
+        Assert.Equal(originalQb, s.HomeDepthChart[Position.QB][0].PlayerId);
+        Assert.True(GameDayCoachingService.UseSecondUnit(s, "Home", false));
+        Assert.Empty(s.SecondUnits);
+        Assert.False(GameDayCoachingService.UseSecondUnit(s, "Unknown", true));
+    }
+
+    [Fact]
+    public void SecondUnitWithThinDepthKeepsDistinctPlayersAndFillsGapsWithStarters()
+    {
+        var source = GameDayEngineTests.Session(GameDayMode.Play);
+        // Explicitly trim to three receivers; imported depth orders can be zero.
+        var receivers = source.HomeDepthChart[Position.WR].Take(3).Select(p => p.PlayerId).ToHashSet();
+        var roster = source.Roster.Where(p => p.TeamName != "Home" || p.Position != Position.WR || receivers.Contains(p.PlayerId)).ToArray();
+        var s = GameDayEngine.Start(source.Game, source.HomeProfile, source.AwayProfile, roster, GameDayMode.Play);
+        GameDayCoachingService.UseSecondUnit(s, "Home", true);
+        var pool = s.HomeDepthChart[Position.WR];
+        var unit = new SnapPersonnel { TeamName = "Home", PlayerIds = [pool[0].PlayerId, pool[2].PlayerId] };
+        var selected = GameDayCoachingService.ApplySubstitutions(s, unit);
+        Assert.Equal(2, selected.PlayerIds.Distinct().Count());
+        Assert.Contains(pool[2].PlayerId, selected.PlayerIds);
+    }
 }

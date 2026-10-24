@@ -211,6 +211,15 @@ def main():
     assert "Talk to player" not in texts(team), "Individual talks must not be offered"
     assert "Starter" in texts(team) and not enabled(team, "Starter")
     assert len([n for n in team.iter("node") if n.get("text") == "Sub in"]) <= 2, "Default QB list must stay compact"
+    tap(team, "Use second unit")
+    second = wait_for("second-unit-confirm", lambda r: "Use second unit?" in texts(r))
+    tap(second, "Use second unit")
+    second = capture("second-unit-active")
+    assert "Return to starters" in texts(second)
+    assert "Starter" in texts(second)
+    tap(second, "Return to starters")
+    team = capture("first-unit-restored")
+    assert "Use second unit" in texts(team)
     if "Sub in" in texts(team):
         tap(team, "Sub in")
         scope = wait_for("live-substitution-scope", lambda r: "This game only" in texts(r))
