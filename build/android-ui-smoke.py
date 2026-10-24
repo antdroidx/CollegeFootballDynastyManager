@@ -174,6 +174,20 @@ def main():
     toss = capture("coin-toss-portrait-ready")
     tap(toss, "Start game")
     viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
+    badges = [n for n in viewer.iter("node") if n.get("content-desc", "").endswith(" team badge")]
+    assert len(badges) == 2, "Compact scoreboard must expose both team badges"
+    settings_clock = next(t for t in texts(viewer) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
+    for current, expected in (("Full field", "Broadcast"), ("Broadcast", "Follow ball"), ("Follow ball", "Full field")):
+        tap(scroll_to_text("camera-ready", "Camera: " + current), "Camera: " + current)
+        camera_view = capture("camera-" + expected.replace(" ", "-"))
+        assert "Camera: " + expected in texts(camera_view)
+        assert settings_clock in texts(camera_view), "Camera changes advanced the game clock"
+    tap(scroll_to_text("replay-speed-ready", "Replay speed: 1x"), "Replay speed: 1x")
+    slow = capture("replay-slow-speed")
+    assert "Replay speed: 0.5x" in texts(slow)
+    assert settings_clock in texts(slow), "Replay speed changes advanced the game clock"
+    tap(slow, "Replay speed: 0.5x")
+    viewer = capture("presentation-settings-restored")
     opening_touchback = any("TOUCHBACK" in (value or "") for value in texts(viewer))
     assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
     assert len([n for n in viewer.iter("node") if n.get("content-desc", "").startswith("Select ")]) == 3, "Portrait must show three play choices"

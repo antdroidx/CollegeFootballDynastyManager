@@ -258,9 +258,11 @@ public sealed partial class FoundationPage
         Border TeamBadge(string team)
         {
             var brand = TeamBrandCatalog.Get(team);
+            var primary = Color.FromArgb(brand.Primary);
+            var ink = primary.Red * .2126 + primary.Green * .7152 + primary.Blue * .0722 > .5 ? Colors.Black : Colors.White;
             var badge = new Border { WidthRequest = 30, HeightRequest = 30, Padding = 2,
-                Stroke = Colors.White, StrokeThickness = 1, BackgroundColor = Color.FromArgb(brand.Primary),
-                Content = new Label { Text = TeamBrandCatalog.Initial(team), TextColor = Colors.White,
+                Stroke = Color.FromArgb(brand.Secondary), StrokeThickness = 2, BackgroundColor = primary,
+                Content = new Label { Text = TeamBrandCatalog.Initial(team), TextColor = ink,
                     FontSize = 11, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center } };
             SemanticProperties.SetDescription(badge, team + " team badge");
             return badge;
@@ -1109,9 +1111,17 @@ public sealed partial class FoundationPage
                         carrierLabel.Text = $"{(ownerPlayer?.JerseyNumber is int n ? $"#{n} " : "")}{surname}";
                         var pos = AbsoluteLayout.GetLayoutBounds(host);
                         var width = Math.Max(180, fieldPlayers.Width); var height = Math.Max(50, fieldPlayers.Height);
-                        AbsoluteLayout.SetLayoutBounds(carrierLabel, new Rect(
-                            Math.Clamp((pos.X * (width - 28) + 14 - 75) / (width - 150), 0, 1),
-                            Math.Clamp((pos.Y * (height - 28) + (pos.Y < .5 ? 32 : -24)) / (height - 20), 0, 1), 150, 20));
+                        var labelX = Math.Clamp(pos.X * (width - 28) + 14 - 75, 0, width - 150);
+                        // Pick the less crowded side in screen pixels; only one name is shown.
+                        var candidates = new[] { Math.Clamp(pos.Y * (height - 28) - 24, 0, height - 20),
+                            Math.Clamp(pos.Y * (height - 28) + 32, 0, height - 20) };
+                        var labelY = candidates.OrderBy(y => markerHosts.Keys.Count(marker =>
+                        {
+                            var other = AbsoluteLayout.GetLayoutBounds(marker);
+                            var x = other.X * (width - other.Width); var top = other.Y * (height - other.Height);
+                            return x < labelX + 150 && x + other.Width > labelX && top < y + 20 && top + other.Height > y;
+                        })).First();
+                        AbsoluteLayout.SetLayoutBounds(carrierLabel, new Rect(labelX / (width - 150), labelY / (height - 20), 150, 20));
                     }
                     else carrierLabel.IsVisible = false;
                 }
@@ -1328,7 +1338,7 @@ public sealed partial class FoundationPage
             skipReplayRequested = false; skipReplay.IsVisible = true; replayChip.IsVisible = true;
             highlightText.Text = "INSTANT REPLAY";
             highlightText.FontSize = 30;
-            highlight.BackgroundColor = DynastyTheme.Palette("#ED102B40"); highlight.Opacity = 1; highlight.Scale = 1;
+            highlight.BackgroundColor = Color.FromArgb("#ED102B40"); highlight.Opacity = 1; highlight.Scale = 1;
             highlight.IsVisible = true;
             await Task.Delay(850);
             highlight.IsVisible = false; highlightText.FontSize = 22;
