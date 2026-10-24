@@ -13,7 +13,7 @@ public static class CoachCareerService
         if (seasons.Count == 0) return state;
         var history = state.CoachSeasonHistory.ToList();
         var keys = history.Select(item => (item.StaffId, item.SeasonYear, item.TeamName, item.Role)).ToHashSet();
-        var staff = state.Staff.Where(item => !(item.Role == StaffRole.HeadCoach && state.UserHeadCoach is not null &&
+        var staff = state.Staff.Where(item => !(item.Role == state.UserCoachRole && state.UserHeadCoach is not null &&
             item.TeamName.Equals(state.UserTeamName, StringComparison.OrdinalIgnoreCase)))
             .Select(item => StaffManagementService.GetStaff(state, item.TeamName, item.Role) ?? item).ToList();
         if (state.UserHeadCoach is not null && !state.UserCoachIsFired) staff.Add(state.UserHeadCoach);
@@ -38,7 +38,7 @@ public static class CoachCareerService
         foreach (var item in state.UserCoachCareerHistory)
         {
             if (history.Any(record => record.StaffId == coach.StaffId && record.SeasonYear == item.SeasonYear &&
-                record.TeamName.Equals(item.TeamName, StringComparison.OrdinalIgnoreCase) && record.Role == StaffRole.HeadCoach)) continue;
+                record.TeamName.Equals(item.TeamName, StringComparison.OrdinalIgnoreCase) && record.Role == item.Role)) continue;
             var season = state.TeamSeasonHistory.FirstOrDefault(record => record.SeasonYear == item.SeasonYear &&
                 record.TeamName.Equals(item.TeamName, StringComparison.OrdinalIgnoreCase)) ?? new TeamSeasonHistoryRecord
                 {
@@ -53,7 +53,7 @@ public static class CoachCareerService
                 PlayoffParticipant = season.PlayoffParticipant || item.PlayoffParticipant,
                 NationalChampion = season.NationalChampion || item.NationalChampion
             };
-            history.Add(FromSeason(coach with { TeamName = item.TeamName, Role = StaffRole.HeadCoach }, season));
+            history.Add(FromSeason(coach with { TeamName = item.TeamName, Role = item.Role }, season));
         }
         return state with { CoachSeasonHistory = history.ToArray() };
     }

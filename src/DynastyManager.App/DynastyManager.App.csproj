@@ -10,13 +10,13 @@
 
     <ApplicationTitle>College Football Dynasty Manager</ApplicationTitle>
     <ApplicationId>antdroid.cfbcoach</ApplicationId>
-    <ApplicationDisplayVersion>2.0</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>0.20.0</ApplicationDisplayVersion>
     <ApplicationVersion>400</ApplicationVersion>
     <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <ApplicationTitle>CF Dynasty Manager Dev</ApplicationTitle>
+    <ApplicationTitle>College Football Dynasty Manager</ApplicationTitle>
     <ApplicationId>antdroid.cfbcoach.dev</ApplicationId>
 
     <!-- GitHub/standalone debug APKs are sideloaded without Visual Studio Fast Deployment. -->
@@ -32,9 +32,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MauiIcon Include="Resources\AppIcon\appicon_cfdm.png" BaseSize="256,256" />
-    <MauiSplashScreen Include="Resources\Splash\splash.svg"
-                      Color="#10243E"
+    <MauiImage Include="Resources\Images\dynasty_logo.png" BaseSize="240,240" />
+    <MauiIcon Include="Resources\AppIcon\appicon_purple.png" BaseSize="256,256" />
+    <MauiSplashScreen Include="Resources\Splash\splash_cfdm.png"
+                      Color="#211039"
                       BaseSize="128,128" />
   </ItemGroup>
 

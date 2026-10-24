@@ -99,6 +99,7 @@ public static class InteractiveRecruitingService
         Guid prospectId,
         bool cpuAssisted = false)
     {
+        if (!cpuAssisted && !UserCoachControlService.CanRecruit(state, source, prospectId)) return state;
         if (state.RecruitingPointsRemaining < ScoutCost)
             return state;
 
@@ -142,6 +143,7 @@ public static class InteractiveRecruitingService
         Guid prospectId,
         bool cpuAssisted = false)
     {
+        if (!cpuAssisted && !UserCoachControlService.CanRecruit(state, source, prospectId)) return state;
         ArgumentNullException.ThrowIfNull(userTeam);
 
         var interaction = GetOrCreateInteraction(
@@ -200,6 +202,7 @@ public static class InteractiveRecruitingService
         RecruitPitchType pitchType,
         bool cpuAssisted = false)
     {
+        if (!cpuAssisted && !UserCoachControlService.CanRecruit(state, source, prospectId)) return state;
         ArgumentNullException.ThrowIfNull(userTeam);
 
         if (state.RecruitingPointsRemaining < PitchCost)
@@ -296,6 +299,7 @@ public static class InteractiveRecruitingService
         RecruitingSource source,
         Guid prospectId)
     {
+        if (!UserCoachControlService.CanRecruit(state, source, prospectId)) return state;
         var interaction = GetOrCreateInteraction(
             state,
             source,

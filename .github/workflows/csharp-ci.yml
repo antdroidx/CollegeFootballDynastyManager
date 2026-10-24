@@ -111,7 +111,7 @@ jobs:
         shell: bash
         run: |
           echo "APP_VERSION_CODE=$((400 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
-          echo "APP_DISPLAY_VERSION=2.0.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+          echo "APP_DISPLAY_VERSION=0.20.${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
 
       - name: Build Android debug APK
         run: >
@@ -197,7 +197,7 @@ jobs:
             sleep 8
             adb logcat -d > android-logcat.txt
             adb shell pidof antdroid.cfbcoach.dev
-            python3 build/android-ui-smoke.py || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
+            python3 -u build/android-ui-smoke.py || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
 
       - name: Upload launch UI evidence
         if: always()
@@ -215,6 +215,72 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-launch-log
+          path: |
+            android-logcat.txt
+            android-last-anr.txt
+          if-no-files-found: ignore
+          retention-days: 1
+
+  android-career-options:
+    needs: build-test-android
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout UI smoke test
+        uses: actions/checkout@v4
+
+      - name: Download built APK
+        uses: actions/download-artifact@v4
+        with:
+          name: dynasty-manager-build-${{ github.run_number }}
+          path: apk
+
+      - name: Select APK
+        shell: bash
+        run: |
+          APK_PATH="$(find apk -name '*.apk' -print -quit)"
+          test -n "$APK_PATH"
+          echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
+
+      - name: Enable KVM access
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+
+      - name: Android career options smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r "$APK_PATH"
+            adb logcat -c
+            adb shell monkey -p antdroid.cfbcoach.dev -c android.intent.category.LAUNCHER 1
+            sleep 8
+            adb logcat -d > android-logcat.txt
+            adb shell pidof antdroid.cfbcoach.dev
+            python3 -u build/android-ui-smoke.py --career-options || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
+
+      - name: Upload launch UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-career-options-ui-${{ github.run_number }}
+          path: |
+            android-*.png
+            android-*.xml
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Upload runtime log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-career-options-log-${{ github.run_number }}
           path: |
             android-logcat.txt
             android-last-anr.txt

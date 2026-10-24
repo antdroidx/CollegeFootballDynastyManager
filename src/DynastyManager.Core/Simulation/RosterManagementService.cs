@@ -56,6 +56,7 @@ public static class RosterManagementService
         Guid playerId,
         int direction)
     {
+        if (teamName == state.UserTeamName && state.ActiveRoster.FirstOrDefault(p => p.PlayerId == playerId) is { } controlled && !UserCoachControlService.ControlsPosition(state, controlled.Position)) return state;
         ArgumentNullException.ThrowIfNull(state);
 
         if (direction == 0)
@@ -145,6 +146,7 @@ public static class RosterManagementService
         Guid playerId,
         int targetOrder)
     {
+        if (teamName == state.UserTeamName && state.ActiveRoster.FirstOrDefault(p => p.PlayerId == playerId) is { } controlled && !UserCoachControlService.ControlsPosition(state, controlled.Position)) return state;
         ArgumentNullException.ThrowIfNull(state);
 
         state = NormalizeAllDepthCharts(state);
@@ -189,6 +191,7 @@ public static class RosterManagementService
         string teamName,
         Guid playerId)
     {
+        if (teamName == state.UserTeamName && state.UserCoachRole != StaffRole.HeadCoach) return state;
         ArgumentNullException.ThrowIfNull(state);
 
         if (state.Phase != SeasonPhase.RosterManagement)
@@ -228,6 +231,7 @@ public static class RosterManagementService
         string teamName,
         Guid playerId)
     {
+        if (teamName == state.UserTeamName && state.UserCoachRole != StaffRole.HeadCoach) return state;
         ArgumentNullException.ThrowIfNull(state);
 
         if (state.Phase != SeasonPhase.RosterManagement)

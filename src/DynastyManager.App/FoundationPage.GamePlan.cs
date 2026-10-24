@@ -137,11 +137,15 @@ public sealed partial class FoundationPage
         var approachValues = Enum.GetValues<DefensiveApproach>();
         var offensiveFormationValues = Enum.GetValues<OffensiveFormation>();
         var defensiveFormationValues = Enum.GetValues<DefensiveFormation>();
-        var offense = new Picker { Title = "Offensive playbook", ItemsSource = offenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offenseValues, plan.Offense) };
-        var defense = new Picker { Title = "Defensive playbook", ItemsSource = defenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defenseValues, plan.Defense) };
+        var offense = new Picker { AutomationId = "offensive-playbook", Title = "Offensive playbook", ItemsSource = offenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offenseValues, plan.Offense) };
+        var defense = new Picker { AutomationId = "defensive-playbook", Title = "Defensive playbook", ItemsSource = defenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defenseValues, plan.Defense) };
         var approach = new Picker { Title = "Defensive approach", ItemsSource = approachValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(approachValues, plan.Approach) };
         var offensiveFormation = new Picker { Title = "Primary offensive formation", ItemsSource = offensiveFormationValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offensiveFormationValues, plan.OffensiveFormation) };
         var defensiveFormation = new Picker { Title = "Primary defensive formation", ItemsSource = defensiveFormationValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defensiveFormationValues, plan.DefensiveFormation) };
+        tempo.IsEnabled = offense.IsEnabled = offensiveFormation.IsEnabled = UserCoachControlService.ControlsOffense(_currentDynasty);
+        defense.IsEnabled = approach.IsEnabled = defensiveFormation.IsEnabled = UserCoachControlService.ControlsDefense(_currentDynasty);
+        if (_currentDynasty.UserCoachRole != StaffRole.HeadCoach)
+            settingsHost.Children.Add(new Label { Text = UserCoachControlService.Label(_currentDynasty.UserCoachRole) + " · The staff manages the other side.", TextColor = DynastyTheme.Muted });
         var description = new Label { Text = GamePlanService.Describe(plan.Offense), TextColor = DynastyTheme.Muted };
         offense.SelectedIndexChanged += (_, _) =>
         {

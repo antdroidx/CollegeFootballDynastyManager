@@ -34,7 +34,7 @@ public static class StaffManagementService
 
         var staff = state.Staff
             .Where(item =>
-                !(item.Role == StaffRole.HeadCoach &&
+                !(item.Role == state.UserCoachRole &&
                   item.TeamName.Equals(
                       state.UserTeamName,
                       StringComparison.OrdinalIgnoreCase)))
@@ -43,7 +43,7 @@ public static class StaffManagementService
         {
             foreach (var role in RequiredRoles)
             {
-                if (role == StaffRole.HeadCoach &&
+                if (role == state.UserCoachRole &&
                     team.Name.Equals(
                         state.UserTeamName,
                         StringComparison.OrdinalIgnoreCase))
@@ -79,7 +79,7 @@ public static class StaffManagementService
         string teamName,
         StaffRole role)
     {
-        if (role == StaffRole.HeadCoach &&
+        if (role == state.UserCoachRole &&
             teamName.Equals(
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase) &&
@@ -128,7 +128,7 @@ public static class StaffManagementService
         DynastyState state,
         StaffMember candidate)
     {
-        if (candidate.Role == StaffRole.HeadCoach &&
+        if ((state.UserCoachRole != StaffRole.HeadCoach || candidate.Role == state.UserCoachRole) &&
             candidate.TeamName.Equals(
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase))
@@ -209,7 +209,7 @@ public static class StaffManagementService
     {
         if (state.UserHeadCoach is not null)
         {
-            if (!state.UserHeadCoach.TeamName.Equals(
+            if (state.UserHeadCoach.Role != state.UserCoachRole || !state.UserHeadCoach.TeamName.Equals(
                     state.UserTeamName,
                     StringComparison.OrdinalIgnoreCase))
             {
@@ -218,7 +218,7 @@ public static class StaffManagementService
                     UserHeadCoach = state.UserHeadCoach with
                     {
                         TeamName = state.UserTeamName,
-                        Role = StaffRole.HeadCoach
+                        Role = state.UserCoachRole
                     }
                 };
             }
@@ -237,20 +237,20 @@ public static class StaffManagementService
             item.TeamName.Equals(
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase) &&
-            item.Role == StaffRole.HeadCoach);
+            item.Role == state.UserCoachRole);
 
         var profile = legacy is not null
             ? legacy with
             {
                 FullName = "YOU",
                 TeamName = state.UserTeamName,
-                Role = StaffRole.HeadCoach
+                Role = state.UserCoachRole
             }
             : CreateUserHeadCoach(state, userTeam);
 
         return state with
         {
-            UserHeadCoach = profile
+            UserHeadCoach = profile with { Role = state.UserCoachRole }
         };
     }
 

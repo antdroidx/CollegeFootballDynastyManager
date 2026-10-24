@@ -10,6 +10,7 @@ public enum UserCoachJobOfferStatus
 
 public sealed record UserCoachJobOffer
 {
+    public StaffRole Role { get; init; } = StaffRole.HeadCoach;
     public Guid OfferId { get; init; } = Guid.NewGuid();
     public int SeasonYear { get; init; }
     public required string TeamName { get; init; }
@@ -23,6 +24,7 @@ public sealed record UserCoachJobOffer
 
 public sealed record UserCoachCareerRecord
 {
+    public StaffRole Role { get; init; } = StaffRole.HeadCoach;
     public int SeasonYear { get; init; }
     public required string TeamName { get; init; }
     public int Wins { get; init; }

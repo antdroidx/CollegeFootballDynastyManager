@@ -429,6 +429,7 @@ public static class StaffMarketService
         Guid candidateId,
         IReadOnlyDictionary<string, Team> teamsByName)
     {
+        if (state.UserCoachRole != StaffRole.HeadCoach) return state;
         state = EnsureMarket(state, teamsByName);
 
         var candidate = state.StaffMarketCandidates.FirstOrDefault(item =>
@@ -561,7 +562,7 @@ public static class StaffMarketService
         DynastyState state,
         string oldTeamName,
         string newTeamName,
-        IReadOnlyDictionary<string, Team> teamsByName)
+        IReadOnlyDictionary<string, Team> teamsByName, StaffRole oldRole = StaffRole.HeadCoach)
     {
         if (oldTeamName.Equals(
                 newTeamName,
@@ -585,14 +586,14 @@ public static class StaffMarketService
             item.TeamName.Equals(
                 newTeamName,
                 StringComparison.OrdinalIgnoreCase) &&
-            item.Role == StaffRole.HeadCoach);
+            item.Role == state.UserCoachRole);
 
         if (displaced is not null)
         {
             ReleaseToMarket(
                 state,
                 displaced,
-                "Program hired the user as head coach.",
+                "Program hired the user as " + UserCoachControlService.Label(state.UserCoachRole) + ".",
                 StaffMovementType.Fired,
                 null,
                 staff,
@@ -605,7 +606,7 @@ public static class StaffMarketService
         {
             vacancies.Add(VacancyKey(
                 oldTeamName,
-                StaffRole.HeadCoach));
+                oldRole));
         }
 
         if (state.UserHeadCoach is not null)
@@ -616,7 +617,7 @@ public static class StaffMarketService
                 StaffId =
                     state.UserHeadCoach.StaffId,
                 FullName = "YOU",
-                Role = StaffRole.HeadCoach,
+                Role = state.UserCoachRole,
                 MovementType =
                     StaffMovementType.Hired,
                 FromTeamName = oldTeamName,
@@ -624,7 +625,7 @@ public static class StaffMarketService
                 OverallRating =
                     state.UserHeadCoach.OverallRating,
                 Reason =
-                    "User accepted a head-coaching job offer."
+                    "User accepted a " + UserCoachControlService.Label(state.UserCoachRole) + " job offer."
             });
         }
 
@@ -648,7 +649,7 @@ public static class StaffMarketService
         DynastyState state,
         Team team)
     {
-        if (team.Name.Equals(
+        if (state.UserCoachRole == StaffRole.HeadCoach && team.Name.Equals(
                 state.UserTeamName,
                 StringComparison.OrdinalIgnoreCase))
         {

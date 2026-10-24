@@ -11,6 +11,11 @@ namespace DynastyManager.Core.Simulation;
 /// </summary>
 public static class CpuRecruitingService
 {
+    private static bool ShouldAssist(DynastyState state, RecruitingSource source, Guid id) =>
+        state.UserCoachRole == StaffRole.HeadCoach ||
+        (state.RecruitingAssistanceEnabled && state.RecruitingAssistanceWorkloadPercent > 0) ||
+        !UserCoachControlService.CanRecruit(state, source, id);
+
     public static DynastyState ApplyWeeklyUserAssistance(
         DynastyState state,
         Team userTeam)
@@ -23,9 +28,11 @@ public static class CpuRecruitingService
             state.RecruitingAssistanceWorkloadPercent,
             0,
             100);
+        var coordinator = state.UserCoachRole != StaffRole.HeadCoach;
+        if (coordinator) workload = !state.RecruitingAssistanceEnabled || workload <= 0 ? 50 : Math.Max(50, workload);
         var sources = GetAssistanceSources(state);
 
-        if (!state.RecruitingAssistanceEnabled ||
+        if ((!state.RecruitingAssistanceEnabled && !coordinator) ||
             workload <= 0 ||
             sources.Length == 0 ||
             (state.RecruitingAssistanceSeasonYear == state.SeasonYear &&
@@ -106,6 +113,7 @@ public static class CpuRecruitingService
                         new AssistanceCandidate(
                             source,
                             candidate)))
+            .Where(item => ShouldAssist(state, item.Source, item.Candidate.ProspectId))
             .Where(item => !unavailableIds.Contains(item.Candidate.ProspectId))
             .Where(item =>
                 item.Source != RecruitingSource.TransferPortal ||
@@ -453,6 +461,7 @@ public static class CpuRecruitingService
             })
             .Where(item => item is not null)
             .Select(item => item!)
+            .Where(item => ShouldAssist(state, item.Source, item.Candidate.ProspectId))
             .Where(item => item.Source != RecruitingSource.TransferPortal ||
                 IsUsefulTransfer(state, userTeam, item.Candidate))
             .OrderByDescending(item =>

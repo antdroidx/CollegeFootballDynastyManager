@@ -47,6 +47,11 @@ public static partial class GameDayEngine
         string? userDefensivePlayId = null)
     {
         if (session.IsComplete) throw new InvalidOperationException("The game is complete.");
+        if (session.UserCoachRole != StaffRole.HeadCoach)
+        {
+            if (session.UserCoachRole == StaffRole.DefensiveCoordinator || session.PossessionTeamName != session.ControlledTeamName) userPlayId = null;
+            if (session.UserCoachRole == StaffRole.OffensiveCoordinator || session.PossessionTeamName == session.ControlledTeamName) userDefensivePlayId = null;
+        }
         if (session.TryPending) return ResolveTry(session, userPlayId);
         if (session.KickoffPending) return ResolveKickoff(session);
         if (session.Quarter is 2 or 4 && session.ClockSeconds <= 90 && (!session.ClockStopped || session.ClockRestartsOnReady))

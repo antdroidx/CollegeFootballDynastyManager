@@ -11,7 +11,7 @@ public static class GameMoraleService
         var form = games.Sum(g => g.WinnerTeamName == team ? 6 : -4);
         var recovery = games.Take(2).Sum(g => ((g.HomeTeamName == team ? g.HomeEndingMorale : g.AwayEndingMorale) - 50) / 8);
         var talks = state.CoachTalks.Concat(state.Schedule.Where(g => g.HasPlayed && g.SeasonYear == state.SeasonYear).SelectMany(g => g.CoachTalks.Where(t => t.Quarter == 99 && t.Reactions.Count > 1)))
-            .Where(t => t.TeamName == team && t.SeasonYear == state.SeasonYear && t.Week <= state.Week && state.Week - t.Week < 3)
+            .Where(t => t.Audience == CoachTalkAudience.Team && t.TeamName == team && t.SeasonYear == state.SeasonYear && t.Week <= state.Week && state.Week - t.Week < 3)
             .Sum(t => t.Reactions.Select(r => (double)r.Change).DefaultIfEmpty().Average() * (3 - (state.Week - t.Week)) / 3);
         var coach = state.Staff.FirstOrDefault(s => s.TeamName == team && s.Role == StaffRole.HeadCoach);
         return Math.Clamp(50 + form + recovery + (int)Math.Round(talks) + ((coach?.Leadership ?? 60) - 60) / 12, 25, 75);

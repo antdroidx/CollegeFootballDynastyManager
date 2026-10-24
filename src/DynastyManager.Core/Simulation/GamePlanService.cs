@@ -7,6 +7,7 @@ public static class GamePlanService
     public static DynastyState SetPlan(DynastyState state, TeamGamePlan plan)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(plan.TeamName);
+        plan = UserCoachControlService.LimitPlan(state, plan);
         PlayEditorService.Validate(plan);
         if (!Enum.IsDefined(plan.Tempo) || !Enum.IsDefined(plan.Offense) || !Enum.IsDefined(plan.Defense) || !Enum.IsDefined(plan.Approach) ||
             !Enum.IsDefined(plan.OffensiveFormation) || !Enum.IsDefined(plan.DefensiveFormation) ||

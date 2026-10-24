@@ -55,7 +55,7 @@ public static class GameDayCoachingService
     public static bool UseSecondUnit(GameDaySession s, string team, bool enabled)
     {
         if (s.IsComplete || (team != s.Game.HomeTeamName && team != s.Game.AwayTeamName)) return false;
-        foreach (var key in s.ManualStarters.Keys.Where(k => k.Team == team).ToArray()) s.ManualStarters.Remove(key);
+        foreach (var key in s.ManualStarters.Keys.Where(k => k.Team == team && (team != s.ControlledTeamName || UserCoachControlService.ControlsPosition(s.UserCoachRole, k.Position))).ToArray()) s.ManualStarters.Remove(key);
         s.LineupResetAt[team] = s.Events.Count;
         if (enabled) s.SecondUnits.Add(team); else s.SecondUnits.Remove(team);
         return true;
@@ -66,6 +66,7 @@ public static class GameDayCoachingService
         if (session.IsComplete || !session.PlayersById.TryGetValue(playerId, out var player) ||
             player.TeamName != team || player.IsRedshirted || player.CurrentInjury is not null) return false;
         if (team != session.Game.HomeTeamName && team != session.Game.AwayTeamName) return false;
+        if (team == session.ControlledTeamName && !UserCoachControlService.ControlsPosition(session.UserCoachRole, player.Position)) return false;
         session.ManualStarters[(team, player.Position)] = playerId;
         return true;
     }
@@ -73,7 +74,7 @@ public static class GameDayCoachingService
     public static DynastyPlayer? Specialist(GameDaySession s, string team, DynastyPlayer? fallback)
     {
         if (s.ManualStarters.TryGetValue((team, Position.K), out var id) && s.PlayersById.TryGetValue(id, out var player)) return player;
-        if (s.SecondUnits.Contains(team))
+        if (s.SecondUnits.Contains(team) && (team != s.ControlledTeamName || s.UserCoachRole == StaffRole.HeadCoach))
         {
             var depth = team == s.Game.HomeTeamName ? s.HomeDepthChart : s.AwayDepthChart;
             return depth.GetValueOrDefault(Position.K)?.FirstOrDefault(p => p.PlayerId != fallback?.PlayerId &&
@@ -90,6 +91,7 @@ public static class GameDayCoachingService
             var depth = unit.TeamName == session.Game.HomeTeamName ? session.HomeDepthChart : session.AwayDepthChart;
             foreach (var group in unit.PlayerIds.GroupBy(id => session.PlayersById[id].Position))
             {
+                if (unit.TeamName == session.ControlledTeamName && !UserCoachControlService.ControlsPosition(session.UserCoachRole, group.Key)) continue;
                 if (!depth.TryGetValue(group.Key, out var pool)) continue;
                 var slots = group.Select(id => Array.IndexOf(ids, id)).ToArray();
                 var first = group.Key == Position.OL ? OffensiveLineService.Lineup(pool).Select(p => p.PlayerId).ToHashSet() : pool.Take(slots.Length).Select(p => p.PlayerId).ToHashSet();
@@ -171,6 +173,8 @@ public static class GameDayCoachingService
     public static CoachTalkRecord? Talk(GameDaySession s, string team, CoachTalkTone tone, CoachTalkAudience audience = CoachTalkAudience.Team)
     {
         if (TalkAvailability(s, team) != "Available") return null;
+        if (team == s.ControlledTeamName && s.UserCoachRole != StaffRole.HeadCoach)
+            audience = s.UserCoachRole == StaffRole.OffensiveCoordinator ? CoachTalkAudience.Offense : CoachTalkAudience.Defense;
         var quarter = s.IsComplete ? 99 : s.Events.Count == 0 ? 0 : s.Quarter;
         var previous = s.CoachTalks.Where(t => t.TeamName == team).ToArray();
         var roster = s.Roster.Where(p => audience == CoachTalkAudience.Team ||

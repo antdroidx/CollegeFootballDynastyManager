@@ -1,3 +1,4 @@
+using DynastyManager.Core.Models;
 using DynastyManager.Core.Simulation;
 using DynastyManager.Data.Persistence;
 
@@ -9,7 +10,9 @@ public sealed partial class FoundationPage
     {
         var availability = GameDayCoachingService.TalkAvailability(session, team);
         if (availability != "Available") return;
-        var scope = await GameDialogs.ActionSheetAsync(page, "Address the squad", "Cancel", null, "Team", "Offense", "Defense");
+        var scope = session.UserCoachRole == StaffRole.HeadCoach
+            ? await GameDialogs.ActionSheetAsync(page, "Address the squad", "Cancel", null, "Team", "Offense", "Defense")
+            : session.UserCoachRole == StaffRole.OffensiveCoordinator ? "Offense" : "Defense";
         if (!Enum.TryParse<CoachTalkAudience>(scope, out var audience)) return;
         var choice = await GameDialogs.ActionSheetAsync(page, $"{scope} talk · reactions may be mixed", "Cancel", null, "Encourage", "Praise", "Challenge", "Stay composed");
         if (!Enum.TryParse<CoachTalkTone>(choice?.Replace(" ", ""), out var tone)) return;
@@ -36,7 +39,7 @@ public sealed partial class FoundationPage
         if (!Enum.TryParse<CoachTalkTone>(choice?.Replace(" ", ""), out var tone)) return;
         var morale = GameMoraleService.SeasonMorale(state, state.UserTeamName);
         var repetition = state.CoachTalks.Count(t => t.TeamName == state.UserTeamName && t.SeasonYear == state.SeasonYear && state.Week - t.Week <= 3 && t.Tone == tone);
-        var talk = GameDayCoachingService.CreateTalk(state.ActiveRoster, state.UserTeamName, tone, state.SeasonYear, state.Week, 0, 0, morale - 50, repetition);
+        var talk = GameDayCoachingService.CreateTalk(state.ActiveRoster.Where(p => UserCoachControlService.ControlsPosition(state, p.Position)).ToArray(), state.UserTeamName, tone, state.SeasonYear, state.Week, 0, 0, morale - 50, repetition) with { Audience = UserCoachControlService.Audience(state) };
         _currentDynasty = state with { CoachTalks = state.CoachTalks.Append(talk).ToArray() };
         await SaveCurrentAsync(SaveKind.AutosaveCurrent);
         await GameDialogs.AlertAsync(this, "Team reaction", $"{talk.Reactions.Count(r => r.Change > 0)} positive · {talk.Reactions.Count(r => r.Change < 0)} negative · {talk.Reactions.Count(r => r.Change == 0)} neutral\n" +

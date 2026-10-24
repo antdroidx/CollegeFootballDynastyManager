@@ -1,5 +1,6 @@
 """Check the launch/create/cancel flow on an already running disposable emulator."""
 import re
+import sys
 import subprocess
 import time
 import xml.etree.ElementTree as ET
@@ -135,9 +136,13 @@ def main():
         not any(t.startswith("Loading ") for t in texts(r)))
     assert {"Your dynasties", "New dynasty"} <= texts(home), "Launch must open the save library"
     assert not {"Advance Week", "Start season", "Advance to Week 1", "Overview", "Roster", "Coach", "Recruit", "Season", "Settings"} & texts(home), "Career controls leaked onto Home"
+    assert any((n.get("resource-id") or "").endswith("opening-logo") for n in home.iter("node"))
+    assert any(t and t.startswith("Pre-release 0.20 · Build ") for t in texts(home))
+    assert "Options" in texts(home)
     tap(home, "New dynasty")
     create = capture("new-dynasty")
-    assert {"Start a dynasty", "Dynasty name", "League structure", "Your school", "Start dynasty"} <= texts(create)
+    assert {"Start a dynasty", "Dynasty name", "League structure", "Your school"} <= texts(create)
+    assert "Start dynasty" in texts(scroll_to_text("new-dynasty-career-options", "Start dynasty"))
     tap(create, "‹ Cancel")
     assert "Your dynasties" in texts(capture("cancel-create")), "Cancel must return to the library"
     assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip(), "App exited during navigation"
@@ -148,7 +153,7 @@ def main():
     tap(capture("library"), "New dynasty")
     tap(capture("create-form"), "Choose your team")
     tap(capture("school-picker"), "Air Force")
-    tap(capture("create-ready"), "Start dynasty")
+    tap(scroll_to_text("create-ready", "Start dynasty"), "Start dynasty")
     overview = wait_for("overview-preseason", lambda r: overview_ready(r), timeout=300)
     overview = check_college_center()
     for week in range(4):
@@ -591,8 +596,95 @@ def check_management_layouts():
 
 
 
+def node_with_id(root, suffix):
+    return next(n for n in root.iter("node") if (n.get("resource-id") or "").endswith(suffix))
+
+
+def tap_id(root, suffix):
+    node = node_with_id(root, suffix)
+    left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
+    assert right > left and bottom > top
+    adb("shell", "input", "tap", str((left+right)//2), str((top+bottom)//2))
+    time.sleep(1)
+
+
+def check_career_options():
+    for role, scope, expected_call in [("Offensive coordinator", "Offense", "Call play"), ("Defensive coordinator", "Defense", "Call defense")]:
+        adb("shell", "pm", "clear", "antdroid.cfbcoach.dev")
+        adb("shell", "monkey", "-p", "antdroid.cfbcoach.dev", "-c", "android.intent.category.LAUNCHER", "1")
+        home = wait_for("career-launch-"+scope, lambda r: "New dynasty" in texts(r) and "Options" in texts(r), timeout=300)
+        assert any(t and t.startswith("Pre-release 0.20 · Build ") for t in texts(home))
+        node_with_id(home, "opening-logo")
+        tap(home, "Options")
+        options = wait_for("career-options", lambda r: "Default coaching role" in texts(r))
+        tap(options, "Default coaching role")
+        roles = wait_for("career-roles", lambda r: role in texts(r))
+        tap(roles, role)
+        tap(capture("career-before-firing"), "Options")
+        options = wait_for("career-firing-menu", lambda r: "Coach firing" in texts(r))
+        tap(options, "Coach firing")
+        options = wait_for("career-firing-default", lambda r: "Off" in texts(r))
+        tap(options, "Off")
+        tap(capture("career-create-ready"), "New dynasty")
+        tap(capture("career-create-school"), "Choose your team")
+        tap(wait_for("career-schools", lambda r: "Air Force" in texts(r)), "Air Force")
+        form = scroll_to_text("career-form-"+scope, "Start dynasty")
+        assert role in texts(form)
+        assert node_with_id(form, "new-coach-firing").get("checked") == "false"
+        tap(form, "Start dynasty")
+        overview = wait_for("career-overview-"+scope, overview_ready, timeout=300)
+        tap(overview, "Coach")
+        plan = wait_for("career-plan-"+scope, lambda r: "Development" in texts(r) and "Game plan" in texts(r))
+        scroll_to_text("career-role-label-"+scope, role + " · The staff manages the other side.")
+        offense = scroll_to_text("career-offense-plan-"+scope, "Offensive playbook — available calls and CPU run/pass tendencies")
+        assert (node_with_id(offense, "offensive-playbook").get("enabled") == "true") == (scope == "Offense")
+        defense = scroll_to_text("career-defense-plan-"+scope, "Defensive playbook — available fronts and coverages")
+        assert (node_with_id(defense, "defensive-playbook").get("enabled") == "true") == (scope == "Defense")
+        tap(defense, "Settings")
+        settings = scroll_to_text("career-settings-"+scope, "Coach can be fired")
+        assert node_with_id(settings, "coach-firing-setting").get("checked") == "false"
+        tap_id(settings, "coach-firing-setting")
+        tap(capture("career-before-save"), "‹ Exit Dynasty")
+        library = wait_for("career-library-"+scope, lambda r: "Your dynasties" in texts(r))
+        tap(scroll_to_text("career-load-"+scope, "Load"), "Load")
+        restored = wait_for("career-restored-"+scope, overview_ready, timeout=300)
+        tap(restored, "Settings")
+        settings = scroll_to_text("career-firing-restored-"+scope, "Coach can be fired")
+        assert node_with_id(settings, "coach-firing-setting").get("checked") == "true"
+        tap(settings, "Coach")
+        coach = wait_for("career-restored-coach-"+scope, lambda r: "Development" in texts(r))
+        tap(coach, "Development")
+        development = wait_for("career-development-"+scope, lambda r: scope+" talk · morale" in texts(r))
+        tap(development, scope+" talk · morale")
+        tap(wait_for("career-talk-tone", lambda r: "Encourage" in texts(r)), "Encourage")
+        tap(wait_for("career-talk-result", lambda r: "Team reaction" in texts(r)), "OK")
+        used = wait_for("career-talk-used-"+scope, lambda r: scope+" talk · used this week" in texts(r))
+        assert not enabled(used, scope+" talk · used this week")
+        tap(used, "Overview")
+        overview = wait_for("career-live-preparation-"+scope, overview_ready, timeout=300)
+        for week in range(4):
+            if "Play game" in texts(overview): break
+            previous = calendar(overview)
+            tap(overview, advance_action(overview))
+            overview = wait_for("career-week-"+scope+str(week), lambda r: overview_ready(r, previous), timeout=300)
+        tap(overview, "Play game")
+        toss = wait_for("career-toss-"+scope, lambda r: "Heads" in texts(r) or "Receive" in texts(r) or "Start game" in texts(r))
+        if "Heads" in texts(toss):
+            tap(toss, "Heads")
+            toss = wait_for("career-toss-result", lambda r: "Receive" in texts(r) or "Start game" in texts(r))
+        if "Receive" in texts(toss):
+            tap(toss, "Receive")
+            toss = wait_for("career-toss-ready", lambda r: "Start game" in texts(r))
+        tap(toss, "Start game")
+        viewer = wait_for("career-live-"+scope, lambda r: expected_call in texts(r), timeout=240)
+        other_call = "Call defense" if scope == "Offense" else "Call play"
+        assert other_call not in texts(viewer), "Coordinator received the other side's play controls"
+        assert enabled(viewer, expected_call)
+    print("Opening branding/options, both coordinator roles, plan permissions, firing persistence, scoped talks and live play controls passed.", flush=True)
+
+
 if __name__ == "__main__":
     try:
-        main()
+        check_career_options() if "--career-options" in sys.argv else main()
     finally:
         Path("android-logcat.txt").write_bytes(adb("logcat", "-d"))

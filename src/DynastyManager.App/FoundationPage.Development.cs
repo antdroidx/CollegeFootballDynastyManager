@@ -20,7 +20,8 @@ public sealed partial class FoundationPage
             var current = _currentDynasty ?? state;
             var used = current.CoachTalks.Any(t => t.TeamName == current.UserTeamName && t.SeasonYear == current.SeasonYear && t.Week == current.Week);
             talk.IsEnabled = !used && !openingTalk;
-            talk.Text = openingTalk ? "Opening team talk…" : used ? "Team talk · used this week" : "Team talk · morale";
+            var scope = current.UserCoachRole == DynastyManager.Core.Models.StaffRole.HeadCoach ? "Team" : UserCoachControlService.ControlsOffense(current) ? "Offense" : "Defense";
+            talk.Text = openingTalk ? "Opening talk…" : used ? scope + " talk · used this week" : scope + " talk · morale";
             talk.BackgroundColor = used || openingTalk ? DynastyTheme.Panel : DynastyTheme.Accent;
             talk.TextColor = used || openingTalk ? DynastyTheme.Muted : DynastyTheme.Background;
             talkStatus.Text = used ? "Available after the next weekly advance. Current talk effects fade over three weeks."

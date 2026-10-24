@@ -67,6 +67,8 @@ public sealed record DynastyState
         Array.Empty<StaffMember>();
     public IReadOnlyList<StaffRetirementRecord> StaffRetirements { get; init; } = [];
     public StaffMember? UserHeadCoach { get; init; }
+    public StaffRole UserCoachRole { get; init; } = StaffRole.HeadCoach;
+    public bool UserCoachFiringEnabled { get; init; } = true;
     public int UserCoachJobSecurity { get; init; } = 70;
     public bool UserCoachIsFired { get; init; }
     public string? UserCoachFiredFromTeamName { get; init; }

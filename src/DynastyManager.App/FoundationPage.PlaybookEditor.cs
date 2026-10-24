@@ -16,6 +16,7 @@ public sealed partial class FoundationPage
             GamePlanService.AvailableDefensivePlays(plan).Select(p => p.Id)).ToHashSet(StringComparer.Ordinal);
         var page = new ContentPage { Title = "Playbook Editor", BackgroundColor = DynastyTheme.Background };
         var side = new Picker { Title = "Side", ItemsSource = new[] { "Offense", "Defense" }, SelectedIndex = 0 };
+        if (_currentDynasty?.UserCoachRole is StaffRole.OffensiveCoordinator or StaffRole.DefensiveCoordinator) { side.SelectedIndex = _currentDynasty.UserCoachRole == StaffRole.OffensiveCoordinator ? 0 : 1; side.IsEnabled = false; }
         var formation = new Picker { Title = "Browse formation" };
         var count = new Label { TextColor = DynastyTheme.Accent };
         var status = new Label { TextColor = DynastyTheme.Muted };

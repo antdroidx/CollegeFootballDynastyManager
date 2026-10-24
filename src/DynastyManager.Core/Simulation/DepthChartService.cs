@@ -43,6 +43,7 @@ public static class DepthChartService
         var player = state.ActiveRoster.SingleOrDefault(p => p.PlayerId == playerId && p.TeamName.Equals(team, StringComparison.OrdinalIgnoreCase))
             ?? throw new ArgumentException("Player is not on this team's roster.", nameof(playerId));
         var previousCode = AssignedCode(state, player);
+        if (team == state.UserTeamName && (!UserCoachControlService.ControlsPosition(state, PositionForCode(code)) || !UserCoachControlService.ControlsPosition(state, PositionForCode(previousCode)))) return state;
         var target = AtPosition(state, team, code).Where(p => p.PlayerId != playerId).Select(p => p.PlayerId).ToList();
         target.Insert(Math.Clamp(order - 1, 0, target.Count), playerId);
         var assignments = state.DepthChartAssignments.Where(a => !a.TeamName.Equals(team, StringComparison.OrdinalIgnoreCase) ||
@@ -59,6 +60,13 @@ public static class DepthChartService
 
     public static DynastyState AutoSet(DynastyState state, string team, int? selectedCode = null)
     {
+        if (team == state.UserTeamName && state.UserCoachRole != StaffRole.HeadCoach && selectedCode is null)
+        {
+            var ownSide = state;
+            for (var ownCode = 0; ownCode <= 20; ownCode++)
+                if (UserCoachControlService.ControlsPosition(state, PositionForCode(ownCode))) ownSide = AutoSet(ownSide, team, ownCode);
+            return ownSide;
+        }
         if (selectedCode is int code)
         {
             var result = state;

@@ -12,6 +12,8 @@ public sealed partial class FoundationPage
 
     private View BuildLibrarySection()
     {
+        var options = new Button { Text = "Options", AutomationId = "startup-options" };
+        options.Clicked += async (_, _) => await ShowStartupOptionsAsync();
         var create = new Button { Text = "New dynasty", BackgroundColor = DynastyTheme.Accent,
             TextColor = DynastyTheme.Background, HorizontalOptions = LayoutOptions.End };
         create.Clicked += (_, _) => ShowSection(AppSection.NewDynasty);
@@ -22,7 +24,10 @@ public sealed partial class FoundationPage
         heading.Add(create, 1, 0);
         return new VerticalStackLayout { Spacing = 12, MaximumWidthRequest = 1000, Children =
         {
-            heading,
+            new Image { Source = "dynasty_logo.png", HeightRequest = 160, Aspect = Aspect.AspectFit, AutomationId = "opening-logo" },
+            new Label { Text = "College Football Dynasty Manager", FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center },
+            new Label { Text = VersionCaption, FontSize = 12, HorizontalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Muted },
+            options, heading,
             new Label { Text = "Load a saved career or start a new one.", FontSize = 12, TextColor = DynastyTheme.Muted },
             new ActionRow { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { StartingLibraryButton(), RosterImportButton() } },
             _saveList, _libraryStatus
@@ -42,13 +47,14 @@ public sealed partial class FoundationPage
             new Label { Text = "Import and manage reusable rosters and league setups from the main screen.", FontSize = 11, TextColor = DynastyTheme.Muted },
             new Label { Text = "Your school", FontSize = 12, FontAttributes = FontAttributes.Bold }, _teamPicker,
             new Label { Text = "Staff and recruiting preferences can be changed after starting.", FontSize = 11, TextColor = DynastyTheme.Muted },
-            _newDynastyButton, _newDynastyStatus
+            BuildNewCareerOptions(), _newDynastyButton, _newDynastyStatus
         } };
     }
 
     private void UpdateShellContext()
     {
         var library = _activeSection is AppSection.Home or AppSection.NewDynasty;
+        _screenTitle.IsVisible = _activeSection != AppSection.Home;
         _navigationBar.IsVisible = !library && _currentDynasty is not null;
         _libraryButton.IsVisible = _activeSection != AppSection.Home;
         _libraryButton.Text = _activeSection == AppSection.NewDynasty ? "‹ Cancel" : "‹ Exit Dynasty";

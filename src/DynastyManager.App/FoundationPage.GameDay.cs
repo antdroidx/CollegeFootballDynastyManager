@@ -32,6 +32,9 @@ public sealed partial class FoundationPage
         if (replay is not null) { home = home with { GamePlan = game.HomeGamePlan ?? home.GamePlan }; away = away with { GamePlan = game.AwayGamePlan ?? away.GamePlan }; }
         var session = GameDayEngine.Start(game, home, away, roster, mode, replay is null ? _currentDynasty.DepthChartAssignments : null);
         session.ControlledTeamName = controlledTeamName;
+        var controlsOffense = UserCoachControlService.ControlsOffense(_currentDynasty);
+        var controlsDefense = UserCoachControlService.ControlsDefense(_currentDynasty);
+        session.UserCoachRole = _currentDynasty.UserCoachRole;
         var gameRanks = BuildCurrentNationalRankings();
         var animating = false;
         var boxScoreOpen = false;
@@ -292,8 +295,8 @@ public sealed partial class FoundationPage
         var controls = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
         foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, options, teamControl, gameInfo, boxScore, timeout, replayLast, camera, replaySpeedButton, skipReplay, numbers, spriteMode, replayToggle, carrierToggle, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
-        var coachCallsOffense = false;
-        var coachCallsDefense = false;
+        var coachCallsOffense = !controlsOffense;
+        var coachCallsDefense = !controlsDefense;
         var quickCalls = new Grid { ColumnSpacing = 6,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
         var expand = new Button { Text = "Choose play" };
@@ -337,6 +340,7 @@ public sealed partial class FoundationPage
             more.IsVisible = !animating && !session.IsComplete && replay is null;
             options.IsVisible = replay is null; teamControl.IsVisible = replay is null;
             takeover.IsEnabled = !takingOver && !session.IsComplete;
+            delegateOffense.IsEnabled = controlsOffense; delegateDefense.IsEnabled = controlsDefense;
             gameInfo.IsVisible = boxScore.IsVisible = moreOpen && !animating;
             timeout.IsVisible = skip.IsVisible = replayLast.IsVisible = moreOpen && !animating;
             more.Text = moreOpen ? "Less" : "More";
@@ -1564,11 +1568,13 @@ public sealed partial class FoundationPage
         };
         delegateOffense.Clicked += async (_, _) =>
         {
+            if (!controlsOffense) return;
             coachCallsOffense = !coachCallsOffense; Refresh();
             if (coachCallsOffense) await RunCpuUntilUserDecision();
         };
         delegateDefense.Clicked += async (_, _) =>
         {
+            if (!controlsDefense) return;
             coachCallsDefense = !coachCallsDefense; Refresh();
             if (coachCallsDefense) await RunCpuUntilUserDecision();
         };
@@ -1583,7 +1589,7 @@ public sealed partial class FoundationPage
         {
             if (takingOver) return;
             takingOver = true; session.Mode = GameDayMode.Play; watchPaused = false;
-            coachCallsOffense = coachCallsDefense = false;
+            coachCallsOffense = !controlsOffense; coachCallsDefense = !controlsDefense;
             takeover.Text = "Taking over after this play";
             await currentSnapFinished;
             takingOver = false; takeover.Text = "Take over"; Refresh();
@@ -1609,7 +1615,7 @@ public sealed partial class FoundationPage
             teamPage.BackHandler = () => { _ = Back(); return true; };
             var back = new Button { Text = "Return to game" }; back.Clicked += async (_, _) => await Back();
             var talkButton = new Button { Text = "Coach talk" };
-            var filter = new Picker { Title = "Position", ItemsSource = Enum.GetNames<Position>(), SelectedIndex = 0 };
+            var filter = new Picker { Title = "Position", ItemsSource = Enum.GetValues<Position>().Where(p => UserCoachControlService.ControlsPosition(session.UserCoachRole, p)).Select(p => p.ToString()).ToArray(), SelectedIndex = 0 };
             var rows = new VerticalStackLayout { Spacing = 3 };
             var availability = new Label { FontSize = 12, TextColor = DynastyTheme.Muted };
             var showAll = false;
@@ -1646,7 +1652,7 @@ public sealed partial class FoundationPage
                         LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
                     var info = new Label { Text = $"OVR {player.OverallRating} · Energy {fatigue.Energy(player.PlayerId):0}% · Morale {morale}", FontSize = 12, TextColor = DynastyTheme.Muted };
                     var sub = new Button { Text = unavailable ? "Unavailable" : starter ? "Starter" : "Sub in", FontSize = 12,
-                        IsEnabled = !starter && !unavailable && !session.IsComplete, MinimumHeightRequest = 44, Padding = new Thickness(10, 4),
+                        IsEnabled = !starter && !unavailable && !session.IsComplete && UserCoachControlService.ControlsPosition(session.UserCoachRole, player.Position), MinimumHeightRequest = 44, Padding = new Thickness(10, 4),
                         BackgroundColor = starter || unavailable ? DynastyTheme.Panel : DynastyTheme.Accent, TextColor = starter || unavailable ? DynastyTheme.Muted : DynastyTheme.Background };
                     sub.Clicked += async (_, _) =>
                     {
@@ -1680,7 +1686,7 @@ public sealed partial class FoundationPage
             secondUnit.Clicked += async (_, _) =>
             {
                 var enabled = !session.SecondUnits.Contains(controlledTeamName);
-                if (enabled && !await GameDialogs.AlertAsync(teamPage, "Use second unit?", "Use eligible backups across offense and defense from the next snap, plus a backup kicker where available. Starters fill gaps where backups are unavailable. Season depth chart stays unchanged.", "Use second unit", "Cancel")) return;
+                if (enabled && !await GameDialogs.AlertAsync(teamPage, "Use second unit?", session.UserCoachRole == StaffRole.HeadCoach ? "Use eligible backups across offense and defense from the next snap, plus a backup kicker where available. Starters fill gaps where backups are unavailable. Season depth chart stays unchanged." : "Use eligible backups on your side from the next snap. The other side and season depth chart stay unchanged.", "Use second unit", "Cancel")) return;
                 GameDayCoachingService.UseSecondUnit(session, controlledTeamName, enabled); Draw();
             };
             expandRoster.Clicked += (_, _) => { showAll = !showAll; Draw(); };

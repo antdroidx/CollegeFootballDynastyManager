@@ -770,7 +770,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _screenTitle.Text = section switch
         {
-            AppSection.Home => "College Football",
+            AppSection.Home => "College Football Dynasty Manager",
             AppSection.NewDynasty => "Start a dynasty",
             AppSection.Dynasty => "Overview",
             AppSection.Schedule => "Schedule",
@@ -940,6 +940,7 @@ public sealed partial class FoundationPage : ContentPage
             SectionTitle("Preferences", "Appearance, delegation and dynasty rules"),
             ResponsivePanels(ManagementPanel("Display", BuildThemeSettings()), ManagementPanel("Recruiting assistance", delegation),
                 ManagementPanel("Save protection", save)),
+            ManagementPanel("Career", _careerOptionsHost),
             ManagementPanel("League configuration", BuildLeagueFeatureSettings())
         } };
     }
@@ -1091,6 +1092,8 @@ public sealed partial class FoundationPage : ContentPage
                 LeagueName = startingSetup.Name, LeagueRules = startingSetup.Rules with { },
                 StartingRosterName = startingRoster?.Name ?? "Default roster",
                 UserTeamName = teamName,
+                UserCoachRole = (StaffRole)Math.Max(0, _newCoachRole.SelectedIndex),
+                UserCoachFiringEnabled = _newCoachFiring.IsToggled,
                 SeasonYear = startingYear,
                 Week = 0,
                 Phase = SeasonPhase.Preseason,
@@ -1156,8 +1159,8 @@ public sealed partial class FoundationPage : ContentPage
         if (_currentDynasty.UserCoachIsFired)
         {
             await GameDialogs.AlertAsync(this,
-                "Head Coach Job Required",
-                "You were fired from your previous program. Open Program and accept a head-coaching offer before advancing.",
+                "Coaching Job Required",
+                "You were fired from your previous program. Open Program and accept a coaching offer before advancing.",
                 "OK");
             ShowSection(AppSection.Program);
             return;
@@ -1852,6 +1855,8 @@ public sealed partial class FoundationPage : ContentPage
                 RenderInjuryReport();
                 break;
             case AppSection.Settings:
+                _careerOptionsHost.Content = BuildCareerPreferences();
+                break;
             default:
                 break;
         }
@@ -2994,6 +2999,8 @@ public sealed partial class FoundationPage : ContentPage
             actions.Children.Add(button);
         }
 
+        var controlsRecruit = UserCoachControlService.ControlsPosition(_currentDynasty, prospect.Position);
+        foreach (var action in new[] { scoutButton, offerButton, pitchButton, priorityButton, boardButton }) action.IsEnabled &= controlsRecruit;
         scoutButton.IsVisible = offerButton.IsVisible = pitchButton.IsVisible = pitchPicker.IsVisible = recruitingOpen;
         pitchPicker.IsEnabled = pitchButton.IsEnabled;
         foreach (var action in new[] { scoutButton, offerButton, pitchButton, priorityButton, boardButton })
@@ -3640,7 +3647,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _programList.Children.Add(new Label
         {
-            Text = "HEAD COACH • YOU",
+            Text = UserCoachControlService.Label(_currentDynasty.UserCoachRole).ToUpperInvariant() + " • YOU" + (_currentDynasty.UserCoachFiringEnabled ? "" : " · Firing off"),
             FontAttributes = FontAttributes.Bold,
             Margin = new Thickness(0, 10, 0, 0),
             TextColor = _currentDynasty.UserCoachIsFired
@@ -3736,7 +3743,7 @@ public sealed partial class FoundationPage : ContentPage
 
         _programList.Children.Add(new Label
         {
-            Text = "HEAD COACH JOB OFFERS",
+            Text = "COACHING JOB OFFERS",
             FontAttributes = FontAttributes.Bold,
             Margin = new Thickness(0, 8, 0, 0)
         });
@@ -3768,8 +3775,8 @@ public sealed partial class FoundationPage : ContentPage
                     return;
 
                 var accept = await GameDialogs.AlertAsync(this,
-                    "Accept Head Coaching Job?",
-                    $"Leave {_currentDynasty.UserTeamName} for {selectedOffer.TeamName}? " +
+                    "Accept Coaching Job?",
+                    $"Join {selectedOffer.TeamName} as {UserCoachControlService.Label(selectedOffer.Role)}? " +
                     $"Prestige {selectedOffer.ProgramPrestige} • " +
                     $"{selectedOffer.ContractYears}-year contract.",
                     "Accept",
@@ -3783,6 +3790,7 @@ public sealed partial class FoundationPage : ContentPage
                         _currentDynasty,
                         selectedOffer.OfferId,
                         _teamsByName);
+                await SaveCurrentAsync(SaveKind.AutosaveCurrent);
                 RenderCurrentDynasty();
                 ShowSection(AppSection.Program);
             };
@@ -3821,7 +3829,7 @@ public sealed partial class FoundationPage : ContentPage
                         new Label
                         {
                             Text =
-                                $"{offer.TeamName} • Prestige {offer.ProgramPrestige} • " +
+                                $"{offer.TeamName} · {UserCoachControlService.Label(offer.Role)} • Prestige {offer.ProgramPrestige} • " +
                                 $"{offer.ContractYears}y • Fit {offer.FitScore}",
                             FontAttributes =
                                 FontAttributes.Bold
@@ -3851,13 +3859,13 @@ public sealed partial class FoundationPage : ContentPage
         });
         _programList.Children.Add(new Label
         {
-            Text = "You are the Head Coach • Manage the staff reporting to you below.",
+            Text = _currentDynasty.UserCoachRole == StaffRole.HeadCoach ? "You are the Head Coach • Manage the staff reporting to you below." : "You are the " + UserCoachControlService.Label(_currentDynasty.UserCoachRole) + " • The head coach manages hiring.",
             FontSize = 11,
             FontAttributes = FontAttributes.Italic
         });
 
         foreach (var role in Enum.GetValues<StaffRole>()
-                     .Where(role => role != StaffRole.HeadCoach))
+                     .Where(role => role != _currentDynasty.UserCoachRole))
         {
             var staff = StaffManagementService.GetStaff(
                 _currentDynasty, team.Name, role);
@@ -3865,6 +3873,7 @@ public sealed partial class FoundationPage : ContentPage
             var candidatesButton = new Button
             {
                 Text = staff is null ? "Fill Vacancy" : "Candidates",
+                IsEnabled = _currentDynasty.UserCoachRole == StaffRole.HeadCoach,
                 FontSize = 11,
                 Padding = new Thickness(10, 4),
                 TextColor = Colors.White,
@@ -4445,7 +4454,7 @@ public sealed partial class FoundationPage : ContentPage
             TextColor = Colors.White,
             IsEnabled =
                 _currentDynasty.Phase == SeasonPhase.RosterManagement &&
-                RosterManagementService.CanRedshirt(player)
+                _currentDynasty.UserCoachRole == StaffRole.HeadCoach && RosterManagementService.CanRedshirt(player)
         };
 
         redshirtButton.Clicked += (_, _) =>
@@ -4466,7 +4475,7 @@ public sealed partial class FoundationPage : ContentPage
             Text = "Cut",
             TextColor = Colors.White,
             IsEnabled =
-                _currentDynasty.Phase == SeasonPhase.RosterManagement
+                _currentDynasty.UserCoachRole == StaffRole.HeadCoach && _currentDynasty.Phase == SeasonPhase.RosterManagement
         };
 
         cutButton.Clicked += async (_, _) =>
@@ -4545,6 +4554,7 @@ public sealed partial class FoundationPage : ContentPage
                     },
                     new HorizontalStackLayout
                     {
+                        IsEnabled = UserCoachControlService.ControlsPosition(_currentDynasty, player.Position),
                         Spacing = 6,
                         Children =
                         {
