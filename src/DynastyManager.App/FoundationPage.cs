@@ -142,6 +142,7 @@ public sealed partial class FoundationPage : ContentPage
     private readonly Button _libraryButton = new() { Text = "‹ Exit Dynasty", FontSize = 12, Padding = new Thickness(0, 2, 12, 2), BackgroundColor = Colors.Transparent };
     private readonly Label _headerContext = new() { FontSize = 11, TextColor = DynastyTheme.Muted };
     private readonly Dictionary<AppSection, View> _sectionViews = new();
+    private readonly Grid _visibleSectionGrid = new();
     private AppSection _activeSection = AppSection.Home;
     private RecruitingView _recruitingView = RecruitingView.HighSchool;
     private RecruitingSource? _selectedRecruitSource;
@@ -640,7 +641,7 @@ public sealed partial class FoundationPage : ContentPage
             Content = navigation
         };
 
-        var pages = new Grid();
+        var pages = _visibleSectionGrid;
 
         foreach (var section in Enum.GetValues<AppSection>())
         {
@@ -692,7 +693,6 @@ public sealed partial class FoundationPage : ContentPage
             }
 
             _sectionViews[section] = page;
-            pages.Children.Add(page);
         }
 
         var root = new Grid
@@ -759,6 +759,14 @@ public sealed partial class FoundationPage : ContentPage
 
         foreach (var pair in _sectionViews)
             pair.Value.IsVisible = pair.Key == section;
+        // Hidden menus retain their state without creating native controls or
+        // participating in layout and resource updates for the visible screen.
+        var visiblePage = _sectionViews[section];
+        if (_visibleSectionGrid.Children.Count != 1 || !ReferenceEquals(_visibleSectionGrid.Children[0], visiblePage))
+        {
+            _visibleSectionGrid.Children.Clear();
+            _visibleSectionGrid.Children.Add(visiblePage);
+        }
 
         _screenTitle.Text = section switch
         {
