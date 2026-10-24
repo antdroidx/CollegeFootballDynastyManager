@@ -63,7 +63,7 @@ public static class GameDialogs
                 {
                     if (!choices[index].Contains(query, StringComparison.OrdinalIgnoreCase)) continue;
                     var value = index;
-                    var button = new Button { Text = choices[index], FontSize = 14, MinimumHeightRequest = 48,
+                    var button = new Button { Text = choices[index], FontSize = 14, MinimumHeightRequest = 48, HeightRequest = 48,
                         HorizontalOptions = LayoutOptions.Fill, Padding = new Thickness(14, 10),
                         BackgroundColor = index == selected ? DynastyTheme.Selected : DynastyTheme.Panel,
                         TextColor = destructiveFirst && index == 0 ? DynastyTheme.Palette("#CE344C") : DynastyTheme.Text,
@@ -94,7 +94,7 @@ public static class GameDialogs
             var scroll = new ScrollView { Content = body, VerticalScrollBarVisibility = ScrollBarVisibility.Default };
             var content = new Grid { Padding = 18, RowSpacing = 14, RowDefinitions = new() { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
             content.Add(titleLabel, 0, 0); content.Add(search, 0, 1); content.Add(scroll, 0, 2); content.Add(actions, 0, 3);
-            var surface = new Border { Content = content, BackgroundColor = DynastyTheme.Surface, Stroke = DynastyTheme.Panel,
+            var surface = new Border { Content = content, Padding = 0, BackgroundColor = DynastyTheme.Surface, Stroke = DynastyTheme.Panel,
                 StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 16 }, HorizontalOptions = LayoutOptions.Center,
                 VerticalOptions = LayoutOptions.Center, MaximumWidthRequest = 560, AutomationId = "game-dialog-surface" };
             var root = new Grid { Padding = 16 }; root.Add(surface); page.Content = root;
@@ -104,7 +104,9 @@ public static class GameDialogs
                 surface.WidthRequest = Math.Min(560, Math.Max(240, root.Width - 32));
                 var available = Math.Max(120, root.Height - 32);
                 // Keep actions reachable while long information or choice lists scroll inside the surface.
-                surface.HeightRequest = Math.Min(available, 150 + (choices is not null ? choices.Count * 54 : Math.Max(60, (message?.Length ?? 0) / 38 * 22)));
+                var headingLines = Math.Max(1, (int)Math.Ceiling(title.Length / Math.Max(18, (surface.WidthRequest - 36) / 12)));
+                var chrome = 170 + (headingLines - 1) * 26 + (search.IsVisible ? 56 : 0);
+                surface.HeightRequest = Math.Min(available, chrome + (choices is not null ? choices.Count * 54 : Math.Max(60, (message?.Length ?? 0) / 38 * 22)));
             };
             page.Disappearing += (_, _) => page.Dispatcher.Dispatch(() =>
             {

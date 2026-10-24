@@ -434,6 +434,15 @@ def check_remaining_management():
     tap(schedule,"Your team")
     options=wait_for("management-schedule-scope",lambda r:"All teams" in texts(r))
     assert any((n.get("resource-id") or "").endswith("game-dialog-surface") for n in options.iter("node")), "Picker must use themed choices"
+    scroll = next(n for n in options.iter("node") if n.get("scrollable") == "true")
+    left, top, right, bottom = map(int, re.findall(r"\d+", scroll.get("bounds")))
+    first_choice = next(n for n in options.iter("node") if n.get("text") == "Your team")
+    first_bounds = list(map(int, re.findall(r"\d+", first_choice.get("bounds"))))
+    first_height = first_bounds[3] - first_bounds[1]
+    for label in ("Your team", "All teams"):
+        choice = next(n for n in options.iter("node") if n.get("text") == label)
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", choice.get("bounds")))
+        assert top <= y1 < y2 <= bottom and y2-y1 >= first_height - 2, "Short menu clipped a choice"
     tap(options,"All teams")
     schedule=wait_for("management-all-team-schedule",lambda r:"All teams" in texts(r) and "All weeks" not in texts(r))
     tap(schedule,"Standings & polls")
