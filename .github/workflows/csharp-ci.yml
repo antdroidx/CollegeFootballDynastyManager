@@ -197,7 +197,7 @@ jobs:
             sleep 8
             adb logcat -d > android-logcat.txt
             adb shell pidof antdroid.cfbcoach.dev
-            python3 build/android-ui-smoke.py
+            python3 build/android-ui-smoke.py || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
 
       - name: Upload launch UI evidence
         if: always()
@@ -215,6 +215,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-launch-log
-          path: android-logcat.txt
+          path: |
+            android-logcat.txt
+            android-last-anr.txt
           if-no-files-found: ignore
           retention-days: 1
