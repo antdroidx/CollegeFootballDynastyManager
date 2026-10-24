@@ -59,6 +59,42 @@ public class GameDayCoachingTests
         Assert.Empty(game.CoachTalks);
     }
 
+    [Fact]
+    public void WinningRunRecoversMoraleAndSeasonTalkEffectsExpire()
+    {
+        var source = GameDayEngineTests.Session(GameDayMode.Play);
+        var player = source.Roster.First(p => p.TeamName == "Home");
+        var state = new DynastyState { DynastyName = "Morale", UserTeamName = "Home", SeasonYear = 2026, Week = 5,
+            ActiveRoster = source.Roster,
+            Schedule = Enumerable.Range(1, 4).Select(w => source.Game with { GameId = $"g{w}", Week = w,
+                HasPlayed = true, HomeScore = 0, AwayScore = 14 }).ToArray() };
+        var low = GameMoraleService.SeasonMorale(state, "Home");
+        var recovering = state with { Schedule = state.Schedule.Select(g => g.Week >= 3 ? g with { HomeScore = 21, AwayScore = 7 } : g).ToArray() };
+        Assert.True(GameMoraleService.SeasonMorale(recovering, "Home") > low);
+        var talk = new CoachTalkRecord("Home", CoachTalkTone.Challenge, 2026, 5, 0, 0,
+            [new(player.PlayerId, player.FullName, -5, "Felt pressured")]);
+        var criticized = recovering with { CoachTalks = [talk] };
+        Assert.True(GameMoraleService.PlayerMorale(criticized, player) < GameMoraleService.PlayerMorale(recovering, player));
+        Assert.Equal(GameMoraleService.PlayerMorale(recovering with { Week = 8 }, player),
+            GameMoraleService.PlayerMorale(criticized with { Week = 8 }, player));
+        var restored = JsonSerializer.Deserialize<DynastyState>(JsonSerializer.Serialize(criticized))!;
+        Assert.Single(restored.CoachTalks);
+    }
+
+    [Fact]
+    public void IndividualTalkAffectsOnlyRecipientAndPostgameTalkIsSeparate()
+    {
+        var s = GameDayEngineTests.Session(GameDayMode.Play);
+        var player = s.Roster.First(p => p.TeamName == "Home");
+        var talk = GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Challenge, player.PlayerId)!;
+        Assert.Single(talk.Reactions);
+        Assert.Equal(player.PlayerId, talk.Reactions[0].PlayerId);
+        Assert.NotNull(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Encourage));
+        GameDayEngine.SimulateToEnd(s);
+        Assert.NotNull(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Praise));
+        Assert.Null(GameDayCoachingService.Talk(s, "Home", CoachTalkTone.Praise));
+    }
+
     [Theory]
     [InlineData("UCLA", "UCLA")]
     [InlineData("USC", "USC")]

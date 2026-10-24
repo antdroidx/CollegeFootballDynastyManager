@@ -302,7 +302,7 @@ public sealed partial class FoundationPage
         controls.Children.Add(more);
         var tray = new VerticalStackLayout { Spacing = 4, Children = { quickCalls, controls } };
         var traySurface = new Border { AutomationId = "game-day-controls", StrokeThickness = 0, Padding = 7,
-            BackgroundColor = DynastyTheme.Surface, Content = tray,
+            BackgroundColor = DynastyTheme.Surface, Content = new ScrollView { Content = tray, MaximumHeightRequest = 190 },
             VerticalOptions = LayoutOptions.End, Margin = new Thickness(8) };
         var pickerLayer = new Grid { IsVisible = false, BackgroundColor = DynastyTheme.Palette("#88000000"), Padding = 10 };
         expand.Clicked += (_, _) => ExpandCalls(!ControlledOnOffense());

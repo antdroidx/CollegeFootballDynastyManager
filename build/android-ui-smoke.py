@@ -258,7 +258,7 @@ def main():
     controlled = wait_for("takeover-controlled", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
     assert "Watch CPU" in texts(controlled), "Take over did not leave Watch mode"
     tap(controlled, "More")
-    tap(capture("skip-ready"), "Skip to end")
+    tap(scroll_to_text("skip-ready", "Skip to end"), "Skip to end")
     confirmation = wait_for("skip-confirm-cancel", lambda r: "Skip to end?" in texts(r))
     cancel_label = next(t for t in texts(confirmation) if (t or "").casefold() == "keep playing")
     tap(confirmation, cancel_label)
@@ -266,7 +266,7 @@ def main():
     assert "Close" not in texts(cancelled)
     if "Skip to end" not in texts(cancelled):
         tap(cancelled, "More")
-    tap(capture("skip-ready-again"), "Skip to end")
+    tap(scroll_to_text("skip-ready-again", "Skip to end"), "Skip to end")
     confirmation = wait_for("skip-confirm-finish", lambda r: "Skip to end?" in texts(r))
     accept_label = next(t for t in texts(confirmation) if (t or "").casefold() == "simulate remainder")
     tap(confirmation, accept_label)
