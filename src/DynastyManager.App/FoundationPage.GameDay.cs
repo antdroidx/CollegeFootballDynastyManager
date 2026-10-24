@@ -359,13 +359,13 @@ public sealed partial class FoundationPage
             {
                 button.FontSize = compact ? 10 : 11;
                 button.Padding = compact ? new Thickness(7, 4) : new Thickness(12, 8);
-                button.MinimumHeightRequest = compact ? 28 : 34;
-                button.HeightRequest = compact ? 28 : 34;
+                button.MinimumHeightRequest = compact ? 36 : 40;
+                button.HeightRequest = compact ? 36 : 40;
                 button.Margin = new Thickness(0, 0, 4, 4);
             }
-            score.FontSize = compact ? 16 : 22;
-            downValue.FontSize = toGoValue.FontSize = compact ? 17 : 22;
-            ballValue.FontSize = compact ? 14 : 18;
+            score.FontSize = compact ? 15 : 17;
+            downValue.FontSize = toGoValue.FontSize = compact ? 15 : 16;
+            ballValue.FontSize = compact ? 13 : 15;
             result.FontSize = compact ? 13 : 15;
             result.MaxLines = compact ? 2 : 3;
             selectedDescription.IsVisible = defenseDescription.IsVisible = !compact;
