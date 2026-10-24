@@ -83,7 +83,7 @@ public sealed partial class FoundationPage
         var team = _currentDynasty.UserTeamName;
         var seasonGames = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear).ToArray();
         var weekValues = seasonGames.Select(game => game.Week).Append(_currentDynasty.Week).Distinct().Order().ToArray();
-        var weekOptions = new[] { "All weeks" }.Concat(weekValues.Select(FormatScheduleWeek)).ToArray();
+        var weekOptions = new[] { "All weeks" }.Concat(weekValues.Select(week => FormatScheduleWeek(week) + (week == _currentDynasty.Week ? " · Current" : ""))).ToArray();
         if (_scheduleWeek.ItemsSource is not string[] oldWeeks || !oldWeeks.SequenceEqual(weekOptions))
         {
             _updatingScheduleWeeks = true;
@@ -136,16 +136,29 @@ public sealed partial class FoundationPage
             var type = game.GameType switch { ScheduledGameType.Conference => "CONF", ScheduledGameType.ConferenceChampionship => "CCG",
                 ScheduledGameType.CollegeFootballPlayoff => "CFP", ScheduledGameType.Bowl => "BOWL", _ => "OOC" };
             var stats = home ? game.HomeStats : game.AwayStats;
-            rows.Add([TableText(FormatScheduleWeek(game.Week), game.Week == _currentDynasty.Week),
+            rows.Add([TableText(FormatScheduleWeek(game.Week), game.Week == _currentDynasty.Week), GameDetailCell(game),
                 leagueWide ? SchoolCell(game.AwayTeamName) : SchoolCell(home ? game.AwayTeamName : game.HomeTeamName),
                 leagueWide ? SchoolCell(game.HomeTeamName) : TableText(home ? "Home" : "Away"),
                 TableText(result, true, resultColor), TableText(type),
-                TableText(stats?.TotalYards.ToString("N0") ?? "—"), TableText(stats?.Turnovers.ToString() ?? "—"), GameDetailCell(game)]);
+                TableText(stats?.TotalYards.ToString("N0") ?? "—"), TableText(stats?.Turnovers.ToString() ?? "—") ]);
         }
         if (rows.Count == 0) _scheduleList.Children.Add(new Label { Text = "No games match this selection." });
         else _scheduleList.Children.Add(DataTable(leagueWide
-            ? [("Week", 95), ("Away", 195), ("Home", 195), ("Score", 90), ("Type", 55), ("Yards", 65), ("TO", 45), ("Game center", 230)]
-            : [("Week", 95), ("Opponent", 195), ("Venue", 60), ("Result", 100), ("Type", 55), ("Yards", 65), ("TO", 45), ("Game center", 230)], rows));
+            ? [("Week", 95), ("Game center", 130), ("Away", 195), ("Home", 195), ("Score", 90), ("Type", 55), ("Yards", 65), ("TO", 45)]
+            : [("Week", 95), ("Game center", 130), ("Opponent", 195), ("Venue", 60), ("Result", 100), ("Type", 55), ("Yards", 65), ("TO", 45)], rows));
+    }
+
+    private void OpenLeagueWeek(int week)
+    {
+        if (_currentDynasty is null) return;
+        _scheduleScope.SelectedIndex = 1;
+        _scheduleVenue.SelectedIndex = 0;
+        _defaultLeagueWeek = false;
+        RenderScheduleGrid();
+        var weeks = _currentDynasty.Schedule.Where(g => g.SeasonYear == _currentDynasty.SeasonYear)
+            .Select(g => g.Week).Append(_currentDynasty.Week).Distinct().Order().ToArray();
+        _scheduleWeek.SelectedIndex = Math.Max(0, Array.IndexOf(weeks, week) + 1);
+        ShowSection(AppSection.Schedule);
     }
 
     private static string FormatScheduleWeek(int week) => week switch

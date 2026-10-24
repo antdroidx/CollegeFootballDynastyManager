@@ -452,9 +452,19 @@ def check_remaining_management():
     assert any("Dynasty Wire" in (t or "") for t in texts(story))
     tap(story,"‹ Back to headlines")
     wait_for("management-news-return",lambda r:"News & headlines" in texts(r))
-    tap(capture("management-before-schedule"),"Schedule")
+    tap(capture("management-before-schedule"),"Overview")
+    home = scroll_to_text("overview-week-links", next(t for t in texts(capture("overview-week-links-ready")) if (t or "").startswith("This week's games")))
+    current_link = next(t for t in texts(home) if (t or "").startswith("This week's games"))
+    previous_link = next(t for t in texts(home) if (t or "").startswith("Last week's results"))
+    tap(home, previous_link)
+    previous = wait_for("overview-last-week-schedule", lambda r: "Season schedule" in texts(r))
+    assert "All teams" in texts(previous)
+    tap(previous,"Overview")
+    home = capture("overview-return-week-links")
+    tap(home, current_link)
+
     schedule=wait_for("management-schedule",lambda r:"Season schedule" in texts(r))
-    tap(schedule,"Your team")
+    tap(schedule,"All teams")
     options=wait_for("management-schedule-scope",lambda r:"All teams" in texts(r))
     assert any((n.get("resource-id") or "").endswith("game-dialog-surface") for n in options.iter("node")), "Picker must use themed choices"
     scroll = next(n for n in options.iter("node") if "ScrollView" in n.get("class", "") and any(c.get("text") == "Your team" for c in n.iter("node")))
@@ -468,6 +478,16 @@ def check_remaining_management():
         assert top <= y1 < y2 <= bottom and y2-y1 >= first_height - 2, "Short menu clipped a choice"
     tap(options,"All teams")
     schedule=wait_for("management-all-team-schedule",lambda r:"All teams" in texts(r) and "All weeks" not in texts(r))
+    assert any(" · Current" in (t or "") for t in texts(schedule)), "Current week must be labeled"
+    game = scroll_to_text("schedule-current-game", "Watch / Play ›")
+    league_game = next(n for n in game.iter("node") if (n.get("resource-id") or "").endswith("schedule-league-game") and n.get("text") == "Watch / Play ›")
+    tap(league_game, "Watch / Play ›")
+    matchup = wait_for("schedule-game-center", lambda r: "‹ Back to schedule" in texts(r))
+    assert {"Watch game", "Play game"} <= texts(matchup), "Current matchups need both entry points"
+    tap(matchup, "Play game")
+    choice = wait_for("schedule-team-choice", lambda r: "Choose team to control" in texts(r))
+    tap(choice, "Cancel")
+    schedule = wait_for("schedule-choice-cancelled", lambda r: "Season schedule" in texts(r))
     tap(schedule,"Standings & polls")
     rankings=wait_for("management-rankings",lambda r:"National rankings" in texts(r))
     tap(rankings,"Conference")

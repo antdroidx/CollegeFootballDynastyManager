@@ -146,6 +146,19 @@ public sealed partial class FoundationPage
         pollPanel.IsVisible=false;
         var dashboard=ResponsivePanels(ManagementPanel("Season overview", cards),ManagementPanel("Weekly tasks",tasks),pollPanel);
         dashboard.SizeChanged+=(_,_)=>pollPanel.IsVisible=dashboard.Width>=600;
+        var weeklyGames = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
+        var thisWeek = new Button { Text = $"This week's games · Week {state.Week} ›", AutomationId = "overview-this-week" };
+        thisWeek.Clicked += (_, _) => OpenLeagueWeek(state.Week);
+        weeklyGames.Children.Add(thisWeek);
+        var lastWeek = state.Schedule.Where(g => g.SeasonYear == state.SeasonYear && g.Week < state.Week)
+            .Select(g => (int?)g.Week).Max();
+        if (lastWeek is int previousWeek)
+        {
+            var results = new Button { Text = $"Last week's results · Week {previousWeek} ›", AutomationId = "overview-last-week" };
+            results.Clicked += (_, _) => OpenLeagueWeek(previousWeek);
+            weeklyGames.Children.Add(results);
+        }
+        _homeHighlights.Children.Add(weeklyGames);
         _homeHighlights.Children.Add(dashboard);
         if (state.UserCoachIsFired || state.UserCoachJobOffers.Any(o => o.Status == UserCoachJobOfferStatus.Pending))
             _homeHighlights.Children.Add(NavigationCard(state.UserCoachIsFired ? "ACTION REQUIRED" : "COACHING CAROUSEL", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));

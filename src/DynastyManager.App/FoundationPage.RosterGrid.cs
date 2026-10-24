@@ -88,15 +88,6 @@ public sealed partial class FoundationPage
         var rows = new List<View[]>();
         foreach (var player in players)
         {
-            var details = new Button { Text = "Open", FontSize = 11, Margin = new Thickness(4, 0) };
-            SemanticProperties.SetDescription(details, "Open " + player.FullName);
-            details.Clicked += async (_, _) =>
-            {
-                if (!DynastyManager.Data.Presentation.ManagementLayout.SplitProfile(_rosterWorkspace.Width)) { await ShowPlayerProfileAsync(player.PlayerId); return; }
-                _selectedRosterPlayer = player.PlayerId;
-                RenderCurrentDynasty();
-                if (_sectionViews[AppSection.Roster] is ScrollView scroll) await scroll.ScrollToAsync(0, 0, false);
-            };
             var status = player.CurrentInjury is not null ? $"Injured {player.CurrentInjury.WeeksRemaining}w"
                 : player.IsRedshirted ? "Redshirt" : player.IsWalkOn ? "Walk-on" : EffectiveRosterStarter(player) ? "Starter" : "Depth";
             var playerDevelopment = development.GetValueOrDefault(player.PlayerId);
@@ -107,7 +98,7 @@ public sealed partial class FoundationPage
                 RatingCell(player.OverallRating),
                 TableText(FormatSigned(seasonDelta), true, GetChangeColor(seasonDelta)),
                 MoraleIcon(player),
-                details, TableText(player.IsRedshirted ? "RS" : DisplayDepthOrder(player).ToString()),
+                TableText(player.IsRedshirted ? "RS" : DisplayDepthOrder(player).ToString()),
                 TableText(FormatPotentialStars(player.PotentialRating), color: DynastyTheme.Palette("#E9C76C")),
                 TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"),
                 TableText(status, color: player.CurrentInjury is not null ? NegativeChangeColor : player.IsRedshirted ? DynastyTheme.Palette("#D6A3EB") : DynastyTheme.Muted),
@@ -115,7 +106,7 @@ public sealed partial class FoundationPage
         }
         _transferPortalList.Children.Add(SectionTitle($"Depth chart · {rows.Count} players", "Δ = change from season start · Morale responds to form and injury · swipe for more columns"));
         if (rows.Count == 0) _transferPortalList.Children.Add(new Label { Text = "No players match these filters." });
-        else _transferPortalList.Children.Add(DataTable([("Pos", 36), ("Player", 136), ("Year", 52), ("OVR", 44), ("Δ", 36), ("Morale", 50), ("Details", 56),
+        else _transferPortalList.Children.Add(DataTable([("Pos", 36), ("Player", 136), ("Year", 52), ("OVR", 44), ("Δ", 36), ("Morale", 50),
             ("Depth", 54), ("Potential", 75), ("HS", 45), ("Status", 105), ("Height", 64), ("Wt lb", 60)], rows, configureColumns: true));
     }
 
