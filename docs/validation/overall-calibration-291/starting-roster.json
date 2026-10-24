@@ -1,0 +1,992 @@
+{
+  "before": {
+    "Average": 71.95519031141869,
+    "Median": 72,
+    "StarterAverage": 78.95294117647059,
+    "Percent80": 20.865051903114185,
+    "Percent85": 7.664359861591696,
+    "Percent90": 2.162629757785467,
+    "Percent95": 0.41522491349480967,
+    "Percent99": 0.04325259515570934,
+    "FreshmanAverage": 67.17171401810802,
+    "SeniorAverage": 75.91141609482221,
+    "EliteProgramAverage": 75.24532871972319,
+    "WeakProgramAverage": 69.00926916221034,
+    "Positions": [
+      {
+        "Code": 0,
+        "Count": 559,
+        "Average": 69.56708407871199,
+        "StarterAverage": 79.49264705882354,
+        "Percent90": 2.146690518783542,
+        "Distribution": {
+          "Count": 559,
+          "Average": 69.56708407871199,
+          "Median": 69,
+          "Percent80": 12.343470483005367,
+          "Percent85": 6.082289803220036,
+          "Percent90": 2.146690518783542,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 1,
+        "Count": 742,
+        "Average": 77.8989218328841,
+        "StarterAverage": 85.03676470588235,
+        "Percent90": 2.4258760107816713,
+        "Distribution": {
+          "Count": 742,
+          "Average": 77.8989218328841,
+          "Median": 78,
+          "Percent80": 39.757412398921836,
+          "Percent85": 13.342318059299192,
+          "Percent90": 2.4258760107816713,
+          "Percent95": 0.5390835579514824,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 2,
+        "Count": 155,
+        "Average": 69.30322580645161,
+        "StarterAverage": 68.98412698412699,
+        "Percent90": 2.5806451612903225,
+        "Distribution": {
+          "Count": 155,
+          "Average": 69.30322580645161,
+          "Median": 68,
+          "Percent80": 9.67741935483871,
+          "Percent85": 4.516129032258065,
+          "Percent90": 2.5806451612903225,
+          "Percent95": 1.2903225806451613,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 3,
+        "Count": 1207,
+        "Average": 78.3545981772991,
+        "StarterAverage": 83.9656862745098,
+        "Percent90": 4.556752278376139,
+        "Distribution": {
+          "Count": 1207,
+          "Average": 78.3545981772991,
+          "Median": 78,
+          "Percent80": 40.927920463960234,
+          "Percent85": 16.072908036454017,
+          "Percent90": 4.556752278376139,
+          "Percent95": 0.33140016570008285,
+          "Percent99": 0.08285004142502071
+        }
+      },
+      {
+        "Code": 4,
+        "Count": 795,
+        "Average": 67.7748427672956,
+        "StarterAverage": 77.45588235294117,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 795,
+          "Average": 67.7748427672956,
+          "Median": 68,
+          "Percent80": 7.421383647798742,
+          "Percent85": 1.2578616352201257,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 5,
+        "Count": 474,
+        "Average": 62.10548523206751,
+        "StarterAverage": 69.375,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 474,
+          "Average": 62.10548523206751,
+          "Median": 61,
+          "Percent80": 2.742616033755274,
+          "Percent85": 1.2658227848101267,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 6,
+        "Count": 464,
+        "Average": 62.35129310344828,
+        "StarterAverage": 70.24264705882354,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 464,
+          "Average": 62.35129310344828,
+          "Median": 61,
+          "Percent80": 3.0172413793103448,
+          "Percent85": 1.293103448275862,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 7,
+        "Count": 410,
+        "Average": 62.541463414634144,
+        "StarterAverage": 69.76470588235294,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 410,
+          "Average": 62.541463414634144,
+          "Median": 61,
+          "Percent80": 3.902439024390244,
+          "Percent85": 0.7317073170731707,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 8,
+        "Count": 441,
+        "Average": 62.30612244897959,
+        "StarterAverage": 69.13970588235294,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 441,
+          "Average": 62.30612244897959,
+          "Median": 62,
+          "Percent80": 1.5873015873015872,
+          "Percent85": 0.45351473922902497,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 9,
+        "Count": 460,
+        "Average": 61.69565217391305,
+        "StarterAverage": 68.77941176470588,
+        "Percent90": 0.21739130434782608,
+        "Distribution": {
+          "Count": 460,
+          "Average": 61.69565217391305,
+          "Median": 61,
+          "Percent80": 2.608695652173913,
+          "Percent85": 1.3043478260869565,
+          "Percent90": 0.21739130434782608,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 10,
+        "Count": 567,
+        "Average": 71.16402116402116,
+        "StarterAverage": 77.27941176470588,
+        "Percent90": 0.7054673721340388,
+        "Distribution": {
+          "Count": 567,
+          "Average": 71.16402116402116,
+          "Median": 71,
+          "Percent80": 9.876543209876543,
+          "Percent85": 2.4691358024691357,
+          "Percent90": 0.7054673721340388,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 11,
+        "Count": 544,
+        "Average": 71.1158088235294,
+        "StarterAverage": 77.33088235294117,
+        "Percent90": 0.36764705882352944,
+        "Distribution": {
+          "Count": 544,
+          "Average": 71.1158088235294,
+          "Median": 71,
+          "Percent80": 11.029411764705882,
+          "Percent85": 2.0220588235294117,
+          "Percent90": 0.36764705882352944,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 12,
+        "Count": 816,
+        "Average": 73.4718137254902,
+        "StarterAverage": 78.39338235294117,
+        "Percent90": 1.1029411764705883,
+        "Distribution": {
+          "Count": 816,
+          "Average": 73.4718137254902,
+          "Median": 73,
+          "Percent80": 17.769607843137255,
+          "Percent85": 4.411764705882353,
+          "Percent90": 1.1029411764705883,
+          "Percent95": 0.24509803921568626,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 13,
+        "Count": 337,
+        "Average": 74.47181008902078,
+        "StarterAverage": 77.9375,
+        "Percent90": 2.373887240356083,
+        "Distribution": {
+          "Count": 337,
+          "Average": 74.47181008902078,
+          "Median": 74,
+          "Percent80": 17.2106824925816,
+          "Percent85": 6.824925816023739,
+          "Percent90": 2.373887240356083,
+          "Percent95": 0.8902077151335311,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 14,
+        "Count": 552,
+        "Average": 68.95652173913044,
+        "StarterAverage": 76.88235294117646,
+        "Percent90": 0.36231884057971014,
+        "Distribution": {
+          "Count": 552,
+          "Average": 68.95652173913044,
+          "Median": 68,
+          "Percent80": 8.876811594202898,
+          "Percent85": 1.9927536231884058,
+          "Percent90": 0.36231884057971014,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 15,
+        "Count": 467,
+        "Average": 76.61456102783725,
+        "StarterAverage": 83.04411764705883,
+        "Percent90": 5.56745182012848,
+        "Distribution": {
+          "Count": 467,
+          "Average": 76.61456102783725,
+          "Median": 76,
+          "Percent80": 30.83511777301927,
+          "Percent85": 13.9186295503212,
+          "Percent90": 5.56745182012848,
+          "Percent95": 1.7130620985010707,
+          "Percent99": 0.21413276231263384
+        }
+      },
+      {
+        "Code": 16,
+        "Count": 1059,
+        "Average": 77.41265344664778,
+        "StarterAverage": 81.99019607843137,
+        "Percent90": 1.9830028328611897,
+        "Distribution": {
+          "Count": 1059,
+          "Average": 77.41265344664778,
+          "Median": 77,
+          "Percent80": 35.2219074598678,
+          "Percent85": 13.125590179414543,
+          "Percent90": 1.9830028328611897,
+          "Percent95": 0.18885741265344666,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 17,
+        "Count": 560,
+        "Average": 77.4125,
+        "StarterAverage": 83.72058823529412,
+        "Percent90": 3.5714285714285716,
+        "Distribution": {
+          "Count": 560,
+          "Average": 77.4125,
+          "Median": 77,
+          "Percent80": 33.214285714285715,
+          "Percent85": 12.321428571428571,
+          "Percent90": 3.5714285714285716,
+          "Percent95": 0.35714285714285715,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 18,
+        "Count": 505,
+        "Average": 78.17227722772277,
+        "StarterAverage": 84.4779411764706,
+        "Percent90": 5.742574257425742,
+        "Distribution": {
+          "Count": 505,
+          "Average": 78.17227722772277,
+          "Median": 78,
+          "Percent80": 40.99009900990099,
+          "Percent85": 14.851485148514852,
+          "Percent90": 5.742574257425742,
+          "Percent95": 1.188118811881188,
+          "Percent99": 0.19801980198019803
+        }
+      },
+      {
+        "Code": 19,
+        "Count": 251,
+        "Average": 73.84860557768924,
+        "StarterAverage": 79.54074074074074,
+        "Percent90": 7.968127490039841,
+        "Distribution": {
+          "Count": 251,
+          "Average": 73.84860557768924,
+          "Median": 72,
+          "Percent80": 29.8804780876494,
+          "Percent85": 17.131474103585656,
+          "Percent90": 7.968127490039841,
+          "Percent95": 2.7888446215139444,
+          "Percent99": 0.398406374501992
+        }
+      },
+      {
+        "Code": 20,
+        "Count": 195,
+        "Average": 75.76410256410256,
+        "StarterAverage": 78.81343283582089,
+        "Percent90": 9.743589743589743,
+        "Distribution": {
+          "Count": 195,
+          "Average": 75.76410256410256,
+          "Median": 75,
+          "Percent80": 33.333333333333336,
+          "Percent85": 16.923076923076923,
+          "Percent90": 9.743589743589743,
+          "Percent95": 4.102564102564102,
+          "Percent99": 0.5128205128205128
+        }
+      }
+    ],
+    "Stars": [
+      {
+        "star": 1,
+        "count": 1438,
+        "average": 64.60917941585535,
+        "freshmanAverage": 59.38857142857143,
+        "seniorAverage": 67.56666666666666,
+        "percent90": 0,
+        "distribution": {
+          "Count": 1438,
+          "Average": 64.60917941585535,
+          "Median": 66,
+          "Percent80": 0,
+          "Percent85": 0,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 2,
+        "count": 5361,
+        "average": 69.30106323447119,
+        "freshmanAverage": 63.943820224719104,
+        "seniorAverage": 74.25586206896551,
+        "percent90": 0,
+        "distribution": {
+          "Count": 5361,
+          "Average": 69.30106323447119,
+          "Median": 70,
+          "Percent80": 7.685133370639806,
+          "Percent85": 0.39171796306659207,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 3,
+        "count": 3773,
+        "average": 75.35674529552081,
+        "freshmanAverage": 70.17019607843137,
+        "seniorAverage": 81.16191562143672,
+        "percent90": 1.2987012987012987,
+        "distribution": {
+          "Count": 3773,
+          "Average": 75.35674529552081,
+          "Median": 76,
+          "Percent80": 32.44102835939571,
+          "Percent85": 9.912536443148689,
+          "Percent90": 1.2987012987012987,
+          "Percent95": 0.0795123244102836,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 4,
+        "count": 917,
+        "average": 83.53653217011995,
+        "freshmanAverage": 77.18143459915612,
+        "seniorAverage": 88.11740890688259,
+        "percent90": 17.3391494002181,
+        "distribution": {
+          "Count": 917,
+          "Average": 83.53653217011995,
+          "Median": 84,
+          "Percent80": 76.88113413304254,
+          "Percent85": 46.346782988004364,
+          "Percent90": 17.3391494002181,
+          "Percent95": 3.380588876772083,
+          "Percent99": 0.3271537622682661
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 5,
+        "count": 71,
+        "average": 90.80281690140845,
+        "freshmanAverage": 84,
+        "seniorAverage": 95,
+        "percent90": 59.15492957746479,
+        "distribution": {
+          "Count": 71,
+          "Average": 90.80281690140845,
+          "Median": 91,
+          "Percent80": 100,
+          "Percent85": 92.95774647887323,
+          "Percent90": 59.15492957746479,
+          "Percent95": 19.718309859154928,
+          "Percent99": 2.816901408450704
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      }
+    ],
+    "Freshmen": {
+      "Count": 3203,
+      "Average": 67.17171401810802,
+      "Median": 68,
+      "Percent80": 4.464564470808617,
+      "Percent85": 0.49953168904152356,
+      "Percent90": 0,
+      "Percent95": 0,
+      "Percent99": 0
+    },
+    "Seniors": {
+      "Count": 3206,
+      "Average": 75.91141609482221,
+      "Median": 76,
+      "Percent80": 35.62071116656269,
+      "Percent85": 14.753587024329383,
+      "Percent90": 4.398003742981909,
+      "Percent95": 0.6550218340611353,
+      "Percent99": 0.09357454772301933
+    }
+  },
+  "after": {
+    "Average": 72.7318339100346,
+    "Median": 72,
+    "StarterAverage": 79.16264705882352,
+    "Percent80": 16.24567474048443,
+    "Percent85": 5.700692041522491,
+    "Percent90": 1.3408304498269896,
+    "Percent95": 0.00865051903114187,
+    "Percent99": 0,
+    "FreshmanAverage": 68.80018732438339,
+    "SeniorAverage": 76.30131004366812,
+    "EliteProgramAverage": 75.8287197231834,
+    "WeakProgramAverage": 69.92335115864527,
+    "Positions": [
+      {
+        "Code": 0,
+        "Count": 559,
+        "Average": 72.86940966010734,
+        "StarterAverage": 79.59558823529412,
+        "Percent90": 0.5366726296958855,
+        "Distribution": {
+          "Count": 559,
+          "Average": 72.86940966010734,
+          "Median": 73,
+          "Percent80": 11.449016100178891,
+          "Percent85": 4.293381037567084,
+          "Percent90": 0.5366726296958855,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 1,
+        "Count": 742,
+        "Average": 79.59433962264151,
+        "StarterAverage": 86.29411764705883,
+        "Percent90": 3.0997304582210243,
+        "Distribution": {
+          "Count": 742,
+          "Average": 79.59433962264151,
+          "Median": 79,
+          "Percent80": 49.86522911051213,
+          "Percent85": 20.080862533692724,
+          "Percent90": 3.0997304582210243,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 2,
+        "Count": 155,
+        "Average": 66.56774193548387,
+        "StarterAverage": 66.32539682539682,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 155,
+          "Average": 66.56774193548387,
+          "Median": 65,
+          "Percent80": 3.870967741935484,
+          "Percent85": 1.2903225806451613,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 3,
+        "Count": 1207,
+        "Average": 73.74979287489644,
+        "StarterAverage": 80.24509803921569,
+        "Percent90": 1.9055509527754764,
+        "Distribution": {
+          "Count": 1207,
+          "Average": 73.74979287489644,
+          "Median": 73,
+          "Percent80": 20.629660314830158,
+          "Percent85": 8.285004142502071,
+          "Percent90": 1.9055509527754764,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 4,
+        "Count": 795,
+        "Average": 71.25534591194969,
+        "StarterAverage": 80.23529411764706,
+        "Percent90": 1.0062893081761006,
+        "Distribution": {
+          "Count": 795,
+          "Average": 71.25534591194969,
+          "Median": 71,
+          "Percent80": 11.446540880503145,
+          "Percent85": 4.0251572327044025,
+          "Percent90": 1.0062893081761006,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 5,
+        "Count": 474,
+        "Average": 72.97679324894514,
+        "StarterAverage": 79.41176470588235,
+        "Percent90": 2.109704641350211,
+        "Distribution": {
+          "Count": 474,
+          "Average": 72.97679324894514,
+          "Median": 73,
+          "Percent80": 15.40084388185654,
+          "Percent85": 4.852320675105485,
+          "Percent90": 2.109704641350211,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 6,
+        "Count": 464,
+        "Average": 73.0603448275862,
+        "StarterAverage": 80.01470588235294,
+        "Percent90": 1.7241379310344827,
+        "Distribution": {
+          "Count": 464,
+          "Average": 73.0603448275862,
+          "Median": 73,
+          "Percent80": 16.594827586206897,
+          "Percent85": 5.603448275862069,
+          "Percent90": 1.7241379310344827,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 7,
+        "Count": 410,
+        "Average": 72.80975609756098,
+        "StarterAverage": 79.33823529411765,
+        "Percent90": 1.951219512195122,
+        "Distribution": {
+          "Count": 410,
+          "Average": 72.80975609756098,
+          "Median": 72,
+          "Percent80": 17.317073170731707,
+          "Percent85": 7.804878048780488,
+          "Percent90": 1.951219512195122,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 8,
+        "Count": 441,
+        "Average": 73.11337868480726,
+        "StarterAverage": 79.08823529411765,
+        "Percent90": 1.1337868480725624,
+        "Distribution": {
+          "Count": 441,
+          "Average": 73.11337868480726,
+          "Median": 73,
+          "Percent80": 15.192743764172336,
+          "Percent85": 4.081632653061225,
+          "Percent90": 1.1337868480725624,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 9,
+        "Count": 460,
+        "Average": 72.9695652173913,
+        "StarterAverage": 78.69117647058823,
+        "Percent90": 2.391304347826087,
+        "Distribution": {
+          "Count": 460,
+          "Average": 72.9695652173913,
+          "Median": 73,
+          "Percent80": 13.91304347826087,
+          "Percent85": 4.130434782608695,
+          "Percent90": 2.391304347826087,
+          "Percent95": 0.21739130434782608,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 10,
+        "Count": 567,
+        "Average": 71.81305114638448,
+        "StarterAverage": 78.11029411764706,
+        "Percent90": 1.0582010582010581,
+        "Distribution": {
+          "Count": 567,
+          "Average": 71.81305114638448,
+          "Median": 72,
+          "Percent80": 11.11111111111111,
+          "Percent85": 3.3509700176366843,
+          "Percent90": 1.0582010582010581,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 11,
+        "Count": 544,
+        "Average": 72.20036764705883,
+        "StarterAverage": 78.47058823529412,
+        "Percent90": 1.286764705882353,
+        "Distribution": {
+          "Count": 544,
+          "Average": 72.20036764705883,
+          "Median": 72,
+          "Percent80": 14.889705882352942,
+          "Percent85": 4.595588235294118,
+          "Percent90": 1.286764705882353,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 12,
+        "Count": 816,
+        "Average": 72.98651960784314,
+        "StarterAverage": 77.78676470588235,
+        "Percent90": 0.9803921568627451,
+        "Distribution": {
+          "Count": 816,
+          "Average": 72.98651960784314,
+          "Median": 73,
+          "Percent80": 15.441176470588236,
+          "Percent85": 3.4313725490196076,
+          "Percent90": 0.9803921568627451,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 13,
+        "Count": 337,
+        "Average": 68.98219584569733,
+        "StarterAverage": 72.3359375,
+        "Percent90": 0.8902077151335311,
+        "Distribution": {
+          "Count": 337,
+          "Average": 68.98219584569733,
+          "Median": 69,
+          "Percent80": 4.747774480712166,
+          "Percent85": 2.077151335311573,
+          "Percent90": 0.8902077151335311,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 14,
+        "Count": 552,
+        "Average": 70.47826086956522,
+        "StarterAverage": 78.13235294117646,
+        "Percent90": 0.7246376811594203,
+        "Distribution": {
+          "Count": 552,
+          "Average": 70.47826086956522,
+          "Median": 70,
+          "Percent80": 10.68840579710145,
+          "Percent85": 2.898550724637681,
+          "Percent90": 0.7246376811594203,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 15,
+        "Count": 467,
+        "Average": 71.15845824411134,
+        "StarterAverage": 76.96323529411765,
+        "Percent90": 1.0706638115631693,
+        "Distribution": {
+          "Count": 467,
+          "Average": 71.15845824411134,
+          "Median": 70,
+          "Percent80": 11.991434689507495,
+          "Percent85": 4.282655246252677,
+          "Percent90": 1.0706638115631693,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 16,
+        "Count": 1059,
+        "Average": 73.25590179414542,
+        "StarterAverage": 78.25245098039215,
+        "Percent90": 1.2275731822474032,
+        "Distribution": {
+          "Count": 1059,
+          "Average": 73.25590179414542,
+          "Median": 72,
+          "Percent80": 16.997167138810198,
+          "Percent85": 5.571293673276676,
+          "Percent90": 1.2275731822474032,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 17,
+        "Count": 560,
+        "Average": 71.11607142857143,
+        "StarterAverage": 78.29411764705883,
+        "Percent90": 1.0714285714285714,
+        "Distribution": {
+          "Count": 560,
+          "Average": 71.11607142857143,
+          "Median": 70,
+          "Percent80": 10,
+          "Percent85": 3.75,
+          "Percent90": 1.0714285714285714,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 18,
+        "Count": 505,
+        "Average": 72.28316831683168,
+        "StarterAverage": 78.48529411764706,
+        "Percent90": 0.7920792079207921,
+        "Distribution": {
+          "Count": 505,
+          "Average": 72.28316831683168,
+          "Median": 72,
+          "Percent80": 12.277227722772277,
+          "Percent85": 5.346534653465347,
+          "Percent90": 0.7920792079207921,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 19,
+        "Count": 251,
+        "Average": 71.34661354581674,
+        "StarterAverage": 74.87407407407407,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 251,
+          "Average": 71.34661354581674,
+          "Median": 70,
+          "Percent80": 10.358565737051793,
+          "Percent85": 2.7888446215139444,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      },
+      {
+        "Code": 20,
+        "Count": 195,
+        "Average": 72.33333333333333,
+        "StarterAverage": 74.08955223880596,
+        "Percent90": 0,
+        "Distribution": {
+          "Count": 195,
+          "Average": 72.33333333333333,
+          "Median": 72,
+          "Percent80": 10.76923076923077,
+          "Percent85": 2.5641025641025643,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        }
+      }
+    ],
+    "Stars": [
+      {
+        "star": 1,
+        "count": 1438,
+        "average": 64.557719054242,
+        "freshmanAverage": 59.8,
+        "seniorAverage": 66.98253968253968,
+        "percent90": 0,
+        "distribution": {
+          "Count": 1438,
+          "Average": 64.557719054242,
+          "Median": 65,
+          "Percent80": 0,
+          "Percent85": 0,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 2,
+        "count": 5361,
+        "average": 70.23708263383698,
+        "freshmanAverage": 65.68605419695969,
+        "seniorAverage": 74.92,
+        "percent90": 0,
+        "distribution": {
+          "Count": 5361,
+          "Average": 70.23708263383698,
+          "Median": 70,
+          "Percent80": 0,
+          "Percent85": 0,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 3,
+        "count": 3773,
+        "average": 76.31513384574609,
+        "freshmanAverage": 71.8878431372549,
+        "seniorAverage": 81.76966932725199,
+        "percent90": 0,
+        "distribution": {
+          "Count": 3773,
+          "Average": 76.31513384574609,
+          "Median": 76,
+          "Percent80": 28.33289159819772,
+          "Percent85": 3.6840710310098066,
+          "Percent90": 0,
+          "Percent95": 0,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 4,
+        "count": 917,
+        "average": 84.01090512540894,
+        "freshmanAverage": 78.52320675105486,
+        "seniorAverage": 88.62753036437248,
+        "percent90": 11.450381679389313,
+        "distribution": {
+          "Count": 917,
+          "Average": 84.01090512540894,
+          "Median": 84,
+          "Percent80": 80.47982551799346,
+          "Percent85": 49.291166848418754,
+          "Percent90": 11.450381679389313,
+          "Percent95": 0,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      },
+      {
+        "star": 5,
+        "count": 71,
+        "average": 90.56338028169014,
+        "freshmanAverage": 84,
+        "seniorAverage": 93,
+        "percent90": 70.4225352112676,
+        "distribution": {
+          "Count": 71,
+          "Average": 90.56338028169014,
+          "Median": 91,
+          "Percent80": 100,
+          "Percent85": 95.77464788732394,
+          "Percent90": 70.4225352112676,
+          "Percent95": 1.408450704225352,
+          "Percent99": 0
+        },
+        "developmentRecords": 0,
+        "meanDevelopmentPerStage": 0
+      }
+    ],
+    "Freshmen": {
+      "Count": 3203,
+      "Average": 68.80018732438339,
+      "Median": 68,
+      "Percent80": 2.4039962535123323,
+      "Percent85": 0.062441461130190445,
+      "Percent90": 0,
+      "Percent95": 0,
+      "Percent99": 0
+    },
+    "Seniors": {
+      "Count": 3206,
+      "Average": 76.30131004366812,
+      "Median": 76,
+      "Percent80": 31.035558328134748,
+      "Percent85": 12.102308172177167,
+      "Percent90": 2.744853399875234,
+      "Percent95": 0,
+      "Percent99": 0
+    }
+  }
+}

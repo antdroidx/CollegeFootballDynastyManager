@@ -1,0 +1,47 @@
+namespace DynastyManager.Core.Models;
+
+public sealed record ScheduledGame
+{
+    public IReadOnlyList<DynastyManager.Core.Simulation.CoachTalkRecord> CoachTalks { get; init; } = [];
+    public required string GameId { get; init; }
+    public int SeasonYear { get; init; }
+    public int Week { get; init; }
+    public required string HomeTeamName { get; init; }
+    public required string AwayTeamName { get; init; }
+    public ScheduledGameType GameType { get; init; } = ScheduledGameType.NonConference;
+    public PostseasonRound PostseasonRound { get; init; } = PostseasonRound.None;
+    public int PlayoffBracketSlot { get; init; }
+    public int? HomeSeed { get; init; }
+    public int? AwaySeed { get; init; }
+    public bool IsNeutralSite { get; init; }
+    public string? BowlName { get; init; }
+    public GameWeather? Weather { get; init; }
+    public PlayerGameAward? PlayerOfGame { get; init; }
+    public int HomeEndingMorale { get; init; } = 50;
+    public int AwayEndingMorale { get; init; } = 50;
+    public int SimulationSeed { get; init; }
+    public TeamGamePlan? HomeGamePlan { get; init; }
+    public TeamGamePlan? AwayGamePlan { get; init; }
+    public IReadOnlyList<GameDriveSummary> Drives { get; init; } = Array.Empty<GameDriveSummary>();
+    public double? HomePregameRating { get; init; }
+    public double? AwayPregameRating { get; init; }
+    public bool HasPlayed { get; init; }
+    public int? HomeScore { get; init; }
+    public int? AwayScore { get; init; }
+    public GameTeamStats? HomeStats { get; init; }
+    public GameTeamStats? AwayStats { get; init; }
+    public IReadOnlyList<PlayerSeasonStatLine> PlayerStats { get; init; } = Array.Empty<PlayerSeasonStatLine>();
+    public IReadOnlyList<GameSnapEvent> Highlights { get; init; } = [];
+    public IReadOnlyList<ReplayPlayer> HighlightPlayers { get; init; } = [];
+    public bool IsFcsGame { get; init; }
+    public IReadOnlyList<GamePeriodScore> PeriodScores { get; init; } = [];
+
+    public bool InvolvesTeam(string teamName) =>
+        HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ||
+        AwayTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase);
+
+    public string? WinnerTeamName =>
+        !HasPlayed || HomeScore is null || AwayScore is null
+            ? null
+            : HomeScore > AwayScore ? HomeTeamName : AwayTeamName;
+}

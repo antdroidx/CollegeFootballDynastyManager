@@ -1,0 +1,328 @@
+using DynastyManager.Core.Models;
+
+namespace DynastyManager.Core.Simulation;
+
+public static class RosterManagementService
+{
+    public static DynastyState NormalizeAllDepthCharts(
+        DynastyState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        var normalized = state.ActiveRoster
+            .GroupBy(player => new
+            {
+                player.TeamName,
+                player.Position
+            })
+            .SelectMany(group =>
+            {
+                var starters = group.Key.Position == Position.OL ? LineStarters(group) : [];
+                return group
+                    .OrderBy(player => player.IsRedshirted ? 1 : 0)
+                    .ThenBy(player => group.Key.Position == Position.OL && !starters.Contains(player.PlayerId) ? 1 : 0)
+                    .ThenBy(player =>
+                        player.DepthChartOrder > 0
+                            ? player.DepthChartOrder
+                            : int.MaxValue)
+                    .ThenByDescending(player => player.OverallRating)
+                    .ThenByDescending(player => player.TalentLevel)
+                    .ThenBy(player =>
+                        player.FullName,
+                        StringComparer.OrdinalIgnoreCase)
+                    .Select((player, index) =>
+                        player with
+                        {
+                            DepthChartOrder = index + 1
+                        });
+            })
+            .ToArray();
+
+        return state with
+        {
+            ActiveRoster = normalized,
+            DepthChartAssignments = state.DepthChartAssignments.Where(a => normalized.Any(p => p.PlayerId == a.PlayerId &&
+                p.TeamName.Equals(a.TeamName, StringComparison.OrdinalIgnoreCase))).ToArray()
+        };
+
+        static HashSet<Guid> LineStarters(IEnumerable<DynastyPlayer> players) => OffensiveLineService.Lineup(players
+            .Where(p => !p.IsRedshirted && p.CurrentInjury is null).OrderBy(p => p.DepthChartOrder <= 0 ? int.MaxValue : p.DepthChartOrder)
+            .ThenByDescending(p => p.OverallRating).ToArray()).Select(p => p.PlayerId).ToHashSet();
+    }
+
+    public static DynastyState MovePlayer(
+        DynastyState state,
+        string teamName,
+        Guid playerId,
+        int direction)
+    {
+        if (teamName == state.UserTeamName && state.ActiveRoster.FirstOrDefault(p => p.PlayerId == playerId) is { } controlled && !UserCoachControlService.ControlsPosition(state, controlled.Position)) return state;
+        ArgumentNullException.ThrowIfNull(state);
+
+        if (direction == 0)
+            return state;
+
+        if (state.DepthChartAssignments.Any(a => a.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase)))
+        {
+            var current = state.ActiveRoster.FirstOrDefault(p => p.PlayerId == playerId && p.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+            if (current is null || current.IsRedshirted) return state;
+            var code = DepthChartService.AssignedCode(state, current);
+            var group = DepthChartService.AtPosition(state, teamName, code);
+            var rank = group.Select((p, i) => (p.PlayerId, Rank: i + 1)).First(p => p.PlayerId == playerId).Rank;
+            return DepthChartService.Assign(state, teamName, playerId, code, rank + Math.Sign(direction));
+        }
+        state = NormalizeAllDepthCharts(state);
+
+        var player = state.ActiveRoster.FirstOrDefault(candidate =>
+            candidate.PlayerId == playerId &&
+            candidate.TeamName.Equals(
+                teamName,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (player is null || player.IsRedshirted)
+            return state;
+
+        var positionPlayers = state.ActiveRoster
+            .Where(candidate =>
+                candidate.TeamName.Equals(
+                    teamName,
+                    StringComparison.OrdinalIgnoreCase) &&
+                candidate.Position == player.Position &&
+                OffensiveLineService.Label(candidate) == OffensiveLineService.Label(player) &&
+                !candidate.IsRedshirted)
+            .OrderBy(candidate => candidate.DepthChartOrder)
+            .ToArray();
+
+        var index = Array.FindIndex(
+            positionPlayers,
+            candidate => candidate.PlayerId == playerId);
+
+        if (index < 0)
+            return state;
+
+        var targetIndex = Math.Clamp(
+            index + Math.Sign(direction),
+            0,
+            positionPlayers.Length - 1);
+
+        if (targetIndex == index)
+            return state;
+
+        var other = positionPlayers[targetIndex];
+
+        var roster = state.ActiveRoster
+            .Select(candidate =>
+            {
+                if (candidate.PlayerId == player.PlayerId)
+                {
+                    return candidate with
+                    {
+                        DepthChartOrder = other.DepthChartOrder
+                    };
+                }
+
+                if (candidate.PlayerId == other.PlayerId)
+                {
+                    return candidate with
+                    {
+                        DepthChartOrder = player.DepthChartOrder
+                    };
+                }
+
+                return candidate;
+            })
+            .ToArray();
+
+        return NormalizeAllDepthCharts(
+            state with
+            {
+                ActiveRoster = roster
+            });
+    }
+
+    public static DynastyState MovePlayerToOrder(
+        DynastyState state,
+        string teamName,
+        Guid playerId,
+        int targetOrder)
+    {
+        if (teamName == state.UserTeamName && state.ActiveRoster.FirstOrDefault(p => p.PlayerId == playerId) is { } controlled && !UserCoachControlService.ControlsPosition(state, controlled.Position)) return state;
+        ArgumentNullException.ThrowIfNull(state);
+
+        state = NormalizeAllDepthCharts(state);
+        var player = state.ActiveRoster.FirstOrDefault(candidate =>
+            candidate.PlayerId == playerId &&
+            candidate.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+
+        if (player is null || player.IsRedshirted)
+            return state;
+
+        var positionPlayers = state.ActiveRoster
+            .Where(candidate =>
+                candidate.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) &&
+                candidate.Position == player.Position &&
+                !candidate.IsRedshirted)
+            .OrderBy(candidate => candidate.DepthChartOrder)
+            .ToList();
+        var oldIndex = positionPlayers.FindIndex(candidate => candidate.PlayerId == playerId);
+        if (oldIndex < 0)
+            return state;
+
+        var newIndex = Math.Clamp(targetOrder - 1, 0, positionPlayers.Count - 1);
+        if (oldIndex == newIndex)
+            return state;
+
+        positionPlayers.RemoveAt(oldIndex);
+        positionPlayers.Insert(newIndex, player);
+        var orders = positionPlayers.Select((candidate, index) => (candidate.PlayerId, Order: index + 1))
+            .ToDictionary(item => item.PlayerId, item => item.Order);
+
+        return NormalizeAllDepthCharts(state with
+        {
+            ActiveRoster = state.ActiveRoster.Select(candidate =>
+                orders.TryGetValue(candidate.PlayerId, out var order)
+                    ? candidate with { DepthChartOrder = order }
+                    : candidate).ToArray()
+        });
+    }
+
+    public static DynastyState ToggleRedshirt(
+        DynastyState state,
+        string teamName,
+        Guid playerId)
+    {
+        if (teamName == state.UserTeamName && state.UserCoachRole != StaffRole.HeadCoach) return state;
+        ArgumentNullException.ThrowIfNull(state);
+
+        if (state.Phase != SeasonPhase.RosterManagement)
+            return state;
+
+        var player = state.ActiveRoster.FirstOrDefault(candidate =>
+            candidate.PlayerId == playerId &&
+            candidate.TeamName.Equals(
+                teamName,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (player is null)
+            return state;
+
+        if (!player.IsRedshirted && player.HasRedshirted)
+            return state;
+
+        var roster = state.ActiveRoster
+            .Select(candidate =>
+                candidate.PlayerId == playerId
+                    ? candidate with
+                    {
+                        IsRedshirted = !candidate.IsRedshirted
+                    }
+                    : candidate)
+            .ToArray();
+
+        return NormalizeAllDepthCharts(
+            state with
+            {
+                ActiveRoster = roster
+            });
+    }
+
+    public static DynastyState ReleasePlayer(
+        DynastyState state,
+        string teamName,
+        Guid playerId)
+    {
+        if (teamName == state.UserTeamName && state.UserCoachRole != StaffRole.HeadCoach) return state;
+        ArgumentNullException.ThrowIfNull(state);
+
+        if (state.Phase != SeasonPhase.RosterManagement)
+            return state;
+
+        var roster = state.ActiveRoster
+            .Where(player =>
+                player.PlayerId != playerId ||
+                !player.TeamName.Equals(
+                    teamName,
+                    StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (roster.Length == state.ActiveRoster.Count)
+            return state;
+
+        var player = state.ActiveRoster.First(p => p.PlayerId == playerId && p.TeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase));
+        var departure = new PlayerDepartureRecord { SeasonYear = state.SeasonYear, PlayerId = player.PlayerId,
+            FullName = player.FullName, TeamName = player.TeamName, Position = player.Position,
+            OverallRating = player.OverallRating, Reason = PlayerDepartureReason.Released };
+        return NormalizeAllDepthCharts(
+            state with
+            {
+                ActiveRoster = roster,
+                RecentPlayerDepartures = state.RecentPlayerDepartures.Append(departure).ToArray(),
+                PlayerDepartureHistory = state.PlayerDepartureHistory.Append(departure).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray()
+            });
+    }
+
+    public static bool IsStarter(
+        DynastyPlayer player)
+    {
+        ArgumentNullException.ThrowIfNull(player);
+
+        if (player.IsRedshirted ||
+            player.DepthChartOrder <= 0)
+        {
+            return false;
+        }
+
+        return DynastyRosterRules.StarterPositionCounts.TryGetValue(
+                   player.Position,
+                   out var starters) &&
+               player.DepthChartOrder <= starters;
+    }
+
+    public static bool CanRedshirt(
+        DynastyPlayer player)
+    {
+        ArgumentNullException.ThrowIfNull(player);
+
+        return player.IsRedshirted ||
+               !player.HasRedshirted;
+    }
+
+    public static IReadOnlyList<string> GetPositionWarnings(
+        DynastyState state,
+        string teamName)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+
+        var playable = state.ActiveRoster
+            .Where(player =>
+                player.TeamName.Equals(
+                    teamName,
+                    StringComparison.OrdinalIgnoreCase) &&
+                !player.IsRedshirted &&
+                player.CurrentInjury is null)
+            .GroupBy(player => player.Position)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Count());
+
+        var warnings = new List<string>();
+
+        foreach (var pair in DynastyRosterRules.MinimumPositionCounts)
+        {
+            var count = playable.TryGetValue(
+                pair.Key,
+                out var value)
+                ? value
+                : 0;
+
+            if (count >= pair.Value)
+                continue;
+
+            warnings.Add(
+                $"{pair.Key}: {count}/{pair.Value} playable " +
+                $"({pair.Value - count} short)");
+        }
+
+        return warnings;
+    }
+}

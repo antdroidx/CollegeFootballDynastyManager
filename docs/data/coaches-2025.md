@@ -1,0 +1,13 @@
+# 2025 starting coaching identities
+
+The bundled `coaches-2025.csv` initializes new dynasties, matching the NEXT26 roster's 2025 season. It does not overwrite staff in an existing career. All 138 bundled team names have HC, OC, DC and ST game-slot coverage. The user retains their own head-coach avatar. Scouts, medical and strength/support staff remain generated.
+
+Names and published titles are identity data; ages, ratings, contracts and portraits remain generated game estimates. Prior real-world wins and awards are not invented. Co-coordinator/assistant names are retained under the primary game role and shown on its profile; the engine still has one staff contract/rating per role, rather than simulating each assistant separately.
+
+Some schools have no separately titled OC, or use a special-teams analyst/assistant. These rows explicitly retain the actual published title and identify the game assignment. Akron, Appalachian State, Ball State, Florida Atlantic, Mississippi State and West Virginia use their head coach for the OC game slot, sharing the coach identity/rating instead of creating a fictitious second coach. Colorado State uses pass-game coordinator Matt Mumme for the OC game slot. Analysts mapped to ST are labeled as analysts, not asserted to hold a coordinator title.
+
+Each row retains a source URL and, where available, a season-specific cross-check URL. Official athletics archives are the main discovery source. Some 2025 URLs have been overwritten with 2026 hires or late-season interim staff; the season-specific team lists were used to detect these and retain the opening head coach. Primary 2025 media guides and announcements resolve known conflicts (for example Arkansas, Rutgers and Kentucky). Secondary season pages remain the explicit source where a frozen primary record was not independently checked. This is a curated initial dataset, not a claim that every entry has independently verified biographical data.
+
+The canonical runtime copy is `src/DynastyManager.App/Resources/Raw/coaches-2025.csv`; this directory includes a review copy and curated overrides. The research scripts under `build/` produce a **review queue**, not an automatically trusted roster. They require BeautifulSoup and caches under `.artifacts/`, and are not executed by CI or the game. Do not import a newly scraped current staff list without rechecking the 2025 season.
+
+CSV columns: `Season,Team,Role,Name,Title,SourceUrl,CrossCheckUrl`. Roles are HC/OC/DC/ST. Unknown extra columns are ignored. Duplicate identity/role rows, invalid season/role and missing HTTPS sources are rejected. Extra team names outside a custom league are skipped when applying the seed. Existing save retention is unchanged.

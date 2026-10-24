@@ -1,0 +1,21 @@
+{
+  "Games": 544,
+  "Seed": 70931,
+  "Teams": 136,
+  "RegulationPlays": 134.47058823529412,
+  "PlaysP10": 117,
+  "PlaysP90": 159,
+  "PointsPerTeam": 26.66636029411765,
+  "YardsPerTeam": 389.4172794117647,
+  "PassYards": 235.63878676470588,
+  "RushYards": 153.7784926470588,
+  "YardsPerPlay": 5.758481026421659,
+  "CompletionPct": 62.45668939309266,
+  "YardsPerPassAttempt": 7.163714094109758,
+  "YardsPerRush": 4.427622525669524,
+  "Sacks": 1.9650735294117647,
+  "Turnovers": 1.396139705882353,
+  "ExplosivePasses": 2.9200367647058822,
+  "ExplosiveRuns": 1.416360294117647,
+  "YacPerCatch": 5.3996510379384395
+}
