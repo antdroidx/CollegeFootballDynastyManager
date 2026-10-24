@@ -139,6 +139,8 @@ public class GameDayCoachingTests
         Assert.Equal(originalQb, s.HomeDepthChart[Position.QB][0].PlayerId);
         Assert.True(GameDayCoachingService.UseSecondUnit(s, "Home", false));
         Assert.Empty(s.SecondUnits);
+        Assert.Contains(originalQb, GameDayCoachingService.Starters(s, "Home"));
+        Assert.DoesNotContain(backupQb, GameDayCoachingService.Starters(s, "Home"));
         Assert.False(GameDayCoachingService.UseSecondUnit(s, "Unknown", true));
     }
 

@@ -25,7 +25,7 @@ public static class GameDayCoachingService
             var count = position switch { Position.OL => 5, Position.RB or Position.WR or Position.DE or Position.DT or Position.OLB or Position.CB => 2, _ => 1 };
             ids.UnionWith(position == Position.OL ? OffensiveLineService.Lineup(pool).Select(p => p.PlayerId) : pool.Take(count).Select(p => p.PlayerId));
         }
-        foreach (var offense in new[] { true, false })
+        foreach (var offense in s.LineupResetAt.GetValueOrDefault(team, -1) == s.Events.Count ? Array.Empty<bool>() : new[] { true, false })
         {
             var snap = s.Events.LastOrDefault(e => GameDayEngine.IsScrimmage(e) && (offense ? e.OffenseTeamName : e.DefenseTeamName) == team);
             if (snap is null) continue;
@@ -56,6 +56,7 @@ public static class GameDayCoachingService
     {
         if (s.IsComplete || (team != s.Game.HomeTeamName && team != s.Game.AwayTeamName)) return false;
         foreach (var key in s.ManualStarters.Keys.Where(k => k.Team == team).ToArray()) s.ManualStarters.Remove(key);
+        s.LineupResetAt[team] = s.Events.Count;
         if (enabled) s.SecondUnits.Add(team); else s.SecondUnits.Remove(team);
         return true;
     }

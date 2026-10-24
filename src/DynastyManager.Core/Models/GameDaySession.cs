@@ -71,6 +71,7 @@ public sealed record GameSnapEvent
 
 public sealed class GameDaySession
 {
+    public Dictionary<string, int> LineupResetAt { get; } = new();
     public HashSet<string> SecondUnits { get; } = new(StringComparer.Ordinal);
     public Dictionary<(string Team, Position Position), Guid> ManualStarters { get; } = new();
     public List<DynastyManager.Core.Simulation.CoachTalkRecord> CoachTalks { get; } = [];
