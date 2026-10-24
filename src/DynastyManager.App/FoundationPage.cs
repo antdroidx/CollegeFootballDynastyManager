@@ -599,7 +599,7 @@ public sealed partial class FoundationPage : ContentPage
             Spacing = 5
         };
 
-        var navigation = new Grid { ColumnSpacing = 2, Padding = new Thickness(6, 3),
+        var navigation = new Grid { ColumnSpacing = 6, Padding = new Thickness(6, 5),
             ColumnDefinitions = new ColumnDefinitionCollection
             { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
 
@@ -1720,7 +1720,7 @@ public sealed partial class FoundationPage : ContentPage
                 new Label { Text = $"{latest.UserTeamName} · {latest.SeasonYear} · {FormatWeek(latest)}", FontSize = 12 },
                 new Label { Text = $"Last saved {latest.UpdatedUtc.ToLocalTime():g}", FontSize = 11, TextColor = DynastyTheme.Muted }
             } };
-            var actions = new HorizontalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center, Children = { load, manage } };
+            var actions = new HorizontalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center, Children = { load, manage } };
             var row = new Grid { ColumnSpacing = 10,
                 ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
             row.Add(info, 0, 0); row.Add(actions, 1, 0);
@@ -2965,7 +2965,7 @@ public sealed partial class FoundationPage : ContentPage
             }
         }
 
-        var actions = new FlexLayout
+        var actions = new ActionRow
         {
             Direction = FlexDirection.Row,
             Wrap = FlexWrap.Wrap,

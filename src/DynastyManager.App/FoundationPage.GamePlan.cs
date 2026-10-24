@@ -34,8 +34,8 @@ public sealed partial class FoundationPage
         program.Clicked += (_, _) => ShowSection(AppSection.Program);
         var depthChart = new Button { Text = "Manage depth chart", BackgroundColor = DynastyTheme.Palette("#315D59") };
         depthChart.Clicked += (_, _) => { _showDepthChartOrganizer = true; ShowSection(AppSection.Roster); };
-        _gamePlanHost.Children.Add(new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { program, depthChart } });
-        var careerTools = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
+        _gamePlanHost.Children.Add(new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { program, depthChart } });
+        var careerTools = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
         if (_currentDynasty.UserHeadCoach is not null)
         {
             var career = CreateCoachCareerButton(_currentDynasty.UserHeadCoach);

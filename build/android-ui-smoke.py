@@ -87,6 +87,12 @@ def enabled(root, text):
     return any(n.get("text") == text and n.get("enabled") == "true" for n in root.iter("node"))
 
 
+def assert_action_spacing(root, labels):
+    bounds = [tuple(map(int, re.findall(r"\d+", next(n for n in root.iter("node") if n.get("text") == label).get("bounds")))) for label in labels]
+    for previous, current in zip(bounds, bounds[1:]):
+        assert current[0] > previous[2] or current[1] > previous[3], f"Touching action buttons: {labels}"
+
+
 def calendar(root):
     # The shell header precedes dated news cards in document order.
     values = [node.get("text") for node in root.iter("node")]
@@ -152,6 +158,7 @@ def main():
         tap(overview, advance_action(overview))
         overview = wait_for(f"overview-week-{week}", lambda r: overview_ready(r, previous), timeout=300)
     assert "Play game" in texts(overview), "Expected a current-week user matchup"
+    assert_action_spacing(overview, ["Sim game", "Watch game", "Play game"])
     tap(overview,"Settings")
     wait_for("management-before-layouts",lambda r:"Appearance" in texts(r))
     overview=check_management_layouts()
@@ -421,7 +428,17 @@ def check_remaining_management():
     tap(capture("management-before-coach"), "Coach")
     coach_hub = wait_for("coach-hub", lambda r: "Game plan" in texts(r) and "Development" in texts(r))
     tap(coach_hub, "Development")
-    wait_for("management-coach-development",lambda r:"Availability" in texts(r) and "Morale" in texts(r))
+    development = wait_for("management-coach-development",lambda r:"Availability" in texts(r) and "Morale" in texts(r))
+    assert_action_spacing(development, ["Team talk · morale", "Injuries & availability"])
+    tap(development, "Team talk · morale")
+    choices = wait_for("season-talk-choices", lambda r: "Encourage" in texts(r))
+    tap(choices, "Encourage")
+    reaction = wait_for("season-talk-reaction", lambda r: "Team reaction" in texts(r))
+    tap(reaction, "OK")
+    used = wait_for("season-talk-used", lambda r: "Team talk · used this week" in texts(r))
+    assert not enabled(used, "Team talk · used this week"), "Used weekly talk must be disabled"
+    assert any(t and "Available after the next weekly advance" in t for t in texts(used))
+    assert_action_spacing(used, ["Team talk · used this week", "Injuries & availability"])
     tap(capture("management-before-news"),"News")
     news=wait_for("management-news-cards",lambda r:"Read story ›" in texts(r))
     tap(news,"Read story ›")

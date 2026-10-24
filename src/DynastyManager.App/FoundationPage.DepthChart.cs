@@ -57,7 +57,7 @@ public sealed partial class FoundationPage
         } }, 0);
         header.Add(auto, 1);
         _depthChartOrganizer.Children.Add(header);
-        var units = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, AlignItems = FlexAlignItems.Center };
+        var units = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, AlignItems = FlexAlignItems.Center };
         foreach (var (name, first, last) in new[] { ("Offense", 0, 9), ("Defense", 10, 18), ("Special teams", 19, 20) })
         {
             var active = code >= first && code <= last;

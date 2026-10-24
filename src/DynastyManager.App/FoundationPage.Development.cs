@@ -12,11 +12,31 @@ public sealed partial class FoundationPage
         panel.Children.Add(SectionTitle("Player development", "Training, morale and availability · your coaching staff's impact"));
         var injuries = new Button { Text = "Injuries & availability", MinimumHeightRequest = 44 };
         injuries.Clicked += (_, _) => ShowSection(AppSection.Injuries);
-        var talk = new Button { Text = "Team talk · morale", AutomationId = "season-coach-talk", MinimumHeightRequest = 44,
-            IsEnabled = !state.CoachTalks.Any(t => t.TeamName == state.UserTeamName && t.SeasonYear == state.SeasonYear && t.Week == state.Week) };
-        talk.Clicked += async (_, _) => await ShowSeasonCoachTalkAsync();
-        panel.Children.Add(new Microsoft.Maui.Controls.FlexLayout { Direction = Microsoft.Maui.Layouts.FlexDirection.Row,
-            Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { talk, injuries } });
+        var talk = new Button { AutomationId = "season-coach-talk", MinimumHeightRequest = 44 };
+        var talkStatus = new Label { FontSize = 12, TextColor = DynastyTheme.Muted, AutomationId = "season-coach-talk-status" };
+        var openingTalk = false;
+        void UpdateTalk()
+        {
+            var current = _currentDynasty ?? state;
+            var used = current.CoachTalks.Any(t => t.TeamName == current.UserTeamName && t.SeasonYear == current.SeasonYear && t.Week == current.Week);
+            talk.IsEnabled = !used && !openingTalk;
+            talk.Text = openingTalk ? "Opening team talk…" : used ? "Team talk · used this week" : "Team talk · morale";
+            talk.BackgroundColor = used || openingTalk ? DynastyTheme.Panel : DynastyTheme.Accent;
+            talk.TextColor = used || openingTalk ? DynastyTheme.Muted : DynastyTheme.Background;
+            talkStatus.Text = used ? "Available after the next weekly advance. Current talk effects fade over three weeks."
+                : "One team talk per week · reactions can be positive, neutral, or negative.";
+            SemanticProperties.SetDescription(talk, talk.Text + ". " + talkStatus.Text);
+        }
+        talk.Clicked += async (_, _) =>
+        {
+            if (openingTalk || !talk.IsEnabled) return;
+            openingTalk = true; UpdateTalk();
+            try { await ShowSeasonCoachTalkAsync(); }
+            finally { openingTalk = false; UpdateTalk(); }
+        };
+        UpdateTalk();
+        panel.Children.Add(new ActionRow { Children = { talk, injuries } });
+        panel.Children.Add(talkStatus);
         var latest = GetLatestUserDevelopmentRecords();
         panel.Children.Add(new Label { Text = latest.Count > 0
             ? $"Latest training · {FormatSigned(latest.Average(r => r.OverallChange))} OVR average"

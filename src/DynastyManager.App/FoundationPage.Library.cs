@@ -24,7 +24,7 @@ public sealed partial class FoundationPage
         {
             heading,
             new Label { Text = "Load a saved career or start a new one.", FontSize = 12, TextColor = DynastyTheme.Muted },
-            new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { StartingLibraryButton(), RosterImportButton() } },
+            new ActionRow { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { StartingLibraryButton(), RosterImportButton() } },
             _saveList, _libraryStatus
         } };
     }

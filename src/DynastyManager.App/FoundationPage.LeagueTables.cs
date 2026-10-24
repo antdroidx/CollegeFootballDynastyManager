@@ -31,7 +31,7 @@ public sealed partial class FoundationPage
             ResponsiveTableHeader(_scheduleBanner, new VerticalStackLayout { Spacing = 8, Children =
             {
                 SectionTitle("Season schedule", "Browse your schedule or every game and result by week."),
-                new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _scheduleScope, _scheduleWeek, _scheduleVenue } }
+                new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _scheduleScope, _scheduleWeek, _scheduleVenue } }
             } }), _scheduleList
         } };
     }
@@ -45,7 +45,7 @@ public sealed partial class FoundationPage
         [
             new VerticalStackLayout { Spacing = 10, Children = { ResponsiveTableHeader(
                 new VerticalStackLayout { Spacing = 6, Children = { SectionTitle("National rankings", "School colors · records · scoring · ranking score"), _nationalRankingStatus } },
-                new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _pollKind, _rankingsRange } }), _nationalRankingsList } },
+                new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _pollKind, _rankingsRange } }), _nationalRankingsList } },
             new VerticalStackLayout { Spacing = 10, IsVisible = false, Children =
             {
                 ResponsiveTableHeader(

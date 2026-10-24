@@ -35,7 +35,7 @@ public sealed partial class FoundationPage
                 list.Children.Add(new Border { StrokeThickness = 0, Padding = 8, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = new VerticalStackLayout { Spacing = 3, Children =
                 { new Label { Text = $"{team.Name} ({team.Abbreviation})", FontAttributes = FontAttributes.Bold },
                     new Label { Text = $"{team.ConferenceName}{(team.DivisionName is null ? "" : " · " + team.DivisionName)} · Prestige {team.Prestige}", FontSize = 11 },
-                    new HorizontalStackLayout { Children = { edit, remove } } } } });
+                    new ActionRow { Children = { edit, remove } } } } });
             }
         }
         async Task EditTeamAsync(Team? existing)

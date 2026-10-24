@@ -109,7 +109,7 @@ public sealed partial class FoundationPage
                 var defaultName = AvailableStartingRosters().FirstOrDefault(r => r.Id == defaultId)?.Name ?? "Legacy / generated";
                 rows.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = DynastyTheme.Palette("#1B2B37"), Content = new VerticalStackLayout { Spacing = 5, Children =
                 { new Label { Text = setup.Name, FontAttributes = FontAttributes.Bold }, new Label { Text = $"{setup.Teams.Count} teams · {setup.Rules.GamesPerTeam} games · {setup.Rules.PlayoffTeams}-team playoff · Roster: {defaultName}", FontSize = 11 },
-                    new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { edit, defaults, remove } } } } });
+                    new ActionRow { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { edit, defaults, remove } } } } });
             }
             rows.Children.Add(SectionTitle("Roster packs", "A pack replaces the listed teams' starting rosters. Teams missing from the pack use generated/default players. Packs can be reused across setups; schools outside the chosen setup are ignored."));
             if (_bundledStartingRoster is { } included) rows.Children.Add(new Border { Content = new VerticalStackLayout { Spacing = 5, Children =

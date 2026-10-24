@@ -51,7 +51,7 @@ public sealed partial class FoundationPage
             ResponsiveTableHeader(
                 new VerticalStackLayout { Spacing = 8, Children = { _rosterBanner, _offseasonRosterStatus } },
                 new VerticalStackLayout { Spacing = 8, Children = { filters,
-                    new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _rosterSort, _depthChartOrganizerButton, stats } } } }),
+                    new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _rosterSort, _depthChartOrganizerButton, stats } } } }),
             _depthChartOrganizer, BuildRosterWorkspace()
         } };
     }

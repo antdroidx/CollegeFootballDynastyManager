@@ -28,6 +28,19 @@ public static class MauiProgram
                 search.Loaded += (_, _) => search.TextColor = DynastyTheme.ReadableInk(search.TextColor, search);
         });
 #if ANDROID
+        ButtonHandler.Mapper.AppendToMapping("FlatButtons", (handler, _) =>
+        {
+            handler.PlatformView.StateListAnimator = null;
+            handler.PlatformView.Elevation = 0;
+            handler.PlatformView.TranslationZ = 0;
+        });
+        static void ApplyButtonAvailability(IButtonHandler handler, Microsoft.Maui.IButton view)
+        {
+            if (view is Microsoft.Maui.Controls.Button button)
+                handler.PlatformView.Alpha = (float)(button.IsEnabled ? button.Opacity : Math.Min(.45, button.Opacity));
+        }
+        ButtonHandler.Mapper.AppendToMapping(nameof(Microsoft.Maui.IView.IsEnabled), ApplyButtonAvailability);
+        ButtonHandler.Mapper.AppendToMapping(nameof(Microsoft.Maui.IView.Opacity), ApplyButtonAvailability);
         PickerHandler.Mapper.AppendToMapping("FlatPicker", (handler, _) =>
             handler.PlatformView.BackgroundTintList = ColorStateList.ValueOf(Android.Graphics.Color.Transparent));
         PickerHandler.Mapper.AppendToMapping("ThemedChoices", (handler, view) =>

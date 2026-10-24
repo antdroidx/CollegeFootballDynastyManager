@@ -149,7 +149,7 @@ public sealed partial class FoundationPage
     private View ProfileTabs(string? key, params (string Title, View Content)[] panels)
     {
         var body = new ContentView();
-        var tabs = new HorizontalStackLayout { Spacing = 4 };
+        var tabs = new HorizontalStackLayout { Spacing = 8 };
         var buttons = new List<Button>();
         void Select(int index)
         {
