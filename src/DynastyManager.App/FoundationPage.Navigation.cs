@@ -285,7 +285,7 @@ public sealed partial class FoundationPage
     {
         if (_currentDynasty is null) return;
         var controlled = game.InvolvesTeam(_currentDynasty.UserTeamName) ? _currentDynasty.UserTeamName :
-            await DisplayActionSheetAsync("Choose team to control", "Cancel", null, game.AwayTeamName, game.HomeTeamName);
+            await GameDialogs.ActionSheetAsync(this, "Choose team to control", "Cancel", null, game.AwayTeamName, game.HomeTeamName);
         if (string.IsNullOrWhiteSpace(controlled) || controlled == "Cancel") return;
         await OpenGameDayAsync(game, GameDayMode.Play, controlled);
     }

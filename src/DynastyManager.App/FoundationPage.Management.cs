@@ -157,7 +157,8 @@ public sealed partial class FoundationPage
             if (key is not null) _managementTabs[key] = index;
             for (var i=0;i<buttons.Count;i++)
             { buttons[i].BackgroundColor = i == index ? DynastyTheme.Panel : Colors.Transparent;
-              buttons[i].TextColor = i == index ? DynastyTheme.Text : DynastyTheme.Muted; }
+              buttons[i].TextColor = i == index ? DynastyTheme.Text : DynastyTheme.Muted;
+              SemanticProperties.SetDescription(buttons[i], panels[i].Title + (i == index ? ", selected tab" : ", tab")); }
         }
         for (var i=0;i<panels.Length;i++)
         {

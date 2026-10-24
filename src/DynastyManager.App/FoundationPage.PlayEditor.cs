@@ -44,7 +44,7 @@ public sealed partial class FoundationPage
             Name = string.IsNullOrWhiteSpace(name.Text) ? source.Name : name.Text.Trim(), Approach = (DefensiveApproach)approach.SelectedIndex,
             Assignments = assignments.ToArray() }); await Navigation.PopModalAsync(); };
         cancel.Clicked += async (_, _) => { completion.TrySetResult(null); await Navigation.PopModalAsync(); };
-        page.Disappearing += (_, _) => completion.TrySetResult(null);
+        page.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(page)) completion.TrySetResult(null); });
         page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 10, Children =
         { cancel, SectionTitle("Defensive Play Editor", "Copy the selected package and assign rush, man coverage or zone responsibility to each slot. Front alignment follows the selected package."), name, approach, save, rows } } };
         await Navigation.PushModalAsync(page); return await completion.Task;
@@ -111,7 +111,7 @@ public sealed partial class FoundationPage
             completion.TrySetResult(draft); await Navigation.PopModalAsync();
         };
         cancel.Clicked += async (_, _) => { completion.TrySetResult(null); await Navigation.PopModalAsync(); };
-        page.Disappearing += (_, _) => completion.TrySetResult(null);
+        page.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(page)) completion.TrySetResult(null); });
         formation.SelectedIndexChanged += (_, _) => { assignments.Clear(); BuildAssignments(); }; concept.SelectedIndexChanged += (_, _) => Draw();
         BuildAssignments();
         page.Content = new ScrollView { Content = new VerticalStackLayout { Padding = 14, Spacing = 10, Children =

@@ -22,7 +22,7 @@ public sealed partial class FoundationPage
         var save = new Button { Text = "Validate schedule & save setup" }; var cancel = new Button { Text = "Cancel" };
         var cancelled = false;
         cancel.Clicked += async (_, _) => { cancelled = true; await Navigation.PopModalAsync(); };
-        page.Disappearing += (_, _) => { if (!save.IsEnabled) cancelled = true; };
+        page.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!save.IsEnabled && !Navigation.ModalStack.Contains(page)) cancelled = true; });
         void Render()
         {
             summary.Text = $"{teams.Count} teams · {teams.Select(t => t.ConferenceName).Distinct(StringComparer.OrdinalIgnoreCase).Count()} conferences";

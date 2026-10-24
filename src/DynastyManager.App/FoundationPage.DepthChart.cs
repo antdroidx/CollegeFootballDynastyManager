@@ -42,7 +42,7 @@ public sealed partial class FoundationPage
             BackgroundColor = DynastyTheme.Palette("#315D59"), TextColor = Colors.White, Padding = new Thickness(16, 10) };
         auto.Clicked += async (_, _) =>
         {
-            var choice = await DisplayActionSheetAsync("Auto Set depth chart", "Cancel", null, "Whole team · roster, scheme & staff", $"Sort {label} depth only");
+            var choice = await GameDialogs.ActionSheetAsync(this, "Auto Set depth chart", "Cancel", null, "Whole team · roster, scheme & staff", $"Sort {label} depth only");
             if (_currentDynasty is null || choice is null || choice == "Cancel") return;
             _currentDynasty = DepthChartService.AutoSet(_currentDynasty, _currentDynasty.UserTeamName,
                 choice.StartsWith("Sort", StringComparison.Ordinal) ? code : null);

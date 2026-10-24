@@ -1147,7 +1147,7 @@ public sealed partial class FoundationPage : ContentPage
 
         if (_currentDynasty.UserCoachIsFired)
         {
-            await DisplayAlert(
+            await GameDialogs.AlertAsync(this,
                 "Head Coach Job Required",
                 "You were fired from your previous program. Open Program and accept a head-coaching offer before advancing.",
                 "OK");
@@ -1669,7 +1669,7 @@ public sealed partial class FoundationPage : ContentPage
         {
             _advanceOverlay.IsVisible = false;
             _libraryStatus.Text = error.Message;
-            await DisplayAlertAsync("Could not load dynasty", error.Message, "Close");
+            await GameDialogs.AlertAsync(this, "Could not load dynasty", error.Message, "Close");
         }
         finally
         {
@@ -3601,28 +3601,11 @@ public sealed partial class FoundationPage : ContentPage
         var careerPanel = Group(careerStart, staffStart);
         var staffPanel = Group(staffStart, historyStart);
         var historyPanel = Group(historyStart, developmentStart);
-        var developmentPanel = Group(developmentStart, titlesStart);
         foreach (var view in generated[titlesStart..]) historyPanel.Children.Add(view);
-        var injuries = new Button { Text = "Injuries & availability", HorizontalOptions = LayoutOptions.Start };
-        injuries.Clicked += (_, _) => ShowSection(AppSection.Injuries);
-        developmentPanel.Children.Insert(0, injuries);
-        if (team.Name == _currentDynasty.UserTeamName)
-        {
-            var talk = new Button { Text = "Team talk · morale", AutomationId = "season-coach-talk" };
-            talk.Clicked += async (_, _) => await ShowSeasonCoachTalkAsync();
-            developmentPanel.Children.Insert(1, talk);
-        }
-        developmentPanel.Children.Add(SectionTitle("Player development", "Change from season start · staff-led training · current morale"));
-        developmentPanel.Children.Add(DataTable([("Player", 155), ("Pos", 45), ("Year", 60), ("OVR", 50), ("Δ", 50), ("Morale", 60), ("Availability", 115)],
-            _currentDynasty.ActiveRoster.Where(p => p.TeamName == team.Name).OrderBy(p => p.Position).ThenByDescending(p => p.OverallRating).Select(player => new View[] {
-                PlayerLink(player), TableText(OffensiveLineService.Label(player)), TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)),
-                RatingCell(player.OverallRating), TableText(FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty, player))), MoraleIcon(player),
-                TableText(player.CurrentInjury is null ? "Available" : $"Injured · {player.CurrentInjury.WeeksRemaining}w")
-            })));
         historyPanel.Children.Insert(0, generated[0]);
         _programList.Children.Add(SchoolBanner(team.Name, team.ConferenceName + " · Program headquarters"));
         _programList.Children.Add(ProfileTabs("program", ("Your career", careerPanel), ("Staff & hiring", staffPanel),
-            ("History & titles", historyPanel), ("Development", developmentPanel)));
+            ("History & titles", historyPanel)));
     }
 
     private void RenderUserCoachCareer(Team team)
@@ -3776,7 +3759,7 @@ public sealed partial class FoundationPage : ContentPage
                 if (_currentDynasty is null)
                     return;
 
-                var accept = await DisplayAlert(
+                var accept = await GameDialogs.AlertAsync(this,
                     "Accept Head Coaching Job?",
                     $"Leave {_currentDynasty.UserTeamName} for {selectedOffer.TeamName}? " +
                     $"Prestige {selectedOffer.ProgramPrestige} • " +
@@ -3989,7 +3972,7 @@ public sealed partial class FoundationPage : ContentPage
 
         if (candidates.Count == 0)
         {
-            await DisplayAlert(
+            await GameDialogs.AlertAsync(this,
                 "Staff Market",
                 $"No available {FormatStaffRole(role)} candidates are currently interested.",
                 "OK");
@@ -4042,7 +4025,7 @@ public sealed partial class FoundationPage : ContentPage
                 $"{candidate.SourceTeamName}"
         };
 
-        var hire = await DisplayAlert(
+        var hire = await GameDialogs.AlertAsync(this,
             $"Hire {profile.FullName}?",
             $"{FormatStaffRole(role)} • OVR {StaffMarketService.GetProjectedOverall(candidate)} • Fit {fitScore}\n" +
             $"{candidate.StyleLabel} • {sourceText}\n" +
@@ -4483,7 +4466,7 @@ public sealed partial class FoundationPage : ContentPage
             if (_currentDynasty is null)
                 return;
 
-            var confirmed = await DisplayAlertAsync(
+            var confirmed = await GameDialogs.AlertAsync(this,
                 "Release player?",
                 $"Release {player.FullName}? A walk-on can fill the open roster spot when you advance.",
                 "Release",

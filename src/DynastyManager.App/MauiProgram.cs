@@ -30,6 +30,11 @@ public static class MauiProgram
 #if ANDROID
         PickerHandler.Mapper.AppendToMapping("FlatPicker", (handler, _) =>
             handler.PlatformView.BackgroundTintList = ColorStateList.ValueOf(Android.Graphics.Color.Transparent));
+        PickerHandler.Mapper.AppendToMapping("ThemedChoices", (handler, view) =>
+        {
+            if (view is Microsoft.Maui.Controls.Picker picker)
+                handler.PlatformView.SetOnClickListener(new ThemedPickerClick(picker));
+        });
         SearchBarHandler.Mapper.AppendToMapping("FlatSearch", (handler, _) =>
             handler.PlatformView.Background = null);
 #endif

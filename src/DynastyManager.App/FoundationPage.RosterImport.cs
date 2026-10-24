@@ -16,9 +16,9 @@ public sealed partial class FoundationPage
 
     private async Task OpenRosterImportAsync()
     {
-        if (_startingLibraryError is not null) { await DisplayAlertAsync("Starting library", _startingLibraryError, "Close"); return; }
+        if (_startingLibraryError is not null) { await GameDialogs.AlertAsync(this, "Starting library", _startingLibraryError, "Close"); return; }
         var setups = AvailableStartingSetups();
-        if (setups.Count == 0) { await DisplayAlertAsync("Starting rosters", "Add or restore a league setup in Starting rosters & league setups before importing.", "Close"); return; }
+        if (setups.Count == 0) { await GameDialogs.AlertAsync(this, "Starting rosters", "Add or restore a league setup in Starting rosters & league setups before importing.", "Close"); return; }
         if (_startingLibraryRepository is null) return;
         var selected = Math.Max(0, Array.FindIndex(setups.ToArray(), s => s.Id == SelectedStartingSetup?.Id));
         var league = new Picker { Title = "Default league setup", ItemsSource = setups.Select(s => s.Name).ToArray(), SelectedIndex = selected };

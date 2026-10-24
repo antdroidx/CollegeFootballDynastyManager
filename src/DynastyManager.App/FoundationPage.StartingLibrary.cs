@@ -72,7 +72,7 @@ public sealed partial class FoundationPage
 
     private async Task OpenStartingLibraryAsync()
     {
-        if (_startingLibraryError is not null) { await DisplayAlertAsync("Starting library", _startingLibraryError, "Close"); return; }
+        if (_startingLibraryError is not null) { await GameDialogs.AlertAsync(this, "Starting library", _startingLibraryError, "Close"); return; }
         if (_legacyTeams.Count == 0 || _startingLibraryRepository is null) return;
         var page = new ContentPage { Title = "Starting Library", BackgroundColor = DynastyTheme.Background };
         var rows = new VerticalStackLayout { Spacing = 12 }; var status = new Label { TextColor = DynastyTheme.Muted };
@@ -95,14 +95,14 @@ public sealed partial class FoundationPage
                 {
                     var compatible = AvailableStartingRosters().Where(r => StartingLibraryService.IsCompatible(r, setup.Teams)).ToArray();
                     var labels = new[] { "Legacy / generated roster" }.Concat(compatible.Select((r, i) => $"{i + 1}. {r.Name}")).ToArray();
-                    var choice = await DisplayActionSheetAsync(setup.Name, "Cancel", null, labels); var index = Array.IndexOf(labels, choice);
+                    var choice = await GameDialogs.ActionSheetAsync(this, setup.Name, "Cancel", null, labels); var index = Array.IndexOf(labels, choice);
                     if (index < 0) return;
                     try { var map = _startingLibrary.DefaultRosterBySetup.ToDictionary(); map[setup.Id] = index > 0 ? compatible[index - 1].Id : Guid.Empty;
                         await SaveStartingLibraryAsync(_startingLibrary with { DefaultRosterBySetup = map }); Render(); }
                     catch (Exception ex) { status.Text = ex.Message; }
                 };
                 var remove = new Button { Text = "Remove" };
-                remove.Clicked += async (_, _) => { if (!await DisplayAlertAsync("Remove league option?", $"Remove {setup.Name} from the starting library? Existing dynasties keep their setup.", "Remove", "Cancel")) return;
+                remove.Clicked += async (_, _) => { if (!await GameDialogs.AlertAsync(this, "Remove league option?", $"Remove {setup.Name} from the starting library? Existing dynasties keep their setup.", "Remove", "Cancel")) return;
                     try { await SaveStartingLibraryAsync(StartingLibraryService.RemoveSetup(_startingLibrary, setup)); Render(); } catch (Exception ex) { status.Text = ex.Message; } };
                 var defaultId = _startingLibrary.DefaultRosterBySetup.TryGetValue(setup.Id, out var rosterId)
                     ? rosterId : _bundledStartingRoster?.Id ?? Guid.Empty;
@@ -121,7 +121,7 @@ public sealed partial class FoundationPage
             foreach (var roster in _startingLibrary.Rosters)
             {
                 var remove = new Button { Text = "Remove roster pack" };
-                remove.Clicked += async (_, _) => { if (!await DisplayAlertAsync("Remove starting roster?", $"Remove {roster.Name}? Existing dynasties retain their players.", "Remove", "Cancel")) return;
+                remove.Clicked += async (_, _) => { if (!await GameDialogs.AlertAsync(this, "Remove starting roster?", $"Remove {roster.Name}? Existing dynasties retain their players.", "Remove", "Cancel")) return;
                     try { await SaveStartingLibraryAsync(StartingLibraryService.RemoveRoster(_startingLibrary, roster.Id)); Render(); } catch (Exception ex) { status.Text = ex.Message; } };
                 rows.Children.Add(new VerticalStackLayout { Children = { new Label { Text = $"{roster.Name} · {roster.Players.Count} players · {roster.Players.Select(p => p.TeamName).Distinct().Count()} teams" }, remove } });
             }

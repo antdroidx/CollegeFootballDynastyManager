@@ -1414,7 +1414,7 @@ public sealed partial class FoundationPage
                 if (!viewerClosed)
                 {
                     result.Text = "Final · save failed. Use Retry save before leaving.";
-                    await page.DisplayAlertAsync("Could not save game", "Your result is still in memory. Tap Retry save to try again.", "OK");
+                    await GameDialogs.AlertAsync(page, "Could not save game", "Your result is still in memory. Tap Retry save to try again.", "OK");
                 }
             }
             finally { animating = false; finalizing = false; UpdateOverlay(); }
@@ -1444,7 +1444,7 @@ public sealed partial class FoundationPage
             {
                 viewerClosed = false;
                 System.Diagnostics.Trace.WriteLine(error);
-                await page.DisplayAlertAsync("Could not close game", "The game view could not close. Please try again.", "OK");
+                await GameDialogs.AlertAsync(page, "Could not close game", "The game view could not close. Please try again.", "OK");
             }
             finally { closingViewer = false; UpdateOverlay(); }
         }
@@ -1475,7 +1475,7 @@ public sealed partial class FoundationPage
             var replayBusy = false;
             var replayClosed = false;
             var replayCompleted = false;
-            page.Disappearing += (_, _) => { replayClosed = true; if (autoReplay && !replayCompleted) _highlightShowCanceled = true; };
+            page.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(page)) { replayClosed = true; if (autoReplay && !replayCompleted) _highlightShowCanceled = true; } });
             var replayNext = new Button { Text = "Next highlight" };
             var replayAll = new Button { Text = "Play highlights" };
             var replayClose = new Button { Text = autoReplay ? "Stop highlight show" : "Close highlights" };
@@ -1647,7 +1647,7 @@ public sealed partial class FoundationPage
                         BackgroundColor = starter || unavailable ? DynastyTheme.Panel : DynastyTheme.Accent, TextColor = starter || unavailable ? DynastyTheme.Muted : DynastyTheme.Background };
                     sub.Clicked += async (_, _) =>
                     {
-                        var scope = await teamPage.DisplayActionSheetAsync($"Start {player.FullName} at {player.Position}", "Cancel", null, "This game only", "Also update season depth chart");
+                        var scope = await GameDialogs.ActionSheetAsync(teamPage, $"Start {player.FullName} at {player.Position}", "Cancel", null, "This game only", "Also update season depth chart");
                         if (scope is not ("This game only" or "Also update season depth chart")) return;
                         if (!GameDayCoachingService.Substitute(session, controlledTeamName, player.PlayerId)) return;
                         if (scope == "Also update season depth chart")
@@ -1663,7 +1663,7 @@ public sealed partial class FoundationPage
                         var stat = stats.GetValueOrDefault(player.PlayerId);
                         var summary = GameDayCoachingService.LiveReason(session, player);
                         if (player.Position == Position.QB && stat is not null) summary += $"\nPassing {stat.PassYards} yd · TD {stat.PassingTouchdowns} · INT {stat.InterceptionsThrown}";
-                        await teamPage.DisplayAlertAsync(player.FullName, summary, "Close");
+                        await GameDialogs.AlertAsync(teamPage, player.FullName, summary, "Close");
                     };
                     var text = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children = { name, info } };
                     text.GestureRecognizers.Add(detail);
@@ -1677,7 +1677,7 @@ public sealed partial class FoundationPage
             secondUnit.Clicked += async (_, _) =>
             {
                 var enabled = !session.SecondUnits.Contains(controlledTeamName);
-                if (enabled && !await teamPage.DisplayAlertAsync("Use second unit?", "Use eligible backups across offense and defense from the next snap, plus a backup kicker where available. Starters fill gaps where backups are unavailable. Season depth chart stays unchanged.", "Use second unit", "Cancel")) return;
+                if (enabled && !await GameDialogs.AlertAsync(teamPage, "Use second unit?", "Use eligible backups across offense and defense from the next snap, plus a backup kicker where available. Starters fill gaps where backups are unavailable. Season depth chart stays unchanged.", "Use second unit", "Cancel")) return;
                 GameDayCoachingService.UseSecondUnit(session, controlledTeamName, enabled); Draw();
             };
             expandRoster.Clicked += (_, _) => { showAll = !showAll; Draw(); };
@@ -1697,17 +1697,17 @@ public sealed partial class FoundationPage
             {
                 await currentSnapFinished;
                 if (team) { await ShowTeamAsync(); return; }
-                var selected = await page.DisplayActionSheetAsync("GameCast options", "Close", null,
+                var selected = await GameDialogs.ActionSheetAsync(page, "GameCast options", "Close", null,
                     "Camera", "Game speed", "Replay speed", "Automatic replays", "Player labels", "Box score", "Weather", "Team & substitutions");
                 if (selected == "Camera")
                 {
-                    var choice = await page.DisplayActionSheetAsync("Camera", "Cancel", null, "Full field", "Broadcast", "Follow ball");
+                    var choice = await GameDialogs.ActionSheetAsync(page, "Camera", "Cancel", null, "Full field", "Broadcast", "Follow ball");
                     var index = Array.IndexOf(new[] { "Full field", "Broadcast", "Follow ball" }, choice);
                     if (index >= 0) { cameraMode = index; Microsoft.Maui.Storage.Preferences.Default.Set("live-camera", index); camera.Text = "Camera: " + CameraName(); FrameCamera(); }
                 }
                 else if (selected is "Game speed" or "Replay speed")
                 {
-                    var choice = await page.DisplayActionSheetAsync(selected + " · presentation only", "Cancel", null, "0.5×", "1×", "1.5×", "2×");
+                    var choice = await GameDialogs.ActionSheetAsync(page, selected + " · presentation only", "Cancel", null, "0.5×", "1×", "1.5×", "2×");
                     var index = Array.IndexOf(new[] { "0.5×", "1×", "1.5×", "2×" }, choice);
                     if (index >= 0)
                     {
@@ -1719,7 +1719,7 @@ public sealed partial class FoundationPage
                 else if (selected == "Automatic replays") { instantReplays = !instantReplays; Microsoft.Maui.Storage.Preferences.Default.Set("live-instant-replays", instantReplays); }
                 else if (selected == "Player labels") { showCarrierNames = !showCarrierNames; Microsoft.Maui.Storage.Preferences.Default.Set("live-player-labels", showCarrierNames); }
                 else if (selected == "Box score") await ShowLiveBoxScoreAsync(GameDayEngine.BoxScore(session));
-                else if (selected == "Weather") await page.DisplayAlertAsync("Conditions", session.Weather.Summary, "OK");
+                else if (selected == "Weather") await GameDialogs.AlertAsync(page, "Conditions", session.Weather.Summary, "OK");
                 else if (selected == "Team & substitutions") await ShowTeamAsync();
             }
             finally
@@ -1752,7 +1752,7 @@ public sealed partial class FoundationPage
                 if (viewerClosed) return;
                 if (!session.IsComplete)
                 {
-                    var confirmed = await page.DisplayAlertAsync("Skip to end?", "Simulate the rest of this game and save the final result?", "Simulate remainder", "Keep playing");
+                    var confirmed = await GameDialogs.AlertAsync(page, "Skip to end?", "Simulate the rest of this game and save the final result?", "Simulate remainder", "Keep playing");
                     if (!confirmed) return;
                     result.Text = "Simulating remaining game…";
                     await Task.Run(() => GameDayEngine.SimulateToEnd(session));
@@ -1762,7 +1762,7 @@ public sealed partial class FoundationPage
             catch (Exception error)
             {
                 System.Diagnostics.Trace.WriteLine(error);
-                if (!viewerClosed) await page.DisplayAlertAsync("Could not skip game", "The game is still open. Please try again.", "OK");
+                if (!viewerClosed) await GameDialogs.AlertAsync(page, "Could not skip game", "The game is still open. Please try again.", "OK");
             }
             finally
             {
@@ -1817,7 +1817,7 @@ public sealed partial class FoundationPage
         }
         var cancel = new Button { Text = "Cancel" };
         cancel.Clicked += async (_, _) => { completion.TrySetResult(null); await Navigation.PopModalAsync(); };
-        modal.Disappearing += (_, _) => completion.TrySetResult(null);
+        modal.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(modal)) completion.TrySetResult(null); });
         var header = new Grid { Padding = 12,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(new Label { Text = "Call offensive play", FontSize = 20, FontAttributes = FontAttributes.Bold,
@@ -1870,7 +1870,7 @@ public sealed partial class FoundationPage
         }
         var cancel = new Button { Text = "Cancel" };
         cancel.Clicked += async (_, _) => { completion.TrySetResult(null); await Navigation.PopModalAsync(); };
-        modal.Disappearing += (_, _) => completion.TrySetResult(null);
+        modal.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(modal)) completion.TrySetResult(null); });
         var header = new Grid { Padding = 12,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(new Label { Text = "Call defensive play", FontSize = 20, FontAttributes = FontAttributes.Bold,

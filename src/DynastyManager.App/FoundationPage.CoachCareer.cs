@@ -48,7 +48,7 @@ public sealed partial class FoundationPage
             text.AppendLine();
         }
         text.Append("Records cover saved dynasty seasons. Staff-season team results are separate from head-coaching totals. Older CPU coaching history is unavailable before tracking began.");
-        await presenter.DisplayAlertAsync(summary.CoachName, text.ToString(), "Close");
+        await GameDialogs.AlertAsync(presenter, summary.CoachName, text.ToString(), "Close");
     }
 
     private View CreateCoachArchiveShortcut()

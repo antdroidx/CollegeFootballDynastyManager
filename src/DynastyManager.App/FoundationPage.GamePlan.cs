@@ -196,7 +196,15 @@ public sealed partial class FoundationPage
         settingsHost.Children.Add(status);
         var last = _currentDynasty.Schedule.Where(game => game.HasPlayed && game.InvolvesTeam(teamName))
             .OrderByDescending(game => game.SeasonYear).ThenByDescending(game => game.Week).FirstOrDefault();
-        if (last is null) return;
+        void FinishCoachTabs()
+        {
+            var planPanel = new VerticalStackLayout { Spacing = 12 };
+            var controls = _gamePlanHost.Children.OfType<View>().ToArray();
+            _gamePlanHost.Children.Clear();
+            foreach (var view in controls) planPanel.Children.Add(view);
+            _gamePlanHost.Children.Add(ProfileTabs("coach", ("Game plan", planPanel), ("Development", BuildCoachDevelopmentPanel())));
+        }
+        if (last is null) { FinishCoachTabs(); return; }
         var driveRows = new VerticalStackLayout { Spacing = 10 };
         var ownPlan = last.HomeTeamName == teamName ? last.HomeGamePlan : last.AwayGamePlan;
         driveRows.Children.Add(new Label { Text = $"{last.SeasonYear} Week {last.Week} / {last.AwayTeamName} {last.AwayScore} - {last.HomeScore} {last.HomeTeamName}", FontAttributes = FontAttributes.Bold });
@@ -207,6 +215,7 @@ public sealed partial class FoundationPage
             driveRows.Children.Add(new Label { Text = drive.IsOvertime ? $"OT / {drive.Outcome} / +{drive.Points} points"
                 : $"Drive {drive.PossessionNumber} / {PlaybookCatalog.OffensivePlays.FirstOrDefault(play => play.Id == drive.OffensivePlayId)?.Name ?? GamePlanService.Label(drive.Concept)} / {drive.Outcome}\n{drive.PassAttempts} passes, {drive.RushAttempts} runs / {drive.PassYards + drive.RushYards} yards / +{drive.Points} points" });
         _gamePlanHost.Children.Add(CoachingCard("LAST GAME / DRIVE REPORT", driveRows));
+        FinishCoachTabs();
     }
 
     private static View PlayLibraryRow(string id, string name, string details, string description,

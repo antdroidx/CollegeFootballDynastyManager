@@ -182,6 +182,7 @@ def main():
     def options_choice(item, name):
         tap(capture(name + "-ready"), "Options")
         menu = wait_for(name + "-options", lambda r: "GameCast options" in texts(r))
+        assert any((n.get("resource-id") or "").endswith("game-dialog-surface") for n in menu.iter("node")), "Live menu must use themed dialog surface"
         tap(menu, item)
         return capture(name)
 
@@ -416,8 +417,11 @@ def check_remaining_management():
     program=wait_for("management-staff-cancel",lambda r:"History & titles" in texts(r))
     tap(program,"History & titles")
     wait_for("management-program-history",lambda r:any(t and "National titles:" in t for t in texts(r)))
-    tap(capture("management-before-development"),"Development")
-    wait_for("management-program-development",lambda r:"Availability" in texts(r) and "Morale" in texts(r))
+    assert "Development" not in texts(capture("program-without-development")), "Development must move out of Program & staff"
+    tap(capture("management-before-coach"), "Coach")
+    coach_hub = wait_for("coach-hub", lambda r: "Game plan" in texts(r) and "Development" in texts(r))
+    tap(coach_hub, "Development")
+    wait_for("management-coach-development",lambda r:"Availability" in texts(r) and "Morale" in texts(r))
     tap(capture("management-before-news"),"News")
     news=wait_for("management-news-cards",lambda r:"Read story ›" in texts(r))
     tap(news,"Read story ›")
@@ -429,6 +433,7 @@ def check_remaining_management():
     schedule=wait_for("management-schedule",lambda r:"Season schedule" in texts(r))
     tap(schedule,"Your team")
     options=wait_for("management-schedule-scope",lambda r:"All teams" in texts(r))
+    assert any((n.get("resource-id") or "").endswith("game-dialog-surface") for n in options.iter("node")), "Picker must use themed choices"
     tap(options,"All teams")
     schedule=wait_for("management-all-team-schedule",lambda r:"All teams" in texts(r) and "All weeks" not in texts(r))
     tap(schedule,"Standings & polls")

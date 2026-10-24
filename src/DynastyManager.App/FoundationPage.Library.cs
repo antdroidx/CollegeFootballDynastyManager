@@ -72,7 +72,7 @@ public sealed partial class FoundationPage
             }
             ShowSection(AppSection.Home);
         }
-        catch (Exception ex) { await DisplayAlertAsync("Could not save dynasty", ex.Message, "Close"); }
+        catch (Exception ex) { await GameDialogs.AlertAsync(this, "Could not save dynasty", ex.Message, "Close"); }
         finally { _advanceOverlay.IsVisible = false; }
     }
 
@@ -98,10 +98,10 @@ public sealed partial class FoundationPage
     {
         var ordered = saves.OrderByDescending(save => save.UpdatedUtc).ToArray();
         var labels = ordered.Select((save, index) => $"{index + 1}. {save.SeasonYear} / {FormatWeek(save)} / {RollingAutosavePolicy.GetDisplayName(save.Kind)} / {save.UpdatedUtc.ToLocalTime():g}").ToArray();
-        var selected = await DisplayActionSheetAsync("Saved versions", "Cancel", null, labels);
+        var selected = await GameDialogs.ActionSheetAsync(this, "Saved versions", "Cancel", null, labels);
         var index = Array.IndexOf(labels, selected);
         if (index < 0) return;
-        var action = await DisplayActionSheetAsync(labels[index], "Cancel", null, "Load save", "Delete save");
+        var action = await GameDialogs.ActionSheetAsync(this, labels[index], "Cancel", null, "Load save", "Delete save");
         if (action == "Load save") await LoadSaveAsync(ordered[index].SaveId);
         else if (action == "Delete save") await DeleteSaveAsync(ordered[index].SaveId);
     }
