@@ -149,7 +149,7 @@ public sealed partial class FoundationPage
     private View ProfileTabs(string? key, params (string Title, View Content)[] panels)
     {
         var body = new ContentView();
-        var tabs = new HorizontalStackLayout { Spacing = 4 };
+        var tabs = new HorizontalStackLayout { Spacing = 8 };
         var buttons = new List<Button>();
         void Select(int index)
         {
@@ -157,7 +157,8 @@ public sealed partial class FoundationPage
             if (key is not null) _managementTabs[key] = index;
             for (var i=0;i<buttons.Count;i++)
             { buttons[i].BackgroundColor = i == index ? DynastyTheme.Panel : Colors.Transparent;
-              buttons[i].TextColor = i == index ? DynastyTheme.Text : DynastyTheme.Muted; }
+              buttons[i].TextColor = i == index ? DynastyTheme.Text : DynastyTheme.Muted;
+              SemanticProperties.SetDescription(buttons[i], panels[i].Title + (i == index ? ", selected tab" : ", tab")); }
         }
         for (var i=0;i<panels.Length;i++)
         {
@@ -218,11 +219,11 @@ public sealed partial class FoundationPage
             SemanticProperties.SetDescription(name, "View recruit " + prospect.FullName);
             name.Clicked += (_,_) => { _selectedRecruitSource=prospect.Source; _selectedRecruitId=prospect.ProspectId; RenderSelectedRecruitDetail(); };
             var quick = new Button { Text = item.Interaction.IsPriorityScout ? "Scouting" : "Scout weekly", FontSize = 10,
-                IsEnabled = item.Interaction.CommittedTeamName is null && item.Interaction.ScoutingPercent < 100, Padding = new Thickness(5,2) };
+                IsEnabled = UserCoachControlService.ControlsPosition(_currentDynasty!, prospect.Position) && item.Interaction.CommittedTeamName is null && item.Interaction.ScoutingPercent < 100, Padding = new Thickness(5,2) };
             quick.Clicked += (_,_) => { if (_currentDynasty is null) return;
                 _currentDynasty=ScoutingDepartmentService.TogglePriority(_currentDynasty,prospect.Source,prospect.ProspectId); RenderRecruitingScreen(); };
             var board = new Button { Text=item.Interaction.IsOnTargetBoard ? "On board" : "Add", FontSize=10, Padding=new Thickness(5,2),
-                IsEnabled=!item.Interaction.IsOnTargetBoard && item.Interaction.CommittedTeamName is null };
+                IsEnabled=UserCoachControlService.ControlsPosition(_currentDynasty!, prospect.Position) && !item.Interaction.IsOnTargetBoard && item.Interaction.CommittedTeamName is null };
             board.Clicked+=(_,_)=>{ if(_currentDynasty is null)return;
                 _currentDynasty=InteractiveRecruitingService.ToggleTargetBoard(_currentDynasty,prospect.Source,prospect.ProspectId);RenderRecruitingScreen(); };
             var actions=new HorizontalStackLayout { Spacing=3,Children={quick,board} };

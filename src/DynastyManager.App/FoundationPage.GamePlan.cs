@@ -34,8 +34,8 @@ public sealed partial class FoundationPage
         program.Clicked += (_, _) => ShowSection(AppSection.Program);
         var depthChart = new Button { Text = "Manage depth chart", BackgroundColor = DynastyTheme.Palette("#315D59") };
         depthChart.Clicked += (_, _) => { _showDepthChartOrganizer = true; ShowSection(AppSection.Roster); };
-        _gamePlanHost.Children.Add(new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { program, depthChart } });
-        var careerTools = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
+        _gamePlanHost.Children.Add(new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { program, depthChart } });
+        var careerTools = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
         if (_currentDynasty.UserHeadCoach is not null)
         {
             var career = CreateCoachCareerButton(_currentDynasty.UserHeadCoach);
@@ -137,11 +137,15 @@ public sealed partial class FoundationPage
         var approachValues = Enum.GetValues<DefensiveApproach>();
         var offensiveFormationValues = Enum.GetValues<OffensiveFormation>();
         var defensiveFormationValues = Enum.GetValues<DefensiveFormation>();
-        var offense = new Picker { Title = "Offensive playbook", ItemsSource = offenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offenseValues, plan.Offense) };
-        var defense = new Picker { Title = "Defensive playbook", ItemsSource = defenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defenseValues, plan.Defense) };
+        var offense = new Picker { AutomationId = "offensive-playbook", Title = "Offensive playbook", ItemsSource = offenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offenseValues, plan.Offense) };
+        var defense = new Picker { AutomationId = "defensive-playbook", Title = "Defensive playbook", ItemsSource = defenseValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defenseValues, plan.Defense) };
         var approach = new Picker { Title = "Defensive approach", ItemsSource = approachValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(approachValues, plan.Approach) };
         var offensiveFormation = new Picker { Title = "Primary offensive formation", ItemsSource = offensiveFormationValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(offensiveFormationValues, plan.OffensiveFormation) };
         var defensiveFormation = new Picker { Title = "Primary defensive formation", ItemsSource = defensiveFormationValues.Select(GamePlanService.Label).ToList(), SelectedIndex = Array.IndexOf(defensiveFormationValues, plan.DefensiveFormation) };
+        tempo.IsEnabled = offense.IsEnabled = offensiveFormation.IsEnabled = UserCoachControlService.ControlsOffense(_currentDynasty);
+        defense.IsEnabled = approach.IsEnabled = defensiveFormation.IsEnabled = UserCoachControlService.ControlsDefense(_currentDynasty);
+        if (_currentDynasty.UserCoachRole != StaffRole.HeadCoach)
+            settingsHost.Children.Add(new Label { Text = UserCoachControlService.Label(_currentDynasty.UserCoachRole) + " · The staff manages the other side.", TextColor = DynastyTheme.Muted });
         var description = new Label { Text = GamePlanService.Describe(plan.Offense), TextColor = DynastyTheme.Muted };
         offense.SelectedIndexChanged += (_, _) =>
         {
@@ -196,7 +200,15 @@ public sealed partial class FoundationPage
         settingsHost.Children.Add(status);
         var last = _currentDynasty.Schedule.Where(game => game.HasPlayed && game.InvolvesTeam(teamName))
             .OrderByDescending(game => game.SeasonYear).ThenByDescending(game => game.Week).FirstOrDefault();
-        if (last is null) return;
+        void FinishCoachTabs()
+        {
+            var planPanel = new VerticalStackLayout { Spacing = 12 };
+            var controls = _gamePlanHost.Children.OfType<View>().ToArray();
+            _gamePlanHost.Children.Clear();
+            foreach (var view in controls) planPanel.Children.Add(view);
+            _gamePlanHost.Children.Add(ProfileTabs("coach", ("Game plan", planPanel), ("Development", BuildCoachDevelopmentPanel())));
+        }
+        if (last is null) { FinishCoachTabs(); return; }
         var driveRows = new VerticalStackLayout { Spacing = 10 };
         var ownPlan = last.HomeTeamName == teamName ? last.HomeGamePlan : last.AwayGamePlan;
         driveRows.Children.Add(new Label { Text = $"{last.SeasonYear} Week {last.Week} / {last.AwayTeamName} {last.AwayScore} - {last.HomeScore} {last.HomeTeamName}", FontAttributes = FontAttributes.Bold });
@@ -207,6 +219,7 @@ public sealed partial class FoundationPage
             driveRows.Children.Add(new Label { Text = drive.IsOvertime ? $"OT / {drive.Outcome} / +{drive.Points} points"
                 : $"Drive {drive.PossessionNumber} / {PlaybookCatalog.OffensivePlays.FirstOrDefault(play => play.Id == drive.OffensivePlayId)?.Name ?? GamePlanService.Label(drive.Concept)} / {drive.Outcome}\n{drive.PassAttempts} passes, {drive.RushAttempts} runs / {drive.PassYards + drive.RushYards} yards / +{drive.Points} points" });
         _gamePlanHost.Children.Add(CoachingCard("LAST GAME / DRIVE REPORT", driveRows));
+        FinishCoachTabs();
     }
 
     private static View PlayLibraryRow(string id, string name, string details, string description,

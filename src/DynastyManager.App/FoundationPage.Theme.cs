@@ -77,7 +77,7 @@ public sealed partial class FoundationPage
             next._recruitingStarFilter.SelectedIndex=_recruitingStarFilter.SelectedIndex;
             next._recruitingScoutedFilter.SelectedIndex=_recruitingScoutedFilter.SelectedIndex;
             next.SetDynastyControlsEnabled(_currentDynasty is not null);
-            next.RenderCurrentDynasty();
+            // ShowSection renders the requested view; keep the live-state transfer synchronous.
             next.ShowSection(section);
             next._sectionTrail.Clear();
             foreach (var previousSection in _sectionTrail.Reverse()) next._sectionTrail.Push(previousSection);
@@ -95,8 +95,7 @@ public sealed partial class FoundationPage
             if (picker.SelectedIndex < 0 || picker.SelectedItem?.ToString() == DynastyTheme.Preference) return;
             var hostWindow = Window;
             if (hostWindow is null) return;
-            // Let Android dismiss its native picker before replacing its owning page.
-            await Task.Delay(150);
+            // The themed choice surface is already closed before this selection event.
             try
             {
             Preferences.Default.Set("app-theme", picker.SelectedItem?.ToString() ?? "System");
@@ -109,7 +108,7 @@ public sealed partial class FoundationPage
             {
                 System.Diagnostics.Trace.WriteLine(ex);
                 Console.WriteLine("Appearance change failed: " + ex);
-                await hostWindow.Page.DisplayAlertAsync("Appearance change failed", ex.Message, "Close");
+                if (hostWindow.Page is { } presenter) await GameDialogs.AlertAsync(presenter, "Appearance change failed", ex.Message, "Close");
             }
         };
         return new VerticalStackLayout { Spacing = 4, Children = { new Label { Text = "Appearance" }, picker } };

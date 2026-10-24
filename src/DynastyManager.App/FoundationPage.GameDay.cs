@@ -32,10 +32,16 @@ public sealed partial class FoundationPage
         if (replay is not null) { home = home with { GamePlan = game.HomeGamePlan ?? home.GamePlan }; away = away with { GamePlan = game.AwayGamePlan ?? away.GamePlan }; }
         var session = GameDayEngine.Start(game, home, away, roster, mode, replay is null ? _currentDynasty.DepthChartAssignments : null);
         session.ControlledTeamName = controlledTeamName;
+        var controlsOffense = UserCoachControlService.ControlsOffense(_currentDynasty);
+        var controlsDefense = UserCoachControlService.ControlsDefense(_currentDynasty);
+        session.UserCoachRole = _currentDynasty.UserCoachRole;
         var gameRanks = BuildCurrentNationalRankings();
         var animating = false;
         var boxScoreOpen = false;
         var driving = false;
+        var watchPaused = false;
+        var takingOver = false;
+        var gameSpeed = Math.Clamp(Microsoft.Maui.Storage.Preferences.Default.Get("live-game-speed", 1d), .5, 2);
         bool? compactLayout = null;
         var completion = new GameDayCompletionService();
         var skipPending = false;
@@ -56,26 +62,27 @@ public sealed partial class FoundationPage
         }
 
         var page = new GameDayViewerPage { BackgroundColor = DynastyTheme.Background };
-        var score = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var quarterClock = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var downValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var toGoValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var ballValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        Border SituationCell(string heading, Label value) => new() { StrokeThickness = 0, Padding = 7,
-            BackgroundColor = DynastyTheme.Palette("#172733"), Content = new VerticalStackLayout { Spacing = 1, Children =
-            { new Label { Text = heading, FontSize = 9, TextColor = DynastyTheme.Muted, HorizontalTextAlignment = TextAlignment.Center }, value } } };
-        var situation = new Grid { ColumnSpacing = 7,
-            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
-        situation.Add(SituationCell("QUARTER / CLOCK", quarterClock), 0, 0);
-        situation.Add(SituationCell("DOWN", downValue), 1, 0);
-        situation.Add(SituationCell("YARDS TO GO", toGoValue), 2, 0);
-        situation.Add(SituationCell("BALL ON", ballValue), 3, 0);
+        var score = new Label { FontSize = 17, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, AutomationId = "game-day-score" };
+        var quarterClock = new Label { FontSize = 14, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var downValue = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var toGoValue = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var ballValue = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var situation = new Grid { ColumnSpacing = 12, Padding = new Thickness(10, 6), AutomationId = "game-day-situation",
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
+        situation.Add(quarterClock, 0, 0); situation.Add(downValue, 1, 0); situation.Add(ballValue, 2, 0);
+        quarterClock.FontSize = downValue.FontSize = ballValue.FontSize = 13;
+        var awayScoreLabel = new Label { FontSize = 25, FontAttributes = FontAttributes.Bold, VerticalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Text };
+        var homeScoreLabel = new Label { FontSize = 25, FontAttributes = FontAttributes.Bold, VerticalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Text };
+        var awayTimeouts = new Label { FontSize = 11, TextColor = DynastyTheme.Muted };
+        var homeTimeouts = new Label { FontSize = 11, TextColor = DynastyTheme.Muted };
+        var awayName = new Label { FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text };
+        var homeName = new Label { FontSize = 13, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text };
         var possession = new Label { FontSize = 11, HorizontalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Palette("#E8C979") };
         var result = new Label { HorizontalTextAlignment = TextAlignment.Center, FontSize = 14,
-            FontAttributes = FontAttributes.Bold, TextColor = Colors.White, MaxLines = 3 };
+            FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text, MaxLines = 3 };
         var commentaryPanel = new Border { StrokeThickness = 0, Padding = new Thickness(10, 6),
             BackgroundColor = DynastyTheme.Palette("#203645"), Content = result };
-        var conditionsHud = new Label { FontSize = 9, MaxLines = 2, TextColor = DynastyTheme.Palette("#B8D8FA"),
+        var conditionsHud = new Label { FontSize = 9, MaxLines = 2, IsVisible = false, TextColor = DynastyTheme.Palette("#B8D8FA"),
             HorizontalTextAlignment = TextAlignment.Center };
         var timeoutsHud = new Label { FontSize = 10, TextColor = DynastyTheme.Palette("#E8C979"),
             HorizontalTextAlignment = TextAlignment.Center, AutomationId = "game-day-timeouts" };
@@ -85,12 +92,29 @@ public sealed partial class FoundationPage
             HomeColor = Color.FromArgb(homeBrand.Primary),
             HomeSecondaryColor = Color.FromArgb(homeBrand.Secondary),
             HomeName = game.HomeTeamName.ToUpperInvariant(),
-            HomeInitial = TeamBrandCatalog.Initial(game.HomeTeamName),
+            HomeInitial = TeamBrandCatalog.Monogram(game.HomeTeamName),
             Weather = session.Weather
         };
         var field = new Grid { AutomationId = "game-day-field", HeightRequest = 330, BackgroundColor = DynastyTheme.Palette("#245B38") };
+        var fieldFrame = new Border { Padding = 5, StrokeThickness = 1, Stroke = DynastyTheme.Muted,
+            BackgroundColor = DynastyTheme.Surface, StrokeShape = new RoundRectangle { CornerRadius = 8 }, Content = field,
+            AutomationId = "game-day-field-frame" };
         var fieldLines = new GraphicsView { Drawable = fieldArt };
         var fieldPlayers = new AbsoluteLayout();
+        field.IsClippedToBounds = true;
+        var cameraMode = Math.Clamp(Microsoft.Maui.Storage.Preferences.Default.Get("live-camera", 0), 0, 2);
+        void FrameCamera(double x = .5, double y = .5)
+        {
+            if (field.Width <= 0 || field.Height <= 0) return;
+            var zoom = cameraMode == 0 ? 1 : cameraMode == 1 ? 1.15 : 1.35;
+            foreach (var layer in new View[] { fieldLines, fieldPlayers })
+            {
+                layer.Scale = zoom;
+                layer.TranslationX = Math.Clamp((.5 - x) * field.Width * zoom, -field.Width * (zoom - 1) / 2, field.Width * (zoom - 1) / 2);
+                layer.TranslationY = Math.Clamp((.5 - y) * field.Height * zoom, -field.Height * (zoom - 1) / 2, field.Height * (zoom - 1) / 2);
+            }
+        }
+        field.SizeChanged += (_, _) => FrameCamera();
         var highlightText = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold,
             TextColor = Colors.White, HorizontalTextAlignment = TextAlignment.Center };
         var highlight = new Border { IsVisible = false, StrokeThickness = 2, Stroke = Colors.White,
@@ -195,6 +219,15 @@ public sealed partial class FoundationPage
         onside.Clicked += (_, _) => { session.OnsideKickRequested = !session.OnsideKickRequested; onside.Text = session.OnsideKickRequested ? "Next kickoff: Onside" : "Next kickoff: Deep"; };
         var timeout = new Button { Text = "Timeout" };
         var replayLast = new Button { Text = "Replay last", IsVisible = false };
+        var replaySpeed = Math.Clamp(Microsoft.Maui.Storage.Preferences.Default.Get("live-replay-speed", 1d), .5, 2);
+        var skipReplayRequested = false;
+        var replaySpeedButton = new Button { Text = "Replay speed: 1x" };
+        replaySpeedButton.Clicked += (_, _) => { replaySpeed = replaySpeed == 1 ? .5 : 1; replaySpeedButton.Text = $"Replay speed: {replaySpeed:0.0}x"; };
+        var skipReplay = new Button { Text = "Skip replay", IsVisible = false, AutomationId = "game-day-skip-replay" };
+        skipReplay.Clicked += (_, _) => { skipReplayRequested = true; fieldPlayers.AbortAnimation("snap-movement"); };
+        string CameraName() => cameraMode == 0 ? "Full field" : cameraMode == 1 ? "Broadcast" : "Follow ball";
+        var camera = new Button { Text = "Camera: " + CameraName(), AutomationId = "game-day-camera" };
+        camera.Clicked += (_, _) => { cameraMode = (cameraMode + 1) % 3; Microsoft.Maui.Storage.Preferences.Default.Set("live-camera", cameraMode); camera.Text = "Camera: " + CameraName(); FrameCamera(); };
         var replayToggle = new Button { Text = instantReplays ? "Auto replay: On" : "Auto replay: Off" };
         var carrierToggle = new Button { Text = showCarrierNames ? "Player names: On" : "Player names: Off" };
         replayToggle.Clicked += (_, _) => { instantReplays = !instantReplays;
@@ -224,24 +257,56 @@ public sealed partial class FoundationPage
         }
         numbers.Clicked += (_, _) => { showNumbers = !showNumbers; Microsoft.Maui.Storage.Preferences.Default.Set("live-jersey-numbers", showNumbers); UpdateMarkerLabels(); };
         var boxScore = new Button { Text = "Box score", AutomationId = "live-box-score", FontSize = 13, FontAttributes = FontAttributes.Bold, BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background, MinimumHeightRequest = 42, Padding = new Thickness(14, 8), VerticalOptions = LayoutOptions.Center };
-        var scoreHeader = new Grid { ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-        scoreHeader.Add(new VerticalStackLayout { Spacing = 1, Children = { score, timeoutsHud, conditionsHud } }, 0, 0); scoreHeader.Add(boxScore, 1, 0);
+        var gameInfo = new Button { Text = "Weather", FontSize = 11, MinimumHeightRequest = 40,
+            BackgroundColor = DynastyTheme.Palette("#172733"), AutomationId = "game-day-conditions-toggle" };
+        gameInfo.Clicked += (_, _) =>
+        {
+            conditionsHud.IsVisible = !conditionsHud.IsVisible;
+            gameInfo.Text = conditionsHud.IsVisible ? "Hide info" : "Weather";
+        };
+        Border TeamBadge(string team)
+        {
+            var brand = TeamBrandCatalog.Get(team);
+            var primary = Color.FromArgb(brand.Primary);
+            var ink = primary.Red * .2126 + primary.Green * .7152 + primary.Blue * .0722 > .5 ? Colors.Black : Colors.White;
+            var badge = new Border { WidthRequest = 30, HeightRequest = 30, Padding = 2,
+                Stroke = Color.FromArgb(brand.Secondary), StrokeThickness = 2, BackgroundColor = primary,
+                Content = new Label { Text = TeamBrandCatalog.Monogram(team), TextColor = ink,
+                    FontSize = TeamBrandCatalog.Monogram(team).Length >= 4 ? 8 : 10, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center } };
+            SemanticProperties.SetDescription(badge, team + " team badge");
+            return badge;
+        }
+        Grid TeamScore(string team, Label name, Label value, Label timeouts)
+        {
+            var grid = new Grid { Padding = new Thickness(9, 7), ColumnSpacing = 7,
+                ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
+            grid.Add(TeamBadge(team), 0, 0);
+            grid.Add(new VerticalStackLayout { Spacing = 1, Children = { name, timeouts } }, 1, 0);
+            grid.Add(value, 2, 0); return grid;
+        }
+        var scoreHeader = new Grid { BackgroundColor = DynastyTheme.Surface, ColumnSpacing = 1,
+            ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star) }, AutomationId = "game-day-score" };
+        scoreHeader.Add(TeamScore(game.AwayTeamName, awayName, awayScoreLabel, awayTimeouts), 0, 0);
+        scoreHeader.Add(TeamScore(game.HomeTeamName, homeName, homeScoreLabel, homeTimeouts), 1, 0);
+        var options = new Button { Text = "Options", AutomationId = "game-day-options" };
+        var teamControl = new Button { Text = "Team", AutomationId = "game-day-team" };
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
-        var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
-        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, timeout, replayLast, numbers, spriteMode, replayToggle, carrierToggle, skip, close })
+        var controls = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
+        foreach (var button in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, onside, delegateOffense, delegateDefense, watch, takeover, options, teamControl, gameInfo, boxScore, timeout, replayLast, camera, replaySpeedButton, skipReplay, numbers, spriteMode, replayToggle, carrierToggle, skip, close })
         { button.Margin = new Thickness(0, 0, 8, 8); controls.Children.Add(button); }
-        var coachCallsOffense = false;
-        var coachCallsDefense = false;
+        var coachCallsOffense = !controlsOffense;
+        var coachCallsDefense = !controlsDefense;
         var quickCalls = new Grid { ColumnSpacing = 6,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
         var expand = new Button { Text = "Choose play" };
         controls.Children.Insert(1, expand);
         var more = new Button { Text = "More", AutomationId = "game-day-more" };
         controls.Children.Add(more);
-        var tray = new VerticalStackLayout { Spacing = 4, Children = { quickCalls, controls } };
+        var tray = new VerticalStackLayout { Spacing = 8, Children = { quickCalls, controls } };
+        var trayScroll = new ScrollView { Content = tray, MaximumHeightRequest = 260 };
         var traySurface = new Border { AutomationId = "game-day-controls", StrokeThickness = 0, Padding = 7,
-            BackgroundColor = DynastyTheme.Surface, Content = tray,
+            BackgroundColor = DynastyTheme.Surface, Content = trayScroll,
             VerticalOptions = LayoutOptions.End, Margin = new Thickness(8) };
         var pickerLayer = new Grid { IsVisible = false, BackgroundColor = DynastyTheme.Palette("#88000000"), Padding = 10 };
         expand.Clicked += (_, _) => ExpandCalls(!ControlledOnOffense());
@@ -271,17 +336,22 @@ public sealed partial class FoundationPage
             twoPoint.IsVisible = deciding && ControlledOnOffense() && session.TryPending;
             call.IsVisible = deciding && ControlledOnOffense();
             callDefense.IsVisible = deciding && !ControlledOnOffense();
-            replayLast.IsVisible = replay is null && lastPlayedSnap is not null && !animating && session.Mode != GameDayMode.Watch;
+            replayLast.IsVisible = replay is null && lastPlayedSnap is not null && !animating;
             more.IsVisible = !animating && !session.IsComplete && replay is null;
+            options.IsVisible = replay is null; teamControl.IsVisible = replay is null;
+            takeover.IsEnabled = !takingOver && !session.IsComplete;
+            delegateOffense.IsEnabled = controlsOffense; delegateDefense.IsEnabled = controlsDefense;
+            gameInfo.IsVisible = boxScore.IsVisible = moreOpen && !animating;
+            timeout.IsVisible = skip.IsVisible = replayLast.IsVisible = moreOpen && !animating;
             more.Text = moreOpen ? "Less" : "More";
-            foreach (var utility in new[] { punt, kick, kneel, spike, onside, delegateOffense, delegateDefense, numbers, spriteMode, replayToggle, carrierToggle })
+            foreach (var utility in new[] { punt, kick, kneel, spike, onside, delegateOffense, delegateDefense, numbers, spriteMode, replayToggle, carrierToggle, camera, replaySpeedButton })
             {
                 var eligible = utility == punt || utility == kick || utility == kneel || utility == spike
                     ? deciding && ControlledOnOffense() && !session.TryPending && (utility != kneel && utility != spike || session.OvertimeRound == 0)
-                    : utility == numbers || utility == spriteMode || utility == replayToggle || utility == carrierToggle || session.Mode == GameDayMode.Play && !session.IsComplete;
+                    : utility == camera || utility == replaySpeedButton || utility == numbers || utility == spriteMode || utility == replayToggle || utility == carrierToggle || session.Mode == GameDayMode.Play && !session.IsComplete;
                 utility.IsVisible = eligible && moreOpen && !animating;
             }
-            foreach (var action in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, delegateOffense, delegateDefense, takeover, onside, skip })
+            foreach (var action in new[] { call, callDefense, punt, kick, extraPoint, twoPoint, kneel, spike, delegateOffense, delegateDefense, onside, skip })
                 action.IsEnabled = !animating;
             controls.IsEnabled = !skipPending && !finalizing && !closingViewer;
             boxScore.IsEnabled = !skipPending && !finalizing && !closingViewer && !boxScoreOpen;
@@ -342,21 +412,23 @@ public sealed partial class FoundationPage
         {
             if (compactLayout == compact) return;
             compactLayout = compact;
+            // Leave room for the play cards and two complete action rows in portrait.
+            trayScroll.MaximumHeightRequest = compact ? 190 : 260;
             ClosePicker();
             page.Content = null;
-            foreach (var view in new View[] { scoreHeader, situation, possession, field, commentaryPanel, playCard, defenseCard, controls, quickCalls, traySurface, pickerLayer })
+            foreach (var view in new View[] { scoreHeader, situation, possession, fieldFrame, commentaryPanel, playCard, defenseCard, controls, quickCalls, traySurface, pickerLayer })
                 if (view.Parent is Layout parent) parent.Children.Remove(view);
             foreach (var button in controls.Children.OfType<Button>())
             {
                 button.FontSize = compact ? 10 : 11;
                 button.Padding = compact ? new Thickness(7, 4) : new Thickness(12, 8);
-                button.MinimumHeightRequest = compact ? 28 : 34;
-                button.HeightRequest = compact ? 28 : 34;
+                button.MinimumHeightRequest = 44;
+                button.HeightRequest = 44;
                 button.Margin = new Thickness(0, 0, 4, 4);
             }
-            score.FontSize = compact ? 16 : 22;
-            downValue.FontSize = toGoValue.FontSize = compact ? 17 : 22;
-            ballValue.FontSize = compact ? 14 : 18;
+            score.FontSize = compact ? 15 : 17;
+            downValue.FontSize = quarterClock.FontSize = 13;
+            ballValue.FontSize = 13;
             result.FontSize = compact ? 13 : 15;
             result.MaxLines = compact ? 2 : 3;
             selectedDescription.IsVisible = defenseDescription.IsVisible = !compact;
@@ -383,14 +455,14 @@ public sealed partial class FoundationPage
                 new ColumnDefinitionCollection { new(new GridLength(2, GridUnitType.Star)), new(new GridLength(3, GridUnitType.Star)) } };
             if (compact)
             {
-                heading.Add(new VerticalStackLayout { Spacing = 1, Children = { scoreHeader, possession } }, 0, 0);
+                heading.Add(scoreHeader, 0, 0);
                 heading.Add(situation, 1, 0);
             }
             else
             {
                 heading.ColumnDefinitions.Clear(); heading.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                heading.Add(new VerticalStackLayout { Spacing = 3, Children = { scoreHeader, situation, possession } });
-                score.FontSize = 17; downValue.FontSize = toGoValue.FontSize = 17; ballValue.FontSize = 15;
+                heading.Add(new VerticalStackLayout { Spacing = 3, Children = { scoreHeader, situation } });
+                downValue.FontSize = ballValue.FontSize = quarterClock.FontSize = 13;
             }
             UpdateQuickCalls();
             if (playCard.Parent is Layout oldPlay) oldPlay.Children.Remove(playCard);
@@ -399,7 +471,7 @@ public sealed partial class FoundationPage
             if (quickCalls.Parent is Layout oldQuick) oldQuick.Children.Remove(quickCalls);
             tray.Children.Clear(); tray.Children.Add(quickCalls); tray.Children.Add(controls);
             var body = new Grid { RowDefinitions = new RowDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-            body.Add(field, 0, 0); body.Add(traySurface, 0, 1); body.Add(pickerLayer, 0, 0);
+            body.Add(fieldFrame, 0, 0); body.Add(traySurface, 0, 1); body.Add(pickerLayer, 0, 0);
             Grid.SetRowSpan(pickerLayer, 2);
             var root = new Grid { Padding = 4, RowSpacing = 3, RowDefinitions =
                 new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
@@ -410,7 +482,7 @@ public sealed partial class FoundationPage
         ArrangeViewer(false);
         page.SizeChanged += (_, _) =>
         {
-            if (page.Width > 0 && page.Height > 0) ArrangeViewer(page.Width > page.Height);
+            if (page.Width > 0 && page.Height > 0) ArrangeViewer(page.Width >= 700);
         };
 
         Color TeamColor(string teamName) => Color.FromArgb(TeamBrandCatalog.Get(teamName).Primary);
@@ -966,7 +1038,7 @@ public sealed partial class FoundationPage
                 return (distance, movementSpeeds[m.View], active);
             }));
             if (snap.TurnoverYardLine.HasValue) durationSeconds = Math.Max(durationSeconds, snap.ReturnYards / 9d / (1 - catchProgress));
-            if (instantReplay) durationSeconds *= 1.2;
+            durationSeconds /= instantReplay ? replaySpeed : gameSpeed;
             Rect TurnoverTrack(double progress)
             {
                 var pickup = interceptorTo ?? new Rect(GameDayAnimationPlanner.ProjectYardLine(snap.TurnoverYardLine ?? snap.StartYardLine, direction), snap.CarrierLane ?? .5, 28, 28);
@@ -1040,7 +1112,7 @@ public sealed partial class FoundationPage
                     highlightedOwner = owner;
                 }
                 var labelOwner = owner;
-                if (owner is Guid liveOwner && progress > .7)
+                if (!isPass && owner is Guid liveOwner && progress > .92)
                 {
                     var carrierHost = markerHosts.FirstOrDefault(m => m.Value.Player?.PlayerId == liveOwner).Key;
                     if (carrierHost is not null)
@@ -1065,9 +1137,17 @@ public sealed partial class FoundationPage
                         carrierLabel.Text = $"{(ownerPlayer?.JerseyNumber is int n ? $"#{n} " : "")}{surname}";
                         var pos = AbsoluteLayout.GetLayoutBounds(host);
                         var width = Math.Max(180, fieldPlayers.Width); var height = Math.Max(50, fieldPlayers.Height);
-                        AbsoluteLayout.SetLayoutBounds(carrierLabel, new Rect(
-                            Math.Clamp((pos.X * (width - 28) + 14 - 75) / (width - 150), 0, 1),
-                            Math.Clamp((pos.Y * (height - 28) - 20) / (height - 20), 0, 1), 150, 20));
+                        var labelX = Math.Clamp(pos.X * (width - 28) + 14 - 75, 0, width - 150);
+                        // Pick the less crowded side in screen pixels; only one name is shown.
+                        var candidates = new[] { Math.Clamp(pos.Y * (height - 28) - 24, 0, height - 20),
+                            Math.Clamp(pos.Y * (height - 28) + 32, 0, height - 20) };
+                        var labelY = candidates.OrderBy(y => markerHosts.Keys.Count(marker =>
+                        {
+                            var other = AbsoluteLayout.GetLayoutBounds(marker);
+                            var x = other.X * (width - other.Width); var top = other.Y * (height - other.Height);
+                            return x < labelX + 150 && x + other.Width > labelX && top < y + 20 && top + other.Height > y;
+                        })).First();
+                        AbsoluteLayout.SetLayoutBounds(carrierLabel, new Rect(labelX / (width - 150), labelY / (height - 20), 150, 20));
                     }
                     else carrierLabel.IsVisible = false;
                 }
@@ -1143,6 +1223,7 @@ public sealed partial class FoundationPage
                 else currentBall = BallAt(Track(qbFrom, qbTo, progress));
                 if (snap.TurnoverYardLine.HasValue && progress >= catchProgress) currentBall = BallAt(TurnoverTrack(progress));
                 AbsoluteLayout.SetLayoutBounds(ball, currentBall);
+                if (cameraMode != 0) FrameCamera(cameraMode == 2 ? currentBall.X : (centerPoint.X + currentBall.X) / 2, cameraMode == 2 ? currentBall.Y : .5);
                 fieldArt.WeatherPhase = progress * durationSeconds;
                 if (session.Weather.Precipitation != GamePrecipitation.Clear) fieldLines.Invalidate();
                 if (isTackle && terminalCarrierView is not null && primaryTacklerView is not null && progress >= .84)
@@ -1194,14 +1275,21 @@ public sealed partial class FoundationPage
             var homeMorale = GameMoraleService.InGame(session, game.HomeTeamName);
             var awayMorale = GameMoraleService.InGame(session, game.AwayTeamName);
             conditionsHud.Text = $"{session.Weather.Summary} · Morale {awayTeam.Abbreviation} {awayMorale} / {homeTeam.Abbreviation} {homeMorale}";
-            score.Text = $"{CollegePollService.RankedName(game.AwayTeamName, gameRanks)} {session.AwayScore}  ·  {session.HomeScore} {CollegePollService.RankedName(game.HomeTeamName, gameRanks)}";
+            awayScoreLabel.Text = session.AwayScore.ToString(); homeScoreLabel.Text = session.HomeScore.ToString();
+            string ShortName(string name, string abbreviation) => name == "Ohio State" ? "OHST" : name == "Oklahoma State" ? "OKST" : name == "Oregon State" ? "ORST" : abbreviation;
+            awayName.Text = (session.PossessionTeamName == game.AwayTeamName ? "● " : "") + ShortName(game.AwayTeamName, awayTeam.Abbreviation);
+            homeName.Text = (session.PossessionTeamName == game.HomeTeamName ? "● " : "") + ShortName(game.HomeTeamName, homeTeam.Abbreviation);
             string Dots(int count) => new string('●', count) + new string('○', Math.Max(0, 3 - count));
             timeoutsHud.Text = $"TIMEOUTS  {awayTeam.Abbreviation} {Dots(session.AwayTimeouts)} ({session.AwayTimeouts})   ·   {homeTeam.Abbreviation} {Dots(session.HomeTimeouts)} ({session.HomeTimeouts})";
+            awayTimeouts.Text = Dots(session.AwayTimeouts); homeTimeouts.Text = Dots(session.HomeTimeouts);
+            SemanticProperties.SetDescription(awayTimeouts, $"{game.AwayTeamName}: {session.AwayTimeouts} timeouts");
+            SemanticProperties.SetDescription(homeTimeouts, $"{game.HomeTeamName}: {session.HomeTimeouts} timeouts");
             quarterClock.Text = $"Q{session.Quarter}  {TimeSpan.FromSeconds(session.ClockSeconds):m\\:ss}";
             if (session.OvertimeRound > 0) quarterClock.Text = $"OT {session.OvertimeRound} · untimed";
             downValue.Text = session.KickoffPending ? "—" : Ordinal(session.Down);
             toGoValue.Text = session.KickoffPending ? "KICKOFF" : session.Distance.ToString();
             if (session.TryPending) { downValue.Text = "TRY"; toGoValue.Text = "3"; }
+            if (!session.KickoffPending && !session.TryPending) downValue.Text = $"{Ordinal(session.Down)} & {session.Distance}";
             ballValue.Text = session.KickoffPending ? "RECEIVE" : GameDayEngine.BallOn(session, name => _teamsByName.TryGetValue(name, out var team) ? team.Abbreviation : name);
             possession.Text = session.Mode == GameDayMode.Watch
                 ? $"CPU vs CPU · {session.PossessionTeamName} possession"
@@ -1239,7 +1327,7 @@ public sealed partial class FoundationPage
             delegateOffense.Text = coachCallsOffense ? "Offense: Coach" : "Offense: You";
             delegateDefense.Text = coachCallsDefense ? "Defense: Coach" : "Defense: You";
             watch.IsVisible = !session.IsComplete;
-            watch.Text = session.Mode == GameDayMode.Watch ? "Pause watch" : "Watch CPU";
+            watch.Text = session.Mode == GameDayMode.Watch ? watchPaused ? "Resume watch" : "Pause watch" : "Watch CPU";
             takeover.IsVisible = session.Mode == GameDayMode.Watch && !session.IsComplete;
             onside.IsVisible = session.Mode == GameDayMode.Play && !session.IsComplete;
             onside.Text = session.OnsideKickRequested ? "Next kickoff: Onside" : "Next kickoff: Deep";
@@ -1272,27 +1360,30 @@ public sealed partial class FoundationPage
                 if (instantReplays && GameDayLivePresentation.InstantReplay(snap)) await ReplaySnapAsync(snap);
                 var period = GameDayAnimationPlanner.PeriodHeadline(snap.Quarter, session.Quarter, session.IsComplete);
                 if (period is not null) await ShowHighlightAsync(snap, period);
-                await Task.Delay(session.Mode == GameDayMode.Watch ? 180 : 80);
+                var halftime = snap.Quarter < session.Quarter || snap.TimeoutTeamName is not null;
+                if (halftime && session.Mode == GameDayMode.Watch) watchPaused = true;
+                await Task.Delay((int)((session.Mode == GameDayMode.Watch ? 450 : 80) / gameSpeed));
                 animating = false;
                 Refresh(snap);
+                if (halftime) result.Text = "BREAK · Team → Coach talk or substitutions. Resume watch when ready.";
             }
             finally { animating = false; UpdateOverlay(); finished.TrySetResult(); }
         }
         async Task ReplaySnapAsync(GameSnapEvent snap)
         {
-            replayChip.IsVisible = true;
+            skipReplayRequested = false; skipReplay.IsVisible = true; replayChip.IsVisible = true;
             highlightText.Text = "INSTANT REPLAY";
             highlightText.FontSize = 30;
-            highlight.BackgroundColor = DynastyTheme.Palette("#ED102B40"); highlight.Opacity = 1; highlight.Scale = 1;
+            highlight.BackgroundColor = Color.FromArgb("#ED102B40"); highlight.Opacity = 1; highlight.Scale = 1;
             highlight.IsVisible = true;
             await Task.Delay(850);
             highlight.IsVisible = false; highlightText.FontSize = 22;
-            try { await AnimateSnapAsync(snap, true); }
-            finally { replayChip.IsVisible = false; }
+            try { if (!skipReplayRequested && !viewerClosed) await AnimateSnapAsync(snap, true); }
+            finally { skipReplay.IsVisible = false; replayChip.IsVisible = false; FrameCamera(); }
         }
         replayLast.Clicked += async (_, _) =>
         {
-            if (animating || lastPlayedSnap is null || session.Mode == GameDayMode.Watch) return;
+            if (animating || lastPlayedSnap is null) return;
             var commentary = result.Text;
             var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             currentSnapFinished = finished.Task;
@@ -1330,7 +1421,7 @@ public sealed partial class FoundationPage
                 if (!viewerClosed)
                 {
                     result.Text = "Final · save failed. Use Retry save before leaving.";
-                    await page.DisplayAlertAsync("Could not save game", "Your result is still in memory. Tap Retry save to try again.", "OK");
+                    await GameDialogs.AlertAsync(page, "Could not save game", "Your result is still in memory. Tap Retry save to try again.", "OK");
                 }
             }
             finally { animating = false; finalizing = false; UpdateOverlay(); }
@@ -1360,7 +1451,7 @@ public sealed partial class FoundationPage
             {
                 viewerClosed = false;
                 System.Diagnostics.Trace.WriteLine(error);
-                await page.DisplayAlertAsync("Could not close game", "The game view could not close. Please try again.", "OK");
+                await GameDialogs.AlertAsync(page, "Could not close game", "The game view could not close. Please try again.", "OK");
             }
             finally { closingViewer = false; UpdateOverlay(); }
         }
@@ -1376,7 +1467,7 @@ public sealed partial class FoundationPage
             driving = true;
             try
             {
-                while (!session.IsComplete && !boxScoreOpen && !skipPending && !viewerClosed && !closingViewer && page.Parent is not null &&
+                while (!session.IsComplete && !watchPaused && !boxScoreOpen && !skipPending && !viewerClosed && !closingViewer && page.Parent is not null &&
                     (session.Mode == GameDayMode.Watch || !NeedsUserCall()))
                     await ShowSnapAsync(GameDayEngine.Step(session));
                 await FinishIfNeeded();
@@ -1391,7 +1482,7 @@ public sealed partial class FoundationPage
             var replayBusy = false;
             var replayClosed = false;
             var replayCompleted = false;
-            page.Disappearing += (_, _) => { replayClosed = true; if (autoReplay && !replayCompleted) _highlightShowCanceled = true; };
+            page.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(page)) { replayClosed = true; if (autoReplay && !replayCompleted) _highlightShowCanceled = true; } });
             var replayNext = new Button { Text = "Next highlight" };
             var replayAll = new Button { Text = "Play highlights" };
             var replayClose = new Button { Text = autoReplay ? "Stop highlight show" : "Close highlights" };
@@ -1409,7 +1500,7 @@ public sealed partial class FoundationPage
                     session.PossessionTeamName = snap.OffenseTeamName;
                     session.Quarter = snap.Quarter; session.ClockSeconds = snap.ClockSeconds;
                     session.Down = snap.Down; session.Distance = snap.Distance; session.YardLine = snap.StartYardLine;
-                    score.Text = $"{game.AwayTeamName} {game.AwayScore} · {game.HomeScore} {game.HomeTeamName}";
+                    awayScoreLabel.Text = game.AwayScore.ToString(); homeScoreLabel.Text = game.HomeScore.ToString(); awayName.Text = awayTeam.Abbreviation; homeName.Text = homeTeam.Abbreviation;
                     quarterClock.Text = $"Q{snap.Quarter} {snap.ClockSeconds / 60}:{snap.ClockSeconds % 60:D2}";
                     downValue.Text = snap.Down.ToString(); toGoValue.Text = snap.Distance.ToString();
                     ballValue.Text = GameDayEngine.BallOn(session);
@@ -1477,23 +1568,33 @@ public sealed partial class FoundationPage
         };
         delegateOffense.Clicked += async (_, _) =>
         {
+            if (!controlsOffense) return;
             coachCallsOffense = !coachCallsOffense; Refresh();
             if (coachCallsOffense) await RunCpuUntilUserDecision();
         };
         delegateDefense.Clicked += async (_, _) =>
         {
+            if (!controlsDefense) return;
             coachCallsDefense = !coachCallsDefense; Refresh();
             if (coachCallsDefense) await RunCpuUntilUserDecision();
         };
         watch.Clicked += async (_, _) =>
         {
-            session.Mode = session.Mode == GameDayMode.Watch ? GameDayMode.Play : GameDayMode.Watch;
+            if (session.Mode != GameDayMode.Watch) { session.Mode = GameDayMode.Watch; watchPaused = false; }
+            else watchPaused = !watchPaused;
             Refresh();
-            if (animating) return;
-            if (session.Mode == GameDayMode.Watch) await WatchLoop();
-            else await RunCpuUntilUserDecision();
+            if (!animating && !watchPaused) await WatchLoop();
         };
-        takeover.Clicked += async (_, _) => { session.Mode = GameDayMode.Play; Refresh(); await RunCpuUntilUserDecision(); };
+        takeover.Clicked += async (_, _) =>
+        {
+            if (takingOver) return;
+            takingOver = true; session.Mode = GameDayMode.Play; watchPaused = false;
+            coachCallsOffense = !controlsOffense; coachCallsDefense = !controlsDefense;
+            takeover.Text = "Taking over after this play";
+            await currentSnapFinished;
+            takingOver = false; takeover.Text = "Take over"; Refresh();
+            await RunCpuUntilUserDecision();
+        };
         punt.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-punt")); await RunCpuUntilUserDecision(); };
         extraPoint.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-extra-point")); await RunCpuUntilUserDecision(); };
         twoPoint.Clicked += async (_, _) => { await ShowSnapAsync(GameDayEngine.Step(session, "special-two-point")); await RunCpuUntilUserDecision(); };
@@ -1505,6 +1606,139 @@ public sealed partial class FoundationPage
             if (!animating && GameDayEngine.TryCallTimeout(session, controlledTeamName))
             { await ShowSnapAsync(session.Events[^1]); }
         };
+        async Task GiveTalkAsync() => await ShowGameCoachTalkAsync(page, session, controlledTeamName);
+        async Task ShowTeamAsync()
+        {
+            var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var teamPage = new GameDayViewerPage { BackgroundColor = DynastyTheme.Background };
+            async Task Back() { await Navigation.PopModalAsync(); closed.TrySetResult(); }
+            teamPage.BackHandler = () => { _ = Back(); return true; };
+            var back = new Button { Text = "Return to game" }; back.Clicked += async (_, _) => await Back();
+            var talkButton = new Button { Text = "Coach talk" };
+            var filter = new Picker { Title = "Position", ItemsSource = Enum.GetValues<Position>().Where(p => UserCoachControlService.ControlsPosition(session.UserCoachRole, p)).Select(p => p.ToString()).ToArray(), SelectedIndex = 0 };
+            var rows = new VerticalStackLayout { Spacing = 3 };
+            var availability = new Label { FontSize = 12, TextColor = DynastyTheme.Muted };
+            var showAll = false;
+            var expandRoster = new Button { Text = "Show all reserves" };
+            var automatic = new Button { Text = "Automatic rotation", FontSize = 12 };
+            var secondUnit = new Button { AutomationId = "live-second-unit", FontSize = 13, MinimumHeightRequest = 44 };
+            void Draw()
+            {
+                rows.Children.Clear();
+                secondUnit.Text = session.SecondUnits.Contains(controlledTeamName) ? "Return to starters" : "Use second unit";
+                secondUnit.IsEnabled = !session.IsComplete;
+                var depth = controlledTeamName == game.HomeTeamName ? session.HomeDepthChart : session.AwayDepthChart;
+                var fatigue = controlledTeamName == game.HomeTeamName ? session.HomeFatigue : session.AwayFatigue;
+                var stats = GameDayEngine.BoxScore(session).Players.ToDictionary(p => p.PlayerId);
+                var starters = GameDayCoachingService.Starters(session, controlledTeamName);
+                var selectedPosition = Enum.Parse<Position>(filter.SelectedItem?.ToString() ?? "QB");
+                var pool = session.Roster.Where(p => p.TeamName == controlledTeamName && p.Position == selectedPosition)
+                    .OrderByDescending(p => starters.Contains(p.PlayerId)).ThenBy(p => p.DepthChartOrder <= 0 ? int.MaxValue : p.DepthChartOrder).ThenByDescending(p => p.OverallRating).ToArray();
+                availability.Text = GameDayCoachingService.TalkAvailability(session, controlledTeamName);
+                var canTalk = availability.Text == "Available";
+                talkButton.IsEnabled = canTalk;
+                talkButton.BackgroundColor = canTalk ? DynastyTheme.Accent : DynastyTheme.Panel;
+                talkButton.TextColor = canTalk ? DynastyTheme.Background : DynastyTheme.Muted;
+                talkButton.Opacity = canTalk ? 1 : .55;
+                expandRoster.IsVisible = pool.Length > 3;
+                expandRoster.Text = showAll ? "Show top three" : $"Show all {pool.Length} players";
+                automatic.IsVisible = session.ManualStarters.ContainsKey((controlledTeamName, selectedPosition));
+                foreach (var player in pool.Take(showAll ? pool.Length : 3))
+                {
+                    var morale = GameDayCoachingService.LivePlayerMorale(session, player, GameMoraleService.PlayerMorale(_currentDynasty!, player));
+                    var starter = starters.Contains(player.PlayerId);
+                    var unavailable = player.IsRedshirted || player.CurrentInjury is not null;
+                    var name = new Label { Text = $"#{player.JerseyNumber} {player.FullName}", FontSize = 14, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Text,
+                        LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1 };
+                    var info = new Label { Text = $"OVR {player.OverallRating} · Energy {fatigue.Energy(player.PlayerId):0}% · Morale {morale}", FontSize = 12, TextColor = DynastyTheme.Muted };
+                    var sub = new Button { Text = unavailable ? "Unavailable" : starter ? "Starter" : "Sub in", FontSize = 12,
+                        IsEnabled = !starter && !unavailable && !session.IsComplete && UserCoachControlService.ControlsPosition(session.UserCoachRole, player.Position), MinimumHeightRequest = 44, Padding = new Thickness(10, 4),
+                        BackgroundColor = starter || unavailable ? DynastyTheme.Panel : DynastyTheme.Accent, TextColor = starter || unavailable ? DynastyTheme.Muted : DynastyTheme.Background };
+                    sub.Clicked += async (_, _) =>
+                    {
+                        var scope = await GameDialogs.ActionSheetAsync(teamPage, $"Start {player.FullName} at {player.Position}", "Cancel", null, "This game only", "Also update season depth chart");
+                        if (scope is not ("This game only" or "Also update season depth chart")) return;
+                        if (!GameDayCoachingService.Substitute(session, controlledTeamName, player.PlayerId)) return;
+                        if (scope == "Also update season depth chart")
+                        {
+                            _currentDynasty = DepthChartService.Assign(_currentDynasty!, controlledTeamName, player.PlayerId, player.PlayingPositionCode ?? Ncaa06RatingService.PositionCode(player), 1);
+                            await SaveCurrentAsync(SaveKind.AutosaveCurrent);
+                        }
+                        Draw();
+                    };
+                    var detail = new TapGestureRecognizer();
+                    detail.Tapped += async (_, _) =>
+                    {
+                        var stat = stats.GetValueOrDefault(player.PlayerId);
+                        var summary = GameDayCoachingService.LiveReason(session, player);
+                        if (player.Position == Position.QB && stat is not null) summary += $"\nPassing {stat.PassYards} yd · TD {stat.PassingTouchdowns} · INT {stat.InterceptionsThrown}";
+                        await GameDialogs.AlertAsync(teamPage, player.FullName, summary, "Close");
+                    };
+                    var text = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children = { name, info } };
+                    text.GestureRecognizers.Add(detail);
+                    var line = new Grid { Padding = 8, ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(new GridLength(92)) } };
+                    line.Add(text, 0, 0); line.Add(sub, 1, 0);
+                    rows.Children.Add(new Border { StrokeThickness = 0, BackgroundColor = DynastyTheme.Surface, Content = line });
+                }
+            }
+            talkButton.Clicked += async (_, _) => { await GiveTalkAsync(); Draw(); };
+            filter.SelectedIndexChanged += (_, _) => { showAll = false; Draw(); };
+            secondUnit.Clicked += async (_, _) =>
+            {
+                var enabled = !session.SecondUnits.Contains(controlledTeamName);
+                if (enabled && !await GameDialogs.AlertAsync(teamPage, "Use second unit?", session.UserCoachRole == StaffRole.HeadCoach ? "Use eligible backups across offense and defense from the next snap, plus a backup kicker where available. Starters fill gaps where backups are unavailable. Season depth chart stays unchanged." : "Use eligible backups on your side from the next snap. The other side and season depth chart stay unchanged.", "Use second unit", "Cancel")) return;
+                GameDayCoachingService.UseSecondUnit(session, controlledTeamName, enabled); Draw();
+            };
+            expandRoster.Clicked += (_, _) => { showAll = !showAll; Draw(); };
+            automatic.Clicked += (_, _) => { var pos = Enum.Parse<Position>(filter.SelectedItem?.ToString() ?? "QB"); session.ManualStarters.Remove((controlledTeamName, pos)); Draw(); };
+            teamPage.Content = new Grid { Padding = 12, RowSpacing = 8, RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Star) } };
+            var layout = (Grid)teamPage.Content;
+            layout.Add(new HorizontalStackLayout { Spacing = 8, Children = { back, talkButton } }, 0, 0);
+            layout.Add(new VerticalStackLayout { Spacing = 5, Children = { availability, secondUnit, filter, automatic } }, 0, 1);
+            layout.Add(new ScrollView { Content = new VerticalStackLayout { Spacing = 6, Children = { rows, expandRoster } } }, 0, 2);
+            Draw(); await Navigation.PushModalAsync(teamPage); await closed.Task;
+        }
+        async Task OpenViewingMenuAsync(bool team)
+        {
+            if (boxScoreOpen || closingViewer || finalizing) return;
+            boxScoreOpen = true;
+            try
+            {
+                await currentSnapFinished;
+                if (team) { await ShowTeamAsync(); return; }
+                var selected = await GameDialogs.ActionSheetAsync(page, "GameCast options", "Close", null,
+                    "Camera", "Game speed", "Replay speed", "Automatic replays", "Player labels", "Box score", "Weather", "Team & substitutions");
+                if (selected == "Camera")
+                {
+                    var choice = await GameDialogs.ActionSheetAsync(page, "Camera", "Cancel", null, "Full field", "Broadcast", "Follow ball");
+                    var index = Array.IndexOf(new[] { "Full field", "Broadcast", "Follow ball" }, choice);
+                    if (index >= 0) { cameraMode = index; Microsoft.Maui.Storage.Preferences.Default.Set("live-camera", index); camera.Text = "Camera: " + CameraName(); FrameCamera(); }
+                }
+                else if (selected is "Game speed" or "Replay speed")
+                {
+                    var choice = await GameDialogs.ActionSheetAsync(page, selected + " · presentation only", "Cancel", null, "0.5×", "1×", "1.5×", "2×");
+                    var index = Array.IndexOf(new[] { "0.5×", "1×", "1.5×", "2×" }, choice);
+                    if (index >= 0)
+                    {
+                        var value = new[] { .5, 1, 1.5, 2 }[index];
+                        if (selected == "Game speed") { gameSpeed = value; Microsoft.Maui.Storage.Preferences.Default.Set("live-game-speed", value); }
+                        else { replaySpeed = value; Microsoft.Maui.Storage.Preferences.Default.Set("live-replay-speed", value); }
+                    }
+                }
+                else if (selected == "Automatic replays") { instantReplays = !instantReplays; Microsoft.Maui.Storage.Preferences.Default.Set("live-instant-replays", instantReplays); }
+                else if (selected == "Player labels") { showCarrierNames = !showCarrierNames; Microsoft.Maui.Storage.Preferences.Default.Set("live-player-labels", showCarrierNames); }
+                else if (selected == "Box score") await ShowLiveBoxScoreAsync(GameDayEngine.BoxScore(session));
+                else if (selected == "Weather") await GameDialogs.AlertAsync(page, "Conditions", session.Weather.Summary, "OK");
+                else if (selected == "Team & substitutions") await ShowTeamAsync();
+            }
+            finally
+            {
+                boxScoreOpen = false; Refresh();
+                if (!watchPaused) await DriveGameAsync();
+            }
+        }
+        options.Clicked += async (_, _) => await OpenViewingMenuAsync(false);
+        teamControl.Clicked += async (_, _) => await OpenViewingMenuAsync(true);
         boxScore.Clicked += async (_, _) =>
         {
             if (boxScoreOpen) return;
@@ -1527,7 +1761,7 @@ public sealed partial class FoundationPage
                 if (viewerClosed) return;
                 if (!session.IsComplete)
                 {
-                    var confirmed = await page.DisplayAlertAsync("Skip to end?", "Simulate the rest of this game and save the final result?", "Simulate remainder", "Keep playing");
+                    var confirmed = await GameDialogs.AlertAsync(page, "Skip to end?", "Simulate the rest of this game and save the final result?", "Simulate remainder", "Keep playing");
                     if (!confirmed) return;
                     result.Text = "Simulating remaining game…";
                     await Task.Run(() => GameDayEngine.SimulateToEnd(session));
@@ -1537,7 +1771,7 @@ public sealed partial class FoundationPage
             catch (Exception error)
             {
                 System.Diagnostics.Trace.WriteLine(error);
-                if (!viewerClosed) await page.DisplayAlertAsync("Could not skip game", "The game is still open. Please try again.", "OK");
+                if (!viewerClosed) await GameDialogs.AlertAsync(page, "Could not skip game", "The game is still open. Please try again.", "OK");
             }
             finally
             {
@@ -1592,7 +1826,7 @@ public sealed partial class FoundationPage
         }
         var cancel = new Button { Text = "Cancel" };
         cancel.Clicked += async (_, _) => { completion.TrySetResult(null); await Navigation.PopModalAsync(); };
-        modal.Disappearing += (_, _) => completion.TrySetResult(null);
+        modal.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(modal)) completion.TrySetResult(null); });
         var header = new Grid { Padding = 12,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(new Label { Text = "Call offensive play", FontSize = 20, FontAttributes = FontAttributes.Bold,
@@ -1645,7 +1879,7 @@ public sealed partial class FoundationPage
         }
         var cancel = new Button { Text = "Cancel" };
         cancel.Clicked += async (_, _) => { completion.TrySetResult(null); await Navigation.PopModalAsync(); };
-        modal.Disappearing += (_, _) => completion.TrySetResult(null);
+        modal.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!Navigation.ModalStack.Contains(modal)) completion.TrySetResult(null); });
         var header = new Grid { Padding = 12,
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(new Label { Text = "Call defensive play", FontSize = 20, FontAttributes = FontAttributes.Bold,
@@ -1774,7 +2008,7 @@ public sealed partial class FoundationPage
             canvas.StrokeColor = HomeSecondaryColor; canvas.StrokeSize = 2;
             canvas.DrawCircle(rect.Center.X, rect.Center.Y, Math.Min(rect.Width, rect.Height) * .105f);
             canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
-            canvas.FontSize = Math.Min(46, rect.Height * .19f); canvas.FontColor = HomeSecondaryColor;
+            canvas.FontSize = Math.Min(46, Math.Min(rect.Width, rect.Height) * .16f) / Math.Max(1, HomeInitial.Length * .6f); canvas.FontColor = HomeSecondaryColor;
             canvas.DrawString(HomeInitial, rect.Width * .40f, rect.Height * .36f, rect.Width * .20f, rect.Height * .28f,
                 HorizontalAlignment.Center, VerticalAlignment.Center);
             var line = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(YardLine, Direction);

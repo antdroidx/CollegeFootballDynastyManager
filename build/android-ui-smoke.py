@@ -1,5 +1,6 @@
 """Check the launch/create/cancel flow on an already running disposable emulator."""
 import re
+import sys
 import subprocess
 import time
 import xml.etree.ElementTree as ET
@@ -54,7 +55,7 @@ def tap(root, text):
     time.sleep(1)
 
 
-def scroll_to_text(name, text, max_swipes=6):
+def scroll_to_text(name, text, max_swipes=6, toward_start=False):
     for attempt in range(max_swipes + 1):
         root = capture(name)
         for node in root.iter("node"):
@@ -70,7 +71,8 @@ def scroll_to_text(name, text, max_swipes=6):
             return (x2-x1)*(y2-y1)
         left, top, right, bottom = map(int, re.findall(r"\d+", max(scrollables,key=area).get("bounds")))
         x = str((left + right) // 2)
-        adb("shell", "input", "swipe", x, str(top + (bottom-top)*3//4), x, str(top + (bottom-top)//4), "350")
+        start, end = (1, 3) if toward_start else (3, 1)
+        adb("shell", "input", "swipe", x, str(top + (bottom-top)*start//4), x, str(top + (bottom-top)*end//4), "350")
 
 
 def wait_for(name, predicate, timeout=120):
@@ -85,6 +87,12 @@ def wait_for(name, predicate, timeout=120):
 
 def enabled(root, text):
     return any(n.get("text") == text and n.get("enabled") == "true" for n in root.iter("node"))
+
+
+def assert_action_spacing(root, labels):
+    bounds = [tuple(map(int, re.findall(r"\d+", next(n for n in root.iter("node") if n.get("text") == label).get("bounds")))) for label in labels]
+    for previous, current in zip(bounds, bounds[1:]):
+        assert current[0] > previous[2] or current[1] > previous[3], f"Touching action buttons: {labels}"
 
 
 def calendar(root):
@@ -129,9 +137,13 @@ def main():
         not any(t.startswith("Loading ") for t in texts(r)))
     assert {"Your dynasties", "New dynasty"} <= texts(home), "Launch must open the save library"
     assert not {"Advance Week", "Start season", "Advance to Week 1", "Overview", "Roster", "Coach", "Recruit", "Season", "Settings"} & texts(home), "Career controls leaked onto Home"
+    assert any((n.get("resource-id") or "").endswith("opening-logo") for n in home.iter("node"))
+    assert any(t and t.startswith("Pre-release 0.20 · Build ") for t in texts(home))
+    assert "Options" in texts(home)
     tap(home, "New dynasty")
     create = capture("new-dynasty")
-    assert {"Start a dynasty", "Dynasty name", "League structure", "Your school", "Start dynasty"} <= texts(create)
+    assert {"Start a dynasty", "Dynasty name", "League structure", "Your school"} <= texts(create)
+    assert "Start dynasty" in texts(scroll_to_text("new-dynasty-career-options", "Start dynasty"))
     tap(create, "‹ Cancel")
     assert "Your dynasties" in texts(capture("cancel-create")), "Cancel must return to the library"
     assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip(), "App exited during navigation"
@@ -142,7 +154,7 @@ def main():
     tap(capture("library"), "New dynasty")
     tap(capture("create-form"), "Choose your team")
     tap(capture("school-picker"), "Air Force")
-    tap(capture("create-ready"), "Start dynasty")
+    tap(scroll_to_text("create-ready", "Start dynasty"), "Start dynasty")
     overview = wait_for("overview-preseason", lambda r: overview_ready(r), timeout=300)
     overview = check_college_center()
     for week in range(4):
@@ -152,6 +164,7 @@ def main():
         tap(overview, advance_action(overview))
         overview = wait_for(f"overview-week-{week}", lambda r: overview_ready(r, previous), timeout=300)
     assert "Play game" in texts(overview), "Expected a current-week user matchup"
+    assert_action_spacing(overview, ["Sim game", "Watch game", "Play game"])
     tap(overview,"Settings")
     wait_for("management-before-layouts",lambda r:"Appearance" in texts(r))
     overview=check_management_layouts()
@@ -173,179 +186,128 @@ def main():
     time.sleep(2)
     toss = capture("coin-toss-portrait-ready")
     tap(toss, "Start game")
-    viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
-    opening_touchback = any("TOUCHBACK" in (value or "") for value in texts(viewer))
-    assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(viewer)
-    assert len([n for n in viewer.iter("node") if n.get("content-desc", "").startswith("Select ")]) == 3, "Portrait must show three play choices"
-    tap(viewer, "More")
-    assert "Player names: On" in texts(capture("names-default-on")), "Subtle names must default on"
-    # Swap the renderer on an existing field and restore it without advancing the snap.
-    sprites = scroll_to_text("sprites-ready", "Players: Sprites")
-    tap(sprites, "Players: Sprites")
-    circles = capture("circle-renderer")
-    assert "Players: Circles" in texts(circles)
-    tap(circles, "Players: Circles")
-    assert "Players: Sprites" in texts(capture("sprite-renderer"))
-    tap(capture("portrait-utilities"), "Less")
-    adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
-    adb("shell", "settings", "put", "system", "user_rotation", "1")
-    time.sleep(3)
-    landscape = capture("game-day-landscape")
-    assert {"DOWN", "YARDS TO GO", "BALL ON"} <= texts(landscape)
-    assert "Call play" in texts(landscape) or "Call defense" in texts(landscape)
-    field_node = next(n for n in landscape.iter("node") if (n.get("resource-id") or "").endswith("game-day-field"))
-    dock_node = next(n for n in landscape.iter("node") if (n.get("resource-id") or "").endswith("game-day-controls"))
-    field_bounds = list(map(int, re.findall(r"\d+", field_node.get("bounds"))))
-    dock_bounds = list(map(int, re.findall(r"\d+", dock_node.get("bounds"))))
-    assert field_bounds[3] <= dock_bounds[1], "Controls overlap the live field"
-    screen = next(landscape.iter("node"))
-    screen_left, screen_top, screen_right, screen_bottom = map(int, re.findall(r"\d+", screen.get("bounds")))
-    assert screen_right - screen_left > screen_bottom - screen_top, "Viewer did not rotate to landscape"
-    for label in ("Call play", "Call defense", "Punt", "Field goal", "Skip to end"):
-        for node in landscape.iter("node"):
-            if node.get("text") == label:
-                left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
-                assert screen_top <= top < bottom <= screen_bottom, f"Landscape control is off-screen: {label}"
-    # The hybrid tray exposes the full call sheet over the existing field. Merely
-    # choosing/canceling a play or filtering formations must not advance the game.
-    before_picker_clock = next(t for t in texts(landscape) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
-    choose_label = "Choose play" if "Choose play" in texts(landscape) else "Choose defense"
-    tap(landscape, choose_label)
-    picker = wait_for("expanded-play-picker", lambda r: "Close playbook" in texts(r))
-    assert "All formations" in texts(picker)
-    assert any(n.get("scrollable") == "true" for n in picker.iter("node")), "Play library must scroll"
-    adb("shell", "input", "keyevent", "4")
-    collapsed = wait_for("play-picker-back", lambda r: "Close playbook" not in texts(r) and "BALL ON" in texts(r))
-    assert before_picker_clock in texts(collapsed), "Browsing the playbook advanced the clock"
-    # Select a real card in the expanded library and verify it only changes the
-    # pending call, rather than running a snap or consuming time.
-    tap(collapsed, choose_label)
-    selection = capture("play-picker-selection")
-    card_node = next(n for n in selection.iter("node") if n.get("content-desc", "").startswith("Select "))
-    left, top, right, bottom = map(int, re.findall(r"\d+", card_node.get("bounds")))
-    adb("shell", "input", "tap", str((left + right)//2), str((top + bottom)//2))
-    collapsed = wait_for("play-selected", lambda r: "Close playbook" not in texts(r) and choose_label in texts(r))
-    assert before_picker_clock in texts(collapsed), "Selecting a play advanced the game clock"
-    assert any("SELECTED" in (value or "") for value in texts(collapsed))
-    tap(collapsed, "More")
-    utilities = capture("game-day-more")
-    assert {"Players: Sprites", "Offense: You", "Defense: You"} <= texts(utilities)
-    assert {"Markers: Positions", "Markers: Numbers"} & texts(utilities)
-    tap(utilities, "Less")
-    landscape = capture("game-day-tray-restored")
-    assert "Players: Sprites" not in texts(landscape), "Utility controls should collapse during play selection"
-    assert choose_label in texts(landscape)
-    print("Hybrid play overlay, Android Back, compact utility menu and paused-clock checks passed.")
-    assert any((value or "").startswith("TIMEOUTS  ") for value in texts(landscape)), "Both timeout banks must be visible"
-    tap(landscape, "Box score")
-    replay_before = wait_for("replay-stats-before", lambda r: "Live box score" in texts(r))
-    replay_stats = texts(replay_before)
-    tap(replay_before, "Return to game")
-    replay_ready = wait_for("manual-replay-ready", lambda r: "Replay last" in texts(r))
-    replay_clock = next(t for t in texts(replay_ready) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
-    tap(replay_ready, "Replay last")
-    Path("android-instant-replay.png").write_bytes(adb("exec-out", "screencap", "-p"))
-    replay_returned = wait_for("manual-replay-returned", lambda r: "Replay last" in texts(r))
-    assert replay_clock in texts(replay_returned), "Replay consumed game time"
-    assert any("SELECTED" in (value or "") for value in texts(replay_returned)), "Replay reset the pending call"
-    tap(replay_returned, "Box score")
-    replay_after = wait_for("replay-stats-after", lambda r: "Live box score" in texts(r))
-    assert texts(replay_after) == replay_stats, "Replay changed scores or statistics"
-    tap(replay_after, "Return to game")
-    landscape = wait_for("replay-complete", lambda r: "Replay last" in texts(r))
-    print("Both timeout banks and manual replay without clock/stat/call changes passed.")
-    # Inspect in-progress totals without finishing the match or advancing the play clock.
-    before_clock = next(t for t in texts(landscape) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
-    tap(landscape, "Box score")
-    box = wait_for("live-box-score", lambda r: "Live box score" in texts(r) and "Return to game" in texts(r))
-    assert {"Team totals", "Player statistics", "Total yards"} <= texts(box)
-    tap(box, "Player statistics")
-    players = capture("live-box-players")
-    assert "Passing" in texts(players)
-    tap(players, "Passing")
-    tap(scroll_to_text("live-box-category", "Returns"), "Returns")
-    returns = capture("live-box-returns")
-    if opening_touchback:
-        assert "No recorded statistics in this category yet." in texts(returns), "A touchback must not create a kick-return statistic"
-    else:
-        assert {"KR", "KR yds"} <= texts(returns), "The opening kick return must appear in the live box score"
-    tap(returns, "Return to game")
-    returned = wait_for("live-box-returned", lambda r: "BALL ON" in texts(r))
-    assert before_clock in texts(returned), "Reading the box score advanced a paused game"
-    if "Call play" in texts(returned):
-        tap(returned, "More")
-        special = capture("timeout-clock-play")
-        tap(special, "Kneel")
-        running = wait_for("timeout-available", lambda r: enabled(r, "Timeout (3)"))
-        timeout_clock = next(t for t in texts(running) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
-        tap(running, "Timeout (3)")
-        Path("android-timeout-banner.png").write_bytes(adb("exec-out", "screencap", "-p"))
-        stopped = wait_for("timeout-called", lambda r: "Timeout (2)" in texts(r))
-        assert timeout_clock in texts(stopped), "A timeout consumed game time"
-        assert any("(2)" in (value or "") and (value or "").startswith("TIMEOUTS  ") for value in texts(stopped))
-        print("User timeout notification and both-team remaining counters passed.")
-    # Rotate back as well: the same field/cards must safely reparent in both directions.
-    adb("shell", "settings", "put", "system", "user_rotation", "0")
-    time.sleep(2)
-    assert "BALL ON" in texts(capture("game-day-portrait-restored"))
-    assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip()
-    print("Current-week game entry, live box-score filters and portrait/landscape rotation passed.")
+    def has_field(root):
+        return any((n.get("resource-id") or "").endswith("game-day-field") for n in root.iter("node"))
 
-    # The header button stays in the same place when switching to Watch; wait for the
-    # active snap to finish before showing stats, then ensure Watch resumes on return.
-    adb("shell", "settings", "put", "system", "user_rotation", "1")
+    def game_clock(root):
+        return next(t for t in texts(root) if t and re.match(r"^Q\d+\s+\d+:\d+$", t))
+
+    def options_choice(item, name):
+        tap(capture(name + "-ready"), "Options")
+        menu = wait_for(name + "-options", lambda r: "GameCast options" in texts(r))
+        assert any((n.get("resource-id") or "").endswith("game-dialog-surface") for n in menu.iter("node")), "Live menu must use themed dialog surface"
+        tap(menu, item)
+        return capture(name)
+
+    def open_box(name):
+        options_choice("Box score", name)
+        return wait_for(name, lambda r: "Live box score" in texts(r) or "Final statistics" in texts(r))
+
+    viewer = wait_for("game-day-portrait", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
+    badges = [n for n in viewer.iter("node") if n.get("content-desc", "").endswith(" team badge")]
+    assert len(badges) == 2, "Broadcast scoreboard must expose both team badges"
+    assert any((n.get("resource-id") or "").endswith("game-day-field-frame") for n in viewer.iter("node"))
+    before_clock = game_clock(viewer)
+    for name in ("Full field", "Broadcast", "Follow ball"):
+        choices = options_choice("Camera", "camera-" + name.replace(" ", "-"))
+        tap(choices, name)
+        assert before_clock == game_clock(capture("camera-returned")), "Camera changes advanced the game clock"
+    for name in ("Game speed", "Replay speed"):
+        choices = options_choice(name, name.replace(" ", "-"))
+        assert {"0.5×", "1×", "1.5×", "2×"} <= texts(choices)
+        tap(choices, "1.5×")
+        assert before_clock == game_clock(capture("speed-returned")), "Viewing speed changed the game clock"
+    tap(capture("team-ready"), "Team")
+    team = wait_for("team-depth", lambda r: "Coach talk" in texts(r))
+    assert any("Energy" in (t or "") and "Morale" in (t or "") for t in texts(team))
+    assert not enabled(team, "Coach talk"), "Coach talk must be disabled outside an eligible break"
+    assert "Available at timeouts and quarter breaks" in texts(team)
+    assert "Talk to player" not in texts(team), "Individual talks must not be offered"
+    assert "Starter" in texts(team) and not enabled(team, "Starter")
+    assert len([n for n in team.iter("node") if n.get("text") == "Sub in"]) <= 2, "Default QB list must stay compact"
+    tap(team, "Use second unit")
+    second = wait_for("second-unit-confirm", lambda r: "Use second unit?" in texts(r))
+    tap(second, "Use second unit")
+    second = capture("second-unit-active")
+    assert "Return to starters" in texts(second)
+    assert "Starter" in texts(second)
+    tap(second, "Return to starters")
+    team = capture("first-unit-restored")
+    assert "Use second unit" in texts(team)
+    if "Sub in" in texts(team):
+        tap(team, "Sub in")
+        scope = wait_for("live-substitution-scope", lambda r: "This game only" in texts(r))
+        tap(scope, "This game only")
+        switched = capture("live-substitution-applied")
+        assert "Starter" in texts(switched) and not enabled(switched, "Starter")
+        assert "Automatic rotation" in texts(switched)
+        tap(switched, "Automatic rotation")
+    tap(capture("team-return-ready"), "Return to game")
+    assert before_clock == game_clock(capture("team-returned")), "Team management advanced the game clock"
+    for rotation, name in ((1, "landscape"), (0, "portrait-restored")):
+        adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
+        adb("shell", "settings", "put", "system", "user_rotation", str(rotation))
+        time.sleep(2)
+        rotated = capture("game-day-" + name)
+        assert has_field(rotated) and "Options" in texts(rotated)
+        field_node = next(n for n in rotated.iter("node") if (n.get("resource-id") or "").endswith("game-day-field"))
+        dock_node = next(n for n in rotated.iter("node") if (n.get("resource-id") or "").endswith("game-day-controls"))
+        field_bounds = list(map(int, re.findall(r"\d+", field_node.get("bounds"))))
+        dock_bounds = list(map(int, re.findall(r"\d+", dock_node.get("bounds"))))
+        assert field_bounds[3] <= dock_bounds[1], "Controls overlap framed field"
+        assert before_clock == game_clock(rotated)
+    # Fold-size resize while retaining the same game and score panel.
+    adb("shell", "wm", "size", "1768x2208")
+    time.sleep(3)
+    folded = capture("game-day-fold")
+    assert has_field(folded) and "Options" in texts(folded)
+    assert before_clock == game_clock(folded)
+    adb("shell", "wm", "size", "reset")
     time.sleep(2)
-    ready = capture("watch-ready")
-    tap(ready, "Watch CPU")
-    tap(ready, "Box score")
-    paused = wait_for("watch-box-paused", lambda r: "Live box score" in texts(r))
-    snapshot = texts(paused)
+    box = open_box("live-box-score")
+    assert any("since kickoff" in (t or "") for t in texts(box))
+    baseline = texts(box)
+    tap(box, "Return to game")
+    tap(capture("manual-replay-more"), "More")
+    replay = wait_for("manual-replay-ready", lambda r: "Replay last" in texts(r))
+    tap(replay, "Replay last")
+    returned = wait_for("manual-replay-returned", lambda r: "Options" in texts(r) and ("Call play" in texts(r) or "Call defense" in texts(r)))
+    assert before_clock == game_clock(returned), "Replay consumed game time"
+    after = open_box("replay-stats-after")
+    assert texts(after) == baseline, "Replay changed scores, morale or statistics"
+    tap(after, "Return to game")
+    tap(capture("watch-ready"), "Watch CPU")
+    # Viewing options must be reachable while Watch is advancing.
+    watch_box = open_box("watch-box-score")
+    snapshot = texts(watch_box)
     time.sleep(2)
     assert texts(capture("watch-box-still-paused")) == snapshot
-    tap(paused, "Return to game")
-    tap(ready, "Box score")
-    resumed = wait_for("watch-box-resumed", lambda r: "Live box score" in texts(r))
-    assert texts(resumed) != snapshot, "Watch did not advance after returning from the box score"
-    assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip()
-    print("Watch mode box-score pause/resume passed.")
-    # Finish the Watch pause/resume check, then reopen the uncommitted game in Play mode.
-    # UIAutomator waits for idle, so a continuously animated Watch game is unsuitable
-    # for capturing confirmation controls. Never reuse Play-mode bounds after mode changes.
-    adb("shell", "input", "keyevent", "4")
-    time.sleep(1)
-    adb("shell", "input", "keyevent", "4")
-    overview=wait_for("skip-reopen-overview",overview_ready,timeout=300)
-    tap(overview,"Play game")
-    toss=wait_for("skip-reopen-toss",lambda r:"Heads" in texts(r) or "Receive" in texts(r) or "Start game" in texts(r))
-    if "Heads" in texts(toss):
-        tap(toss,"Heads")
-        toss=wait_for("skip-reopen-result",lambda r:"Receive" in texts(r) or "Start game" in texts(r))
-    if "Receive" in texts(toss):
-        tap(toss,"Receive")
-        toss=wait_for("skip-reopen-ready",lambda r:"Start game" in texts(r))
-    tap(toss,"Start game")
-    watch_view = wait_for("skip-play-ready", lambda r: enabled(r, "Skip to end"))
-    tap(watch_view, "Skip to end")
-    confirmation = wait_for("skip-confirm-cancel", lambda r: "Skip to end?" in texts(r), timeout=300)
+    tap(watch_box, "Return to game")
+    ready = capture("takeover-ready")
+    tap(ready, "Take over")
+    controlled = wait_for("takeover-controlled", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
+    assert "Watch CPU" in texts(controlled), "Take over did not leave Watch mode"
+    tap(controlled, "More")
+    tap(scroll_to_text("skip-ready", "Skip to end"), "Skip to end")
+    confirmation = wait_for("skip-confirm-cancel", lambda r: "Skip to end?" in texts(r))
     cancel_label = next(t for t in texts(confirmation) if (t or "").casefold() == "keep playing")
     tap(confirmation, cancel_label)
-    cancelled = wait_for("skip-cancelled", lambda r: enabled(r, "Skip to end") and "BALL ON" in texts(r))
-    assert "Close" not in texts(cancelled), "Cancelling Skip unexpectedly finished the game"
-    tap(cancelled, "Skip to end")
-    confirmation = wait_for("skip-confirm-finish", lambda r: "Skip to end?" in texts(r), timeout=300)
+    cancelled = capture("skip-cancelled")
+    assert "Close" not in texts(cancelled)
+    if "Skip to end" not in texts(cancelled):
+        tap(cancelled, "More")
+    tap(scroll_to_text("skip-ready-again", "Skip to end"), "Skip to end")
+    confirmation = wait_for("skip-confirm-finish", lambda r: "Skip to end?" in texts(r))
     accept_label = next(t for t in texts(confirmation) if (t or "").casefold() == "simulate remainder")
     tap(confirmation, accept_label)
-    final = wait_for("skip-final-saved", lambda r: enabled(r, "Close") and "BALL ON" in texts(r), timeout=300)
-    assert not enabled(final, "Skip to end")
-    tap(final, "Box score")
-    final_box = wait_for("skip-final-box", lambda r: "Final statistics" in texts(r))
+    final = wait_for("skip-final-saved", lambda r: enabled(r, "Close"), timeout=300)
+    final_box = open_box("skip-final-box")
+    assert "Final statistics" in texts(final_box)
     tap(final_box, "Return to game")
-    final = wait_for("skip-final-close", lambda r: enabled(r, "Close"))
-    tap(final, "Close")
-    overview = wait_for("after-live-view", lambda r: overview_ready(r), timeout=300)
-    assert adb("shell", "pidof", "antdroid.cfbcoach.dev").strip(), "Closing the saved final crashed the app"
+    tap(capture("skip-final-close"), "Close")
+    overview = wait_for("after-live-view", overview_ready, timeout=300)
     assert "Play game" not in texts(overview), "Saved game was not marked completed"
-    print("Skip cancellation, confirmed simulation, saved final box score and Close without crash passed.")
+    print("Broadcast scoreboard, inset frame, cameras, independent speeds, live morale, coach talks, replay invariants, rotation/Fold, Watch options, Take over and saved final passed.")
     previous = calendar(overview)
     tap(overview, advance_action(overview))
     advanced = wait_for("calendar-advanced", lambda r: overview_ready(r, previous), timeout=300)
@@ -468,8 +430,21 @@ def check_remaining_management():
     program=wait_for("management-staff-cancel",lambda r:"History & titles" in texts(r))
     tap(program,"History & titles")
     wait_for("management-program-history",lambda r:any(t and "National titles:" in t for t in texts(r)))
-    tap(capture("management-before-development"),"Development")
-    wait_for("management-program-development",lambda r:"Availability" in texts(r) and "Morale" in texts(r))
+    assert "Development" not in texts(capture("program-without-development")), "Development must move out of Program & staff"
+    tap(capture("management-before-coach"), "Coach")
+    coach_hub = wait_for("coach-hub", lambda r: "Game plan" in texts(r) and "Development" in texts(r))
+    tap(coach_hub, "Development")
+    development = wait_for("management-coach-development",lambda r:"Availability" in texts(r) and "Morale" in texts(r))
+    assert_action_spacing(development, ["Team talk · morale", "Injuries & availability"])
+    tap(development, "Team talk · morale")
+    choices = wait_for("season-talk-choices", lambda r: "Encourage" in texts(r))
+    tap(choices, "Encourage")
+    reaction = wait_for("season-talk-reaction", lambda r: "Team reaction" in texts(r))
+    tap(reaction, "OK")
+    used = wait_for("season-talk-used", lambda r: "Team talk · used this week" in texts(r))
+    assert not enabled(used, "Team talk · used this week"), "Used weekly talk must be disabled"
+    assert any(t and "Available after the next weekly advance" in t for t in texts(used))
+    assert_action_spacing(used, ["Team talk · used this week", "Injuries & availability"])
     tap(capture("management-before-news"),"News")
     news=wait_for("management-news-cards",lambda r:"Read story ›" in texts(r))
     tap(news,"Read story ›")
@@ -477,12 +452,42 @@ def check_remaining_management():
     assert any("Dynasty Wire" in (t or "") for t in texts(story))
     tap(story,"‹ Back to headlines")
     wait_for("management-news-return",lambda r:"News & headlines" in texts(r))
-    tap(capture("management-before-schedule"),"Schedule")
+    tap(capture("management-before-schedule"),"Overview")
+    home = scroll_to_text("overview-week-links", next(t for t in texts(capture("overview-week-links-ready")) if (t or "").startswith("This week's games")))
+    current_link = next(t for t in texts(home) if (t or "").startswith("This week's games"))
+    previous_link = next(t for t in texts(home) if (t or "").startswith("Last week's results"))
+    tap(home, previous_link)
+    previous = wait_for("overview-last-week-schedule", lambda r: "Season schedule" in texts(r))
+    assert "All teams" in texts(previous)
+    tap(previous,"Overview")
+    home = capture("overview-return-week-links")
+    tap(home, current_link)
+
     schedule=wait_for("management-schedule",lambda r:"Season schedule" in texts(r))
-    tap(schedule,"Your team")
+    tap(schedule,"All teams")
     options=wait_for("management-schedule-scope",lambda r:"All teams" in texts(r))
+    assert any((n.get("resource-id") or "").endswith("game-dialog-surface") for n in options.iter("node")), "Picker must use themed choices"
+    scroll = next(n for n in options.iter("node") if "ScrollView" in n.get("class", "") and any(c.get("text") == "Your team" for c in n.iter("node")))
+    left, top, right, bottom = map(int, re.findall(r"\d+", scroll.get("bounds")))
+    first_choice = next(n for n in options.iter("node") if n.get("text") == "Your team")
+    first_bounds = list(map(int, re.findall(r"\d+", first_choice.get("bounds"))))
+    first_height = first_bounds[3] - first_bounds[1]
+    for label in ("Your team", "All teams"):
+        choice = next(n for n in options.iter("node") if n.get("text") == label)
+        x1, y1, x2, y2 = map(int, re.findall(r"\d+", choice.get("bounds")))
+        assert top <= y1 < y2 <= bottom and y2-y1 >= first_height - 2, "Short menu clipped a choice"
     tap(options,"All teams")
     schedule=wait_for("management-all-team-schedule",lambda r:"All teams" in texts(r) and "All weeks" not in texts(r))
+    assert any(" · Current" in (t or "") for t in texts(schedule)), "Current week must be labeled"
+    game = scroll_to_text("schedule-current-game", "Watch / Play ›")
+    league_game = next(n for n in game.iter("node") if (n.get("resource-id") or "").endswith("schedule-league-game") and n.get("text") == "Watch / Play ›")
+    tap(league_game, "Watch / Play ›")
+    matchup = wait_for("schedule-game-center", lambda r: "‹ Back to schedule" in texts(r))
+    assert {"Watch game", "Play game"} <= texts(matchup), "Current matchups need both entry points"
+    tap(matchup, "Play game")
+    choice = wait_for("schedule-team-choice", lambda r: "Choose team to control" in texts(r))
+    tap(choice, "Cancel")
+    schedule = wait_for("schedule-choice-cancelled", lambda r: "Season schedule" in texts(r))
     tap(schedule,"Standings & polls")
     rankings=wait_for("management-rankings",lambda r:"National rankings" in texts(r))
     tap(rankings,"Conference")
@@ -612,8 +617,95 @@ def check_management_layouts():
 
 
 
+def node_with_id(root, suffix):
+    return next(n for n in root.iter("node") if (n.get("resource-id") or "").endswith(suffix))
+
+
+def tap_id(root, suffix):
+    node = node_with_id(root, suffix)
+    left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
+    assert right > left and bottom > top
+    adb("shell", "input", "tap", str((left+right)//2), str((top+bottom)//2))
+    time.sleep(1)
+
+
+def check_career_options():
+    for role, scope, expected_call in [("Offensive coordinator", "Offense", "Call play"), ("Defensive coordinator", "Defense", "Call defense")]:
+        adb("shell", "pm", "clear", "antdroid.cfbcoach.dev")
+        adb("shell", "monkey", "-p", "antdroid.cfbcoach.dev", "-c", "android.intent.category.LAUNCHER", "1")
+        home = wait_for("career-launch-"+scope, lambda r: "New dynasty" in texts(r) and "Options" in texts(r) and not any(t and t.startswith("Loading ") for t in texts(r)), timeout=300)
+        assert any(t and t.startswith("Pre-release 0.20 · Build ") for t in texts(home))
+        node_with_id(home, "opening-logo")
+        tap(home, "Options")
+        options = wait_for("career-options", lambda r: "Default coaching role" in texts(r))
+        tap(options, "Default coaching role")
+        roles = wait_for("career-roles", lambda r: role in texts(r))
+        tap(roles, role)
+        tap(capture("career-before-firing"), "Options")
+        options = wait_for("career-firing-menu", lambda r: "Coach firing" in texts(r))
+        tap(options, "Coach firing")
+        options = wait_for("career-firing-default", lambda r: "Off" in texts(r))
+        tap(options, "Off")
+        tap(capture("career-create-ready"), "New dynasty")
+        tap(capture("career-create-school"), "Choose your team")
+        tap(wait_for("career-schools", lambda r: "Air Force" in texts(r)), "Air Force")
+        form = scroll_to_text("career-form-"+scope, "Start dynasty")
+        assert role in texts(form)
+        assert node_with_id(form, "new-coach-firing").get("checked") == "false"
+        tap(form, "Start dynasty")
+        overview = wait_for("career-overview-"+scope, overview_ready, timeout=300)
+        tap(overview, "Coach")
+        plan = wait_for("career-plan-"+scope, lambda r: "Development" in texts(r) and "Game plan" in texts(r))
+        scroll_to_text("career-role-label-"+scope, role + " · The staff manages the other side.")
+        offense = scroll_to_text("career-offense-plan-"+scope, "Offensive playbook — available calls and CPU run/pass tendencies")
+        assert (node_with_id(offense, "offensive-playbook").get("enabled") == "true") == (scope == "Offense")
+        defense = scroll_to_text("career-defense-plan-"+scope, "Defensive playbook — available fronts and coverages")
+        assert (node_with_id(defense, "defensive-playbook").get("enabled") == "true") == (scope == "Defense")
+        tap(defense, "Settings")
+        settings = scroll_to_text("career-settings-"+scope, "Coach can be fired")
+        assert node_with_id(settings, "coach-firing-setting").get("checked") == "false"
+        tap_id(settings, "coach-firing-setting")
+        tap(capture("career-before-save"), "‹ Exit Dynasty")
+        library = wait_for("career-library-"+scope, lambda r: "Your dynasties" in texts(r))
+        tap(scroll_to_text("career-load-"+scope, "Load"), "Load")
+        restored = wait_for("career-restored-"+scope, overview_ready, timeout=300)
+        tap(restored, "Settings")
+        settings = scroll_to_text("career-firing-restored-"+scope, "Coach can be fired")
+        assert node_with_id(settings, "coach-firing-setting").get("checked") == "true"
+        tap(settings, "Coach")
+        wait_for("career-restored-coach-"+scope, lambda r: "Coaching Hub" in texts(r))
+        tap(scroll_to_text("career-development-tab-"+scope, "Development", toward_start=True), "Development")
+        development = wait_for("career-development-"+scope, lambda r: scope+" talk · morale" in texts(r))
+        tap(development, scope+" talk · morale")
+        tap(wait_for("career-talk-tone", lambda r: "Encourage" in texts(r)), "Encourage")
+        tap(wait_for("career-talk-result", lambda r: "Team reaction" in texts(r)), "OK")
+        used = wait_for("career-talk-used-"+scope, lambda r: scope+" talk · used this week" in texts(r))
+        assert not enabled(used, scope+" talk · used this week")
+        tap(used, "Overview")
+        overview = wait_for("career-live-preparation-"+scope, overview_ready, timeout=300)
+        for week in range(4):
+            if "Play game" in texts(overview): break
+            previous = calendar(overview)
+            tap(overview, advance_action(overview))
+            overview = wait_for("career-week-"+scope+str(week), lambda r: overview_ready(r, previous), timeout=300)
+        tap(overview, "Play game")
+        toss = wait_for("career-toss-"+scope, lambda r: "Heads" in texts(r) or "Receive" in texts(r) or "Start game" in texts(r))
+        if "Heads" in texts(toss):
+            tap(toss, "Heads")
+            toss = wait_for("career-toss-result", lambda r: "Receive" in texts(r) or "Start game" in texts(r))
+        if "Receive" in texts(toss):
+            tap(toss, "Receive")
+            toss = wait_for("career-toss-ready", lambda r: "Start game" in texts(r))
+        tap(toss, "Start game")
+        viewer = wait_for("career-live-"+scope, lambda r: expected_call in texts(r), timeout=240)
+        other_call = "Call defense" if scope == "Offense" else "Call play"
+        assert other_call not in texts(viewer), "Coordinator received the other side's play controls"
+        assert enabled(viewer, expected_call)
+    print("Opening branding/options, both coordinator roles, plan permissions, firing persistence, scoped talks and live play controls passed.", flush=True)
+
+
 if __name__ == "__main__":
     try:
-        main()
+        check_career_options() if "--career-options" in sys.argv else main()
     finally:
         Path("android-logcat.txt").write_bytes(adb("logcat", "-d"))

@@ -63,7 +63,7 @@ public sealed partial class FoundationPage
         _manualSaveButton.Text = "Save";
         return new VerticalStackLayout { Spacing = 12, Children =
         {
-            _overviewBanner, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _advanceWeekButton, _manualSaveButton } },
+            _overviewBanner, new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _advanceWeekButton, _manualSaveButton } },
             _overviewGameActions, _homeHighlights
         } };
     }
@@ -146,6 +146,19 @@ public sealed partial class FoundationPage
         pollPanel.IsVisible=false;
         var dashboard=ResponsivePanels(ManagementPanel("Season overview", cards),ManagementPanel("Weekly tasks",tasks),pollPanel);
         dashboard.SizeChanged+=(_,_)=>pollPanel.IsVisible=dashboard.Width>=600;
+        var weeklyGames = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
+        var thisWeek = new Button { Text = $"This week's games · Week {state.Week} ›", AutomationId = "overview-this-week" };
+        thisWeek.Clicked += (_, _) => OpenLeagueWeek(state.Week);
+        weeklyGames.Children.Add(thisWeek);
+        var lastWeek = state.Schedule.Where(g => g.SeasonYear == state.SeasonYear && g.Week < state.Week)
+            .Select(g => (int?)g.Week).Max();
+        if (lastWeek is int previousWeek)
+        {
+            var results = new Button { Text = $"Last week's results · Week {previousWeek} ›", AutomationId = "overview-last-week" };
+            results.Clicked += (_, _) => OpenLeagueWeek(previousWeek);
+            weeklyGames.Children.Add(results);
+        }
+        _homeHighlights.Children.Add(weeklyGames);
         _homeHighlights.Children.Add(dashboard);
         if (state.UserCoachIsFired || state.UserCoachJobOffers.Any(o => o.Status == UserCoachJobOfferStatus.Pending))
             _homeHighlights.Children.Add(NavigationCard(state.UserCoachIsFired ? "ACTION REQUIRED" : "COACHING CAROUSEL", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
@@ -198,7 +211,7 @@ public sealed partial class FoundationPage
         var college = new Button { Text = "Awards, polls & program center ›", BackgroundColor = DynastyTheme.Palette("#645025") };
         college.Clicked += async (_, _) => await ShowCollegeCenterAsync();
         _seasonHub.Children.Add(college);
-        var careers = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
+        var careers = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap };
         foreach (var item in new[] { ("Player departures", 5), ("Hall of Fame", 6) })
         {
             var open = new Button { Text = item.Item1 + " ›", FontSize = 12, Margin = new Thickness(3) };
@@ -226,7 +239,7 @@ public sealed partial class FoundationPage
         _overviewGameActions.Content = new Border { StrokeThickness = 0, Padding = 10,
             BackgroundColor = DynastyTheme.Palette("#172733"), Content = new VerticalStackLayout { Spacing = 8, Children =
             {
-                title, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
+                title, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
             } } };
         _overviewGameActions.IsVisible = true;
     }
@@ -277,7 +290,7 @@ public sealed partial class FoundationPage
         return new Border { StrokeThickness = 0, Padding = 11, BackgroundColor = DynastyTheme.Palette("#1B2B37"),
             Content = new VerticalStackLayout { Spacing = 7, Children =
             {
-                matchup, note, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
+                matchup, note, new Label { Text = GameOutlookLabel(game), FontSize = 11, TextColor = DynastyTheme.Muted }, new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { simulate, watch, play } }
             } } };
     }
 
@@ -285,7 +298,7 @@ public sealed partial class FoundationPage
     {
         if (_currentDynasty is null) return;
         var controlled = game.InvolvesTeam(_currentDynasty.UserTeamName) ? _currentDynasty.UserTeamName :
-            await DisplayActionSheetAsync("Choose team to control", "Cancel", null, game.AwayTeamName, game.HomeTeamName);
+            await GameDialogs.ActionSheetAsync(this, "Choose team to control", "Cancel", null, game.AwayTeamName, game.HomeTeamName);
         if (string.IsNullOrWhiteSpace(controlled) || controlled == "Cancel") return;
         await OpenGameDayAsync(game, GameDayMode.Play, controlled);
     }

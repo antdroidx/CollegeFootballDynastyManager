@@ -26,10 +26,49 @@ public sealed partial class FoundationPage
 
     private View GameDetailCell(ScheduledGame game)
     {
-        if (!game.HasPlayed) return TableText(GameOutlookLabel(game));
+        if (!game.HasPlayed)
+        {
+            var available = _currentDynasty is not null && GameDayEngine.IsAvailable(game,
+                _currentDynasty.SeasonYear, _currentDynasty.Week, _currentDynasty.Phase);
+            var open = new Button { Text = available ? "Watch / Play ›" : "Preview ›", FontSize = 11,
+                BackgroundColor = Colors.Transparent, TextColor = DynastyTheme.Accent,
+                AutomationId = game.InvolvesTeam(_currentDynasty!.UserTeamName) ? "schedule-user-game" : "schedule-league-game" };
+            open.Clicked += async (_, _) => await ShowScheduledMatchupAsync(game);
+            return open;
+        }
         var button = new Button { Text = "Box score & highlights", FontSize = 11, BackgroundColor = Colors.Transparent, TextColor = DynastyTheme.Accent };
         button.Clicked += async (_, _) => await ShowRecordedGameAsync(game);
         return button;
+    }
+
+    private async Task ShowScheduledMatchupAsync(ScheduledGame game)
+    {
+        if (_currentDynasty is null) return;
+        var page = new ContentPage { Title = "Game center", BackgroundColor = DynastyTheme.Background };
+        var body = new VerticalStackLayout { Padding = 16, Spacing = 12 };
+        var close = new Button { Text = "‹ Back to schedule" };
+        close.Clicked += async (_, _) => await Navigation.PopModalAsync();
+        body.Children.Add(close);
+        body.Children.Add(SectionTitle("Game center", FormatScheduleWeek(game.Week)));
+        body.Children.Add(SchoolBanner(game.AwayTeamName, "Away"));
+        body.Children.Add(SchoolBanner(game.HomeTeamName, "Home"));
+        body.Children.Add(new Label { Text = GameOutlookLabel(game), TextColor = DynastyTheme.Muted });
+        if (GameDayEngine.IsAvailable(game, _currentDynasty.SeasonYear, _currentDynasty.Week, _currentDynasty.Phase))
+        {
+            async Task Open(GameDayMode mode)
+            {
+                await Navigation.PopModalAsync();
+                if (mode == GameDayMode.Play) await OpenPlayModeAsync(game);
+                else await OpenGameDayAsync(game, mode);
+            }
+            body.Children.Add(new ActionRow { Direction = Microsoft.Maui.Layouts.FlexDirection.Row,
+                Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = {
+                    GameModeButton("Watch game", DynastyTheme.Palette("#315D59"), () => Open(GameDayMode.Watch)),
+                    GameModeButton("Play game", DynastyTheme.Palette("#8A6234"), () => Open(GameDayMode.Play)) } });
+        }
+        else body.Children.Add(new Label { Text = "Watch and Play become available when this week begins.", TextColor = DynastyTheme.Muted });
+        page.Content = new ScrollView { Content = body };
+        await Navigation.PushModalAsync(page);
     }
 
     private View BuildLeagueFeatureSettings()

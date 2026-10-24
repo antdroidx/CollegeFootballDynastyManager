@@ -42,7 +42,7 @@ public sealed partial class FoundationPage
             BackgroundColor = DynastyTheme.Palette("#315D59"), TextColor = Colors.White, Padding = new Thickness(16, 10) };
         auto.Clicked += async (_, _) =>
         {
-            var choice = await DisplayActionSheetAsync("Auto Set depth chart", "Cancel", null, "Whole team · roster, scheme & staff", $"Sort {label} depth only");
+            var choice = await GameDialogs.ActionSheetAsync(this, "Auto Set depth chart", "Cancel", null, "Whole team · roster, scheme & staff", $"Sort {label} depth only");
             if (_currentDynasty is null || choice is null || choice == "Cancel") return;
             _currentDynasty = DepthChartService.AutoSet(_currentDynasty, _currentDynasty.UserTeamName,
                 choice.StartsWith("Sort", StringComparison.Ordinal) ? code : null);
@@ -57,7 +57,7 @@ public sealed partial class FoundationPage
         } }, 0);
         header.Add(auto, 1);
         _depthChartOrganizer.Children.Add(header);
-        var units = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, AlignItems = FlexAlignItems.Center };
+        var units = new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, AlignItems = FlexAlignItems.Center };
         foreach (var (name, first, last) in new[] { ("Offense", 0, 9), ("Defense", 10, 18), ("Special teams", 19, 20) })
         {
             var active = code >= first && code <= last;
@@ -128,6 +128,7 @@ public sealed partial class FoundationPage
                 actions.Children.Add(move);
             }
         }
+        if (_currentDynasty is { } current && (!UserCoachControlService.ControlsPosition(current, DepthChartService.PositionForCode(code)) || !UserCoachControlService.ControlsPosition(current, DepthChartService.PositionForCode(DepthChartService.AssignedCode(current, player))))) actions.IsEnabled = false;
         row.Add(actions, 3);
         var card = new Border { StrokeThickness = 0, StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = row,
             BackgroundColor = DynastyTheme.Palette(rank == 1 ? "#244B45" : "#243542"), Opacity = player.IsRedshirted ? .6 : 1 };

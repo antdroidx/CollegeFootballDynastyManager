@@ -155,6 +155,7 @@ public static class ScoutingDepartmentService
         RecruitingSource source,
         Guid prospectId)
     {
+        if (!UserCoachControlService.CanRecruit(state, source, prospectId)) return state;
         var interaction = InteractiveRecruitingService.GetInteraction(
             state, source, prospectId);
         var interactions = state.RecruitingInteractions.ToList();

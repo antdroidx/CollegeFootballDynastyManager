@@ -6,6 +6,190 @@ namespace DynastyManager.Core.Tests;
 
 public sealed class UserCoachCareerTests
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(100)]
+    public void CoordinatorStaffRecruitsTheOtherSideEvenWithManualAssistanceOff(int savedWorkload)
+    {
+        var own = new HighSchoolRecruit { RecruitId = Guid.NewGuid(), FullName = "Quarterback", Position = Position.QB, SeasonYear = 2028, TrueOverallRating = 70, PotentialRating = 80, StarRating = 3, HomeRegion = 1 };
+        var other = own with { RecruitId = Guid.NewGuid(), FullName = "Cornerback", Position = Position.CB };
+        var state = State() with { Phase = SeasonPhase.Recruiting, UserCoachRole = StaffRole.OffensiveCoordinator,
+            RecruitingAssistanceEnabled = false, RecruitingAssistanceWorkloadPercent = savedWorkload,
+            RecruitingPointsRemaining = 400, HighSchoolRecruitingPool = [own, other] };
+        var result = CpuRecruitingService.ApplyWeeklyUserAssistance(state, Teams()["User"]);
+        Assert.Contains(result.RecruitingInteractions, r => r.ProspectId == other.RecruitId && r.WasCpuAssisted && r.ScholarshipOffered);
+        Assert.DoesNotContain(result.RecruitingInteractions, r => r.ProspectId == own.RecruitId && r.WasCpuAssisted);
+        Assert.True(result.RecruitingPointsRemaining >= 200);
+    }
+
+    [Theory]
+    [InlineData(StaffRole.OffensiveCoordinator)]
+    [InlineData(StaffRole.DefensiveCoordinator)]
+    public void CpuManagesTheRestOfTheStaffInCoordinatorCareers(StaffRole role)
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = role }, teams.Values);
+        var user = state.UserHeadCoach!;
+        var originalHead = StaffManagementService.GetStaff(state, "User", StaffRole.HeadCoach)!;
+        state = state with { TeamSeasonHistory = [Season("User", 0, 12)],
+            Staff = state.Staff.Select(member => member with { ContractYearsRemaining = 0 }).ToArray() };
+        var changed = StaffMarketService.RunCpuCarousel(state, teams);
+        Assert.Equal(user.StaffId, changed.UserHeadCoach!.StaffId);
+        Assert.DoesNotContain(changed.Staff, member => member.TeamName == "User" && member.Role == role);
+        var newHead = StaffManagementService.GetStaff(changed, "User", StaffRole.HeadCoach);
+        Assert.NotNull(newHead);
+        Assert.NotEqual(originalHead.StaffId, newHead!.StaffId);
+        Assert.All(Enum.GetValues<StaffRole>(), staffRole => Assert.NotNull(StaffManagementService.GetStaff(changed, "User", staffRole)));
+    }
+
+    [Fact]
+    public void CoordinatorDoesNotInheritTheCpuHeadCoachsSharedIdentity()
+    {
+        var teams = Teams();
+        var initial = StaffManagementService.EnsureLeagueStaff(State(), teams.Values);
+        var cpuHead = initial.UserHeadCoach! with { StaffId = Guid.Parse("aaaaaaaa-1111-2222-3333-444444444444"), FullName = "CPU Head", Role = StaffRole.HeadCoach };
+        var shared = cpuHead with { Role = StaffRole.OffensiveCoordinator, IsHeadCoachRoleAssignment = true };
+        var state = initial with { UserHeadCoach = null, UserCoachRole = StaffRole.OffensiveCoordinator, Staff = [cpuHead, shared] };
+        var ready = StaffManagementService.EnsureLeagueStaff(state, teams.Values);
+        Assert.NotEqual(cpuHead.StaffId, ready.UserHeadCoach!.StaffId);
+        Assert.False(ready.UserHeadCoach.IsHeadCoachRoleAssignment);
+        Assert.Equal(cpuHead.StaffId, StaffManagementService.GetStaff(ready, "User", StaffRole.HeadCoach)!.StaffId);
+    }
+
+    [Fact]
+    public void CoordinatorVacanciesDoNotRequireAHeadCoachVacancy()
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = StaffRole.DefensiveCoordinator }, teams.Values);
+        state = state with { UserHeadCoach = state.UserHeadCoach! with { Reputation = 95 },
+            TeamSeasonHistory = [Season("User", 14, 0, true, true, true, 1)],
+            Staff = state.Staff.Select(member => member with { ContractYearsRemaining = member.Role == StaffRole.DefensiveCoordinator ? 1 : 5 }).ToArray() };
+        var offers = UserCoachCareerService.GenerateJobOffers(state, teams).UserCoachJobOffers;
+        Assert.Contains(offers, o => o.Role == StaffRole.DefensiveCoordinator);
+        Assert.DoesNotContain(offers, o => o.Role == StaffRole.HeadCoach);
+    }
+
+    [Fact]
+    public void SuccessfulCoordinatorReceivesBothCoordinatorAndHeadCoachOffers()
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = StaffRole.OffensiveCoordinator }, teams.Values);
+        state = state with { UserHeadCoach = state.UserHeadCoach! with { Reputation = 95 },
+            TeamSeasonHistory = [Season("User", 14, 0, true, true, true, 1)],
+            Staff = state.Staff.Select(member => member with { ContractYearsRemaining = 1 }).ToArray() };
+        var offered = UserCoachCareerService.GenerateJobOffers(state, teams);
+        Assert.Contains(offered.UserCoachJobOffers, o => o.Role == StaffRole.HeadCoach);
+        Assert.Contains(offered.UserCoachJobOffers, o => o.Role == StaffRole.OffensiveCoordinator);
+    }
+
+    [Fact]
+    public void CoordinatorCannotInjectAnOffSidePlayIntoTheEngine()
+    {
+        var manual = GameDayEngineTests.Session(GameDayMode.Play);
+        var automatic = GameDayEngineTests.Session(GameDayMode.Play);
+        if (manual.KickoffPending) { GameDayEngine.Step(manual); GameDayEngine.Step(automatic); }
+        manual.ControlledTeamName = manual.PossessionTeamName;
+        automatic.ControlledTeamName = automatic.PossessionTeamName;
+        manual.UserCoachRole = automatic.UserCoachRole = StaffRole.DefensiveCoordinator;
+        var denied = GameDayEngine.Step(manual, PlaybookCatalog.OffensivePlays.First().Id);
+        var cpu = GameDayEngine.Step(automatic);
+        Assert.Equal(cpu.OffensivePlayId, denied.OffensivePlayId);
+        Assert.Equal(cpu.Yards, denied.Yards);
+        Assert.Equal(cpu.Outcome, denied.Outcome);
+    }
+
+    [Fact]
+    public void FiringCanBeDisabledWithoutErasingPerformanceOrEndingTheContract()
+    {
+        var teams = Teams();
+        var source = StaffManagementService.EnsureLeagueStaff(State(), teams.Values);
+        source = source with { UserCoachJobSecurity = 25, UserHeadCoach = source.UserHeadCoach! with { ContractYearsRemaining = 1 },
+            TeamSeasonHistory = [Season("User", 0, 12)] };
+        var fired = UserCoachCareerService.EvaluateCompletedSeason(source, teams);
+        var protectedCoach = UserCoachCareerService.EvaluateCompletedSeason(source with { UserCoachFiringEnabled = false }, teams);
+        Assert.True(fired.UserCoachIsFired);
+        Assert.False(protectedCoach.UserCoachIsFired);
+        Assert.Equal(fired.UserCoachJobSecurity, protectedCoach.UserCoachJobSecurity);
+        Assert.True(protectedCoach.UserHeadCoach!.ContractYearsRemaining > 0);
+    }
+
+    [Theory]
+    [InlineData(StaffRole.OffensiveCoordinator)]
+    [InlineData(StaffRole.DefensiveCoordinator)]
+    public void CoordinatorOccupiesTheirOwnRoleAndKeepsASeparateHeadCoach(StaffRole role)
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = role, UserCoachFiringEnabled = false }, teams.Values);
+        Assert.Equal(role, state.UserHeadCoach!.Role);
+        Assert.Equal(state.UserHeadCoach.StaffId, StaffManagementService.GetStaff(state, "User", role)!.StaffId);
+        Assert.NotEqual(state.UserHeadCoach.StaffId, StaffManagementService.GetStaff(state, "User", StaffRole.HeadCoach)!.StaffId);
+        Assert.DoesNotContain(state.Staff, s => s.TeamName == "User" && s.Role == role);
+        var restored = System.Text.Json.JsonSerializer.Deserialize<DynastyState>(System.Text.Json.JsonSerializer.Serialize(state))!;
+        Assert.Equal(role, restored.UserCoachRole);
+        Assert.False(restored.UserCoachFiringEnabled);
+        Assert.Equal(role, StaffManagementService.EnsureUserHeadCoach(restored, teams.Values).UserHeadCoach!.Role);
+    }
+
+    [Fact]
+    public void OldSaveDefaultsToHeadCoachWithFiringEnabled()
+    {
+        var state = System.Text.Json.JsonSerializer.Deserialize<DynastyState>("""{"DynastyName":"Old","UserTeamName":"User"}""")!;
+        Assert.Equal(StaffRole.HeadCoach, state.UserCoachRole);
+        Assert.True(state.UserCoachFiringEnabled);
+    }
+
+    [Fact]
+    public void CoordinatorCanAcceptHeadCoachPromotionAndKeepsTheirIdentity()
+    {
+        var teams = Teams();
+        var state = StaffManagementService.EnsureLeagueStaff(State() with { UserCoachRole = StaffRole.OffensiveCoordinator }, teams.Values);
+        var offer = new UserCoachJobOffer { OfferId = Guid.NewGuid(), TeamName = "Rival", SeasonYear = state.SeasonYear, Role = StaffRole.HeadCoach, Reason = "Promotion" };
+        state = state with { UserCoachJobOffers = [offer] };
+        var promoted = UserCoachCareerService.AcceptJobOffer(state, offer.OfferId, teams);
+        Assert.Equal(StaffRole.HeadCoach, promoted.UserCoachRole);
+        Assert.Equal(state.UserHeadCoach!.StaffId, promoted.UserHeadCoach!.StaffId);
+        Assert.Equal(StaffRole.HeadCoach, promoted.UserHeadCoach.Role);
+        Assert.True(UserCoachControlService.ControlsOffense(promoted));
+        Assert.True(UserCoachControlService.ControlsDefense(promoted));
+        Assert.NotNull(StaffManagementService.GetStaff(promoted, "User", StaffRole.OffensiveCoordinator));
+    }
+
+    [Fact]
+    public void CoordinatorPlanChangesPreserveTheOtherSide()
+    {
+        var original = new TeamGamePlan { TeamName = "User", Offense = OffensivePlaybook.AirRaid, Defense = DefensivePlaybook.ThreeFour, Tempo = OffensiveTempo.ChewClock };
+        var state = State() with { UserCoachRole = StaffRole.DefensiveCoordinator, TeamGamePlans = [original] };
+        var changed = GamePlanService.SetPlan(state, original with { Offense = OffensivePlaybook.PowerRun, Tempo = OffensiveTempo.UpTempo, Defense = DefensivePlaybook.Nickel });
+        var plan = Assert.Single(changed.TeamGamePlans);
+        Assert.Equal(original.Offense, plan.Offense);
+        Assert.Equal(original.Tempo, plan.Tempo);
+        Assert.Equal(DefensivePlaybook.Nickel, plan.Defense);
+    }
+
+    [Fact]
+    public void CoordinatorCannotScoutOtherSideButCpuAssistanceCan()
+    {
+        var recruit = new HighSchoolRecruit { RecruitId = Guid.NewGuid(), FullName = "Defender", Position = Position.CB, SeasonYear = 2028 };
+        var state = State() with { UserCoachRole = StaffRole.OffensiveCoordinator, RecruitingPointsRemaining = 100, HighSchoolRecruitingPool = [recruit] };
+        Assert.Same(state, InteractiveRecruitingService.Scout(state, RecruitingSource.HighSchool, recruit.RecruitId));
+        var assisted = InteractiveRecruitingService.Scout(state, RecruitingSource.HighSchool, recruit.RecruitId, cpuAssisted: true);
+        Assert.True(assisted.RecruitingPointsRemaining < state.RecruitingPointsRemaining);
+        Assert.True(Assert.Single(assisted.RecruitingInteractions).ScoutingPercent > 0);
+    }
+
+    [Fact]
+    public void CoordinatorTalkOnlyReactsOnTheirSideAndCannotSubstituteOtherSide()
+    {
+        var session = GameDayEngineTests.Session(GameDayMode.Play);
+        session.ControlledTeamName = session.Game.HomeTeamName;
+        session.UserCoachRole = StaffRole.DefensiveCoordinator;
+        var talk = GameDayCoachingService.Talk(session, session.ControlledTeamName, CoachTalkTone.Encourage, CoachTalkAudience.Team)!;
+        Assert.Equal(CoachTalkAudience.Defense, talk.Audience);
+        Assert.All(talk.Reactions, r => Assert.False(GameDayCoachingService.IsOffense(session.PlayersById[r.PlayerId].Position)));
+        var qb = session.Roster.First(p => p.TeamName == session.ControlledTeamName && p.Position == Position.QB);
+        Assert.False(GameDayCoachingService.Substitute(session, session.ControlledTeamName, qb.PlayerId));
+    }
+
     [Fact]
     public void UserHeadCoachIsSeparateFromStaffButFeedsHeadCoachRatings()
     {

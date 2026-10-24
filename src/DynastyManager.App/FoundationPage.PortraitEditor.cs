@@ -53,9 +53,9 @@ public sealed partial class FoundationPage
                 catch { _currentDynasty = before; throw; }
                 await Navigation.PopModalAsync(); result.TrySetResult(next);
             }
-            catch (Exception ex) { saving = false; page.IsSaving = false; save.IsEnabled = true; cancel.IsEnabled = true; await page.DisplayAlertAsync("Could not save appearance", ex.Message, "Close"); }
+            catch (Exception ex) { saving = false; page.IsSaving = false; save.IsEnabled = true; cancel.IsEnabled = true; await GameDialogs.AlertAsync(page, "Could not save appearance", ex.Message, "Close"); }
         };
-        page.Disappearing += (_, _) => { if (!saving) result.TrySetResult(null); };
+        page.Disappearing += (_, _) => Dispatcher.Dispatch(() => { if (!saving && !Navigation.ModalStack.Contains(page)) result.TrySetResult(null); });
         Refresh(); await Navigation.PushModalAsync(page); return await result.Task;
     }
 

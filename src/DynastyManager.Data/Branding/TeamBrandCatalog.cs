@@ -151,6 +151,15 @@ public static class TeamBrandCatalog
     };
     public static TeamBrand Get(string? name) => name is not null && Brands.TryGetValue(name.Trim(), out var brand)
         ? brand : Fallback;
+    public static string Monogram(string? name) => name?.Trim() switch
+    {
+        "UCLA" => "UCLA", "USC" => "USC", "Washington State" => "WSU",
+        "Oregon State" or "Oklahoma State" => "OSU", "Ohio State" => "O",
+        "Michigan State" => "MSU", "Florida State" => "FSU", "Penn State" => "PSU",
+        "LSU" => "LSU", "BYU" => "BYU", "TCU" => "TCU", "SMU" => "SMU",
+        "UNLV" => "UNLV", "UTSA" => "UTSA", "UAB" => "UAB", "UCF" or "Central Florida" => "UCF",
+        _ => Initial(name)
+    };
     public static string Initial(string? name)
     {
         if (string.IsNullOrWhiteSpace(name)) return "?";

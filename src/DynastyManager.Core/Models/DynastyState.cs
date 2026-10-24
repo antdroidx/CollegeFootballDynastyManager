@@ -2,6 +2,7 @@ namespace DynastyManager.Core.Models;
 
 public sealed record DynastyState
 {
+    public IReadOnlyList<DynastyManager.Core.Simulation.CoachTalkRecord> CoachTalks { get; init; } = [];
     public const int CurrentSchemaVersion = 26;
     public int OverallCalibrationVersion { get; init; }
     public IReadOnlyList<DepthChartAssignment> DepthChartAssignments { get; init; } = [];
@@ -66,6 +67,8 @@ public sealed record DynastyState
         Array.Empty<StaffMember>();
     public IReadOnlyList<StaffRetirementRecord> StaffRetirements { get; init; } = [];
     public StaffMember? UserHeadCoach { get; init; }
+    public StaffRole UserCoachRole { get; init; } = StaffRole.HeadCoach;
+    public bool UserCoachFiringEnabled { get; init; } = true;
     public int UserCoachJobSecurity { get; init; } = 70;
     public bool UserCoachIsFired { get; init; }
     public string? UserCoachFiredFromTeamName { get; init; }

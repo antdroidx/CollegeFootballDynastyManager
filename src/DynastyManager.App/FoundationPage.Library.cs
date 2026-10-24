@@ -12,6 +12,8 @@ public sealed partial class FoundationPage
 
     private View BuildLibrarySection()
     {
+        var options = new Button { Text = "Options", AutomationId = "startup-options" };
+        options.Clicked += async (_, _) => await ShowStartupOptionsAsync();
         var create = new Button { Text = "New dynasty", BackgroundColor = DynastyTheme.Accent,
             TextColor = DynastyTheme.Background, HorizontalOptions = LayoutOptions.End };
         create.Clicked += (_, _) => ShowSection(AppSection.NewDynasty);
@@ -22,9 +24,12 @@ public sealed partial class FoundationPage
         heading.Add(create, 1, 0);
         return new VerticalStackLayout { Spacing = 12, MaximumWidthRequest = 1000, Children =
         {
-            heading,
+            new Image { Source = "dynasty_logo.png", HeightRequest = 160, Aspect = Aspect.AspectFit, AutomationId = "opening-logo" },
+            new Label { Text = "College Football Dynasty Manager", FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center },
+            new Label { Text = VersionCaption, FontSize = 12, HorizontalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Muted },
+            options, heading,
             new Label { Text = "Load a saved career or start a new one.", FontSize = 12, TextColor = DynastyTheme.Muted },
-            new FlexLayout { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { StartingLibraryButton(), RosterImportButton() } },
+            new ActionRow { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { StartingLibraryButton(), RosterImportButton() } },
             _saveList, _libraryStatus
         } };
     }
@@ -42,13 +47,14 @@ public sealed partial class FoundationPage
             new Label { Text = "Import and manage reusable rosters and league setups from the main screen.", FontSize = 11, TextColor = DynastyTheme.Muted },
             new Label { Text = "Your school", FontSize = 12, FontAttributes = FontAttributes.Bold }, _teamPicker,
             new Label { Text = "Staff and recruiting preferences can be changed after starting.", FontSize = 11, TextColor = DynastyTheme.Muted },
-            _newDynastyButton, _newDynastyStatus
+            BuildNewCareerOptions(), _newDynastyButton, _newDynastyStatus
         } };
     }
 
     private void UpdateShellContext()
     {
         var library = _activeSection is AppSection.Home or AppSection.NewDynasty;
+        _screenTitle.IsVisible = _activeSection != AppSection.Home;
         _navigationBar.IsVisible = !library && _currentDynasty is not null;
         _libraryButton.IsVisible = _activeSection != AppSection.Home;
         _libraryButton.Text = _activeSection == AppSection.NewDynasty ? "‹ Cancel" : "‹ Exit Dynasty";
@@ -72,7 +78,7 @@ public sealed partial class FoundationPage
             }
             ShowSection(AppSection.Home);
         }
-        catch (Exception ex) { await DisplayAlertAsync("Could not save dynasty", ex.Message, "Close"); }
+        catch (Exception ex) { await GameDialogs.AlertAsync(this, "Could not save dynasty", ex.Message, "Close"); }
         finally { _advanceOverlay.IsVisible = false; }
     }
 
@@ -98,10 +104,10 @@ public sealed partial class FoundationPage
     {
         var ordered = saves.OrderByDescending(save => save.UpdatedUtc).ToArray();
         var labels = ordered.Select((save, index) => $"{index + 1}. {save.SeasonYear} / {FormatWeek(save)} / {RollingAutosavePolicy.GetDisplayName(save.Kind)} / {save.UpdatedUtc.ToLocalTime():g}").ToArray();
-        var selected = await DisplayActionSheetAsync("Saved versions", "Cancel", null, labels);
+        var selected = await GameDialogs.ActionSheetAsync(this, "Saved versions", "Cancel", null, labels);
         var index = Array.IndexOf(labels, selected);
         if (index < 0) return;
-        var action = await DisplayActionSheetAsync(labels[index], "Cancel", null, "Load save", "Delete save");
+        var action = await GameDialogs.ActionSheetAsync(this, labels[index], "Cancel", null, "Load save", "Delete save");
         if (action == "Load save") await LoadSaveAsync(ordered[index].SaveId);
         else if (action == "Delete save") await DeleteSaveAsync(ordered[index].SaveId);
     }

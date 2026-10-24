@@ -158,14 +158,14 @@ public static class UserCoachCareerService
         };
 
         var fired =
-            !season.NationalChampion &&
+            state.UserCoachFiringEnabled && !season.NationalChampion &&
             (securityAfter <= 20 ||
              (nextContractYears == 0 &&
               securityAfter < 50));
 
         if (!fired &&
             updatedCoach.ContractYearsRemaining == 0 &&
-            securityAfter >= 50)
+            (!state.UserCoachFiringEnabled || securityAfter >= 50))
         {
             updatedCoach = updatedCoach with
             {
@@ -193,6 +193,7 @@ public static class UserCoachCareerService
             .Append(new UserCoachCareerRecord
             {
                 SeasonYear = state.SeasonYear,
+                Role = state.UserCoachRole,
                 TeamName = state.UserTeamName,
                 Wins = season.Wins,
                 Losses = season.Losses,
@@ -340,7 +341,9 @@ public static class UserCoachCareerService
                 var hasOpening =
                     currentHeadCoach is null ||
                     currentHeadCoach.ContractYearsRemaining <= 1 ||
-                    opportunity >= 8;
+                    opportunity >= 8 ||
+                    (state.UserCoachRole != StaffRole.HeadCoach &&
+                     StaffManagementService.GetStaff(state, team.Name, state.UserCoachRole) is null or { ContractYearsRemaining: <= 1 });
 
                 var reputationGap =
                     coach.Reputation - prestige;
@@ -446,8 +449,12 @@ public static class UserCoachCareerService
             }
         }
 
+        var promotionTeam = candidates.FirstOrDefault(item => item.Fit >= 100 &&
+            (StaffManagementService.GetStaff(state, item.Team.Name, StaffRole.HeadCoach) is null or { ContractYearsRemaining: <= 1 } || item.Opportunity >= 8))?.Team.Name;
         foreach (var candidate in candidates)
         {
+            var offeredRole = state.UserCoachRole == StaffRole.HeadCoach || (!state.UserCoachIsFired && candidate.Team.Name == promotionTeam)
+                ? StaffRole.HeadCoach : state.UserCoachRole;
             var direction =
                 candidate.Prestige >= currentPrestige + 6
                     ? "A step up in program prestige."
@@ -462,6 +469,7 @@ public static class UserCoachCareerService
                     state.DynastyId,
                     $"{state.SeasonYear}|{candidate.Team.Name}|job-offer"),
                 SeasonYear = state.SeasonYear,
+                Role = offeredRole,
                 TeamName = candidate.Team.Name,
                 ProgramPrestige =
                     candidate.Prestige,
@@ -524,9 +532,11 @@ public static class UserCoachCareerService
         var moved = state with
         {
             UserTeamName = offer.TeamName,
+            UserCoachRole = offer.Role,
             UserHeadCoach = state.UserHeadCoach with
             {
                 TeamName = offer.TeamName,
+                Role = offer.Role,
                 TenureYears = 0,
                 ContractYearsRemaining =
                     offer.ContractYears
@@ -556,7 +566,7 @@ public static class UserCoachCareerService
                 moved,
                 oldTeamName,
                 offer.TeamName,
-                teamsByName);
+                teamsByName, state.UserCoachRole);
 
         moved = StaffManagementService.EnsureLeagueStaff(
             moved,

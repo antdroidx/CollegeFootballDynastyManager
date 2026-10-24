@@ -12,7 +12,7 @@ public static partial class GameDayEngine
     {
         var home = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var profile = home ? session.HomeProfile : session.AwayProfile;
-        var kicker = Kicker(home ? session.HomeRoster : session.AwayRoster);
+        var kicker = GameDayCoachingService.Specialist(session, session.PossessionTeamName, Kicker(home ? session.HomeRoster : session.AwayRoster));
         return GameWeatherService.KickProbability(session, GameDayMatchupService.FieldGoalProbability(117 - session.YardLine,
             kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating, kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating));
     }
@@ -47,6 +47,11 @@ public static partial class GameDayEngine
         string? userDefensivePlayId = null)
     {
         if (session.IsComplete) throw new InvalidOperationException("The game is complete.");
+        if (session.UserCoachRole != StaffRole.HeadCoach)
+        {
+            if (session.UserCoachRole == StaffRole.DefensiveCoordinator || session.PossessionTeamName != session.ControlledTeamName) userPlayId = null;
+            if (session.UserCoachRole == StaffRole.OffensiveCoordinator || session.PossessionTeamName == session.ControlledTeamName) userDefensivePlayId = null;
+        }
         if (session.TryPending) return ResolveTry(session, userPlayId);
         if (session.KickoffPending) return ResolveKickoff(session);
         if (session.Quarter is 2 or 4 && session.ClockSeconds <= 90 && (!session.ClockStopped || session.ClockRestartsOnReady))
@@ -109,7 +114,7 @@ public static partial class GameDayEngine
         if (special is not null)
         {
             var kickStart = session.YardLine;
-            var kicker = Kicker(offenseRoster, special == "special-punt");
+            var kicker = GameDayCoachingService.Specialist(session, offense.TeamName, Kicker(offenseRoster, special == "special-punt"));
             var made = special == "special-field-goal" &&
                 session.Random.NextDouble() < FieldGoalProbability(session);
             var puntLanding = special == "special-punt"
@@ -162,6 +167,8 @@ public static partial class GameDayEngine
             call.Offense.Personnel, offenseFatigue, session.Random);
         var defensePersonnel = PersonnelRotationService.SelectDefense(defenseDepthChart, defense.TeamName,
             call.Defense.Personnel, defenseFatigue, session.Random);
+        offensePersonnel = GameDayCoachingService.ApplySubstitutions(session, offensePersonnel);
+        defensePersonnel = GameDayCoachingService.ApplySubstitutions(session, defensePersonnel);
         var offensePlayers = Players(session, offensePersonnel);
         var defensePlayers = Players(session, defensePersonnel);
 
@@ -181,6 +188,7 @@ public static partial class GameDayEngine
         var advantage = isPass ? offense.PassOffenseRating - defense.PassDefenseRating : offense.RushOffenseRating - defense.RushDefenseRating;
         advantage += MatchupShift(call.Offense.Concept, call.Defense.Approach);
         advantage += GameMoraleService.MatchupShift(session, offense.TeamName, defense.TeamName);
+        advantage += GameDayCoachingService.IndividualTalkShift(session, offensePlayers) - GameDayCoachingService.IndividualTalkShift(session, defensePlayers);
         advantage += GameDayMatchupService.FormationAdvantage(call.Offense, call.Defense, isPass);
         advantage += GameDayMatchupService.PersonnelAdvantage(offensePlayers, defensePlayers, isPass);
         if (!session.Game.IsNeutralSite)
@@ -299,6 +307,7 @@ public static partial class GameDayEngine
         var awayStats = BuildStats(session, session.Game.AwayTeamName);
         var finished = session.Game with
         {
+            CoachTalks = session.CoachTalks.ToArray(),
             Weather = session.Weather, HomeEndingMorale = GameMoraleService.InGame(session, session.Game.HomeTeamName),
             AwayEndingMorale = GameMoraleService.InGame(session, session.Game.AwayTeamName),
             HasPlayed = true, HomeScore = session.HomeScore, AwayScore = session.AwayScore,
@@ -610,7 +619,7 @@ public static partial class GameDayEngine
         var receivingHome = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var receivingRoster = receivingHome ? session.HomeRoster : session.AwayRoster;
         var kickingRoster = receivingHome ? session.AwayRoster : session.HomeRoster;
-        var kicker = Kicker(kickingRoster);
+        var kicker = GameDayCoachingService.Specialist(session, kickingRoster.FirstOrDefault()?.TeamName ?? "", Kicker(kickingRoster));
         var returner = Returner(receivingRoster);
         var kickoffRandom = new Random(unchecked(session.Game.SimulationSeed * 397 ^ session.PossessionNumber * 7919 ^
             session.Quarter * 31 ^ 0x4B1C));

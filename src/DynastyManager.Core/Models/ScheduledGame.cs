@@ -2,6 +2,7 @@ namespace DynastyManager.Core.Models;
 
 public sealed record ScheduledGame
 {
+    public IReadOnlyList<DynastyManager.Core.Simulation.CoachTalkRecord> CoachTalks { get; init; } = [];
     public required string GameId { get; init; }
     public int SeasonYear { get; init; }
     public int Week { get; init; }

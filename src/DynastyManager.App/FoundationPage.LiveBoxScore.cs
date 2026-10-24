@@ -34,7 +34,7 @@ public sealed partial class FoundationPage
         var heading = SectionTitle("Live box score", box.IsComplete ? "Final statistics" :
             $"Paused · {(box.Quarter > 4 ? $"OT {box.Quarter-4}" : $"Q{box.Quarter}")} {TimeSpan.FromSeconds(box.ClockSeconds):m\\:ss} · returns to the same game");
         if (box.Weather is not null) content.Children.Add(new Label { Text = box.Weather.Summary, FontSize = 11, TextColor = DynastyTheme.Muted });
-        content.Children.Add(new Label { Text = $"Morale · {box.AwayTeamName}: {GameMoraleService.Label(box.AwayMorale)} ({box.AwayMorale}) · {box.HomeTeamName}: {GameMoraleService.Label(box.HomeMorale)} ({box.HomeMorale})", FontSize = 11, TextColor = DynastyTheme.Muted });
+        content.Children.Add(new Label { Text = $"Morale · {box.AwayTeamName}: {GameMoraleService.Label(box.AwayMorale)} ({box.AwayMorale}, {box.AwayMorale - box.AwayStartingMorale:+0;-0;0} since kickoff) · {box.HomeTeamName}: {GameMoraleService.Label(box.HomeMorale)} ({box.HomeMorale}, {box.HomeMorale - box.HomeStartingMorale:+0;-0;0} since kickoff)", FontSize = 11, TextColor = DynastyTheme.Muted });
         if (box.PlayerOfGame is { } award) content.Children.Add(new Border { Padding = 12, StrokeThickness = 0, BackgroundColor = DynastyTheme.Palette("#343B28"),
             Content = new VerticalStackLayout { Spacing = 4, Children = {
                 new Label { Text = "★ PLAYER OF THE GAME", FontSize = 12, FontAttributes = FontAttributes.Bold, TextColor = DynastyTheme.Palette("#E8C979") },
