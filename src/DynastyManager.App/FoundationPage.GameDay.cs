@@ -56,15 +56,15 @@ public sealed partial class FoundationPage
         }
 
         var page = new GameDayViewerPage { BackgroundColor = DynastyTheme.Background };
-        var score = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var quarterClock = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var downValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var toGoValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        var ballValue = new Label { FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
-        Border SituationCell(string heading, Label value) => new() { StrokeThickness = 0, Padding = 7,
+        var score = new Label { FontSize = 17, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center, LineBreakMode = LineBreakMode.TailTruncation, MaxLines = 1, AutomationId = "game-day-score" };
+        var quarterClock = new Label { FontSize = 14, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var downValue = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var toGoValue = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        var ballValue = new Label { FontSize = 16, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center };
+        Border SituationCell(string heading, Label value) => new() { StrokeThickness = 0, Padding = new Thickness(4, 3),
             BackgroundColor = DynastyTheme.Palette("#172733"), Content = new VerticalStackLayout { Spacing = 1, Children =
-            { new Label { Text = heading, FontSize = 9, TextColor = DynastyTheme.Muted, HorizontalTextAlignment = TextAlignment.Center }, value } } };
-        var situation = new Grid { ColumnSpacing = 7,
+            { new Label { Text = heading, FontSize = 9, MaxLines = 1, LineBreakMode = LineBreakMode.TailTruncation, TextColor = DynastyTheme.Muted, HorizontalTextAlignment = TextAlignment.Center }, value } } };
+        var situation = new Grid { ColumnSpacing = 4, AutomationId = "game-day-situation",
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) } };
         situation.Add(SituationCell("QUARTER / CLOCK", quarterClock), 0, 0);
         situation.Add(SituationCell("DOWN", downValue), 1, 0);
@@ -75,7 +75,7 @@ public sealed partial class FoundationPage
             FontAttributes = FontAttributes.Bold, TextColor = Colors.White, MaxLines = 3 };
         var commentaryPanel = new Border { StrokeThickness = 0, Padding = new Thickness(10, 6),
             BackgroundColor = DynastyTheme.Palette("#203645"), Content = result };
-        var conditionsHud = new Label { FontSize = 9, MaxLines = 2, TextColor = DynastyTheme.Palette("#B8D8FA"),
+        var conditionsHud = new Label { FontSize = 9, MaxLines = 2, IsVisible = false, TextColor = DynastyTheme.Palette("#B8D8FA"),
             HorizontalTextAlignment = TextAlignment.Center };
         var timeoutsHud = new Label { FontSize = 10, TextColor = DynastyTheme.Palette("#E8C979"),
             HorizontalTextAlignment = TextAlignment.Center, AutomationId = "game-day-timeouts" };
@@ -224,8 +224,17 @@ public sealed partial class FoundationPage
         }
         numbers.Clicked += (_, _) => { showNumbers = !showNumbers; Microsoft.Maui.Storage.Preferences.Default.Set("live-jersey-numbers", showNumbers); UpdateMarkerLabels(); };
         var boxScore = new Button { Text = "Box score", AutomationId = "live-box-score", FontSize = 13, FontAttributes = FontAttributes.Bold, BackgroundColor = DynastyTheme.Accent, TextColor = DynastyTheme.Background, MinimumHeightRequest = 42, Padding = new Thickness(14, 8), VerticalOptions = LayoutOptions.Center };
-        var scoreHeader = new Grid { ColumnSpacing = 8, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-        scoreHeader.Add(new VerticalStackLayout { Spacing = 1, Children = { score, timeoutsHud, conditionsHud } }, 0, 0); scoreHeader.Add(boxScore, 1, 0);
+        var gameInfo = new Button { Text = "Weather", FontSize = 11, MinimumHeightRequest = 40,
+            BackgroundColor = DynastyTheme.Palette("#172733"), AutomationId = "game-day-conditions-toggle" };
+        gameInfo.Clicked += (_, _) =>
+        {
+            conditionsHud.IsVisible = !conditionsHud.IsVisible;
+            gameInfo.Text = conditionsHud.IsVisible ? "Hide info" : "Weather";
+        };
+        var scoreHeader = new Grid { ColumnSpacing = 5, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto), new(GridLength.Auto) } };
+        scoreHeader.Add(new VerticalStackLayout { Spacing = 0, Children = { score, timeoutsHud, conditionsHud } }, 0, 0);
+        scoreHeader.Add(gameInfo, 1, 0);
+        scoreHeader.Add(boxScore, 2, 0);
         var skip = new Button { Text = "Skip to end" };
         var close = new Button { Text = "Close", IsVisible = false };
         var controls = new FlexLayout { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
