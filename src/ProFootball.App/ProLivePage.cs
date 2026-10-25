@@ -21,7 +21,7 @@ public sealed partial class ProLivePage : ContentPage
         TextColor = Color.FromArgb("#FFE194"), BackgroundColor = Color.FromArgb("#101F2C"), Padding = new Thickness(12, 4), HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Start, Margin = 6 };
     readonly GameFieldDrawable art; readonly GraphicsView turf;
     readonly Button next = new() { Text = "Next snap" }, pause = new() { Text = "Pause watch" }, skipReplay = new() { Text = "Skip replay", IsVisible = false };
-    readonly Button offenseButton, defenseButton, replayButton, takeoverButton, watchingButton, timeoutButton, secondButton, finishButton;
+    readonly Button offenseButton, defenseButton, replayButton, takeoverButton, watchingButton, timeoutButton, secondButton, finishButton, talkButton;
     bool active, working, pending, paused, saved, second, initialized, replaying; bool? pauseAfterAction;
     double speed = Preferences.Get("pro-game-speed", 1d), replaySpeed = Preferences.Get("pro-replay-speed", 1d);
     int cameraMode = Math.Clamp(Preferences.Get("pro-camera", 0), 0, 2);
@@ -61,6 +61,7 @@ public sealed partial class ProLivePage : ContentPage
         Button("Depth chart", DepthChart);
         timeoutButton = Button("Timeout", () => { if (!GameDayEngine.TryCallTimeout(session, session.ControlledTeamName!)) selected.Text = "Timeout unavailable"; return Task.CompletedTask; });
         secondButton = Button("Second team", () => { second = !second; GameDayCoachingService.UseSecondUnit(session, session.ControlledTeamName!, second); selected.Text = second ? "Second team on field" : "Starters on field"; return Task.CompletedTask; });
+        talkButton = Button("Coach talk", CoachTalk);
         Button("Box score", ShowBox);
         finishButton = Button("Finish game", async () => { if (!session.IsComplete) await Task.Run(() => GameDayEngine.SimulateToEnd(session)); await Commit(); });
         Button("Return to franchise", CloseCore);
@@ -128,7 +129,11 @@ public sealed partial class ProLivePage : ContentPage
         next.IsVisible = !watch && !session.IsComplete; next.IsEnabled = !working && !pending;
         pause.IsVisible = watch && !session.IsComplete; pause.Text = paused ? "Resume watch" : "Pause watch";
         takeoverButton.IsVisible = watch && !session.IsComplete; watchingButton.IsVisible = !watch && !session.IsComplete;
-        offenseButton.IsVisible = defenseButton.IsVisible = !watch && !session.IsComplete;
+        offenseButton.IsVisible = !watch && !session.IsComplete && session.UserCoachRole != StaffRole.DefensiveCoordinator;
+        defenseButton.IsVisible = !watch && !session.IsComplete && session.UserCoachRole != StaffRole.OffensiveCoordinator;
+        var availability = GameDayCoachingService.TalkAvailability(session, session.ControlledTeamName!);
+        talkButton.IsEnabled = !session.IsComplete && availability == "Available";
+        talkButton.Text = talkButton.IsEnabled ? "Coach talk" : "Coach talk · " + availability;
         replayButton.IsEnabled = last is not null && !session.IsComplete;
         timeoutButton.IsEnabled = !session.IsComplete && (session.ControlledTeamName == session.Game.HomeTeamName ? session.HomeTimeouts : session.AwayTimeouts) > 0;
         secondButton.IsEnabled = !session.IsComplete; secondButton.Text = second ? "Use starters" : "Second team";

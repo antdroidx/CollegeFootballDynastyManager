@@ -14,7 +14,7 @@ public sealed partial class FranchisePage : ContentPage
     readonly Grid bottom = new() { ColumnSpacing = 3, Padding = 6, BackgroundColor = DynastyTheme.Surface };
     readonly ScrollView scroll;
     ProFranchise? state; bool initialized, busy; string section = "Overview";
-    static readonly string[] Sections = ["Overview", "Roster", "Staff", "Front office", "Schedule", "Standings", "Statistics", "News", "History"];
+    static readonly string[] Sections = ["Overview", "Roster", "Staff", "Front office", "Schedule", "Standings", "Statistics", "News", "Career", "History"];
     public FranchisePage()
     {
         Title = "Pro Football Franchise Manager"; NavigationPage.SetHasNavigationBar(this, false); BackgroundColor = DynastyTheme.Background;
@@ -37,22 +37,31 @@ public sealed partial class FranchisePage : ContentPage
         { bottom.ColumnDefinitions.Add(new(GridLength.Star)); var target = name; var b = Action(name, () => target == "League" ? LeagueMenu() : Open(target)); b.FontSize = 10; b.Padding = 4; b.HorizontalOptions = LayoutOptions.Fill; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; bottom.Add(b, index, 0); }
         LayoutShell();
     }
-    async Task LeagueMenu() { var pick = await GameDialogs.ActionSheetAsync(this, "League", "Cancel", null, "Schedule", "Standings", "Statistics", "News", "History"); if (pick is "Schedule" or "Standings" or "Statistics" or "News" or "History") await Open(pick); }
+    async Task LeagueMenu() { var pick = await GameDialogs.ActionSheetAsync(this, "League", "Cancel", null, "Schedule", "Standings", "Statistics", "News", "Career", "History"); if (pick is "Schedule" or "Standings" or "Statistics" or "News" or "Career" or "History") await Open(pick); }
     View Panel(string title, params View[] views)
     { var content = new VerticalStackLayout { Spacing = 10 }; content.Add(Text(title, 20, true)); foreach (var view in views) content.Add(view); return new Border { Padding = 14, BackgroundColor = DynastyTheme.Surface, StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = content }; }
     View Cards(params View[] views)
     { var grid = new Grid { ColumnSpacing = 12, RowSpacing = 12 }; var previousCount = 0; void Layout() { var count = Width >= 900 ? 2 : 1; if (count == previousCount) return; previousCount = count; grid.ColumnDefinitions.Clear(); grid.RowDefinitions.Clear(); for (var c = 0; c < count; c++) grid.ColumnDefinitions.Add(new(GridLength.Star)); for (var i = 0; i < views.Length; i++) { if (i % count == 0) grid.RowDefinitions.Add(new(GridLength.Auto)); Grid.SetColumn(views[i], i % count); Grid.SetRow(views[i], i / count); } } foreach (var v in views) grid.Add(v); Layout(); grid.SizeChanged += (_, _) => Layout(); return grid; }
     async Task Library()
     {
-        state = null; LayoutShell(); body.Clear(); body.Add(Text("PRO FOOTBALL", 28, true)); body.Add(Text("Franchise Manager", 24, true)); body.Add(Text("Development preview · " + AppInfo.VersionString));
-        body.Add(Text("NFL teams and staff · Build your own football legacy."));
+        state = null; LayoutShell(); body.Clear(); body.Add(new Image { Source = "pro_brand.png", HeightRequest = 145, HorizontalOptions = LayoutOptions.Center });
+        body.Add(Text("PRO FOOTBALL", 28, true)); body.Add(Text("Franchise Manager", 24, true)); body.Add(Text("Development preview · " + AppInfo.VersionString + " · Build " + AppInfo.BuildString));
         body.Add(Action("New franchise", Create, "pro-new")); body.Add(Action("Options", Options)); body.Add(Text("Your franchises", 20, true));
-        foreach (var id in store.Slots().ToArray()) try { var save = await store.Load(id); body.Add(Action($"{save.Name} · {save.UserTeam} · {save.Year} {save.Phase} W{save.Week}", async () => { state = await store.Load(id); section = "Overview"; Render(); })); } catch (Exception) { body.Add(Text("Unavailable save · " + id)); }
-        body.Add(Text("NFL roster snapshot: 2026 Weeks 6–7. Player attributes and overall use the shared football rating system. Staff ratings are game estimates. Contract source is selected when creating a franchise.", 12));
+        foreach (var id in store.Slots().ToArray())
+        {
+            var slot = id; var row = new ActionRow(); string label;
+            try { var saved = await store.Load(slot); label = $"{saved.Name} · {saved.UserTeam} · {saved.Year} {saved.Phase} W{saved.Week}";
+                row.Add(Action(label, async () => { state = await store.Load(slot); section = "Overview"; Render(); })); }
+            catch (Exception) { label = "Unavailable save · " + slot; row.Add(Text(label)); }
+            row.Add(Action("Delete save", async () => { if (!await GameDialogs.AlertAsync(this, "Delete franchise?", label + "\nThis removes this franchise and its rolling backups. Other saves are unaffected.", "Delete", "Cancel")) return; await store.Delete(slot); await Library(); }));
+            body.Add(row);
+        }
+        body.Add(Text("NFL roster snapshot: 2026 Weeks 6–7. Player ratings use the same attributes and calculation as College Dynasty. Staff ratings are estimates.", 12));
     }
     async Task Options()
     {
-        var pick = await GameDialogs.ActionSheetAsync(this, "Options", "Cancel", null, "Appearance", "Data sources");
+        var pick = await GameDialogs.ActionSheetAsync(this, "Options", "Cancel", null, "Appearance", "Career options", "Data sources");
+        if (pick == "Career options") { if (state is not null) await Open("Career"); else await GameDialogs.AlertAsync(this, "Career options", "Choose your coaching role and firing preference when creating a franchise.", "Close"); }
         if (pick == "Appearance") { var choice = await GameDialogs.ActionSheetAsync(this, "Appearance", "Cancel", null, "Dark", "Light"); if (choice is "Dark" or "Light") { Preferences.Set("app-theme", choice); Application.Current!.Resources = DynastyTheme.CreateResources(); Application.Current.UserAppTheme = DynastyTheme.RequestedTheme; BackgroundColor = DynastyTheme.Background; DynastyTheme.ApplyNativeAppearance(); if (state is null) await Library(); else Render(); } }
         if (pick == "Data sources") await GameDialogs.AlertAsync(this, "Data sources", "Rosters: nflverse (CC BY 4.0), 2026 Weeks 6–7. Staff: official team sites. Colors: nflverse. Player overall is calculated from shared football attributes using the college game's rating system. New franchises can use sourced contracts or game estimates; team cap adjustments remain incomplete. Import provenance and file hashes are recorded in docs/nfl-data-manifest.json and docs/nfl-contract-data.json.", "Close");
     }
@@ -60,21 +69,23 @@ public sealed partial class FranchisePage : ContentPage
     {
         body.Clear(); body.Add(Text("Start a franchise", 25, true)); var name = new Entry { Text = "My franchise", Placeholder = "Franchise name" }; body.Add(name);
         var league = ProLeagueService.Load(); var picker = new Picker { Title = "Choose your team", ItemsSource = league.Teams.Select(t => t.Name).ToList(), SelectedIndex = league.Teams.FindIndex(t => t.Id == "SEA") }; body.Add(picker);
+        var role = new Picker { Title = "Coaching role", ItemsSource = new[] { "Head coach", "Offensive coordinator", "Defensive coordinator" }, SelectedIndex = 0 }; var firing = new Switch { IsToggled = true }; var coachName = new Entry { Placeholder = "Coach name (optional)" }; body.Add(role); body.Add(coachName); body.Add(new HorizontalStackLayout { Spacing = 8, Children = { firing, Text("Coach can be fired") } });
+        body.Add(Text("Coordinators manage their unit; the GM approves shared cap and draft-pick decisions.", 12));
         var preview = new ContentView(); void Preview() { var t = league.Teams[picker.SelectedIndex]; preview.Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(t, 70), Text(t.Name, 21, true) } }; }
         picker.SelectedIndexChanged += (_, _) => Preview(); Preview(); body.Add(preview);
         var finances = new Picker { Title = "Starting contract data", ItemsSource = new[] { "Estimated game contracts", "OverTheCap snapshot · experimental cap model" }, SelectedIndex = 0 }; body.Add(finances);
         body.Add(Text("Sourced contracts preserve reported yearly cap charges. Team rollover, adjustments and departed-player dead money are not imported yet; some teams may start above the base cap. Existing saves retain their finances.", 12));
         body.Add(Text("Start a new 2026 franchise using real roster identities. Actual source vacancies and reserve players are preserved; active roster limit is 53 and practice squad limit is 16."));
-        body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text, finances.SelectedIndex == 1)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
+        body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text, finances.SelectedIndex == 1, role.SelectedIndex == 1 ? StaffRole.OffensiveCoordinator : role.SelectedIndex == 2 ? StaffRole.DefensiveCoordinator : StaffRole.HeadCoach, firing.IsToggled, coachName.Text)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
     }
-    async Task Save() { if (state is not null) await store.Save(state); }
+    async Task Save() { if (state is not null) { state = ProNews.Refresh(state); await store.Save(state); } }
     void Render()
     {
         if (state is null) return; body.Clear(); bottom.ColumnDefinitions.Clear(); RenderNavigation();
         var header = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(Action("‹ Exit", async () => { await Save(); await Library(); }), 0, 0); header.Add(new VerticalStackLayout { Children = { Text(section == "Staff" ? "Coaching Hub" : section, 25, true), Text($"{state.UserTeam} · {state.Year} · {state.Phase} · Week {state.Week}", 12) } }, 1, 0); header.Add(Action("Options", Options), 2, 0); body.Add(header);
         var team = state.League.Teams.Single(t => t.Name == state.UserTeam); body.Add(new Border { Padding = 14, BackgroundColor = Color.FromArgb(team.Primary), Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(team, 56), new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { new Label { Text = team.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = TeamBadgeView.Ink(team) }, new Label { Text = state.Name + " · " + state.Year, TextColor = TeamBadgeView.Ink(team) } } } } } });
-        switch (section) { case "Overview": Overview(); break; case "Roster": Roster(); break; case "Staff": Staff(); break; case "Front office": FrontOffice(); break; case "Schedule": Schedule(); break; case "Standings": Standings(); break; case "History": History(); break; case "News": News(); break; case "Statistics": Statistics(); break; }
+        switch (section) { case "Overview": Overview(); break; case "Roster": Roster(); break; case "Staff": Staff(); break; case "Front office": FrontOffice(); break; case "Schedule": Schedule(); break; case "Standings": Standings(); break; case "History": History(); break; case "Career": Career(); break; case "News": News(); break; case "Statistics": Statistics(); break; }
         var actions = new ActionRow(); actions.Add(Action("Save franchise", async () => { await Save(); await GameDialogs.AlertAsync(this, "Saved", "Franchise and rolling backups saved.", "OK"); })); actions.Add(Action("Save & exit", async () => { await Save(); await Library(); })); body.Add(actions);
     }
     void Overview()
@@ -83,6 +94,7 @@ public sealed partial class FranchisePage : ContentPage
         var actions = new ActionRow(); actions.Add(Action(s.Phase == ProPhase.Offseason ? "Advance offseason" : "Advance week", Advance, "pro-advance")); actions.Add(Action("This week's league games", () => Open("Schedule"), "pro-week-games")); body.Add(actions);
         if (s.Phase == ProPhase.Offseason) { body.Add(Panel("Offseason · " + s.OffseasonStep, Text(s.Champion is null ? "Build next season's roster." : "Champions · " + s.Champion), Action("Open front office", () => Open("Front office")))); }
         else { var game = s.Games.FirstOrDefault(g => g.Phase == s.Phase && g.Football.Week == s.Week && g.Football.InvolvesTeam(s.UserTeam)); if (game is not null) body.Add(GameCard(game)); else body.Add(Text("Your team has a bye this week.")); }
+        body.Add(Panel("Your coaching career", Text($"{s.Career?.Name} · {RoleName(ProCareer.Role(s))}", 17, true), Text(s.Career?.Unemployed == true ? "Seeking employment · Open your job offers" : $"Job security {s.Career?.Security ?? 65}/100 · Reputation {s.Career?.Reputation ?? 50}/100"), Action("Career & job offers ›", () => Open("Career"))));
         var owner = s.Owners.FirstOrDefault(o => o.Team == s.UserTeam); body.Add(Cards(Panel("Season overview", Text($"{r.Wins}–{r.Losses}–{r.Ties}", 28, true), Text(r.Team.Conference + " · " + r.Team.Division), Action("Open standings ›", () => Open("Standings"))), Panel("Front office", Text($"{Money(ProEconomy.Room(s, s.UserTeam))} cap room", 24, true), Text($"Active {ProRoster.Active(s, s.UserTeam)}/53 · Owner security {owner?.Security ?? 65}/100"), Action("Contracts & salary cap ›", () => Open("Front office")))));
         body.Add(Panel("League news", Action("Headlines & results ›", () => Open("News")), Action("Statistics & leaders ›", () => Open("Statistics"))));
         body.Add(Panel("Latest transactions", Text(string.Join("\n", s.Transactions.TakeLast(4).Reverse()), 12)));
@@ -165,8 +177,8 @@ public sealed partial class FranchisePage : ContentPage
             var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired && OffensiveLineService.Label(p.Football) == label).OrderBy(p => p.Football.DepthChartOrder).ThenByDescending(p => p.Football.OverallRating).ToArray();
             for (var index = 0; index < players.Length; index++)
             {
-                var p = players[index]; var starter = index == 0; var button = new Button { Text = starter ? "First choice" : "Move to first", IsEnabled = !starter && p.Football.CurrentInjury is not { WeeksRemaining: > 0 } };
-                button.Clicked += async (_, _) => { state = ProDepthChart.MakeStarter(state!, state!.UserTeam, p.Football.PlayerId); await Save(); Draw(); Render(); };
+                var p = players[index]; var starter = index == 0; var button = new Button { Text = starter ? "First choice" : "Move to first", IsEnabled = !starter && ProCareer.Controls(state!, p.Football.Position) && p.Football.CurrentInjury is not { WeeksRemaining: > 0 } };
+                button.Clicked += async (_, _) => { ProCareer.RequirePlayer(state!, p.Football.PlayerId); state = ProDepthChart.MakeStarter(state!, state!.UserTeam, p.Football.PlayerId); await Save(); Draw(); Render(); };
                 list.Add(Panel($"{index + 1} · {p.Football.FullName}", PlayerCell(p), Text($"OVR {p.Football.OverallRating} · Morale {p.Morale}"), button));
             }
         }

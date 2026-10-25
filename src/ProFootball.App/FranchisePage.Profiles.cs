@@ -48,11 +48,12 @@ public sealed partial class FranchisePage
         var plan = state!.GamePlans.FirstOrDefault(p => p.TeamName == state.UserTeam) ?? new TeamGamePlan { TeamName = state.UserTeam };
         Picker Choices<T>(T selected) where T : struct, Enum => new() { ItemsSource = Enum.GetNames<T>(), SelectedIndex = Array.IndexOf(Enum.GetValues<T>(), selected) };
         var offense = Choices(plan.Offense); var defense = Choices(plan.Defense); var approach = Choices(plan.Approach); var tempo = Choices(plan.Tempo);
+        offense.IsEnabled = tempo.IsEnabled = ProCareer.Role(state!) != StaffRole.DefensiveCoordinator; defense.IsEnabled = approach.IsEnabled = ProCareer.Role(state!) != StaffRole.OffensiveCoordinator;
         var save = new Button { Text = "Save game plan" }; var saved = Text("");
         save.Clicked += async (_, _) =>
         {
             var next = plan with { Offense = Enum.Parse<OffensivePlaybook>((string)offense.SelectedItem), Defense = Enum.Parse<DefensivePlaybook>((string)defense.SelectedItem), Approach = Enum.Parse<DefensiveApproach>((string)approach.SelectedItem), Tempo = Enum.Parse<OffensiveTempo>((string)tempo.SelectedItem) };
-            state = state! with { GamePlans = state.GamePlans.Where(p => p.TeamName != state.UserTeam).Append(next).ToList() }; await Save(); saved.Text = "Saved · applies to future games";
+            next = ProCareer.LimitPlan(state!, next); state = state! with { GamePlans = state.GamePlans.Where(p => p.TeamName != state.UserTeam).Append(next).ToList() }; await Save(); saved.Text = "Saved · applies to future games";
         };
         return ShowPage("Game plan", Text("Offensive playbook"), offense, Text("Defensive playbook"), defense, Text("Defensive approach"), approach, Text("Tempo"), tempo, save, saved);
     }
@@ -62,17 +63,28 @@ public sealed partial class FranchisePage
         return ShowPage("Injuries & availability", players.Length == 0 ? Text("No reported injuries or reserve players.") : new VerticalStackLayout { Spacing = 12, Children = { } },
             Panel("Unavailable players", players.Select(p => Panel(p.Football.FullName, PlayerCell(p), Text(p.Football.CurrentInjury is { } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Reserve list · source roster status " + p.RosterStatus))).ToArray()));
     }
+    string newsFilter = "All";
     void News()
     {
+        state = ProNews.Refresh(state!); var s = state!;
         body.Add(Text("League news", 23, true));
-        foreach (var game in state!.Games.Where(g => g.Football.HasPlayed).OrderByDescending(g => g.Phase).ThenByDescending(g => g.Football.Week).Take(32))
-        { var g = game.Football; body.Add(Panel(g.HomeScore == g.AwayScore ? "Teams finish level" : g.WinnerTeamName + " wins", Text($"{game.Phase} · Week {g.Week} · {g.AwayTeamName} {g.AwayScore} – {g.HomeScore} {g.HomeTeamName}"), Action("Game report ›", () => BoxScore(g)))); }
-        foreach (var transaction in state.Transactions.AsEnumerable().Reverse().Take(40)) body.Add(Panel("League transaction", Text(transaction)));
-        if (!state.Games.Any(g => g.Football.HasPlayed) && state.Transactions.Count == 0) body.Add(Panel("Season kickoff", Text("Play or simulate games and make roster moves to build your league's news feed.")));
+        body.Add(Action("Filter: " + newsFilter, async () => { var filter = await GameDialogs.ActionSheetAsync(this, "News", "Cancel", null, new[] { "All", "My team", "Unread" }.Concat(s.News.Select(n => n.Category).Distinct()).ToArray()); if (filter is null or "Cancel") return; newsFilter = filter; Render(); }));
+        var stories = s.News.Where(n => newsFilter == "All" || newsFilter == "My team" && (n.Team == s.UserTeam || n.Headline.Contains(s.UserTeam)) || newsFilter == "Unread" && !s.ReadNewsIds.Contains(n.Id) || n.Category == newsFilter).Take(60).ToArray();
+        if (stories.Length == 0) body.Add(Text("No stories in this view yet. Completed games and league activity will appear here."));
+        foreach (var story in stories)
+        {
+            var n = story; body.Add(Panel((s.ReadNewsIds.Contains(n.Id) ? "" : "● ") + n.Headline, Text($"{n.Year} · Week {n.Week} · {n.Category}", 12), Text(n.Body), Action(n.GameId is null ? "Read story" : "Game report ›", async () =>
+            {
+                state = state! with { ReadNewsIds = state.ReadNewsIds.Append(n.Id).Distinct().ToList() }; await Save();
+                var game = state.Games.Concat(state.History.SelectMany(h => h.Games)).FirstOrDefault(g => g.Football.GameId == n.GameId);
+                if (game is not null) await BoxScore(game.Football); else await GameDialogs.AlertAsync(this, n.Headline, n.Body, "Close");
+            })));
+        }
     }
     void Statistics()
     {
         var games = state!.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).Select(g => g.Football).ToArray();
+        Analytics();
         body.Add(Text("Regular-season league leaders", 23, true));
         foreach (var (name, value) in new (string, Func<PlayerSeasonStatLine, int>)[] { ("Passing yards", x => x.PassYards), ("Rushing yards", x => x.RushYards), ("Receiving yards", x => x.ReceivingYards), ("Tackles", x => x.Tackles), ("Sacks", x => x.Sacks) })
         {

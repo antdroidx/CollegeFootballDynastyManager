@@ -53,9 +53,24 @@ public sealed partial class ProLivePage
         }, () => closePicker?.Invoke()));
         pickerLayer.IsVisible = true; await closed.Task;
     }
+    async Task CoachTalk()
+    {
+        var audience = session.UserCoachRole == StaffRole.OffensiveCoordinator ? CoachTalkAudience.Offense : session.UserCoachRole == StaffRole.DefensiveCoordinator ? CoachTalkAudience.Defense : CoachTalkAudience.Team;
+        if (session.UserCoachRole == StaffRole.HeadCoach)
+        {
+            var group = await GameDialogs.ActionSheetAsync(this, "Address", "Cancel", null, "Team", "Offense", "Defense");
+            if (!Enum.TryParse<CoachTalkAudience>(group, out audience)) return;
+        }
+        var tone = await GameDialogs.ActionSheetAsync(this, "Coach talk", "Cancel", null, Enum.GetNames<CoachTalkTone>());
+        if (!Enum.TryParse<CoachTalkTone>(tone, out var selectedTone)) return;
+        var talk = GameDayCoachingService.Talk(session, session.ControlledTeamName!, selectedTone, audience);
+        if (talk is null) return;
+        var positive = talk.Reactions.Count(r => r.Change > 0); var negative = talk.Reactions.Count(r => r.Change < 0);
+        selected.Text = $"Talk delivered · {positive} encouraged · {negative} reacted negatively";
+    }
     async Task DepthChart()
     {
-        var positions = session.Roster.Where(p => p.TeamName == session.ControlledTeamName).Select(p => OffensiveLineService.Label(p)).Distinct().Order().ToArray();
+        var positions = session.Roster.Where(p => p.TeamName == session.ControlledTeamName && UserCoachControlService.ControlsPosition(session.UserCoachRole, p.Position)).Select(p => OffensiveLineService.Label(p)).Distinct().Order().ToArray();
         var position = await GameDialogs.ActionSheetAsync(this, "Position", "Cancel", null, positions);
         if (position is null or "Cancel") return;
         var starters = GameDayCoachingService.Starters(session, session.ControlledTeamName!);

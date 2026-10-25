@@ -4,7 +4,19 @@ namespace ProFootball.Core;
 public static class ProTrade
 {
     public static bool Available(ProFranchise s, ProDraftPick p) => p.Year > s.Year || p.Year == s.Year && !s.DraftHistory.Any(h => h.Year == p.Year && h.Round == p.Round && h.Slot == p.Slot);
-    public static double PlayerValue(ProPlayer p) => Math.Pow(Math.Max(1, p.Football.OverallRating - 48), 2) * Math.Clamp((36 - p.Age) / 10d, .25, 1.5) * (p.Football.Position == Position.QB ? 1.7 : 1);
+    public static double PositionWeight(Position p) => p switch { Position.QB => 1.8, Position.DE => 1.45, Position.CB => 1.35, Position.OL => 1.2, Position.WR or Position.DT => 1.1, Position.RB => .85, Position.K => .35, _ => 1 };
+    public static double PlayerValue(ProPlayer p) => Math.Pow(Math.Max(0, p.Football.OverallRating - 55), 2) * .65
+        * Math.Clamp((36 - p.Age) / 10d, .25, 1.5) * PositionWeight(p.Football.Position)
+        * (1 + Math.Max(0, p.Football.PotentialRating - p.Football.OverallRating) / 100d);
+    public static double PlayerValue(ProFranchise s, ProPlayer p, string receivingTeam)
+    {
+        var contract = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);
+        var cap = contract is null ? ProEconomy.MarketSalary(p) : ProEconomy.CapHit(contract, s.Year);
+        var surplus = Math.Clamp((ProEconomy.MarketSalary(p) - cap) / (double)Math.Max(1_000_000, ProEconomy.MarketSalary(p)), -.5, .5);
+        return PlayerValue(p) * (1 + surplus * .35) * (1 + Math.Min(3, ProCpu.Need(s, receivingTeam, p.Football.Position)) * .06)
+            * (p.Football.CurrentInjury is null ? 1 : .8);
+    }
+    public static double PickValue(ProFranchise s, ProDraftPick p) => PickValue(p) * Math.Pow(.9, Math.Max(0, p.Year - s.Year - 1));
     public static double PickValue(ProDraftPick p) => 1800 / Math.Pow((p.Round - 1) * 32 + p.Slot, .58);
     public static ProFranchise Propose(ProFranchise s, string from, string to, IReadOnlyList<Guid> givePlayers, IReadOnlyList<Guid> getPlayers, IReadOnlyList<Guid> givePicks, IReadOnlyList<Guid> getPicks)
     {
@@ -14,11 +26,11 @@ public static class ProTrade
         var b = getPlayers.Select(id => s.Players.Single(p => p.Football.PlayerId == id && p.Football.TeamName == to && !p.Retired)).ToArray();
         var ap = givePicks.Select(id => s.Picks.Single(p => p.Id == id && p.Owner == from && Available(s, p))).ToArray(); var bp = getPicks.Select(id => s.Picks.Single(p => p.Id == id && p.Owner == to && Available(s, p))).ToArray();
         if (a.Length + b.Length + ap.Length + bp.Length == 0) throw new InvalidOperationException("Select trade assets.");
-        if (a.Sum(PlayerValue) + ap.Sum(PickValue) < (b.Sum(PlayerValue) + bp.Sum(PickValue)) * 1.05) throw new InvalidOperationException("The CPU rejected this package. Offer more value.");
+        if (a.Sum(p => PlayerValue(s, p, to)) + ap.Sum(p => PickValue(s, p)) < (b.Sum(p => PlayerValue(s, p, from)) + bp.Sum(p => PickValue(s, p))) * 1.05) throw new InvalidOperationException("The CPU rejected this package. Offer more value.");
         var next = s;
         foreach (var p in a) next = Move(next, p, to); foreach (var p in b) next = Move(next, p, from);
         if (ProEconomy.Room(next, from) < 0 || ProEconomy.Room(next, to) < 0 || ProRoster.Active(next, from) > ProRoster.Limit(next) || ProRoster.Active(next, to) > ProRoster.Limit(next)) throw new InvalidOperationException("Trade violates the salary cap or active-roster limit.");
-        return ProEconomy.Log(next with { Picks = next.Picks.Select(p => givePicks.Contains(p.Id) ? p with { Owner = to } : getPicks.Contains(p.Id) ? p with { Owner = from } : p).ToList() }, $"Trade completed: {from} / {to}.");
+        return ProEconomy.Log(next with { TradeHistory = next.TradeHistory.Append(new(Guid.NewGuid(), s.Year, s.Week, from, to, a.Select(p => p.Football.PlayerId).ToList(), b.Select(p => p.Football.PlayerId).ToList(), ap.ToList(), bp.ToList())).ToList(), Picks = next.Picks.Select(p => givePicks.Contains(p.Id) ? p with { Owner = to } : getPicks.Contains(p.Id) ? p with { Owner = from } : p).ToList() }, $"Trade completed: {from} / {to}.");
     }
     static ProFranchise Move(ProFranchise s, ProPlayer p, string to)
     {
@@ -36,7 +48,7 @@ public static class ProDraft
         foreach (var p in order) { var old = s.Picks.FirstOrDefault(x => x.Year == s.Year && x.Round == p.Round && x.OriginalTeam == p.OriginalTeam); existing.Add(old is null ? p : p with { Owner = old.Owner }); }
         var random = new Random(s.Year * 31); var basePlayers = ProLeagueService.GeneratePlayers(s.League).Where(p => !p.PracticeSquad).Take(320).ToArray();
         var prospects = basePlayers.Select((p, i) => { var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"rookie-{s.Year}-{i}")); var rating = random.Next(49, 82); return p with { Football = p.Football with { PlayerId = new Guid(bytes[..16]), TeamName = "Draft class", OverallRating = rating, SeasonStartOverall = rating, Skills = ProOffseason.ShiftSkills(p.Football.Skills ?? new PlayerSkillRatings(), rating - p.Football.OverallRating), AwarenessRating = rating, StrengthRating = rating, AgilityRating = rating, PotentialRating = Math.Clamp(rating + random.Next(2, 20), 50, 99), SpeedRating = Math.Clamp(p.Football.SpeedRating + random.Next(-6, 7), 35, 99) }, Age = random.Next(21, 24), Experience = 0, RatingSource = "Generated prospect · scouting uncertainty", ExternalId = "", Reserve = false }; }).Select(p => ProPlayerRatingService.Refresh(p, true, true)).ToList();
-        return s with { Picks = existing, Prospects = prospects, DraftIndex = 0, Scouting = [], DraftBoard = [] };
+        return ProEconomy.EnsurePickInventory(s with { Picks = existing, Prospects = prospects, DraftIndex = 0, Scouting = [], DraftBoard = [] });
     }
     public static ProDraftPick? Current(ProFranchise s) => s.Picks.Where(p => p.Year == s.Year).OrderBy(p => p.Round).ThenBy(p => p.Slot).ElementAtOrDefault(s.DraftIndex);
     public static ProFranchise Scout(ProFranchise s, string team, Guid id)
@@ -89,7 +101,7 @@ public static class ProCpu
     }
     public static ProFranchise Manage(ProFranchise s, bool includeUser = false)
     {
-        var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam).ToArray();
+        var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam || s.Career?.Unemployed == true).ToArray();
         if (s.Phase == ProPhase.Preseason)
             foreach (var team in teams) s = MakeRoom(s, team.Name, Math.Max(0, 53 - ProRoster.Active(s, team.Name)) * 1_000_000);
 
@@ -136,6 +148,7 @@ public static class ProOffseason
     {
         if (s.OffseasonStep == OffseasonStep.Retention)
         {
+            s = ProCareer.Review(s);
             var owners = ProStandings.Build(s).Select(r => { var old = s.Owners.FirstOrDefault(o => o.Team == r.Team.Name) ?? new(r.Team.Name, 8, 65); var security = Math.Clamp(old.Security + (r.Wins - old.TargetWins) * 5, 0, 100); return old with { Security = security, Fired = security < 15 }; }).ToList();
             foreach (var p in s.Players.Where(p => !p.Retired && p.Football.TeamName != "Free agent").ToArray())
             { var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId); if (c is not null && c.Years.Max(y => y.Year) <= s.Year) s = ProEconomy.Release(s, p.Football.TeamName, p.Football.PlayerId, false); }
@@ -160,7 +173,7 @@ public static class ProOffseason
             return s with { OffseasonStep = OffseasonStep.RosterCuts, Players = s.Players.Concat(s.Prospects.Select(p => p with { Football = p.Football with { TeamName = "Free agent" } })).ToList(), Prospects = [] };
         }
         if (ProRoster.Active(s, s.UserTeam) > 53 || ProEconomy.Room(s, s.UserTeam) < 0) throw new InvalidOperationException("Trim your active roster to 53 and get under the cap first.");
-        foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam)) s = ProCpu.Trim(s, team.Name);
+        foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam || s.Career?.Unemployed == true)) s = ProCpu.Trim(s, team.Name);
         s = ProCpu.Manage(s with { Phase = ProPhase.Preseason, Week = 1 });
         return s with { Phase = ProPhase.Preseason, Week = 1, OffseasonStep = OffseasonStep.Retention, Games = ProSchedule.Build(s.League, s.Year), TaggedTeams = [], Picks = s.Picks.Concat(ProEconomy.CreatePicks(s, s.Year + 1)).DistinctBy(p => (p.Year, p.Round, p.OriginalTeam)).ToList() };
     }

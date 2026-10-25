@@ -12,7 +12,7 @@ public static class ProEconomy
     public static long Pending(ProFranchise s, string team, Guid? except = null) => s.Bids.Where(b => b.Team == team && b.PlayerId != except).Sum(b => b.AnnualSalary + b.Bonus / b.Years);
     public static ProFranchise Initialize(ProFranchise s)
     {
-        if (s.Contracts.Count > 0) return s;
+        if (s.Contracts.Count > 0) return EnsurePickInventory(s);
         var contracts = new List<ProContract>();
         foreach (var team in s.League.Teams)
         {
@@ -26,7 +26,15 @@ public static class ProEconomy
                 contracts.Add(new(p.Football.PlayerId, team.Name, s.Year, years, bonus, Enumerable.Range(0, years).Select(i => new ContractYear(s.Year + i, salary, i == 0 ? salary / 3 : 0)).ToList()));
             }
         }
-        return s with { SchemaVersion = 2, Contracts = contracts, Picks = s.Picks.Count > 0 ? s.Picks : CreatePicks(s, s.Year + 1), Owners = s.League.Teams.Select(t => new OwnerExpectation(t.Name, 8, 65)).ToList() };
+        return EnsurePickInventory(s with { SchemaVersion = 2, Contracts = contracts, Picks = s.Picks.Count > 0 ? s.Picks : CreatePicks(s, s.Year + 1), Owners = s.League.Teams.Select(t => new OwnerExpectation(t.Name, 8, 65)).ToList() });
+    }
+    public static ProFranchise EnsurePickInventory(ProFranchise s)
+    {
+        var picks = s.Picks.ToList();
+        foreach (var year in Enumerable.Range(s.Year + 1, 3))
+            foreach (var pick in CreatePicks(s, year))
+                if (!picks.Any(p => p.Year == year && p.Round == pick.Round && p.OriginalTeam == pick.OriginalTeam)) picks.Add(pick);
+        return s with { Picks = picks };
     }
     public static List<ProDraftPick> CreatePicks(ProFranchise s, int year)
     {

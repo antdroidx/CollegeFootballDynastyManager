@@ -5,7 +5,7 @@ public static class ProStaff
 {
     public static ProFranchise ManageCpu(ProFranchise s)
     {
-        foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam))
+        foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam || s.Career?.Unemployed == true))
         {
             var owner = s.Owners.FirstOrDefault(o => o.Team == team.Name);
             if (owner?.Fired == true)

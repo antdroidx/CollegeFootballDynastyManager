@@ -25,7 +25,7 @@ public static class ProLeagueService
             league.Teams.GroupBy(t => (t.Conference, t.Division)).Any(g => g.Count() != 4 || !g.Select(t => t.SeedRank).Order().SequenceEqual(new[] { 0, 1, 2, 3 })) || league.ActiveRosterLimit != 53 || league.PracticeSquadLimit != 16)
             throw new InvalidDataException("A league needs two conferences of four divisions, four unique teams per division, 53 active players and 16 practice players.");
     }
-    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false)
+    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false, StaffRole role = StaffRole.HeadCoach, bool firingEnabled = false, string? coachName = null)
     {
         var league = Load();
         if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
@@ -41,6 +41,7 @@ public static class ProLeagueService
             Games = ProSchedule.Build(league, 2026),
             DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
         }));
+        franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
         return sourcedContracts ? ProContractData.Apply(franchise) : franchise;
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
@@ -108,18 +109,24 @@ public static class ProLeagueService
     }
     public static GameDaySession Start(ProFranchise state, ProGame game, GameDayMode mode, string? controlled = null)
     {
+        if (mode == GameDayMode.Play && game.Football.InvolvesTeam(state.UserTeam) && state.Career?.Unemployed == true) throw new InvalidOperationException("Accept a coaching job before controlling this team.");
         if (game.Football.HasPlayed || game.Phase != state.Phase || game.Football.Week != state.Week) throw new InvalidOperationException("Game is not available this week.");
         var session = GameDayEngine.Start(game.Football, Profile(state, game.Football.HomeTeamName), Profile(state, game.Football.AwayTeamName), state.Players.Where(p => !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => p.Football).ToArray(), mode, rules: FootballRules.Professional with { Postseason = state.Phase == ProPhase.Playoffs });
         controlled ??= game.Football.InvolvesTeam(state.UserTeam) ? state.UserTeam : game.Football.HomeTeamName;
         if (!game.Football.InvolvesTeam(controlled)) throw new ArgumentException("Controlled team must be in this matchup.");
-        session.ControlledTeamName = controlled; return session;
+        session.ControlledTeamName = controlled;
+        if (controlled == state.UserTeam) session.UserCoachRole = ProCareer.Role(state);
+        return session;
     }
     public static ProFranchise Finish(ProFranchise state, GameDaySession session)
     {
         if (!session.IsComplete) throw new InvalidOperationException("Game has not finished.");
         var game = GameDayEngine.Finish(session);
+        var scheduled = state.Games.SingleOrDefault(g => g.Football.GameId == game.GameId)
+            ?? throw new InvalidOperationException("This game does not belong to this franchise.");
+        if (scheduled.Football.HasPlayed) return state; // Retrying a save must not award morale twice.
         var next = state with { Games = state.Games.Select(g => g.Football.GameId == game.GameId ? g with { Football = game } : g).ToList() };
-        return next with { Players = next.Players.Select(p => !game.InvolvesTeam(p.Football.TeamName) ? p : p with { Morale = Math.Clamp(p.Morale + (game.HomeScore == game.AwayScore ? 0 : game.WinnerTeamName == p.Football.TeamName ? 3 : -2), 10, 95) }).ToList() };
+        return next with { Players = next.Players.Select(p => !game.InvolvesTeam(p.Football.TeamName) ? p : p with { Morale = Math.Clamp(GameDayCoachingService.LivePlayerMorale(session, p.Football, p.Morale) + (game.HomeScore == game.AwayScore ? 0 : game.WinnerTeamName == p.Football.TeamName ? 3 : -2), 10, 95) }).ToList() };
     }
     public static ProFranchise Advance(ProFranchise state)
     {

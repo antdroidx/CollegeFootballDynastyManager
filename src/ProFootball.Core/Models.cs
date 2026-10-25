@@ -34,17 +34,24 @@ public sealed record ProFranchise
     public long SalaryCap { get; init; } = 301_200_000;
     public string DataSnapshot { get; init; } = "Legacy fictional franchise";
     public List<TeamGamePlan> GamePlans { get; init; } = [];
+    public ProUserCareer? Career { get; init; }
+    public List<ProJobOffer> JobOffers { get; init; } = [];
+    public List<ProCareerSeason> CoachingHistory { get; init; } = [];
+    public List<ProGmDecision> GmDecisions { get; init; } = [];
     public List<ProCoach> Coaches { get; init; } = [];
     public List<CoachCandidate> CoachCandidates { get; init; } = [];
     public List<ProContract> Contracts { get; init; } = [];
     public List<DeadCapCharge> DeadCap { get; init; } = [];
     public List<FreeAgentBid> Bids { get; init; } = [];
+    public List<ProTradeRecord> TradeHistory { get; init; } = [];
     public List<ProDraftPick> Picks { get; init; } = [];
     public List<ProPlayer> Prospects { get; init; } = [];
     public List<DraftSelection> DraftHistory { get; init; } = [];
     public List<ScoutReport> Scouting { get; init; } = [];
     public List<Guid> DraftBoard { get; init; } = [];
     public List<WaiverEntry> Waivers { get; init; } = [];
+    public List<ProNewsStory> News { get; init; } = [];
+    public List<string> ReadNewsIds { get; init; } = [];
     public List<string> Transactions { get; init; } = [];
     public List<string> TaggedTeams { get; init; } = [];
     public List<OwnerExpectation> Owners { get; init; } = [];
@@ -71,3 +78,13 @@ public sealed record WaiverEntry(Guid PlayerId, int ExpiresAfterWeek, List<strin
 public sealed record OwnerExpectation(string Team, int TargetWins, int Security, bool Fired = false);
 
 public sealed record CoachCandidate(string Name, string SourceTeam, string Title, string Source);
+
+public sealed record ProUserCareer(string Name, StaffRole Role, bool FiringEnabled)
+{ public int Reputation { get; init; } = 50; public int Security { get; init; } = 65; public bool Unemployed { get; init; } public int LastReviewedYear { get; init; } }
+public sealed record ProJobOffer(Guid Id, string Team, StaffRole Role, int Year, string Reason);
+public sealed record ProCareerSeason(int Year, string Team, StaffRole Role, int Wins, int Losses, int Reputation, int Security, bool Fired);
+public sealed record ProGmDecision(Guid Id, int Year, int Week, string Action, bool Approved, string Reason);
+
+public sealed record ProTradeRecord(Guid Id, int Year, int Week, string From, string To, List<Guid> GivenPlayers, List<Guid> ReceivedPlayers, List<ProDraftPick> GivenPicks, List<ProDraftPick> ReceivedPicks);
+
+public sealed record ProNewsStory(string Id, int Year, int Week, string Category, string Headline, string Body, string? Team = null, string? GameId = null);
