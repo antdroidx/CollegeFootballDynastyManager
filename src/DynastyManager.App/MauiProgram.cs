@@ -10,6 +10,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        AndroidSearchAppearance.Configure();
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
         Microsoft.Maui.Handlers.LabelHandler.Mapper.AppendToMapping("ThemeContrast", (_, view) =>
