@@ -62,10 +62,10 @@ public sealed partial class FranchisePage : ContentPage
         var league = ProLeagueService.Load(); var picker = new Picker { Title = "Choose your team", ItemsSource = league.Teams.Select(t => t.Name).ToList(), SelectedIndex = league.Teams.FindIndex(t => t.Id == "SEA") }; body.Add(picker);
         var preview = new ContentView(); void Preview() { var t = league.Teams[picker.SelectedIndex]; preview.Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(t, 70), Text(t.Name, 21, true) } }; }
         picker.SelectedIndexChanged += (_, _) => Preview(); Preview(); body.Add(preview);
-        var finances = new Picker { Title = "Starting contract data", ItemsSource = new[] { "OverTheCap snapshot · provisional team cap", "Estimated game contracts" }, SelectedIndex = 0 }; body.Add(finances);
+        var finances = new Picker { Title = "Starting contract data", ItemsSource = new[] { "Estimated game contracts", "OverTheCap snapshot · experimental cap model" }, SelectedIndex = 0 }; body.Add(finances);
         body.Add(Text("Sourced contracts preserve reported yearly cap charges. Team rollover, adjustments and departed-player dead money are not imported yet; some teams may start above the base cap. Existing saves retain their finances.", 12));
         body.Add(Text("Start a new 2026 franchise using real roster identities. Actual source vacancies and reserve players are preserved; active roster limit is 53 and practice squad limit is 16."));
-        body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text, finances.SelectedIndex == 0)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
+        body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text, finances.SelectedIndex == 1)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
     }
     async Task Save() { if (state is not null) await store.Save(state); }
     void Render()
