@@ -48,7 +48,8 @@ def texts(root):
 
 
 def tap(root, text):
-    node = next(node for node in root.iter("node") if node.get("text") == text)
+    matches = [node for node in root.iter("node") if node.get("text") == text]
+    node = next((n for n in matches if "Button" in n.get("class", "")), next((n for n in matches if n.get("clickable") == "true" and "EditText" not in n.get("class", "")), matches[0]))
     left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
     assert right > left and bottom > top, f"Target is not visible: {text}"
     adb("shell", "input", "tap", str((left + right) // 2), str((top + bottom) // 2))
