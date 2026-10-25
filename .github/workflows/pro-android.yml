@@ -28,7 +28,7 @@ jobs:
           key: pro-nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','global.json') }}
           restore-keys: pro-nuget-${{ runner.os }}-
       - run: dotnet workload install maui-android --version 10.0.301.1
-      - name: Pro foundation tests
+      - name: Pro tests
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
       - name: Build independent pro APK
         run: >

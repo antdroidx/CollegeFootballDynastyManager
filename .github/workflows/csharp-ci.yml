@@ -1,5 +1,5 @@
-name: C# / MAUI CI
-run-name: Build ${{ github.run_number }} • ${{ github.head_ref || github.ref_name }}
+name: College Android
+run-name: College build ${{ github.run_number }} • ${{ github.head_ref || github.ref_name }}
 
 on:
   push:
@@ -75,7 +75,7 @@ jobs:
       - name: Restore
         run: dotnet restore CollegeFootballDynastyManager.sln
 
-      - name: Run core tests
+      - name: Run combined Core / College tests
         env:
           SKIP_CAREER_HEALTH: ${{ (github.event_name == 'workflow_dispatch' && !inputs.run_career_health) || (github.ref_name == 'feature/gamecast-visual-polish' || github.ref_name == 'feature/pro-franchise-foundation') }}
           RUN_RATING_CALIBRATION: ${{ github.event_name == 'workflow_dispatch' && inputs.run_rating_calibration }}
@@ -184,7 +184,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm || true
 
-      - name: Android launch smoke test
+      - name: College Android management checks
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 36
@@ -250,7 +250,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm || true
 
-      - name: Android career options smoke test
+      - name: College Android career checks
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 36
