@@ -36,7 +36,7 @@ public sealed partial class FranchisePage
     }
     void Staff()
     {
-        var s = state!; var team = s.League.Teams.Single(t => t.Name == s.UserTeam); body.Add(Text("Staff ratings are game estimates. Changes open during the offseason.", 12));
+        var s = state!; var team = s.League.Teams.Single(t => t.Name == s.UserTeam); var tools = new ActionRow(); tools.Add(Action("Game plan", GamePlan)); tools.Add(Action("Injuries & availability", InjuryReport)); body.Add(tools); body.Add(Text("Staff ratings are game estimates. Changes open during the offseason.", 12));
         foreach (var c in s.Coaches.Where(c => c.TeamId == team.Id).OrderBy(c => c.Role))
         { var coach = c; var row = new ActionRow(); var hire = Action("Hire / replace", () => Hire(coach)); hire.IsEnabled = s.Phase == ProPhase.Offseason; row.Add(hire); var fire = Action("Dismiss", () => Update(x => ProStaff.Fire(x, x.UserTeam, coach.Role))); fire.IsEnabled = s.Phase == ProPhase.Offseason && !coach.Vacant; row.Add(fire); body.Add(Panel(RoleName(c.Role), CoachIdentity(c, team), Action("Coach profile", () => CoachProfile(coach)), Text(c.Title, 12), Text($"Coaching {c.Rating} · Development {c.Development}"), row)); }
     }

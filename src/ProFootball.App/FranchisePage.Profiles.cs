@@ -41,6 +41,25 @@ public sealed partial class FranchisePage
         var team = state!.League.Teams.Single(t => t.Id == coach.TeamId);
         return ShowPage("Coach profile", CoachIdentity(coach, team), Panel(RoleName(coach.Role), Text(coach.Title), Text($"Coaching {coach.Rating} · Development {coach.Development}"), Text(coach.Vacant ? "Position vacant" : "Employed by " + team.Name), Text("Coaching ratings and illustrated portraits are generated game representations.", 12)));
     }
+    Task GamePlan()
+    {
+        var plan = state!.GamePlans.FirstOrDefault(p => p.TeamName == state.UserTeam) ?? new TeamGamePlan { TeamName = state.UserTeam };
+        Picker Choices<T>(T selected) where T : struct, Enum => new() { ItemsSource = Enum.GetNames<T>(), SelectedIndex = Array.IndexOf(Enum.GetValues<T>(), selected) };
+        var offense = Choices(plan.Offense); var defense = Choices(plan.Defense); var approach = Choices(plan.Approach); var tempo = Choices(plan.Tempo);
+        var save = new Button { Text = "Save game plan" }; var saved = Text("");
+        save.Clicked += async (_, _) =>
+        {
+            var next = plan with { Offense = Enum.Parse<OffensivePlaybook>((string)offense.SelectedItem), Defense = Enum.Parse<DefensivePlaybook>((string)defense.SelectedItem), Approach = Enum.Parse<DefensiveApproach>((string)approach.SelectedItem), Tempo = Enum.Parse<OffensiveTempo>((string)tempo.SelectedItem) };
+            state = state! with { GamePlans = state.GamePlans.Where(p => p.TeamName != state.UserTeam).Append(next).ToList() }; await Save(); saved.Text = "Saved · applies to future games";
+        };
+        return ShowPage("Game plan", Text("Offensive playbook"), offense, Text("Defensive playbook"), defense, Text("Defensive approach"), approach, Text("Tempo"), tempo, save, saved);
+    }
+    Task InjuryReport()
+    {
+        var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.Retired && (p.Reserve || p.Football.CurrentInjury is { WeeksRemaining: > 0 })).ToArray();
+        return ShowPage("Injuries & availability", players.Length == 0 ? Text("No reported injuries or reserve players.") : new VerticalStackLayout { Spacing = 12, Children = { } },
+            Panel("Unavailable players", players.Select(p => Panel(p.Football.FullName, PlayerCell(p), Text(p.Football.CurrentInjury is { } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Reserve list · source roster status " + p.RosterStatus))).ToArray()));
+    }
     void News()
     {
         body.Add(Text("League news", 23, true));

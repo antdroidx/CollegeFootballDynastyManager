@@ -125,9 +125,42 @@ public sealed partial class FranchisePage : ContentPage
     View TeamCell(ProTeam team) => new HorizontalStackLayout { Spacing = 8, Children = { new TeamBadgeView(team, 28), Text(team.Name, 12) } };
     void Roster()
     {
-        var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.Retired).ToArray();
-        foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"))
-        { body.Add(Text(group.Key + " · " + group.Count(), 21, true)); body.Add(Table([("Pos", 48), ("Player", 165), ("Age", 45), ("OVR", 50), ("Morale", 65), ("Cap hit", 90)], group.OrderBy(p => p.Football.Position).ThenBy(p => p.Football.DepthChartOrder).Select(p => new View[] { Text(OffensiveLineService.Label(p.Football), 12), PlayerCell(p), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString(), 15, true), Text(p.Morale.ToString()), Text(Money(state.Contracts.Where(c => c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, state.Year))), 12) }))); }
+        var s = state!; var teams = s.League.Teams.OrderBy(t => t.Name).ToArray();
+        var team = new Picker { Title = "Team", ItemsSource = teams.Select(t => t.Name).ToArray(), SelectedIndex = Array.FindIndex(teams, t => t.Name == s.UserTeam) };
+        var search = new SearchBar { Placeholder = "Find a player" }; var positions = new Picker { Title = "Position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
+        var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); body.Add(tools); body.Add(team); body.Add(search); body.Add(positions);
+        var list = new VerticalStackLayout { Spacing = 12 }; body.Add(list);
+        void Draw()
+        {
+            list.Clear(); if (team.SelectedIndex < 0) return;
+            var selectedTeam = teams[team.SelectedIndex].Name;
+            var players = s.Players.Where(p => p.Football.TeamName == selectedTeam && !p.Retired && (string.IsNullOrWhiteSpace(search.Text) || p.Football.FullName.Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)) && (positions.SelectedIndex <= 0 || p.Football.Position.ToString() == (string)positions.SelectedItem)).ToArray();
+            foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"))
+            {
+                list.Add(Text(group.Key + " · " + group.Count(), 21, true));
+                list.Add(Table([("Pos", 48), ("Player", 220), ("Age", 45), ("OVR", 50), ("Morale", 65), ("Cap hit", 90)], group.OrderBy(p => p.Football.Position).ThenBy(p => p.Football.DepthChartOrder).Select(p => new View[] { Text(OffensiveLineService.Label(p.Football), 12), PlayerCell(p), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString(), 15, true), Text(p.Morale.ToString()), Text(Money(s.Contracts.Where(c => c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year))), 12) })));
+            }
+            if (players.Length == 0) list.Add(Text("No players match these filters."));
+        }
+        team.SelectedIndexChanged += (_, _) => Draw(); positions.SelectedIndexChanged += (_, _) => Draw(); search.TextChanged += (_, _) => Draw(); Draw();
+    }
+    Task DepthChart()
+    {
+        var s = state!; var picker = new Picker { Title = "Position", ItemsSource = s.Players.Where(p => p.Football.TeamName == s.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => OffensiveLineService.Label(p.Football)).Distinct().Order().ToArray() };
+        var list = new VerticalStackLayout { Spacing = 10 };
+        void Draw()
+        {
+            list.Clear(); if (picker.SelectedItem is not string label) return;
+            var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired && OffensiveLineService.Label(p.Football) == label).OrderBy(p => p.Football.DepthChartOrder).ThenByDescending(p => p.Football.OverallRating).ToArray();
+            for (var index = 0; index < players.Length; index++)
+            {
+                var p = players[index]; var starter = index == 0; var button = new Button { Text = starter ? "Starter" : "Make starter", IsEnabled = !starter && p.Football.CurrentInjury is not { WeeksRemaining: > 0 } };
+                button.Clicked += async (_, _) => { state = ProDepthChart.MakeStarter(state!, state!.UserTeam, p.Football.PlayerId); await Save(); Draw(); Render(); };
+                list.Add(Panel($"{index + 1} · {p.Football.FullName}", PlayerCell(p), Text($"OVR {p.Football.OverallRating} · Morale {p.Morale}"), button));
+            }
+        }
+        picker.SelectedIndexChanged += (_, _) => Draw(); picker.SelectedIndex = 0;
+        return ShowPage("Depth chart", Text("Select a position to reorder your active roster. Changes apply to the next game; use the live depth chart for substitutions during a game."), picker, list);
     }
     void History()
     { body.Add(Text("Franchise history", 22, true)); foreach (var season in state!.History) body.Add(Panel(season.Year + " champions", Text(season.Champion, 21, true))); body.Add(Text("Draft history", 21, true)); foreach (var pick in state.DraftHistory.Where(p => p.Team == state.UserTeam).TakeLast(21).Reverse()) body.Add(Text($"{pick.Year} R{pick.Round} #{pick.Slot} · {pick.Player.Football.FullName}", 13)); }

@@ -32,6 +32,7 @@ public sealed record ProFranchise
     public List<SeasonArchive> History { get; init; } = [];
     public long SalaryCap { get; init; } = 301_200_000;
     public string DataSnapshot { get; init; } = "Legacy fictional franchise";
+    public List<TeamGamePlan> GamePlans { get; init; } = [];
     public List<ProCoach> Coaches { get; init; } = [];
     public List<CoachCandidate> CoachCandidates { get; init; } = [];
     public List<ProContract> Contracts { get; init; } = [];

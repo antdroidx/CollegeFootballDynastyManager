@@ -98,7 +98,7 @@ public static class ProLeagueService
             RushDefenseRating = Rating(Position.DE, Position.DT, Position.MLB, Position.OLB),
             SpecialTeamsRating = Rating(Position.K),
             RosterSize = 53,
-            GamePlan = new() { TeamName = team },
+            GamePlan = state.GamePlans.FirstOrDefault(p => p.TeamName == team) ?? new() { TeamName = team },
             Morale = (int)state.Players.Where(p => p.Football.TeamName == team && !p.Retired).Select(p => (double)p.Morale).DefaultIfEmpty(60).Average(),
             HeadCoachLeadership = Coach(StaffRole.HeadCoach),
             HeadCoachGameManagement = Coach(StaffRole.HeadCoach),
