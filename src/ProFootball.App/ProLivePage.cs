@@ -106,6 +106,7 @@ public sealed partial class ProLivePage : ContentPage
             last = ProLiveControl.Step(session, offense, defense);
             await Animate(last, false);
             if (autoReplays && !pending && GameDayLivePresentation.InstantReplay(last)) await Replay(last);
+            if (last.Outcome == SnapOutcome.Kickoff && session.Mode == GameDayMode.Play) selected.Text = "Coach mode · choose plays, then Next snap";
             commentary.Text = GameDayCommentaryService.Describe(last, session.PlayersById);
             if (session.IsComplete) await Commit();
         }
@@ -126,7 +127,7 @@ public sealed partial class ProLivePage : ContentPage
         awayTimeouts.Text = $"TO {session.AwayTimeouts}"; homeTimeouts.Text = $"TO {session.HomeTimeouts}";
         situation.Text = session.IsComplete ? saved ? "FINAL · Saved" : "FINAL · Save pending" : $"{(session.Quarter > 4 ? "OT" : "Q" + session.Quarter)} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · {session.Down} & {session.Distance} · {GameDayEngine.BallOn(session, Short)}";
         if (session.KickoffPending) situation.Text = $"Q{session.Quarter} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · Kickoff · {Short(session.PossessionTeamName)} receives";
-        possession.Text = session.IsComplete ? "Final" : "Controlling " + Short(session.ControlledTeamName!) + " · " + Short(session.PossessionTeamName) + " possession · " + (session.Mode == GameDayMode.Watch ? "Watching CPU vs CPU" : CoordinatorMode ? CpuUnit ? "CPU handling opposite unit" : "Your unit · choose calls" : "Coach mode");
+        possession.Text = session.IsComplete ? "Final" : (session.Mode == GameDayMode.Watch ? "" : "Controlling " + Short(session.ControlledTeamName!) + " · ") + Short(session.PossessionTeamName) + " possession · " + (session.Mode == GameDayMode.Watch ? "Watching CPU vs CPU" : CoordinatorMode ? CpuUnit ? "CPU handling opposite unit" : "Your unit · choose calls" : "Coach mode");
         var watch = session.Mode == GameDayMode.Watch;
         next.IsVisible = !watch && !session.IsComplete && (!CpuUnit || paused || session.KickoffPending); next.Text = session.KickoffPending ? "Kickoff" : "Next snap"; next.IsEnabled = !working && !pending;
         pause.IsVisible = (watch || CoordinatorMode) && !session.IsComplete; pause.Text = CoordinatorMode ? paused ? "Resume CPU unit" : "Pause CPU unit" : paused ? "Resume watch" : "Pause watch";
