@@ -135,6 +135,7 @@ try:
     click("news-open","News")
     ready("news","League news")
     s.capture("pro-news")
+    click("delete-overview","Overview")
     click("delete-exit","Save & exit")
     click("delete-prompt","Delete save")
     dialog=ready("delete-confirm","Delete franchise?")
