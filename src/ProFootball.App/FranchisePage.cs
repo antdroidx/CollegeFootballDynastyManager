@@ -27,7 +27,7 @@ public sealed partial class FranchisePage : ContentPage
         var b = new Button { Text = text, AutomationId = id, BackgroundColor = DynastyTheme.Panel, TextColor = DynastyTheme.Text };
         b.Clicked += async (_, _) => { if (busy) return; busy = true; b.IsEnabled = false; try { await action(); } catch (Exception e) { await GameDialogs.AlertAsync(this, "Unable to continue", e.Message, "OK"); } finally { busy = false; b.IsEnabled = true; } }; return b;
     }
-    void LayoutShell() { sidebar.BackgroundColor=bottom.BackgroundColor=DynastyTheme.Surface; var wide = state is not null && Width >= 900; sidebar.IsVisible = wide; bottom.IsVisible = state is not null && !wide; shell.ColumnDefinitions[0].Width = wide ? 210 : 0; }
+    void LayoutShell() { sidebar.BackgroundColor = bottom.BackgroundColor = DynastyTheme.Surface; var wide = state is not null && Width >= 900; sidebar.IsVisible = wide; bottom.IsVisible = state is not null && !wide; shell.ColumnDefinitions[0].Width = wide ? 210 : 0; }
     Task Open(string target) { section = target; Render(); scroll.ScrollToAsync(0, 0, false); return Task.CompletedTask; }
     void RenderNavigation()
     {
@@ -54,13 +54,13 @@ public sealed partial class FranchisePage : ContentPage
     {
         var pick = await GameDialogs.ActionSheetAsync(this, "Options", "Cancel", null, "Appearance", "Data sources");
         if (pick == "Appearance") { var choice = await GameDialogs.ActionSheetAsync(this, "Appearance", "Cancel", null, "Dark", "Light"); if (choice is "Dark" or "Light") { Preferences.Set("app-theme", choice); Application.Current!.Resources = DynastyTheme.CreateResources(); Application.Current.UserAppTheme = DynastyTheme.RequestedTheme; BackgroundColor = DynastyTheme.Background; DynastyTheme.ApplyNativeAppearance(); if (state is null) await Library(); else Render(); } }
-        if (pick == "Data sources") await GameDialogs.AlertAsync(this, "Data sources", (state?.DataSnapshot ?? "NFL 2026 Week 7 · Madden 27 Week 6") + "\nRosters: nflverse (CC BY 4.0). Ratings: EA public Madden ratings, launch archive fallback; unmatched players estimated. Staff: official team sites. Colors: nflverse. Team marks: ESPN/NFL club assets, rendered as a pixel grid. Initial finances and coaching ratings are estimates. Transactions and future draft classes are simulated. Existing fictional franchises remain intact.\nSources and file hashes are recorded in docs/nfl-data-manifest.json.", "Close");
+        if (pick == "Data sources") await GameDialogs.AlertAsync(this, "Data sources", (state?.DataSnapshot ?? "NFL 2026 Week 7 · Madden 27 Week 6") + "\nRosters: nflverse (CC BY 4.0). Ratings: EA public Madden ratings, launch archive fallback; unmatched players estimated. Staff: official team sites. Colors: nflverse. Badges: team abbreviations and NFL club colors. Initial finances and coaching ratings are estimates. Transactions and future draft classes are simulated. Existing fictional franchises remain intact.\nSources and file hashes are recorded in docs/nfl-data-manifest.json.", "Close");
     }
     Task Create()
     {
         body.Clear(); body.Add(Text("Start a franchise", 25, true)); var name = new Entry { Text = "My franchise", Placeholder = "Franchise name" }; body.Add(name);
         var league = ProLeagueService.Load(); var picker = new Picker { Title = "Choose your team", ItemsSource = league.Teams.Select(t => t.Name).ToList(), SelectedIndex = league.Teams.FindIndex(t => t.Id == "SEA") }; body.Add(picker);
-        var preview = new ContentView(); void Preview() { var t = league.Teams[picker.SelectedIndex]; preview.Content = new HorizontalStackLayout { Spacing = 12, Children = { new PixelTeamLogo(t, 70), Text(t.Name, 21, true) } }; }
+        var preview = new ContentView(); void Preview() { var t = league.Teams[picker.SelectedIndex]; preview.Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(t, 70), Text(t.Name, 21, true) } }; }
         picker.SelectedIndexChanged += (_, _) => Preview(); Preview(); body.Add(preview);
         body.Add(Text("Start a new 2026 franchise using real roster identities. Actual source vacancies and reserve players are preserved; active roster limit is 53 and practice squad limit is 16."));
         body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
@@ -71,7 +71,7 @@ public sealed partial class FranchisePage : ContentPage
         if (state is null) return; body.Clear(); bottom.ColumnDefinitions.Clear(); RenderNavigation();
         var header = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(Action("‹ Exit", async () => { await Save(); await Library(); }), 0, 0); header.Add(new VerticalStackLayout { Children = { Text(section == "Staff" ? "Coaching Hub" : section, 25, true), Text($"{state.UserTeam} · {state.Year} · {state.Phase} · Week {state.Week}", 12) } }, 1, 0); header.Add(Action("Options", Options), 2, 0); body.Add(header);
-        var team = state.League.Teams.Single(t => t.Name == state.UserTeam); body.Add(new Border { Padding = 14, BackgroundColor = Color.FromArgb(team.Primary), Content = new HorizontalStackLayout { Spacing = 12, Children = { new PixelTeamLogo(team, 56), new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { new Label { Text = team.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = Colors.White }, new Label { Text = state.Name + " · " + state.Year, TextColor = Colors.White } } } } } });
+        var team = state.League.Teams.Single(t => t.Name == state.UserTeam); body.Add(new Border { Padding = 14, BackgroundColor = Color.FromArgb(team.Primary), Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(team, 56), new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { new Label { Text = team.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = TeamBadgeView.Ink(team) }, new Label { Text = state.Name + " · " + state.Year, TextColor = TeamBadgeView.Ink(team) } } } } } });
         switch (section) { case "Overview": Overview(); break; case "Roster": Roster(); break; case "Staff": Staff(); break; case "Front office": FrontOffice(); break; case "Schedule": Schedule(); break; case "Standings": Standings(); break; case "History": History(); break; }
         var actions = new ActionRow(); actions.Add(Action("Save franchise", async () => { await Save(); await GameDialogs.AlertAsync(this, "Saved", "Franchise and rolling backups saved.", "OK"); })); actions.Add(Action("Save & exit", async () => { await Save(); await Library(); })); body.Add(actions);
     }
@@ -119,7 +119,7 @@ public sealed partial class FranchisePage : ContentPage
         { body.Add(Text(group.Key, 19, true)); body.Add(Table([("Team", 210), ("W", 40), ("L", 40), ("T", 40), ("Pct", 65), ("Diff", 65)], group.Select(r => new View[] { TeamCell(r.Team), Text(r.Wins.ToString()), Text(r.Losses.ToString()), Text(r.Ties.ToString()), Text(r.Percentage.ToString(".000")), Text(r.Differential.ToString()) }))); }
         body.Add(Text("Initial tiebreaks: percentage, division, conference, opponent strength, differential. Full official multi-team chains remain in development.", 12));
     }
-    View TeamCell(ProTeam team) => new HorizontalStackLayout { Spacing = 8, Children = { new PixelTeamLogo(team, 28), Text(team.Name, 12) } };
+    View TeamCell(ProTeam team) => new HorizontalStackLayout { Spacing = 8, Children = { new TeamBadgeView(team, 28), Text(team.Name, 12) } };
     void Roster()
     {
         var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.Retired).ToArray();

@@ -5,7 +5,7 @@ namespace ProFootball.App;
 
 public sealed partial class FranchisePage
 {
-    static string RoleName(StaffRole role)=>role switch{StaffRole.HeadCoach=>"Head coach",StaffRole.OffensiveCoordinator=>"Offensive coordinator",StaffRole.DefensiveCoordinator=>"Defensive coordinator",StaffRole.SpecialTeamsCoordinator=>"Special teams coordinator",_=>role.ToString()};
+    static string RoleName(StaffRole role) => role switch { StaffRole.HeadCoach => "Head coach", StaffRole.OffensiveCoordinator => "Offensive coordinator", StaffRole.DefensiveCoordinator => "Defensive coordinator", StaffRole.SpecialTeamsCoordinator => "Special teams coordinator", _ => role.ToString() };
     static string Money(long value) => "$" + (value / 1_000_000d).ToString("0.00") + "m";
     View Link(string text, Func<Task> action) { var b = Action(text, action); b.BackgroundColor = Colors.Transparent; b.FontSize = 12; b.Padding = 4; return b; }
     View Table((string Name, int Width)[] columns, IEnumerable<View[]> rows)
@@ -15,7 +15,7 @@ public sealed partial class FranchisePage
         var row = 1; foreach (var cells in rows) { grid.RowDefinitions.Add(new(GridLength.Auto)); for (var c = 0; c < cells.Length; c++) { cells[c].VerticalOptions = LayoutOptions.Center; grid.Add(cells[c], c, row); } row++; }
         return new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = grid };
     }
-    async Task Update(Func<ProFranchise, ProFranchise> mutation) { state = await Task.Run(()=>mutation(state!)); await Save(); Render(); }
+    async Task Update(Func<ProFranchise, ProFranchise> mutation) { state = await Task.Run(() => mutation(state!)); await Save(); Render(); }
     async Task Player(ProPlayer original)
     {
         var p = state!.Players.Single(x => x.Football.PlayerId == original.Football.PlayerId); var c = state.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);

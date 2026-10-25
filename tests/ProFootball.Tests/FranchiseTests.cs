@@ -6,6 +6,18 @@ namespace ProFootball.Tests;
 public class FranchiseTests
 {
     static ProFranchise New()=>ProLeagueService.Create("Seattle Seahawks");
+    [Fact] public void DraftOrderUsesCompletedSeasonAfterCalendarAdvances()
+    {
+        var s=New();var completed=s.Games.Select(g=>
+        {
+            if(g.Phase!=ProPhase.RegularSeason)return g;
+            var f=g.Football;var winner=f.InvolvesTeam("Buffalo Bills")?"Buffalo Bills":f.InvolvesTeam(s.UserTeam)?f.HomeTeamName==s.UserTeam?f.AwayTeamName:f.HomeTeamName:f.HomeTeamName;
+            return g with{Football=f with{HasPlayed=true,HomeScore=winner==f.HomeTeamName?21:7,AwayScore=winner==f.AwayTeamName?21:7}};
+        }).ToList();
+        s=ProDraft.Generate(s with{Year=s.Year+1,Games=[],History=[new(s.Year,"Buffalo Bills",completed)]});
+        var round=s.Picks.Where(p=>p.Year==s.Year&&p.Round==1).OrderBy(p=>p.Slot).ToArray();
+        Assert.Equal("Seattle Seahawks",round[0].OriginalTeam);Assert.Equal("Buffalo Bills",round[^1].OriginalTeam);
+    }
     [Fact] public void WaiverClockContinuesAcrossPlayoffWeekReset()
     {
         var s=New() with{Phase=ProPhase.RegularSeason,Week=18,TransactionTick=20};var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&!p.Reserve&&!p.PracticeSquad&&p.Experience<4);
@@ -32,7 +44,7 @@ public class FranchiseTests
     [Fact] public void SnapshotHasRealIdentitiesStaffAndHonestRatingSources()
     {
         var s=New();Assert.Contains(s.Players,p=>p.Football.FullName=="Patrick Mahomes"&&p.RatingSource.StartsWith("Madden"));
-        Assert.All(s.League.Teams,t=>{Assert.NotNull(t.LogoFile);Assert.Equal(4,s.Coaches.Count(c=>c.TeamId==t.Id));Assert.True(ProEconomy.Room(s,t.Name)>0);});
+        Assert.All(s.League.Teams,t=>{Assert.InRange(t.Abbreviation.Length,2,4);Assert.Equal(4,s.Coaches.Count(c=>c.TeamId==t.Id));Assert.True(ProEconomy.Room(s,t.Name)>0);});
         Assert.Contains(s.Coaches,c=>c.TeamId=="SEA"&&c.Name=="Mike Macdonald");Assert.NotEmpty(s.CoachCandidates);
         Assert.All(s.Players,p=>Assert.InRange(p.Football.OverallRating,1,99));
         Assert.All(Enumerable.Range(5,5),code=>Assert.True(s.Players.Count(p=>p.Football.Position==Position.OL&&p.Football.NcaaPositionCode==code)>=40,"Missing specific offensive line roles in the source pack"));

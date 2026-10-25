@@ -20,15 +20,18 @@ public sealed class ProLivePage : ContentPage
         var home = league.Teams.Single(t => t.Name == session.Game.HomeTeamName);
         art = new() { HomeName = home.Abbreviation, HomeInitial = home.Abbreviation, HomeColor = Color.FromArgb(home.Primary), HomeSecondaryColor = Color.FromArgb(home.Secondary), HashMarkFraction = .30, Weather = session.Weather };
         turf = new() { Drawable = art, InputTransparent = true }; AbsoluteLayout.SetLayoutFlags(turf, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.All); AbsoluteLayout.SetLayoutBounds(turf, new Rect(0, 0, 1, 1)); field.Add(turf);
-        var body = new VerticalStackLayout { Padding = 12, Spacing = 10 }; body.Add(score); body.Add(situation);
+        var body = new VerticalStackLayout { Padding = 12, Spacing = 10 }; body.Add(new HorizontalStackLayout { HorizontalOptions = LayoutOptions.Center, Spacing = 12, Children = { new TeamBadgeView(league.Teams.Single(t => t.Name == session.Game.AwayTeamName), 32), score, new TeamBadgeView(home, 32) } }); body.Add(situation);
         body.Add(new Border { Padding = 5, Stroke = DynastyTheme.Accent, StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 12 }, BackgroundColor = DynastyTheme.Surface, Content = field });
         body.Add(selected); var controls = new ActionRow(); controls.Add(next); controls.Add(pause);
-        Button Button(string text, Func<Task> action) { var b = new Button { Text = text }; b.Clicked += async (_, _) =>
+        Button Button(string text, Func<Task> action)
+        {
+            var b = new Button { Text = text }; b.Clicked += async (_, _) =>
             {
-                if(pending)return;pending=true;var wasPaused=paused;paused=true;
-                try{while(working)await Task.Delay(30);working=true;await action();}
-                finally{working=false;pending=false;paused=session.Mode==GameDayMode.Play||wasPaused;Update();}
-            }; controls.Add(b); return b; }
+                if (pending) return; pending = true; var wasPaused = paused; paused = true;
+                try { while (working) await Task.Delay(30); working = true; await action(); }
+                finally { working = false; pending = false; paused = session.Mode == GameDayMode.Play || wasPaused; Update(); }
+            }; controls.Add(b); return b;
+        }
         next.Clicked += async (_, _) => await Snap(); pause.Clicked += (_, _) => { paused = !paused; pause.Text = paused ? "Resume watch" : "Pause watch"; };
         Button("Choose offense", async () => { var plays = PlaybookCatalog.OffensivePlays.ToArray(); var pick = await GameDialogs.ActionSheetAsync(this, "Offensive play", "Cancel", null, plays.Select(p => p.Name + " · " + p.Formation).Append("Punt").Append("Field goal").ToArray()); if (pick == "Punt") offense = "special-punt"; else if (pick == "Field goal") offense = "special-field-goal"; else offense = plays.FirstOrDefault(p => p.Name + " · " + p.Formation == pick)?.Id; selected.Text = "Offense: " + (pick ?? "CPU"); });
         Button("Choose defense", async () => { var plays = PlaybookCatalog.DefensivePlays.ToArray(); var pick = await GameDialogs.ActionSheetAsync(this, "Defensive play", "Cancel", null, plays.Select(p => p.Name).ToArray()); defense = plays.FirstOrDefault(p => p.Name == pick)?.Id; selected.Text = "Defense: " + (pick ?? "CPU"); });
@@ -43,7 +46,7 @@ public sealed class ProLivePage : ContentPage
         Button("Return to franchise", async () => { if (!session.IsComplete && !await GameDialogs.AlertAsync(this, "Leave game?", "This unfinished game's snaps will be discarded. Your saved franchise remains unchanged.", "Leave", "Cancel")) return; active = false; await Navigation.PopModalAsync(); });
         body.Add(controls); body.Add(commentary); Content = new ScrollView { Content = body };
         SizeChanged += (_, _) => field.HeightRequest = Math.Clamp(Math.Min((Width - 36) / 2.25, Height * .43), 120, 420);
-        Loaded += async (_, _) => { art.HomeLogo = await PixelTeamLogo.Art(home); turf.Invalidate(); if (initialized) return; initialized = true; active = true; Update(); if (session.Mode == GameDayMode.Watch) _ = Watch(); };
+        Loaded += (_, _) => { art.HomeLogo = TeamBadgeView.Mark(home, false); turf.Invalidate(); if (initialized) return; initialized = true; active = true; Update(); if (session.Mode == GameDayMode.Watch) _ = Watch(); };
     }
     protected override bool OnBackButtonPressed() { if (working) return true; _ = Close(); return true; }
     async Task Close() { if (session.IsComplete || await GameDialogs.AlertAsync(this, "Leave game?", "Unfinished snaps will be discarded.", "Leave", "Cancel")) { active = false; await Navigation.PopModalAsync(); } }
@@ -53,10 +56,37 @@ public sealed class ProLivePage : ContentPage
         if (working || pending || session.IsComplete) return; working = true; next.IsEnabled = false;
         try { var own = session.PossessionTeamName == session.ControlledTeamName; last = GameDayEngine.Step(session, session.Mode == GameDayMode.Play && own ? offense : null, session.Mode == GameDayMode.Play && !own ? defense : null); await Animate(last, false); Update(); if (session.IsComplete) await Commit(); }
         catch (Exception e) { paused = true; await GameDialogs.AlertAsync(this, "Game paused", e.Message, "OK"); }
-        finally { working = false; next.IsEnabled = !session.IsComplete; }
+        finally { working = false; next.IsEnabled = !session.IsComplete; RenderHuddles(); }
     }
     async Task Commit() { if (saved || !session.IsComplete) return; await save(); saved = true; }
-    void Update() { string Short(string team) => league.Teams.Single(t => t.Name == team).Abbreviation; score.Text = $"{Short(session.Game.AwayTeamName)}  {session.AwayScore}  –  {session.HomeScore}  {Short(session.Game.HomeTeamName)}"; situation.Text = session.IsComplete ? "FINAL · Saved" : $"Q{session.Quarter} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · {session.Down} & {session.Distance} · {GameDayEngine.BallOn(session, Short)}"; art.Direction = (session.PossessionTeamName == session.Game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1); art.YardLine = session.YardLine; art.Distance = session.Distance; turf.Invalidate(); pause.IsVisible = session.Mode == GameDayMode.Watch;pause.Text=paused?"Resume watch":"Pause watch"; }
+    void Update() { string Short(string team) => league.Teams.Single(t => t.Name == team).Abbreviation; score.Text = $"{session.AwayScore}  –  {session.HomeScore}"; situation.Text = session.IsComplete ? "FINAL · Saved" : $"Q{session.Quarter} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · {session.Down} & {session.Distance} · {GameDayEngine.BallOn(session, Short)}"; if (last is null) { art.Direction = (session.PossessionTeamName == session.Game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1); art.YardLine = session.YardLine; art.Distance = session.Distance; } turf.Invalidate(); pause.IsVisible = session.Mode == GameDayMode.Watch; pause.Text = paused ? "Resume watch" : "Pause watch"; RenderHuddles(); }
+    void RenderHuddles()
+    {
+        if (working || pending || session.IsComplete || session.Mode != GameDayMode.Play) return;
+        foreach (var view in field.Children.Where(v => v != turf).ToArray()) field.Remove(view);
+        var direction = (session.PossessionTeamName == session.Game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1);
+        art.Direction = direction; art.YardLine = session.YardLine; art.Distance = session.Distance; turf.Invalidate();
+        foreach (var team in new[] { session.Game.HomeTeamName, session.Game.AwayTeamName })
+        {
+            var attacking = team == session.PossessionTeamName; var home = team == session.Game.HomeTeamName;
+            var profile = home ? session.HomeProfile : session.AwayProfile; var plan = profile.GamePlan ?? new TeamGamePlan { TeamName = team };
+            var depth = home ? session.HomeDepthChart : session.AwayDepthChart; var fatigue = home ? session.HomeFatigue : session.AwayFatigue;
+            var previewRandom = new Random(unchecked(session.Game.SimulationSeed ^ session.Events.Count * 31 ^ (home ? 17 : 37)));
+            var play = PlaybookCatalog.OffensivePlays.FirstOrDefault(p => p.Id == offense) ?? GamePlanService.RecommendOffensivePlay(plan, session.Down, session.Distance, session.YardLine);
+            var call = PlaybookCatalog.DefensivePlays.FirstOrDefault(p => p.Id == defense) ?? GamePlanService.RecommendDefensivePlay(plan, session.Down, session.Distance);
+            var preview = attacking ? PersonnelRotationService.SelectOffense(depth, team, play.Personnel, fatigue, previewRandom) : PersonnelRotationService.SelectDefense(depth, team, call.Personnel, fatigue, previewRandom);
+            var unit = GameDayCoachingService.ApplySubstitutions(session, preview).PlayerIds.Select(id => session.PlayersById.GetValueOrDefault(id)).OfType<DynastyPlayer>().ToArray();
+            var brand = league.Teams.Single(t => t.Name == team);
+            for (var i = 0; i < unit.Length; i++)
+            {
+                var p = unit[i]; var point = GameDayLivePresentation.HuddlePoint(session.YardLine, direction, attacking, i);
+                var sprite = new FootballSpriteView(Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), !home, p.PlayerId.ToByteArray()[0] % 4, p.JerseyNumber?.ToString() ?? p.Position.ToString());
+                sprite.HuddleFacing(.5 - point.X, .5 - point.Y);
+                AbsoluteLayout.SetLayoutFlags(sprite, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(sprite, new Rect(point.X, point.Y, 28, 28)); field.Add(sprite);
+            }
+        }
+    }
     async Task Animate(GameSnapEvent snap, bool replay)
     {
         foreach (var view in field.Children.Where(v => v != turf).ToArray()) field.Remove(view);

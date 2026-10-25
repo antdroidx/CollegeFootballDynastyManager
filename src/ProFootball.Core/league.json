@@ -13,8 +13,7 @@
       "Division": "East",
       "SeedRank": 0,
       "Primary": "#00338D",
-      "Secondary": "#C60C30",
-      "LogoFile": "nfl_buf.png"
+      "Secondary": "#C60C30"
     },
     {
       "Id": "MIA",
@@ -25,8 +24,7 @@
       "Division": "East",
       "SeedRank": 1,
       "Primary": "#008E97",
-      "Secondary": "#F58220",
-      "LogoFile": "nfl_mia.png"
+      "Secondary": "#F58220"
     },
     {
       "Id": "NE",
@@ -37,8 +35,7 @@
       "Division": "East",
       "SeedRank": 2,
       "Primary": "#002244",
-      "Secondary": "#C60C30",
-      "LogoFile": "nfl_ne.png"
+      "Secondary": "#C60C30"
     },
     {
       "Id": "NYJ",
@@ -49,8 +46,7 @@
       "Division": "East",
       "SeedRank": 3,
       "Primary": "#003F2D",
-      "Secondary": "#000000",
-      "LogoFile": "nfl_nyj.png"
+      "Secondary": "#000000"
     },
     {
       "Id": "BAL",
@@ -61,8 +57,7 @@
       "Division": "North",
       "SeedRank": 0,
       "Primary": "#241773",
-      "Secondary": "#9E7C0C",
-      "LogoFile": "nfl_bal.png"
+      "Secondary": "#9E7C0C"
     },
     {
       "Id": "CIN",
@@ -73,8 +68,7 @@
       "Division": "North",
       "SeedRank": 1,
       "Primary": "#FB4F14",
-      "Secondary": "#000000",
-      "LogoFile": "nfl_cin.png"
+      "Secondary": "#000000"
     },
     {
       "Id": "CLE",
@@ -85,8 +79,7 @@
       "Division": "North",
       "SeedRank": 2,
       "Primary": "#FF3C00",
-      "Secondary": "#311D00",
-      "LogoFile": "nfl_cle.png"
+      "Secondary": "#311D00"
     },
     {
       "Id": "PIT",
@@ -97,8 +90,7 @@
       "Division": "North",
       "SeedRank": 3,
       "Primary": "#000000",
-      "Secondary": "#FFB612",
-      "LogoFile": "nfl_pit.png"
+      "Secondary": "#FFB612"
     },
     {
       "Id": "HOU",
@@ -109,8 +101,7 @@
       "Division": "South",
       "SeedRank": 0,
       "Primary": "#03202F",
-      "Secondary": "#A71930",
-      "LogoFile": "nfl_hou.png"
+      "Secondary": "#A71930"
     },
     {
       "Id": "IND",
@@ -121,8 +112,7 @@
       "Division": "South",
       "SeedRank": 1,
       "Primary": "#002C5F",
-      "Secondary": "#a5acaf",
-      "LogoFile": "nfl_ind.png"
+      "Secondary": "#a5acaf"
     },
     {
       "Id": "JAX",
@@ -133,8 +123,7 @@
       "Division": "South",
       "SeedRank": 2,
       "Primary": "#006778",
-      "Secondary": "#000000",
-      "LogoFile": "nfl_jax.png"
+      "Secondary": "#000000"
     },
     {
       "Id": "TEN",
@@ -145,8 +134,7 @@
       "Division": "South",
       "SeedRank": 3,
       "Primary": "#4495D2",
-      "Secondary": "#D50A0A",
-      "LogoFile": "nfl_ten.png"
+      "Secondary": "#D50A0A"
     },
     {
       "Id": "DEN",
@@ -157,8 +145,7 @@
       "Division": "West",
       "SeedRank": 0,
       "Primary": "#002244",
-      "Secondary": "#FB4F14",
-      "LogoFile": "nfl_den.png"
+      "Secondary": "#FB4F14"
     },
     {
       "Id": "KC",
@@ -169,8 +156,7 @@
       "Division": "West",
       "SeedRank": 1,
       "Primary": "#E31837",
-      "Secondary": "#FFB612",
-      "LogoFile": "nfl_kc.png"
+      "Secondary": "#FFB612"
     },
     {
       "Id": "LAC",
@@ -181,8 +167,7 @@
       "Division": "West",
       "SeedRank": 2,
       "Primary": "#007BC7",
-      "Secondary": "#ffc20e",
-      "LogoFile": "nfl_lac.png"
+      "Secondary": "#ffc20e"
     },
     {
       "Id": "LV",
@@ -193,8 +178,7 @@
       "Division": "West",
       "SeedRank": 3,
       "Primary": "#000000",
-      "Secondary": "#A5ACAF",
-      "LogoFile": "nfl_lv.png"
+      "Secondary": "#A5ACAF"
     },
     {
       "Id": "DAL",
@@ -205,8 +189,7 @@
       "Division": "East",
       "SeedRank": 0,
       "Primary": "#002244",
-      "Secondary": "#B0B7BC",
-      "LogoFile": "nfl_dal.png"
+      "Secondary": "#B0B7BC"
     },
     {
       "Id": "NYG",
@@ -217,8 +200,7 @@
       "Division": "East",
       "SeedRank": 1,
       "Primary": "#0B2265",
-      "Secondary": "#A71930",
-      "LogoFile": "nfl_nyg.png"
+      "Secondary": "#A71930"
     },
     {
       "Id": "PHI",
@@ -229,8 +211,7 @@
       "Division": "East",
       "SeedRank": 2,
       "Primary": "#004C54",
-      "Secondary": "#A5ACAF",
-      "LogoFile": "nfl_phi.png"
+      "Secondary": "#A5ACAF"
     },
     {
       "Id": "WAS",
@@ -241,8 +222,7 @@
       "Division": "East",
       "SeedRank": 3,
       "Primary": "#5A1414",
-      "Secondary": "#FFB612",
-      "LogoFile": "nfl_was.png"
+      "Secondary": "#FFB612"
     },
     {
       "Id": "CHI",
@@ -253,8 +233,7 @@
       "Division": "North",
       "SeedRank": 0,
       "Primary": "#0B162A",
-      "Secondary": "#E64100",
-      "LogoFile": "nfl_chi.png"
+      "Secondary": "#E64100"
     },
     {
       "Id": "DET",
@@ -265,8 +244,7 @@
       "Division": "North",
       "SeedRank": 1,
       "Primary": "#0076B6",
-      "Secondary": "#B0B7BC",
-      "LogoFile": "nfl_det.png"
+      "Secondary": "#B0B7BC"
     },
     {
       "Id": "GB",
@@ -277,8 +255,7 @@
       "Division": "North",
       "SeedRank": 2,
       "Primary": "#203731",
-      "Secondary": "#FFB612",
-      "LogoFile": "nfl_gb.png"
+      "Secondary": "#FFB612"
     },
     {
       "Id": "MIN",
@@ -289,8 +266,7 @@
       "Division": "North",
       "SeedRank": 3,
       "Primary": "#4F2683",
-      "Secondary": "#FFC62F",
-      "LogoFile": "nfl_min.png"
+      "Secondary": "#FFC62F"
     },
     {
       "Id": "ATL",
@@ -301,8 +277,7 @@
       "Division": "South",
       "SeedRank": 0,
       "Primary": "#A71930",
-      "Secondary": "#000000",
-      "LogoFile": "nfl_atl.png"
+      "Secondary": "#000000"
     },
     {
       "Id": "CAR",
@@ -313,8 +288,7 @@
       "Division": "South",
       "SeedRank": 1,
       "Primary": "#0085CA",
-      "Secondary": "#000000",
-      "LogoFile": "nfl_car.png"
+      "Secondary": "#000000"
     },
     {
       "Id": "NO",
@@ -325,8 +299,7 @@
       "Division": "South",
       "SeedRank": 2,
       "Primary": "#D3BC8D",
-      "Secondary": "#000000",
-      "LogoFile": "nfl_no.png"
+      "Secondary": "#000000"
     },
     {
       "Id": "TB",
@@ -337,8 +310,7 @@
       "Division": "South",
       "SeedRank": 3,
       "Primary": "#A71930",
-      "Secondary": "#322F2B",
-      "LogoFile": "nfl_tb.png"
+      "Secondary": "#322F2B"
     },
     {
       "Id": "ARI",
@@ -349,8 +321,7 @@
       "Division": "West",
       "SeedRank": 0,
       "Primary": "#97233F",
-      "Secondary": "#000000",
-      "LogoFile": "nfl_ari.png"
+      "Secondary": "#000000"
     },
     {
       "Id": "LAR",
@@ -361,8 +332,7 @@
       "Division": "West",
       "SeedRank": 1,
       "Primary": "#003594",
-      "Secondary": "#FFD100",
-      "LogoFile": "nfl_lar.png"
+      "Secondary": "#FFD100"
     },
     {
       "Id": "SEA",
@@ -373,8 +343,7 @@
       "Division": "West",
       "SeedRank": 2,
       "Primary": "#002244",
-      "Secondary": "#69be28",
-      "LogoFile": "nfl_sea.png"
+      "Secondary": "#69be28"
     },
     {
       "Id": "SF",
@@ -385,8 +354,7 @@
       "Division": "West",
       "SeedRank": 3,
       "Primary": "#AA0000",
-      "Secondary": "#B3995D",
-      "LogoFile": "nfl_sf.png"
+      "Secondary": "#B3995D"
     }
   ]
 }

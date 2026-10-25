@@ -2,7 +2,7 @@
 Usage: python build/import-nfl-snapshot.py PATH_TO_SOURCE_CACHE
 EA numeric ratings only; nflverse identities/statuses; official team coaching pages.
 """
-import csv,datetime,hashlib,json,re,sys,uuid,collections,unicodedata,urllib.request,concurrent.futures
+import csv,datetime,hashlib,json,re,sys,uuid,collections,unicodedata
 from pathlib import Path
 cache=Path(sys.argv[1]);root=Path(__file__).resolve().parents[1]
 def read(name):return json.loads((cache/name).read_text(encoding="utf-8"))
@@ -14,7 +14,7 @@ active=[t["team"] for t in read("teams.json")["sports"][0]["leagues"][0]["teams"
 byname={t["team_name"]:t for t in colors};teams=[]
 for t in active:
  c=byname[t["displayName"]];division=c["team_division"].split()[-1]
- teams.append(dict(Id=c["team_abbr"],City=t["location"],Nickname=t["name"],Abbreviation=t["abbreviation"],Conference=c["team_conf"],Division=division,SeedRank=0,Primary=c["team_color"],Secondary=c["team_color2"],LogoFile="nfl_"+c["team_abbr"].lower()+".png"))
+ teams.append(dict(Id=c["team_abbr"],City=t["location"],Nickname=t["name"],Abbreviation=t["abbreviation"],Conference=c["team_conf"],Division=division,SeedRank=0,Primary=c["team_color"],Secondary=c["team_color2"]))
 # Stable division order is consumed by the existing rotating schedule builder.
 teams.sort(key=lambda t:(["AFC","NFC"].index(t["Conference"]),["East","North","South","West"].index(t["Division"]),t["Id"]))
 for conf in ["AFC","NFC"]:
@@ -86,13 +86,6 @@ for path in cache.glob("*-coaches.html"):
   known.add(norm(name));candidates.append(dict(Name=name,SourceTeam=code,Title=title,Source=next(c["Source"] for c in coaches if c["TeamId"]==code)))
 pack=dict(Candidates=candidates,Version=1,Season=2026,Week=week,RetrievedUtc=datetime.datetime.now(datetime.timezone.utc).isoformat(),MaddenMatched=covered,Estimated=estimated,Players=players,Coaches=coaches)
 (out/"nfl-snapshot.json").write_text(json.dumps(pack,separators=(",",":"),ensure_ascii=False),encoding="utf-8")
-assets=root/"src/ProFootball.App/Resources/Images";assets.mkdir(exist_ok=True)
-espn={t["displayName"]:t for t in active}
-def logo(t):
- url=espn[t["City"]+" "+t["Nickname"]]["logos"][0]["href"];target=assets/t["LogoFile"]
- if not target.exists():target.write_bytes(urllib.request.urlopen(url,timeout=40).read())
- return dict(Team=t["Id"],Url=url,Sha256=hashlib.sha256(target.read_bytes()).hexdigest())
-logos=list(concurrent.futures.ThreadPoolExecutor(max_workers=4).map(logo,teams))
-manifest=dict(RetrievedUtc=pack["RetrievedUtc"],RosterUrl="https://github.com/nflverse/nflverse-data/releases/download/weekly_rosters/roster_weekly_2026.csv",MaddenUrl="https://www.ea.com/games/madden-nfl/ratings",MaddenIteration="Madden 27 Week 6",LaunchFallback="https://github.com/zachxwalton/madden-ratings-breakdown",RosterWeek=week,TeamRosterWeeks=teamweeks,Matched=covered,Estimated=estimated,Logos=logos,CoachingSources=sorted(set(c["Source"] for c in coaches)),InputHashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in cache.iterdir() if p.name in ["roster_weekly_2026.csv","ea-players.json","madden27.csv","colors.csv","coaches.json"]})
+manifest=dict(RetrievedUtc=pack["RetrievedUtc"],RosterUrl="https://github.com/nflverse/nflverse-data/releases/download/weekly_rosters/roster_weekly_2026.csv",MaddenUrl="https://www.ea.com/games/madden-nfl/ratings",MaddenIteration="Madden 27 Week 6",LaunchFallback="https://github.com/zachxwalton/madden-ratings-breakdown",RosterWeek=week,TeamRosterWeeks=teamweeks,Matched=covered,Estimated=estimated,BadgeStyle="Team abbreviations with club colors",CoachingSources=sorted(set(c["Source"] for c in coaches)),InputHashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in cache.iterdir() if p.name in ["roster_weekly_2026.csv","ea-players.json","madden27.csv","colors.csv","coaches.json"]})
 (root/"docs/nfl-data-manifest.json").write_text(json.dumps(manifest,indent=2),encoding="utf-8")
 print(json.dumps(dict(teams=len(teams),players=len(players),coaches=len(coaches),madden=covered,estimated=estimated,week=week)))

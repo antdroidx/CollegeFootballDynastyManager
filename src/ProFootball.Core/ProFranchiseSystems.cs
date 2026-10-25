@@ -32,7 +32,7 @@ public static class ProDraft
 {
     public static ProFranchise Generate(ProFranchise s)
     {
-        var existing = s.Picks.Where(p => p.Year != s.Year).ToList(); var order = ProEconomy.CreatePicks(s, s.Year);
+        var existing = s.Picks.Where(p => p.Year != s.Year).ToList(); var completedSeason=s.History.LastOrDefault();var order = ProEconomy.CreatePicks(completedSeason is null?s:s with{Games=completedSeason.Games}, s.Year);
         foreach (var p in order) { var old = s.Picks.FirstOrDefault(x => x.Year == s.Year && x.Round == p.Round && x.OriginalTeam == p.OriginalTeam); existing.Add(old is null ? p : p with { Owner = old.Owner }); }
         var random = new Random(s.Year * 31); var basePlayers = ProLeagueService.GeneratePlayers(s.League).Where(p => !p.PracticeSquad).Take(320).ToArray();
         var prospects = basePlayers.Select((p, i) => { var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"rookie-{s.Year}-{i}")); var rating = random.Next(49, 82); return p with { Football = p.Football with { PlayerId = new Guid(bytes[..16]), TeamName = "Draft class", OverallRating = rating, SeasonStartOverall = rating, Skills = ProOffseason.ShiftSkills(p.Football.Skills ?? new PlayerSkillRatings(), rating - p.Football.OverallRating), AwarenessRating = rating, StrengthRating = rating, AgilityRating = rating, PotentialRating = Math.Clamp(rating + random.Next(2, 20), 50, 99), SpeedRating = Math.Clamp(p.Football.SpeedRating + random.Next(-6, 7), 35, 99) }, Age = random.Next(21, 24), Experience = 0, RatingSource = "Generated prospect · scouting uncertainty", ExternalId = "", Reserve = false }; }).ToList();
