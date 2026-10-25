@@ -6,6 +6,14 @@ namespace ProFootball.Tests;
 public class FranchiseTests
 {
     static ProFranchise New()=>ProLeagueService.Create("Seattle Seahawks");
+    [Fact] public void WaiverClockContinuesAcrossPlayoffWeekReset()
+    {
+        var s=New() with{Phase=ProPhase.RegularSeason,Week=18,TransactionTick=20};var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&!p.Reserve&&!p.PracticeSquad&&p.Experience<4);
+        s=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId);Assert.Contains(s.Waivers,w=>w.PlayerId==p.Football.PlayerId);
+        var other=s.League.Teams.First(t=>t.Name!=s.UserTeam).Name;var cut=s.Players.First(x=>x.Football.TeamName==other&&!x.PracticeSquad&&!x.Reserve&&!x.Retired);s=ProEconomy.Release(s,other,cut.Football.PlayerId,false);s=ProRoster.Claim(s,other,p.Football.PlayerId);
+        s=ProRoster.ResolveWaivers(s with{Phase=ProPhase.Playoffs,Week=1,TransactionTick=21});Assert.DoesNotContain(s.Waivers,w=>w.PlayerId==p.Football.PlayerId);
+        Assert.Equal(other,s.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId).Football.TeamName);
+    }
     [Fact] public async Task LegacyFictionalSaveMigratesWithoutReplacingItsLeagueOrRoster()
     {
         using var stream=typeof(ProLeagueService).Assembly.GetManifestResourceStream("ProFootball.Core.fictional-league.json")!;
@@ -27,6 +35,7 @@ public class FranchiseTests
         Assert.All(s.League.Teams,t=>{Assert.NotNull(t.LogoFile);Assert.Equal(4,s.Coaches.Count(c=>c.TeamId==t.Id));Assert.True(ProEconomy.Room(s,t.Name)>0);});
         Assert.Contains(s.Coaches,c=>c.TeamId=="SEA"&&c.Name=="Mike Macdonald");Assert.NotEmpty(s.CoachCandidates);
         Assert.All(s.Players,p=>Assert.InRange(p.Football.OverallRating,1,99));
+        Assert.All(Enumerable.Range(5,5),code=>Assert.True(s.Players.Count(p=>p.Football.Position==Position.OL&&p.Football.NcaaPositionCode==code)>=40,"Missing specific offensive line roles in the source pack"));
     }
     [Fact] public void BonusProrationAndReleaseConserveObligations()
     {
@@ -55,18 +64,18 @@ public class FranchiseTests
         Assert.Equal(GameDayAnimationPlanner.PursuitTarget(contact,0,true),LiveFootballChoreography.DefensiveDestination(start,contact,.3,.8,0,true,false));
         Assert.Empty(LiveFootballChoreography.AssistIds(snap with{Outcome=SnapOutcome.Incompletion}));
     }
-    [Fact] public void ThreeOffseasonsPreserveCapRosterDraftAndAging()
+    [Fact] public void TwentySeasonsPreserveCapRosterDraftAndAging()
     {
         var s=New();var first=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Age<28);var age=first.Age;
-        for(var season=0;season<3;season++)
+        for(var season=0;season<20;season++)
         {
             for(var week=0;week<25&&s.Phase!=ProPhase.Offseason;week++)s=ProLeagueService.Advance(s);
             Assert.Equal(ProPhase.Offseason,s.Phase);Assert.Equal(season+1,s.History.Count);s=ProOffseason.Advance(s);Assert.Equal(320,s.Prospects.Count);
             s=ProOffseason.Advance(s);s=ProDraft.AutoUntilUser(s,true);Assert.Null(ProDraft.Current(s));Assert.Equal(224,s.DraftHistory.Count(p=>p.Year==s.Year));
             s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
-            Assert.Equal(ProPhase.Preseason,s.Phase);Assert.All(s.League.Teams,t=>{Assert.InRange(ProRoster.Active(s,t.Name),20,53);Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);});
+            Assert.Equal(ProPhase.Preseason,s.Phase);Assert.All(s.League.Teams,t=>{Assert.True(ProRoster.Active(s,t.Name)>=45&&ProRoster.Active(s,t.Name)<=53,$"{s.Year} {t.Name}: {ProRoster.Active(s,t.Name)} active, room {ProEconomy.Room(s,t.Name):N0}, dead {s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Sum(d=>d.Amount):N0}");Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);});
             Assert.Equal(s.Players.Count,s.Players.Select(p=>p.Football.PlayerId).Distinct().Count());
         }
-        Assert.Equal(age+3,s.Players.Single(p=>p.Football.PlayerId==first.Football.PlayerId).Age);
+        Assert.Equal(age+20,s.Players.Single(p=>p.Football.PlayerId==first.Football.PlayerId).Age);
     }
 }

@@ -63,7 +63,7 @@ public static class ProLeagueService
                     FullName = first[random.Next(first.Length)] + " " + last[random.Next(last.Length)],
                     TeamName = team.Name,
                     Position = position,
-                    NcaaPositionCode = position == Position.K ? (depth == 2 ? 20 : 19) : null,
+                    NcaaPositionCode = position == Position.K ? (depth == 2 ? 20 : 19) : position==Position.OL?5+(depth-1)%5:null,
                     ClassYear = 4,
                     OverallRating = overall,
                     SeasonStartOverall = overall,
@@ -122,8 +122,8 @@ public static class ProLeagueService
     }
     public static ProFranchise Advance(ProFranchise state)
     {
+        state = ProRoster.ResolveWaivers(state with { TransactionTick = state.TransactionTick + 1 });
         if (state.Phase == ProPhase.Offseason) return ProOffseason.Advance(state);
-        state = ProRoster.ResolveWaivers(state);
         state = ProCpu.Manage(state);
         foreach (var game in state.Games.Where(g => g.Phase == state.Phase && g.Football.Week == state.Week && !g.Football.HasPlayed).ToArray())
         { var session = Start(state, game, GameDayMode.Simulate); GameDayEngine.SimulateToEnd(session); state = Finish(state, session); }

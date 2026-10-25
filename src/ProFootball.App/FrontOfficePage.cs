@@ -15,7 +15,7 @@ public sealed partial class FranchisePage
         var row = 1; foreach (var cells in rows) { grid.RowDefinitions.Add(new(GridLength.Auto)); for (var c = 0; c < cells.Length; c++) { cells[c].VerticalOptions = LayoutOptions.Center; grid.Add(cells[c], c, row); } row++; }
         return new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = grid };
     }
-    async Task Update(Func<ProFranchise, ProFranchise> mutation) { state = mutation(state!); await Save(); Render(); }
+    async Task Update(Func<ProFranchise, ProFranchise> mutation) { state = await Task.Run(()=>mutation(state!)); await Save(); Render(); }
     async Task Player(ProPlayer original)
     {
         var p = state!.Players.Single(x => x.Football.PlayerId == original.Football.PlayerId); var c = state.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);

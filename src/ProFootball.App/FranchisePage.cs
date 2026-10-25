@@ -27,7 +27,7 @@ public sealed partial class FranchisePage : ContentPage
         var b = new Button { Text = text, AutomationId = id, BackgroundColor = DynastyTheme.Panel, TextColor = DynastyTheme.Text };
         b.Clicked += async (_, _) => { if (busy) return; busy = true; b.IsEnabled = false; try { await action(); } catch (Exception e) { await GameDialogs.AlertAsync(this, "Unable to continue", e.Message, "OK"); } finally { busy = false; b.IsEnabled = true; } }; return b;
     }
-    void LayoutShell() { var wide = state is not null && Width >= 900; sidebar.IsVisible = wide; bottom.IsVisible = state is not null && !wide; shell.ColumnDefinitions[0].Width = wide ? 210 : 0; }
+    void LayoutShell() { sidebar.BackgroundColor=bottom.BackgroundColor=DynastyTheme.Surface; var wide = state is not null && Width >= 900; sidebar.IsVisible = wide; bottom.IsVisible = state is not null && !wide; shell.ColumnDefinitions[0].Width = wide ? 210 : 0; }
     Task Open(string target) { section = target; Render(); scroll.ScrollToAsync(0, 0, false); return Task.CompletedTask; }
     void RenderNavigation()
     {

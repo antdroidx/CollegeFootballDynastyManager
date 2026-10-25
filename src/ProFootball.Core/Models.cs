@@ -25,6 +25,7 @@ public sealed record ProFranchise
     public required string UserTeam { get; init; }
     public int Year { get; init; } = 2026;
     public int Week { get; init; } = 1;
+    public int TransactionTick { get; init; }
     public ProPhase Phase { get; init; } = ProPhase.Preseason;
     public List<ProPlayer> Players { get; init; } = [];
     public List<ProGame> Games { get; init; } = [];

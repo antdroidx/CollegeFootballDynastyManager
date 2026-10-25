@@ -64,7 +64,7 @@ public static class ProEconomy
         var contracts = s.Contracts.ToList(); long dead = 0;
         for (var i = 0; i < contracts.Count; i++) if (contracts[i].Active && contracts[i].PlayerId == id)
         { var c = contracts[i]; dead += c.Years.Where(y => y.Year >= s.Year).Sum(y => y.Guaranteed) + Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => BonusCharge(c, y)); contracts[i] = c with { Active = false }; }
-        var waivers = s.Waivers.ToList(); if (waive && (p.Experience < 4 || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.Week + 1, []));
+        var waivers = s.Waivers.ToList(); if (waive && (p.Experience < 4 || s.Phase == ProPhase.Playoffs || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.TransactionTick + 1, []));
         return Log(s with { Contracts = contracts, DeadCap = dead == 0 ? s.DeadCap : s.DeadCap.Append(new(team, s.Year, id, dead)).ToList(), Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
     }
     public static ProFranchise Extend(ProFranchise s, string team, Guid id, int years, long annual)
@@ -102,11 +102,15 @@ public static class ProRoster
         return ProEconomy.Log(s with { Players = s.Players.Select(x => x == p ? x with { PracticeSquad = practice } : x).ToList() }, $"{p.Football.FullName} moved to {(practice ? "practice squad" : "active roster")}.");
     }
     public static ProFranchise Claim(ProFranchise s, string team, Guid id)
-    { var entry = s.Waivers.Single(w => w.PlayerId == id); if (entry.Claims.Contains(team)) return s; return s with { Waivers = s.Waivers.Select(w => w == entry ? w with { Claims = w.Claims.Append(team).ToList() } : w).ToList() }; }
+    {
+        if (!s.League.Teams.Any(t => t.Name == team) || Active(s, team) >= Limit(s)) throw new InvalidOperationException("No roster space for a waiver claim.");
+        var player = s.Players.Single(p => p.Football.PlayerId == id); if (ProEconomy.Room(s, team) < Math.Max(1_000_000, ProEconomy.MarketSalary(player))) throw new InvalidOperationException("Insufficient cap space for this claim.");
+        var entry = s.Waivers.Single(w => w.PlayerId == id); if (entry.Claims.Contains(team)) return s; return s with { Waivers = s.Waivers.Select(w => w == entry ? w with { Claims = w.Claims.Append(team).ToList() } : w).ToList() };
+    }
     public static ProFranchise ResolveWaivers(ProFranchise s)
     {
         var order = ProStandings.Build(s).AsEnumerable().Reverse().Select(r => r.Team.Name).ToArray();
-        foreach (var entry in s.Waivers.Where(w => w.ExpiresAfterWeek <= s.Week).ToArray())
+        foreach (var entry in s.Waivers.Where(w => w.ExpiresAfterWeek <= s.TransactionTick).ToArray())
         { s = s with { Waivers = s.Waivers.Where(w => w != entry).ToList() }; foreach (var team in entry.Claims.OrderBy(t => Array.IndexOf(order, t))) { var p = s.Players.Single(p => p.Football.PlayerId == entry.PlayerId); var next = ProEconomy.Sign(s, new(p.Football.PlayerId, team, 1, Math.Max(1_000_000, ProEconomy.MarketSalary(p)), 0, 0)); if (next != s) { s = next; break; } } }
         return s;
     }

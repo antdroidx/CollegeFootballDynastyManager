@@ -63,7 +63,7 @@ public static class ProDraft
         while (Current(s) is { } pick && (includeUser || pick.Owner != s.UserTeam) && guard++ < 224)
         {
             s = ProCpu.MakeRoom(s, pick.Owner, 7_000_000);
-            var needs=Enum.GetValues<Position>().ToDictionary(p=>p,p=>ProCpu.Need(s,pick.Owner,p));
+            var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => ProCpu.Need(s, pick.Owner, p));
             var chosen = s.Prospects.OrderByDescending(p => p.Football.OverallRating + needs[p.Football.Position] * 2).First(); s = Pick(s, chosen.Football.PlayerId);
         }
         return s;
@@ -90,7 +90,15 @@ public static class ProCpu
     public static ProFranchise Manage(ProFranchise s, bool includeUser = false)
     {
         var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam).ToArray();
-        var rounds = s.Phase == ProPhase.Offseason || s.Phase == ProPhase.Preseason ? 60 : 4;
+        if (s.Phase == ProPhase.Preseason)
+            foreach (var team in teams) s = MakeRoom(s, team.Name, Math.Max(0, 53 - ProRoster.Active(s, team.Name)) * 1_000_000);
+
+        foreach (var team in teams)
+        {
+            var claim = s.Waivers.Select(w => s.Players.Single(p => p.Football.PlayerId == w.PlayerId)).Where(p => Need(s, team.Name, p.Football.Position) > 0 && ProRoster.Active(s, team.Name) < ProRoster.Limit(s) && ProEconomy.Room(s, team.Name) >= Math.Max(1_000_000, ProEconomy.MarketSalary(p))).OrderByDescending(p => p.Football.OverallRating).FirstOrDefault();
+            if (claim is not null) s = ProRoster.Claim(s, team.Name, claim.Football.PlayerId);
+        }
+        var rounds = s.Phase == ProPhase.Offseason || s.Phase == ProPhase.Preseason ? 256 : 4;
         for (var round = 0; round < rounds; round++)
         {
             var offers = 0;
@@ -98,10 +106,10 @@ public static class ProCpu
             {
                 var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))) continue;
                 var remaining = Math.Max(1, 53 - count); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000 : 0;
-                var room = ProEconomy.Room(s, team.Name) - reserve; var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), room / remaining * 2);
-                var needs=Enum.GetValues<Position>().ToDictionary(p=>p,p=>Need(s,team.Name,p));
+                var room = ProEconomy.Room(s, team.Name) - reserve; var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * 1_000_000));
+                var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => Need(s, team.Name, p));
                 var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && Math.Max(1_000_000, ProEconomy.MarketSalary(p)) <= budget)
-                    .OrderByDescending(p => needs[p.Football.Position] * 20 + p.Football.OverallRating).FirstOrDefault();
+                    .OrderByDescending(p => needs[p.Football.Position] * 20 + p.Football.OverallRating + (p.Football.PlayerId.ToByteArray()[0] * (team.Id.Sum(c => (int)c)) + s.Year) % 11).FirstOrDefault();
                 if (candidate is null) continue;
                 try { s = ProEconomy.Offer(s, team.Name, candidate.Football.PlayerId, 2, Math.Max(1_000_000, ProEconomy.MarketSalary(candidate)), 0); offers++; } catch (InvalidOperationException) { }
             }
