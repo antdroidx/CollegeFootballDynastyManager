@@ -45,12 +45,14 @@ public sealed class ProLivePage : ContentPage
         Button("Finish game", async () => { paused = true; await Task.Run(() => GameDayEngine.SimulateToEnd(session)); await Commit(); Update(); });
         Button("Return to franchise", async () => { if (!session.IsComplete && !await GameDialogs.AlertAsync(this, "Leave game?", "This unfinished game's snaps will be discarded. Your saved franchise remains unchanged.", "Leave", "Cancel")) return; active = false; await Navigation.PopModalAsync(); });
         body.Add(controls); body.Add(commentary); Content = new ScrollView { Content = body };
-        SizeChanged += (_, _) => field.HeightRequest = Math.Clamp(Math.Min((Width - 36) / 2.25, Height * .43), 120, 420);
+        SizeChanged += (_, _) => field.HeightRequest = Width < Height
+            ? Math.Clamp(Math.Min((Width - 36) * .90, Height * .44), 220, 540)
+            : Math.Clamp(Math.Min((Width - 36) / 2.25, Height * .50), 120, 420);
         Loaded += (_, _) => { art.HomeLogo = TeamBadgeView.Mark(home, false); turf.Invalidate(); if (initialized) return; initialized = true; active = true; Update(); if (session.Mode == GameDayMode.Watch) _ = Watch(); };
     }
     protected override bool OnBackButtonPressed() { if (working) return true; _ = Close(); return true; }
     async Task Close() { if (session.IsComplete || await GameDialogs.AlertAsync(this, "Leave game?", "Unfinished snaps will be discarded.", "Leave", "Cancel")) { active = false; await Navigation.PopModalAsync(); } }
-    async Task Watch() { while (active && !session.IsComplete) { if (!working && !paused) await Snap(); await Task.Delay(300); } }
+    async Task Watch() { while (active && !session.IsComplete) { if (!working && !paused) await Snap(); await Task.Delay(paused ? 250 : 1400); } }
     async Task Snap()
     {
         if (working || pending || session.IsComplete) return; working = true; next.IsEnabled = false;
