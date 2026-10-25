@@ -20,6 +20,13 @@ public static class ProCareer
         coaches.Add(existing is null ? new(team.Id, role, coachName, role.ToString(), "User career") : existing with { Name = coachName, Vacant = false });
         return state with { Career = new(coachName, role, firing), Coaches = coaches, CoachCandidates = candidates.DistinctBy(c => c.Name).ToList() };
     }
+    /// <summary>Coordinators call their own unit; the opposite unit continues under CPU staff.</summary>
+    public static bool CpuHandlesUnit(StaffRole role, bool controlledTeamHasBall) => role switch
+    {
+        StaffRole.OffensiveCoordinator => !controlledTeamHasBall,
+        StaffRole.DefensiveCoordinator => controlledTeamHasBall,
+        _ => false
+    };
     public static StaffRole Role(ProFranchise s) => s.Career?.Role ?? StaffRole.HeadCoach;
     public static bool Controls(ProFranchise s, Position position) => s.Career?.Unemployed != true && UserCoachControlService.ControlsPosition(Role(s), position);
     public static void RequirePlayer(ProFranchise s, Guid id)

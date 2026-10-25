@@ -56,7 +56,7 @@ public sealed partial class ProLivePage : ContentPage
         Style(skipReplay); skipReplay.Clicked += (_, _) => players.AbortAnimation("snap-movement"); controls.Add(skipReplay);
         Button("Viewing options", ViewingOptions);
         Button("Speed", ChooseSpeed);
-        takeoverButton = Button("Take over", () => { session.Mode = GameDayMode.Play; pauseAfterAction = true; selected.Text = "Coach mode · choose plays, then Next snap"; return Task.CompletedTask; });
+        takeoverButton = Button("Take over", () => { session.Mode = GameDayMode.Play; pauseAfterAction = session.UserCoachRole == StaffRole.HeadCoach; selected.Text = "Coach mode · choose plays, then Next snap"; return Task.CompletedTask; });
         watchingButton = Button("Watch CPU vs CPU", () => { session.Mode = GameDayMode.Watch; pauseAfterAction = false; selected.Text = "CPU recommended calls"; return Task.CompletedTask; });
         Button("Depth chart", DepthChart);
         timeoutButton = Button("Timeout", () => { if (!GameDayEngine.TryCallTimeout(session, session.ControlledTeamName!)) selected.Text = "Timeout unavailable"; return Task.CompletedTask; });
@@ -77,7 +77,7 @@ public sealed partial class ProLivePage : ContentPage
         if (pending) return; pending = true; var wasPaused = paused; paused = true; pauseAfterAction = null;
         try { while (working) await Task.Delay(30); working = true; await action(); }
         catch (Exception error) { await GameDialogs.AlertAsync(this, "Unable to continue", error.Message, "OK"); }
-        finally { working = false; pending = false; paused = pauseAfterAction ?? (session.Mode == GameDayMode.Play || wasPaused); Update(); }
+        finally { working = false; pending = false; paused = pauseAfterAction ?? (session.Mode == GameDayMode.Play && !CoordinatorMode || wasPaused); Update(); }
     }
     protected override bool OnBackButtonPressed()
     {
@@ -92,9 +92,11 @@ public sealed partial class ProLivePage : ContentPage
         else if (!await GameDialogs.AlertAsync(this, "Leave game?", "Unfinished snaps will be discarded. Your saved franchise remains unchanged.", "Leave", "Cancel")) return;
         active = false; players.AbortAnimation("snap-movement"); await Navigation.PopModalAsync();
     }
+    bool CoordinatorMode => session.Mode == GameDayMode.Play && session.UserCoachRole is StaffRole.OffensiveCoordinator or StaffRole.DefensiveCoordinator;
+    bool CpuUnit => CoordinatorMode && ProCareer.CpuHandlesUnit(session.UserCoachRole, session.PossessionTeamName == session.ControlledTeamName);
     async Task Watch()
     {
-        while (active && !session.IsComplete) { if (session.Mode == GameDayMode.Watch && !working && !pending && !paused) await Snap(); await Task.Delay(paused || session.Mode != GameDayMode.Watch ? 250 : 1400); }
+        while (active && !session.IsComplete) { if ((session.Mode == GameDayMode.Watch || CpuUnit) && !working && !pending && !paused) await Snap(); await Task.Delay(paused || session.Mode != GameDayMode.Watch && !CpuUnit ? 250 : 1400); }
     }
     async Task Snap()
     {
@@ -124,10 +126,10 @@ public sealed partial class ProLivePage : ContentPage
         awayScore.Text = session.AwayScore.ToString(); homeScore.Text = session.HomeScore.ToString();
         awayTimeouts.Text = $"TO {session.AwayTimeouts}"; homeTimeouts.Text = $"TO {session.HomeTimeouts}";
         situation.Text = session.IsComplete ? saved ? "FINAL · Saved" : "FINAL · Save pending" : $"{(session.Quarter > 4 ? "OT" : "Q" + session.Quarter)} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · {session.Down} & {session.Distance} · {GameDayEngine.BallOn(session, Short)}";
-        possession.Text = session.IsComplete ? "Final" : Short(session.PossessionTeamName) + " possession · " + (session.Mode == GameDayMode.Watch ? "Watching CPU vs CPU" : "Coach mode");
+        possession.Text = session.IsComplete ? "Final" : Short(session.PossessionTeamName) + " possession · " + (session.Mode == GameDayMode.Watch ? "Watching CPU vs CPU" : CoordinatorMode ? CpuUnit ? "CPU handling opposite unit" : "Your unit · choose calls" : "Coach mode");
         var watch = session.Mode == GameDayMode.Watch;
-        next.IsVisible = !watch && !session.IsComplete; next.IsEnabled = !working && !pending;
-        pause.IsVisible = watch && !session.IsComplete; pause.Text = paused ? "Resume watch" : "Pause watch";
+        next.IsVisible = !watch && !session.IsComplete && (!CpuUnit || paused); next.IsEnabled = !working && !pending;
+        pause.IsVisible = (watch || CoordinatorMode) && !session.IsComplete; pause.Text = CoordinatorMode ? paused ? "Resume CPU unit" : "Pause CPU unit" : paused ? "Resume watch" : "Pause watch";
         takeoverButton.IsVisible = watch && !session.IsComplete; watchingButton.IsVisible = !watch && !session.IsComplete;
         offenseButton.IsVisible = !watch && !session.IsComplete && session.UserCoachRole != StaffRole.DefensiveCoordinator;
         defenseButton.IsVisible = !watch && !session.IsComplete && session.UserCoachRole != StaffRole.OffensiveCoordinator;

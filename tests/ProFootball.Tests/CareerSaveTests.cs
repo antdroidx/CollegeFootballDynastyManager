@@ -4,6 +4,15 @@ using DynastyManager.Core.Models;
 namespace ProFootball.Tests;
 public class CareerSaveTests
 {
+    [Theory]
+    [InlineData(StaffRole.HeadCoach, true, false)]
+    [InlineData(StaffRole.HeadCoach, false, false)]
+    [InlineData(StaffRole.OffensiveCoordinator, true, false)]
+    [InlineData(StaffRole.OffensiveCoordinator, false, true)]
+    [InlineData(StaffRole.DefensiveCoordinator, true, true)]
+    [InlineData(StaffRole.DefensiveCoordinator, false, false)]
+    public void OppositeUnitBelongsToCpuStaff(StaffRole role, bool hasBall, bool cpu)
+        => Assert.Equal(cpu, ProCareer.CpuHandlesUnit(role, hasBall));
     [Fact] public void NewsRefreshIsIdempotentAndPreservesReadState()
     {
         var s = ProLeagueService.Create("Seattle Seahawks");

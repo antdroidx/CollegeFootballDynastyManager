@@ -146,6 +146,28 @@ try:
     s.tap(dialog,"Delete")
     library=ready("deleted-library","New franchise")
     assert "Delete save" not in s.texts(library), "Deleted franchise remains visible"
+    # Coordinator careers delegate the opposite unit and wait for the user's own unit.
+    s.tap(library,"New franchise")
+    create=ready("oc-create","Head coach")
+    s.tap(create,"Head coach")
+    roles=ready("oc-role-options","Offensive coordinator")
+    s.tap(roles,"Offensive coordinator")
+    click("oc-start","Start franchise")
+    ready("oc-overview","Advance week")
+    click("oc-watch","Watch")
+    live=ready("oc-live","Take over")
+    s.tap(live,"Take over")
+    coach=ready("oc-cpu-pause","Pause CPU unit")
+    assert "Choose defense" not in s.texts(coach)
+    s.scroll_to_text("pro-oc-top","SEA",max_swipes=20,toward_start=True)
+    own=s.wait_for("pro-oc-own-unit",lambda r:any("Your unit · choose calls" in (t or "") for t in s.texts(r)),timeout=180)
+    clock_own={t for t in s.texts(own) if t and re.match(r"^(Q\d|OT) ",t)}
+    assert clock_own, "Coordinator game clock is not visible"
+    time.sleep(3)
+    held=s.capture("pro-oc-own-unit-held")
+    assert clock_own=={t for t in s.texts(held) if t and re.match(r"^(Q\d|OT) ",t)}, "CPU advanced the coordinator's own unit"
+    own_controls=s.scroll_to_text("pro-oc-own-controls","Choose offense",max_swipes=20)
+    assert "Choose offense" in s.texts(own_controls)
     assert s.adb("shell","pidof","antdroid.profootball.franchise").strip()
     print("Pro launch, franchise creation, watch/replay, landscape, saved final, reload, advance and coach mode passed.",flush=True)
 finally:
