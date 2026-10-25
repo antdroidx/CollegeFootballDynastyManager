@@ -65,7 +65,7 @@ public static class ProDraft
         var pick = Current(s) ?? throw new InvalidOperationException("Draft complete."); var p = s.Prospects.Single(p => p.Football.PlayerId == id);
         var salary = Math.Max(1_100_000, 5_000_000 / pick.Round); var bonus = salary;
         var pool = s with { Players = s.Players.Append(p with { Football = p.Football with { TeamName = "Free agent" } }).ToList() };
-        var signed = ProEconomy.Sign(pool, new(id, pick.Owner, 4, salary, bonus, 0));
+        var signed = ProEconomy.Sign(pool, new(id, pick.Owner, 4, salary, bonus, 0), rookieScale: true);
         if (signed == pool) throw new InvalidOperationException($"{pick.Owner}: make cap/roster room before drafting (room {ProEconomy.Room(s, pick.Owner):N0}, active {ProRoster.Active(s, pick.Owner)}).");
         return signed with { Prospects = s.Prospects.Where(x => x.Football.PlayerId != id).ToList(), DraftIndex = s.DraftIndex + 1, DraftHistory = s.DraftHistory.Append(new(s.Year, pick.Round, pick.Slot, pick.Owner, p)).ToList() };
     }

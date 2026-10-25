@@ -1,0 +1,90 @@
+using DynastyManager.App;
+using DynastyManager.Core.Models;
+using ProFootball.Core;
+namespace ProFootball.App;
+
+public sealed partial class FranchisePage
+{
+    Task TradingBlock()
+    {
+        state = ProTradeMarket.Refresh(state!); var s = state;
+        body.Clear(); body.Add(Action("‹ Front office",()=>Open("Front office"))); body.Add(Text("Trading block",25,true));
+        body.Add(Text("Browse available players or list your own from their contract & roster actions. Interest is preliminary; cap and roster checks apply to every deal.",12));
+        if(!ProTradeMarket.IsOpen(s)) body.Add(Text("Trades are closed until the offseason.",16,true));
+        var list=new VerticalStackLayout(); var position=new Picker { ItemsSource=new[]{"All positions"}.Concat(Enum.GetNames<Position>()).ToArray(),SelectedIndex=0 };body.Add(position);body.Add(list);
+        void Draw()
+        {
+            list.Clear();var players=s.Players.Where(p=>s.TradeBlock.Contains(p.Football.PlayerId)&&(position.SelectedIndex==0||p.Football.Position.ToString()==(string)position.SelectedItem)).OrderByDescending(p=>p.Football.OverallRating).ToArray();
+            list.Add(Table([("Pos",48),("Player",190),("Team",180),("OVR",48),("Age",48),("Interest / action",230)],players.Select(p=>
+            {
+                var own=p.Football.TeamName==s.UserTeam;
+                var actions=new VerticalStackLayout { Spacing=2 };
+                if(own)
+                {
+                    foreach(var club in ProTradeMarket.InterestedTeams(s,p).Take(3)) { var partner=club; actions.Add(Link(partner,()=>Trade(partner,p.Football.PlayerId,true))); }
+                    actions.Add(Action("Unlist",async()=>{await Update(x=>ProTradeMarket.List(x,x.UserTeam,p.Football.PlayerId,false));await TradingBlock();}));
+                }
+                else actions.Add(Action("Build offer",()=>Trade(p.Football.TeamName,p.Football.PlayerId,false)));
+                actions.IsEnabled=ProTradeMarket.IsOpen(s);
+                return new View[]{Text(p.Football.Position.ToString()),PlayerCell(p),TeamCell(s.League.Teams.Single(t=>t.Name==p.Football.TeamName)),Text(p.Football.OverallRating.ToString()),Text(p.Age.ToString()),actions};
+            })));
+        }
+        position.SelectedIndexChanged+=(_,_)=>Draw();Draw();return Task.CompletedTask;
+    }
+
+    Task Trade(string? partner=null,Guid? initialPlayer=null,bool giveInitial=false)
+    {
+        var s=state!;body.Clear();body.Add(Action("‹ Front office",()=>Open("Front office")));body.Add(Text("Trade center",25,true));
+        var clubs=s.League.Teams.Where(t=>t.Name!=s.UserTeam).OrderBy(t=>t.Name).ToArray();
+        var other=new Picker { Title="Trade partner",ItemsSource=clubs.Select(t=>t.Name).ToArray(),SelectedIndex=Math.Max(0,Array.FindIndex(clubs,t=>t.Name==partner)) };body.Add(other);
+        var givePlayers=new HashSet<Guid>();var getPlayers=new HashSet<Guid>();var givePicks=new HashSet<Guid>();var getPicks=new HashSet<Guid>();
+        if(initialPlayer is {} id)(giveInitial?givePlayers:getPlayers).Add(id);
+        var summary=Text("",14,true);body.Add(summary);body.Add(Text("Select players and picks on either side. Values estimate positional importance, age, potential, contracts and team needs; the CPU also checks cap and roster legality.",12));
+        var workspace=new Grid {ColumnSpacing=10,RowSpacing=10};body.Add(workspace);
+        void Layout()
+        {
+            var wide=Width>=1000;
+            if(workspace.ColumnDefinitions.Count==(wide?2:1)&&workspace.RowDefinitions.Count==(wide?1:2)) return;
+            workspace.ColumnDefinitions.Clear();workspace.RowDefinitions.Clear();
+            workspace.RowDefinitions.Add(new(GridLength.Auto));if(!wide)workspace.RowDefinitions.Add(new(GridLength.Auto));
+            workspace.ColumnDefinitions.Add(new(GridLength.Star));if(wide)workspace.ColumnDefinitions.Add(new(GridLength.Star));
+            foreach(var (child,index) in workspace.Children.OfType<View>().Select((v,i)=>(v,i))) {Grid.SetColumn(child,wide?index:0);Grid.SetRow(child,wide?0:index);}
+        }
+        workspace.SizeChanged+=(_,_)=>Layout();
+        string Recipient()=>(string)other.SelectedItem;
+        void Summary()
+        {
+            var sent=ProTradeMarket.PackageValue(s,givePlayers,givePicks,Recipient());var requested=ProTradeMarket.PackageValue(s,getPlayers,getPicks,s.UserTeam);
+            summary.Text=$"Your offer: {givePlayers.Count} players + {givePicks.Count} picks · Value {sent:0}\nTheir offer: {getPlayers.Count} players + {getPicks.Count} picks · Value {requested:0}\nCPU interest: "+(sent+requested==0?"Select assets":sent>=requested*1.05?"Value acceptable · legality review pending":$"Needs about {Math.Max(0,requested*1.05-sent):0} more value");
+        }
+        View Side(string club,bool giving)
+        {
+            var selectedPlayers=giving?givePlayers:getPlayers;var selectedPicks=giving?givePicks:getPicks;
+            View Select(Guid id,bool pick)
+            {
+                var set=pick?selectedPicks:selectedPlayers;var check=new CheckBox {IsChecked=set.Contains(id),Color=DynastyTheme.Accent};check.CheckedChanged+=(_,e)=>{if(e.Value)set.Add(id);else set.Remove(id);Summary();};return check;
+            }
+            var players=s.Players.Where(p=>p.Football.TeamName==club&&!p.Retired&&ProCareer.Controls(s,p.Football.Position)).OrderByDescending(p=>s.TradeBlock.Contains(p.Football.PlayerId)).ThenBy(p=>p.Football.Position).ThenByDescending(p=>p.Football.OverallRating);
+            var table=Table([("Select",54),("Pos",45),("Player",165),("OVR",48),("Age",48),("Value",65)],players.Select(p=>new View[]{Select(p.Football.PlayerId,false),Text(p.Football.Position.ToString()),PlayerCell(p),Text(p.Football.OverallRating.ToString()),Text(p.Age.ToString()),Text(ProTrade.PlayerValue(s,p,giving?Recipient():s.UserTeam).ToString("0"))}));
+            var picks=Table([("Select",54),("Year",65),("Round",55),("Original team",165),("Value",65)],s.Picks.Where(p=>p.Owner==club&&ProTrade.Available(s,p)).OrderBy(p=>p.Year).ThenBy(p=>p.Round).Select(p=>new View[]{Select(p.Id,true),Text(p.Year.ToString()),Text(p.Round.ToString()),Text(p.OriginalTeam,12),Text(ProTrade.PickValue(s,p).ToString("0"))}));
+            var tabs=new Picker {ItemsSource=new[]{"Players","Draft picks"},SelectedIndex=0};
+            var assets=new ContentView {Content=table};tabs.SelectedIndexChanged+=(_,_)=>assets.Content=tabs.SelectedIndex==0?table:picks;
+            return Panel(club,Text($"Cap room {Money(ProEconomy.Room(s,club))} · Active {ProRoster.Active(s,club)}/{ProRoster.Limit(s)}",12),tabs,new ScrollView {HeightRequest=300,Content=assets});
+        }
+        void Draw(){workspace.Clear();workspace.Add(Side(s.UserTeam,true));workspace.Add(Side(Recipient(),false));Layout();Summary();}
+        other.SelectedIndexChanged+=(_,_)=>{givePlayers.Clear();getPlayers.Clear();givePicks.Clear();getPicks.Clear();Draw();};
+        var actions=new ActionRow();
+        actions.Add(Action("Suggest additional picks",async()=>
+        {
+            var shortfall=ProTradeMarket.PackageValue(s,getPlayers,getPicks,s.UserTeam)*1.05-ProTradeMarket.PackageValue(s,givePlayers,givePicks,Recipient());
+            var picks=ProTradeMarket.CounterPicks(s,s.UserTeam,shortfall,givePicks);
+            if(picks.Count==0){await GameDialogs.AlertAsync(this,"CPU evaluation",shortfall<=0?"Value is acceptable. Submit for cap and roster review.":"Available picks cannot bridge the gap. Change the requested players or add player value.","Close");return;}
+            foreach(var id in picks)givePicks.Add(id);Draw();
+        }));
+        actions.Add(Action("Propose trade",async()=>
+        {
+            if(!await GameDialogs.AlertAsync(this,"Submit trade?",summary.Text+"\nSelected players and picks will change teams if approved.","Propose","Cancel"))return;
+            await Update(x=>ProManagement.Submit(x,"Trade recommendation",givePlayers.Concat(getPlayers).ToArray(),0,y=>ProTrade.Propose(y,y.UserTeam,Recipient(),givePlayers.ToArray(),getPlayers.ToArray(),givePicks.ToArray(),getPicks.ToArray()),sharedPicks:givePicks.Count+getPicks.Count>0));
+        }));actions.IsEnabled=ProTradeMarket.IsOpen(s);body.Remove(workspace);body.Add(actions);body.Add(workspace);Draw();return Task.CompletedTask;
+    }
+}

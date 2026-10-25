@@ -31,6 +31,33 @@ public static class GameDialogs
     public static Task<int> ChooseIndexAsync(Page owner, string title, IReadOnlyList<string> choices, int selected) =>
         PresentAsync(owner, title, null, "Cancel", null, choices, selected);
 
+    public static async Task<string?> PromptAsync(Page owner,string title,string message,string accept,string cancel,string initialValue="",Keyboard? keyboard=null)
+    {
+        await Gate.WaitAsync();
+        try
+        {
+            var nav=owner.Navigation;var page=new DialogPage {BackgroundColor=Colors.Black.WithAlpha(.55f),AutomationId="game-input-dialog"};
+            var finished=new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);var closing=false;
+            async Task Close(string? value)
+            {
+                if(closing)return;closing=true;
+                try {if(nav.ModalStack.LastOrDefault()==page)await nav.PopModalAsync(false);finished.TrySetResult(value);}
+                catch(Exception e){finished.TrySetException(e);}
+            }
+            var input=new Entry {Text=initialValue,Keyboard=keyboard??Keyboard.Default,TextColor=DynastyTheme.Text,AutomationId="game-dialog-input"};
+            var dismiss=new Button {Text=cancel,MinimumHeightRequest=44};var confirm=new Button {Text=accept,MinimumHeightRequest=44};
+            dismiss.Clicked+=async(_,_)=>await Close(null);confirm.Clicked+=async(_,_)=>await Close(input.Text);
+            page.Cancel=()=>Close(null);
+            var actions=new Grid {ColumnSpacing=8,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star)}};actions.Add(dismiss,0,0);actions.Add(confirm,1,0);
+            var content=new VerticalStackLayout {Padding=18,Spacing=12,Children={new Label {Text=title,FontSize=20,FontAttributes=FontAttributes.Bold,TextColor=DynastyTheme.Text},new Label {Text=message,FontSize=14,TextColor=DynastyTheme.Text},input,actions}};
+            var surface=new Border {Content=new ScrollView {Content=content},BackgroundColor=DynastyTheme.Surface,Stroke=DynastyTheme.Panel,StrokeShape=new RoundRectangle {CornerRadius=16},MaximumWidthRequest=560,HorizontalOptions=LayoutOptions.Center,VerticalOptions=LayoutOptions.Center};
+            var root=new Grid {Padding=16};root.Add(surface);root.SizeChanged+=(_,_)=>{surface.WidthRequest=Math.Min(560,Math.Max(240,root.Width-32));surface.MaximumHeightRequest=Math.Max(120,root.Height-32);};page.Content=root;
+            page.Disappearing+=(_,_)=>page.Dispatcher.Dispatch(()=>{if(!closing&&!nav.ModalStack.Contains(page))finished.TrySetResult(null);});
+            await nav.PushModalAsync(page,false);return await finished.Task;
+        }
+        finally{Gate.Release();}
+    }
+
     private static async Task<int> PresentAsync(Page owner, string title, string? message, string cancel, string? accept,
         IReadOnlyList<string>? choices, int selected, bool destructiveFirst = false)
     {

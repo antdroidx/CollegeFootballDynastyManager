@@ -19,20 +19,14 @@ public sealed partial class FranchisePage
     async Task ManagePlayer(ProPlayer original)
     {
         var p = state!.Players.Single(x => x.Football.PlayerId == original.Football.PlayerId); var c = state.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);
-        var choice = await GameDialogs.ActionSheetAsync(this, p.Football.FullName + " · " + p.Football.Position, "Close", null, "Player & contract", p.PracticeSquad ? "Promote to active" : "Move to practice squad", "Extend contract", "Franchise tag", "Release player");
+        var choice = await GameDialogs.ActionSheetAsync(this, p.Football.FullName + " · " + p.Football.Position, "Close", null, "Player & contract", p.PracticeSquad ? "Promote to active" : "Move to practice squad", "Extend contract", "Restructure contract", "Franchise tag", state.TradeBlock.Contains(p.Football.PlayerId) ? "Remove from trading block" : "Add to trading block", "Release player");
         if (choice == "Player & contract") await GameDialogs.AlertAsync(this, p.Football.FullName, $"{p.Age} years · OVR {p.Football.OverallRating} · Morale {p.Morale}\n" + (c is null ? "No contract" : $"Cap hit {Money(ProEconomy.CapHit(c, state.Year))}\nSigning bonus {Money(c.SigningBonus)}\n" + string.Join("\n", c.Years.Select(y => $"{y.Year}: {Money(y.Salary)} · guaranteed {Money(y.Guaranteed)}")) + "\n" + (c.Estimated ? "Initial contract is estimated." : "Franchise contract.")), "Close");
         if (choice == "Promote to active" || choice == "Move to practice squad") await Manage("Roster move", p.Football.PlayerId, 0, s => ProRoster.Practice(s, s.UserTeam, p.Football.PlayerId, !p.PracticeSquad));
-        if (choice == "Extend contract") { var offer = await ContractTerms(p, true); if (offer is { } o) await Manage("Contract extension", p.Football.PlayerId, 0, s => ProEconomy.Extend(s, s.UserTeam, p.Football.PlayerId, o.Years, o.Salary)); }
+        if (choice == "Extend contract") { var offer = await ContractTerms(p, true); if (offer is { } o) await Manage("Contract extension", p.Football.PlayerId, 0, s => ProEconomy.Extend(s, s.UserTeam, p.Football.PlayerId, o.Years, o.Salary, o.Bonus)); }
+        if(choice=="Restructure contract") await RestructureContract(p);
+        if (choice is "Add to trading block" or "Remove from trading block") await Update(s => ProTradeMarket.List(s,s.UserTeam,p.Football.PlayerId,choice == "Add to trading block"));
         if (choice == "Franchise tag") await Manage("Franchise tag", p.Football.PlayerId, 0, s => ProEconomy.Tag(s, s.UserTeam, p.Football.PlayerId));
         if (choice == "Release player" && await GameDialogs.AlertAsync(this, "Release player?", "Remaining guarantees and unamortized signing bonus will count as dead money. Waiver eligibility applies.", "Release", "Cancel")) await Manage("Release player", p.Football.PlayerId, 0, s => ProEconomy.Release(s, s.UserTeam, p.Football.PlayerId));
-    }
-    async Task<(int Years, long Salary, long Bonus)?> ContractTerms(ProPlayer p, bool extension = false)
-    {
-        var years = await GameDialogs.ActionSheetAsync(this, "Contract length", "Cancel", null, "1 year", "2 years", "3 years", "4 years", "5 years"); if (string.IsNullOrEmpty(years) || years == "Cancel") return null;
-        var salary = Math.Max(1_000_000, ProEconomy.MarketSalary(p)); var level = await GameDialogs.ActionSheetAsync(this, "Annual salary · market " + Money(salary), "Cancel", null, "Market", "110% of market", "125% of market"); if (level is null or "Cancel") return null;
-        salary = (long)(salary * (level == "110% of market" ? 1.1 : level == "125% of market" ? 1.25 : 1)); long bonus = 0;
-        if (!extension) { var b = await GameDialogs.ActionSheetAsync(this, "Signing bonus", "Cancel", null, "No bonus", "Half annual salary", "One annual salary"); if (b is null or "Cancel") return null; bonus = b == "Half annual salary" ? salary / 2 : b == "One annual salary" ? salary : 0; }
-        return (int.Parse(years[..1]), salary, bonus);
     }
     void Staff()
     {
@@ -45,7 +39,7 @@ public sealed partial class FranchisePage
     void FrontOffice()
     {
         var s = state!; body.Add(Text($"Contract coverage · {s.Contracts.Count(c => c.Active && c.Team == s.UserTeam && c.Source != null)} sourced · {s.Contracts.Count(c => c.Active && c.Team == s.UserTeam && c.Estimated)} estimated", 12)); body.Add(Panel("Salary cap", Text(Money(ProEconomy.Room(s, s.UserTeam)) + " available", 25, true), Text($"Cap {Money(s.SalaryCap)} · Used {Money(ProEconomy.Used(s, s.UserTeam))} · Pending bids {Money(ProEconomy.Pending(s, s.UserTeam))}"), Text("Contracts are labeled by source. OTC snapshots retain reported cap charges; unmatched contracts are estimates. Rollover, team adjustments and historical dead money are not yet included.", 12)));
-        var row = new ActionRow(); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", Trade)); row.Add(Action("Trade history", TradeHistory)); row.Add(Action("Draft & scouting", Draft)); body.Add(row);
+        var row = new ActionRow(); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", () => Trade())); row.Add(Action("Trading block", TradingBlock)); row.Add(Action("Trade history", TradeHistory)); row.Add(Action("Draft & scouting", Draft)); body.Add(row);
         var rosterTools = new ActionRow(); rosterTools.Add(Action("Ask GM to fill roster", () => Update(x => ProCpu.Manage(x, true)))); rosterTools.Add(Action("Ask GM to trim to 53", () => Update(x => ProCpu.Trim(x, x.UserTeam)))); body.Add(rosterTools);
         body.Add(Text("Contracts · select a player", 21, true)); body.Add(Table([("Player", 170), ("Ends", 55), ("Cap hit", 95), ("Bonus", 95)], s.Contracts.Where(c => c.Active && c.Team == s.UserTeam).OrderByDescending(c => ProEconomy.CapHit(c, s.Year)).Select(c => { var p = s.Players.Single(p => p.Football.PlayerId == c.PlayerId); return new View[] { Link(p.Football.FullName, () => Player(p)), Text(c.Years.Max(y => y.Year).ToString()), Text(Money(ProEconomy.CapHit(c, s.Year))), Text(Money(c.SigningBonus)) }; })));
         body.Add(Panel("Dead money", Text(string.Join("\n", s.DeadCap.Where(d => d.Team == s.UserTeam && d.Year == s.Year).Select(d => $"{s.Players.FirstOrDefault(p => p.Football.PlayerId == d.PlayerId)?.Football.FullName}: {Money(d.Amount)}")), 12)));
@@ -93,35 +87,6 @@ public sealed partial class FranchisePage
             Text(t.From + " sent: " + Names(t.GivenPlayers) + " " + string.Join(", ", t.GivenPicks.Select(p => $"{p.Year} R{p.Round} ({p.OriginalTeam})"))),
             Text(t.To + " sent: " + Names(t.ReceivedPlayers) + " " + string.Join(", ", t.ReceivedPicks.Select(p => $"{p.Year} R{p.Round} ({p.OriginalTeam})"))))).ToArray();
         return ShowPage("Trade history", rows.Length == 0 ? Text("No completed trades yet.") : new VerticalStackLayout { Spacing = 12, Children = { } }, Panel("Completed deals", rows));
-    }
-    async Task Trade()
-    {
-        var s = state!; var other = await GameDialogs.ActionSheetAsync(this, "Trade partner", "Cancel", null, s.League.Teams.Where(t => t.Name != s.UserTeam).Select(t => t.Name).ToArray()); if (other is null or "Cancel") return;
-        var give = await TradePackage(s.UserTeam, other); if (give is null) return;
-        var get = await TradePackage(other, s.UserTeam); if (get is null) return;
-        if (!await GameDialogs.AlertAsync(this, "Propose trade?", "Give: " + string.Join("; ", give.Select(a => a.Label)) + "\nReceive: " + string.Join("; ", get.Select(a => a.Label)) + "\nCPU evaluation, cap and roster limits apply.", "Propose", "Cancel")) return;
-        await Update(x => ProManagement.Submit(x, "Trade recommendation", give.Concat(get).Where(a => !a.Pick).Select(a => a.Id).ToArray(), 0,
-            y => ProTrade.Propose(y, y.UserTeam, other, give.Where(a => !a.Pick).Select(a => a.Id).ToArray(), get.Where(a => !a.Pick).Select(a => a.Id).ToArray(), give.Where(a => a.Pick).Select(a => a.Id).ToArray(), get.Where(a => a.Pick).Select(a => a.Id).ToArray()), sharedPicks: give.Concat(get).Any(a => a.Pick)));
-    }
-    async Task<List<(Guid Id, bool Pick, string Label)>?> TradePackage(string team, string recipient)
-    {
-        var selected = new List<(Guid Id, bool Pick, string Label)>();
-        while (true)
-        {
-            var choice = await GameDialogs.ActionSheetAsync(this, team + " · " + selected.Count + " assets", "Cancel", null, "Add player or pick", "Remove asset", "Package ready");
-            if (choice is null or "Cancel") return null;
-            if (choice == "Package ready") return selected;
-            if (choice == "Remove asset")
-            {
-                var remove = await GameDialogs.ActionSheetAsync(this, "Remove asset", "Cancel", null, selected.Select(a => a.Label).ToArray());
-                selected.RemoveAll(a => a.Label == remove); continue;
-            }
-            var assets = state!.Players.Where(p => p.Football.TeamName == team && !p.Retired && ProCareer.Controls(state, p.Football.Position)).Select(p => (Id: p.Football.PlayerId, Pick: false, Label: $"{p.Football.FullName} · {p.Football.Position} · {p.Football.OverallRating} · Value {ProTrade.PlayerValue(state, p, recipient):0}"))
-                .Concat(state.Picks.Where(p => p.Owner == team && ProTrade.Available(state, p)).Select(p => (Id: p.Id, Pick: true, Label: $"{p.Year} R{p.Round} · {p.OriginalTeam} · Value {ProTrade.PickValue(state, p):0}")))
-                .Where(a => !selected.Any(v => v.Id == a.Id)).ToArray();
-            var add = await GameDialogs.ActionSheetAsync(this, "Add asset", "Cancel", null, assets.Select(a => a.Label).ToArray());
-            if (assets.FirstOrDefault(a => a.Label == add) is var asset && asset.Id != Guid.Empty) selected.Add(asset);
-        }
     }
     Task Draft()
     {

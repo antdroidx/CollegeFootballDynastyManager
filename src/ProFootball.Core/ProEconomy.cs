@@ -45,25 +45,30 @@ public static class ProEconomy
     }
     public static ProFranchise Offer(ProFranchise s, string team, Guid playerId, int years, long annual, long bonus)
     {
-        if (years is < 1 or > 5 || annual < 300_000 || bonus < 0 || bonus > annual * years || !s.League.Teams.Any(t => t.Name == team)) throw new InvalidOperationException("Invalid contract offer.");
+        if (years is < 1 or > 5 || annual is < 300_000 or > 500_000_000 || bonus < 0 || bonus > annual * years || !s.League.Teams.Any(t => t.Name == team)) throw new InvalidOperationException("Invalid contract offer.");
         var p = s.Players.Single(p => p.Football.PlayerId == playerId);
         if (p.Retired || s.Waivers.Any(w => w.PlayerId == playerId) || p.Football.TeamName != "Free agent") throw new InvalidOperationException("Player is not an unrestricted free agent.");
-        if (annual < MarketSalary(p) * .7) throw new InvalidOperationException("The player rejected the salary. Increase your offer.");
         if (ProRoster.Active(s, team) + s.Bids.Count(b => b.Team == team && b.PlayerId != playerId) >= ProRoster.Limit(s) || Room(s, team) - Pending(s, team, playerId) < annual + (bonus + years - 1) / years) throw new InvalidOperationException("Insufficient cap room or roster space (pending offers reserve cap room).");
         var bids = s.Bids.Where(b => !(b.PlayerId == playerId && b.Team == team)).ToList(); bids.Add(new(playerId, team, years, annual, bonus, s.Week)); return s with { Bids = bids };
     }
-    public static ProFranchise Sign(ProFranchise s, FreeAgentBid bid)
+    public static ProFranchise Sign(ProFranchise s, FreeAgentBid bid, bool rookieScale = false)
     {
         var p = s.Players.Single(p => p.Football.PlayerId == bid.PlayerId);
-        if (p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.Active(s, bid.Team) >= ProRoster.Limit(s)) return s;
-        var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, bid.AnnualSalary, i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false };
+        if (!(rookieScale && s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.Draft && s.Prospects.Any(x=>x.Football.PlayerId==bid.PlayerId) || ProNegotiation.Evaluate(p,bid.Years,bid.AnnualSalary,bid.Bonus).Accepted) || p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.Active(s, bid.Team) >= ProRoster.Limit(s)) return s;
+        var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, bid.AnnualSalary, i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false, LastChangedYear = s.Year };
         return Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == p.Football.PlayerId ? x with { Football = x.Football with { TeamName = bid.Team, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList(), Contracts = s.Contracts.Append(c).ToList() }, $"{bid.Team} signed {p.Football.FullName} for {bid.Years} years.");
     }
     public static ProFranchise ResolveBids(ProFranchise s)
     {
-        foreach (var group in s.Bids.GroupBy(b => b.PlayerId).OrderBy(g => g.Key))
-        { foreach (var bid in group.OrderByDescending(b => b.AnnualSalary + b.Bonus / b.Years).ThenBy(b => b.Team)) { var next = Sign(s, bid); if (next != s) { s = next; break; } } }
-        return s with { Bids = [] };
+        foreach(var group in s.Bids.GroupBy(b=>b.PlayerId).OrderBy(g=>g.Key))
+        {
+            foreach(var bid in group.OrderByDescending(b=>b.AnnualSalary+b.Bonus/b.Years).ThenBy(b=>b.Team))
+            {var next=Sign(s,bid);if(next!=s){s=next;break;}}
+            var user=group.FirstOrDefault(b=>b.Team==s.UserTeam);var player=s.Players.Single(p=>p.Football.PlayerId==group.Key);
+            if(user is not null && player.Football.TeamName!=s.UserTeam)
+                s=Log(s,player.Football.TeamName=="Free agent"?$"{player.Football.FullName} declined the offer or could not be signed within cap/roster limits.":$"{player.Football.FullName} chose a competing offer from {player.Football.TeamName}.");
+        }
+        return s with {Bids=[]};
     }
     public static ProFranchise Release(ProFranchise s, string team, Guid id, bool waive = true)
     {
@@ -75,23 +80,36 @@ public static class ProEconomy
         var waivers = s.Waivers.ToList(); if (waive && (p.Experience < 4 || s.Phase == ProPhase.Playoffs || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.TransactionTick + 1, []));
         return Log(s with { Contracts = contracts, DeadCap = dead == 0 ? s.DeadCap : s.DeadCap.Append(new(team, s.Year, id, dead)).ToList(), Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
     }
-    public static ProFranchise Extend(ProFranchise s, string team, Guid id, int years, long annual)
+    public static ProFranchise Extend(ProFranchise s, string team, Guid id, int years, long annual, long bonus = 0)
     {
         if (years is < 1 or > 5) throw new InvalidOperationException("Extension must be one to five years.");
         var p = s.Players.Single(p => p.Football.PlayerId == id); var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == id && c.Team == team) ?? throw new InvalidOperationException("No active contract.");
-        if (p.Football.TeamName != team || annual < MarketSalary(p) * .85) throw new InvalidOperationException("Extension rejected. Increase the annual salary.");
-        var first = c.Years.Max(y => y.Year) + 1; var extended = c with { Years = c.Years.Concat(Enumerable.Range(0, years).Select(i => new ContractYear(first + i, annual, i == 0 ? annual / 4 : 0))).ToList(), Estimated = false };
+        if (c.LastChangedYear == s.Year) throw new InvalidOperationException("This player already completed a contract change this season.");
+        if (p.Football.TeamName != team || !ProNegotiation.Evaluate(p,years,annual,bonus).Accepted) throw new InvalidOperationException("Extension rejected. Increase the annual salary.");
+        var first = c.Years.Max(y => y.Year) + 1;
+        if (first + years - s.Year > 6) throw new InvalidOperationException("Extend only when five or fewer future contract years would remain.");
+        if (Enumerable.Range(first,years).Any(year => s.Contracts.Where(x => x.Team == team).Sum(x => CapHit(x,year)) + annual > s.SalaryCap)) throw new InvalidOperationException("Future cap commitments cannot accommodate this extension.");
+        var extended = c with { LastChangedYear = s.Year, Years = c.Years.Concat(Enumerable.Range(0, years).Select(i => new ContractYear(first + i, annual, i == 0 ? annual / 4 : 0))).ToList(), Estimated = false };
+        if(bonus>0)
+        {
+            var count=Math.Min(5,extended.Years.Max(y=>y.Year)-s.Year+1);
+            if(Room(s,team)<(bonus+count-1)/count)throw new InvalidOperationException("Insufficient current cap room for the extension bonus.");
+            extended=extended with {SigningBonus=c.SigningBonus+bonus,BonusYears=Math.Max(c.BonusYears,s.Year+count-c.SignedYear),
+                Years=extended.Years.Select(y=>y with {ProratedBonus=BonusCharge(c,y.Year)+(y.Year>=s.Year&&y.Year<s.Year+count?bonus/count+(y.Year-s.Year<bonus%count?1:0):0)}).ToList()};
+        }
+        if(extended.Years.Where(y=>y.Year>=s.Year).Any(y=>s.Contracts.Where(x=>x.Team==team&&x!=c).Sum(x=>CapHit(x,y.Year))+CapHit(extended,y.Year)>s.SalaryCap))throw new InvalidOperationException("Extension exceeds current or future cap space.");
         return Log(s with { Contracts = s.Contracts.Select(x => x == c ? extended : x).ToList() }, $"{p.Football.FullName} agreed to a {years}-year extension.");
     }
     public static ProFranchise Tag(ProFranchise s, string team, Guid id)
     {
         if (s.Phase != ProPhase.Offseason || s.OffseasonStep != OffseasonStep.Retention || s.TaggedTeams.Contains(team)) throw new InvalidOperationException("One tag per team is available during offseason retention.");
         var p = s.Players.Single(p => p.Football.PlayerId == id); var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == id && c.Team == team) ?? throw new InvalidOperationException("No contract.");
+        if (c.LastChangedYear == s.Year) throw new InvalidOperationException("This player already completed a contract change this season.");
         if (c.Years.Max(y => y.Year) != s.Year) throw new InvalidOperationException("Only an expiring contract may be tagged.");
         var top = s.Players.Where(x => x.Football.Position == p.Football.Position).Select(x => MarketSalary(x)).OrderDescending().Take(5).DefaultIfEmpty(1_000_000).Average();
         var salary = (long)Math.Max(top, (c.Years.Last().Salary + BonusCharge(c, s.Year)) * 1.2);
         if (s.Contracts.Where(x => x.Team == team).Sum(x => CapHit(x, s.Year + 1)) + salary > s.SalaryCap * 1.05) throw new InvalidOperationException("Projected cap space is insufficient for the tag.");
-        return Log(s with { TaggedTeams = s.TaggedTeams.Append(team).ToList(), Contracts = s.Contracts.Select(x => x == c ? c with { Years = c.Years.Append(new(s.Year + 1, salary, salary)).ToList(), Tagged = true } : x).ToList() }, $"{team} tagged {p.Football.FullName}.");
+        return Log(s with { TaggedTeams = s.TaggedTeams.Append(team).ToList(), Contracts = s.Contracts.Select(x => x == c ? c with { LastChangedYear = s.Year, Years = c.Years.Append(new(s.Year + 1, salary, salary)).ToList(), Tagged = true } : x).ToList() }, $"{team} tagged {p.Football.FullName}.");
     }
     public static ProFranchise Log(ProFranchise s, string text) => s with { Transactions = s.Transactions.Append($"{s.Year} W{s.Week} · {text}").TakeLast(250).ToList() };
 }

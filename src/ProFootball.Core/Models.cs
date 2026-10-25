@@ -44,6 +44,7 @@ public sealed record ProFranchise
     public List<DeadCapCharge> DeadCap { get; init; } = [];
     public List<FreeAgentBid> Bids { get; init; } = [];
     public List<ProTradeRecord> TradeHistory { get; init; } = [];
+    public List<Guid> TradeBlock { get; init; } = [];
     public List<ProDraftPick> Picks { get; init; } = [];
     public List<ProPlayer> Prospects { get; init; } = [];
     public List<DraftSelection> DraftHistory { get; init; } = [];
@@ -68,7 +69,7 @@ public sealed record NflSnapshot(int Version, int Season, int Week, string Retri
 public sealed record ContractYear(int Year, long Salary, long Guaranteed)
 { public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } }
 public sealed record ProContract(Guid PlayerId, string Team, int SignedYear, int BonusYears, long SigningBonus, List<ContractYear> Years)
-{ public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
+{ public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
 public sealed record DeadCapCharge(string Team, int Year, Guid PlayerId, long Amount);
 public sealed record FreeAgentBid(Guid PlayerId, string Team, int Years, long AnnualSalary, long Bonus, int Priority);
 public sealed record ProDraftPick(Guid Id, int Year, int Round, int Slot, string OriginalTeam, string Owner);

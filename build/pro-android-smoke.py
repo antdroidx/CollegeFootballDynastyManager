@@ -8,6 +8,17 @@ s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
 def ready(name,label): return s.wait_for("pro-"+name,lambda r:label in s.texts(r),timeout=180)
 def click(name,label):
     root=s.scroll_to_text("pro-"+name,label,max_swipes=20);s.tap(root,label);return root
+def horizontal_to_text(name,label):
+    for attempt in range(6):
+        root=s.capture("pro-"+name+str(attempt))
+        if label in s.texts(root): return root
+        tables=[n for n in root.iter("node") if "HorizontalScrollView" in n.get("class", "")]
+        assert tables,"No horizontal table available"
+        bounds=[tuple(map(int,re.findall(r"\d+",n.get("bounds")))) for n in tables]
+        left,top,right,bottom=max(bounds,key=lambda b:(b[2]-b[0])*(b[3]-b[1]))
+        s.adb("shell","input","swipe",str(left+(right-left)*3//4),str((top+bottom)//2),str(left+(right-left)//4),str((top+bottom)//2),"350")
+    raise AssertionError("Could not find table action "+label)
+
 def navigate(label):
     root=s.capture("pro-navigation-"+label.lower())
     if label in s.texts(root):
@@ -61,6 +72,15 @@ try:
     finance=ready("finance","Salary cap")
     assert any("available" in (t or "") for t in s.texts(finance))
     s.capture("pro-contracts-cap")
+    click("trade-workspace","Trade center")
+    trade=ready("trade-workspace-ready","Suggest additional picks")
+    assert "Seattle Seahawks" in s.texts(trade)
+    s.capture("pro-two-team-trade")
+    click("trade-back","‹ Front office")
+    click("trading-block","Trading block")
+    ready("trading-block-ready","Trading block")
+    s.capture("pro-trading-block")
+    click("block-back","‹ Front office")
     click("free-agents-open","Free agents")
     agents=ready("free-agents","All positions")
     s.capture("pro-free-agents-compact")
@@ -70,6 +90,12 @@ try:
     agents=ready("free-agents-rb","DeeJay Dallas")
     assert "Trevon Diggs" not in s.texts(agents)
     s.capture("pro-free-agents-filtered")
+    offer=horizontal_to_text("free-agent-offer","Make offer");s.tap(offer,"Make offer")
+    ready("contract-workspace","Contract negotiation")
+    cancel=s.scroll_to_text("pro-contract-cancel","Cancel",max_swipes=12)
+    assert "Use player's counter" in s.texts(cancel)
+    s.capture("pro-contract-negotiation")
+    s.tap(cancel,"Cancel")
     click("overview-tab","Overview")
     click("watch-open","Watch")
     coin("watch")
