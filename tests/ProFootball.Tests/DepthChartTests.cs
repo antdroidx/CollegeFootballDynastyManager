@@ -22,6 +22,7 @@ public sealed class DepthChartTests
         s = s with { GamePlans = [plan] };
         Assert.Equal(plan, ProLeagueService.Profile(s, s.UserTeam).GamePlan);
         var roundTrip = System.Text.Json.JsonSerializer.Deserialize<ProFranchise>(System.Text.Json.JsonSerializer.Serialize(s))!;
-        Assert.Equal(plan, Assert.Single(roundTrip.GamePlans));
+        var restored = Assert.Single(roundTrip.GamePlans);
+        Assert.Equal(plan.TeamName, restored.TeamName); Assert.Equal(plan.Offense, restored.Offense); Assert.Equal(plan.Defense, restored.Defense); Assert.Equal(plan.Tempo, restored.Tempo);
     }
 }
