@@ -1,0 +1,11 @@
+# Game-day situations and presentation
+
+This update adjusts the existing shared engine rather than adding a separate CPU simulation. Deficit and time remaining increase the passing weight before the final three minutes; early one-score deficits retain meaningful rushing. Third-and-3/4/5 favors passing in every coach book, with draws and runs still possible. Fourth-down decisions consider the number of scoring possessions needed. Explicit user calls and custom-book membership remain authoritative.
+
+Punt fair catches use punt distance, hang time, coverage speed/release delay and returner awareness. The event records the nearest cover player's distance at the catch. The viewer brings that player to the corresponding catch-area position as the ball arrives. This is a coverage-arrival model, not a full blocking/collision simulation. Kickoff handling remains separate.
+
+Extra-point attempts now record kicking/defending personnel and use the field-goal animation path, including the holder, kicker and posts. Incomplete-pass visuals travel toward the intended receiver's route at the catch point, with small over/underthrow offsets or a drop at the receiver. Official incompletion yardage remains zero.
+
+Player models, CSV bio import, season lines and career archives retain jersey numbers. PJEN and the optional JerseyNumber alias use displayed values 0–99. Imported duplicates are retained (legal on separate units); missing numbers are assigned deterministically from available team numbers. Generated rosters with more than 100 players may reuse numbers. Live-view **Markers: Positions / Numbers** changes the labels immediately and remembers the preference on the device. Jersey numbers do not affect simulation outcomes.
+
+Coach replaces the opening three-snap controls with an opponent scouting report: current-season record/results, scoring averages, recorded passing mix, turnovers, scheme, four matchups and available key-player links. No history produces an explicit empty state. Saving a game plan clears legacy opening scripts and retains created plays. Detailed player/coach portraits increase from 88 to 108 units; recruit identity portraits increase from 54 to 76. Coaching cards have clearer grouping and color accents; common cards/buttons have softer corners.

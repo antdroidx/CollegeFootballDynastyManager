@@ -1,0 +1,26 @@
+# .NET / Visual Studio
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Android / Java local build state
+.gradle/
+local.properties
+*.apk
+*.aab
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local Android visual QA output
+artifacts/qa-build-*/
+__pycache__/
+
+# Local source/workbook analysis cache
+.artifacts/
+**/TestResults/
