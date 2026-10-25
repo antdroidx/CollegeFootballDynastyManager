@@ -135,7 +135,15 @@ public static class ProLeagueService
         state = ProCpu.Manage(state);
         foreach (var game in state.Games.Where(g => g.Phase == state.Phase && g.Football.Week == state.Week && !g.Football.HasPlayed).ToArray())
         { var session = Start(state, game, GameDayMode.Simulate); GameDayEngine.SimulateToEnd(session); state = Finish(state, session); }
-        if (state.Phase == ProPhase.Preseason) return state with { Phase = state.Week == 3 ? ProPhase.RegularSeason : state.Phase, Week = state.Week == 3 ? 1 : state.Week + 1 };
+        if (state.Phase == ProPhase.Preseason)
+        {
+            if (state.Week < 3) return state with { Week = state.Week + 1 };
+            foreach (var team in state.League.Teams.Where(t => t.Name != state.UserTeam || state.Career?.Unemployed == true)) state = ProCpu.Trim(state, team.Name);
+            // Keep completed finale results while the user makes final cuts; no second simulation.
+            if (ProRoster.Active(state, state.UserTeam) > 53)
+                return ProEconomy.Log(state, "Final cutdown required: reduce the active roster to 53 before the regular season.");
+            return state with { Phase = ProPhase.RegularSeason, Week = 1 };
+        }
         if (state.Phase == ProPhase.RegularSeason) return state.Week < 18 ? state with { Week = state.Week + 1 } : ProPlayoffs.Begin(state);
         if (state.Phase == ProPhase.Playoffs) return ProPlayoffs.Advance(state);
         return state;

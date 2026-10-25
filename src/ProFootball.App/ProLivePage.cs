@@ -28,6 +28,7 @@ public sealed partial class ProLivePage : ContentPage
     bool autoReplays = Preferences.Get("pro-auto-replays", true), showNames = Preferences.Get("pro-player-names", true);
     string? offense, defense; GameSnapEvent? last; Action? closePicker;
     readonly Label selected = Hud(12);
+    readonly Grid quickCalls = new() { ColumnSpacing = 6, ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) }, AutomationId = "quick-play-calls" };
     static Label Hud(int size, bool bold = false) => new() { FontSize = size, FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None,
         TextColor = DynastyTheme.Text, VerticalTextAlignment = TextAlignment.Center };
     public ProLivePage(GameDaySession session, ProLeague league, Func<Task> save, bool chooseTeamOnTakeover = false)
@@ -43,7 +44,7 @@ public sealed partial class ProLivePage : ContentPage
             GameCastScoreboard.Team(new TeamBadgeView(home, 30), new Label { Text = home.Abbreviation, FontSize = 13, FontAttributes = FontAttributes.Bold }, homeScore, homeTimeouts)));
         situation.HorizontalTextAlignment = possession.HorizontalTextAlignment = TextAlignment.Center; body.Add(situation); body.Add(possession);
         body.Add(new Border { Padding = 5, Stroke = DynastyTheme.Muted, StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 8 }, BackgroundColor = DynastyTheme.Surface, Content = field });
-        body.Add(selected); var controls = new ActionRow();
+        body.Add(selected); body.Add(quickCalls); var controls = new ActionRow();
         void Style(Button button) { button.FontSize = 12; button.Padding = new Thickness(10, 6); button.MinimumHeightRequest = 44; button.CornerRadius = 10; }
         Button Button(string text, Func<Task> action)
         {
@@ -104,6 +105,7 @@ public sealed partial class ProLivePage : ContentPage
         try
         {
             last = ProLiveControl.Step(session, offense, defense);
+            offense = defense = null;
             await Animate(last, false);
             if (autoReplays && !pending && GameDayLivePresentation.InstantReplay(last)) await Replay(last);
             if (last.Outcome == SnapOutcome.Kickoff && session.Mode == GameDayMode.Play) selected.Text = "Coach mode · choose plays, then Next snap";
@@ -141,7 +143,8 @@ public sealed partial class ProLivePage : ContentPage
         timeoutButton.IsEnabled = !session.IsComplete && (session.ControlledTeamName == session.Game.HomeTeamName ? session.HomeTimeouts : session.AwayTimeouts) > 0;
         secondButton.IsEnabled = !session.IsComplete; secondButton.Text = second ? "Use starters" : "Second team";
         finishButton.IsEnabled = !session.IsComplete || !saved; finishButton.Text = session.IsComplete && !saved ? "Retry save" : "Finish game";
-        if (!working && !pending) RenderHuddles();
+        if (!working && !pending) { UpdateQuickCalls(); RenderHuddles(); }
+        quickCalls.IsEnabled = !working && !pending;
     }
     void RenderHuddles()
     {

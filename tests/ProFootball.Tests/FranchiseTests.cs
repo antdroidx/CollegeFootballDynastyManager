@@ -81,11 +81,16 @@ public class FranchiseTests
         var s=New();var first=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Age<28);var age=first.Age;
         for(var season=0;season<20;season++)
         {
-            for(var week=0;week<25&&s.Phase!=ProPhase.Offseason;week++)s=ProLeagueService.Advance(s);
+            for(var week=0;week<26&&s.Phase!=ProPhase.Offseason;week++)
+            {
+                if(s.Phase==ProPhase.Preseason&&s.Week==3)s=ProCpu.Trim(s,s.UserTeam);
+                s=ProLeagueService.Advance(s);
+                if(s.Phase==ProPhase.RegularSeason)Assert.All(s.League.Teams,t=>Assert.True(ProRoster.Active(s,t.Name)<=53,t.Name));
+            }
             Assert.Equal(ProPhase.Offseason,s.Phase);Assert.Equal(season+1,s.History.Count);s=ProOffseason.Advance(s);Assert.Equal(320,s.Prospects.Count);
             s=ProOffseason.Advance(s);s=ProDraft.AutoUntilUser(s,true);Assert.Null(ProDraft.Current(s));Assert.Equal(224,s.DraftHistory.Count(p=>p.Year==s.Year));
             s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
-            Assert.Equal(ProPhase.Preseason,s.Phase);Assert.All(s.League.Teams,t=>{Assert.True(ProRoster.Active(s,t.Name)>=45&&ProRoster.Active(s,t.Name)<=53,$"{s.Year} {t.Name}: {ProRoster.Active(s,t.Name)} active, room {ProEconomy.Room(s,t.Name):N0}, dead {s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Sum(d=>d.Amount):N0}");Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);});
+            Assert.Equal(ProPhase.Preseason,s.Phase);Assert.All(s.League.Teams,t=>{Assert.True(ProRoster.Active(s,t.Name)>=45&&ProRoster.Active(s,t.Name)<=90,$"{s.Year} {t.Name}: {ProRoster.Active(s,t.Name)} active, room {ProEconomy.Room(s,t.Name):N0}, dead {s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Sum(d=>d.Amount):N0}");Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);});
             Assert.Equal(s.Players.Count,s.Players.Select(p=>p.Football.PlayerId).Distinct().Count());
         }
         Assert.Equal(age+20,s.Players.Single(p=>p.Football.PlayerId==first.Football.PlayerId).Age);

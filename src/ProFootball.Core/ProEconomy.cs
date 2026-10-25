@@ -98,7 +98,7 @@ public static class ProEconomy
 
 public static class ProRoster
 {
-    public static int Limit(ProFranchise s) => s.Phase == ProPhase.Offseason ? 90 : 53;
+    public static int Limit(ProFranchise s) => s.Phase is ProPhase.Offseason or ProPhase.Preseason ? 90 : 53;
     public static int Active(ProFranchise s, string team) => s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired);
     public static ProFranchise Practice(ProFranchise s, string team, Guid id, bool practice)
     {

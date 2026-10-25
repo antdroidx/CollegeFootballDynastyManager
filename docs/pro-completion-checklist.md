@@ -34,3 +34,23 @@ Latest validation (Build 21, application source `58eda84`): 45 Pro cases passed 
 - Playbooks are restricted by controlled team, possession, coaching role and kickoff state; non-user Play already asks for a team, and taking over a non-user Watch game now asks too.
 - Free agents use compact rows with annual market value and offer/claim actions, name search and position filters.
 - Added permission/kickoff regression coverage and Android checks for toss, kickoff, possession-specific playbooks and free-agent filtering.
+
+## October 25 expanded management parity request — authorized
+
+- [ ] Pro: College-style three recommended quick-call cards, same shared card UI.
+- [ ] Pro: one-line free-agency grid; all grids sortable, including contracts.
+- [ ] Pro: two-team trade workspace, selectable player/pick assets, CPU interest, trading block and partner discovery.
+- [ ] Pro: visible loading/progress states for operations; sidebar/drawer navigation matching College at equivalent widths.
+- [ ] Pro: separate analytics from sortable complete Passing/Rushing/Receiving/Defense/Kicking/Punting/Returns statistics views.
+- [ ] Pro: 90-player offseason/preseason squads; enforce final 53-player cutdown before regular season.
+- [ ] Pro: persisted season awards and Pro Bowl/all-star selection/game support.
+- [ ] Pro: dense branded schedule grid, team selector and entire-team season schedule view.
+- [ ] Pro: remove repetitive rating-scale captions everywhere.
+- [ ] Pro: single negotiation workspace with precise salary/bonus/term offers, rejection/counteroffers; one completed contract change per player/season, restructures, improved cap ledger and AI parity.
+- [ ] Pro: weekly scoped coach talks, positive/negative personality reactions, decaying signing/contract morale effects and severe trade requests.
+- [ ] College: custom coach name for new/existing careers, non-user game team choice, visible save deletion.
+- [ ] Both: news cards/details retain small team/player thumbnails; remove large stadium/logo illustrations (user clarified request).
+
+All work remains on the monorepo development branch with separate app commits/build evidence; stable main stays untouched. Keep current-work.md synchronized and resume after usage resets. No claim of complete financial realism until accounting and long-term checks pass.
+
+Implementation batch checkpoint: quick-call cards, sortable/paginated grids, category stats, branded full-season schedule, sidebar/loading, College naming/deletion/team choice and thumbnail-only news are implemented; Android acceptance is pending. Camp 90-to-53 transitions pass focused and twenty-season coverage. Automated results: 50 Pro and 682 legacy combined Core/College fast cases. Remaining major systems above stay unchecked until implemented and verified.

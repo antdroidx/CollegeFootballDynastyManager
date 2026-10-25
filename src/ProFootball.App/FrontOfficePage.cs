@@ -8,13 +8,7 @@ public sealed partial class FranchisePage
     static string RoleName(StaffRole role) => role switch { StaffRole.HeadCoach => "Head coach", StaffRole.OffensiveCoordinator => "Offensive coordinator", StaffRole.DefensiveCoordinator => "Defensive coordinator", StaffRole.SpecialTeamsCoordinator => "Special teams coordinator", _ => role.ToString() };
     static string Money(long value) => "$" + (value / 1_000_000d).ToString("0.00") + "m";
     View Link(string text, Func<Task> action) { var b = Action(text, action); b.BackgroundColor = Colors.Transparent; b.FontSize = 12; b.Padding = 4; return b; }
-    View Table((string Name, int Width)[] columns, IEnumerable<View[]> rows)
-    {
-        var grid = new Grid { RowSpacing = 1, ColumnSpacing = 8 }; foreach (var c in columns) grid.ColumnDefinitions.Add(new(c.Width));
-        grid.RowDefinitions.Add(new(GridLength.Auto)); for (var c = 0; c < columns.Length; c++) grid.Add(Text(columns[c].Name, 12, true), c, 0);
-        var row = 1; foreach (var cells in rows) { grid.RowDefinitions.Add(new(GridLength.Auto)); for (var c = 0; c < cells.Length; c++) { cells[c].VerticalOptions = LayoutOptions.Center; grid.Add(cells[c], c, row); } row++; }
-        return new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = grid };
-    }
+    View Table((string Name, int Width)[] columns, IEnumerable<View[]> rows) => FootballDataGrid.Create(columns, rows);
     async Task Update(Func<ProFranchise, ProFranchise> mutation)
     {
         var before = state!; state = await Task.Run(() => mutation(before)); await Save(); Render();
@@ -26,7 +20,7 @@ public sealed partial class FranchisePage
     {
         var p = state!.Players.Single(x => x.Football.PlayerId == original.Football.PlayerId); var c = state.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);
         var choice = await GameDialogs.ActionSheetAsync(this, p.Football.FullName + " · " + p.Football.Position, "Close", null, "Player & contract", p.PracticeSquad ? "Promote to active" : "Move to practice squad", "Extend contract", "Franchise tag", "Release player");
-        if (choice == "Player & contract") await GameDialogs.AlertAsync(this, p.Football.FullName, $"{p.Age} years · OVR {p.Football.OverallRating} · Morale {p.Morale}\nPlayer ratings · 1–99 scale\n" + (c is null ? "No contract" : $"Cap hit {Money(ProEconomy.CapHit(c, state.Year))}\nSigning bonus {Money(c.SigningBonus)}\n" + string.Join("\n", c.Years.Select(y => $"{y.Year}: {Money(y.Salary)} · guaranteed {Money(y.Guaranteed)}")) + "\n" + (c.Estimated ? "Initial contract is estimated." : "Franchise contract.")), "Close");
+        if (choice == "Player & contract") await GameDialogs.AlertAsync(this, p.Football.FullName, $"{p.Age} years · OVR {p.Football.OverallRating} · Morale {p.Morale}\n" + (c is null ? "No contract" : $"Cap hit {Money(ProEconomy.CapHit(c, state.Year))}\nSigning bonus {Money(c.SigningBonus)}\n" + string.Join("\n", c.Years.Select(y => $"{y.Year}: {Money(y.Salary)} · guaranteed {Money(y.Guaranteed)}")) + "\n" + (c.Estimated ? "Initial contract is estimated." : "Franchise contract.")), "Close");
         if (choice == "Promote to active" || choice == "Move to practice squad") await Manage("Roster move", p.Football.PlayerId, 0, s => ProRoster.Practice(s, s.UserTeam, p.Football.PlayerId, !p.PracticeSquad));
         if (choice == "Extend contract") { var offer = await ContractTerms(p, true); if (offer is { } o) await Manage("Contract extension", p.Football.PlayerId, 0, s => ProEconomy.Extend(s, s.UserTeam, p.Football.PlayerId, o.Years, o.Salary)); }
         if (choice == "Franchise tag") await Manage("Franchise tag", p.Football.PlayerId, 0, s => ProEconomy.Tag(s, s.UserTeam, p.Football.PlayerId));
@@ -73,26 +67,19 @@ public sealed partial class FranchisePage
                 && (freeAgentPosition == "All positions" || p.Football.Position.ToString() == freeAgentPosition)
                 && (string.IsNullOrWhiteSpace(freeAgentSearch) || p.Football.FullName.Contains(freeAgentSearch.Trim(), StringComparison.OrdinalIgnoreCase)))
                 .OrderByDescending(p => p.Football.OverallRating).ThenBy(p => p.Football.FullName).ToArray();
-            count.Text = players.Length + " available · sorted by overall";
-            foreach (var p in players.Take(160))
+            count.Text = players.Length + " available · tap a heading to sort";
+            list.Add(Table([("Pos",48),("Player",200),("Age",48),("OVR",52),("Market / yr",100),("Status",100),("Offer",110)], players.Select(p =>
             {
                 var player = p; var waiver = state.Waivers.Any(w => w.PlayerId == p.Football.PlayerId);
                 var pending = state.Bids.FirstOrDefault(b => b.Team == state.UserTeam && b.PlayerId == p.Football.PlayerId);
-                var row = new Grid { ColumnDefinitions = new() { new(GridLength.Star), new(GridLength.Auto), new(GridLength.Auto) }, ColumnSpacing = 8 };
-                var identity = new VerticalStackLayout { Spacing = 1, VerticalOptions = LayoutOptions.Center };
-                identity.Add(Link(p.Football.FullName, () => Player(player))); identity.Add(Text($"{p.Football.Position} · Age {p.Age} · OVR {p.Football.OverallRating}" + (waiver ? " · Waivers" : pending is not null ? " · Bid pending" : ""), 11));
-                row.Add(identity, 0, 0); row.Add(Text(Money(ProEconomy.MarketSalary(p)), 12), 1, 0);
-                var offerButton = Action(waiver ? "Claim" : pending is null ? "Make offer" : "Revise bid", async () =>
+                return new View[] { Text(p.Football.Position.ToString()), Link(p.Football.FullName, () => Player(player)), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString()), Text(Money(ProEconomy.MarketSalary(p))), Text(waiver ? "Waivers" : pending is null ? "Available" : "Bid pending"), Action(waiver ? "Claim" : pending is null ? "Make offer" : "Revise bid", async () =>
                 {
-                    if (waiver) await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s, s.UserTeam, player.Football.PlayerId));
-                    else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer", player.Football.PlayerId, o.Salary + o.Bonus / o.Years, s => ProEconomy.Offer(s, s.UserTeam, player.Football.PlayerId, o.Years, o.Salary, o.Bonus)); }
+                    if (waiver) await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s,s.UserTeam,player.Football.PlayerId));
+                    else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer",player.Football.PlayerId,o.Salary + o.Bonus/o.Years,s => ProEconomy.Offer(s,s.UserTeam,player.Football.PlayerId,o.Years,o.Salary,o.Bonus)); }
                     await FreeAgents();
-                });
-                offerButton.FontSize = 11; offerButton.Padding = new Thickness(8, 4); row.Add(offerButton, 2, 0);
-                list.Add(new Border { Padding = new Thickness(8, 4), StrokeThickness = 0, BackgroundColor = DynastyTheme.Surface, Content = row });
-            }
+                }) };
+            })));
             if (players.Length == 0) list.Add(Text("No available players match these filters."));
-            if (players.Length > 160) list.Add(Text("Showing the top 160. Choose a position or search to narrow the list.", 12));
         }
         search.TextChanged += (_, _) => { freeAgentSearch = search.Text ?? ""; Draw(); };
         position.SelectedIndexChanged += (_, _) => { freeAgentPosition = (string?)position.SelectedItem ?? "All positions"; Draw(); };

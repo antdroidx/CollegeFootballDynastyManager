@@ -27,7 +27,7 @@ public sealed partial class FranchisePage
         var s = state!; var p = s.Players.FirstOrDefault(x => x.Football.PlayerId == original.Football.PlayerId) ?? original; var f = p.Football;
         var contract = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == f.PlayerId);
         var identity = new HorizontalStackLayout { Spacing = 14, Children = { Portrait(p, 108), new VerticalStackLayout { Children = { Text(f.FullName, 23, true), Text($"#{f.JerseyNumber} · {OffensiveLineService.Label(f)} · {f.TeamName}"), Text($"Age {p.Age} · Experience {p.Experience} · {f.HeightInches / 12}′{f.HeightInches % 12}″ · {f.WeightPounds} lb") } } } };
-        var attributes = new List<View> { Text($"OVR {f.OverallRating} · Potential {PlayerAttributeCatalog.PotentialStars(f.PotentialRating)}", 20, true), Text("Player ratings · 1–99 scale", 12) };
+        var attributes = new List<View> { Text($"OVR {f.OverallRating} · Potential {PlayerAttributeCatalog.PotentialStars(f.PotentialRating)}", 20, true) };
         foreach (var group in PlayerAttributeCatalog.Groups(f))
             attributes.Add(PlayerAttributeViews.Group(group.Title, group.Subtitle, group.Attributes,
                 (title, subtitle) => new VerticalStackLayout { Spacing = 3, Children = { Text(title, 15, true), Text(subtitle, 11) } }));
@@ -73,7 +73,7 @@ public sealed partial class FranchisePage
         if (stories.Length == 0) body.Add(Text("No stories in this view yet. Completed games and league activity will appear here."));
         foreach (var story in stories)
         {
-            var n = story; body.Add(Panel((s.ReadNewsIds.Contains(n.Id) ? "" : "● ") + n.Headline, Text($"{n.Year} · Week {n.Week} · {n.Category}", 12), Text(n.Body), Action(n.GameId is null ? "Read story" : "Game report ›", async () =>
+            var n = story; body.Add(Panel((s.ReadNewsIds.Contains(n.Id) ? "" : "● ") + n.Headline, NewsThumbnail(n), Text($"{n.Year} · Week {n.Week} · {n.Category}", 12), Text(n.Body), Action(n.GameId is null ? "Read story" : "Game report ›", async () =>
             {
                 state = state! with { ReadNewsIds = state.ReadNewsIds.Append(n.Id).Distinct().ToList() }; await Save();
                 var game = state.Games.Concat(state.History.SelectMany(h => h.Games)).FirstOrDefault(g => g.Football.GameId == n.GameId);
@@ -81,17 +81,12 @@ public sealed partial class FranchisePage
             })));
         }
     }
-    void Statistics()
+    View NewsThumbnail(ProNewsStory story)
     {
-        var games = state!.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).Select(g => g.Football).ToArray();
-        Analytics();
-        body.Add(Text("Regular-season league leaders", 23, true));
-        foreach (var (name, value) in new (string, Func<PlayerSeasonStatLine, int>)[] { ("Passing yards", x => x.PassYards), ("Rushing yards", x => x.RushYards), ("Receiving yards", x => x.ReceivingYards), ("Tackles", x => x.Tackles), ("Sacks", x => x.Sacks) })
-        {
-            var leaders = games.SelectMany(g => g.PlayerStats).GroupBy(x => x.PlayerId).Select(g => (Id: g.Key, Name: g.First().PlayerName, Value: g.Sum(value))).Where(x => x.Value > 0).OrderByDescending(x => x.Value).Take(12);
-            body.Add(Panel(name, leaders.Select(x => { var p = state.Players.FirstOrDefault(p => p.Football.PlayerId == x.Id); return p is null ? Text($"{x.Name} · {x.Value}") : Link($"{x.Name} · {x.Value}", () => Player(p)); }).ToArray()));
-        }
-        if (games.Length == 0) body.Add(Text("Regular-season statistics appear after the first completed regular-season game."));
+        var team = state!.League.Teams.FirstOrDefault(t => t.Name == story.Team);
+        var player = state.Players.FirstOrDefault(p => p.Football.TeamName == story.Team && story.Headline.Contains(p.Football.FullName, StringComparison.OrdinalIgnoreCase));
+        if (player is not null) return Portrait(player, 42);
+        return team is not null ? new TeamBadgeView(team, 42) : Text("LEAGUE", 12, true);
     }
     Task ShowBoxScore(ScheduledGame g) => GameCastBoxScore.ShowAsync(Navigation, new()
     {

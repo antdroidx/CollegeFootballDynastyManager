@@ -8,6 +8,15 @@ s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
 def ready(name,label): return s.wait_for("pro-"+name,lambda r:label in s.texts(r),timeout=180)
 def click(name,label):
     root=s.scroll_to_text("pro-"+name,label,max_swipes=20);s.tap(root,label);return root
+def navigate(label):
+    root=s.capture("pro-navigation-"+label.lower())
+    if label in s.texts(root):
+        s.tap(root,label)
+    elif "League" in s.texts(root):
+        s.tap(root,"League");click("league-"+label.lower(),label)
+    else:
+        click("sidebar-"+label.lower(),label)
+
 def coin(name,interactive=False):
     ready(name+"-toss","COIN TOSS")
     root=s.wait_for("pro-"+name+"-toss-choice",lambda r:"Start game" in s.texts(r) or interactive and ("Heads" in s.texts(r) or "Receive" in s.texts(r)),timeout=120)
@@ -58,8 +67,8 @@ try:
     s.tap(agents,"All positions")
     position=ready("free-agents-position-options","RB")
     s.tap(position,"RB")
-    agents=s.wait_for("pro-free-agents-rb",lambda r:any((t or "").startswith("RB · Age") for t in s.texts(r)),timeout=120)
-    assert not any(re.match(r"^(QB|CB|DE|WR) · Age",t or "") for t in s.texts(agents))
+    agents=ready("free-agents-rb","DeeJay Dallas")
+    assert "Trevon Diggs" not in s.texts(agents)
     s.capture("pro-free-agents-filtered")
     click("overview-tab","Overview")
     click("watch-open","Watch")
@@ -148,16 +157,13 @@ try:
     click("light-roster-tab","Roster")
     s.wait_for("pro-light-roster",lambda r:any((t or "").startswith("Active roster ·") for t in s.texts(r)),timeout=180)
     s.capture("pro-roster-fold-light")
-    click("analytics-menu","League")
-    click("analytics-open","Statistics")
+    navigate("Analytics")
     ready("analytics","Franchise analytics")
     s.capture("pro-analytics")
-    click("career-menu","League")
-    click("career-open","Career")
+    navigate("Career")
     ready("career","Your career")
     s.capture("pro-career")
-    click("news-menu","League")
-    click("news-open","News")
+    navigate("News")
     ready("news","League news")
     s.capture("pro-news")
     click("delete-overview","Overview")

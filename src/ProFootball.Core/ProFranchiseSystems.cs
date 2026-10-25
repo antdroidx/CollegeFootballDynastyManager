@@ -172,8 +172,7 @@ public static class ProOffseason
             if (ProDraft.Current(s) is not null) throw new InvalidOperationException("Finish all seven draft rounds first.");
             return s with { OffseasonStep = OffseasonStep.RosterCuts, Players = s.Players.Concat(s.Prospects.Select(p => p with { Football = p.Football with { TeamName = "Free agent" } })).ToList(), Prospects = [] };
         }
-        if (ProRoster.Active(s, s.UserTeam) > 53 || ProEconomy.Room(s, s.UserTeam) < 0) throw new InvalidOperationException("Trim your active roster to 53 and get under the cap first.");
-        foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam || s.Career?.Unemployed == true)) s = ProCpu.Trim(s, team.Name);
+        if (ProRoster.Active(s, s.UserTeam) > 90 || ProEconomy.Room(s, s.UserTeam) < 0) throw new InvalidOperationException("Keep your camp roster at 90 or fewer and get under the cap first. Final 53-player cuts follow preseason.");
         s = ProCpu.Manage(s with { Phase = ProPhase.Preseason, Week = 1 });
         return s with { Phase = ProPhase.Preseason, Week = 1, OffseasonStep = OffseasonStep.Retention, Games = ProSchedule.Build(s.League, s.Year), TaggedTeams = [], Picks = s.Picks.Concat(ProEconomy.CreatePicks(s, s.Year + 1)).DistinctBy(p => (p.Year, p.Round, p.OriginalTeam)).ToList() };
     }

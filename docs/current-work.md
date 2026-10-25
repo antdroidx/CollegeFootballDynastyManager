@@ -37,6 +37,18 @@ Use **Core**, **College**, and **Pro** in reports. Classify by what a test exerc
 | Pro Android | Passed full CI device flow: creation, attributes/profiles, dense free-agent filtering, coin toss/kickoff, watch/takeover/replay, playbooks, save/update/reload, week advancement, light/Fold layouts, analytics/news/career, deletion/cancel and coordinator own-unit pacing. Additional local checks verified non-user Play and Watch takeover team selection. |
 | College Android | Both career-options and broad launch/management UI jobs passed after the shared coin-toss extraction. |
 
+## Active expanded request (October 25)
+
+The user authorized the expanded management parity pass recorded at the end of [the checklist](pro-completion-checklist.md). Implement College-inspired sidebar/drawer, three quick-call cards, one-line sortable grids, category statistics, full-team schedules, two-team trading/block, precise contract negotiations/restructures, 90-to-53 roster handling, awards/all-star support and weekly personality-based morale. Also add College coach naming, non-user team selection and visible deletion. Both games should use small news thumbnails without large stadium/logo illustrations. Work is in progress; Build 21 remains the latest verified APK until new validation completes.
+
+## Current implementation batch (Android verification pending)
+
+- College: custom new/existing coach names, prominent whole-dynasty deletion, non-user Play team choice, small news thumbnails without large artwork.
+- Pro: shared College quick-call cards, compact sortable/paginated grids, one-row free agency with position/search filters, category statistics separated from analytics, full-team and league schedule filters with badges/current-week marker, Fold sidebar, working indicator and small news thumbnails. Repetitive rating-scale captions removed.
+- Camp rosters may hold 90 through preseason. CPU final cuts happen after the finale; an oversized user roster retains completed games and waits for cuts before regular-season advancement.
+- Validation: **50 Pro cases passed**, including twenty-season simulation and final-cutdown coverage. **682 Core/College legacy combined fast cases passed** (four new College naming cases). Both local Android builds passed before the last small UI edits; final build/device evidence pending. Build 21 remains the latest device-verified downloadable artifact.
+- Still outstanding: trade workspace/block/CPU offers, precise negotiation/restructure and cap ledger, weekly personality/morale, awards/all-star support. Do not mark the expanded request complete.
+
 ## Outstanding work and next priorities
 
 The full Pro plan is not complete. See the checklist for acceptance gaps; do not represent prototypes as finished systems.
