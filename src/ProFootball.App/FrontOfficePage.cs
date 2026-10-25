@@ -44,15 +44,15 @@ public sealed partial class FranchisePage
     {
         var s = state!; var team = s.League.Teams.Single(t => t.Name == s.UserTeam); var tools = new ActionRow(); tools.Add(Action("Game plan", GamePlan)); tools.Add(Action("Injuries & availability", InjuryReport)); body.Add(tools); body.Add(Text("Staff ratings are game estimates. Changes open during the offseason.", 12));
         foreach (var c in s.Coaches.Where(c => c.TeamId == team.Id).OrderBy(c => c.Role))
-        { var coach = c; var row = new ActionRow(); var hire = Action("Hire / replace", () => Hire(coach)); hire.IsEnabled = s.Phase == ProPhase.Offseason && ProCareer.Role(s) == StaffRole.HeadCoach; row.Add(hire); var fire = Action("Dismiss", () => Update(x => ProStaff.Fire(x, x.UserTeam, coach.Role))); fire.IsEnabled = s.Phase == ProPhase.Offseason && !coach.Vacant && ProCareer.Role(s) == StaffRole.HeadCoach; row.Add(fire); body.Add(Panel(RoleName(c.Role), CoachIdentity(c, team), Action("Coach profile", () => CoachProfile(coach)), Text(c.Title, 12), Text($"Coaching {c.Rating} · Development {c.Development}"), row)); }
+        { var coach = c; var row = new ActionRow(); var hire = Action("Hire / replace", () => Hire(coach)); hire.IsEnabled = s.Phase == ProPhase.Offseason && ProCareer.Role(s) == StaffRole.HeadCoach && !s.Career!.Unemployed && c.Role != ProCareer.Role(s); row.Add(hire); var fire = Action("Dismiss", () => Update(x => ProStaff.Fire(x, x.UserTeam, coach.Role))); fire.IsEnabled = s.Phase == ProPhase.Offseason && !coach.Vacant && ProCareer.Role(s) == StaffRole.HeadCoach && !s.Career!.Unemployed && coach.Role != ProCareer.Role(s); row.Add(fire); body.Add(Panel(RoleName(c.Role), CoachIdentity(c, team), Action("Coach profile", () => CoachProfile(coach)), Text(c.Title, 12), Text($"Coaching {c.Rating} · Development {c.Development}"), row)); }
     }
     async Task Hire(ProCoach coach)
     { var names = state!.CoachCandidates.Select(c => c.Name).Distinct().Order().ToArray(); var name = await GameDialogs.ActionSheetAsync(this, "Available staff", "Cancel", null, names); if (name is not null && name != "Cancel") await Update(s => ProStaff.Hire(s, s.UserTeam, coach.Role, name)); }
     void FrontOffice()
     {
         var s = state!; body.Add(Text($"Contract coverage · {s.Contracts.Count(c => c.Active && c.Team == s.UserTeam && c.Source != null)} sourced · {s.Contracts.Count(c => c.Active && c.Team == s.UserTeam && c.Estimated)} estimated", 12)); body.Add(Panel("Salary cap", Text(Money(ProEconomy.Room(s, s.UserTeam)) + " available", 25, true), Text($"Cap {Money(s.SalaryCap)} · Used {Money(ProEconomy.Used(s, s.UserTeam))} · Pending bids {Money(ProEconomy.Pending(s, s.UserTeam))}"), Text("Contracts are labeled by source. OTC snapshots retain reported cap charges; unmatched contracts are estimates. Rollover, team adjustments and historical dead money are not yet included.", 12)));
-        var row = new ActionRow(); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", Trade)); row.Add(Action("Draft & scouting", Draft)); body.Add(row);
-        var rosterTools = new ActionRow(); rosterTools.Add(Action("Auto fill roster", () => Update(x => ProCpu.Manage(x, true)))); rosterTools.Add(Action("Auto trim to 53", () => Update(x => ProCpu.Trim(x, x.UserTeam)))); body.Add(rosterTools);
+        var row = new ActionRow(); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", Trade)); row.Add(Action("Trade history", TradeHistory)); row.Add(Action("Draft & scouting", Draft)); body.Add(row);
+        var rosterTools = new ActionRow(); rosterTools.Add(Action("Ask GM to fill roster", () => Update(x => ProCpu.Manage(x, true)))); rosterTools.Add(Action("Ask GM to trim to 53", () => Update(x => ProCpu.Trim(x, x.UserTeam)))); body.Add(rosterTools);
         body.Add(Text("Contracts · select a player", 21, true)); body.Add(Table([("Player", 170), ("Ends", 55), ("Cap hit", 95), ("Bonus", 95)], s.Contracts.Where(c => c.Active && c.Team == s.UserTeam).OrderByDescending(c => ProEconomy.CapHit(c, s.Year)).Select(c => { var p = s.Players.Single(p => p.Football.PlayerId == c.PlayerId); return new View[] { Link(p.Football.FullName, () => Player(p)), Text(c.Years.Max(y => y.Year).ToString()), Text(Money(ProEconomy.CapHit(c, s.Year))), Text(Money(c.SigningBonus)) }; })));
         body.Add(Panel("Dead money", Text(string.Join("\n", s.DeadCap.Where(d => d.Team == s.UserTeam && d.Year == s.Year).Select(d => $"{s.Players.FirstOrDefault(p => p.Football.PlayerId == d.PlayerId)?.Football.FullName}: {Money(d.Amount)}")), 12)));
     }
@@ -63,16 +63,25 @@ public sealed partial class FranchisePage
         { var player = p; var waiver = state.Waivers.Any(w => w.PlayerId == p.Football.PlayerId); var pending = state.Bids.FirstOrDefault(b => b.Team == state.UserTeam && b.PlayerId == p.Football.PlayerId); body.Add(Panel(p.Football.FullName, Text($"{p.Football.Position} · Age {p.Age} · OVR {p.Football.OverallRating} · Market {Money(ProEconomy.MarketSalary(p))}", 12), Action(waiver ? "Submit waiver claim" : pending is null ? "Make offer" : "Revise pending offer", async () => { if (waiver) await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s, s.UserTeam, player.Football.PlayerId)); else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer", player.Football.PlayerId, o.Salary + o.Bonus / o.Years, s => ProEconomy.Offer(s, s.UserTeam, player.Football.PlayerId, o.Years, o.Salary, o.Bonus)); } }))); }
         return Task.CompletedTask;
     }
+    Task TradeHistory()
+    {
+        var s = state!;
+        string Names(IEnumerable<Guid> ids) => string.Join(", ", ids.Select(id => s.Players.FirstOrDefault(p => p.Football.PlayerId == id)?.Football.FullName ?? id.ToString()));
+        var rows = s.TradeHistory.AsEnumerable().Reverse().Select(t => Panel($"{t.Year} W{t.Week} · {t.From} / {t.To}",
+            Text(t.From + " sent: " + Names(t.GivenPlayers) + " " + string.Join(", ", t.GivenPicks.Select(p => $"{p.Year} R{p.Round} ({p.OriginalTeam})"))),
+            Text(t.To + " sent: " + Names(t.ReceivedPlayers) + " " + string.Join(", ", t.ReceivedPicks.Select(p => $"{p.Year} R{p.Round} ({p.OriginalTeam})"))))).ToArray();
+        return ShowPage("Trade history", rows.Length == 0 ? Text("No completed trades yet.") : new VerticalStackLayout { Spacing = 12, Children = { } }, Panel("Completed deals", rows));
+    }
     async Task Trade()
     {
         var s = state!; var other = await GameDialogs.ActionSheetAsync(this, "Trade partner", "Cancel", null, s.League.Teams.Where(t => t.Name != s.UserTeam).Select(t => t.Name).ToArray()); if (other is null or "Cancel") return;
-        var give = await TradePackage(s.UserTeam); if (give is null) return;
-        var get = await TradePackage(other); if (get is null) return;
+        var give = await TradePackage(s.UserTeam, other); if (give is null) return;
+        var get = await TradePackage(other, s.UserTeam); if (get is null) return;
         if (!await GameDialogs.AlertAsync(this, "Propose trade?", "Give: " + string.Join("; ", give.Select(a => a.Label)) + "\nReceive: " + string.Join("; ", get.Select(a => a.Label)) + "\nCPU evaluation, cap and roster limits apply.", "Propose", "Cancel")) return;
         await Update(x => ProManagement.Submit(x, "Trade recommendation", give.Concat(get).Where(a => !a.Pick).Select(a => a.Id).ToArray(), 0,
             y => ProTrade.Propose(y, y.UserTeam, other, give.Where(a => !a.Pick).Select(a => a.Id).ToArray(), get.Where(a => !a.Pick).Select(a => a.Id).ToArray(), give.Where(a => a.Pick).Select(a => a.Id).ToArray(), get.Where(a => a.Pick).Select(a => a.Id).ToArray()), sharedPicks: give.Concat(get).Any(a => a.Pick)));
     }
-    async Task<List<(Guid Id, bool Pick, string Label)>?> TradePackage(string team)
+    async Task<List<(Guid Id, bool Pick, string Label)>?> TradePackage(string team, string recipient)
     {
         var selected = new List<(Guid Id, bool Pick, string Label)>();
         while (true)
@@ -85,8 +94,8 @@ public sealed partial class FranchisePage
                 var remove = await GameDialogs.ActionSheetAsync(this, "Remove asset", "Cancel", null, selected.Select(a => a.Label).ToArray());
                 selected.RemoveAll(a => a.Label == remove); continue;
             }
-            var assets = state!.Players.Where(p => p.Football.TeamName == team && !p.Retired && ProCareer.Controls(state, p.Football.Position)).Select(p => (Id: p.Football.PlayerId, Pick: false, Label: $"{p.Football.FullName} · {p.Football.Position} · {p.Football.OverallRating}"))
-                .Concat(state.Picks.Where(p => p.Owner == team && ProTrade.Available(state, p)).Select(p => (Id: p.Id, Pick: true, Label: $"{p.Year} R{p.Round} · {p.OriginalTeam}")))
+            var assets = state!.Players.Where(p => p.Football.TeamName == team && !p.Retired && ProCareer.Controls(state, p.Football.Position)).Select(p => (Id: p.Football.PlayerId, Pick: false, Label: $"{p.Football.FullName} · {p.Football.Position} · {p.Football.OverallRating} · Value {ProTrade.PlayerValue(state, p, recipient):0}"))
+                .Concat(state.Picks.Where(p => p.Owner == team && ProTrade.Available(state, p)).Select(p => (Id: p.Id, Pick: true, Label: $"{p.Year} R{p.Round} · {p.OriginalTeam} · Value {ProTrade.PickValue(state, p):0}")))
                 .Where(a => !selected.Any(v => v.Id == a.Id)).ToArray();
             var add = await GameDialogs.ActionSheetAsync(this, "Add asset", "Cancel", null, assets.Select(a => a.Label).ToArray());
             if (assets.FirstOrDefault(a => a.Label == add) is var asset && asset.Id != Guid.Empty) selected.Add(asset);

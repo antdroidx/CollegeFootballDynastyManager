@@ -17,6 +17,21 @@ public static class ProNews
                 f.HomeScore == f.AwayScore ? "All square: " + f.AwayTeamName + " and " + f.HomeTeamName : f.WinnerTeamName + (margin >= 21 ? " rolls to a convincing win" : margin <= 3 ? " survives a close finish" : " takes the win"),
                 $"{g.Phase} · {f.AwayTeamName} {f.AwayScore} – {f.HomeScore} {f.HomeTeamName}", f.WinnerTeamName, f.GameId));
         }
+        foreach (var player in s.Players.Where(p => p.Football.CurrentInjury is { WeeksRemaining: > 0 }))
+        {
+            var f = player.Football; var injury = f.CurrentInjury!;
+            Add(new("injury-" + injury.InjuryId, injury.SeasonYear, injury.StartWeek, "Injuries", f.FullName + " sidelined",
+                $"{f.TeamName} · {injury.BodyArea} · initial recovery estimate {injury.InitialWeeks} weeks.", f.TeamName));
+        }
+        foreach (var group in s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).GroupBy(g => g.Football.Week))
+        {
+            foreach (var team in s.League.Teams)
+            {
+                var run = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed && g.Football.Week <= group.Key && g.Football.InvolvesTeam(team.Name)).OrderByDescending(g => g.Football.Week).TakeWhile(g => g.Football.WinnerTeamName == team.Name).ToArray();
+                if (run.Length < 3) continue;
+                Add(new($"streak-{s.Year}-{group.Key}-{team.Id}", s.Year, group.Key, "Form", team.Name + $" wins {run.Length} straight", "Consecutive regular-season wins keep the momentum building.", team.Name));
+            }
+        }
         foreach (var trade in s.TradeHistory)
             Add(new("trade-" + trade.Id, trade.Year, trade.Week, "Trades", trade.From + " and " + trade.To + " complete deal",
                 $"{trade.GivenPlayers.Count + trade.ReceivedPlayers.Count} players and {trade.GivenPicks.Count + trade.ReceivedPicks.Count} draft picks changed hands.", trade.From));
@@ -24,7 +39,10 @@ public static class ProNews
         {
             // Private GM decisions are stored separately and never published here.
             var category = text.Contains("hired") || text.Contains("dismissed") || text.Contains("job") ? "Coaching" : text.Contains("draft", StringComparison.OrdinalIgnoreCase) ? "Draft" : "Transactions";
-            Add(new(Key("transaction:" + text), s.Year, s.Week, category, text, "Confirmed league transaction."));
+            var stamp = System.Text.RegularExpressions.Regex.Match(text, @"^(\d{4}) W(\d+) · ");
+            var year = stamp.Success ? int.Parse(stamp.Groups[1].Value) : s.Year;
+            var week = stamp.Success ? int.Parse(stamp.Groups[2].Value) : s.Week;
+            Add(new(Key("transaction:" + text), year, week, category, text, "Confirmed league transaction."));
         }
         var news = stories.Values.OrderByDescending(n => n.Year).ThenByDescending(n => n.Week).Take(1000).ToList();
         return s with { News = news, ReadNewsIds = s.ReadNewsIds.Where(id => news.Any(n => n.Id == id)).Distinct().ToList() };

@@ -7,6 +7,9 @@ public sealed partial class FranchisePage
     void Career()
     {
         var s = state!; var c = s.Career!;
+        var team = s.League.Teams.Single(t => t.Name == s.UserTeam);
+        var coach = s.Coaches.FirstOrDefault(x => x.TeamId == team.Id && x.Role == c.Role);
+        if (coach is not null && !c.Unemployed) body.Add(CoachIdentity(coach, team));
         body.Add(Panel("Your career", Text(c.Name, 24, true), Text(RoleName(c.Role) + " · " + (c.Unemployed ? "Seeking employment" : s.UserTeam)), Text($"Reputation {c.Reputation}/100 · Job security {c.Security}/100")));
         var firing = new Switch { IsToggled = c.FiringEnabled };
         firing.Toggled += async (_, e) => { state = state! with { Career = state!.Career! with { FiringEnabled = e.Value } }; await Save(); };
