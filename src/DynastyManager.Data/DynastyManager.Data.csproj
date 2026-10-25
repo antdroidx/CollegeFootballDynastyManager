@@ -10,6 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DynastyManager.Core\DynastyManager.Core.csproj" />
+    <ProjectReference Include="..\Football.Engine\Football.Engine.csproj" />
   </ItemGroup>
 </Project>

@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DynastyManager.Core\DynastyManager.Core.csproj" />
+    <ProjectReference Include="..\..\src\Football.Engine\Football.Engine.csproj" />
     <ProjectReference Include="..\..\src\DynastyManager.Data\DynastyManager.Data.csproj" />
   </ItemGroup>
 

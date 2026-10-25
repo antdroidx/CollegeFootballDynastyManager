@@ -8,6 +8,7 @@ on:
       - fix-live-field-formations
       - game-day-2-test
       - feature/gamecast-visual-polish
+      - feature/pro-franchise-foundation
   pull_request:
     branches:
       - main
@@ -76,7 +77,7 @@ jobs:
 
       - name: Run core tests
         env:
-          SKIP_CAREER_HEALTH: ${{ (github.event_name == 'workflow_dispatch' && !inputs.run_career_health) || github.ref_name == 'feature/gamecast-visual-polish' }}
+          SKIP_CAREER_HEALTH: ${{ (github.event_name == 'workflow_dispatch' && !inputs.run_career_health) || (github.ref_name == 'feature/gamecast-visual-polish' || github.ref_name == 'feature/pro-franchise-foundation') }}
           RUN_RATING_CALIBRATION: ${{ github.event_name == 'workflow_dispatch' && inputs.run_rating_calibration }}
           CFDM_CALIBRATION_REPORT_DIR: ${{ github.workspace }}/artifacts/calibration
         run: |

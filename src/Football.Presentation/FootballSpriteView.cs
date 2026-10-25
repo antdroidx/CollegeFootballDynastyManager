@@ -4,7 +4,7 @@ using Microsoft.Maui.Graphics;
 namespace DynastyManager.App;
 
 /// <summary>Original shaded three-quarter pixel player. No bitmap sheets, downloads or simulation state.</summary>
-internal sealed class FootballSpriteView : GraphicsView
+public sealed class FootballSpriteView : GraphicsView
 {
     private readonly PlayerDrawable art;
     private int lastFrame = -1;

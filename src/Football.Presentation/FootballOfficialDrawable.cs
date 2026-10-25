@@ -1,7 +1,7 @@
 using Microsoft.Maui.Graphics;
 namespace DynastyManager.App;
 
-internal sealed class FootballOfficialDrawable : IDrawable
+public sealed class FootballOfficialDrawable : IDrawable
 {
     public void Draw(ICanvas canvas, RectF rect) => Paint(canvas, rect.Center.X, rect.Center.Y, Math.Min(rect.Width / 18, rect.Height / 28));
     public static void Paint(ICanvas c, float x, float y, float scale = 1)

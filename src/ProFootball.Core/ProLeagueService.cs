@@ -1,0 +1,79 @@
+using System.Reflection;
+using System.Text.Json;
+using DynastyManager.Core.Models;
+using DynastyManager.Core.Simulation;
+namespace ProFootball.Core;
+public static class ProLeagueService
+{
+    public static ProLeague Load()
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.league.json")!;
+        var league = JsonSerializer.Deserialize<ProLeague>(stream)!;
+        Validate(league); return league;
+    }
+    public static void Validate(ProLeague league)
+    {
+        if (league.Version != 1 || league.Teams.Count != 32 || league.Teams.Select(t => t.Id).Distinct().Count() != 32 || league.Teams.Select(t => t.Name).Distinct().Count() != 32 ||
+            league.Teams.GroupBy(t => t.Conference).Count() != 2 || league.Teams.GroupBy(t => (t.Conference,t.Division)).Count() != 8 ||
+            league.Teams.GroupBy(t => (t.Conference,t.Division)).Any(g => g.Count() != 4 || !g.Select(t => t.SeedRank).Order().SequenceEqual(new[]{0,1,2,3})) || league.ActiveRosterLimit != 53 || league.PracticeSquadLimit != 16)
+            throw new InvalidDataException("A league needs two conferences of four divisions, four unique teams per division, 53 active players and 16 practice players.");
+    }
+    public static ProFranchise Create(string userTeam, string name = "My franchise")
+    {
+        var league = Load();
+        if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
+        return new() { League = league, UserTeam = userTeam, Name = string.IsNullOrWhiteSpace(name) ? "My franchise" : name.Trim(), Players = GeneratePlayers(league), Games = ProSchedule.Build(league,2026) };
+    }
+    public static List<ProPlayer> GeneratePlayers(ProLeague league)
+    {
+        var random = new Random(2026); var players = new List<ProPlayer>();
+        (Position,int)[] positions = [(Position.QB,3),(Position.RB,4),(Position.WR,6),(Position.TE,3),(Position.OL,9),(Position.DE,4),(Position.DT,4),(Position.MLB,3),(Position.OLB,4),(Position.CB,5),(Position.FS,3),(Position.SS,3),(Position.K,2)];
+        string[] first = ["Marcus","Jordan","Evan","Tyler","Darius","Noah","Miles","Andre","Caleb","Devin","Cameron","Isaiah"];
+        string[] last = ["Carter","Brooks","Reed","Bennett","Hayes","Morgan","Coleman","Foster","Warren","Price","Marshall","Grant","Sullivan"];
+        foreach (var team in league.Teams)
+        {
+            foreach (var (position,count) in positions)
+            for(var depth=1;depth<=count;depth++) Add(position,depth,false);
+            for(var i=0;i<league.PracticeSquadLimit;i++) Add(positions[i%positions.Length].Item1,20+i,true);
+            void Add(Position position,int depth,bool practice)
+            {
+                var overall = Math.Clamp(84-depth*3+random.Next(-7,8)-(practice?8:0),40,94);
+                var idBytes=new byte[16];random.NextBytes(idBytes);
+                var player = new DynastyPlayer { PlayerId=new Guid(idBytes), FullName=first[random.Next(first.Length)]+" "+last[random.Next(last.Length)],TeamName=team.Name,Position=position,ClassYear=4,
+                    OverallRating=overall, SeasonStartOverall=overall,PotentialRating=Math.Min(99,overall+random.Next(2,14)),SpeedRating=overall,StrengthRating=overall,AgilityRating=overall,AwarenessRating=overall,InjuryRating=85,DepthChartOrder=depth,
+                    HeightInches=position==Position.OL?77:73,WeightPounds=position is Position.OL or Position.DT?305:position==Position.QB?220:215,
+                    Skills=new() { PassingPower=overall,PassingAccuracy=overall,Catching=overall,BreakTackle=overall,Tackling=overall,RunBlocking=overall,PassBlocking=overall,BallCarrying=overall,Acceleration=overall,Leadership=overall,Discipline=85,Jumping=overall,KickPower=overall,KickAccuracy=overall } };
+                players.Add(new(player,random.Next(22,34),random.Next(0,9),practice));
+            }
+        }
+        return players;
+    }
+    public static TeamSimulationProfile Profile(ProFranchise state,string team)
+    {
+        var players=state.Players.Where(p=>p.Football.TeamName==team&&!p.PracticeSquad).Select(p=>p.Football).ToArray();
+        double Rating(params Position[] positions) => players.Where(p=>positions.Contains(p.Position)).OrderBy(p=>p.DepthChartOrder).Take(8).Average(p=>p.OverallRating);
+        return new() { TeamName=team,PassOffenseRating=Rating(Position.QB,Position.WR,Position.TE),RushOffenseRating=Rating(Position.RB,Position.OL),PassDefenseRating=Rating(Position.CB,Position.FS,Position.SS),RushDefenseRating=Rating(Position.DE,Position.DT,Position.MLB,Position.OLB),SpecialTeamsRating=Rating(Position.K),RosterSize=53,
+            GamePlan=new() { TeamName=team } };
+    }
+    public static GameDaySession Start(ProFranchise state,ProGame game,GameDayMode mode,string? controlled=null)
+    {
+        if(game.Football.HasPlayed || game.Phase!=state.Phase || game.Football.Week!=state.Week) throw new InvalidOperationException("Game is not available this week.");
+        var session=GameDayEngine.Start(game.Football,Profile(state,game.Football.HomeTeamName),Profile(state,game.Football.AwayTeamName),state.Players.Where(p=>!p.PracticeSquad).Select(p=>p.Football).ToArray(),mode,rules:FootballRules.Professional with { Postseason=state.Phase==ProPhase.Playoffs });
+        session.ControlledTeamName=controlled??state.UserTeam;return session;
+    }
+    public static ProFranchise Finish(ProFranchise state,GameDaySession session)
+    {
+        if(!session.IsComplete)throw new InvalidOperationException("Game has not finished.");
+        var game=GameDayEngine.Finish(session);
+        return state with { Games=state.Games.Select(g=>g.Football.GameId==game.GameId?g with{Football=game}:g).ToList() };
+    }
+    public static ProFranchise Advance(ProFranchise state)
+    {
+        foreach(var game in state.Games.Where(g=>g.Phase==state.Phase&&g.Football.Week==state.Week&&!g.Football.HasPlayed).ToArray())
+        { var session=Start(state,game,GameDayMode.Simulate);GameDayEngine.SimulateToEnd(session);state=Finish(state,session); }
+        if(state.Phase==ProPhase.Preseason) return state with { Phase=state.Week==3?ProPhase.RegularSeason:state.Phase,Week=state.Week==3?1:state.Week+1 };
+        if(state.Phase==ProPhase.RegularSeason) return state.Week<18?state with{Week=state.Week+1}:ProPlayoffs.Begin(state);
+        if(state.Phase==ProPhase.Playoffs) return ProPlayoffs.Advance(state);
+        return state;
+    }
+}

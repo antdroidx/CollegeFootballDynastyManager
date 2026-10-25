@@ -18,7 +18,7 @@ public static partial class GameDayEngine
     }
     public static GameDaySession Start(ScheduledGame game, TeamSimulationProfile home,
         TeamSimulationProfile away, IReadOnlyList<DynastyPlayer> roster, GameDayMode mode,
-        IReadOnlyList<DepthChartAssignment>? assignments = null)
+        IReadOnlyList<DepthChartAssignment>? assignments = null, FootballRules? rules = null)
     {
         roster = DepthChartService.ProjectRoster(roster, assignments ?? []);
         roster = PlayerJerseyService.Assign(roster.Where(p => p.TeamName.Equals(game.HomeTeamName, StringComparison.OrdinalIgnoreCase) ||
@@ -30,6 +30,7 @@ public static partial class GameDayEngine
         var gameRoster = homeRoster.Concat(awayRoster).ToArray();
         var session = new GameDaySession
         {
+            Rules = rules ?? FootballRules.College, ClockSeconds = (rules ?? FootballRules.College).QuarterSeconds,
             Game = game, HomeProfile = home, AwayProfile = away, Roster = gameRoster,
             HomeRoster = homeRoster, AwayRoster = awayRoster,
             PlayersById = gameRoster.ToDictionary(player => player.PlayerId),
@@ -158,7 +159,7 @@ public static partial class GameDayEngine
             ConsumeLiveClock(session, session.Random.Next(5, 13));
             if (made) { if (homeOnOffense) session.HomeScore += 3; else session.AwayScore += 3; }
             ChangePossession(session, newSpot);
-            if (made && session.OvertimeRound == 0) QueueKickoff(session, offense.TeamName);
+            if (made && !session.IsComplete && (session.OvertimeRound == 0 || session.Rules.TimedOvertime)) QueueKickoff(session, offense.TeamName);
             AdvanceQuarter(session);
             return kick;
         }
@@ -552,7 +553,7 @@ public static partial class GameDayEngine
         {
             session.YardLine = Math.Clamp(session.YardLine + yards, 1, 99);
             if (yards >= session.Distance) { session.Down = 1; session.Distance = Math.Min(10, 100 - session.YardLine);
-                if (session.Quarter is 2 or 4 && session.ClockSeconds <= 120) { session.ClockStopped = true; session.ClockRestartsOnReady = true; } }
+                if (session.Rules.StopClockOnFirstDown && session.Quarter is 2 or 4 && session.ClockSeconds <= 120) { session.ClockStopped = true; session.ClockRestartsOnReady = true; } }
             else { session.Distance -= yards; session.Down++; }
             if (session.Down > 4)
                 ChangePossession(session, Math.Clamp(100 - session.YardLine, 1, 99));
@@ -563,16 +564,25 @@ public static partial class GameDayEngine
 
     private static void AdvanceQuarter(GameDaySession session)
     {
+        if (session.Rules.TimedOvertime && session.OvertimeRound > 0)
+        {
+            if (session.TryPending || session.ClockSeconds > 0) return;
+            if (!session.Rules.Postseason || session.HomeScore != session.AwayScore && session.OvertimePossessions >= 2)
+                session.IsComplete = true;
+            else { session.Quarter++; session.ClockSeconds = session.Rules.PlayoffOvertimeSeconds; }
+            return;
+        }
         if (session.OvertimeRound > 0 || session.TryPending || session.ClockSeconds > 0) return;
         session.ClockSeconds = 0;
         if (session.Quarter == 4)
         {
             session.KickoffPending = false;
             if (session.HomeScore != session.AwayScore) session.IsComplete = true;
+            else if (session.Rules.TimedOvertime) StartProfessionalOvertime(session);
             else StartOvertimeRound(session);
             return;
         }
-        session.Quarter++; session.ClockSeconds = 900;
+        session.Quarter++; session.ClockSeconds = session.Rules.QuarterSeconds;
         session.PlayClockSeconds = 25;
         if (session.Quarter == 3)
         {
@@ -602,7 +612,12 @@ public static partial class GameDayEngine
 
     private static void ChangePossession(GameDaySession session, int yardLine)
     {
-        if (session.OvertimeRound > 0) { EndOvertimePossession(session); return; }
+        if (session.Rules.TimedOvertime && session.OvertimeRound > 0)
+        {
+            session.OvertimePossessions++;
+            if (session.OvertimePossessions >= 2 && session.HomeScore != session.AwayScore) { session.IsComplete = true; session.KickoffPending = false; return; }
+        }
+        else if (session.OvertimeRound > 0) { EndOvertimePossession(session); return; }
         session.PossessionTeamName = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase)
             ? session.Game.AwayTeamName : session.Game.HomeTeamName;
         session.PossessionNumber++; session.Down = 1; session.Distance = Math.Min(10, 100 - yardLine); session.YardLine = yardLine;

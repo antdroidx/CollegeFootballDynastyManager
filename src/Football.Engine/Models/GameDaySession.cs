@@ -71,6 +71,7 @@ public sealed record GameSnapEvent
 
 public sealed class GameDaySession
 {
+    public FootballRules Rules { get; init; } = FootballRules.College;
     public StaffRole UserCoachRole { get; set; } = StaffRole.HeadCoach;
     public Dictionary<string, int> LineupResetAt { get; } = new();
     public HashSet<string> SecondUnits { get; } = new(StringComparer.Ordinal);

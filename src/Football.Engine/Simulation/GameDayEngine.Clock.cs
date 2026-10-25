@@ -34,7 +34,7 @@ public static partial class GameDayEngine
     private static GameSnapEvent? PrepareSnap(GameDaySession session, bool spike, bool quickShot = false)
     {
         session.LastPreSnapSeconds = 0;
-        if (session.OvertimeRound > 0) return null;
+        if (session.OvertimeRound > 0 && !session.Rules.TimedOvertime) return null;
         if (CheckTwoMinuteTimeout(session)) return ClockEvent(session, "Two-minute timeout.");
         if (session.ClockSeconds <= 0) { var end = ClockEvent(session, "The period ends before another snap."); AdvanceQuarter(session); return end; }
         var tempo = EffectiveTempo(session);
@@ -66,7 +66,7 @@ public static partial class GameDayEngine
 
     private static void ConsumeLiveClock(GameDaySession session, int seconds)
     {
-        if (session.OvertimeRound == 0) session.ClockSeconds = Math.Max(0, session.ClockSeconds - seconds);
+        if (session.OvertimeRound == 0 || session.Rules.TimedOvertime) session.ClockSeconds = Math.Max(0, session.ClockSeconds - seconds);
     }
 
     private static bool CheckTwoMinuteTimeout(GameDaySession session)

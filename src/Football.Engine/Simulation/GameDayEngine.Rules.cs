@@ -10,7 +10,7 @@ public static partial class GameDayEngine
 
     public static bool ShouldAttemptTwo(GameDaySession session)
     {
-        if (session.OvertimeRound >= 2) return true;
+        if (!session.Rules.TimedOvertime && session.OvertimeRound >= 2) return true;
         var margin = session.PossessionTeamName == session.Game.HomeTeamName
             ? session.HomeScore - session.AwayScore : session.AwayScore - session.HomeScore;
         return session.Quarter == 4 && session.ClockSeconds <= 300 && margin is -8 or -5 or -2 or 1 or 5;
@@ -41,13 +41,13 @@ public static partial class GameDayEngine
     private static GameSnapEvent ResolveTry(GameDaySession session, string? choice)
     {
         var two = choice == "special-two-point" || choice != "special-extra-point" && ShouldAttemptTwo(session);
-        if (session.OvertimeRound >= 2) two = true;
+        if (!session.Rules.TimedOvertime && session.OvertimeRound >= 2) two = true;
         var home = session.PossessionTeamName == session.Game.HomeTeamName;
         var profile = home ? session.HomeProfile : session.AwayProfile;
         var defense = home ? session.AwayProfile : session.HomeProfile;
         var kicker = GameDayCoachingService.Specialist(session, session.PossessionTeamName, Kicker(home ? session.HomeRoster : session.AwayRoster));
         var probability = two ? Math.Clamp(.44 + (profile.OffenseRating - defense.DefenseRating) * .006, .15, .75)
-            : GameDayMatchupService.FieldGoalProbability(20, kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating,
+            : GameDayMatchupService.FieldGoalProbability(session.Rules.ExtraPointDistance, kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating,
                 kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating);
         var made = session.Random.NextDouble() < probability;
         var offenseUnit = PlaceKickTeam(home ? session.HomeRoster : session.AwayRoster, kicker);
@@ -70,14 +70,14 @@ public static partial class GameDayEngine
         if (home) session.HomeScore += snap.Points; else session.AwayScore += snap.Points;
         session.TryPending = false;
         ChangePossession(session, 25);
-        if (session.OvertimeRound == 0) QueueKickoff(session, snap.OffenseTeamName);
+        if (!session.IsComplete && (session.OvertimeRound == 0 || session.Rules.TimedOvertime)) QueueKickoff(session, snap.OffenseTeamName);
         AdvanceQuarter(session);
         return snap;
     }
 
     private static GameSnapEvent ClockPlay(GameDaySession session, bool spike)
     {
-        if (session.OvertimeRound > 0) throw new InvalidOperationException("Clock plays are unavailable in untimed overtime.");
+        if (session.OvertimeRound > 0 && !session.Rules.TimedOvertime) throw new InvalidOperationException("Clock plays are unavailable in untimed overtime.");
         var home = session.PossessionTeamName == session.Game.HomeTeamName;
         var qb = (home ? session.HomeRoster : session.AwayRoster).FirstOrDefault(p => p.Position == Position.QB);
         var snap = new GameSnapEvent
@@ -145,6 +145,18 @@ public static partial class GameDayEngine
         session.ClockRestartsOnReady = !session.ClockStopped || session.ClockRestartsOnReady;
         session.ClockStopped = true; session.PlayClockSeconds = 25; session.Events.Add(snap);
         return snap;
+    }
+
+    private static void StartProfessionalOvertime(GameDaySession session)
+    {
+        session.OvertimeRound = 1; session.Quarter = 5;
+        session.ClockSeconds = session.Rules.Postseason ? session.Rules.PlayoffOvertimeSeconds : session.Rules.RegularOvertimeSeconds;
+        session.HomeTimeouts = session.AwayTimeouts = session.Rules.Postseason ? 3 : 2;
+        session.OvertimePossessions = 0;
+        session.OvertimeFirstTeam = session.Random.Next(2) == 0 ? session.Game.HomeTeamName : session.Game.AwayTeamName;
+        session.PossessionTeamName = session.OvertimeFirstTeam;
+        session.PossessionNumber++; session.YardLine = 25; session.Down = 1; session.Distance = 10;
+        QueueKickoff(session, session.OvertimeFirstTeam == session.Game.HomeTeamName ? session.Game.AwayTeamName : session.Game.HomeTeamName);
     }
 
     private static void StartOvertimeRound(GameDaySession session)
