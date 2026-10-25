@@ -4,8 +4,8 @@ namespace ProFootball.Core;
 public static class ProEconomy
 {
     public static long MarketSalary(ProPlayer p) => (long)(Math.Pow(Math.Max(1, p.Football.OverallRating - 48), 2) * 6500 * (p.Football.Position == Position.QB ? 2.5 : 1));
-    public static long BonusCharge(ProContract c, int year) => year < c.SignedYear || year >= c.SignedYear + c.BonusYears ? 0 : c.SigningBonus / c.BonusYears + (year - c.SignedYear < c.SigningBonus % c.BonusYears ? 1 : 0);
-    public static long CapHit(ProContract c, int year) => !c.Active ? 0 : (c.Years.FirstOrDefault(y => y.Year == year)?.Salary ?? 0) + BonusCharge(c, year);
+    public static long BonusCharge(ProContract c, int year) => c.Years.FirstOrDefault(y => y.Year == year)?.ProratedBonus ?? (year < c.SignedYear || year >= c.SignedYear + c.BonusYears ? 0 : c.SigningBonus / c.BonusYears + (year - c.SignedYear < c.SigningBonus % c.BonusYears ? 1 : 0));
+    public static long CapHit(ProContract c, int year) => !c.Active ? 0 : (c.Years.FirstOrDefault(y => y.Year == year)?.Salary ?? 0) + (c.Years.FirstOrDefault(y => y.Year == year)?.OtherCompensation ?? 0) + BonusCharge(c, year);
     public static long DeadOnRelease(ProFranchise s, Guid id) => s.Contracts.Where(c => c.Active && c.PlayerId == id).Sum(c => c.Years.Where(y => y.Year >= s.Year).Sum(y => y.Guaranteed) + Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => BonusCharge(c, y)));
     public static long Used(ProFranchise s, string team) => s.Contracts.Where(c => c.Team == team).Sum(c => CapHit(c, s.Year)) + s.DeadCap.Where(c => c.Team == team && c.Year == s.Year).Sum(c => c.Amount);
     public static long Room(ProFranchise s, string team) => s.SalaryCap - Used(s, team);

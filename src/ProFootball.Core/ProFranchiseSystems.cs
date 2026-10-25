@@ -23,7 +23,7 @@ public static class ProTrade
     static ProFranchise Move(ProFranchise s, ProPlayer p, string to)
     {
         var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId); var contracts = s.Contracts.ToList(); var dead = s.DeadCap.ToList();
-        if (c is not null) { var bonus = Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => ProEconomy.BonusCharge(c, y)); dead.Add(new(c.Team, s.Year, c.PlayerId, bonus)); contracts = contracts.Select(x => x == c ? c with { Active = false } : x).ToList(); contracts.Add(c with { Team = to, SigningBonus = 0, SignedYear = s.Year, BonusYears = 1 }); }
+        if (c is not null) { var bonus = Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => ProEconomy.BonusCharge(c, y)); dead.Add(new(c.Team, s.Year, c.PlayerId, bonus)); contracts = contracts.Select(x => x == c ? c with { Active = false } : x).ToList(); contracts.Add(c with { Team = to, SigningBonus = 0, SignedYear = s.Year, BonusYears = 1, Years = c.Years.Select(y => y with { ProratedBonus = 0 }).ToList() }); }
         return s with { Contracts = contracts, DeadCap = dead, Players = s.Players.Select(x => x == p ? x with { Football = x.Football with { TeamName = to, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList() };
     }
 }

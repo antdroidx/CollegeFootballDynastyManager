@@ -1,0 +1,9 @@
+{
+  "source": "https://github.com/nflverse/nflverse-data/releases/tag/contracts",
+  "provider": "OverTheCap via nflverse",
+  "snapshot": "2026-10-24",
+  "source_sha256": "2bcbc67c52bcfaea0b9b9690a434a306bd4b597ba92991540b6d0292e2307876",
+  "matched": 1981,
+  "units": "Provider million-dollar fields converted to integer dollars. Matched GSIS ID and current team/year only.",
+  "limitations": "No team rollover, adjustments, departed-player dead money or missing-contract reconstruction. Existing saves are not overwritten."
+}

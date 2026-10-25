@@ -25,12 +25,12 @@ public static class ProLeagueService
             league.Teams.GroupBy(t => (t.Conference, t.Division)).Any(g => g.Count() != 4 || !g.Select(t => t.SeedRank).Order().SequenceEqual(new[] { 0, 1, 2, 3 })) || league.ActiveRosterLimit != 53 || league.PracticeSquadLimit != 16)
             throw new InvalidDataException("A league needs two conferences of four divisions, four unique teams per division, 53 active players and 16 practice players.");
     }
-    public static ProFranchise Create(string userTeam, string name = "My franchise")
+    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false)
     {
         var league = Load();
         if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
         var snapshot = Snapshot();
-        return ProEconomy.Initialize(new()
+        var franchise = ProEconomy.Initialize(new()
         {
             League = league,
             UserTeam = userTeam,
@@ -41,6 +41,7 @@ public static class ProLeagueService
             Games = ProSchedule.Build(league, 2026),
             DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
         });
+        return sourcedContracts ? ProContractData.Apply(franchise) : franchise;
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {

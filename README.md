@@ -57,3 +57,7 @@ Open a successful run and download its APK artifact. Each application has indepe
 Preserving existing college behavior, package identity, and save compatibility is a priority. Shared engine changes require college and pro regression validation. Pro saves have their own versioned format and migrations. Data snapshot provenance and import tooling are documented under `docs`; imported real-world data is a dated snapshot, not a live roster feed.
 
 See [LICENSE](LICENSE) for repository licensing and the historical documentation for the original game's acknowledgments.
+
+## Pro parity and contract-data status
+
+See [the current parity audit](docs/pro-parity-audit.md) for implemented screens and remaining college UI/GameCast gaps. New pro franchises can select a dated OverTheCap/nflverse contract snapshot or estimated game contracts. [Contract provenance](docs/nfl-contract-data.json) records coverage and limitations; team cap room remains provisional until rollover, adjustments, and historical dead money are imported. Existing save finances are preserved.

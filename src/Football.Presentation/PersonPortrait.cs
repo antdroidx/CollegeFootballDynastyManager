@@ -5,7 +5,7 @@ using Microsoft.Maui.Graphics;
 namespace DynastyManager.App;
 
 /// <summary>Lightweight, offline illustrated headshots. No image cache or network required.</summary>
-internal sealed class PersonPortrait(PortraitAppearance face, Color primary, Color secondary,
+public sealed class PersonPortrait(PortraitAppearance face, Color primary, Color secondary,
     bool staff, int age, bool naturalAging) : IDrawable
 {
     private static readonly string[] Skin = ["#F0C9AB", "#DCAB84", "#C58D64", "#AB714C", "#8E583B", "#70432F", "#503125"];

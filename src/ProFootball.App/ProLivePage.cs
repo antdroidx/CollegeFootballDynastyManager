@@ -62,7 +62,7 @@ public sealed class ProLivePage : ContentPage
     void Update() { string Short(string team) => league.Teams.Single(t => t.Name == team).Abbreviation; score.Text = $"{session.AwayScore}  –  {session.HomeScore}"; situation.Text = session.IsComplete ? "FINAL · Saved" : $"Q{session.Quarter} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · {session.Down} & {session.Distance} · {GameDayEngine.BallOn(session, Short)}"; if (last is null) { art.Direction = (session.PossessionTeamName == session.Game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1); art.YardLine = session.YardLine; art.Distance = session.Distance; } turf.Invalidate(); pause.IsVisible = session.Mode == GameDayMode.Watch; pause.Text = paused ? "Resume watch" : "Pause watch"; RenderHuddles(); }
     void RenderHuddles()
     {
-        if (working || pending || session.IsComplete || session.Mode != GameDayMode.Play) return;
+        if (working || pending || session.IsComplete) return;
         foreach (var view in field.Children.Where(v => v != turf).ToArray()) field.Remove(view);
         var direction = (session.PossessionTeamName == session.Game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1);
         art.Direction = direction; art.YardLine = session.YardLine; art.Distance = session.Distance; turf.Invalidate();
@@ -109,7 +109,7 @@ public sealed class ProLivePage : ContentPage
             var lane = attacking ? alignment.Y : starts[id].Y;
             var offset = attacking ? alignment.X : starts[id].X;
             var from = new GameFieldPoint(GameDayAnimationPlanner.ProjectFieldYardLine(snap.StartYardLine + offset, direction), lane);
-            var carrier = id == snap.BallCarrierId || id == snap.TargetId;
+            var carrier = id == snap.BallCarrierId || id == snap.TargetId || (snap.IsQuarterbackKeep || snap.IsQuarterbackScramble) && id == snap.QuarterbackId;
             var primary = !attacking && id == snap.PrimaryDefenderId && snap.Outcome is not (SnapOutcome.Incompletion or SnapOutcome.Penalty);
             var pursue = primary || !attacking && assists.Contains(id);
             GameDayRouteFamily? route = attacking && play is not null && p.Position is Position.WR or Position.TE or Position.RB && snap.TargetId.HasValue ? GameDayAnimationPlanner.AssignedRoute(play, p.Position, role) : null;
@@ -129,7 +129,8 @@ public sealed class ProLivePage : ContentPage
         }
         var ball = new Border { WidthRequest = 18, HeightRequest = 10, BackgroundColor = Color.FromArgb("#9B652F"), Stroke = Colors.White, StrokeThickness = 1, StrokeShape = new RoundRectangle { CornerRadius = 6 }, InputTransparent = true };
         field.Add(ball);
-        var frames = 30; for (var frame = 0; frame <= frames; frame++)
+        // The renderer and ball must consume the same sampled player coordinates.
+        var frames = 60; for (var frame = 0; frame <= frames; frame++)
         {
             if (!active) break; var progress = frame / (double)frames;
             GameFieldPoint Lerp(GameFieldPoint a, GameFieldPoint b, double t) => new(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
@@ -138,6 +139,7 @@ public sealed class ProLivePage : ContentPage
                 if (m.Route is { } route) return GameDayAnimationPlanner.RoutePoint(m.From, m.To, route, at);
                 return m.Carrier ? GameDayAnimationPlanner.CarrierPoint(m.From, m.To, at, 75, snap.BrokeTackle) : Lerp(m.From, m.To, m.Pursue ? GameDayAnimationPlanner.PursuitProgress(at, m.Primary) : at);
             }
+            var positions = new Dictionary<Guid, GameFieldPoint>();
             foreach (var m in movements)
             {
                 var point = PositionAt(m, progress);
@@ -148,11 +150,24 @@ public sealed class ProLivePage : ContentPage
                     point = LiveFootballChoreography.Coverage(m.From, PositionAt(receiver, at), at, cover.Zone, direction);
                     if (m.Pursue && progress > caught) point = Lerp(point, m.To, (progress - caught) / (1 - caught));
                 }
+                positions[m.Id] = point;
+                AbsoluteLayout.SetLayoutFlags(m.View, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.None);
                 AbsoluteLayout.SetLayoutBounds(m.View, new Rect(Math.Clamp(point.X * field.Width - 14, 0, Math.Max(0, field.Width - 28)), Math.Clamp(point.Y * field.Height - 14, 0, Math.Max(0, field.Height - 28)), 28, 28)); m.View.Animate(progress, 1, m.To.X - m.From.X, m.To.Y - m.From.Y, false, false);
             }
             var owner = GameDayAnimationPlanner.BallOwner(snap, progress, .35);
             var carrier = movements.FirstOrDefault(m => m.Id == owner);
-            var ballPoint = carrier.View is null ? new GameFieldPoint(GameDayAnimationPlanner.ProjectFieldYardLine(snap.StartYardLine + snap.Yards * progress, direction), snap.CarrierLane ?? .5) : GameDayAnimationPlanner.CarrierPoint(carrier.From, carrier.To, progress, 75, false);
+            var ballPoint = owner.HasValue && positions.TryGetValue(owner.Value, out var held) ? held :
+                BallFlight(progress);
+            GameFieldPoint BallFlight(double at)
+            {
+                var release = snap.TargetId.HasValue ? .35 : .10;
+                var caught = snap.TargetId.HasValue ? GameDayAnimationPlanner.CatchProgress(.35) : .65;
+                var passer = movements.FirstOrDefault(m => m.Id == (snap.QuarterbackId ?? snap.KickerId));
+                var receiver = movements.FirstOrDefault(m => m.Id == (snap.ReturnerId ?? snap.TargetId));
+                var start = passer.View is null ? new GameFieldPoint(GameDayAnimationPlanner.ProjectFieldYardLine(snap.StartYardLine, direction), .5) : PositionAt(passer, release);
+                var end = receiver.View is null ? contact : PositionAt(receiver, caught);
+                return Lerp(start, end, Math.Clamp((at - release) / Math.Max(.01, caught - release), 0, 1));
+            }
             AbsoluteLayout.SetLayoutBounds(ball, new Rect(Math.Clamp(ballPoint.X * field.Width - 9, 0, Math.Max(0, field.Width - 18)), Math.Clamp(ballPoint.Y * field.Height - 5, 0, Math.Max(0, field.Height - 10)), 18, 10));
             await Task.Delay((int)(33 / (replay ? replaySpeed : speed)));
         }

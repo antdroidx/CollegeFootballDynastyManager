@@ -16,7 +16,7 @@ public sealed partial class FranchisePage
         return new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = grid };
     }
     async Task Update(Func<ProFranchise, ProFranchise> mutation) { state = await Task.Run(() => mutation(state!)); await Save(); Render(); }
-    async Task Player(ProPlayer original)
+    async Task ManagePlayer(ProPlayer original)
     {
         var p = state!.Players.Single(x => x.Football.PlayerId == original.Football.PlayerId); var c = state.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);
         var choice = await GameDialogs.ActionSheetAsync(this, p.Football.FullName + " · " + p.Football.Position, "Close", null, "Player & contract", p.PracticeSquad ? "Promote to active" : "Move to practice squad", "Extend contract", "Franchise tag", "Release player");
@@ -38,13 +38,13 @@ public sealed partial class FranchisePage
     {
         var s = state!; var team = s.League.Teams.Single(t => t.Name == s.UserTeam); body.Add(Text("Staff ratings are game estimates. Changes open during the offseason.", 12));
         foreach (var c in s.Coaches.Where(c => c.TeamId == team.Id).OrderBy(c => c.Role))
-        { var coach = c; var row = new ActionRow(); var hire = Action("Hire / replace", () => Hire(coach)); hire.IsEnabled = s.Phase == ProPhase.Offseason; row.Add(hire); var fire = Action("Dismiss", () => Update(x => ProStaff.Fire(x, x.UserTeam, coach.Role))); fire.IsEnabled = s.Phase == ProPhase.Offseason && !coach.Vacant; row.Add(fire); body.Add(Panel(RoleName(c.Role), Text(c.Name, 22, true), Text(c.Title, 12), Text($"Coaching {c.Rating} · Development {c.Development}"), row)); }
+        { var coach = c; var row = new ActionRow(); var hire = Action("Hire / replace", () => Hire(coach)); hire.IsEnabled = s.Phase == ProPhase.Offseason; row.Add(hire); var fire = Action("Dismiss", () => Update(x => ProStaff.Fire(x, x.UserTeam, coach.Role))); fire.IsEnabled = s.Phase == ProPhase.Offseason && !coach.Vacant; row.Add(fire); body.Add(Panel(RoleName(c.Role), CoachIdentity(c, team), Action("Coach profile", () => CoachProfile(coach)), Text(c.Title, 12), Text($"Coaching {c.Rating} · Development {c.Development}"), row)); }
     }
     async Task Hire(ProCoach coach)
     { var names = state!.CoachCandidates.Select(c => c.Name).Distinct().Order().ToArray(); var name = await GameDialogs.ActionSheetAsync(this, "Available staff", "Cancel", null, names); if (name is not null && name != "Cancel") await Update(s => ProStaff.Hire(s, s.UserTeam, coach.Role, name)); }
     void FrontOffice()
     {
-        var s = state!; body.Add(Panel("Salary cap", Text(Money(ProEconomy.Room(s, s.UserTeam)) + " available", 25, true), Text($"Cap {Money(s.SalaryCap)} · Used {Money(ProEconomy.Used(s, s.UserTeam))} · Pending bids {Money(ProEconomy.Pending(s, s.UserTeam))}"), Text("Initial contracts are estimated, not real-world contract figures. Bonuses prorate; release guarantees and bonus balances become dead money.", 12)));
+        var s = state!; body.Add(Text($"Contract coverage · {s.Contracts.Count(c => c.Active && c.Team == s.UserTeam && c.Source != null)} sourced · {s.Contracts.Count(c => c.Active && c.Team == s.UserTeam && c.Estimated)} estimated", 12)); body.Add(Panel("Salary cap", Text(Money(ProEconomy.Room(s, s.UserTeam)) + " available", 25, true), Text($"Cap {Money(s.SalaryCap)} · Used {Money(ProEconomy.Used(s, s.UserTeam))} · Pending bids {Money(ProEconomy.Pending(s, s.UserTeam))}"), Text("Contracts are labeled by source. OTC snapshots retain reported cap charges; unmatched contracts are estimates. Rollover, team adjustments and historical dead money are not yet included.", 12)));
         var row = new ActionRow(); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", Trade)); row.Add(Action("Draft & scouting", Draft)); body.Add(row);
         var rosterTools = new ActionRow(); rosterTools.Add(Action("Auto fill roster", () => Update(x => ProCpu.Manage(x, true)))); rosterTools.Add(Action("Auto trim to 53", () => Update(x => ProCpu.Trim(x, x.UserTeam)))); body.Add(rosterTools);
         body.Add(Text("Contracts · select a player", 21, true)); body.Add(Table([("Player", 170), ("Ends", 55), ("Cap hit", 95), ("Bonus", 95)], s.Contracts.Where(c => c.Active && c.Team == s.UserTeam).OrderByDescending(c => ProEconomy.CapHit(c, s.Year)).Select(c => { var p = s.Players.Single(p => p.Football.PlayerId == c.PlayerId); return new View[] { Link(p.Football.FullName, () => Player(p)), Text(c.Years.Max(y => y.Year).ToString()), Text(Money(ProEconomy.CapHit(c, s.Year))), Text(Money(c.SigningBonus)) }; })));
