@@ -9,7 +9,7 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
-    private readonly Entry _newCoachName = new() { Placeholder = "Your coach name", Text = "Coach", AutomationId = "new-coach-name" };
+    private readonly Entry _newCoachName = new() { Placeholder = "Your coach name", Text = "Coach", MaxLength = 60, AutomationId = "new-coach-name" };
     private readonly ContentView _careerOptionsHost = new();
     private static readonly string[] CareerRoles = ["Head coach", "Offensive coordinator", "Defensive coordinator"];
     private readonly Picker _newCoachRole = new() { Title = "Coaching role", ItemsSource = CareerRoles,
@@ -25,7 +25,7 @@ public sealed partial class FoundationPage
 
     private View BuildCareerPreferences()
     {
-        var name = new Entry { Text = _currentDynasty?.UserHeadCoach?.FullName ?? "Coach", Placeholder = "Your coach name", AutomationId = "coach-name-setting" };
+        var name = new Entry { Text = _currentDynasty?.UserHeadCoach?.FullName ?? "Coach", Placeholder = "Your coach name", MaxLength = 60, AutomationId = "coach-name-setting" };
         var saveName = new Button { Text = "Save coach name", AutomationId = "save-coach-name" };
         saveName.Clicked += async (_, _) =>
         {
