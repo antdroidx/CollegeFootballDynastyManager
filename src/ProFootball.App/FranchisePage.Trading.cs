@@ -44,6 +44,7 @@ public sealed partial class FranchisePage
         void Layout()
         {
             var wide=Width>=1000;
+            foreach(var (view,i) in workspace.Children.OfType<View>().Select((v,i)=>(v,i))) {Grid.SetColumn(view,wide?i:0);Grid.SetRow(view,wide?0:i);}
             if(workspace.ColumnDefinitions.Count==(wide?2:1)&&workspace.RowDefinitions.Count==(wide?1:2)) return;
             workspace.ColumnDefinitions.Clear();workspace.RowDefinitions.Clear();
             workspace.RowDefinitions.Add(new(GridLength.Auto));if(!wide)workspace.RowDefinitions.Add(new(GridLength.Auto));

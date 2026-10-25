@@ -22,9 +22,9 @@ public sealed partial class FranchisePage
         }
         years.TextChanged+=(_,_)=>Refresh();salary.TextChanged+=(_,_)=>Refresh();bonus.TextChanged+=(_,_)=>Refresh();
         counter.Clicked+=(_,_)=>{if(Terms(out var y,out var a,out var b))salary.Text=ProNegotiation.Evaluate(player,y,a,b).CounterSalary.ToString();};
-        cancel.Clicked+=async(_,_)=>{closing=true;await Navigation.PopModalAsync();completion.TrySetResult(null);};
-        submit.Clicked+=async(_,_)=>{if(!Terms(out var y,out var a,out var b))return;closing=true;await Navigation.PopModalAsync();completion.TrySetResult((y,a,b));};
-        page.Disappearing+=(_,_)=>{if(!closing)completion.TrySetResult(null);};
+        cancel.Clicked+=async(_,_)=>{if(closing)return;closing=true;await Navigation.PopModalAsync();completion.TrySetResult(null);};
+        submit.Clicked+=async(_,_)=>{if(closing)return;if(!Terms(out var y,out var a,out var b))return;closing=true;await Navigation.PopModalAsync();completion.TrySetResult((y,a,b));};
+        page.Disappearing+=(_,_)=>page.Dispatcher.Dispatch(()=>{if(!closing&&!Navigation.ModalStack.Contains(page))completion.TrySetResult(null);});
         var stack=new VerticalStackLayout {Padding=16,Spacing=10,Children={Text("Contract negotiation",25,true),new HorizontalStackLayout {Spacing=10,Children={Portrait(player,48),Text(player.Football.FullName,20,true)}},Text(extension?"Extension · one completed contract change per season":"Free agent · offers compete when the week advances",12),Text("Years"),years,Text("Annual base salary · dollars"),salary,Text("Signing bonus · dollars"),bonus,preview,response,counter,submit,cancel}};
         page.Content=new ScrollView {Content=stack};Refresh();await Navigation.PushModalAsync(page);return await completion.Task;
     }
