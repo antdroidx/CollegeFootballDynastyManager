@@ -1,5 +1,6 @@
 using DynastyManager.Core.Models;
 namespace ProFootball.Core;
+
 public sealed record ProTeam(string Id, string City, string Nickname, string Abbreviation, string Conference, string Division, int SeedRank, string Primary, string Secondary)
 { public string Name => City + " " + Nickname; }
 public sealed record ProLeague(int Version, string Name, int ActiveRosterLimit, int PracticeSquadLimit, List<ProTeam> Teams);

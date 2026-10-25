@@ -647,7 +647,7 @@ public static partial class GameDayEngine
         if (kickoffRandom.NextDouble() < Math.Clamp(.025 + (returnSpeed - coverageSpeed) * .0004, .01, .05))
             returnYards += kickoffRandom.Next(18, 85);
         var touchback = kickoffRandom.NextDouble() < Math.Clamp(.40 + ((kicker?.Skills?.KickPower ?? 70) - 60) * .008 + GameWeatherService.Tailwind(session, session.KickoffTeamName) * .004, .20, .80);
-        var end = touchback ? 25 : Math.Clamp(landing + returnYards, 1, 100);
+        var end = touchback ? session.Rules.KickoffTouchbackYardLine : Math.Clamp(landing + returnYards, 1, 100);
         returnYards = touchback ? 0 : end - landing;
         if (touchback) landing = -3;
         var touchdown = end == 100;

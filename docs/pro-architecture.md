@@ -22,3 +22,14 @@ Contracts/cap/guarantees/dead money, negotiations, free agency, tags, pick trade
 
 ## Regression controls
 Preserve college package IDs, signing key, serialized type names, assembly identity, database paths and schema. Run college tests and compile both hosts after extraction; add pro schedule/save/playoff/rules tests; separate APK CI and emulator smoke. Preserve college release and workflow. Feature branch only; no merge into stable main.
+
+## Building and validation
+- College: `dotnet build src/DynastyManager.App/DynastyManager.App.csproj -c Debug`.
+- Pro: `dotnet build src/ProFootball.App/ProFootball.App.csproj -c Debug`.
+- Pro tests: `dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release`.
+- College regression: the existing Core.Tests project path stays unchanged.
+- Solution contains both hosts; install the MAUI Android workload before restoring the solution.
+- College workflow remains `.github/workflows/csharp-ci.yml`; separate pro artifacts and device evidence are produced by `pro-android.yml`. Pro version codes are the pro workflow run number, independently increasing; the package and stable test signing key allow in-place updates. These are testing APKs, not production Play Store releases.
+
+## First device evidence
+Initial pro candidate passed launch/create, CPU watch, replay, rotation, save/reload, advancing a week and coach-mode play selection on Android API 36. Screenshot review prompted smaller landscape field framing and use of shared offensive alignment (to prevent overlapping linemen). The final candidate additionally checks update-install preservation and light/Fold display. Refer to the final Actions run for actual final status rather than treating this planned checklist as proof.
