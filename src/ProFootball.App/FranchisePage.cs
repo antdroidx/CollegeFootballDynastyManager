@@ -193,6 +193,11 @@ public sealed partial class FranchisePage : ContentPage
         var controlled = game.Football.InvolvesTeam(state!.UserTeam) ? state.UserTeam : game.Football.HomeTeamName;
         if (mode == GameDayMode.Play && !game.Football.InvolvesTeam(state.UserTeam)) { controlled = await GameDialogs.ActionSheetAsync(this, "Choose team to control", "Cancel", null, game.Football.AwayTeamName, game.Football.HomeTeamName); if (controlled is null or "Cancel") return; }
         var session = ProLeagueService.Start(state, game, mode, controlled);
-        await Navigation.PushModalAsync(new ProLivePage(session, state.League, async () => { state = ProLeagueService.Finish(state!, session); await Save(); Render(); }));
+        await GameCastCoinToss.ShowAsync(Navigation, session, controlled, mode == GameDayMode.Play, name =>
+        {
+            var team = state!.League.Teams.Single(t => t.Name == name);
+            return new(team.Primary, team.Secondary, team.Abbreviation);
+        });
+        await Navigation.PushModalAsync(new ProLivePage(session, state.League, async () => { state = ProLeagueService.Finish(state!, session); await Save(); Render(); }, chooseTeamOnTakeover: !game.Football.InvolvesTeam(state.UserTeam)));
     }
 }

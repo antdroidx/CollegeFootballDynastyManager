@@ -25,3 +25,10 @@ This is an implementation ledger, not a claim that every system is release-ready
 - College workflow remains independent; shared presentation changes require college build verification.
 
 Local validation: 38 pro tests passed including twenty-season stability; 678 fast college regression tests passed. Android code compiled and packaged successfully before the final presentation refinements; Build 18 pro and college pipelines both passed, including Android device checks. The subsequent coordinator pacing change is under separate validation.
+
+## Current live-view / free-agency correction
+
+- College's coin-toss ceremony is extracted into shared presentation and used by both apps. Pro opening kickoffs have an explicit Kickoff action/formation and no scrimmage play choices.
+- Playbooks are restricted by controlled team, possession, coaching role and kickoff state; non-user Play already asks for a team, and taking over a non-user Watch game now asks too.
+- Free agents use compact rows with annual market value and offer/claim actions, name search and position filters.
+- Added permission/kickoff regression coverage and Android checks for toss, kickoff, possession-specific playbooks and free-agent filtering.

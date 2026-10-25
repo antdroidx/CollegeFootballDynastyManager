@@ -8,6 +8,17 @@ s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
 def ready(name,label): return s.wait_for("pro-"+name,lambda r:label in s.texts(r),timeout=180)
 def click(name,label):
     root=s.scroll_to_text("pro-"+name,label,max_swipes=20);s.tap(root,label);return root
+def coin(name,interactive=False):
+    ready(name+"-toss","COIN TOSS")
+    root=s.wait_for("pro-"+name+"-toss-choice",lambda r:"Start game" in s.texts(r) or interactive and ("Heads" in s.texts(r) or "Receive" in s.texts(r)),timeout=120)
+    if "Heads" in s.texts(root):
+        s.tap(root,"Heads")
+        root=s.wait_for("pro-"+name+"-toss-result",lambda r:"Start game" in s.texts(r) or "Receive" in s.texts(r),timeout=120)
+    if "Receive" in s.texts(root):
+        s.tap(root,"Receive")
+        root=ready(name+"-toss-ready","Start game")
+    s.tap(root,"Start game")
+
 try:
     home=ready("library","New franchise")
     assert "PRO FOOTBALL" in s.texts(home)
@@ -41,8 +52,18 @@ try:
     finance=ready("finance","Salary cap")
     assert any("available" in (t or "") for t in s.texts(finance))
     s.capture("pro-contracts-cap")
+    click("free-agents-open","Free agents")
+    agents=ready("free-agents","All positions")
+    s.capture("pro-free-agents-compact")
+    s.tap(agents,"All positions")
+    position=ready("free-agents-position-options","RB")
+    s.tap(position,"RB")
+    agents=s.wait_for("pro-free-agents-rb",lambda r:any((t or "").startswith("RB · Age") for t in s.texts(r)),timeout=120)
+    assert not any(re.match(r"^(QB|CB|DE|WR) · Age",t or "") for t in s.texts(agents))
+    s.capture("pro-free-agents-filtered")
     click("overview-tab","Overview")
     click("watch-open","Watch")
+    coin("watch")
     live=ready("watch","Pause watch")
     # A watch-mode action must work while a snap is animating, without a separate pause.
     s.tap(live,"Viewing options")
@@ -92,6 +113,10 @@ try:
     s.tap(confirm,"Advance")
     advanced=s.wait_for("pro-week2",lambda r:any("Week 2" in (t or "") for t in s.texts(r)),timeout=240)
     click("play-open","Play")
+    coin("play",True)
+    kickoff=ready("opening-kickoff","Kickoff")
+    assert "Choose offense" not in s.texts(kickoff) and "Choose defense" not in s.texts(kickoff)
+    s.tap(kickoff,"Kickoff")
     viewer=ready("coach-mode","Next snap")
     click("offense","Choose offense")
     choices=ready("play-choices","Choose play")
@@ -155,6 +180,7 @@ try:
     click("oc-start","Start franchise")
     ready("oc-overview","Advance week")
     click("oc-watch","Watch")
+    coin("oc-watch")
     live=ready("oc-live","Take over")
     s.tap(live,"Take over")
     coach=ready("oc-cpu-pause","Pause CPU unit")

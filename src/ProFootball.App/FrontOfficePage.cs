@@ -56,12 +56,47 @@ public sealed partial class FranchisePage
         body.Add(Text("Contracts · select a player", 21, true)); body.Add(Table([("Player", 170), ("Ends", 55), ("Cap hit", 95), ("Bonus", 95)], s.Contracts.Where(c => c.Active && c.Team == s.UserTeam).OrderByDescending(c => ProEconomy.CapHit(c, s.Year)).Select(c => { var p = s.Players.Single(p => p.Football.PlayerId == c.PlayerId); return new View[] { Link(p.Football.FullName, () => Player(p)), Text(c.Years.Max(y => y.Year).ToString()), Text(Money(ProEconomy.CapHit(c, s.Year))), Text(Money(c.SigningBonus)) }; })));
         body.Add(Panel("Dead money", Text(string.Join("\n", s.DeadCap.Where(d => d.Team == s.UserTeam && d.Year == s.Year).Select(d => $"{s.Players.FirstOrDefault(p => p.Football.PlayerId == d.PlayerId)?.Football.FullName}: {Money(d.Amount)}")), 12)));
     }
+    string freeAgentPosition = "All positions", freeAgentSearch = "";
     Task FreeAgents()
     {
-        body.Clear(); body.Add(Action("‹ Front office", () => Open("Front office"))); body.Add(Text("Free agency & waivers", 25, true)); body.Add(Text("Offers compete with CPU bids when you advance. Pending offers reserve cap space.", 12));
-        foreach (var p in state!.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && ProCareer.Controls(state!, p.Football.Position)).OrderByDescending(p => p.Football.OverallRating).Take(80))
-        { var player = p; var waiver = state.Waivers.Any(w => w.PlayerId == p.Football.PlayerId); var pending = state.Bids.FirstOrDefault(b => b.Team == state.UserTeam && b.PlayerId == p.Football.PlayerId); body.Add(Panel(p.Football.FullName, Text($"{p.Football.Position} · Age {p.Age} · OVR {p.Football.OverallRating} · Market {Money(ProEconomy.MarketSalary(p))}", 12), Action(waiver ? "Submit waiver claim" : pending is null ? "Make offer" : "Revise pending offer", async () => { if (waiver) await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s, s.UserTeam, player.Football.PlayerId)); else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer", player.Football.PlayerId, o.Salary + o.Bonus / o.Years, s => ProEconomy.Offer(s, s.UserTeam, player.Football.PlayerId, o.Years, o.Salary, o.Bonus)); } }))); }
-        return Task.CompletedTask;
+        body.Clear(); body.Add(Action("‹ Front office", () => Open("Front office"))); body.Add(Text("Free agency & waivers", 25, true)); body.Add(Text("Offers compete when you advance. Pending bids reserve cap space.", 12));
+        var positions = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray();
+        var position = new Picker { Title = "Position", ItemsSource = positions, SelectedIndex = Array.IndexOf(positions, freeAgentPosition), MinimumWidthRequest = 130 };
+        var search = new Entry { Placeholder = "Find a free agent", Text = freeAgentSearch };
+        var filters = new Grid { ColumnDefinitions = new() { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 8 };
+        filters.Add(search, 0, 0); filters.Add(position, 1, 0); body.Add(filters);
+        var count = Text("", 12); body.Add(count); var list = new VerticalStackLayout { Spacing = 3 }; body.Add(list);
+        void Draw()
+        {
+            list.Clear();
+            var players = state!.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && ProCareer.Controls(state, p.Football.Position)
+                && (freeAgentPosition == "All positions" || p.Football.Position.ToString() == freeAgentPosition)
+                && (string.IsNullOrWhiteSpace(freeAgentSearch) || p.Football.FullName.Contains(freeAgentSearch.Trim(), StringComparison.OrdinalIgnoreCase)))
+                .OrderByDescending(p => p.Football.OverallRating).ThenBy(p => p.Football.FullName).ToArray();
+            count.Text = players.Length + " available · sorted by overall";
+            foreach (var p in players.Take(160))
+            {
+                var player = p; var waiver = state.Waivers.Any(w => w.PlayerId == p.Football.PlayerId);
+                var pending = state.Bids.FirstOrDefault(b => b.Team == state.UserTeam && b.PlayerId == p.Football.PlayerId);
+                var row = new Grid { ColumnDefinitions = new() { new(GridLength.Star), new(GridLength.Auto), new(GridLength.Auto) }, ColumnSpacing = 8 };
+                var identity = new VerticalStackLayout { Spacing = 1, VerticalOptions = LayoutOptions.Center };
+                identity.Add(Link(p.Football.FullName, () => Player(player))); identity.Add(Text($"{p.Football.Position} · Age {p.Age} · OVR {p.Football.OverallRating}" + (waiver ? " · Waivers" : pending is not null ? " · Bid pending" : ""), 11));
+                row.Add(identity, 0, 0); row.Add(Text(Money(ProEconomy.MarketSalary(p)), 12), 1, 0);
+                var offerButton = Action(waiver ? "Claim" : pending is null ? "Make offer" : "Revise bid", async () =>
+                {
+                    if (waiver) await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s, s.UserTeam, player.Football.PlayerId));
+                    else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer", player.Football.PlayerId, o.Salary + o.Bonus / o.Years, s => ProEconomy.Offer(s, s.UserTeam, player.Football.PlayerId, o.Years, o.Salary, o.Bonus)); }
+                    await FreeAgents();
+                });
+                offerButton.FontSize = 11; offerButton.Padding = new Thickness(8, 4); row.Add(offerButton, 2, 0);
+                list.Add(new Border { Padding = new Thickness(8, 4), StrokeThickness = 0, BackgroundColor = DynastyTheme.Surface, Content = row });
+            }
+            if (players.Length == 0) list.Add(Text("No available players match these filters."));
+            if (players.Length > 160) list.Add(Text("Showing the top 160. Choose a position or search to narrow the list.", 12));
+        }
+        search.TextChanged += (_, _) => { freeAgentSearch = search.Text ?? ""; Draw(); };
+        position.SelectedIndexChanged += (_, _) => { freeAgentPosition = (string?)position.SelectedItem ?? "All positions"; Draw(); };
+        Draw(); return Task.CompletedTask;
     }
     Task TradeHistory()
     {

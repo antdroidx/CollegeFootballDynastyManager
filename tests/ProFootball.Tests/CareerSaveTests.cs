@@ -4,6 +4,23 @@ using DynastyManager.Core.Models;
 namespace ProFootball.Tests;
 public class CareerSaveTests
 {
+    [Fact] public void LiveCallsBelongOnlyToControlledTeamAndCurrentUnit()
+    {
+        var s = ProLeagueService.Create("Seattle Seahawks"); var game = s.Games.First(g => g.Phase == s.Phase && g.Football.Week == s.Week);
+        var session = ProLeagueService.Start(s, game, DynastyManager.Core.Models.GameDayMode.Play, game.Football.AwayTeamName);
+        Assert.False(ProLiveControl.CanCall(session, false)); Assert.False(ProLiveControl.CanCall(session, true));
+        var toss = DynastyManager.Core.Simulation.CoinTossService.Toss(game.Football);
+        DynastyManager.Core.Simulation.CoinTossService.Apply(session, toss with { ReceivingTeam = session.ControlledTeamName!, Deferred = false });
+        var kickoff = ProLiveControl.Step(session, "ignored-offense", "ignored-defense");
+        Assert.Equal(DynastyManager.Core.Models.SnapOutcome.Kickoff, kickoff.Outcome);
+        Assert.True(ProLiveControl.CanCall(session, false)); Assert.False(ProLiveControl.CanCall(session, true));
+        session.PossessionTeamName = game.Football.HomeTeamName;
+        Assert.False(ProLiveControl.CanCall(session, false)); Assert.True(ProLiveControl.CanCall(session, true));
+        session.UserCoachRole = StaffRole.OffensiveCoordinator;
+        Assert.False(ProLiveControl.CanCall(session, true));
+        session.Mode = DynastyManager.Core.Models.GameDayMode.Watch;
+        Assert.False(ProLiveControl.CanCall(session, false)); Assert.False(ProLiveControl.CanCall(session, true));
+    }
     [Theory]
     [InlineData(StaffRole.HeadCoach, true, false)]
     [InlineData(StaffRole.HeadCoach, false, false)]

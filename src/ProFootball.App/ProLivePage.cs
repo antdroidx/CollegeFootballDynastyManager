@@ -8,7 +8,7 @@ namespace ProFootball.App;
 // League-specific host; animation, field art, play cards, cameras and box scores are shared with college.
 public sealed partial class ProLivePage : ContentPage
 {
-    readonly GameDaySession session; readonly ProLeague league; readonly Func<Task> save;
+    readonly GameDaySession session; readonly ProLeague league; readonly Func<Task> save; readonly bool chooseTeamOnTakeover;
     readonly Label awayScore = Hud(25, true), homeScore = Hud(25, true), awayTimeouts = Hud(11), homeTimeouts = Hud(11);
     readonly Label situation = Hud(13, true), possession = Hud(11), commentary = Hud(14);
     readonly Grid field = new() { HeightRequest = 300, IsClippedToBounds = true };
@@ -30,9 +30,9 @@ public sealed partial class ProLivePage : ContentPage
     readonly Label selected = Hud(12);
     static Label Hud(int size, bool bold = false) => new() { FontSize = size, FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None,
         TextColor = DynastyTheme.Text, VerticalTextAlignment = TextAlignment.Center };
-    public ProLivePage(GameDaySession session, ProLeague league, Func<Task> save)
+    public ProLivePage(GameDaySession session, ProLeague league, Func<Task> save, bool chooseTeamOnTakeover = false)
     {
-        this.session = session; this.league = league; this.save = save; BackgroundColor = DynastyTheme.Background;
+        this.session = session; this.league = league; this.save = save; this.chooseTeamOnTakeover = chooseTeamOnTakeover; BackgroundColor = DynastyTheme.Background;
         speed = Math.Clamp(speed, .5, 2); replaySpeed = Math.Clamp(replaySpeed, .5, 2);
         var home = league.Teams.Single(t => t.Name == session.Game.HomeTeamName); var away = league.Teams.Single(t => t.Name == session.Game.AwayTeamName);
         art = new() { HomeName = home.Abbreviation, HomeInitial = home.Abbreviation, HomeColor = Color.FromArgb(home.Primary), HomeSecondaryColor = Color.FromArgb(home.Secondary), HashMarkFraction = .30, Weather = session.Weather };
@@ -56,7 +56,7 @@ public sealed partial class ProLivePage : ContentPage
         Style(skipReplay); skipReplay.Clicked += (_, _) => players.AbortAnimation("snap-movement"); controls.Add(skipReplay);
         Button("Viewing options", ViewingOptions);
         Button("Speed", ChooseSpeed);
-        takeoverButton = Button("Take over", () => { session.Mode = GameDayMode.Play; pauseAfterAction = session.UserCoachRole == StaffRole.HeadCoach; selected.Text = "Coach mode · choose plays, then Next snap"; return Task.CompletedTask; });
+        takeoverButton = Button("Take over", TakeOver);
         watchingButton = Button("Watch CPU vs CPU", () => { session.Mode = GameDayMode.Watch; pauseAfterAction = false; selected.Text = "CPU recommended calls"; return Task.CompletedTask; });
         Button("Depth chart", DepthChart);
         timeoutButton = Button("Timeout", () => { if (!GameDayEngine.TryCallTimeout(session, session.ControlledTeamName!)) selected.Text = "Timeout unavailable"; return Task.CompletedTask; });
@@ -70,7 +70,7 @@ public sealed partial class ProLivePage : ContentPage
         var root = new Grid(); root.Add(new ScrollView { Content = body }); root.Add(pickerLayer); Content = root;
         SizeChanged += (_, _) => { field.HeightRequest = Width < Height ? Math.Clamp(Math.Min((Width - 36) * .90, Height * .44), 220, 540) : Math.Clamp(Math.Min((Width - 36) / 2.25, Height * .50), 120, 420); FrameCamera(); };
         field.SizeChanged += (_, _) => FrameCamera();
-        Loaded += (_, _) => { art.HomeLogo = TeamBadgeView.Mark(home, false); turf.Invalidate(); if (initialized) return; initialized = true; active = true; selected.Text = session.Mode == GameDayMode.Watch ? "CPU recommended calls" : "Coach mode · choose plays, then Next snap"; Update(); _ = Watch(); };
+        Loaded += (_, _) => { art.HomeLogo = TeamBadgeView.Mark(home, false); turf.Invalidate(); if (initialized) return; initialized = true; active = true; selected.Text = session.Mode == GameDayMode.Watch ? "CPU recommended calls" : session.KickoffPending ? "Ready for kickoff" : "Coach mode · choose plays, then Next snap"; Update(); _ = Watch(); };
     }
     async Task Run(Func<Task> action)
     {
@@ -96,15 +96,14 @@ public sealed partial class ProLivePage : ContentPage
     bool CpuUnit => CoordinatorMode && ProCareer.CpuHandlesUnit(session.UserCoachRole, session.PossessionTeamName == session.ControlledTeamName);
     async Task Watch()
     {
-        while (active && !session.IsComplete) { if ((session.Mode == GameDayMode.Watch || CpuUnit) && !working && !pending && !paused) await Snap(); await Task.Delay(paused || session.Mode != GameDayMode.Watch && !CpuUnit ? 250 : 1400); }
+        while (active && !session.IsComplete) { if ((session.Mode == GameDayMode.Watch || CpuUnit && !session.KickoffPending) && !working && !pending && !paused) await Snap(); await Task.Delay(paused || session.Mode != GameDayMode.Watch && !CpuUnit ? 250 : 1400); }
     }
     async Task Snap()
     {
         if (working || pending || session.IsComplete) return; working = true; Update();
         try
         {
-            var own = session.PossessionTeamName == session.ControlledTeamName;
-            last = GameDayEngine.Step(session, session.Mode == GameDayMode.Play && own ? offense : null, session.Mode == GameDayMode.Play && !own ? defense : null);
+            last = ProLiveControl.Step(session, offense, defense);
             await Animate(last, false);
             if (autoReplays && !pending && GameDayLivePresentation.InstantReplay(last)) await Replay(last);
             commentary.Text = GameDayCommentaryService.Describe(last, session.PlayersById);
@@ -126,13 +125,14 @@ public sealed partial class ProLivePage : ContentPage
         awayScore.Text = session.AwayScore.ToString(); homeScore.Text = session.HomeScore.ToString();
         awayTimeouts.Text = $"TO {session.AwayTimeouts}"; homeTimeouts.Text = $"TO {session.HomeTimeouts}";
         situation.Text = session.IsComplete ? saved ? "FINAL · Saved" : "FINAL · Save pending" : $"{(session.Quarter > 4 ? "OT" : "Q" + session.Quarter)} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · {session.Down} & {session.Distance} · {GameDayEngine.BallOn(session, Short)}";
-        possession.Text = session.IsComplete ? "Final" : Short(session.PossessionTeamName) + " possession · " + (session.Mode == GameDayMode.Watch ? "Watching CPU vs CPU" : CoordinatorMode ? CpuUnit ? "CPU handling opposite unit" : "Your unit · choose calls" : "Coach mode");
+        if (session.KickoffPending) situation.Text = $"Q{session.Quarter} {session.ClockSeconds / 60}:{session.ClockSeconds % 60:00} · Kickoff · {Short(session.PossessionTeamName)} receives";
+        possession.Text = session.IsComplete ? "Final" : "Controlling " + Short(session.ControlledTeamName!) + " · " + Short(session.PossessionTeamName) + " possession · " + (session.Mode == GameDayMode.Watch ? "Watching CPU vs CPU" : CoordinatorMode ? CpuUnit ? "CPU handling opposite unit" : "Your unit · choose calls" : "Coach mode");
         var watch = session.Mode == GameDayMode.Watch;
-        next.IsVisible = !watch && !session.IsComplete && (!CpuUnit || paused); next.IsEnabled = !working && !pending;
+        next.IsVisible = !watch && !session.IsComplete && (!CpuUnit || paused || session.KickoffPending); next.Text = session.KickoffPending ? "Kickoff" : "Next snap"; next.IsEnabled = !working && !pending;
         pause.IsVisible = (watch || CoordinatorMode) && !session.IsComplete; pause.Text = CoordinatorMode ? paused ? "Resume CPU unit" : "Pause CPU unit" : paused ? "Resume watch" : "Pause watch";
         takeoverButton.IsVisible = watch && !session.IsComplete; watchingButton.IsVisible = !watch && !session.IsComplete;
-        offenseButton.IsVisible = !watch && !session.IsComplete && session.UserCoachRole != StaffRole.DefensiveCoordinator;
-        defenseButton.IsVisible = !watch && !session.IsComplete && session.UserCoachRole != StaffRole.OffensiveCoordinator;
+        offenseButton.IsVisible = ProLiveControl.CanCall(session, false);
+        defenseButton.IsVisible = ProLiveControl.CanCall(session, true);
         var availability = GameDayCoachingService.TalkAvailability(session, session.ControlledTeamName!);
         talkButton.IsEnabled = !session.IsComplete && availability == "Available";
         talkButton.Text = talkButton.IsEnabled ? "Coach talk" : "Coach talk · " + availability;
@@ -161,7 +161,7 @@ public sealed partial class ProLivePage : ContentPage
             var brand = league.Teams.Single(t => t.Name == team);
             for (var i = 0; i < unit.Length; i++)
             {
-                var p = unit[i]; var point = GameDayLivePresentation.HuddlePoint(session.YardLine, direction, attacking, i);
+                var p = unit[i]; var point = session.KickoffPending ? LiveFootballChoreography.Kickoff(attacking, attacking ? i == 0 : p.Position == Position.K, i, 2, 25, direction).From : GameDayLivePresentation.HuddlePoint(session.YardLine, direction, attacking, i);
                 var sprite = new FootballSpriteView(Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), !home, p.PlayerId.ToByteArray()[0] % 4, p.JerseyNumber?.ToString() ?? p.Position.ToString());
                 sprite.HuddleFacing(.5 - point.X, .5 - point.Y);
                 AbsoluteLayout.SetLayoutFlags(sprite, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.PositionProportional);
@@ -179,7 +179,7 @@ public sealed partial class ProLivePage : ContentPage
     }
     Task Animate(GameSnapEvent snap, bool replay) => GameCastAnimation.PlayAsync(new()
     {
-        Session = session, ControlledPlan = session.HomeProfile.GamePlan ?? new() { TeamName = session.Game.HomeTeamName },
+        Session = session, ControlledPlan = (session.ControlledTeamName == session.Game.HomeTeamName ? session.HomeProfile : session.AwayProfile).GamePlan ?? new() { TeamName = session.Game.HomeTeamName },
         Players = players, Turf = turf, Artwork = art, Commentary = commentary, Highlight = new Border(),
         SpritePlayers = spritePlayers, MarkerHosts = markerHosts, ActiveBallOwners = ballOwners, CreateMarker = Marker,
         ClearMarkers = () => { spritePlayers.Clear(); markerHosts.Clear(); ballOwners.Clear(); },

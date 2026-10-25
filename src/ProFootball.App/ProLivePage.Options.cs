@@ -6,6 +6,17 @@ namespace ProFootball.App;
 
 public sealed partial class ProLivePage
 {
+    async Task TakeOver()
+    {
+        if (chooseTeamOnTakeover)
+        {
+            var team = await GameDialogs.ActionSheetAsync(this, "Choose team to control", "Cancel", null, session.Game.AwayTeamName, session.Game.HomeTeamName);
+            if (team is null or "Cancel") return;
+            session.ControlledTeamName = team; session.UserCoachRole = StaffRole.HeadCoach; offense = defense = null;
+        }
+        session.Mode = GameDayMode.Play; pauseAfterAction = session.UserCoachRole == StaffRole.HeadCoach;
+        selected.Text = "Coach mode · choose plays, then Next snap";
+    }
     void FrameCamera(double x = .5, double y = .5) => GameCastCamera.Apply([turf, players], field.Width, field.Height, cameraMode, x, y);
     async Task ViewingOptions()
     {
@@ -38,6 +49,7 @@ public sealed partial class ProLivePage
     Task ShowBox() => GameCastBoxScore.ShowAsync(Navigation, GameDayEngine.BoxScore(session), ProGameCastPresentation.BoxStyle(league));
     async Task Playbook(bool defending)
     {
+        if (!ProLiveControl.CanCall(session, defending)) return;
         var plan = (session.ControlledTeamName == session.Game.HomeTeamName ? session.HomeProfile : session.AwayProfile).GamePlan ?? new TeamGamePlan { TeamName = session.ControlledTeamName! };
         var plays = PlayEditorService.OffensiveLibrary(plan); var defenses = PlayEditorService.DefensiveLibrary(plan);
         var choices = defending
