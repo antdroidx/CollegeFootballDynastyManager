@@ -33,6 +33,9 @@ public sealed partial class FranchisePage
             list.Add(Text(rows.Length + " players · " + statisticsCategory + " · " + statisticsPeriod,12));
             var columns = new List<(string,int)> { ("Player",190),("Team",170) }; columns.AddRange(fields.Select(f=>(System.Text.RegularExpressions.Regex.Replace(f,"([a-z])([A-Z])","$1 $2"),100)));
             if(statisticsCategory is "Passing" or "Kicking") columns.Add((statisticsCategory=="Passing"?"Cmp%":"FG%",75));
+            if(statisticsCategory=="Passing") { columns.Add(("Y/A",70)); columns.Add(("Rating",80)); }
+            if(statisticsCategory is "Rushing" or "Receiving" or "Punting") columns.Add((statisticsCategory=="Punting"?"Average":statisticsCategory=="Receiving"?"Y/Rec":"Y/Carry",80));
+            if(statisticsCategory=="Returns") { columns.Add(("KR Avg",80)); columns.Add(("PR Avg",80)); }
             list.Add(Table(columns.ToArray(),rows.Select(g=>
             {
                 var first = g.First(); var player = s.Players.FirstOrDefault(p=>p.Football.PlayerId==g.Key);
@@ -40,6 +43,16 @@ public sealed partial class FranchisePage
                 cells.AddRange(fields.Select(f=>Text(Total(g,f).ToString())));
                 if(statisticsCategory=="Passing") cells.Add(Text((100d*Total(g,"PassCompletions")/Math.Max(1,Total(g,"PassAttempts"))).ToString("0.0")));
                 if(statisticsCategory=="Kicking") cells.Add(Text((100d*Total(g,"FieldGoalsMade")/Math.Max(1,Total(g,"FieldGoalsAttempted"))).ToString("0.0")));
+                string Average(string numerator,string denominator)=>(Total(g,numerator)/(double)Math.Max(1,Total(g,denominator))).ToString("0.0");
+                if(statisticsCategory=="Passing")
+                {
+                    cells.Add(Text(Average("PassYards","PassAttempts")));
+                    cells.Add(Text(ProStatistics.PasserRating(new PlayerSeasonStatLine{PlayerId=g.Key,PlayerName=first.PlayerName,TeamName=first.TeamName,PassAttempts=Total(g,"PassAttempts"),PassCompletions=Total(g,"PassCompletions"),PassYards=Total(g,"PassYards"),PassingTouchdowns=Total(g,"PassingTouchdowns"),InterceptionsThrown=Total(g,"InterceptionsThrown")}).ToString("0.0")));
+                }
+                if(statisticsCategory=="Rushing")cells.Add(Text(Average("RushYards","RushAttempts")));
+                if(statisticsCategory=="Receiving")cells.Add(Text(Average("ReceivingYards","Receptions")));
+                if(statisticsCategory=="Punting")cells.Add(Text(Average("PuntYards","Punts")));
+                if(statisticsCategory=="Returns") {cells.Add(Text(Average("KickReturnYards","KickReturns")));cells.Add(Text(Average("PuntReturnYards","PuntReturns")));}
                 return cells.ToArray();
             })));
         }

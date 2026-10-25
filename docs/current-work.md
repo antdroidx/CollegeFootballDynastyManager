@@ -1,82 +1,58 @@
 # Current work — Pro Football Franchise Manager
 
-Updated: October 25, 2026 (America/Los_Angeles).
+Updated: October 25, 2026 (America/Los_Angeles). This manually maintained handoff is updated with every implementation batch. Detailed acceptance gaps live in [the completion checklist](pro-completion-checklist.md).
 
-This is the primary handoff/status document. Update it with each implementation batch and its final validation results. It is manually maintained; Actions does not regenerate it. Detailed requirements live in [the Pro completion checklist](pro-completion-checklist.md). Preserve this file as the current status rather than replacing it with a single completed feature's report.
+## Repository and verified downloads
 
-## Repository and latest verified build
+- Branch: `feature/pro-franchise-foundation`.
+- Latest device-verified source: `8a5d1c7f9a50a9dee9ed933d04f27e65dc7a2b2c`.
+- [Pro Build 24 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40240371421/artifacts/12616896838): build and Pro Android checks passed. [Workflow](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40240371421), [device evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40240371421/artifacts/12616008938).
+- [College Build 382 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40240371410/artifacts/12616797849): build, career Android and broad management/theme Android checks passed. [Workflow](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40240371410).
+- Remote stable `main` verified unchanged at `fdd3d4898b5bd07eeec8dba346024d61f5289474`. No unfinished Pro work is merged there.
+- College package/save identity and Pro independent package `antdroid.profootball.franchise` remain unchanged. CI uses increasing version codes and the existing stable development signing key.
 
-- Active branch: `feature/pro-franchise-foundation`.
-- Latest Pro device-verified application source: `186e699cf4f2eb5bb0bfd6fea0301d0d1c37b02b`. Later documentation-only commits do not require a new APK.
-- [Pro Build 22 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40238640473/artifacts/12616450302).
-- [Pro build and Android checks: passed](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40238640473).
-- [Pro Android screenshots/evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40238640473/artifacts/12616940698).
-- [Previous College build and both Android checks: passed](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40220240848).
-- Stable `main` remains `fdd3d4898b5bd07eeec8dba346024d61f5289474`. Do not merge unfinished Pro work or change College package/save identity.
+## Implemented and device verified through Build 24 / College 382
 
-## Implemented and verified
+- Shared simulation, canonical 19 attributes/overall, GameCast, sprites/animations/field, playbooks, coin toss/kickoff, cameras, replay and box scores. Play calling respects controlled team, possession and coaching role. Non-user Play/Watch takeover supports team selection.
+- Player/staff portraits and profiles; full rating cards and roster attribute columns; HC/OC/DC careers, firing preference, unit restrictions and GM decisions; save slots, rolling backups and deletion confirmation.
+- College-family Pro palette/branding, responsive Fold sidebar, loading indicator, compact sortable/paginated grids, one-line searchable position-filtered free agency, separate category statistics/analytics and branded whole-team/league schedule filters with current-week marker.
+- Three shared College-style quick-call cards, refreshed after each snap.
+- Two-team player/pick trade workspace, persisted user/CPU surplus trading block, preliminary interest, value-gap pick suggestions, future-pick ownership and trade history. Position/age/potential/contract/need valuation and cap/roster checks remain enforced.
+- Exact-dollar salary/bonus/term negotiation form, rejection/counters, one completed contract change per season, extensions and cash/cap-conserving restructures. Veteran negotiation does not override rookie salary-scale contracts.
+- College custom coach names, visible whole-dynasty deletion and non-user Play team selection. Both news views retain small thumbnails without large stadium/logo art.
+- Android 16 native SearchBar theme-tint crash worked around in shared presentation; text/hint colors stay themed while icon vectors remain platform-owned. College system dark/light checks passed. Reference: https://github.com/dotnet/maui/issues/39208.
 
-- Shared football simulation and canonical 19 player attributes/overall calculation; shared GameCast animation, field, sprites, playbooks, cameras and box scores.
-- Player/staff portraits and profiles; complete rating cards and optional roster attribute columns. No Madden branding in Pro UI; import provenance remains in data/documentation.
-- HC/OC/DC careers, firing toggle, job offers, own-unit management restrictions and GM decision inbox. Coordinators automatically watch CPU staff handle the opposite unit, then wait for their own play calls; CPU-unit pause/resume is available.
-- Multiple save slots, rolling backups and named deletion confirmation. Cancel preserves the save; deletion removes its backups and prevents delayed autosaves resurrecting it.
-- College-family green/teal/gold Pro branding, with independent package/version workflow.
-- Multi-player/pick trade packages, three future draft classes, position/age/potential/contract/need valuation and completed-trade history. Ownership survives draft-order finalization.
-- Saved factual news with categories, unread/filter state, results, trades, transactions, injuries and winning streaks. Franchise/player charts show saved roster, statistics, cap commitments and draft inventory.
-- Build 21: shared college coin-toss ceremony, Receive/Defer choice, explicit opening kickoff and kickoff formation. Playbooks are restricted to the controlled team, possession, role and scrimmage state. Non-user Play and Watch takeover both support team selection.
-- Build 21: compact free-agent rows, position filters, name search and offer/claim actions.
+## Current follow-on batch — final Android acceptance pending
 
-## Validation categories and actual counts
+- Weekly team/unit talks reuse College positive/negative reactions. One talk per calendar advance; used buttons are visibly disabled. Signing reactions fade by simulated personality; sustained severe contract dissatisfaction can lead to trade requests, and agreements/trades can improve morale.
+- Camp capacity is 90 total active/practice players (reserve excluded), then 53 active plus practice squad for regular season. Final games remain saved while the user cuts down; repeated blocked cutdown advancement cannot advance morale/cooldown time.
+- Saved regular-season awards and conference all-star selection snapshots feed factual news. Optional watch/play/simulate traditional all-star exhibition uses the shared engine/GameCast. Its result, injuries and statistics are separate from league players/games/cap. Honors has Awards / All-stars / Showcase tabs.
+- Efficiency statistics include NFL passer rating and per-attempt/carry/catch/punt/return averages. Pro box-score grids also use the shared sortable grid.
+- College Android career checks now enter and reload custom coach names and assert visible deletion; names are limited to 60 characters in both forms.
 
-Use **Core**, **College**, and **Pro** in reports. Classify by what a test exercises, not its current folder or underlying assembly name. Label device flows **College Android** and **Pro Android**.
+## Validation — report Core, College and Pro honestly
 
-| Category | Latest evidence |
+| Category | Evidence |
 |---|---|
-| Pro | 45 automated cases passed, including the twenty-season stability simulation and new kickoff/controlled-team permission coverage. |
-| Core / College legacy combined suite | 678 fast cases passed in the existing `DynastyManager.Core.Tests` project. These have not yet been individually classified; do not report all 678 as exclusively College or exclusively Core. |
-| Pro Android | Passed full CI device flow: creation, attributes/profiles, dense free-agent filtering, coin toss/kickoff, watch/takeover/replay, playbooks, save/update/reload, week advancement, light/Fold layouts, analytics/news/career, deletion/cancel and coordinator own-unit pacing. Additional local checks verified non-user Play and Watch takeover team selection. |
-| College Android | Both career-options and broad launch/management UI jobs passed after the shared coin-toss extraction. |
+| Pro | Build 24: 57 cases plus Android passed. Current follow-on: **64 automated cases passed**, including twenty-season roster/cap/draft/aging and honors-history checks, weekly talk cooldown/reactions, personality effect decay, contract concern, exhibition isolation and 90-player camp capacity. |
+| Core / College legacy combined | **682 fast cases passed** in the existing `DynastyManager.Core.Tests` project. They have not been individually classified; do not label all 682 as exclusively Core or College. Four new coach-name cases are College-specific. |
+| Pro Android | Build 24 CI and the local broad emulator flow passed trade/block/negotiation, ratings/profiles, FA filters, coin toss/kickoff, playbooks, watch/takeover/replay, save/reload/advance, light/Fold, careers/news/analytics and deletion. |
+| Targeted follow-on Android | Disposable emulator verified weekly reaction screen, visibly disabled cooldown, saved honors, exhibition simulation/save and its final box score. Synthetic fixture only on emulator-5554. The extra script expected the wrong final heading; captured XML correctly shows `Live box score` / `Final statistics`. New tab layout and final batch still need CI acceptance. |
+| College Android | Build 382 career and broad management/theme flows passed. Final follow-on run must also verify custom-name entry/reload. |
 
-## Active expanded request (October 25)
+## Remaining acceptance work
 
-The user authorized the expanded management parity pass recorded at the end of [the checklist](pro-completion-checklist.md). Implement College-inspired sidebar/drawer, three quick-call cards, one-line sortable grids, category statistics, full-team schedules, two-team trading/block, precise contract negotiations/restructures, 90-to-53 roster handling, awards/all-star support and weekly personality-based morale. Also add College coach naming, non-user team selection and visible deletion. Both games should use small news thumbnails without large stadium/logo illustrations. Work is in progress; Build 22 is verified for Pro; the next College run must verify the navigation test fix and shared SearchBar theme-crash workaround.
+Do not represent the full Pro roadmap as complete.
 
-## Current implementation batch (Android verification pending)
+1. Complete final Pro/College APK builds and Android checks for the current follow-on source, fix failures, and replace verified download links above with exact tested artifacts.
+2. CPU autonomous trade offers/counteroffers and further valuation calibration; GM review of shared future picks and future unit commitments.
+3. Authoritative sourced cap ledger: rollover, team adjustments and departed-player dead-money reconciliation. **Sourced contract accounting remains experimental.** Preserve estimate/coverage labels; unavailable amounts are not zero.
+4. Richer scouting/combine/camp/offseason decisions, waiver contract assumptions, editable coaching appearance and deeper career/job-market behavior.
+5. Further progression/morale/statistical calibration; ratings-growth/scatter/draft-outcome analytics and record/playoff-race/weekly-roundup news.
+6. Audit individual test classifications before splitting projects/counts. CI labels now distinguish College/Pro Android and the combined Core/College suite; existing coverage remains intact.
 
-- College: custom new/existing coach names, prominent whole-dynasty deletion, non-user Play team choice, small news thumbnails without large artwork.
-- Pro: shared College quick-call cards, compact sortable/paginated grids, one-row free agency with position/search filters, category statistics separated from analytics, full-team and league schedule filters with badges/current-week marker, Fold sidebar, working indicator and small news thumbnails. Repetitive rating-scale captions removed.
-- Camp rosters may hold 90 through preseason. CPU final cuts happen after the finale; an oversized user roster retains completed games and waits for cuts before regular-season advancement.
-- Validation: **50 Pro cases passed**, including twenty-season simulation and final-cutdown coverage. **682 Core/College legacy combined fast cases passed** (four new College naming cases). Both local Android builds passed before the last small UI edits; final build/device evidence pending. Build 22 subsequently passed Pro Android checks; College 380 failed as detailed below.
-- Still outstanding: trade workspace/block/CPU offers, precise negotiation/restructure and cap ledger, weekly personality/morale, awards/all-star support. Do not mark the expanded request complete.
+## Continuation
 
-## Outstanding work and next priorities
+The hourly `resume-pro-football-development` follow-up remains active, including after usage resets. Read this file, the checklist, chat and repository state; never duplicate active work. Keep both status files current. Preserve main and College identities/saves. Keep `sources/` read-only. Do not delete branches/artifacts or merge unfinished work as part of this batch.
 
-The full Pro plan is not complete. See the checklist for acceptance gaps; do not represent prototypes as finished systems.
-
-1. Tighten career/GM decision rules for shared picks and future financial commitments; editable coach appearance and deeper job-market behavior.
-2. CPU trade proposals/counteroffers, trade block and broader valuation calibration.
-3. Authoritative cap ledger, team rollover/adjustments and departed-player dead money reconciliation. **Sourced contract accounting remains experimental.** Preserve coverage/estimate labels; do not silently treat unavailable source amounts as zero.
-4. Richer scouting/combine/camp/offseason calendar and correct waiver contract assumptions; continue AI and long-term validation.
-5. Ratings-growth history, efficiency/scatter/draft-outcome analytics; draft/record/playoff-race news and weekly roundups.
-6. Continue College-to-Pro page/interaction parity and broader progression calibration.
-7. Audit test classifications before reorganizing projects or reporting separate Core/College counts. Keep existing CI coverage during any later test cleanup.
-
-## Continuation and safeguards
-
-- Hourly `resume-pro-football-development` follow-up is active. Read this document, the checklist, current chat and repository state before resuming. Do not duplicate active work.
-- Keep stable main, College Android identity, shared save compatibility and existing College workflows intact.
-- Run appropriate automated and Android checks for changes; report exact tested APK links. A build compiling is not equivalent to device validation.
-- Keep `sources/` read-only. Preserve unfinished work across usage resets/restarts.
-- Update this file and the checklist together. Use documentation-only commits without rebuilding unchanged applications when appropriate.
-
-## Historical handoff
-
-The previous completed management-UI status is preserved in [Build 309 history](current-work-build309.md). Its branch/PR/build statements are historical, not current instructions or the current development status.
-
-### Follow-on trade/contract batch (awaiting Android acceptance)
-
-Two-team selectable trade workspace and a persisted user/CPU surplus trading block are implemented, with value-gap pick suggestions, position filters, preliminary interest and existing role/cap/roster review. A single exact-dollar contract workspace includes counters, rejection feedback and salary/bonus/year controls. Extensions/restructures lock after one completed change per season; restructures preserve total cash and cap charges while moving proration. Rookie draft salaries bypass veteran market negotiation. **57 Pro tests passed**, including twenty-season validation. Android source compiles; final packaging/device checks are pending. The existing Pro Build 22 and College Build 380 CI runs cover source `186e699`; College career smoke needs the navigation/name disambiguation fix `b2f232f` in the next run. Remaining weekly morale/personality, awards/all-star and source cap reconciliation are not complete.
-
-### CI regression follow-up
-
-Pro Build 22 passed both jobs. College 380 built successfully, but career smoke hit an ambiguous Coach name/navigation label (test fix `b2f232f`), and broad UI smoke captured a native Android 16 SearchBar vector-tint crash on system light-mode switching. The shared AndroidSearchAppearance mapper workaround avoids native vector tint callbacks while retaining game text/hint colors; both hosts enable it. Upstream reference: https://github.com/dotnet/maui/issues/39208. Final Pro/College builds and device checks must pass before declaring this follow-on batch verified. No changes to stable main or package/save identities.
+Historical management-UI handoff: [Build 309 history](current-work-build309.md).

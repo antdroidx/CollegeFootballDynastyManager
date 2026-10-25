@@ -130,7 +130,9 @@ public static class ProLeagueService
     }
     public static ProFranchise Advance(ProFranchise state)
     {
-        state = ProRoster.ResolveWaivers(state with { TransactionTick = state.TransactionTick + 1 });
+        if(state.Phase==ProPhase.Preseason&&state.Week==3&&state.Career?.Unemployed!=true&&ProRoster.Active(state,state.UserTeam)>53&&state.Games.Where(g=>g.Phase==ProPhase.Preseason&&g.Football.Week==3).All(g=>g.Football.HasPlayed))
+            throw new InvalidOperationException("Final cutdown is pending. Reduce your active roster to 53 before advancing the calendar.");
+        state = ProMorale.Advance(ProRoster.ResolveWaivers(state with { TransactionTick = state.TransactionTick + 1 }));
         if (state.Phase == ProPhase.Offseason) return ProOffseason.Advance(state);
         state = ProCpu.Manage(state);
         foreach (var game in state.Games.Where(g => g.Phase == state.Phase && g.Football.Week == state.Week && !g.Football.HasPlayed).ToArray())

@@ -34,7 +34,7 @@ public sealed partial class FranchisePage
         attributes.Add(Text("Higher ratings are better. Injury represents resistance to injury and wear.", 11));
         var actions = new ActionRow(); if (f.TeamName == s.UserTeam) actions.Add(Action("Contract & roster actions", () => ManagePlayer(p)));
         var lines = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).SelectMany(g => g.Football.PlayerStats).Where(x => x.PlayerId == f.PlayerId).ToArray();
-        await ShowPage("Player profile", identity, Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder}", 12)),
+        await ShowPage("Player profile", identity, Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
             Panel("Contract", Text(contract is null ? "No active contract" : $"Current cap hit {Money(ProEconomy.CapHit(contract, s.Year))} · Bonus balance {Money(contract.SigningBonus)}"), Text(contract is null ? "" : string.Join("\n", contract.Years.Select(y => $"{y.Year} · Salary {Money(y.Salary)} · Guaranteed {Money(y.Guaranteed)}"))), Text(contract?.Estimated == true ? "Estimated game contract · real contract data not yet imported" : contract?.Source ?? "Franchise contract", 12)),
             PlayerAnalytics(p), Panel("Regular season", Text($"Passing {lines.Sum(x => x.PassYards)} yd · {lines.Sum(x => x.PassingTouchdowns)} TD\nRushing {lines.Sum(x => x.RushYards)} yd · Receiving {lines.Sum(x => x.ReceivingYards)} yd\nTackles {lines.Sum(x => x.Tackles)} · Sacks {lines.Sum(x => x.Sacks)}")), actions);
     }
@@ -73,7 +73,9 @@ public sealed partial class FranchisePage
         if (stories.Length == 0) body.Add(Text("No stories in this view yet. Completed games and league activity will appear here."));
         foreach (var story in stories)
         {
-            var n = story; body.Add(Panel((s.ReadNewsIds.Contains(n.Id) ? "" : "● ") + n.Headline, NewsThumbnail(n), Text($"{n.Year} · Week {n.Week} · {n.Category}", 12), Text(n.Body), Action(n.GameId is null ? "Read story" : "Game report ›", async () =>
+            var n = story; var heading=new Grid {ColumnSpacing=10,ColumnDefinitions=new(){new(GridLength.Auto),new(GridLength.Star)}};
+            heading.Add(NewsThumbnail(n),0,0);heading.Add(Text((s.ReadNewsIds.Contains(n.Id)?"":"● ")+n.Headline,18,true),1,0);
+            body.Add(Panel("", heading, Text($"{n.Year} · Week {n.Week} · {n.Category}", 12), Text(n.Body), Action(n.GameId is null ? "Read story" : "Game report ›", async () =>
             {
                 state = state! with { ReadNewsIds = state.ReadNewsIds.Append(n.Id).Distinct().ToList() }; await Save();
                 var game = state.Games.Concat(state.History.SelectMany(h => h.Games)).FirstOrDefault(g => g.Football.GameId == n.GameId);

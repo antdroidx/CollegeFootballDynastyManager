@@ -21,19 +21,6 @@ static class ProGameCastPresentation
     static string Average(int total, int count) => (count == 0 ? 0 : (double)total / count).ToString("F1");
     static Label Text(string text, bool bold = false, int size = 13) => new() { Text = text, TextColor = DynastyTheme.Text, FontSize = size,
         FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None, VerticalTextAlignment = TextAlignment.Center };
-    static View Table((string Title, double Width)[] columns, IEnumerable<View[]> rows)
-    {
-        var grid = new Grid { RowSpacing = 1, ColumnSpacing = 8 };
-        foreach (var column in columns) grid.ColumnDefinitions.Add(new(column.Width));
-        grid.RowDefinitions.Add(new(GridLength.Auto));
-        for (var c = 0; c < columns.Length; c++) grid.Add(new Border { StrokeThickness = 0, Padding = 8, BackgroundColor = DynastyTheme.Selected, Content = Text(columns[c].Title, true) }, c, 0);
-        var row = 1;
-        foreach (var cells in rows)
-        {
-            grid.RowDefinitions.Add(new(GridLength.Auto));
-            for (var c = 0; c < cells.Length; c++) grid.Add(new Border { StrokeThickness = 0, Padding = new Thickness(8, 10), BackgroundColor = row % 2 == 0 ? DynastyTheme.Panel : DynastyTheme.Surface, Content = cells[c] }, c, row);
-            row++;
-        }
-        return new ScrollView { Orientation = ScrollOrientation.Horizontal, Content = grid };
-    }
+    static View Table((string Title,double Width)[] columns,IEnumerable<View[]> rows) =>
+        FootballDataGrid.Create(columns.Select(c=>(c.Title,(int)c.Width)).ToArray(),rows);
 }

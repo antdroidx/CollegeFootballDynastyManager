@@ -48,15 +48,15 @@ public static class ProEconomy
         if (years is < 1 or > 5 || annual is < 300_000 or > 500_000_000 || bonus < 0 || bonus > annual * years || !s.League.Teams.Any(t => t.Name == team)) throw new InvalidOperationException("Invalid contract offer.");
         var p = s.Players.Single(p => p.Football.PlayerId == playerId);
         if (p.Retired || s.Waivers.Any(w => w.PlayerId == playerId) || p.Football.TeamName != "Free agent") throw new InvalidOperationException("Player is not an unrestricted free agent.");
-        if (ProRoster.Active(s, team) + s.Bids.Count(b => b.Team == team && b.PlayerId != playerId) >= ProRoster.Limit(s) || Room(s, team) - Pending(s, team, playerId) < annual + (bonus + years - 1) / years) throw new InvalidOperationException("Insufficient cap room or roster space (pending offers reserve cap room).");
+        if (ProRoster.CountForLimit(s, team) + s.Bids.Count(b => b.Team == team && b.PlayerId != playerId) >= ProRoster.Limit(s) || Room(s, team) - Pending(s, team, playerId) < annual + (bonus + years - 1) / years) throw new InvalidOperationException("Insufficient cap room or roster space (pending offers reserve cap room).");
         var bids = s.Bids.Where(b => !(b.PlayerId == playerId && b.Team == team)).ToList(); bids.Add(new(playerId, team, years, annual, bonus, s.Week)); return s with { Bids = bids };
     }
     public static ProFranchise Sign(ProFranchise s, FreeAgentBid bid, bool rookieScale = false)
     {
         var p = s.Players.Single(p => p.Football.PlayerId == bid.PlayerId);
-        if (!(rookieScale && s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.Draft && s.Prospects.Any(x=>x.Football.PlayerId==bid.PlayerId) || ProNegotiation.Evaluate(p,bid.Years,bid.AnnualSalary,bid.Bonus).Accepted) || p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.Active(s, bid.Team) >= ProRoster.Limit(s)) return s;
+        if (!(rookieScale && s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.Draft && s.Prospects.Any(x=>x.Football.PlayerId==bid.PlayerId) || ProNegotiation.Evaluate(p,bid.Years,bid.AnnualSalary,bid.Bonus).Accepted) || p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.CountForLimit(s, bid.Team) >= ProRoster.Limit(s)) return s;
         var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, bid.AnnualSalary, i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false, LastChangedYear = s.Year };
-        return Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == p.Football.PlayerId ? x with { Football = x.Football with { TeamName = bid.Team, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList(), Contracts = s.Contracts.Append(c).ToList() }, $"{bid.Team} signed {p.Football.FullName} for {bid.Years} years.");
+        return ProMorale.Signing(Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == p.Football.PlayerId ? x with { Football = x.Football with { TeamName = bid.Team, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList(), Contracts = s.Contracts.Append(c).ToList() }, $"{bid.Team} signed {p.Football.FullName} for {bid.Years} years."), p.Football.PlayerId, bid.Team);
     }
     public static ProFranchise ResolveBids(ProFranchise s)
     {
@@ -98,7 +98,7 @@ public static class ProEconomy
                 Years=extended.Years.Select(y=>y with {ProratedBonus=BonusCharge(c,y.Year)+(y.Year>=s.Year&&y.Year<s.Year+count?bonus/count+(y.Year-s.Year<bonus%count?1:0):0)}).ToList()};
         }
         if(extended.Years.Where(y=>y.Year>=s.Year).Any(y=>s.Contracts.Where(x=>x.Team==team&&x!=c).Sum(x=>CapHit(x,y.Year))+CapHit(extended,y.Year)>s.SalaryCap))throw new InvalidOperationException("Extension exceeds current or future cap space.");
-        return Log(s with { Contracts = s.Contracts.Select(x => x == c ? extended : x).ToList() }, $"{p.Football.FullName} agreed to a {years}-year extension.");
+        return ProMorale.ContractAgreement(Log(s with { Contracts = s.Contracts.Select(x => x == c ? extended : x).ToList() }, $"{p.Football.FullName} agreed to a {years}-year extension."), id);
     }
     public static ProFranchise Tag(ProFranchise s, string team, Guid id)
     {
@@ -116,20 +116,22 @@ public static class ProEconomy
 
 public static class ProRoster
 {
-    public static int Limit(ProFranchise s) => s.Phase is ProPhase.Offseason or ProPhase.Preseason ? 90 : 53;
+    public static bool IsCamp(ProFranchise s) => s.Phase is ProPhase.Offseason or ProPhase.Preseason;
+    public static int Limit(ProFranchise s) => IsCamp(s) ? 90 : 53;
+    public static int CountForLimit(ProFranchise s,string team) => IsCamp(s) ? s.Players.Count(p=>p.Football.TeamName==team&&!p.Reserve&&!p.Retired) : Active(s,team);
     public static int Active(ProFranchise s, string team) => s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired);
     public static ProFranchise Practice(ProFranchise s, string team, Guid id, bool practice)
     {
         var p = s.Players.Single(p => p.Football.PlayerId == id);
         if (p.Football.TeamName != team || p.Reserve || p.Retired) throw new InvalidOperationException("Unavailable player.");
         if (practice && s.Players.Count(x => x.Football.TeamName == team && x.PracticeSquad) >= 16) throw new InvalidOperationException("Practice squad is full.");
-        if (!practice && Active(s, team) >= Limit(s)) throw new InvalidOperationException("Active roster is full.");
+        if (!practice && !IsCamp(s) && Active(s, team) >= Limit(s)) throw new InvalidOperationException("Active roster is full.");
         if (practice && p.Experience > 2 && s.Players.Count(x => x.Football.TeamName == team && x.PracticeSquad && x.Experience > 2) >= 6) throw new InvalidOperationException("Six veteran practice-squad slots are already occupied.");
         return ProEconomy.Log(s with { Players = s.Players.Select(x => x == p ? x with { PracticeSquad = practice } : x).ToList() }, $"{p.Football.FullName} moved to {(practice ? "practice squad" : "active roster")}.");
     }
     public static ProFranchise Claim(ProFranchise s, string team, Guid id)
     {
-        if (!s.League.Teams.Any(t => t.Name == team) || Active(s, team) >= Limit(s)) throw new InvalidOperationException("No roster space for a waiver claim.");
+        if (!s.League.Teams.Any(t => t.Name == team) || CountForLimit(s, team) >= Limit(s)) throw new InvalidOperationException("No roster space for a waiver claim.");
         var player = s.Players.Single(p => p.Football.PlayerId == id); if (ProEconomy.Room(s, team) < Math.Max(1_000_000, ProEconomy.MarketSalary(player))) throw new InvalidOperationException("Insufficient cap space for this claim.");
         var entry = s.Waivers.Single(w => w.PlayerId == id); if (entry.Claims.Contains(team)) return s; return s with { Waivers = s.Waivers.Select(w => w == entry ? w with { Claims = w.Claims.Append(team).ToList() } : w).ToList() };
     }

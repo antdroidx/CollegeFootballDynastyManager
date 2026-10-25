@@ -58,3 +58,11 @@ Implementation batch checkpoint: quick-call cards, sortable/paginated grids, cat
 Follow-on checkpoint: trade/block workspace and exact-dollar negotiation/restructure paths are implemented with 57 passing Pro cases (including twenty seasons), pending final Android acceptance. Counter suggestions are advisory, not automatic completed trades. Full CPU autonomous trade offers and broader valuation calibration remain. Weekly morale, awards/all-star and authoritative sourced cap reconciliation remain outstanding.
 
 Pro Build 22 Android passed: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40238640473/artifacts/12616450302. College 380 device failures require rerun with coach-navigation disambiguation and shared Android SearchBar native-tint workaround. Treat the follow-on trade/contract source as pending device validation.
+
+Pro Build 24 verified the trade/contract batch (57 automated Pro cases plus Android): https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40240371421/artifacts/12616896838. The next uncommitted morale/honors/efficiency batch has 63 locally passing Pro cases and targeted emulator evidence; final full run and Android publication are pending. See current-work for exact state and known remaining financial/AI calibration gaps.
+
+## Final follow-on checkpoint (October 25)
+
+Current-work.md is the authoritative current handoff; prior checkpoint paragraphs above are historical. Pro Build 24 and College Build 382 both passed all device checks. The follow-on morale/honors/camp/efficiency implementation passes **64 Pro cases**, including twenty seasons. Final Android source/build/device publication is pending.
+
+Implemented in the follow-on: weekly scoped positive/negative talks with gray cooldown state; signing/personality decay and severe contract trade requests; 90 total active/practice camp capacity and final 53 cutdown; saved awards/all-star snapshots, factual award news and isolated shared-engine exhibition; efficiency stats and sortable box-score grids. College device checks now cover custom-name entry/reload and visible deletion. See current-work for exact verified download links and remaining financial/AI acceptance gaps.

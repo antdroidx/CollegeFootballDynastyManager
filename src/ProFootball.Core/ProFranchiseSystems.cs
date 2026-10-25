@@ -29,14 +29,14 @@ public static class ProTrade
         if (a.Sum(p => PlayerValue(s, p, to)) + ap.Sum(p => PickValue(s, p)) < (b.Sum(p => PlayerValue(s, p, from)) + bp.Sum(p => PickValue(s, p))) * 1.05) throw new InvalidOperationException("The CPU rejected this package. Offer more value.");
         var next = s;
         foreach (var p in a) next = Move(next, p, to); foreach (var p in b) next = Move(next, p, from);
-        if (ProEconomy.Room(next, from) < 0 || ProEconomy.Room(next, to) < 0 || ProRoster.Active(next, from) > ProRoster.Limit(next) || ProRoster.Active(next, to) > ProRoster.Limit(next)) throw new InvalidOperationException("Trade violates the salary cap or active-roster limit.");
+        if (ProEconomy.Room(next, from) < 0 || ProEconomy.Room(next, to) < 0 || ProRoster.CountForLimit(next, from) > ProRoster.Limit(next) || ProRoster.CountForLimit(next, to) > ProRoster.Limit(next)) throw new InvalidOperationException("Trade violates the salary cap or active-roster limit.");
         return ProEconomy.Log(next with { TradeHistory = next.TradeHistory.Append(new(Guid.NewGuid(), s.Year, s.Week, from, to, a.Select(p => p.Football.PlayerId).ToList(), b.Select(p => p.Football.PlayerId).ToList(), ap.ToList(), bp.ToList())).ToList(), Picks = next.Picks.Select(p => givePicks.Contains(p.Id) ? p with { Owner = to } : getPicks.Contains(p.Id) ? p with { Owner = from } : p).ToList() }, $"Trade completed: {from} / {to}.");
     }
     static ProFranchise Move(ProFranchise s, ProPlayer p, string to)
     {
         var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId); var contracts = s.Contracts.ToList(); var dead = s.DeadCap.ToList();
         if (c is not null) { var bonus = Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => ProEconomy.BonusCharge(c, y)); dead.Add(new(c.Team, s.Year, c.PlayerId, bonus)); contracts = contracts.Select(x => x == c ? c with { Active = false } : x).ToList(); contracts.Add(c with { Team = to, SigningBonus = 0, SignedYear = s.Year, BonusYears = 1, Years = c.Years.Select(y => y with { ProratedBonus = 0 }).ToList() }); }
-        return s with { Contracts = contracts, DeadCap = dead, Players = s.Players.Select(x => x == p ? x with { Football = x.Football with { TeamName = to, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList() };
+        return s with { Contracts = contracts, DeadCap = dead, MoraleEffects = s.MoraleEffects.Where(e=>e.PlayerId!=p.Football.PlayerId).ToList(), Players = s.Players.Select(x => x == p ? x with { Football = x.Football with { TeamName = to, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false, TradeRequested = false, ContractConcernWeeks = 0, Morale = Math.Clamp(x.Morale+5,10,95) } : x).ToList() };
     }
 }
 
@@ -87,7 +87,7 @@ public static class ProCpu
     public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
     public static ProFranchise MakeRoom(ProFranchise s, string team, long room)
     {
-        for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < room || ProRoster.Active(s, team) >= ProRoster.Limit(s)); i++)
+        for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < room || ProRoster.CountForLimit(s, team) >= ProRoster.Limit(s)); i++)
         {
             long Saving(ProPlayer p) => s.Contracts.Where(c => c.Active && c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year)) - ProEconomy.DeadOnRelease(s, p.Football.PlayerId);
             var capNeeded = ProEconomy.Room(s, team) < room;
@@ -95,7 +95,7 @@ public static class ProCpu
                 .OrderByDescending(p => capNeeded ? Saving(p) / (double)Math.Max(1, p.Football.OverallRating - 45) : 100 - p.Football.OverallRating).ThenByDescending(p => p.Age).FirstOrDefault();
             if (release is null) break;
             var next = ProEconomy.Release(s, team, release.Football.PlayerId, false);
-            if (ProEconomy.Room(next, team) <= ProEconomy.Room(s, team) && ProRoster.Active(s, team) < ProRoster.Limit(s)) break; s = next;
+            if (ProEconomy.Room(next, team) <= ProEconomy.Room(s, team) && ProRoster.CountForLimit(s, team) < ProRoster.Limit(s)) break; s = next;
         }
         return s;
     }
@@ -107,7 +107,7 @@ public static class ProCpu
 
         foreach (var team in teams)
         {
-            var claim = s.Waivers.Select(w => s.Players.Single(p => p.Football.PlayerId == w.PlayerId)).Where(p => Need(s, team.Name, p.Football.Position) > 0 && ProRoster.Active(s, team.Name) < ProRoster.Limit(s) && ProEconomy.Room(s, team.Name) >= Math.Max(1_000_000, ProEconomy.MarketSalary(p))).OrderByDescending(p => p.Football.OverallRating).FirstOrDefault();
+            var claim = s.Waivers.Select(w => s.Players.Single(p => p.Football.PlayerId == w.PlayerId)).Where(p => Need(s, team.Name, p.Football.Position) > 0 && ProRoster.CountForLimit(s, team.Name) < ProRoster.Limit(s) && ProEconomy.Room(s, team.Name) >= Math.Max(1_000_000, ProEconomy.MarketSalary(p))).OrderByDescending(p => p.Football.OverallRating).FirstOrDefault();
             if (claim is not null) s = ProRoster.Claim(s, team.Name, claim.Football.PlayerId);
         }
         var rounds = s.Phase == ProPhase.Offseason || s.Phase == ProPhase.Preseason ? 256 : 4;
@@ -172,7 +172,7 @@ public static class ProOffseason
             if (ProDraft.Current(s) is not null) throw new InvalidOperationException("Finish all seven draft rounds first.");
             return s with { OffseasonStep = OffseasonStep.RosterCuts, Players = s.Players.Concat(s.Prospects.Select(p => p with { Football = p.Football with { TeamName = "Free agent" } })).ToList(), Prospects = [] };
         }
-        if (ProRoster.Active(s, s.UserTeam) > 90 || ProEconomy.Room(s, s.UserTeam) < 0) throw new InvalidOperationException("Keep your camp roster at 90 or fewer and get under the cap first. Final 53-player cuts follow preseason.");
+        if (ProRoster.CountForLimit(s, s.UserTeam) > 90 || ProEconomy.Room(s, s.UserTeam) < 0) throw new InvalidOperationException("Keep your camp roster at 90 or fewer and get under the cap first. Final 53-player cuts follow preseason.");
         s = ProCpu.Manage(s with { Phase = ProPhase.Preseason, Week = 1 });
         return s with { Phase = ProPhase.Preseason, Week = 1, OffseasonStep = OffseasonStep.Retention, Games = ProSchedule.Build(s.League, s.Year), TaggedTeams = [], Picks = s.Picks.Concat(ProEconomy.CreatePicks(s, s.Year + 1)).DistinctBy(p => (p.Year, p.Round, p.OriginalTeam)).ToList() };
     }

@@ -70,7 +70,7 @@ public sealed partial class FranchisePage
             var picks=Table([("Select",54),("Year",65),("Round",55),("Original team",165),("Value",65)],s.Picks.Where(p=>p.Owner==club&&ProTrade.Available(s,p)).OrderBy(p=>p.Year).ThenBy(p=>p.Round).Select(p=>new View[]{Select(p.Id,true),Text(p.Year.ToString()),Text(p.Round.ToString()),Text(p.OriginalTeam,12),Text(ProTrade.PickValue(s,p).ToString("0"))}));
             var tabs=new Picker {ItemsSource=new[]{"Players","Draft picks"},SelectedIndex=0};
             var assets=new ContentView {Content=table};tabs.SelectedIndexChanged+=(_,_)=>assets.Content=tabs.SelectedIndex==0?table:picks;
-            return Panel(club,Text($"Cap room {Money(ProEconomy.Room(s,club))} · Active {ProRoster.Active(s,club)}/{ProRoster.Limit(s)}",12),tabs,new ScrollView {HeightRequest=300,Content=assets});
+            return Panel(club,Text($"Cap room {Money(ProEconomy.Room(s,club))} · Roster {ProRoster.CountForLimit(s,club)}/{ProRoster.Limit(s)}",12),tabs,new ScrollView {HeightRequest=300,Content=assets});
         }
         void Draw(){workspace.Clear();workspace.Add(Side(s.UserTeam,true));workspace.Add(Side(Recipient(),false));Layout();Summary();}
         other.SelectedIndexChanged+=(_,_)=>{givePlayers.Clear();getPlayers.Clear();givePicks.Clear();getPicks.Clear();Draw();};

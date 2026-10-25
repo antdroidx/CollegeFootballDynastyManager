@@ -32,6 +32,12 @@ public static class ProNews
                 Add(new($"streak-{s.Year}-{group.Key}-{team.Id}", s.Year, group.Key, "Form", team.Name + $" wins {run.Length} straight", "Consecutive regular-season wins keep the momentum building.", team.Name));
             }
         }
+        foreach(var honors in s.Honors)
+        {
+            foreach(var award in honors.Awards)Add(new($"award-{honors.Year}-{award.Title}",honors.Year,18,"Awards",award.Name+" wins "+award.Title,$"{award.Team} · {honors.Year} regular-season award.",award.Team));
+            foreach(var conference in honors.Selections.GroupBy(p=>p.Conference))Add(new($"allstars-{honors.Year}-{conference.Key}",honors.Year,18,"Awards",conference.Key+" all-star selections announced",$"{conference.Count()} players selected for the {honors.Year} conference showcase."));
+            if(honors.Showcase is {HasPlayed:true} game)Add(new($"showcase-{honors.Year}",honors.Year,19,"Awards","All-star showcase final",$"{game.AwayTeamName} {game.AwayScore} – {game.HomeScore} {game.HomeTeamName}. Exhibition statistics are separate from league totals."));
+        }
         foreach (var trade in s.TradeHistory)
             Add(new("trade-" + trade.Id, trade.Year, trade.Week, "Trades", trade.From + " and " + trade.To + " complete deal",
                 $"{trade.GivenPlayers.Count + trade.ReceivedPlayers.Count} players and {trade.GivenPicks.Count + trade.ReceivedPicks.Count} draft picks changed hands.", trade.From));

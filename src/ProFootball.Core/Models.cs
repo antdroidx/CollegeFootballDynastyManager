@@ -13,6 +13,8 @@ public sealed record ProPlayer(DynastyPlayer Football, int Age, int Experience, 
     public string ExternalId { get; init; } = "";
     public string RosterStatus { get; init; } = "";
     public int Morale { get; init; } = 60;
+    public int ContractConcernWeeks { get; init; }
+    public bool TradeRequested { get; init; }
 }
 public sealed record ProGame(ScheduledGame Football, ProPhase Phase, int Round = 0);
 public sealed record SeasonArchive(int Year, string Champion, List<ProGame> Games);
@@ -31,6 +33,7 @@ public sealed record ProFranchise
     public List<ProPlayer> Players { get; init; } = [];
     public List<ProGame> Games { get; init; } = [];
     public List<SeasonArchive> History { get; init; } = [];
+    public List<ProSeasonHonors> Honors { get; init; } = [];
     public long SalaryCap { get; init; } = 301_200_000;
     public string DataSnapshot { get; init; } = "Legacy fictional franchise";
     public List<TeamGamePlan> GamePlans { get; init; } = [];
@@ -45,6 +48,9 @@ public sealed record ProFranchise
     public List<FreeAgentBid> Bids { get; init; } = [];
     public List<ProTradeRecord> TradeHistory { get; init; } = [];
     public List<Guid> TradeBlock { get; init; } = [];
+    public List<ProWeeklyTalk> WeeklyTalks { get; init; } = [];
+    public List<ProMoraleEffect> MoraleEffects { get; init; } = [];
+    public int LastMoraleTick { get; init; } = -1;
     public List<ProDraftPick> Picks { get; init; } = [];
     public List<ProPlayer> Prospects { get; init; } = [];
     public List<DraftSelection> DraftHistory { get; init; } = [];
@@ -89,3 +95,11 @@ public sealed record ProGmDecision(Guid Id, int Year, int Week, string Action, b
 public sealed record ProTradeRecord(Guid Id, int Year, int Week, string From, string To, List<Guid> GivenPlayers, List<Guid> ReceivedPlayers, List<ProDraftPick> GivenPicks, List<ProDraftPick> ReceivedPicks);
 
 public sealed record ProNewsStory(string Id, int Year, int Week, string Category, string Headline, string Body, string? Team = null, string? GameId = null);
+
+public sealed record ProWeeklyTalk(int Year,int Week,ProPhase Phase,int Tick,DynastyManager.Core.Simulation.CoachTalkRecord Talk);
+public sealed record ProMoraleEffect(Guid PlayerId,string Reason,int RemainingChange,int NextDecayTick);
+
+public sealed record ProAward(string Title,Guid PlayerId,string Name,string Team,double Score);
+public sealed record ProAllStarSelection(ProPlayer Player,string Conference);
+public sealed record ProSeasonHonors(int Year,List<ProAward> Awards,List<ProAllStarSelection> Selections)
+{public ScheduledGame? Showcase {get;init;}}
