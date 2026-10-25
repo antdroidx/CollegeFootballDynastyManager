@@ -1,5 +1,7 @@
 # Pro football completion checklist
 
+Current handoff, verified APK links and validation naming: [current-work.md](current-work.md).
+
 Stable college main remains untouched. All work is on `feature/pro-franchise-foundation`.
 This is an implementation ledger, not a claim that every system is release-ready.
 
@@ -8,7 +10,7 @@ This is an implementation ledger, not a claim that every system is release-ready
 | Shared engine / GameCast | Same simulation, choreography, field, sprites, playbook and box-score presenters as college | Continued device coverage for both apps |
 | Canonical ratings | Shared 19 attributes, overall formula, one-time migration, complete cards and columns | Broader progression calibration |
 | Saves | Multiple slots, rolling backups, deletion confirmation and anti-resurrection tombstone | Verified delete/cancel flow in Build 18 device tests |
-| Careers | HC/OC/DC setup, firing toggle, reviews, job offers, unit restrictions, GM inbox | Verify newly added opposite-unit automatic play/pause; editable coach appearance; deeper job market |
+| Careers | HC/OC/DC setup, firing toggle, reviews, job offers, unit restrictions, GM inbox | Opposite-unit automatic play/pause verified in Build 21; editable coach appearance; deeper job market |
 | Branding | College-family green/teal/gold badge for start, launcher and splash | Visual acceptance on Android masks |
 | Trades | Multi-player/pick UI, three future classes, positional/age/potential/contract/need value, cap/roster checks, history | CPU offers/counters, trade block, richer GM pick budget and historical comparable calibration |
 | Analytics | Shared accessible bars: roster ratings/age, position cap, future commitments, scoring margin, league cap, pick inventory, player game logs/career season charts/position comparison | Ratings-growth history, scatter charts, draft outcomes and more efficiency views |
@@ -24,7 +26,7 @@ This is an implementation ledger, not a claim that every system is release-ready
 - APK and device evidence are published by separate pro Actions workflow after commit.
 - College workflow remains independent; shared presentation changes require college build verification.
 
-Local validation: 38 pro tests passed including twenty-season stability; 678 fast college regression tests passed. Android code compiled and packaged successfully before the final presentation refinements; Build 18 pro and college pipelines both passed, including Android device checks. The subsequent coordinator pacing change is under separate validation.
+Latest validation (Build 21, application source `58eda84`): 45 Pro cases passed including twenty-season stability. The existing combined Core/College suite passed 678 fast cases; individual Core/College classification is pending. Pro Android and both College Android jobs passed. Exact APK/workflow/evidence links are maintained in [current-work.md](current-work.md).
 
 ## Current live-view / free-agency correction
 
