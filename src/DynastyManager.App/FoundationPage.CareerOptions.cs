@@ -9,6 +9,7 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
+    private readonly Entry _newCoachName = new() { Placeholder = "Your coach name", Text = "Coach", AutomationId = "new-coach-name" };
     private readonly ContentView _careerOptionsHost = new();
     private static readonly string[] CareerRoles = ["Head coach", "Offensive coordinator", "Defensive coordinator"];
     private readonly Picker _newCoachRole = new() { Title = "Coaching role", ItemsSource = CareerRoles,
@@ -17,13 +18,24 @@ public sealed partial class FoundationPage
     private static string VersionCaption => "Pre-release 0.20 · Build " + (AppInfo.Current.VersionString.Split('.').ElementAtOrDefault(2) ?? AppInfo.Current.BuildString);
 
     private View BuildNewCareerOptions() => new VerticalStackLayout { Spacing = 8, Children = {
-        new Label { Text = "Your coaching career", FontAttributes = FontAttributes.Bold }, _newCoachRole,
+        new Label { Text = "Your coaching career", FontAttributes = FontAttributes.Bold }, _newCoachName, _newCoachRole,
         new HorizontalStackLayout { Spacing = 8, Children = { _newCoachFiring, new Label { Text = "Coach can be fired", VerticalTextAlignment = TextAlignment.Center } } },
         new Label { Text = "Coordinators control recruiting, game plans and talks for their side. The staff handles the other side. Earn new coordinator or head-coach offers through your career.", FontSize = 12, TextColor = DynastyTheme.Muted }
     } };
 
     private View BuildCareerPreferences()
     {
+        var name = new Entry { Text = _currentDynasty?.UserHeadCoach?.FullName ?? "Coach", Placeholder = "Your coach name", AutomationId = "coach-name-setting" };
+        var saveName = new Button { Text = "Save coach name", AutomationId = "save-coach-name" };
+        saveName.Clicked += async (_, _) =>
+        {
+            if (_currentDynasty is null) return;
+            saveName.IsEnabled = false;
+            var beforeRename = _currentDynasty;
+            try { _currentDynasty = UserCoachCareerService.Rename(_currentDynasty, name.Text ?? ""); await SaveCurrentAsync(SaveKind.AutosaveCurrent); RenderCurrentDynasty(); }
+            catch (Exception error) { _currentDynasty = beforeRename; await GameDialogs.AlertAsync(this, "Coach name", error.Message, "Close"); }
+            finally { saveName.IsEnabled = true; }
+        };
         var firing = new Switch { IsToggled = _currentDynasty?.UserCoachFiringEnabled ?? true, AutomationId = "coach-firing-setting" };
         var saving = false;
         firing.Toggled += async (_, args) => {
@@ -39,6 +51,7 @@ public sealed partial class FoundationPage
             finally { saving = false; firing.IsEnabled = true; }
         };
         return new VerticalStackLayout { Spacing = 8, Children = {
+            name, saveName,
             new Label { Text = _currentDynasty is null ? "Career options" : UserCoachControlService.Label(_currentDynasty.UserCoachRole), FontAttributes = FontAttributes.Bold },
             new HorizontalStackLayout { Spacing = 8, Children = { firing, new Label { Text = "Coach can be fired", VerticalTextAlignment = TextAlignment.Center } } },
             new Label { Text = "Off: poor results still affect reputation and job security, but cannot end your job. Changing this does not undo a previous dismissal. Roles change through job offers.", FontSize = 12, TextColor = DynastyTheme.Muted },

@@ -6,6 +6,15 @@ namespace DynastyManager.Core.Simulation;
 
 public static class UserCoachCareerService
 {
+    public static DynastyState Rename(DynastyState state, string name)
+    {
+        name = name.Trim();
+        if (name.Length is < 1 or > 60) throw new ArgumentException("Coach name must contain 1–60 characters.", nameof(name));
+        var coach = state.UserHeadCoach ?? throw new InvalidOperationException("No user coach profile is available.");
+        var renamed = coach with { FullName = name };
+        return state with { UserHeadCoach = renamed, Staff = state.Staff.Select(s => s.StaffId == coach.StaffId ? renamed : s).ToArray() };
+    }
+
     public static DynastyState EvaluateCompletedSeason(
         DynastyState state,
         IReadOnlyDictionary<string, Team> teamsByName)

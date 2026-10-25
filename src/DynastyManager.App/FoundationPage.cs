@@ -1126,6 +1126,7 @@ public sealed partial class FoundationPage : ContentPage
             _currentDynasty = StaffManagementService.EnsureLeagueStaff(
                 _currentDynasty, _teamsByName.Values);
             _currentDynasty = RealCoachCsvImporter.ApplyToNewDynasty(_currentDynasty, _realCoachSeeds);
+            _currentDynasty = UserCoachCareerService.Rename(_currentDynasty, string.IsNullOrWhiteSpace(_newCoachName.Text) ? "Coach" : _newCoachName.Text);
             await ShowAdvanceProgressAsync("Hiring scouting department...", 0.88);
             _currentDynasty = ScoutingDepartmentService.EnsureDepartment(
                 _currentDynasty, _teamsByName[teamName]);
@@ -1725,13 +1726,20 @@ public sealed partial class FoundationPage : ContentPage
             var manage = new Button { Text = "Versions", FontSize = 12, BackgroundColor = Colors.Transparent,
                 TextColor = DynastyTheme.Muted, Padding = new Thickness(8, 5) };
             manage.Clicked += async (_, _) => await OpenSaveVersionsAsync(versions);
+            var delete = new Button { Text = "Delete dynasty", FontSize = 12, AutomationId = "delete-dynasty" };
+            delete.Clicked += async (_, _) =>
+            {
+                if (!await GameDialogs.AlertAsync(this, "Delete dynasty?", $"Delete {latest.DynastyName} ({latest.UserTeamName}) and all {versions.Length} saved versions? This cannot be undone.", "Delete", "Cancel")) return;
+                foreach (var version in versions) await _saveRepository.DeleteAsync(version.SaveId);
+                await RefreshSaveSlotsAsync();
+            };
             var info = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children =
             {
                 new Label { Text = latest.DynastyName, FontSize = 14, FontAttributes = FontAttributes.Bold },
                 new Label { Text = $"{latest.UserTeamName} · {latest.SeasonYear} · {FormatWeek(latest)}", FontSize = 12 },
                 new Label { Text = $"Last saved {latest.UpdatedUtc.ToLocalTime():g}", FontSize = 11, TextColor = DynastyTheme.Muted }
             } };
-            var actions = new HorizontalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center, Children = { load, manage } };
+            var actions = new HorizontalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center, Children = { load, manage, delete } };
             var row = new Grid { ColumnSpacing = 10,
                 ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
             row.Add(info, 0, 0); row.Add(actions, 1, 0);

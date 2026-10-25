@@ -14,6 +14,11 @@ public sealed partial class FoundationPage
     private async Task OpenGameDayAsync(ScheduledGame game, GameDayMode mode, string? controlledTeamName = null, IReadOnlyList<GameSnapEvent>? replay = null, bool autoReplay = false)
     {
         if (_currentDynasty is null || replay is null && !GameDayEngine.IsAvailable(game, _currentDynasty.SeasonYear, _currentDynasty.Week, _currentDynasty.Phase)) return;
+        if (controlledTeamName is null && mode == GameDayMode.Play && replay is null && !game.InvolvesTeam(_currentDynasty.UserTeamName))
+        {
+            controlledTeamName = await GameDialogs.ActionSheetAsync(this, "Choose team to control", "Cancel", null, game.AwayTeamName, game.HomeTeamName);
+            if (controlledTeamName is null or "Cancel") return;
+        }
         controlledTeamName ??= game.InvolvesTeam(_currentDynasty.UserTeamName)
             ? _currentDynasty.UserTeamName : game.HomeTeamName;
         _currentDynasty = PlayerRatingService.EnsureProfiles(_currentDynasty);
@@ -32,9 +37,10 @@ public sealed partial class FoundationPage
         if (replay is not null) { home = home with { GamePlan = game.HomeGamePlan ?? home.GamePlan }; away = away with { GamePlan = game.AwayGamePlan ?? away.GamePlan }; }
         var session = GameDayEngine.Start(game, home, away, roster, mode, replay is null ? _currentDynasty.DepthChartAssignments : null);
         session.ControlledTeamName = controlledTeamName;
-        var controlsOffense = UserCoachControlService.ControlsOffense(_currentDynasty);
-        var controlsDefense = UserCoachControlService.ControlsDefense(_currentDynasty);
-        session.UserCoachRole = _currentDynasty.UserCoachRole;
+        var careerTeam = controlledTeamName == _currentDynasty.UserTeamName;
+        var controlsOffense = !careerTeam || UserCoachControlService.ControlsOffense(_currentDynasty);
+        var controlsDefense = !careerTeam || UserCoachControlService.ControlsDefense(_currentDynasty);
+        session.UserCoachRole = careerTeam ? _currentDynasty.UserCoachRole : StaffRole.HeadCoach;
         var gameRanks = BuildCurrentNationalRankings();
         var animating = false;
         var boxScoreOpen = false;

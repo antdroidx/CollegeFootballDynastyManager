@@ -6,6 +6,30 @@ namespace DynastyManager.Core.Tests;
 
 public sealed class UserCoachCareerTests
 {
+    [Fact]
+    [Trait("Game", "College")]
+    public void RenamePreservesCoachIdentityAndOtherStaff()
+    {
+        var state = StaffManagementService.EnsureLeagueStaff(State(), Teams().Values);
+        var original = state.UserHeadCoach!;
+        var renamed = UserCoachCareerService.Rename(state, "  Alex Rivera  ");
+        Assert.Equal(original with { FullName = "Alex Rivera" }, renamed.UserHeadCoach);
+        Assert.Equal(state.UserCoachRole, renamed.UserCoachRole);
+        Assert.Equal(state.Staff.Where(s => s.StaffId != original.StaffId), renamed.Staff.Where(s => s.StaffId != original.StaffId));
+        Assert.Equal(original.FullName, state.UserHeadCoach!.FullName);
+    }
+
+    [Theory]
+    [Trait("Game", "College")]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("This coach name is deliberately longer than sixty characters so it must be rejected")]
+    public void RenameRejectsInvalidNames(string name)
+    {
+        var state = StaffManagementService.EnsureLeagueStaff(State(), Teams().Values);
+        Assert.Throws<ArgumentException>(() => UserCoachCareerService.Rename(state, name));
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(100)]

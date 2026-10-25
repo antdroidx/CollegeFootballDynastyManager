@@ -335,7 +335,7 @@ public sealed partial class FoundationPage
         } }, 1, 0);
         var card = new Border { Padding = 12, BackgroundColor = DynastyTheme.Surface, StrokeThickness = 0,
             Content = new VerticalStackLayout { Spacing = 9, Children = {
-                heading, NewsIllustration.Create(story.TeamName, story.Category, 100),
+                heading,
                 new Label { Text = story.Body, FontSize = 12, MaxLines = 3, LineBreakMode = LineBreakMode.TailTruncation, TextColor = DynastyTheme.Muted },
                 new Label { Text = "Read story ›", FontSize = 12, TextColor = ManagementAccent }
             } } };
@@ -363,10 +363,9 @@ public sealed partial class FoundationPage
             {
                 close, SchoolBanner(story.TeamName, $"{story.Category} · {story.SeasonYear} · Week {story.Week}"),
                 new Label { Text = story.Headline, FontSize = 18, FontAttributes = FontAttributes.Bold },
-                NewsIllustration.Create(story.TeamName, story.Category, 180),
                 new Label { Text = story.Body, FontSize = 14 },
                 new Label { Text = DynastyManager.Data.Presentation.NewsEditorial.Context(story.Category, story.TeamName), FontSize = 14 },
-                new Label { Text = "Dynasty Wire · fictional in-world coverage based on your save. Artwork is an illustration.", FontSize = 11, TextColor = DynastyTheme.Muted }, destination
+                new Label { Text = "Dynasty Wire · fictional in-world coverage based on your save. ", FontSize = 11, TextColor = DynastyTheme.Muted }, destination
             } } };
             await Navigation.PushModalAsync(page);
         };
