@@ -832,14 +832,7 @@ public sealed partial class FoundationPage
             Rect? interceptorFrom = null, interceptorTo = null;
             View? interceptorView = null;
             var contact = GameDayAnimationPlanner.ContactPoint(snap, direction, isReturnTackle ? .50 : terminalCarrierTo?.Y ?? .50);
-            var assistCount = snap.Outcome switch
-            {
-                SnapOutcome.Sack => 0,
-                SnapOutcome.Run when snap.Yards < 0 => 1,
-                SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Fumble => snap.Yards >= 8 ? 2 : 1,
-                _ => 0
-            };
-            var assistIds = snap.TackleAttemptIds.Where(id => id != snap.PrimaryDefenderId).Take(assistCount).ToHashSet();
+            var assistIds = LiveFootballChoreography.AssistIds(snap);
             var defensivePlan = (snap.DefenseTeamName == game.HomeTeamName ? home : away).GamePlan ?? controlledPlan;
             var calledDefensivePlay = PlayEditorService.DefensiveLibrary(defensivePlan).FirstOrDefault(p => p.Id == snap.DefensivePlayId);
             var defensiveStarts = calledDefensivePlay is null ? new Dictionary<Guid, GameFieldPoint>() :
@@ -902,9 +895,9 @@ public sealed partial class FoundationPage
                 var primaryDefender = isTackle && player?.PlayerId == snap.PrimaryDefenderId;
                 var assistingDefender = isTackle && player is not null && assistIds.Contains(player.PlayerId);
                 var hasPursuitTarget = primaryDefender || assistingDefender;
-                var pursuitTarget = GameDayAnimationPlanner.PursuitTarget(contact, index, primaryDefender);
-                var endX = hasPursuitTarget ? pursuitTarget.X : Math.Clamp(x + (destination - line) * .72, .025, .96);
-                var endY = hasPursuitTarget ? pursuitTarget.Y : Math.Clamp(y + ((index % 3) - 1) * .025, .07, .93);
+                var defensiveDestination = LiveFootballChoreography.DefensiveDestination(new(x,y), contact, line, destination, index, primaryDefender, assistingDefender);
+                var endX = defensiveDestination.X;
+                var endY = defensiveDestination.Y;
                 (View View, Rect From, Rect To)? blocker = null;
                 var engages = player is not null && GameDayEngine.IsScrimmage(snap) && !isFieldGoalSnap &&
                     (passRusher || !passRushSnap && player.Position is Position.DE or Position.DT) &&

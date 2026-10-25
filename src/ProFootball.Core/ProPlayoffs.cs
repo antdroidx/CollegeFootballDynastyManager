@@ -27,7 +27,7 @@ public static class ProStandings
 }
 public static class ProPlayoffs
 {
-    static ProGame Pair(ProFranchise s, ProStanding home, ProStanding away, int week) => new(new ScheduledGame { GameId = $"{s.Year}-playoffs-{week}-{home.Team.Id}-{away.Team.Id}", SeasonYear = s.Year, Week = week, HomeTeamName = home.Team.Name, AwayTeamName = away.Team.Name, HomeSeed = ProStandings.Seeds(s, home.Team.Conference).FindIndex(r => r.Team.Id == home.Team.Id) + 1, AwaySeed = ProStandings.Seeds(s, away.Team.Conference).FindIndex(r => r.Team.Id == away.Team.Id) + 1, SimulationSeed = s.Year * 10000 + week * 100 + int.Parse(home.Team.Id[1..]), IsNeutralSite = week == 4 }, ProPhase.Playoffs, week);
+    static ProGame Pair(ProFranchise s, ProStanding home, ProStanding away, int week) => new(new ScheduledGame { GameId = $"{s.Year}-playoffs-{week}-{home.Team.Id}-{away.Team.Id}", SeasonYear = s.Year, Week = week, HomeTeamName = home.Team.Name, AwayTeamName = away.Team.Name, HomeSeed = ProStandings.Seeds(s, home.Team.Conference).FindIndex(r => r.Team.Id == home.Team.Id) + 1, AwaySeed = ProStandings.Seeds(s, away.Team.Conference).FindIndex(r => r.Team.Id == away.Team.Id) + 1, SimulationSeed = s.Year * 10000 + week * 100 + s.League.Teams.IndexOf(home.Team), IsNeutralSite = week == 4 }, ProPhase.Playoffs, week);
     public static ProFranchise Begin(ProFranchise state)
     {
         var games = state.Games.ToList(); foreach (var conference in state.League.Teams.Select(t => t.Conference).Distinct())

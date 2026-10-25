@@ -1,0 +1,247 @@
+{
+  "RetrievedUtc": "2026-10-25T03:34:49.597312+00:00",
+  "RosterUrl": "https://github.com/nflverse/nflverse-data/releases/download/weekly_rosters/roster_weekly_2026.csv",
+  "MaddenUrl": "https://www.ea.com/games/madden-nfl/ratings",
+  "MaddenIteration": "Madden 27 Week 6",
+  "LaunchFallback": "https://github.com/zachxwalton/madden-ratings-breakdown",
+  "RosterWeek": 7,
+  "TeamRosterWeeks": {
+    "SEA": 7,
+    "JAX": 6,
+    "MIN": 7,
+    "TEN": 7,
+    "CLE": 7,
+    "WAS": 6,
+    "DAL": 7,
+    "IND": 7,
+    "GB": 7,
+    "HOU": 7,
+    "NYG": 7,
+    "MIA": 7,
+    "BUF": 6,
+    "TB": 7,
+    "DET": 7,
+    "NYJ": 7,
+    "LAC": 6,
+    "KC": 7,
+    "PHI": 7,
+    "CAR": 7,
+    "LV": 7,
+    "SF": 7,
+    "NO": 7,
+    "CIN": 7,
+    "PIT": 7,
+    "DEN": 7,
+    "CHI": 7,
+    "ATL": 7,
+    "BAL": 7,
+    "ARI": 7,
+    "NE": 7,
+    "LA": 7
+  },
+  "Matched": 2255,
+  "Estimated": 338,
+  "Logos": [
+    {
+      "Team": "BUF",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/buf.png",
+      "Sha256": "79b71e2f536ee29f9d23834e89828883af2d95bf6968cbd07a505444229cdd20"
+    },
+    {
+      "Team": "MIA",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/mia.png",
+      "Sha256": "b9631269a82abda39bd748afc82390679ca67bfc167bc3581665e237407de8e0"
+    },
+    {
+      "Team": "NE",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/ne.png",
+      "Sha256": "dac19aa9a573dcf9075e2422bee3e35a4955b9ab494bb3191ab3bacfd3609729"
+    },
+    {
+      "Team": "NYJ",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/nyj.png",
+      "Sha256": "5de8d029f3602c97ffe02bd636eb2630e55d019d1a37cf819d3b9e39a219487b"
+    },
+    {
+      "Team": "BAL",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/bal.png",
+      "Sha256": "67796023c172c9aeab5bcdac9204823d3590097246ad1cb92971134b5f26dcc0"
+    },
+    {
+      "Team": "CIN",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/cin.png",
+      "Sha256": "8e549c0ecac92453140370b2aef3e4a140139b50d16e92507532e8ee49930d4e"
+    },
+    {
+      "Team": "CLE",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/cle.png",
+      "Sha256": "9b286fc4286dc39b1b5a6a08aab042b456ba5fdce99e45e49a4d1e2672411fa2"
+    },
+    {
+      "Team": "PIT",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/pit.png",
+      "Sha256": "806bcb72e75ed184a99bea34df458e6cd87145fc9a863945f3356b01122aeb6f"
+    },
+    {
+      "Team": "HOU",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/hou.png",
+      "Sha256": "54b0fe559761860e4953851c197d995b2f9c0c4e278164edda7b608ffd64f39b"
+    },
+    {
+      "Team": "IND",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/ind.png",
+      "Sha256": "f1f5222a876f810956aa8d4e75d4e6b47bcb3a6d11f876642b674010233c8a97"
+    },
+    {
+      "Team": "JAX",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/jax.png",
+      "Sha256": "15cb9a1c77ebfaea885d0d3a34f33dabc4e6a00eb7d5462148fceed641d49397"
+    },
+    {
+      "Team": "TEN",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/ten.png",
+      "Sha256": "27cf283fca5b2e9e1c5e995a465a54223424c157d2013b603a6491f99333cf45"
+    },
+    {
+      "Team": "DEN",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/den.png",
+      "Sha256": "c98bec2be32e27b19f79f5da86ac6ef133c78d75ab78aadb28ef36696c3213e8"
+    },
+    {
+      "Team": "KC",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/kc.png",
+      "Sha256": "3d77958dc6373768919bb2681cbe1b143f56c07a1f013460def665a5026a7f3d"
+    },
+    {
+      "Team": "LAC",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/lac.png",
+      "Sha256": "5400f85bd93129c056717a771da57a97225e15f39c0022107ce89ef993f15bb0"
+    },
+    {
+      "Team": "LV",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/lv.png",
+      "Sha256": "94de716ea6d3859effbfbc0966c8327eefc0a004e0d2f16c77ca80b58fd95eaa"
+    },
+    {
+      "Team": "DAL",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png",
+      "Sha256": "f4ea9a2ec7d7d500f08db94c8c6f1b23f75361ffe39c4d4b480a684a511ce61e"
+    },
+    {
+      "Team": "NYG",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/nyg.png",
+      "Sha256": "62e361850e7ba3a50dfd09cbb38429e994d1c23b0f999c74421f10e37c7067e7"
+    },
+    {
+      "Team": "PHI",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png",
+      "Sha256": "2875f50f8b756ed5ea3866105b4683f5c603aa542e2c7f7870287e1d3d006100"
+    },
+    {
+      "Team": "WAS",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/wsh.png",
+      "Sha256": "2f67805ef9e385a4c67adb0a9320706bd481a52e3aa0e0faea995dad2b501112"
+    },
+    {
+      "Team": "CHI",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/chi.png",
+      "Sha256": "fd7b5a207b9ad443f950b384d43dba6cb367c5737ad50a51a15e3893fa31753b"
+    },
+    {
+      "Team": "DET",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/det.png",
+      "Sha256": "9776b567ebab0bd3640165e915d948d8e736e35967dfc19ce62b967cfe7b4eb1"
+    },
+    {
+      "Team": "GB",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/gb.png",
+      "Sha256": "7ea8154cdbff5db84d248f235c1f1c78a1a8b4cb8c14335b5886ec10ee20b00e"
+    },
+    {
+      "Team": "MIN",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/min.png",
+      "Sha256": "72759956b149bc1c9496ea6ebb9a6ae34093dfed371cc6abb425c13f14f53448"
+    },
+    {
+      "Team": "ATL",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png",
+      "Sha256": "fe566e9da6f7986b2bac321571bd751247ff93af15c51ae555486fb1bee90c91"
+    },
+    {
+      "Team": "CAR",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/car.png",
+      "Sha256": "2cebc1bbdcfd89f28c1578b397f440d229d93fa9a30bfa1193cc286482c82298"
+    },
+    {
+      "Team": "NO",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/no.png",
+      "Sha256": "68ddfdf1d7ee8317f1af083a0c6d59142a11e8af4dad73c3c50bbafc338e0a94"
+    },
+    {
+      "Team": "TB",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/tb.png",
+      "Sha256": "bcc5d267024650938c9f35558077fe00a31913b89c61768d4ebb63d1ea31fbfd"
+    },
+    {
+      "Team": "ARI",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/ari.png",
+      "Sha256": "f870b58b43585a5b7717d578dd433b0b1e0c462d64ef4bea2aeb8c03f4ae7854"
+    },
+    {
+      "Team": "LAR",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/lar.png",
+      "Sha256": "e289b738a5e1259cccea921bee02eec881d35b4241761a8c4e12fe5964cab75c"
+    },
+    {
+      "Team": "SEA",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/sea.png",
+      "Sha256": "2546b1d4fe5cf6c2d75cda53d3fb56bbc4dd43c6b00200586dab5a85df8fa492"
+    },
+    {
+      "Team": "SF",
+      "Url": "https://a.espncdn.com/i/teamlogos/nfl/500/sf.png",
+      "Sha256": "82ae812f6c15718ce5abdd402863e8b4553fa9971e4baa5d45ff585c52948a45"
+    }
+  ],
+  "CoachingSources": [
+    "https://www.49ers.com/team/coaches-roster/",
+    "https://www.atlantafalcons.com/team/coaches-roster/",
+    "https://www.azcardinals.com/team/coaches-roster/",
+    "https://www.baltimoreravens.com/team/coaches-roster/",
+    "https://www.bengals.com/team/coaches-roster/",
+    "https://www.buccaneers.com/team/coaches-roster/",
+    "https://www.buffalobills.com/team/coaches-roster/",
+    "https://www.chargers.com/team/coaches-roster/",
+    "https://www.chicagobears.com/team/coaches/",
+    "https://www.chiefs.com/team/coaches-roster/",
+    "https://www.clevelandbrowns.com/team/coaches-roster/",
+    "https://www.colts.com/team/coaches-roster/",
+    "https://www.commanders.com/team/coaches-roster/",
+    "https://www.dallascowboys.com/team/coaches-roster/",
+    "https://www.denverbroncos.com/team/coaches-roster/",
+    "https://www.detroitlions.com/team/coaches-roster/",
+    "https://www.giants.com/team/coaches-roster/",
+    "https://www.houstontexans.com/team/coaches-roster/",
+    "https://www.jaguars.com/team/coaches-roster/",
+    "https://www.miamidolphins.com/team/coaches-roster/",
+    "https://www.neworleanssaints.com/team/coaches-roster/",
+    "https://www.newyorkjets.com/team/coaches-roster/",
+    "https://www.packers.com/team/coaches-roster/",
+    "https://www.panthers.com/team/coaches-roster/",
+    "https://www.patriots.com/team/coaches-roster/",
+    "https://www.philadelphiaeagles.com/team/coaches-roster/",
+    "https://www.raiders.com/team/coaches-roster/",
+    "https://www.seahawks.com/team/coaches-roster/",
+    "https://www.steelers.com/team/coaches-roster/",
+    "https://www.tennesseetitans.com/team/coaches-roster/",
+    "https://www.therams.com/team/coaches-roster/",
+    "https://www.vikings.com/team/coaches-roster/"
+  ],
+  "InputHashes": {
+    "coaches.json": "ac775177a400023fc6e9cc76814ee3163ca4d8b8ad6082d44e42071aa9aceaac",
+    "colors.csv": "4eab559fcf89cb4eaf61cb63a88abc47b01b6c9049187c59f3efe95888c3d048",
+    "ea-players.json": "25aa38d30e1bd08c3d6af2eba9ab51729dd6c18f9c588347d883f6330f75cc44",
+    "madden27.csv": "81bbb772eaa02eb415acf88d452093905798cb88c73269736cff31bef72bbceb",
+    "roster_weekly_2026.csv": "6fb16e87a8da6da3ac1e8039e1ba3a47ab15521edc40ebd6aa57e47355187ac4"
+  }
+}

@@ -3,6 +3,17 @@ namespace DynastyManager.Core.Simulation;
 
 public static class LiveFootballChoreography
 {
+    public static IReadOnlySet<Guid> AssistIds(GameSnapEvent snap)
+    {
+        var count=snap.Outcome switch{SnapOutcome.Sack=>0,SnapOutcome.Run when snap.Yards<0=>1,SnapOutcome.Run or SnapOutcome.Scramble or SnapOutcome.Completion or SnapOutcome.Fumble=>snap.Yards>=8?2:1,_=>0};
+        return snap.TackleAttemptIds.Where(id=>id!=snap.PrimaryDefenderId).Take(count).ToHashSet();
+    }
+    public static GameFieldPoint DefensiveDestination(GameFieldPoint start,GameFieldPoint contact,double line,double destination,int index,bool primary,bool assist)
+    {
+        if(primary||assist)return GameDayAnimationPlanner.PursuitTarget(contact,index,primary);
+        return new(Math.Clamp(start.X+(destination-line)*.72,.025,.96),Math.Clamp(start.Y+((index%3)-1)*.025,.07,.93));
+    }
+
     public static bool Zone(DefensivePlayDefinition defense, PlayAssignment? assignment)
     {
         if (assignment is not null) return assignment.Task == AssignmentTask.Zone;

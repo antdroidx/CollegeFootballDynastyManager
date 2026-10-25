@@ -455,12 +455,15 @@ def check_remaining_management():
     tap(capture("management-before-schedule"),"Overview")
     home = scroll_to_text("overview-week-links", next(t for t in texts(capture("overview-week-links-ready")) if (t or "").startswith("This week's games")))
     current_link = next(t for t in texts(home) if (t or "").startswith("This week's games"))
-    previous_link = next(t for t in texts(home) if (t or "").startswith("Last week's results"))
-    tap(home, previous_link)
-    previous = wait_for("overview-last-week-schedule", lambda r: "Season schedule" in texts(r))
-    assert "All teams" in texts(previous)
-    tap(previous,"Overview")
-    home = capture("overview-return-week-links")
+    previous_link = next((t for t in texts(home) if (t or "").startswith("Last week's results")), None)
+    if previous_link is not None:
+        tap(home, previous_link)
+        previous = wait_for("overview-last-week-schedule", lambda r: "Season schedule" in texts(r))
+        assert "All teams" in texts(previous)
+        tap(previous,"Overview")
+        home = capture("overview-return-week-links")
+    else:
+        assert int(re.search(r"Week (\d+)", current_link).group(1)) <= 1, "Missing previous-week access later in the season"
     tap(home, current_link)
 
     schedule=wait_for("management-schedule",lambda r:"Season schedule" in texts(r))

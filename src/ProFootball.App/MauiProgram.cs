@@ -15,6 +15,6 @@ public static class MauiProgram
 }
 public sealed class App : Application
 {
-    public App() { Resources = DynastyTheme.CreateResources(); UserAppTheme = DynastyTheme.RequestedTheme; }
+    public App() { DynastyTheme.ProfessionalPalette = true; Resources = DynastyTheme.CreateResources(); UserAppTheme = DynastyTheme.RequestedTheme; }
     protected override Window CreateWindow(IActivationState? activationState) => new(new NavigationPage(new FranchisePage()) { BarBackgroundColor = DynastyTheme.Surface, BarTextColor = DynastyTheme.Text });
 }

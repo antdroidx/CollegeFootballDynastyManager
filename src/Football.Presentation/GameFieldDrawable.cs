@@ -5,6 +5,7 @@ namespace DynastyManager.App;
 public sealed class GameFieldDrawable : IDrawable
     {
         public double HashMarkFraction { get; set; } = .30;
+        public IDrawable? HomeLogo { get; set; }
         public int YardLine { get; set; } = 25;
         public int Distance { get; set; } = 10;
         public int Direction { get; set; } = 1;
@@ -94,8 +95,12 @@ public sealed class GameFieldDrawable : IDrawable
             canvas.DrawCircle(rect.Center.X, rect.Center.Y, Math.Min(rect.Width, rect.Height) * .105f);
             canvas.Font = Microsoft.Maui.Graphics.Font.DefaultBold;
             canvas.FontSize = Math.Min(46, Math.Min(rect.Width, rect.Height) * .16f) / Math.Max(1, HomeInitial.Length * .6f); canvas.FontColor = HomeSecondaryColor;
+            if (HomeLogo is null)
             canvas.DrawString(HomeInitial, rect.Width * .40f, rect.Height * .36f, rect.Width * .20f, rect.Height * .28f,
                 HorizontalAlignment.Center, VerticalAlignment.Center);
+            else
+            { var logoSize = Math.Min(rect.Width, rect.Height) * .18f; HomeLogo.Draw(canvas,new RectF(rect.Center.X-logoSize/2,rect.Center.Y-logoSize/2,logoSize,logoSize)); }
+
             var line = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(YardLine, Direction);
             var gain = rect.Width * (float)GameDayAnimationPlanner.ProjectYardLine(Math.Min(100, YardLine + Distance), Direction);
             canvas.StrokeColor = DynastyTheme.Palette("#4FA8FF"); canvas.StrokeSize = 3; canvas.DrawLine(line, 0, line, rect.Height);

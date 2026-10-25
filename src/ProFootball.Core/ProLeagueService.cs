@@ -6,10 +6,16 @@ namespace ProFootball.Core;
 
 public static class ProLeagueService
 {
+    static readonly JsonSerializerOptions SnapshotJson = new() { Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } };
+    public static NflSnapshot Snapshot()
+    {
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.nfl-snapshot.json")!;
+        return JsonSerializer.Deserialize<NflSnapshot>(stream, SnapshotJson)!;
+    }
     public static ProLeague Load()
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.league.json")!;
-        var league = JsonSerializer.Deserialize<ProLeague>(stream)!;
+        var league = JsonSerializer.Deserialize<ProLeague>(stream, SnapshotJson)!;
         Validate(league); return league;
     }
     public static void Validate(ProLeague league)
@@ -23,7 +29,18 @@ public static class ProLeagueService
     {
         var league = Load();
         if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
-        return new() { League = league, UserTeam = userTeam, Name = string.IsNullOrWhiteSpace(name) ? "My franchise" : name.Trim(), Players = GeneratePlayers(league), Games = ProSchedule.Build(league, 2026) };
+        var snapshot = Snapshot();
+        return ProEconomy.Initialize(new()
+        {
+            League = league,
+            UserTeam = userTeam,
+            Name = string.IsNullOrWhiteSpace(name) ? "My franchise" : name.Trim(),
+            Players = snapshot.Players.ToList(),
+            Coaches = snapshot.Coaches.ToList(),
+            CoachCandidates = snapshot.Candidates.ToList(),
+            Games = ProSchedule.Build(league, 2026),
+            DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
+        });
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {
@@ -61,15 +78,16 @@ public static class ProLeagueService
                     WeightPounds = position is Position.OL or Position.DT ? 305 : position == Position.QB ? 220 : 215,
                     Skills = new() { PassingPower = overall, PassingAccuracy = overall, Catching = overall, BreakTackle = overall, Tackling = overall, RunBlocking = overall, PassBlocking = overall, BallCarrying = overall, Acceleration = overall, Leadership = overall, Discipline = 85, Jumping = overall, KickPower = overall, KickAccuracy = overall }
                 };
-                players.Add(new(player, random.Next(22, 34), random.Next(0, 9), practice));
+                var age = random.Next(22, 34); players.Add(new(player, age, Math.Min(age - 22, random.Next(0, 9)), practice));
             }
         }
         return players;
     }
     public static TeamSimulationProfile Profile(ProFranchise state, string team)
     {
-        var players = state.Players.Where(p => p.Football.TeamName == team && !p.PracticeSquad).Select(p => p.Football).ToArray();
-        double Rating(params Position[] positions) => players.Where(p => positions.Contains(p.Position)).OrderBy(p => p.DepthChartOrder).Take(8).Average(p => p.OverallRating);
+        var players = state.Players.Where(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => p.Football).ToArray();
+        double Rating(params Position[] positions) => players.Where(p => positions.Contains(p.Position)).OrderBy(p => p.DepthChartOrder).Take(8).Select(p => (double)p.OverallRating).DefaultIfEmpty(45).Average();
+        int Coach(StaffRole role) => state.Coaches.FirstOrDefault(c => c.TeamId == state.League.Teams.Single(t => t.Name == team).Id && c.Role == role && !c.Vacant)?.Rating ?? (role == StaffRole.DefensiveCoordinator ? state.Coaches.FirstOrDefault(c => c.TeamId == state.League.Teams.Single(t => t.Name == team).Id && c.Role == StaffRole.HeadCoach && !c.Vacant)?.Rating ?? 55 : 55);
         return new()
         {
             TeamName = team,
@@ -79,13 +97,18 @@ public static class ProLeagueService
             RushDefenseRating = Rating(Position.DE, Position.DT, Position.MLB, Position.OLB),
             SpecialTeamsRating = Rating(Position.K),
             RosterSize = 53,
-            GamePlan = new() { TeamName = team }
+            GamePlan = new() { TeamName = team },
+            Morale = (int)state.Players.Where(p => p.Football.TeamName == team && !p.Retired).Select(p => (double)p.Morale).DefaultIfEmpty(60).Average(),
+            HeadCoachLeadership = Coach(StaffRole.HeadCoach),
+            HeadCoachGameManagement = Coach(StaffRole.HeadCoach),
+            OffensiveCoordinatorScheme = Coach(StaffRole.OffensiveCoordinator),
+            DefensiveCoordinatorScheme = Coach(StaffRole.DefensiveCoordinator)
         };
     }
     public static GameDaySession Start(ProFranchise state, ProGame game, GameDayMode mode, string? controlled = null)
     {
         if (game.Football.HasPlayed || game.Phase != state.Phase || game.Football.Week != state.Week) throw new InvalidOperationException("Game is not available this week.");
-        var session = GameDayEngine.Start(game.Football, Profile(state, game.Football.HomeTeamName), Profile(state, game.Football.AwayTeamName), state.Players.Where(p => !p.PracticeSquad).Select(p => p.Football).ToArray(), mode, rules: FootballRules.Professional with { Postseason = state.Phase == ProPhase.Playoffs });
+        var session = GameDayEngine.Start(game.Football, Profile(state, game.Football.HomeTeamName), Profile(state, game.Football.AwayTeamName), state.Players.Where(p => !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => p.Football).ToArray(), mode, rules: FootballRules.Professional with { Postseason = state.Phase == ProPhase.Playoffs });
         controlled ??= game.Football.InvolvesTeam(state.UserTeam) ? state.UserTeam : game.Football.HomeTeamName;
         if (!game.Football.InvolvesTeam(controlled)) throw new ArgumentException("Controlled team must be in this matchup.");
         session.ControlledTeamName = controlled; return session;
@@ -94,10 +117,14 @@ public static class ProLeagueService
     {
         if (!session.IsComplete) throw new InvalidOperationException("Game has not finished.");
         var game = GameDayEngine.Finish(session);
-        return state with { Games = state.Games.Select(g => g.Football.GameId == game.GameId ? g with { Football = game } : g).ToList() };
+        var next = state with { Games = state.Games.Select(g => g.Football.GameId == game.GameId ? g with { Football = game } : g).ToList() };
+        return next with { Players = next.Players.Select(p => !game.InvolvesTeam(p.Football.TeamName) ? p : p with { Morale = Math.Clamp(p.Morale + (game.HomeScore == game.AwayScore ? 0 : game.WinnerTeamName == p.Football.TeamName ? 3 : -2), 10, 95) }).ToList() };
     }
     public static ProFranchise Advance(ProFranchise state)
     {
+        if (state.Phase == ProPhase.Offseason) return ProOffseason.Advance(state);
+        state = ProRoster.ResolveWaivers(state);
+        state = ProCpu.Manage(state);
         foreach (var game in state.Games.Where(g => g.Phase == state.Phase && g.Football.Week == state.Week && !g.Football.HasPlayed).ToArray())
         { var session = Start(state, game, GameDayMode.Simulate); GameDayEngine.SimulateToEnd(session); state = Finish(state, session); }
         if (state.Phase == ProPhase.Preseason) return state with { Phase = state.Week == 3 ? ProPhase.RegularSeason : state.Phase, Week = state.Week == 3 ? 1 : state.Week + 1 };
