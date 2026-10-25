@@ -83,7 +83,7 @@ try:
     s.adb("shell","settings","put","system","user_rotation","1")
     time.sleep(2);s.capture("pro-fold-landscape-light")
     click("light-roster-tab","Roster")
-    ready("light-roster","Active roster")
+    s.wait_for("pro-light-roster",lambda r:any((t or "").startswith("Active roster ·") for t in s.texts(r)),timeout=180)
     s.capture("pro-roster-fold-light")
     assert s.adb("shell","pidof","antdroid.profootball.franchise").strip()
     print("Pro launch, franchise creation, watch/replay, landscape, saved final, reload, advance and coach mode passed.",flush=True)
