@@ -1,6 +1,7 @@
 """Real-device pro foundation checks; only operates on the disposable CI emulator."""
 import importlib.util
 import time
+import re
 from pathlib import Path
 spec=importlib.util.spec_from_file_location("college_smoke",Path(__file__).with_name("android-ui-smoke.py"))
 s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
@@ -30,8 +31,12 @@ try:
     # Names are the same interactive cells used by the college-style profile flow.
     click("player-profile-open","Sam Darnold")
     ready("player-profile","Player profile")
+    profile=ready("player-attributes","Character traits")
+    assert not any("Madden" in (t or "") for t in s.texts(profile))
     s.capture("pro-player-profile")
-    click("player-profile-back","‹ Back")
+    s.scroll_to_text("pro-player-skill-ratings","Kicking accuracy",max_swipes=20)
+    profile=s.scroll_to_text("pro-player-profile-back","‹ Back",max_swipes=20,toward_start=True)
+    s.tap(profile,"‹ Back")
     click("front-office-tab","Front office")
     finance=ready("finance","Salary cap")
     assert any("available" in (t or "") for t in s.texts(finance))
@@ -40,6 +45,10 @@ try:
     click("watch-open","Watch")
     live=ready("watch","Pause watch")
     # A watch-mode action must work while a snap is animating, without a separate pause.
+    s.tap(live,"Viewing options")
+    viewing=ready("viewing-options","Viewing options");s.tap(viewing,"Camera")
+    cameras=ready("camera-options","Follow ball");s.tap(cameras,"Follow ball")
+    live=ready("watch-camera","Pause watch")
     s.tap(live,"Take over")
     coach=ready("takeover","Coach mode · choose plays, then Next snap")
     assert "Pause watch" not in s.texts(coach)
@@ -48,8 +57,17 @@ try:
     coach=s.capture("pro-takeover-first-snap")
     s.tap(coach,"Next snap")
     time.sleep(2)
+    before=s.capture("pro-before-replay")
+    clock_before={t for t in s.texts(before) if t and re.match(r"^(Q\d|OT) ",t)}
     click("replay","Instant replay")
-    time.sleep(2)
+    replayed=ready("after-replay","Coach mode · choose plays, then Next snap")
+    clock_after={t for t in s.texts(replayed) if t and re.match(r"^(Q\d|OT) ",t)}
+    assert clock_before and clock_before==clock_after,"Replay advanced the game clock"
+    click("live-box","Box score")
+    box=ready("live-box-page","Live box score");assert "Player statistics" in s.texts(box)
+    s.tap(box,"Player statistics");s.capture("pro-live-box-players")
+    click("live-box-return","Return to game")
+    ready("back-to-live","Next snap")
     s.adb("shell","settings","put","system","accelerometer_rotation","0")
     s.adb("shell","settings","put","system","user_rotation","1")
     time.sleep(2);s.capture("pro-live-landscape")
@@ -76,8 +94,10 @@ try:
     click("play-open","Play")
     viewer=ready("coach-mode","Next snap")
     click("offense","Choose offense")
-    choices=ready("play-choices","Offensive play")
-    s.tap(choices,"Cancel")
+    choices=ready("play-choices","Choose play")
+    assert "All formations" in s.texts(choices)
+    s.capture("pro-shared-playbook")
+    s.tap(choices,"Close playbook")
     click("coach-snap","Next snap")
     time.sleep(2);s.capture("pro-coach-after-snap")
     click("leave-coach","Return to franchise")

@@ -4656,15 +4656,7 @@ public sealed partial class FoundationPage : ContentPage
         }
     }
 
-    private static string FormatPotentialStars(int potential) =>
-        potential switch
-        {
-            >= 92 => "5★",
-            >= 84 => "4★",
-            >= 76 => "3★",
-            >= 68 => "2★",
-            _ => "1★"
-        };
+    private static string FormatPotentialStars(int potential) => PlayerAttributeCatalog.PotentialStars(potential);
 
     private static Color GetChangeColor(int value) =>
         value > 0

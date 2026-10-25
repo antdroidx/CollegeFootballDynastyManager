@@ -45,16 +45,16 @@ public sealed partial class FranchisePage : ContentPage
     async Task Library()
     {
         state = null; LayoutShell(); body.Clear(); body.Add(Text("PRO FOOTBALL", 28, true)); body.Add(Text("Franchise Manager", 24, true)); body.Add(Text("Development preview · " + AppInfo.VersionString));
-        body.Add(Text("Real NFL teams and staff · Madden-based ratings · Build your own football legacy."));
+        body.Add(Text("NFL teams and staff · Build your own football legacy."));
         body.Add(Action("New franchise", Create, "pro-new")); body.Add(Action("Options", Options)); body.Add(Text("Your franchises", 20, true));
         foreach (var id in store.Slots().ToArray()) try { var save = await store.Load(id); body.Add(Action($"{save.Name} · {save.UserTeam} · {save.Year} {save.Phase} W{save.Week}", async () => { state = await store.Load(id); section = "Overview"; Render(); })); } catch (Exception) { body.Add(Text("Unavailable save · " + id)); }
-        body.Add(Text("NFL roster snapshot: 2026 Weeks 6–7 (latest available per team). Madden 27 Week 6 plus launch fallback; unmatched ratings and staff ratings are game estimates. Contract source is selected when creating a franchise.", 12));
+        body.Add(Text("NFL roster snapshot: 2026 Weeks 6–7. Player attributes and overall use the shared football rating system. Staff ratings are game estimates. Contract source is selected when creating a franchise.", 12));
     }
     async Task Options()
     {
         var pick = await GameDialogs.ActionSheetAsync(this, "Options", "Cancel", null, "Appearance", "Data sources");
         if (pick == "Appearance") { var choice = await GameDialogs.ActionSheetAsync(this, "Appearance", "Cancel", null, "Dark", "Light"); if (choice is "Dark" or "Light") { Preferences.Set("app-theme", choice); Application.Current!.Resources = DynastyTheme.CreateResources(); Application.Current.UserAppTheme = DynastyTheme.RequestedTheme; BackgroundColor = DynastyTheme.Background; DynastyTheme.ApplyNativeAppearance(); if (state is null) await Library(); else Render(); } }
-        if (pick == "Data sources") await GameDialogs.AlertAsync(this, "Data sources", (state?.DataSnapshot ?? "NFL 2026 Week 7 · Madden 27 Week 6") + "\nRosters: nflverse (CC BY 4.0). Ratings: EA public Madden ratings, launch archive fallback; unmatched players estimated. Staff: official team sites. Colors: nflverse. Badges: team abbreviations and NFL club colors. New franchises can use sourced OverTheCap/nflverse contracts or estimates. Team cap adjustments and historical dead money remain incomplete; coaching ratings are estimates. Transactions and future draft classes are simulated. Existing fictional franchises remain intact.\nSources and file hashes are recorded in docs/nfl-data-manifest.json.", "Close");
+        if (pick == "Data sources") await GameDialogs.AlertAsync(this, "Data sources", "Rosters: nflverse (CC BY 4.0), 2026 Weeks 6–7. Staff: official team sites. Colors: nflverse. Player overall is calculated from shared football attributes using the college game's rating system. New franchises can use sourced contracts or game estimates; team cap adjustments remain incomplete. Import provenance and file hashes are recorded in docs/nfl-data-manifest.json and docs/nfl-contract-data.json.", "Close");
     }
     Task Create()
     {
@@ -128,8 +128,11 @@ public sealed partial class FranchisePage : ContentPage
         var s = state!; var teams = s.League.Teams.OrderBy(t => t.Name).ToArray();
         var team = new Picker { Title = "Team", ItemsSource = teams.Select(t => t.Name).ToArray(), SelectedIndex = Array.FindIndex(teams, t => t.Name == s.UserTeam) };
         var search = new SearchBar { Placeholder = "Find a player" }; var positions = new Picker { Title = "Position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
-        var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); body.Add(tools); body.Add(team); body.Add(search); body.Add(positions);
-        var list = new VerticalStackLayout { Spacing = 12 }; body.Add(list);
+        var list = new VerticalStackLayout { Spacing = 12 };
+        var showRatings = false;
+        var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(tools); body.Add(team); body.Add(search); body.Add(positions);
+        body.Add(Text("Tap a player for all attributes · Swipe the table for more columns", 12));
+        body.Add(list);
         void Draw()
         {
             list.Clear(); if (team.SelectedIndex < 0) return;
@@ -138,7 +141,15 @@ public sealed partial class FranchisePage : ContentPage
             foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"))
             {
                 list.Add(Text(group.Key + " · " + group.Count(), 21, true));
-                list.Add(Table([("Pos", 48), ("Player", 220), ("Age", 45), ("OVR", 50), ("Morale", 65), ("Cap hit", 90)], group.OrderBy(p => p.Football.Position).ThenBy(p => p.Football.DepthChartOrder).Select(p => new View[] { Text(OffensiveLineService.Label(p.Football), 12), PlayerCell(p), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString(), 15, true), Text(p.Morale.ToString()), Text(Money(s.Contracts.Where(c => c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year))), 12) })));
+                var columns = new List<(string, int)> { ("Pos", 48), ("Player", 220), ("Age", 45), ("OVR", 50), ("Potential", 68), ("Morale", 65), ("Cap hit", 90) };
+                if (showRatings) columns.AddRange(PlayerAttributeCatalog.Groups(players[0].Football).SelectMany(g => g.Attributes).Select(a => (a.Name, 95)));
+                list.Add(Table(columns.ToArray(), group.OrderBy(p => p.Football.Position).ThenBy(p => p.Football.DepthChartOrder).Select(p =>
+                {
+                    var cells = new List<View> { Text(OffensiveLineService.Label(p.Football), 12), PlayerCell(p), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString(), 15, true), Text(PlayerAttributeCatalog.PotentialStars(p.Football.PotentialRating)), Text(p.Morale.ToString()), Text(Money(s.Contracts.Where(c => c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year))), 12) };
+                    if (showRatings) cells.AddRange(PlayerAttributeCatalog.Groups(p.Football).SelectMany(g => g.Attributes).Select(a => Text(a.Rating.ToString())));
+                    return cells.ToArray();
+                })));
+
             }
             if (players.Length == 0) list.Add(Text("No players match these filters."));
         }
@@ -154,7 +165,7 @@ public sealed partial class FranchisePage : ContentPage
             var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired && OffensiveLineService.Label(p.Football) == label).OrderBy(p => p.Football.DepthChartOrder).ThenByDescending(p => p.Football.OverallRating).ToArray();
             for (var index = 0; index < players.Length; index++)
             {
-                var p = players[index]; var starter = index == 0; var button = new Button { Text = starter ? "Starter" : "Make starter", IsEnabled = !starter && p.Football.CurrentInjury is not { WeeksRemaining: > 0 } };
+                var p = players[index]; var starter = index == 0; var button = new Button { Text = starter ? "First choice" : "Move to first", IsEnabled = !starter && p.Football.CurrentInjury is not { WeeksRemaining: > 0 } };
                 button.Clicked += async (_, _) => { state = ProDepthChart.MakeStarter(state!, state!.UserTeam, p.Football.PlayerId); await Save(); Draw(); Render(); };
                 list.Add(Panel($"{index + 1} · {p.Football.FullName}", PlayerCell(p), Text($"OVR {p.Football.OverallRating} · Morale {p.Morale}"), button));
             }

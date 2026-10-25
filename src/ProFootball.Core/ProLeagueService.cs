@@ -30,7 +30,7 @@ public static class ProLeagueService
         var league = Load();
         if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
         var snapshot = Snapshot();
-        var franchise = ProEconomy.Initialize(new()
+        var franchise = ProEconomy.Initialize(ProPlayerRatingService.Migrate(new()
         {
             League = league,
             UserTeam = userTeam,
@@ -40,7 +40,7 @@ public static class ProLeagueService
             CoachCandidates = snapshot.Candidates.ToList(),
             Games = ProSchedule.Build(league, 2026),
             DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
-        });
+        }));
         return sourcedContracts ? ProContractData.Apply(franchise) : franchise;
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
@@ -82,7 +82,7 @@ public static class ProLeagueService
                 var age = random.Next(22, 34); players.Add(new(player, age, Math.Min(age - 22, random.Next(0, 9)), practice));
             }
         }
-        return players;
+        return players.Select(p => ProPlayerRatingService.Refresh(p, true, true)).ToList();
     }
     public static TeamSimulationProfile Profile(ProFranchise state, string team)
     {

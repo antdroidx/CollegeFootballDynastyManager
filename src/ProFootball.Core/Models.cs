@@ -19,6 +19,7 @@ public sealed record SeasonArchive(int Year, string Champion, List<ProGame> Game
 public sealed record ProFranchise
 {
     public int SchemaVersion { get; init; } = 2;
+    public int RatingSystemVersion { get; init; }
     public Guid Id { get; init; } = Guid.NewGuid();
     public string Name { get; init; } = "My franchise";
     public required ProLeague League { get; init; }

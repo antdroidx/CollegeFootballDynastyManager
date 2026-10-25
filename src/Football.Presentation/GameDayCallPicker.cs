@@ -4,15 +4,15 @@ using Microsoft.Maui.Graphics;
 namespace DynastyManager.App;
 
 // A field overlay, rather than another navigation screen: selection never advances a snap.
-internal sealed record GameDayCallChoice(string Id, string Name, string Formation, string Type, IDrawable Art);
+public sealed record GameDayCallChoice(string Id, string Name, string Formation, string Type, IDrawable Art);
 
-internal sealed class GameDayViewerPage : ContentPage
+public sealed class GameDayViewerPage : ContentPage
 {
     public Func<bool>? BackHandler { get; set; }
     protected override bool OnBackButtonPressed() => BackHandler?.Invoke() == true || base.OnBackButtonPressed();
 }
 
-internal sealed class GameDayCallPicker : Border
+public sealed class GameDayCallPicker : Border
 {
     public GameDayCallPicker(string title, IReadOnlyList<GameDayCallChoice> choices, string selectedId,
         Action<string> select, Action close)
@@ -61,7 +61,7 @@ internal sealed class GameDayCallPicker : Border
         Content = body;
     }
 
-    internal static Border Card(string name, string formation, string type, IDrawable? art, Action select, bool compact, bool portrait = false)
+    public static Border Card(string name, string formation, string type, IDrawable? art, Action select, bool compact, bool portrait = false)
     {
         var diagram = new GraphicsView { Drawable = art, IsVisible = art is not null,
             HeightRequest = compact ? portrait ? 58 : 68 : 100, BackgroundColor = Color.FromArgb("#102A24"), InputTransparent = true };

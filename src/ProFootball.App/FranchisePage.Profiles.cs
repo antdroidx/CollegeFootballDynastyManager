@@ -27,12 +27,14 @@ public sealed partial class FranchisePage
         var s = state!; var p = s.Players.FirstOrDefault(x => x.Football.PlayerId == original.Football.PlayerId) ?? original; var f = p.Football;
         var contract = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == f.PlayerId);
         var identity = new HorizontalStackLayout { Spacing = 14, Children = { Portrait(p, 108), new VerticalStackLayout { Children = { Text(f.FullName, 23, true), Text($"#{f.JerseyNumber} · {OffensiveLineService.Label(f)} · {f.TeamName}"), Text($"Age {p.Age} · Experience {p.Experience} · {f.HeightInches / 12}′{f.HeightInches % 12}″ · {f.WeightPounds} lb") } } } };
-        var attributes = new List<View> { Text($"OVR {f.OverallRating} · Potential {f.PotentialRating} · Morale {p.Morale}", 20, true) };
-        foreach (var (name, rating) in new[] { ("Speed", f.SpeedRating), ("Strength", f.StrengthRating), ("Agility", f.AgilityRating), ("Awareness", f.AwarenessRating), ("Durability", f.InjuryRating), ("Passing power", f.Skills?.PassingPower ?? 0), ("Passing accuracy", f.Skills?.PassingAccuracy ?? 0), ("Catching", f.Skills?.Catching ?? 0), ("Tackling", f.Skills?.Tackling ?? 0), ("Run blocking", f.Skills?.RunBlocking ?? 0), ("Pass blocking", f.Skills?.PassBlocking ?? 0) })
-        { attributes.Add(Text(name + " · " + rating)); attributes.Add(new ProgressBar { Progress = rating / 100d, ProgressColor = DynastyTheme.Accent }); }
+        var attributes = new List<View> { Text($"OVR {f.OverallRating} · Potential {PlayerAttributeCatalog.PotentialStars(f.PotentialRating)}", 20, true), Text("Player ratings · 1–99 scale", 12) };
+        foreach (var group in PlayerAttributeCatalog.Groups(f))
+            attributes.Add(PlayerAttributeViews.Group(group.Title, group.Subtitle, group.Attributes,
+                (title, subtitle) => new VerticalStackLayout { Spacing = 3, Children = { Text(title, 15, true), Text(subtitle, 11) } }));
+        attributes.Add(Text("Higher ratings are better. Injury represents resistance to injury and wear.", 11));
         var actions = new ActionRow(); if (f.TeamName == s.UserTeam) actions.Add(Action("Contract & roster actions", () => ManagePlayer(p)));
         var lines = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).SelectMany(g => g.Football.PlayerStats).Where(x => x.PlayerId == f.PlayerId).ToArray();
-        await ShowPage("Player profile", identity, Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text("Ratings · " + p.RatingSource, 12)), Panel("Attributes", attributes.ToArray()),
+        await ShowPage("Player profile", identity, Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder}", 12)),
             Panel("Contract", Text(contract is null ? "No active contract" : $"Current cap hit {Money(ProEconomy.CapHit(contract, s.Year))} · Bonus balance {Money(contract.SigningBonus)}"), Text(contract is null ? "" : string.Join("\n", contract.Years.Select(y => $"{y.Year} · Salary {Money(y.Salary)} · Guaranteed {Money(y.Guaranteed)}"))), Text(contract?.Estimated == true ? "Estimated game contract · real contract data not yet imported" : contract?.Source ?? "Franchise contract", 12)),
             Panel("Regular season", Text($"Passing {lines.Sum(x => x.PassYards)} yd · {lines.Sum(x => x.PassingTouchdowns)} TD\nRushing {lines.Sum(x => x.RushYards)} yd · Receiving {lines.Sum(x => x.ReceivingYards)} yd\nTackles {lines.Sum(x => x.Tackles)} · Sacks {lines.Sum(x => x.Sacks)}")), actions);
     }
@@ -79,11 +81,11 @@ public sealed partial class FranchisePage
         }
         if (games.Length == 0) body.Add(Text("Regular-season statistics appear after the first completed regular-season game."));
     }
-    Task ShowBoxScore(ScheduledGame g)
+    Task ShowBoxScore(ScheduledGame g) => GameCastBoxScore.ShowAsync(Navigation, new()
     {
-        var home = g.HomeStats ?? new(); var away = g.AwayStats ?? new();
-        var stats = Table([("Statistic", 140), ("Away", 100), ("Home", 100)], new[] { new View[] { Text("Total yards"), Text(away.TotalYards.ToString()), Text(home.TotalYards.ToString()) }, new View[] { Text("Passing"), Text(away.PassYards.ToString()), Text(home.PassYards.ToString()) }, new View[] { Text("Rushing"), Text(away.RushYards.ToString()), Text(home.RushYards.ToString()) }, new View[] { Text("Turnovers"), Text(away.Turnovers.ToString()), Text(home.Turnovers.ToString()) }, new View[] { Text("Sacks allowed"), Text(away.SacksAllowed.ToString()), Text(home.SacksAllowed.ToString()) } });
-        var players = Table([("Player", 190), ("Pass", 60), ("Rush", 60), ("Rec", 60), ("Tkl", 50)], g.PlayerStats.OrderByDescending(x => x.ScrimmageYards).ThenByDescending(x => x.Tackles).Select(x => { var p = state!.Players.FirstOrDefault(p => p.Football.PlayerId == x.PlayerId); return new View[] { p is null ? Text(x.PlayerName) : Link(x.PlayerName, () => Player(p)), Text(x.PassYards.ToString()), Text(x.RushYards.ToString()), Text(x.ReceivingYards.ToString()), Text(x.Tackles.ToString()) }; }));
-        return ShowPage("Game report", Text($"{g.AwayTeamName} {g.AwayScore} – {g.HomeScore} {g.HomeTeamName}", 22, true), Text($"{g.SeasonYear} · Week {g.Week}"), Panel("Team statistics", stats), Panel("Player statistics", players));
-    }
+        HomeTeamName = g.HomeTeamName, AwayTeamName = g.AwayTeamName, HomeScore = g.HomeScore ?? 0, AwayScore = g.AwayScore ?? 0,
+        HomeStats = g.HomeStats ?? new(), AwayStats = g.AwayStats ?? new(), Periods = g.PeriodScores, Players = g.PlayerStats,
+        Quarter = Math.Max(4, g.PeriodScores.Select(p => p.Period).DefaultIfEmpty(4).Max()), ClockSeconds = 0, IsComplete = g.HasPlayed,
+        HomeMorale = g.HomeEndingMorale, AwayMorale = g.AwayEndingMorale, Weather = g.Weather, PlayerOfGame = g.PlayerOfGame
+    }, ProGameCastPresentation.BoxStyle(state!.League));
 }

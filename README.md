@@ -61,3 +61,9 @@ See [LICENSE](LICENSE) for repository licensing and the historical documentation
 ## Pro parity and contract-data status
 
 See [the current parity audit](docs/pro-parity-audit.md) for implemented screens and remaining college UI/GameCast gaps. New pro franchises can select a dated OverTheCap/nflverse contract snapshot or estimated game contracts. [Contract provenance](docs/nfl-contract-data.json) records coverage and limitations; team cap room remains provisional until rollover, adjustments, and historical dead money are imported. Existing save finances are preserved.
+
+## Shared player ratings and GameCast
+
+Both games use the same 19 player attributes, position-weighted overall calculation, potential-star scale, and responsive attribute tiles. Pro imports supply attribute data; external overall ratings are not the in-game overall. Existing pro saves adopt the shared calculation once while retaining player IDs, contracts, and historical results.
+
+The college GameCast animation, playbook cards/diagrams, camera framing, broadcast scoreboard layout, and detailed live box-score page live in `Football.Presentation` and are called by both apps. Professional rules and aging remain league-specific. See the [parity audit](docs/pro-parity-audit.md) for remaining work.

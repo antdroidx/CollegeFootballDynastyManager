@@ -33,3 +33,11 @@ Preserve college package IDs, signing key, serialized type names, assembly ident
 
 ## First device evidence
 Initial pro candidate passed launch/create, CPU watch, replay, rotation, save/reload, advancing a week and coach-mode play selection on Android API 36. Screenshot review prompted smaller landscape field framing and use of shared offensive alignment (to prevent overlapping linemen). The final candidate additionally checks update-install preservation and light/Fold display. Refer to the final Actions run for actual final status rather than treating this planned checklist as proof.
+
+## October 25 shared presentation and rating correction
+
+The former independent `ProLivePage.Animate` routine has been removed. Both hosts call `GameCastAnimation.PlayAsync`, extracted from the college routine with branding, marker factories, preferences and camera adapters. The extracted choreography was compared with the original after adapter substitution. It consumes recorded events and never advances the simulation or its random generator. The college host retains its original controls, preferences, marker factories and table styling.
+
+`GameCastCamera`, `GameCastScoreboard`, `GameDayCallPicker`, `PlayArtDrawable`, `GameCastBoxScore`, `FootballStatViews`, and `PlayerAttributeViews` now also reside in the shared presentation project. Each application supplies team branding and league statistics formatting; pro passer rating uses the NFL formula rather than the college passing-efficiency formula.
+
+`PlayerAttributeCatalog` defines the same 19 displayed attributes and potential-star labels for both games. The existing college `PlayerRatingService.CalculateOverall` is the canonical overall calculation. Pro snapshot creation, generated players, draft prospects, imported college classes and offseason progression recalculate overall from those attributes. `ProPlayerRatingService.Migrate` applies the change once to old pro saves via `RatingSystemVersion`; it does not rewrite contracts or completed game results. College save models and the calibrated overall formula are unchanged. Import attribution remains in the data manifest rather than on player cards.
