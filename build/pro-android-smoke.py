@@ -5,7 +5,11 @@ import re
 from pathlib import Path
 spec=importlib.util.spec_from_file_location("college_smoke",Path(__file__).with_name("android-ui-smoke.py"))
 s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
-def ready(name,label): return s.wait_for("pro-"+name,lambda r:label in s.texts(r),timeout=180)
+def ready(name,label):
+    def loaded(root):
+        assert "Unable to continue" not in s.texts(root), "Unexpected app error at "+name
+        return label in s.texts(root)
+    return s.wait_for("pro-"+name,loaded,timeout=180)
 def click(name,label):
     if label in {"Overview","Roster","Staff","Front office","Schedule","Standings","Playoffs","Statistics","Analytics","Inbox","News","Honors","Career","History"}:
         navigate(label);return s.capture("pro-"+name)

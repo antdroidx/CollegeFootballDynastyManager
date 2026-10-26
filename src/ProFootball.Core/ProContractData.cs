@@ -26,7 +26,7 @@ public static class ProContractData
             var end=rookie+(p.DraftOverall is >0?4:3)-1;
             if(end<state.Year||c.Years.Max(y=>y.Year)>=end)return c;
             var current=c.Years.SingleOrDefault(y=>y.Year==state.Year);if(current is null)return c;
-            var years=c.Years.Concat(Enumerable.Range(state.Year+1,end-state.Year).Where(year=>!c.Years.Any(y=>y.Year==year)).Select(year=>new ContractYear(year,current.Salary,0){ProratedBonus=current.ProratedBonus??0})).OrderBy(y=>y.Year).ToList();
+            var years=c.Years.Select(y=>y with{ProratedBonus=ProEconomy.BonusCharge(c,y.Year)}).Concat(Enumerable.Range(state.Year+1,end-state.Year).Where(year=>!c.Years.Any(y=>y.Year==year)).Select(year=>new ContractYear(year,current.Salary,0){ProratedBonus=c.Estimated?0:current.ProratedBonus??0})).OrderBy(y=>y.Year).ToList();
             return c with{Years=years,BonusYears=Math.Max(c.BonusYears,end-c.SignedYear+1),SigningBonus=years.Sum(y=>y.ProratedBonus??0),FutureTermsEstimated=true};
         }).ToList();
         return state with{Players=players,Contracts=contracts};

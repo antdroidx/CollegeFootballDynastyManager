@@ -88,3 +88,5 @@ User chose illustrated portraits with editing rather than real photos. Pro playe
 Focused new regression checks pass; full Pro suite and both Android packaging/device workflows are pending. Do not label this source as a tested APK yet. Latest verified downloads remain Pro 25 / College 383. The prior Pro27/College385 device-test assumptions are fixed in the helper source; final reruns are required. Main is untouched; continuation remains active.
 
 Local refinement validation: **90 Pro cases passed**, including twenty-season simulation and the all-224-picks zero-cap regression; **682 combined Core/College fast cases passed**. UI helper tests: 10 passed; resources check passed. Final Android packaging/device acceptance pending.
+
+Final refinement corrections: **91 Pro cases passed** (including current-cap preservation when repairing legacy estimated rookie terms). Both apps package locally; emulator confirmed saved appearance. Fixed preseason analytics with no regular-season rows before final Android rerun. Source `a9e0d94` is superseded by this correction batch; retain the last fully verified APK links until the final workflows pass.

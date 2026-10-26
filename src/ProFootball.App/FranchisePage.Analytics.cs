@@ -29,8 +29,9 @@ public sealed partial class FranchisePage
             if(selected.Length==0){comparisonBody.Add(Text("Regular-season comparisons appear after your team plays. Preseason and exhibition results are excluded."));return;}
             comparisonBody.Add(Table([("Metric",195),("Unit",65),("Your team",90),("League avg",100),("Leader",95),("Leading team",190),("Rank",75)],selected.Select(c=>new View[]{Text(c.Metric),Text(c.Unit),Text(c.Team.ToString("0.0")),Text(c.Average.ToString("0.0")),Text(c.Leader.ToString("0.0")),Text(c.LeaderTeam),Text($"{c.Rank}/{c.Teams}")})));
             comparisonBody.Add(Text("Performance uses per-game regular-season values and teams with results. Roster comparisons use active players; lower age means younger, and lower committed cap means less committed—not necessarily a stronger team.",12));
+            if(selected.Length==0){comparisonBody.Add(Text("League performance comparisons appear after regular-season games are completed. Roster quality and cap comparisons are available now.",12));return;}
             var metric=new Picker {Title="Compare metric",ItemsSource=selected.Select(c=>c.Metric).ToArray(),SelectedIndex=0};var chart=new ContentView();comparisonBody.Add(metric);comparisonBody.Add(chart);
-            void DrawChart(){var c=selected[metric.SelectedIndex];chart.Content=FootballBarChart.Create(new[]{(s.UserTeam,c.Team),("League average",c.Average),("Leader · "+c.LeaderTeam,c.Leader)},"0.0");}
+            void DrawChart(){if(metric.SelectedIndex<0||metric.SelectedIndex>=selected.Length)return;var c=selected[metric.SelectedIndex];chart.Content=FootballBarChart.Create(new[]{(s.UserTeam,c.Team),("League average",c.Average),("Leader · "+c.LeaderTeam,c.Leader)},"0.0");}
             metric.SelectedIndexChanged+=(_,_)=>DrawChart();DrawChart();
         }
         section.SelectedIndexChanged+=(_,_)=>DrawComparisons();DrawComparisons();

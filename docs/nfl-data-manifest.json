@@ -82,5 +82,15 @@
     "ea-players.json": "25aa38d30e1bd08c3d6af2eba9ab51729dd6c18f9c588347d883f6330f75cc44",
     "madden27.csv": "81bbb772eaa02eb415acf88d452093905798cb88c73269736cff31bef72bbceb",
     "roster_weekly_2026.csv": "6fb16e87a8da6da3ac1e8039e1ba3a47ab15521edc40ebd6aa57e47355187ac4"
+  },
+  "RookieMetadata": {
+    "Url": "https://github.com/nflverse/nflverse-data/releases/download/weekly_rosters/roster_weekly_2026.csv",
+    "RetrievedUtc": "2026-10-26T05:21:00.776287+00:00",
+    "Sha256": "fa5b91be4c5cb216f40d7f8692df991e0a8124d5c5724714a12f5756246c0efb",
+    "Fields": [
+      "rookie_year",
+      "draft_number"
+    ],
+    "Appearance": "No skin-tone data imported. Illustrated portraits use editable game representations."
   }
 }

@@ -25,6 +25,14 @@ public class ManagementRefinementTests
         Assert.Equal(ProEconomy.CapHit(original,s.Year),ProEconomy.CapHit(contract,s.Year));Assert.Equal(3,contract.Years.Count);Assert.True(contract.FutureTermsEstimated);
         Assert.Equal(contract,ProContractData.CompleteRookieTerms(migrated).Contracts.Single(c=>c.PlayerId==rookie.Football.PlayerId));
     }
+    [Fact] public void LegacyEstimatedRookieRepairPreservesCurrentYearCharge()
+    {
+        var s=ProLeagueService.Create("Seattle Seahawks");var p=s.Players.First(p=>p.RookieYear==s.Year&&p.DraftOverall is >0&&!p.PracticeSquad);
+        var c=new ProContract(p.Football.PlayerId,p.Football.TeamName,s.Year,1,400_000,[new(s.Year,1_000_000,200_000)]);
+        s=s with{Contracts=s.Contracts.Where(x=>x.PlayerId!=p.Football.PlayerId).Append(c).ToList()};
+        var next=ProContractData.CompleteRookieTerms(s);var repaired=next.Contracts.Single(x=>x.PlayerId==p.Football.PlayerId);
+        Assert.Equal(4,repaired.Years.Count);Assert.Equal(ProEconomy.CapHit(c,s.Year),ProEconomy.CapHit(repaired,s.Year));Assert.Equal(400_000,repaired.SigningBonus);
+    }
     [Fact] public void InboxResolvesCapAlertsAndReadStateSurvivesRefresh()
     {
         var s=ProLeagueService.Create("Seattle Seahawks") with{SalaryCap=0};var notices=ProInbox.Build(s);var cap=Assert.Single(notices,n=>n.Id.StartsWith("cap-"));
