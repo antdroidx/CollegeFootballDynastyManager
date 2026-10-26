@@ -142,3 +142,10 @@ The October 26 Parquet has ten additional unique same-team, exact normalized-nam
 
 
 Financial QA retry 40415642843 passed the exact-APK source guard and all 13 helper cases, then stopped because the contract term was visible at the bottom while the adjacent APY remained below the viewport. Evidence confirmed correct profile/term; the harness now explicitly scrolls to the APY before asserting it. This does not change application inputs. Reuse Build 39 again; it is not accepted until the complete financial flow passes.
+
+
+### Aging implementation audit checkpoint
+
+Confirmed `ProOffseason.Advance` shifts skills and speed annually, then calls `ProPlayerRatingService.Refresh(resetBaseline:true)`. That recalculates the canonical overall, leaves the old potential ceiling intact, and resets the baseline to the new overall, hiding annual regression in a delta view. `FranchisePage.Profiles.cs` and the roster grid currently display absolute shared PotentialStars with no delta.
+
+Next aging batch: retain the shared 19-attribute overall calculation; add Pro-only positional peak/decline profiles, shrink remaining headroom after prime without forcing potential below current ability, and distinguish projected ability from remaining growth. Preserve a previous-season rating separately from the existing season-start baseline so offseason decline remains visible and does not masquerade as in-season change. Legacy saves with no recorded prior-year rating must show an unknown/neutral baseline, never invented historical change. Test RB/CB/DE vs QB/OL/K trajectories, veteran ceiling conservation, generated prospects, migration idempotence and multi-season roster quality. Do not change College potential/star interpretation. Current financial APK acceptance is separate from this queued work.
