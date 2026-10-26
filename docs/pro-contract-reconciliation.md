@@ -51,3 +51,11 @@ Employment expiration, extension and retention use playing years. Bonus proratio
 The repeated 2029 sourced test exposed an existing CPU planning weakness: small cap-saving cuts could cost more to replace, and a no-offer round stopped even after a budget repair. Replacement funding/retry and retention depth reserves are included in this batch. Final multi-year results are recorded in current-work.md when verified. Do not promote the sourced default or call the 32 opening balances reconciled yet. Fifth-year option decisions remain a separate outstanding item.
 
 Run `dotnet run --project tools/ProContractAudit -- OUTPUT.json` for the developer ledger audit. Its full-roster model values are not an assertion of official Top-51 cap space. See pro-contract-source-audit.md.
+
+## Next rule audit checkpoint
+
+Before implementing offseason Top-51 counting, use CBA Article 13 section 6(a)(i), PDF page 125: contracts outside the highest 51 can still carry Paragraph 5 amounts above the applicable minimum thresholds (different for undrafted rookies). Do not implement this by dropping every charge outside a simple 51-player slice. Bonus proration/acceleration and other charges remain separate. Sections 6(b)(ii) and 6(b)(iii) also require distinguishing paid/guaranteed option bonuses and release timing. Current simplified release behavior is not a complete June-1 designation model; preserve its explicit preview until a versioned rule upgrade is tested.
+
+Primary reference: https://nflpaweb.blob.core.windows.net/website/PDFs/CBA/March-15-2020-NFL-NFLPA-Collective-Bargaining-Agreement-Final-Executed-Copy.pdf
+
+Landscape work preparation: ProLivePage currently stacks separate score/situation/possession rows, a field capped at half the page, quick cards, and a wrapping action row inside a ScrollView. Compare College's compact broadcast strip and quick-call collapse before changing field-height math. Keep field geometry/simulation independent of available display height. Test selected-call confirmation, reopening choices and next-snap reachability in a landscape viewport without scrolling.
