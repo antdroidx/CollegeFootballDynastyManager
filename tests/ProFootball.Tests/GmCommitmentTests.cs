@@ -1,0 +1,48 @@
+using DynastyManager.Core.Models;
+using ProFootball.Core;
+using Xunit;
+namespace ProFootball.Tests;
+public class GmCommitmentTests
+{
+    static (ProFranchise State,ProPlayer Qb,ProPlayer Receiver) Setup()
+    {
+        var s=ProLeagueService.Create("Seattle Seahawks",role:StaffRole.OffensiveCoordinator);
+        var qb=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Football.Position==Position.QB);
+        var receiver=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Football.Position==Position.WR);
+        s=s with{Contracts=[new(qb.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,1_000_000,0)]),new(receiver.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year+1,100_000_000,0)])]};
+        return(s,qb,receiver);
+    }
+    [Fact] public void FutureExtensionIsReviewedAndRejectedWithoutApplyingSideEffects()
+    {
+        var(s,qb,_)=Setup();var calls=0;
+        var result=ProManagement.Submit(s,"Extend",[qb.Football.PlayerId],0,x=>{calls++;return ProEconomy.Extend(x,x.UserTeam,qb.Football.PlayerId,1,100_000_000);});
+        Assert.Equal(1,calls);Assert.Same(s.Contracts,result.Contracts);Assert.Same(s.Transactions,result.Transactions);
+        var decision=Assert.Single(result.GmDecisions);Assert.False(decision.Approved);Assert.Contains((s.Year+1).ToString(),decision.Reason);
+        Assert.Contains("future shared cap",decision.Reason);
+    }
+    [Fact] public void PendingMultiyearOffersReserveFutureUnitBudget()
+    {
+        var(s,_,receiver)=Setup();var free=s.Players.First(p=>p.Football.TeamName=="Free agent"&&p.Football.Position==Position.RB&&!s.Waivers.Any(w=>w.PlayerId==p.Football.PlayerId));
+        s=s with{Contracts=s.Contracts.Select(c=>c.PlayerId==receiver.Football.PlayerId?c with{Years=[new(s.Year+1,150_000_000,0)]}:c).ToList()};
+        var result=ProManagement.Submit(s,"Offer",[free.Football.PlayerId],40_000_000,x=>ProEconomy.Offer(x,x.UserTeam,free.Football.PlayerId,3,40_000_000,0));
+        Assert.False(Assert.Single(result.GmDecisions).Approved);Assert.Empty(result.Bids);Assert.Same(s.Players,result.Players);
+    }
+    [Fact] public void InheritedFutureOverageCanBeReducedWithoutIncreasingIt()
+    {
+        var(s,_,receiver)=Setup();s=s with{Contracts=s.Contracts.Select(c=>c.PlayerId==receiver.Football.PlayerId?c with{Years=[new(s.Year+1,180_000_000,0)]}:c).ToList()};
+        var result=ProManagement.Submit(s,"Reduce",[receiver.Football.PlayerId],0,x=>x with{Contracts=x.Contracts.Select(c=>c.PlayerId==receiver.Football.PlayerId?c with{Years=[new(s.Year+1,170_000_000,0)]}:c).ToList()});
+        Assert.True(Assert.Single(result.GmDecisions).Approved);Assert.Equal(170_000_000,result.Contracts.Sum(c=>ProEconomy.CapHit(c,s.Year+1)));
+    }
+    [Fact] public void BonusHorizonOutsideSalaryRowsIsStillReserved()
+    {
+        var(s,qb,_)=Setup();s=s with{Contracts=s.Contracts.Where(c=>c.PlayerId==qb.Football.PlayerId).ToList()};
+        var result=ProManagement.Submit(s,"Bonus commitment",[qb.Football.PlayerId],0,x=>x with{Contracts=x.Contracts.Select(c=>c with{SigningBonus=400_000_000,BonusYears=2,Years=c.Years.Select(y=>y with{ProratedBonus=0}).ToList()}).ToList()});
+        var decision=Assert.Single(result.GmDecisions);Assert.False(decision.Approved);Assert.Contains((s.Year+1).ToString(),decision.Reason);Assert.Same(s.Contracts,result.Contracts);
+    }
+    [Fact] public void HeadCoachRetainsWholeTeamAllocation()
+    {
+        var(s,qb,_)=Setup();s=s with{Career=s.Career! with{Role=StaffRole.HeadCoach}};
+        var result=ProManagement.Submit(s,"Extend",[qb.Football.PlayerId],0,x=>ProEconomy.Extend(x,x.UserTeam,qb.Football.PlayerId,1,100_000_000));
+        Assert.Empty(result.GmDecisions);Assert.Contains(result.Contracts,c=>c.PlayerId==qb.Football.PlayerId&&c.Years.Any(y=>y.Year==s.Year+1));
+    }
+}

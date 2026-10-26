@@ -78,3 +78,7 @@ All jobs passed for source `a94fbe56e9d7c03d06654bf5d9aa7acecdcc6801`:
 - Local synchronization helper tests: 10 passed; packaged resources check passed.
 
 The follow-on morale/honors/camp/efficiency batch is now verified. Prior pending statements above are historical. CPU autonomous trade proposals, deeper GM future-commitment review, sourced cap reconciliation and broader long-term balancing remain acceptance gaps. Keep the continuation active and source accounting experimental.
+
+Active follow-up: coordinator GM decisions preview future unit commitments and pending bids, reject atomically, and permit non-worsening inherited-overage repairs. Five new focused tests; final full/Android checks pending. This does not complete shared-pick review or sourced cap reconciliation.
+
+Coordinator future-commitment checkpoint: five focused Pro cases passed. Final full suite and both Android workflows will validate the committed batch; the latest verified APKs remain Pro 25 / College 383 until those complete.

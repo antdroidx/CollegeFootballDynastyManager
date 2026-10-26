@@ -60,3 +60,9 @@ Historical management-UI handoff: [Build 309 history](current-work-build309.md).
 ## Final verification checkpoint
 
 Pro Build 25 and College Build 383 both completed successfully at source `a94fbe5`. Pro: 64 automated cases and Android passed. Core/College combined: 682 fast cases; College career and broad management/theme Android passed. Local UI-helper tests: 10 passed; packaged-resource check passed. Both status documents updated. The hourly continuation stays active because CPU autonomous trade offers, sourced cap reconciliation and the remaining roadmap are not complete. No merge or repository cleanup was performed.
+
+## Active batch — coordinator future commitments
+
+A focused GM review now previews a proposed coordinator transaction once and checks every committed future year, including bonus horizons and pending multi-year bids. A current-year discount cannot bypass the unit allocation. A declined preview keeps contracts, rosters, bids and transaction logs unchanged and records the reason in the private GM inbox. Non-worsening repairs of inherited future overages are allowed; head coaches retain full-team authority. Five new Pro regression cases cover these paths, including bonus-only commitment years. Final full Pro run and Android publication are pending; Pro 25 / College 383 remain the latest verified downloads. Shared-pick valuation review and autonomous CPU trade offers remain outstanding.
+
+Coordinator future-commitment checkpoint: five focused Pro cases passed. Final full suite and both Android workflows will validate the committed batch; the latest verified APKs remain Pro 25 / College 383 until those complete.

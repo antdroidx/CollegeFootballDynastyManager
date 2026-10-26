@@ -113,8 +113,36 @@ public static class ProManagement
         var approved = extraCommitment <= room && spending + Math.Max(0, extraCommitment) <= s.SalaryCap * .55;
         if (sharedPicks && players.Count == 0) approved = false;
         var reason = approved ? "GM approved: within the team cap and your unit's spending allocation." : sharedPicks && players.Count == 0 ? "The GM retains control of pick-only trades; recommend a player acquisition for your unit." : "GM declined: protect shared cap room and the other unit's budget.";
+        var proposal = s;
+        if (approved)
+        {
+            proposal = execute(s);
+            // A current-year discount must not bypass review of back-loaded contracts or reserved bids.
+            long UnitCost(ProFranchise state, int year)
+            {
+                var own = state.Players.Where(p => p.Football.TeamName == state.UserTeam && ProCareer.Controls(state, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
+                var contracts = state.Contracts.Where(c => c.Team == state.UserTeam && own.Contains(c.PlayerId)).Sum(c => ProEconomy.CapHit(c, year));
+                var bids = state.Bids.Where(b => b.Team == state.UserTeam && year >= state.Year && year < state.Year + b.Years && state.Players.Any(p => p.Football.PlayerId == b.PlayerId && ProCareer.Controls(state, p.Football.Position)))
+                    .Sum(b => b.AnnualSalary + (b.Bonus + b.Years - 1) / b.Years);
+                return contracts + bids;
+            }
+            var years = proposal.Contracts.Where(c => c.Active && c.Team == proposal.UserTeam).SelectMany(c => c.Years.Select(y => y.Year))
+                .Concat(proposal.Contracts.Where(c => c.Active && c.Team == proposal.UserTeam).SelectMany(c => Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year))))
+                .Concat(proposal.Bids.Where(b => b.Team == proposal.UserTeam).SelectMany(b => Enumerable.Range(proposal.Year, b.Years)))
+                .Where(y => y >= s.Year).Append(s.Year).Distinct().Order();
+            foreach (var year in years)
+            {
+                // Permit a non-worsening repair of an inherited over-budget season.
+                var ceiling = Math.Max(s.SalaryCap * .55, UnitCost(s, year));
+                var projected = UnitCost(proposal, year);
+                if (projected <= ceiling) continue;
+                approved = false;
+                reason = $"GM declined: {year} unit commitments of ${projected:N0} exceed the ${ceiling:N0} planning allocation, including pending offers. Protect future shared cap space.";
+                break;
+            }
+        }
         var decision = new ProGmDecision(Guid.NewGuid(), s.Year, s.Week, action, approved, reason);
-        s = s with { GmDecisions = s.GmDecisions.Append(decision).TakeLast(100).ToList() };
-        return approved ? execute(s) : s;
+        var result = approved ? proposal : s;
+        return result with { GmDecisions = s.GmDecisions.Append(decision).TakeLast(100).ToList() };
     }
 }
