@@ -239,6 +239,7 @@ try:
     s.capture("pro-news")
     click("delete-overview","Overview")
     click("delete-exit","Save & exit")
+    ready("delete-library-ready","Delete save")
     click("delete-prompt","Delete save")
     dialog=ready("delete-confirm","Delete franchise?")
     s.tap(dialog,"Cancel")

@@ -5,6 +5,7 @@ namespace ProFootball.Core;
 /// <summary>Source snapshot only applies to newly created real-team franchises.</summary>
 public static class ProContractData
 {
+    static readonly Lazy<Dictionary<string, ProPlayer>> RookieMetadata = new(() => ProLeagueService.Snapshot().Players.Where(p=>!string.IsNullOrEmpty(p.ExternalId)).DistinctBy(p=>p.ExternalId).ToDictionary(p=>p.ExternalId));
     public static IReadOnlyList<ProContract> Load()
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.nfl-contracts.json")!;
@@ -18,10 +19,11 @@ public static class ProContractData
     }
     public static ProFranchise CompleteRookieTerms(ProFranchise state)
     {
-        var metadata=ProLeagueService.Snapshot().Players.Where(p=>!string.IsNullOrEmpty(p.ExternalId)).DistinctBy(p=>p.ExternalId).ToDictionary(p=>p.ExternalId);
+        var metadata=RookieMetadata.Value;
         var players=state.Players.Select(p=>p.RookieYear is null&&metadata.TryGetValue(p.ExternalId,out var source)?p with{RookieYear=source.RookieYear,DraftOverall=source.DraftOverall}:p).ToList();
+        var byId=players.ToDictionary(p=>p.Football.PlayerId);
         var contracts=state.Contracts.Select(c=>{
-            var p=players.FirstOrDefault(p=>p.Football.PlayerId==c.PlayerId);
+            var p=byId.GetValueOrDefault(c.PlayerId);
             if(p?.PracticeSquad==true||!c.Active||c.LastChangedYear!=0||(!c.Estimated&&c.Source?.StartsWith("OverTheCap")!=true)||p?.RookieYear is not int rookie||state.Year<rookie)return c;
             var end=rookie+(p.DraftOverall is >0?4:3)-1;
             if(end<state.Year||c.Years.Max(y=>y.Year)>=end)return c;

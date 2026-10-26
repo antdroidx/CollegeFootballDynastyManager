@@ -47,19 +47,27 @@ public sealed partial class FranchisePage : ContentPage
     { var grid = new Grid { ColumnSpacing = 12, RowSpacing = 12 }; var previousCount = 0; void Layout() { var count = Width >= 900 ? 2 : 1; if (count == previousCount) return; previousCount = count; grid.ColumnDefinitions.Clear(); grid.RowDefinitions.Clear(); for (var c = 0; c < count; c++) grid.ColumnDefinitions.Add(new(GridLength.Star)); for (var i = 0; i < views.Length; i++) { if (i % count == 0) grid.RowDefinitions.Add(new(GridLength.Auto)); Grid.SetColumn(views[i], i % count); Grid.SetRow(views[i], i / count); } } foreach (var v in views) grid.Add(v); Layout(); grid.SizeChanged += (_, _) => Layout(); return grid; }
     async Task Library()
     {
-        state = null; LayoutShell(); body.Clear(); body.Add(new Image { Source = "pro_brand.png", HeightRequest = 145, HorizontalOptions = LayoutOptions.Center });
-        body.Add(Text("PRO FOOTBALL", 28, true)); body.Add(Text("Franchise Manager", 24, true)); body.Add(Text("Development preview · " + AppInfo.VersionString + " · Build " + AppInfo.BuildString));
-        body.Add(Action("New franchise", Create, "pro-new")); body.Add(Action("Options", Options)); body.Add(Text("Your franchises", 20, true));
-        foreach (var id in store.Slots().ToArray())
+        var previousBusy=busy;busy=true;
+        state=null;LayoutShell();body.Clear();body.Add(new Image{Source="pro_brand.png",HeightRequest=145,HorizontalOptions=LayoutOptions.Center});
+        body.Add(Text("PRO FOOTBALL",28,true));body.Add(Text("Franchise Manager",24,true));body.Add(Text("Development preview · "+AppInfo.VersionString+" · Build "+AppInfo.BuildString));
+        var create=Action("New franchise",Create,"pro-new");var options=Action("Options",Options);create.IsEnabled=options.IsEnabled=false;body.Add(create);body.Add(options);body.Add(Text("Your franchises",20,true));
+        var progress=new HorizontalStackLayout{Spacing=8,Children={new ActivityIndicator{IsRunning=true,WidthRequest=24,Color=DynastyTheme.Accent},Text("Loading franchises…")}};body.Add(progress);
+        try
         {
-            var slot = id; var row = new ActionRow(); string label;
-            try { var saved = await store.Load(slot); label = $"{saved.Name} · {saved.UserTeam} · {saved.Year} {saved.Phase} W{saved.Week}";
-                row.Add(Action(label, async () => { state = await store.Load(slot); section = "Overview"; Render(); })); }
-            catch (Exception) { label = "Unavailable save · " + slot; row.Add(Text(label)); }
-            row.Add(Action("Delete save", async () => { if (!await GameDialogs.AlertAsync(this, "Delete franchise?", label + "\nThis removes this franchise and its rolling backups. Other saves are unaffected.", "Delete", "Cancel")) return; await store.Delete(slot); await Library(); }));
-            body.Add(row);
+            foreach(var id in store.Slots().ToArray())
+            {
+                var slot=id;var row=new ActionRow();string label;
+                try
+                {
+                    var saved=await Task.Run(()=>store.Load(slot));label=$"{saved.Name} · {saved.UserTeam} · {saved.Year} {saved.Phase} W{saved.Week}";
+                    row.Add(Action(label,async()=>{state=await Task.Run(()=>store.Load(slot));section="Overview";Render();}));
+                }
+                catch(Exception){label="Unavailable save · "+slot;row.Add(Text(label));}
+                row.Add(Action("Delete save",async()=>{if(!await GameDialogs.AlertAsync(this,"Delete franchise?",label+"\nThis removes this franchise and its rolling backups. Other saves are unaffected.","Delete","Cancel"))return;await store.Delete(slot);await Library();}));body.Add(row);
+            }
+            body.Add(Text("NFL roster snapshot: 2026 Weeks 6–7. Player ratings use the same attributes and calculation as College Dynasty. Staff ratings are estimates.",12));
         }
-        body.Add(Text("NFL roster snapshot: 2026 Weeks 6–7. Player ratings use the same attributes and calculation as College Dynasty. Staff ratings are estimates.", 12));
+        finally{body.Remove(progress);create.IsEnabled=options.IsEnabled=true;busy=previousBusy;}
     }
     async Task Options()
     {
