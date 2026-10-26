@@ -13,7 +13,7 @@ public sealed partial class FranchisePage
             Text("Player commitments "+Dollars(b.PlayerCommitments)+" · Other cap charges "+Dollars(b.OtherCapCharges)),Text("Dead money "+Dollars(b.DeadMoney)+" · Rollover reserved "+Dollars(b.RolloverReserved)),
             Text("Available cap "+Dollars(b.Available)+" · Pending bids "+Dollars(ProEconomy.Pending(s,s.UserTeam)),12));
     }
-    View AnnualContractTable(ProContract c)=>Table([("Year",55),("Base salary",120),("Bonus / year",120),("Other cap",115),("Cap hit",125),("Guaranteed base",135)],ProContractInsights.Seasons(c).Select(y=>new View[]{Text(y.Year+(c.Years.Single(row=>row.Year==y.Year).IsVoid?" · Void":"")),Text(Dollars(y.Salary)),Text(Dollars(y.Bonus)),Text(Dollars(y.Other)),Text(Dollars(y.CapHit),14,true),Text(Dollars(y.Guaranteed))}));
+    View AnnualContractTable(ProContract c)=>Table([("Year",110),("Base salary",120),("Bonus / year",120),("Other cap",115),("Cap hit",125),("Guaranteed base",135)],ProContractInsights.Seasons(c).Select(y=>new View[]{Text(y.Year+(c.Years.Single(row=>row.Year==y.Year).IsVoid?" · Void":"")),Text(Dollars(y.Salary)),Text(Dollars(y.Bonus)),Text(Dollars(y.Other)),Text(Dollars(y.CapHit),14,true),Text(Dollars(y.Guaranteed))}));
     View ContractDetails(ProPlayer p,ProContract? c)
     {
         if(c is null)return Panel("Contract",Text("No active contract"));

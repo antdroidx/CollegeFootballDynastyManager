@@ -46,7 +46,8 @@ Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared
 - [x] Ten targeted cash/void/term/migration/trade/expiry regressions; all 118 Pro cases passed locally, including 20 generated + 5 sourced + 3 imported-cap seasons.
 - [x] Full source pack refreshed to October 26: 2,012 matched contracts; developer audit records 519 generated roster fallbacks and unresolved official accounting basis.
 - [x] Financial CI tests and Android packaging passed in run 40405152646.
-- [ ] Exact Build 35 contract/financial device acceptance and artifact/evidence links.
+- [x] Exact Build 35 financial/contract device acceptance passed: APK artifact 12690317621, evidence 12689689721, run 40405152646.
+- [ ] Final UI follow-up: widen accounting year column so Void label is readable; capture compact pay table fully and verify the next APK.
 - [ ] Finish broader source reconciliation and option rules before enabling the sourced default.
 
 ## Next authorized financial phase
