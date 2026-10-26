@@ -38,18 +38,29 @@ public static class ProHonors
                 selections.AddRange(selected.Select(p=>new ProAllStarSelection(p,conference)));
             }
         }
-        return s with{Honors=s.Honors.Append(new(s.Year,awards,selections)).ToList()};
+        return s with{Honors=s.Honors.Append(new ProSeasonHonors(s.Year,awards,selections){AllPros=SelectAllPros(players,Score)}).ToList()};
+    }
+    public static List<ProAllProSelection> SelectAllPros(IEnumerable<ProPlayer> source,Func<ProPlayer,double>? score=null)
+    {
+        score??=p=>p.Football.OverallRating;var selected=new List<ProAllProSelection>();
+        foreach(var group in source.Where(p=>!p.Retired&&!p.PracticeSquad&&!p.Reserve).DistinctBy(p=>p.Football.PlayerId).GroupBy(p=>p.Football.Position is Position.OL or Position.K?(p.Football.Position,p.Football.NcaaPositionCode??(p.Football.Position==Position.K?19:5)):(p.Football.Position,0)))
+        {
+            var count=group.Key.Item1 is Position.RB or Position.DE or Position.DT or Position.OLB or Position.CB?2:group.Key.Item1==Position.WR?3:1;
+            var ranked=group.OrderByDescending(score).ThenBy(p=>p.Football.PlayerId).Take(count*2).ToArray();
+            selected.AddRange(ranked.Select((p,i)=>new ProAllProSelection(p,i/count+1)));
+        }
+        return selected;
     }
     public static ProLeague ShowcaseLeague(ProSeasonHonors honors)
     {
         var conferences=honors.Selections.Select(p=>p.Conference).Distinct().ToArray();
         if(conferences.Length!=2)throw new InvalidOperationException("Two conference selection squads are required.");
-        return new(1,"Conference All-Star Showcase",53,16,conferences.Select((c,i)=>new ProTeam("AS_"+i,c,"All-Stars",c.Length<=4?c:c[..3].ToUpperInvariant(),c,"Showcase",0,i==0?"#B52235":"#2056A0","#FFFFFF")).ToList());
+        return new(1,"Pro Bowl",53,16,conferences.Select((c,i)=>new ProTeam("AS_"+i,c,"All-Stars",c.Length<=4?c:c[..3].ToUpperInvariant(),c,"Showcase",0,i==0?"#B52235":"#2056A0","#FFFFFF")).ToList());
     }
     public static GameDaySession StartShowcase(ProFranchise s,int year,GameDayMode mode,string? controlled=null)
     {
         var honors=s.Honors.Single(h=>h.Year==year);if(honors.Showcase?.HasPlayed==true)throw new InvalidOperationException("This showcase has already been completed.");
-        if(year==s.Year&&s.Phase!=ProPhase.Offseason)throw new InvalidOperationException("The showcase opens after the championship.");
+        if(year==s.Year&&s.Phase!=ProPhase.Offseason&&!(s.Phase==ProPhase.Playoffs&&s.Week==4))throw new InvalidOperationException("The Pro Bowl opens after the conference championship games.");
         var league=ShowcaseLeague(honors);var players=honors.Selections.Select(x=>x.Player with{Football=x.Player.Football with{TeamName=x.Conference+" All-Stars",CurrentInjury=null},PracticeSquad=false,Reserve=false,Retired=false}).ToList();
         var exhibition=s with{League=league,Players=players,GamePlans=[]};
         var game=new ScheduledGame{GameId=$"{s.Id}-{year}-showcase",SeasonYear=year,Week=19,HomeTeamName=league.Teams[1].Name,AwayTeamName=league.Teams[0].Name,IsNeutralSite=true,SimulationSeed=year*7919};

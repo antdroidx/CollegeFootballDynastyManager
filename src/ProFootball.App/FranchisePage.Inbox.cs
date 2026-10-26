@@ -20,7 +20,7 @@ public sealed partial class FranchisePage
     }
     Task Retention()
     {
-        body.Clear();body.Add(Action("‹ Front office",()=>Open("Front office")));body.Add(Text("Expiring contracts & retention",25,true));
+        body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Expiring contracts & retention",25,true));
         var s=state!;var available=s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention;
         body.Add(Text(available?"Renew, tag or let players leave before you advance. Unresolved expiring contracts leave at the next offseason step.":"Retention decisions open when the season ends.",12));
         var auto=new Switch{IsToggled=s.AutoNegotiateExpiring};var row=new HorizontalStackLayout{Spacing=10,Children={auto,Text("Staff negotiate expiring contracts on advancement")}};auto.Toggled+=async(_,e)=>{state=state! with{AutoNegotiateExpiring=e.Value};await Save();};body.Add(row);

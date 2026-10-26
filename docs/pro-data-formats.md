@@ -23,3 +23,14 @@ One shared engine, sprites and field renderer. Professional overtime and touchba
 
 ## Validation scope
 The automated economic stress test simulates 20 complete seasons and offseasons (6,400 generated prospects and 4,480 draft picks), checking roster bounds, nonnegative cap room, unique identities, aging, championships and draft completion. This verifies continuity and basic invariants; it does not establish NFL statistical or economic calibration. Separate tests cover data completeness, legacy save migration, bid competition, dead money, pick ownership, staff windows and defensive pursuit. College regression has 678 passing cases; Android workflows validate actual builds and device flows.
+
+
+## October 26 appearance reference overlay
+
+`build/import-player-appearance.py` derives cheek colors from public NFL/ESPN roster headshot URLs in the nflverse roster feed. OpenCV detects a single frontal face, samples both cheeks and rejects insufficient/highly uneven patches. `nfl-appearances.json` contains 2,248 usable source references, including 1,944 matching the bundled 2,593-player snapshot; raw photos are not shipped and the game needs no network. A small contact sheet was visually reviewed. These are photo-lighting-dependent approximations, not verified complexion measurements. Unmatched players retain editable illustrated appearances. Names/ethnicity are never used to assign colors.
+
+The additive `SkinColorHex` supplies the same validated RGB color to portraits and shared live sprites; the seven-tone editor remains available. `AppearanceOrigin=custom` and legacy explicit skin edits take precedence over the photo overlay. College defaults and imported NCAA appearance codes retain their existing interpretation. Users can override any inferred appearance and the override persists.
+
+## Current financial documentation
+
+The older preview notes above describe earlier foundations. Current rollover, cash-floor/minimums, annual release accounting, revenue projections and their limits are documented in [pro-financial-model.md](pro-financial-model.md). Current trade UI supports packages and three future pick classes; careers, role restrictions, staff changes during the season, notifications and annual honors are implemented. The canonical current status is [current-work.md](current-work.md), not the historical preview paragraphs.

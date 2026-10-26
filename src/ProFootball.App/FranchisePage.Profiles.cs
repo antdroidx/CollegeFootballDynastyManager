@@ -35,32 +35,32 @@ public sealed partial class FranchisePage
         var actions = new ActionRow(); actions.Add(Action("Edit appearance",()=>EditPlayerAppearance(p))); if (f.TeamName == s.UserTeam) actions.Add(Action("Contract & roster actions", () => ManagePlayer(p)));
         var lines = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).SelectMany(g => g.Football.PlayerStats).Where(x => x.PlayerId == f.PlayerId).ToArray();
         await ShowPage("Player profile", identity, Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
-            Panel("Contract", Text(contract is null ? "No active contract" : $"Current cap hit {Money(ProEconomy.CapHit(contract, s.Year))} · Bonus balance {Money(contract.SigningBonus)}"), Text(contract is null ? "" : string.Join("\n", contract.Years.Select(y => $"{y.Year} · Salary {Money(y.Salary)} · Guaranteed {Money(y.Guaranteed)}"))), Text(contract?.Estimated == true ? "Estimated game contract · real contract data not yet imported" : (contract?.Source ?? "Franchise contract")+(contract?.FutureTermsEstimated==true?" · Future rookie salaries/bonus charges estimated; current-year source retained":""), 12)),
+            ContractDetails(p,contract),
             PlayerAnalytics(p), Panel("Regular season", Text($"Passing {lines.Sum(x => x.PassYards)} yd · {lines.Sum(x => x.PassingTouchdowns)} TD\nRushing {lines.Sum(x => x.RushYards)} yd · Receiving {lines.Sum(x => x.ReceivingYards)} yd\nTackles {lines.Sum(x => x.Tackles)} · Sacks {lines.Sum(x => x.Sacks)}")), actions);
     }
     async Task EditPlayerAppearance(ProPlayer original)
     {
         var current=state!.Players.FirstOrDefault(p=>p.Football.PlayerId==original.Football.PlayerId)??original;
         var appearance=current.Football.Appearance??new NcaaPlayerAppearance();
-        var tone=new Picker{AutomationId="pro-skin-tone",Title="Skin tone",ItemsSource=new[]{"Light","Light medium","Medium","Tan","Brown","Dark brown","Deep"},SelectedIndex=PortraitAppearance.ForPlayer(current.Football.PlayerId,appearance).Skin};
+        var tone=new Picker{AutomationId="pro-skin-tone",Title="Skin tone",ItemsSource=new[]{"Current appearance","Light","Light medium","Medium","Tan","Brown","Dark brown","Deep"},SelectedIndex=appearance.SkinColorHex is not null?0:PortraitAppearance.ForPlayer(current.Football.PlayerId,appearance).Skin+1};
         var hair=new Picker{Title="Hair color",ItemsSource=new[]{"Automatic","Black","Blonde","Brown","Red","Light brown","Gray"},SelectedIndex=(appearance.HairColor??-1)+1};
         var style=new Picker{Title="Hair style",ItemsSource=new[]{"Automatic","Bald","Cornrows","Afro","Flat top","Buzz cut","Fade","Balding","Close crop","Bald (hidden)","Bald 2","Balding 2","Buzz cut 2","Fade 2","Mullet","Dreadlocks"},SelectedIndex=(appearance.HairStyle??-1)+1};
         var beard=new Picker{Title="Facial hair",ItemsSource=new[]{"Automatic","Clean shaven","Stubble","Goatee","Beard"},SelectedIndex=(appearance.FacialHair??-1)+1};
-        NcaaPlayerAppearance Selected()=>appearance with{SkinTone=tone.SelectedIndex,HairColor=hair.SelectedIndex<=0?null:hair.SelectedIndex-1,HairStyle=style.SelectedIndex<=0?null:style.SelectedIndex-1,FacialHair=beard.SelectedIndex<=0?null:beard.SelectedIndex-1};
+        NcaaPlayerAppearance Selected()=>appearance with{SkinTone=tone.SelectedIndex==0?appearance.SkinTone:tone.SelectedIndex-1,SkinColorHex=tone.SelectedIndex==0?appearance.SkinColorHex:null,HairColor=hair.SelectedIndex<=0?null:hair.SelectedIndex-1,HairStyle=style.SelectedIndex<=0?null:style.SelectedIndex-1,FacialHair=beard.SelectedIndex<=0?null:beard.SelectedIndex-1};
         var preview=new ContentView();
         void Refresh()=>preview.Content=Portrait(current with{Football=current.Football with{Appearance=Selected()}},120);
         tone.SelectedIndexChanged+=(_,_)=>Refresh();hair.SelectedIndexChanged+=(_,_)=>Refresh();style.SelectedIndexChanged+=(_,_)=>Refresh();beard.SelectedIndexChanged+=(_,_)=>Refresh();Refresh();
-        await ShowPage("Edit appearance",Text(current.Football.FullName,20,true),Text("Portraits are illustrated representations. No real appearance data was supplied by this roster pack.",12),preview,Text("Skin tone"),tone,Text("Hair color"),hair,Text("Hair style"),style,Text("Facial hair"),beard,
+        await ShowPage("Edit appearance",Text(current.Football.FullName,20,true),Text("Customize this portrait. Your changes also apply to the player in GameCast.",12),preview,Text("Skin tone"),tone,Text("Hair color"),hair,Text("Hair style"),style,Text("Facial hair"),beard,
             Action("Save appearance",async()=>{
                 var id=current.Football.PlayerId;var selected=Selected();
-                state=state! with{Players=state.Players.Select(p=>p.Football.PlayerId==id?p with{Football=p.Football with{Appearance=selected}}:p).ToList()};
+                state=state! with{Players=state.Players.Select(p=>p.Football.PlayerId==id?p with{AppearanceOrigin="custom",Football=p.Football with{Appearance=selected}}:p).ToList()};
                 await Save();await Navigation.PopModalAsync();await Navigation.PopModalAsync();Render();await Player(state.Players.Single(p=>p.Football.PlayerId==id));
             }));
     }
     Task CoachProfile(ProCoach coach)
     {
         var team = state!.League.Teams.Single(t => t.Id == coach.TeamId);
-        return ShowPage("Coach profile", CoachIdentity(coach, team), Panel(RoleName(coach.Role), Text(coach.Title), Text($"Coaching {coach.Rating} · Development {coach.Development}"), Text(coach.Vacant ? "Position vacant" : "Employed by " + team.Name), Text("Coaching ratings and illustrated portraits are generated game representations.", 12)));
+        return ShowPage("Coach profile", CoachIdentity(coach, team), Panel(RoleName(coach.Role), Text(coach.Title), Text($"Coaching {coach.Rating} · Development {coach.Development}"), Text(coach.Vacant ? "Position vacant" : "Employed by " + team.Name)));
     }
     Task GamePlan()
     {
@@ -80,7 +80,7 @@ public sealed partial class FranchisePage
     {
         var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.Retired && (p.Reserve || p.Football.CurrentInjury is { WeeksRemaining: > 0 })).ToArray();
         return ShowPage("Injuries & availability", players.Length == 0 ? Text("No reported injuries or reserve players.") : new VerticalStackLayout { Spacing = 12, Children = { } },
-            Panel("Unavailable players", players.Select(p => Panel(p.Football.FullName, PlayerCell(p), Text(p.Football.CurrentInjury is { } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Reserve list · source roster status " + p.RosterStatus))).ToArray()));
+            Panel("Unavailable players", players.Select(p => Panel(p.Football.FullName, PlayerCell(p), Text(p.Football.CurrentInjury is { } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Reserve list · " + p.RosterStatus))).ToArray()));
     }
     string newsFilter = "All";
     void News()

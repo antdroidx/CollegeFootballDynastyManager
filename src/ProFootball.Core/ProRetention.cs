@@ -10,7 +10,7 @@ public static class ProRetention
             var terms=ProOfferTerms.AgentDemand(s,p,true);var c=s.Contracts.Last(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
             if(c.LastChangedYear==s.Year)continue;
             var first=c.Years.Max(y=>y.Year)+1;
-            if(Enumerable.Range(first,terms.Years).Any(year=>s.Contracts.Where(c=>c.Team==team).Sum(c=>ProEconomy.CapHit(c,year))+s.DeadCap.Where(d=>d.Team==team&&d.Year==year).Sum(d=>d.Amount)+terms.Salary+terms.Bonus/terms.Years>s.SalaryCap*1.05))continue;
+            if(Enumerable.Range(first,terms.Years).Any(year=>s.Contracts.Where(c=>c.Team==team).Sum(c=>ProEconomy.CapHit(c,year))+s.DeadCap.Where(d=>d.Team==team&&d.Year==year).Sum(d=>d.Amount)+terms.Salary+terms.Bonus/terms.Years>ProFinance.Limit(s,team,year)))continue;
             try{
                 s=team==s.UserTeam?ProManagement.Submit(s,"Staff retention negotiation",[p.Football.PlayerId],0,x=>ProEconomy.Extend(x,team,p.Football.PlayerId,terms.Years,terms.Salary,terms.Bonus)):ProEconomy.Extend(s,team,p.Football.PlayerId,terms.Years,terms.Salary,terms.Bonus);
             }catch(InvalidOperationException){ /* Unresolved players remain visible until expiration. */ }

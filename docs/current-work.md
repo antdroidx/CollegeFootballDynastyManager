@@ -1,6 +1,6 @@
 # Current work — College / Pro football monorepo
 
-Updated October 25, 2026 (Pacific). This file is the current handoff; Git history preserves earlier checkpoints.
+Updated October 26, 2026 (Pacific). This file is the current handoff; Git history preserves earlier checkpoints.
 
 ## Branch and verified downloads
 
@@ -14,6 +14,20 @@ Updated October 25, 2026 (Pacific). This file is the current handoff; Git histor
   Broad UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700543/artifacts/12630846272
   Career UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700543/artifacts/12630590152
 - Never merge unfinished Pro work or clean up branches/releases as part of this batch. `sources/` remains read-only.
+
+## October 26 batch — implementation complete, Android verification pending
+
+Working checkout was restored after the previous checkout disappeared: `C:/Users/ahngu/.codex/visualizations/2026/10/24/01a16ca7-5745-7053-846f-b6fa2f023af1/repo`. Branch unchanged. The downloads above remain the latest fully verified releases until this batch's CI/device jobs finish.
+
+- Rookie/new contract concern protection, rare mid-contract dissatisfaction and legacy complaint cleanup; new deals are Content rather than automatically happier.
+- Unified offer/current-deal/position-market workspace, annual bonus/cap/guarantee rows and release consequences by season.
+- Adjusted cap rollover election, tracked cash floor/settlements, credited-season minimums, reproducible revenue/cap inflation, future cap plan/history and year-specific bonus cash. See [financial model and limitations](pro-financial-model.md).
+- Future pick estimates use original-team roster age/talent/expiry uncertainty and played results, with distance regression; actual draft order remains fixed during the draft.
+- All transaction history with season/week/search and Overview link; late-season-only Overview bracket shortcut; permanent league bracket remains.
+- Staff coordinator changes allowed during the season for employed head coaches; correct disabled permissions and empty candidate feedback. Awards & All-Pros contains league-wide first/second teams; Pro Bowl is named and opens after conference championships.
+- Front Office capitalization; ordinary source/development disclaimers removed in Pro and College. Useful gameplay explanations and attribution remain.
+- Photo-reference skin overlay for 1,944 bundled players, shared portrait/sprite color, existing/custom edits preserved. Other players remain editable; source photos/lighting are not assumed perfect.
+- Local validation: **98 Pro cases passed**, including twenty complete seasons and seven new regression cases. Pro Android packaging passed. 682 combined legacy Core/College tests and 10 UI-helper tests passed; College packaging and CI acceptance are in progress; do not call current APK device-tested yet.
 
 ## Latest completed Pro refinements
 

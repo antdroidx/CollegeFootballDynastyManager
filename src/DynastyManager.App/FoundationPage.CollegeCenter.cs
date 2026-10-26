@@ -281,7 +281,7 @@ public sealed partial class FoundationPage
                     new Label { Text = $"{incident.SeasonYear} · W{incident.Week} · {incident.Title}", FontAttributes = FontAttributes.Bold, FontSize = 13 },
                     new Label { Text = incident.Description, FontSize = 12, TextColor = DynastyTheme.Muted }
                 } } });
-            list.Children.Add(new Label { Text = "Generated dynasty events describe fictional program situations.", FontSize = 10, TextColor = DynastyTheme.Muted });
+            list.Children.Add(new Label { Text = "Program events and decisions", FontSize = 10, TextColor = DynastyTheme.Muted });
         }
         school.SelectedIndexChanged += (_, _) => Render(); Render();
     }
@@ -320,7 +320,7 @@ public sealed partial class FoundationPage
         body.Children.Add(SectionTitle("Conference landscape", $"Realignment {(state.LeagueRules.ConferenceRealignment ? "on" : "off")} · FCS promotion {(state.LeagueRules.FcsPromotion ? "on" : "off")} · Change options in Settings"));
         body.Children.Add(TrendChart(LeagueEvolutionService.ConferencePower(state).OrderByDescending(p => p.Value).Select(p => (p.Key, p.Value)).ToArray(), "Conference power · average current program prestige"));
         foreach (var move in state.LeagueMovementHistory.Reverse().Take(30)) body.Children.Add(new Label { Text = $"{move.SeasonYear} · {move.TeamName}: {move.FromConference} → {move.ToConference}{(move.Promotion ? " · Promoted to FBS" : "")}", FontSize = 12 });
-        body.Children.Add(SectionTitle("FCS opponent library", $"{FcsLeagueService.Available(state.LeagueTeams).Count} external schools · fictional athletes · schools already in this league are excluded"));
+        body.Children.Add(SectionTitle("FCS opponent library", $"{FcsLeagueService.Available(state.LeagueTeams).Count} external schools · schools already in this league are excluded"));
         body.Children.Add(new Label { Text = string.Join(" · ", FcsLeagueService.Available(state.LeagueTeams).Select(t => t.Name)), FontSize = 11, TextColor = DynastyTheme.Muted });
     }
 

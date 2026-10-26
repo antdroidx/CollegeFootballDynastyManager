@@ -8,7 +8,7 @@ public sealed partial class FranchisePage
     Task TradingBlock()
     {
         state = ProTradeMarket.Refresh(state!); var s = state;
-        body.Clear(); body.Add(Action("‹ Front office",()=>Open("Front office"))); body.Add(Text("Trading block",25,true));
+        body.Clear(); body.Add(Action("‹ Front Office",()=>Open("Front Office"))); body.Add(Text("Trading block",25,true));
         body.Add(Text("Browse available players or list your own from their contract & roster actions. Interest is preliminary; cap and roster checks apply to every deal.",12));
         if(!ProTradeMarket.IsOpen(s)) body.Add(Text("Trades are closed until the offseason.",16,true));
         var list=new VerticalStackLayout(); var position=new Picker { ItemsSource=new[]{"All positions"}.Concat(Enum.GetNames<Position>()).ToArray(),SelectedIndex=0 };body.Add(position);body.Add(list);
@@ -34,7 +34,7 @@ public sealed partial class FranchisePage
 
     Task Trade(string? partner=null,Guid? initialPlayer=null,bool giveInitial=false)
     {
-        state=ProEconomy.EnsurePickInventory(state!);var s=state!;body.Clear();body.Add(Action("‹ Front office",()=>Open("Front office")));body.Add(Text("Trade center",25,true));
+        state=ProEconomy.EnsurePickInventory(state!);var s=state!;body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Trade center",25,true));
         body.Add(Text($"Trade draft picks through {s.Year+3} · choose Draft picks under either team",12));
         var clubs=s.League.Teams.Where(t=>t.Name!=s.UserTeam).OrderBy(t=>t.Name).ToArray();
         var other=new Picker { Title="Trade partner",ItemsSource=clubs.Select(t=>t.Name).ToArray(),SelectedIndex=Math.Max(0,Array.FindIndex(clubs,t=>t.Name==partner)) };body.Add(other);
@@ -69,7 +69,7 @@ public sealed partial class FranchisePage
             var players=s.Players.Where(p=>p.Football.TeamName==club&&!p.Retired&&ProCareer.Controls(s,p.Football.Position)).OrderByDescending(p=>s.TradeBlock.Contains(p.Football.PlayerId)).ThenBy(p=>p.Football.Position).ThenByDescending(p=>p.Football.OverallRating);
             var table=Table([("Select",54),("Pos",45),("Player",165),("OVR",48),("Age",48),("Value",65)],players.Select(p=>new View[]{Select(p.Football.PlayerId,false),Text(p.Football.Position.ToString()),PlayerCell(p),Text(p.Football.OverallRating.ToString()),Text(p.Age.ToString()),Text(ProTrade.PlayerValue(s,p,giving?Recipient():s.UserTeam).ToString("0"))}));
             var pickYear=new Picker {Title="Draft year",ItemsSource=new[]{"All draft years"}.Concat(s.Picks.Where(p=>p.Owner==club&&ProTrade.Available(s,p)).Select(p=>p.Year).Distinct().Order().Select(y=>y.ToString())).ToArray(),SelectedIndex=0};
-            View PickTable()=>Table([("Select",54),("Year",65),("Round",55),("Original team",165),("Value",65)],s.Picks.Where(p=>p.Owner==club&&ProTrade.Available(s,p)&&(pickYear.SelectedIndex==0||p.Year.ToString()==(string)pickYear.SelectedItem)).OrderBy(p=>p.Year).ThenBy(p=>p.Round).Select(p=>new View[]{Select(p.Id,true),Text(p.Year.ToString()),Text(p.Round.ToString()),Text(p.OriginalTeam,12),Text(ProTrade.PickValue(s,p).ToString("0"))}));
+            View PickTable()=>Table([("Select",54),("Year",65),("Round",55),("Original team",165),("Projected slot",105),("Value",65)],s.Picks.Where(p=>p.Owner==club&&ProTrade.Available(s,p)&&(pickYear.SelectedIndex==0||p.Year.ToString()==(string)pickYear.SelectedItem)).OrderBy(p=>p.Year).ThenBy(p=>p.Round).Select(p=>new View[]{Select(p.Id,true),Text(p.Year.ToString()),Text(p.Round.ToString()),Text(p.OriginalTeam,12),Text(ProPickProjection.Slot(s,p).ToString("0.0")),Text(ProTrade.PickValue(s,p).ToString("0"))}));
             var pickList=new ContentView {Content=PickTable()};pickYear.SelectedIndexChanged+=(_,_)=>pickList.Content=PickTable();
             var picks=new VerticalStackLayout {Children={pickYear,pickList}};
             var tabs=new Picker {ItemsSource=new[]{"Players","Draft picks"},SelectedIndex=0};

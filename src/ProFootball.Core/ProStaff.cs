@@ -28,8 +28,7 @@ public static class ProStaff
     }
     public static ProFranchise Hire(ProFranchise s, string team, StaffRole role, string name)
     {
-        if (s.Phase != ProPhase.Offseason) throw new InvalidOperationException("Staff hires open during the offseason.");
-        var club = s.League.Teams.Single(t => t.Name == team); var candidate = s.CoachCandidates.SingleOrDefault(c => c.Name == name) ?? throw new InvalidOperationException("This coach is unavailable.");
+        var club = s.League.Teams.Single(t => t.Name == team); var candidate = s.CoachCandidates.FirstOrDefault(c => c.Name == name) ?? throw new InvalidOperationException("This coach is unavailable.");
         var coaches = s.Coaches.ToList(); var old = coaches.FirstOrDefault(c => c.TeamId == club.Id && c.Role == role); var pool = s.CoachCandidates.Where(c => c.Name != name).ToList();
         if (old is not null && !old.Vacant) pool.Add(new(old.Name, club.Id, old.Title, old.Source));
         coaches.RemoveAll(c => c.TeamId == club.Id && c.Role == role); coaches.Add(new(club.Id, role, name, role.ToString() + " · franchise hire", candidate.Source) { Rating = 65, Development = 65 });
@@ -37,7 +36,6 @@ public static class ProStaff
     }
     public static ProFranchise Fire(ProFranchise s, string team, StaffRole role)
     {
-        if (s.Phase != ProPhase.Offseason) throw new InvalidOperationException("Staff changes open during the offseason.");
         var club = s.League.Teams.Single(t => t.Name == team); var old = s.Coaches.First(c => c.TeamId == club.Id && c.Role == role);
         if (old.Vacant) throw new InvalidOperationException("The role is already vacant.");
         return ProEconomy.Log(s with { Coaches = s.Coaches.Select(c => c == old ? c with { Name = "Vacant", Vacant = true, Title = "Vacant franchise role" } : c).ToList(), CoachCandidates = s.CoachCandidates.Append(new(old.Name, club.Id, old.Title, old.Source)).DistinctBy(c => c.Name).ToList() }, $"{team} dismissed {old.Name}.");

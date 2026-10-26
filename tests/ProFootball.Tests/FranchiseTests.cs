@@ -35,10 +35,10 @@ public class FranchiseTests
         try{var store=new ProSaveStore(dir);await store.Save(legacy);var restored=await store.Load(legacy.Id);Assert.Equal(2,restored.SchemaVersion);Assert.Equal(legacy.UserTeam,restored.UserTeam);Assert.Equal(legacy.Players[0].Football.PlayerId,restored.Players[0].Football.PlayerId);Assert.Equal(legacy.Games.Count,restored.Games.Count);Assert.NotEmpty(restored.Contracts);}
         finally{if(Directory.Exists(dir))Directory.Delete(dir,true);}
     }
-    [Fact] public void StaffMovesAreLimitedToOffseasonAndPersistVacancies()
+    [Fact] public void StaffCanChangeDuringSeasonAndPersistVacancies()
     {
-        var s=New();Assert.Throws<InvalidOperationException>(()=>ProStaff.Fire(s,s.UserTeam,StaffRole.OffensiveCoordinator));
-        s=ProStaff.Fire(s with{Phase=ProPhase.Offseason},s.UserTeam,StaffRole.OffensiveCoordinator);Assert.Contains(s.Coaches,c=>c.TeamId=="SEA"&&c.Role==StaffRole.OffensiveCoordinator&&c.Vacant);
+        var s=New();
+        s=ProStaff.Fire(s,s.UserTeam,StaffRole.OffensiveCoordinator);Assert.Contains(s.Coaches,c=>c.TeamId=="SEA"&&c.Role==StaffRole.OffensiveCoordinator&&c.Vacant);
         var candidate=s.CoachCandidates.First();s=ProStaff.Hire(s,s.UserTeam,StaffRole.OffensiveCoordinator,candidate.Name);Assert.Contains(s.Coaches,c=>c.TeamId=="SEA"&&c.Name==candidate.Name&&!c.Vacant);Assert.DoesNotContain(s.CoachCandidates,c=>c.Name==candidate.Name);
     }
     [Fact] public void SnapshotHasRealIdentitiesStaffAndHonestRatingSources()
@@ -53,7 +53,7 @@ public class FranchiseTests
     {
         var s=New();var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam);var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,3,10,[new(s.Year,12,4),new(s.Year+1,12,3),new(s.Year+2,12,0)]);
         Assert.Equal(10,Enumerable.Range(s.Year,3).Sum(y=>ProEconomy.BonusCharge(c,y)));Assert.Equal(16,ProEconomy.CapHit(c,s.Year));
-        s=s with{Contracts=[c]};var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId,false);Assert.Equal(17,ProEconomy.Used(released,s.UserTeam));Assert.False(released.Contracts[0].Active);
+        s=s with{Contracts=[c]};var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId,false);Assert.Equal(14,ProEconomy.Used(released,s.UserTeam));Assert.Equal(3,released.DeadCap.Where(d=>d.Year==s.Year+1).Sum(d=>d.Amount));Assert.Equal(17,released.DeadCap.Sum(d=>d.Amount));Assert.False(released.Contracts[0].Active);
     }
     [Fact] public void OffersCompeteAndCannotExceedReservedCap()
     {

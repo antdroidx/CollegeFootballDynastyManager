@@ -482,7 +482,7 @@ public sealed partial class FoundationPage
             if (useSprites)
             {
                 var sprite = new FootballSpriteView(color, secondary, awayTeam, PortraitAppearance.ForPlayer(player?.PlayerId ?? Guid.Empty, player?.Appearance).Skin,
-                    showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "");
+                    showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "",PortraitAppearance.ForPlayer(player?.PlayerId??Guid.Empty,player?.Appearance).SkinColorHex);
                 spritePlayers[sprite] = player;
                 marker.Stroke = Colors.Transparent; marker.StrokeThickness = 0; marker.BackgroundColor = Colors.Transparent;
                 marker.StrokeShape = new RoundRectangle { CornerRadius = 0 };

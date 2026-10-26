@@ -42,7 +42,7 @@ public static class ProLeagueService
             DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
         }));
         franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
-        return sourcedContracts ? ProContractData.Apply(franchise) : ProContractData.CompleteRookieTerms(franchise);
+        return ProMorale.NormalizeContracts(sourcedContracts ? ProContractData.Apply(franchise) : ProContractData.CompleteRookieTerms(franchise));
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {

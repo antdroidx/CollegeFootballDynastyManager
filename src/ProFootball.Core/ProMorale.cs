@@ -4,6 +4,12 @@ namespace ProFootball.Core;
 
 public static class ProMorale
 {
+    public static ProFranchise NormalizeContracts(ProFranchise s)
+    {
+        s=ProTransactions.Migrate(ProAppearanceData.Apply(s));
+        var deals=s.Contracts.Where(c=>c.Active).GroupBy(c=>c.PlayerId).ToDictionary(g=>g.Key,g=>g.Last());
+        return s with{ContractMoraleVersion=1,Players=s.Players.Select(p=>s.ContractMoraleVersion<1||deals.TryGetValue(p.Football.PlayerId,out var c)&&!ProContractInsights.ConcernEligible(s,p,c)?p with{ContractConcernWeeks=0,TradeRequested=false}:p).ToList()};
+    }
     public static string Personality(ProPlayer p) => (p.Football.PlayerId.ToByteArray()[1]%3) switch {0=>"Team focused",1=>"Ambitious",_=>"Sensitive to change"};
     static int Memory(ProPlayer p)=>Personality(p)=="Sensitive to change"?4:Personality(p)=="Ambitious"?2:1;
     public static bool TalkAvailable(ProFranchise s)=>s.Career?.Unemployed!=true&&!s.WeeklyTalks.Any(t=>t.Year==s.Year&&t.Tick==s.TransactionTick&&t.Talk.TeamName==s.UserTeam);
@@ -39,12 +45,12 @@ public static class ProMorale
             changes[p.Football.PlayerId]=(delta,threatened?"New signing threatens role":"Reaction to team signing");
         }
         s=Effects(s,changes);
-        return Effect(s,id,3,"Signed a new contract");
+        return ContractAgreement(s,id);
     }
     public static ProFranchise ContractAgreement(ProFranchise s,Guid id)
     {
         s=s with{Players=s.Players.Select(p=>p.Football.PlayerId==id?p with{ContractConcernWeeks=0,TradeRequested=false}:p).ToList()};
-        return Effect(s,id,4,"Contract agreement");
+        return s;
     }
     public static ProFranchise Advance(ProFranchise s)
     {
@@ -58,15 +64,22 @@ public static class ProMorale
             if(e.RemainingChange!=step)effects.Add(e with{RemainingChange=e.RemainingChange-step,NextDecayTick=s.TransactionTick+Memory(p)});
         }
         var contracts=s.Contracts.Where(c=>c.Active).GroupBy(c=>c.PlayerId).ToDictionary(g=>g.Key,g=>g.Last());var transactions=new List<string>();
-        foreach(var p in players.Values.Where(p=>!p.Retired&&!p.PracticeSquad&&p.Age>=25&&p.Football.OverallRating>=75&&Personality(p)=="Ambitious").ToArray())
+        foreach(var p in players.Values.Where(p=>!p.Retired).ToArray())
         {
-            contracts.TryGetValue(p.Football.PlayerId,out var c);var salary=c?.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0;
-            var unhappy=salary>0&&salary<ProEconomy.MarketSalary(p)*.6&&c!.LastChangedYear!=s.Year;
+            contracts.TryGetValue(p.Football.PlayerId,out var c);
+            if(c is null||!ProContractInsights.ConcernEligible(s,p,c))
+            {if(p.ContractConcernWeeks>0)players[p.Football.PlayerId]=p with{ContractConcernWeeks=0,TradeRequested=false};continue;}
+            if(s.Phase!=ProPhase.RegularSeason||s.Week<9||p.PracticeSquad||p.Reserve)continue;
+            // One deterministic review cohort per season. No repeated random rolls on refresh.
+            var bytes=System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"contract-review/{s.Year}/{p.Football.PlayerId}"));
+            var underpaid=ProContractInsights.AverageCash(c)<ProEconomy.MarketSalary(s,p)*.60;
+            var unhappy=p.ContractConcernWeeks>0&&underpaid||bytes[0]<38&&p.Football.OverallRating>=80&&Personality(p)=="Ambitious"&&underpaid;
             var weeks=unhappy?p.ContractConcernWeeks+1:Math.Max(0,p.ContractConcernWeeks-1);
-            var request=p.TradeRequested||weeks>=6&&p.Morale<=30;
-            players[p.Football.PlayerId]=p with{ContractConcernWeeks=weeks,TradeRequested=request,Morale=unhappy?Math.Max(10,p.Morale-1):p.Morale};
-            if(request&&!p.TradeRequested)transactions.Add($"{s.Year} W{s.Week} · {p.Football.FullName} requested a trade after sustained contract dissatisfaction.");
+            var request=p.TradeRequested||weeks>=8&&p.Morale<=25;
+            players[p.Football.PlayerId]=p with{ContractConcernWeeks=weeks,TradeRequested=request,Morale=unhappy&&weeks%3==0?Math.Max(10,p.Morale-1):p.Morale};
+            if(request&&!p.TradeRequested)transactions.Add($"{p.Football.FullName} requested a trade after sustained contract dissatisfaction.");
         }
-        return s with{Players=s.Players.Select(p=>players[p.Football.PlayerId]).ToList(),MoraleEffects=effects,LastMoraleTick=s.TransactionTick,Transactions=s.Transactions.Concat(transactions).TakeLast(250).ToList()};
+        var next=s with{Players=s.Players.Select(p=>players[p.Football.PlayerId]).ToList(),MoraleEffects=effects,LastMoraleTick=s.TransactionTick};
+        foreach(var entry in transactions)next=ProEconomy.Log(next,entry);return next;
     }
 }

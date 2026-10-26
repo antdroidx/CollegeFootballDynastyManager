@@ -110,7 +110,7 @@ public static class ProManagement
         var unit = s.Players.Where(p => p.Football.TeamName == s.UserTeam && ProCareer.Controls(s, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
         var spending = s.Contracts.Where(c => c.Team == s.UserTeam && unit.Contains(c.PlayerId)).Sum(c => ProEconomy.CapHit(c, s.Year));
         var room = ProEconomy.Room(s, s.UserTeam) - ProEconomy.Pending(s, s.UserTeam);
-        var approved = extraCommitment == 0 || extraCommitment <= room && spending + Math.Max(0, extraCommitment) <= s.SalaryCap * .55;
+        var approved = extraCommitment == 0 || extraCommitment <= room && spending + Math.Max(0, extraCommitment) <= ProFinance.Limit(s,s.UserTeam) * .55;
         if (sharedPicks && players.Count == 0) approved = false;
         var reason = approved ? "GM approved: within the team cap and your unit's spending allocation." : sharedPicks && players.Count == 0 ? "The GM retains control of pick-only trades; recommend a player acquisition for your unit." : "GM declined: protect shared cap room and the other unit's budget.";
         var proposal = s;
@@ -137,7 +137,7 @@ public static class ProManagement
             foreach (var year in years)
             {
                 // Permit a non-worsening repair of an inherited over-budget season.
-                var ceiling = Math.Max(s.SalaryCap * .55, UnitCost(s, year));
+                var ceiling = Math.Max(ProFinance.Limit(s,s.UserTeam,year) * .55, UnitCost(s, year));
                 var projected = UnitCost(proposal, year);
                 if (projected > ceiling)
                 {
@@ -145,7 +145,7 @@ public static class ProManagement
                     reason = $"GM declined: {year} unit commitments of ${projected:N0} exceed the ${ceiling:N0} planning allocation, including pending offers. Protect future shared cap space.";
                     break;
                 }
-                var teamCeiling = Math.Max(s.SalaryCap, TeamCost(s,year));
+                var teamCeiling = Math.Max(ProFinance.Limit(s,s.UserTeam,year), TeamCost(s,year));
                 var teamProjected = TeamCost(proposal,year);
                 if(teamProjected <= teamCeiling) continue;
                 approved = false;

@@ -2,6 +2,17 @@
 
 Current source: `4a26f14` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
+## October 26 batch — local tests passed; Android CI pending
+
+- [x] Contract concern protection/grace and legacy migration.
+- [x] Current/offer/market tabs, annual salary/bonus/cap/guarantees and release schedule.
+- [x] Rollover, tracked cash floor, minimum salary schedules, bonus cash and seeded cap inflation.
+- [x] Strength/performance-based future picks; annual transaction history; late-season Overview bracket.
+- [x] In-season coordinator staff changes; All-Pros/Pro Bowl naming; Front Office capitalization.
+- [x] Ordinary development disclaimers removed; editable photo-reference complexion overlay.
+- [x] 98 local Pro cases including twenty seasons; Pro Android packaging.
+- [ ] Both final Android workflows/device acceptance and exact artifacts.
+
 ## Verified in Pro Build 30
 
 - [x] Shared College simulation/GameCast, canonical 19 attributes/overall, animation/field, kickoff/coin toss, quick calls, playbooks, replay and controlled-side/role restrictions.

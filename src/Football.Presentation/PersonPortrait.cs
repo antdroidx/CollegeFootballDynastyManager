@@ -32,7 +32,7 @@ public sealed class PersonPortrait(PortraitAppearance face, Color primary, Color
         // Team jersey/polo, shoulders and collar.
         canvas.FillColor = primary;
         canvas.FillRoundedRectangle(7, 75, 86, 25, 20);
-        var skin = Color.FromArgb(PortraitAppearance.SkinColor(face.Skin));
+        var skin = Color.FromArgb(face.SkinColorHex??PortraitAppearance.SkinColor(face.Skin));
         canvas.FillColor = skin;
         canvas.FillRectangle(41, 65, 18, 17);
         canvas.FillColor = secondary;

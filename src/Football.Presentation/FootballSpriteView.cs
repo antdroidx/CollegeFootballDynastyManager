@@ -9,9 +9,9 @@ public sealed class FootballSpriteView : GraphicsView
     private readonly PlayerDrawable art;
     private int lastFrame = -1;
     private readonly int stridePhase;
-    public FootballSpriteView(Color primary, Color secondary, bool away, int skin, string label)
+    public FootballSpriteView(Color primary, Color secondary, bool away, int skin, string label,string? skinColorHex=null)
     {
-        art = new(primary, secondary, away, skin) { Label = label };
+        art = new(primary, secondary, away, skin,DynastyManager.Core.Models.PortraitAppearance.ValidSkinColor(skinColorHex)) { Label = label };
         stridePhase = (label.Sum(c => c) + skin) % 4;
         Drawable = art; InputTransparent = true;
         WidthRequest = HeightRequest = 28;
@@ -27,7 +27,7 @@ public sealed class FootballSpriteView : GraphicsView
         lastFrame = frame; art.Frame = frame; art.Heading = heading; art.Blocking = blocking; art.Passing = passing;
         Invalidate();
     }
-    private sealed class PlayerDrawable(Color primary, Color secondary, bool away, int skin) : IDrawable
+    private sealed class PlayerDrawable(Color primary, Color secondary, bool away, int skin,string? skinColorHex) : IDrawable
     {
         public string Label { get; set; } = "";
         public bool Active { get; set; }
@@ -45,7 +45,7 @@ public sealed class FootballSpriteView : GraphicsView
             var sx = -fy; var sy = fx * .45;
             var front = fy >= -.3;
             var ink = Color.FromArgb("#101923");
-            var skinColor = Color.FromArgb(DynastyManager.Core.Models.PortraitAppearance.SkinColor(skin));
+            var skinColor = Color.FromArgb(skinColorHex??DynastyManager.Core.Models.PortraitAppearance.SkinColor(skin));
             var jersey = away ? Colors.White : primary;
             var pants = away ? Color.FromArgb("#E3E7EB") : secondary;
             Color Shade(Color c, float amount) => new(c.Red * amount, c.Green * amount, c.Blue * amount);

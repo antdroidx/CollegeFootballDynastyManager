@@ -4,7 +4,10 @@ namespace DynastyManager.Core.Models;
 public sealed record PortraitAppearance(int Skin, int HairColor, int HairStyle, int FaceShape,
     int Brow, int FacialHair, int Detail)
 {
-    public static string SkinColor(int tone) => new[] { "#F0C9AB", "#DCAB84", "#C58D64", "#AB714C", "#8E583B", "#70432F", "#503125" }[Math.Clamp(tone, 0, 6)];
+    public string? SkinColorHex {get;init;}
+    public static string? ValidSkinColor(string? hex)=>hex is not null&&System.Text.RegularExpressions.Regex.IsMatch(hex,@"^#[0-9A-Fa-f]{6}$")?hex:null;
+    static readonly string[] SkinPalette = new[] { "#F0C9AB", "#DCAB84", "#C58D64", "#AB714C", "#8E583B", "#70432F", "#503125" };
+    public static string SkinColor(int tone)=>SkinPalette[Math.Clamp(tone,0,6)];
 
     public static PortraitAppearance ForPlayer(Guid id, NcaaPlayerAppearance? appearance)
     {
@@ -13,6 +16,7 @@ public sealed record PortraitAppearance(int Skin, int HairColor, int HairStyle, 
         var face = appearance.Face is >= 0 and <= 63 ? appearance.Face.Value : (int?)null;
         return fallback with
         {
+            SkinColorHex = ValidSkinColor(appearance.SkinColorHex),
             Skin = appearance.SkinTone switch { >= 0 and <= 6 => appearance.SkinTone.Value, 7 => 1, _ => fallback.Skin },
             HairColor = appearance.HairColor switch { 0 => 0, 1 => 4, 2 => 2, 3 => 5, 4 => 3, 5 => 6, _ => fallback.HairColor },
             HairStyle = appearance.HairStyle switch

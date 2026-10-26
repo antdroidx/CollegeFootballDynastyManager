@@ -365,7 +365,7 @@ public sealed partial class FoundationPage
                 new Label { Text = story.Headline, FontSize = 18, FontAttributes = FontAttributes.Bold },
                 new Label { Text = story.Body, FontSize = 14 },
                 new Label { Text = DynastyManager.Data.Presentation.NewsEditorial.Context(story.Category, story.TeamName), FontSize = 14 },
-                new Label { Text = "Dynasty Wire · fictional in-world coverage based on your save. ", FontSize = 11, TextColor = DynastyTheme.Muted }, destination
+                new Label { Text = "Dynasty Wire · stories from around your league. ", FontSize = 11, TextColor = DynastyTheme.Muted }, destination
             } } };
             await Navigation.PushModalAsync(page);
         };

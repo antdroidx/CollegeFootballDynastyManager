@@ -29,7 +29,7 @@ public class GmCommitmentTests
     }
     [Fact] public void InheritedFutureOverageCanBeReducedWithoutIncreasingIt()
     {
-        var(s,_,receiver)=Setup();s=s with{Contracts=s.Contracts.Select(c=>c.PlayerId==receiver.Football.PlayerId?c with{Years=[new(s.Year+1,180_000_000,0)]}:c).ToList()};
+        var(s,_,receiver)=Setup();s=s with{Contracts=s.Contracts.Select(c=>c.PlayerId==receiver.Football.PlayerId?c with{Years=[new(s.Year+1,ProFinance.Limit(s,s.UserTeam,s.Year+1)-20_000_000,0)]}:c).ToList()};
         var result=ProManagement.Submit(s,"Reduce",[receiver.Football.PlayerId],0,x=>x with{Contracts=x.Contracts.Select(c=>c.PlayerId==receiver.Football.PlayerId?c with{Years=[new(s.Year+1,170_000_000,0)]}:c).ToList()});
         Assert.True(Assert.Single(result.GmDecisions).Approved);Assert.Equal(170_000_000,result.Contracts.Sum(c=>ProEconomy.CapHit(c,s.Year+1)));
     }
@@ -42,7 +42,7 @@ public class GmCommitmentTests
     [Fact] public void OtherUnitsCommitmentsRemainProtectedWhenOwnUnitIsWithinAllocation()
     {
         var(s,_,_)=Setup();var other=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Football.Position==Position.CB);
-        s=s with{Contracts=s.Contracts.Append(new(other.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year+1,180_000_000,0)])).ToList()};
+        s=s with{Contracts=s.Contracts.Append(new(other.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year+1,ProFinance.Limit(s,s.UserTeam,s.Year+1)-20_000_000,0)])).ToList()};
         var free=s.Players.First(p=>p.Football.TeamName=="Free agent"&&p.Football.Position==Position.RB&&!s.Waivers.Any(w=>w.PlayerId==p.Football.PlayerId));
         var result=ProManagement.Submit(s,"Offer",[free.Football.PlayerId],35_000_000,x=>ProEconomy.Offer(x,x.UserTeam,free.Football.PlayerId,3,35_000_000,0));
         var decision=Assert.Single(result.GmDecisions);Assert.False(decision.Approved);Assert.Contains("shared team commitments",decision.Reason);Assert.Empty(result.Bids);

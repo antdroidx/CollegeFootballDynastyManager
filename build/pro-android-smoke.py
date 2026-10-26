@@ -11,7 +11,7 @@ def ready(name,label):
         return label in s.texts(root)
     return s.wait_for("pro-"+name,loaded,timeout=180)
 def click(name,label):
-    if label in {"Overview","Roster","Staff","Front office","Schedule","Standings","Playoffs","Statistics","Analytics","Inbox","News","Honors","Career","History"}:
+    if label in {"Overview","Roster","Staff","Front Office","Schedule","Standings","Playoffs","Statistics","Analytics","Inbox","Transactions","News","Honors","Career","History"}:
         navigate(label);return s.capture("pro-"+name)
     root=s.scroll_to_text("pro-"+name,label,max_swipes=20);s.tap(root,label);return root
 def horizontal_to_text(name,label):
@@ -39,7 +39,7 @@ def navigate(label):
             assert scrollables,"No sidebar scroll container"
             bounds=[tuple(map(int,re.findall(r"\d+",n.get("bounds")))) for n in scrollables]
             left,top,right,bottom=min(bounds,key=lambda b:b[0])
-            destinations=["Overview","Roster","Staff","Front office","Schedule","Standings","Playoffs","Statistics","Analytics","Inbox","News","Honors","Career","History"]
+            destinations=["Overview","Roster","Staff","Front Office","Schedule","Standings","Playoffs","Statistics","Analytics","Inbox","Transactions","News","Honors","Career","History"]
             visible=[destinations.index(n.get("text")) for n in root.iter("node") if n.get("text") in destinations and tuple(map(int,re.findall(r"\d+",n.get("bounds"))))[0]<right]
             toward_start=bool(visible) and destinations.index(label)<min(visible)
             y1=top+(bottom-top)*(1 if toward_start else 3)//4;y2=top+(bottom-top)*(3 if toward_start else 1)//4
@@ -99,7 +99,7 @@ try:
 
     profile=s.scroll_to_text("pro-player-profile-back","‹ Back",max_swipes=20,toward_start=True)
     s.tap(profile,"‹ Back")
-    click("front-office-tab","Front office")
+    click("front-office-tab","Front Office")
     finance=ready("finance","Salary cap")
     assert any("available" in (t or "") for t in s.texts(finance))
     s.capture("pro-contracts-cap")
@@ -107,15 +107,15 @@ try:
     trade=ready("trade-workspace-ready","Suggest additional picks")
     assert "Seattle Seahawks" in s.texts(trade)
     s.capture("pro-two-team-trade")
-    click("trade-back","‹ Front office")
+    click("trade-back","‹ Front Office")
     click("trading-block","Trading block")
     ready("trading-block-ready","Trading block")
     s.capture("pro-trading-block")
-    click("block-back","‹ Front office")
+    click("block-back","‹ Front Office")
     click("retention-open","Expiring contracts")
     ready("retention-ready","Expiring contracts & retention")
     s.capture("pro-retention-desk")
-    click("retention-back","‹ Front office")
+    click("retention-back","‹ Front Office")
     click("free-agents-open","Free agents")
     agents=ready("free-agents","All positions")
     s.capture("pro-free-agents-compact")

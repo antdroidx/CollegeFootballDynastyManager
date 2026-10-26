@@ -33,9 +33,10 @@ public class MoraleTests
     [Fact] public void SevereSustainedContractConcernCanCauseTradeRequest()
     {
         var s=ProLeagueService.Create("Seattle Seahawks");var original=s.Players.First(p=>p.Football.TeamName==s.UserTeam);var bytes=original.Football.PlayerId.ToByteArray();bytes[1]=1;var id=new Guid(bytes);
-        var p=original with{Football=original.Football with{PlayerId=id,OverallRating=95},Age=28,Morale=30,PracticeSquad=false,Retired=false};
-        s=s with{Players=[p],Contracts=[new(id,s.UserTeam,s.Year,3,0,[new(s.Year,1_000_000,0),new(s.Year+1,1_000_000,0)])]};
-        for(var tick=1;tick<=6;tick++)s=ProMorale.Advance(s with{TransactionTick=tick});
+        for(var seed=0;seed<256;seed++){bytes[0]=(byte)seed;id=new Guid(bytes);if(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"contract-review/{s.Year}/{id}"))[0]<38)break;}
+        var p=original with{Football=original.Football with{PlayerId=id,OverallRating=95},Age=28,Experience=8,RookieYear=s.Year-8,Morale=25,PracticeSquad=false,Retired=false};
+        s=s with{Phase=ProPhase.RegularSeason,Week=9,Players=[p],Contracts=[new(id,s.UserTeam,s.Year-3,5,0,[new(s.Year,1_000_000,0),new(s.Year+1,1_000_000,0)])]};
+        for(var tick=1;tick<=8;tick++)s=ProMorale.Advance(s with{TransactionTick=tick,Week=8+tick});
         Assert.True(s.Players.Single().TradeRequested);Assert.Contains(s.Transactions,t=>t.Contains("requested a trade"));
         var settled=ProMorale.ContractAgreement(s,id);Assert.False(settled.Players.Single().TradeRequested);Assert.Equal(0,settled.Players.Single().ContractConcernWeeks);
     }
