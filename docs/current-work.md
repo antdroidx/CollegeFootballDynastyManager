@@ -1,94 +1,67 @@
-# Current work — Pro Football Franchise Manager
+# Current work — College / Pro football monorepo
 
-Updated: October 25, 2026 (America/Los_Angeles). This manually maintained handoff is updated with every implementation batch. Detailed acceptance gaps live in [the completion checklist](pro-completion-checklist.md).
+Updated October 25, 2026 (Pacific). This file is the current handoff; Git history preserves earlier checkpoints.
 
-## Repository and verified downloads
+## Branch and verified downloads
 
-- Branch: `feature/pro-franchise-foundation`.
-- Latest device-verified source: `a94fbe56e9d7c03d06654bf5d9aa7acecdcc6801`.
-- [Pro Build 25 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40242451288/artifacts/12617286976): build and Pro Android checks passed. [Workflow](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40242451288), [device evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40242451288/artifacts/12617488063).
-- [College Build 383 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40242451137/artifacts/12617143979): build, career Android and broad management/theme Android checks passed. [Workflow](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40242451137).
-- Remote stable `main` verified unchanged at `fdd3d4898b5bd07eeec8dba346024d61f5289474`. No unfinished Pro work is merged there.
-- College package/save identity and Pro independent package `antdroid.profootball.franchise` remain unchanged. CI uses increasing version codes and the existing stable development signing key.
+- Work only on `feature/pro-franchise-foundation`. Stable `main` remains `fdd3d4898b5bd07eeec8dba346024d61f5289474`.
+- Current game source: `4a26f14f1bb0a76dd1e22ffb98b5836539c19c11` (following `a9e0d94` and `27afcce`). Documentation-only commits may follow it.
+- **Pro Build 30: all jobs passed**, including 91 Pro cases and the Android device flow.
+  APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700523/artifacts/12629334513
+  UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700523/artifacts/12630332132
+- **College Build 388: all jobs passed**, including combined Core/College tests and both broad management/theme and career Android flows.
+  APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700543/artifacts/12629393797
+  Broad UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700543/artifacts/12630846272
+  Career UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700543/artifacts/12630590152
+- Never merge unfinished Pro work or clean up branches/releases as part of this batch. `sources/` remains read-only.
 
-## Implemented and device verified through Build 25 / College 383
+## Latest completed Pro refinements
 
-- Shared simulation, canonical 19 attributes/overall, GameCast, sprites/animations/field, playbooks, coin toss/kickoff, cameras, replay and box scores. Play calling respects controlled team, possession and coaching role. Non-user Play/Watch takeover supports team selection.
-- Player/staff portraits and profiles; full rating cards and roster attribute columns; HC/OC/DC careers, firing preference, unit restrictions and GM decisions; save slots, rolling backups and deletion confirmation.
-- College-family Pro palette/branding, responsive Fold sidebar, loading indicator, compact sortable/paginated grids, one-line searchable position-filtered free agency, separate category statistics/analytics and branded whole-team/league schedule filters with current-week marker.
-- Three shared College-style quick-call cards, refreshed after each snap.
-- Two-team player/pick trade workspace, persisted user/CPU surplus trading block, preliminary interest, value-gap pick suggestions, future-pick ownership and trade history. Position/age/potential/contract/need valuation and cap/roster checks remain enforced.
-- Exact-dollar salary/bonus/term negotiation form, rejection/counters, one completed contract change per season, extensions and cash/cap-conserving restructures. Veteran negotiation does not override rookie salary-scale contracts.
-- College custom coach names, visible whole-dynasty deletion and non-user Play team selection. Both news views retain small thumbnails without large stadium/logo art.
-- Android 16 native SearchBar theme-tint crash worked around in shared presentation; text/hint colors stay themed while icon vectors remain platform-owned. College system dark/light checks passed. Reference: https://github.com/dotnet/maui/issues/39208.
+- Franchise analytics compare your team with league averages, leaders and tied ranks for roster/positions, age, current/future cap, draft inventory and regular-season per-game performance. Preseason has a clear empty state.
+- Contract salary, bonus and restructure controls use $250K steps; terms open at market/agent estimates using age, comparable recent deals and competing CPU bids. Existing financial amounts retain exact accounting.
+- Both trade panels expose draft-year filters and the next three future classes.
+- Regular-season entry, game launch and advancement enforce user cap/53-player eligibility, including old illegal saves. Blocked advancement does not consume calendar/morale time.
+- The playoff bracket shows projected seeds, first-round byes, saved results, current matchups, historical seasons and reseeded divisional rounds. Future opponents stay TBD.
+- Overview/inbox alerts cover cap, unsigned rookies, expiring deals, contract dissatisfaction, trade requests, injuries, GM decisions and job offers. Read status persists; resolved alerts disappear.
+- The expiring-contract retention desk supports individual negotiation, let-expire choices and optional staff negotiations. Staff respect role/cap limits; one-shot delegation and automatic-on-advance are separate options.
+- Draft/scouting uses a dense sortable/paginated, searchable, position-filtered grid. Scout reports run automatically within the annual 40-player budget; projected grades retain uncertainty.
+- Draft selection is separate from signing. CPU cap/roster problems cannot stop the draft: selected players remain reserved/unsigned until their four-year rookie contracts fit. No cap forgiveness or playable unsigned rookies. Full zero-cap regression completes all 224 picks.
+- Rookie-year/draft metadata fixes short estimated starting rookie terms and repairs legacy saves without changing the current cap charge. Sourced future rookie financial projections are explicitly estimated; negotiated deals are retained.
+- User chose illustrated portraits with editing. Player cards edit skin tone, hair and facial hair with preview/save. Portraits and live sprites share the seven-tone palette and identity fallback. No appearance is inferred from a real player's name.
+- Library loading runs off the UI thread with a visible spinner, protected controls, cached rookie metadata and indexed migration lookups.
 
-## Follow-on batch — verified in Pro 25 / College 383
+## Existing implemented foundation
 
-- Weekly team/unit talks reuse College positive/negative reactions. One talk per calendar advance; used buttons are visibly disabled. Signing reactions fade by simulated personality; sustained severe contract dissatisfaction can lead to trade requests, and agreements/trades can improve morale.
-- Camp capacity is 90 total active/practice players (reserve excluded), then 53 active plus practice squad for regular season. Final games remain saved while the user cuts down; repeated blocked cutdown advancement cannot advance morale/cooldown time.
-- Saved regular-season awards and conference all-star selection snapshots feed factual news. Optional watch/play/simulate traditional all-star exhibition uses the shared engine/GameCast. Its result, injuries and statistics are separate from league players/games/cap. Honors has Awards / All-stars / Showcase tabs.
-- Efficiency statistics include NFL passer rating and per-attempt/carry/catch/punt/return averages. Pro box-score grids also use the shared sortable grid.
-- College Android career checks now enter and reload custom coach names and assert visible deletion; names are limited to 60 characters in both forms.
+- Shared canonical 19 attributes/overall, simulation, GameCast/sprites/animations, field, playbooks, coin toss/kickoff, cameras/replay/box scores and three quick recommended calls. Control respects team, possession and HC/OC/DC role. Non-user games offer team selection.
+- College-style responsive Pro UI with a distinct palette, Fold sidebar, themes, profiles/portraits, sortable grids, compact FA/stat categories, branded full-season/weekly schedules, saves/backups and visible deletion.
+- Two-team trades, player/pick selection, trading block, value/need/contract assessment, preliminary interest, pick suggestions, ownership/history and atomic cap/roster checks.
+- Negotiation/rejection/counters, extensions, cash-conserving restructures and one completed contract change per season. Coordinator GM review protects current/future unit and shared team commitments, including pending bids, while permitting non-worsening repairs.
+- Weekly positive/negative talks with visible cooldown, signing reactions/personality decay, contract concern and severe trade requests.
+- 90 total camp players, final 53 cutdown, saved awards/all-star selections and optional shared-engine all-star exhibition isolated from league statistics/cap/injuries. Factual news retains small thumbnails only.
+- College custom coach names, visible save deletion and non-user team selection. Shared Android SearchBar tint workaround preserves themed text while avoiding Android 16 vector-icon crashes.
 
-## Validation — report Core, College and Pro honestly
+## Validation
 
-| Category | Evidence |
-|---|---|
-| Pro | Build 25: **64 automated cases passed**, including twenty-season roster/cap/draft/aging and honors-history checks, weekly talk cooldown/reactions, personality effect decay, contract concern, exhibition isolation and 90-player camp capacity. |
-| Core / College legacy combined | **682 fast cases passed** in the existing `DynastyManager.Core.Tests` project. They have not been individually classified; do not label all 682 as exclusively Core or College. Four new coach-name cases are College-specific. |
-| Pro Android | Build 24 CI and the local broad emulator flow passed trade/block/negotiation, ratings/profiles, FA filters, coin toss/kickoff, playbooks, watch/takeover/replay, save/reload/advance, light/Fold, careers/news/analytics and deletion. |
-| Targeted follow-on Android | Disposable emulator verified weekly reaction screen, visibly disabled cooldown, saved honors, exhibition simulation/save and its final box score. Synthetic fixture only on emulator-5554. The extra script expected the wrong final heading; captured XML correctly shows `Live box score` / `Final statistics`. The final batch also passed Pro 25 CI Android acceptance. |
-| College Android | Build 383 career and broad management/theme flows passed, including custom-name entry/reload and visible deletion. |
+- **Pro:** 91 cases passed locally and in Build 30, including twenty-season roster/cap/draft/aging/honors stability, zero-cap draft completion, migration cap conservation, scouting, retention, inbox and bracket checks. Long-term simulation uses estimated game contracts.
+- **Core / College legacy combined:** 682 fast cases passed locally and in CI. This suite has not been individually classified; do not label all 682 exclusively Core or College. Slow health/calibration classes are excluded from this local fast command.
+- **Pro Android Build 30:** full CI flow passed: creation, profiles/ratings, appearance editing, FA/trade/contract UI, coin toss/kickoff, playbooks, watch/takeover/replay, saved final, reinstall/reload/advance, light/Fold, analytics/inbox/bracket/career/news, deletion and coordinator control.
+- **Targeted disposable emulator:** saved draft grid/filter/40 reports, retention/inbox, 35 staff renewals while retaining one let-expire choice, blocked cap advance with unchanged week/tick, saved reseeded bracket and persisted skin choice verified. Synthetic fixtures exercise UI behavior, not financial calibration.
+- **College Android Build 388:** both career and broad flows passed: branding/options, custom names and roles, permissions/firing, management layouts/themes, profiles/recruiting, shared GameCast/cameras/speeds/talks/replay/takeover, saved final/advance, departures and history.
+- Both apps package locally; UI helper tests: 10 passed; packaged-resource check passed.
+- An extra local install of the downloaded CI APK encountered emulator storage pressure. CI's independent install/reinstall/save flow supplies the exact APK update evidence. No franchise saves were deleted to free space; a College QA DB backup is outside the repo.
 
-## Remaining acceptance work
+## Remaining work — do not call the full Pro roadmap complete
 
-Do not represent the full Pro roadmap as complete.
-
-1. Current implementation batch is verified. Continue remaining roadmap items below in separate batches; keep verified artifact links and both handoffs current.
-2. CPU autonomous trade offers/counteroffers and further valuation calibration; GM review of shared future picks and future unit commitments.
-3. Authoritative sourced cap ledger: rollover, team adjustments and departed-player dead-money reconciliation. **Sourced contract accounting remains experimental.** Preserve estimate/coverage labels; unavailable amounts are not zero.
-4. Richer scouting/combine/camp/offseason decisions, waiver contract assumptions, editable coaching appearance and deeper career/job-market behavior.
-5. Further progression/morale/statistical calibration; ratings-growth/scatter/draft-outcome analytics and record/playoff-race/weekly-roundup news.
-6. Audit individual test classifications before splitting projects/counts. CI labels now distinguish College/Pro Android and the combined Core/College suite; existing coverage remains intact.
+1. CPU autonomous trade proposals/counteroffers, valuation calibration and coordinator GM review of shared future pick value.
+2. **Sourced contract accounting remains experimental:** authoritative rollover/team adjustments/departed-player dead money and long-term sourced-ledger validation. Missing financial data is not zero; projected rookie future terms are estimates.
+3. First-round fifth-year option decisions, deeper rookie/waiver rules, richer scouting/combine/camp decisions, CPU roster/contract calibration, automatic management of a coordinator’s opposite unit and career/job-market behavior.
+4. Further ratings/morale/statistical calibration, growth/scatter/draft-outcome analytics and richer factual record/playoff-race/weekly-roundup news.
+5. Audit individual tests before splitting the combined suite into Core and College projects/counts.
 
 ## Continuation
 
-The hourly `resume-pro-football-development` follow-up remains active, including after usage resets. Read this file, the checklist, chat and repository state; never duplicate active work. Keep both status files current. Preserve main and College identities/saves. Keep `sources/` read-only. Do not delete branches/artifacts or merge unfinished work as part of this batch.
+Hourly `resume-pro-football-development` remains active because work remains, including after usage resets. Read this handoff, checklist, chat and repository state first; do not duplicate active work. Keep source accounting experimental and preserve main, College package identity/save compatibility and separate Pro identity. Do not disable the follow-up until all authorized work is complete.
 
-Historical management-UI handoff: [Build 309 history](current-work-build309.md).
+Historical management UI handoff: [Build 309](current-work-build309.md).
 
-## Final verification checkpoint
-
-Pro Build 25 and College Build 383 both completed successfully at source `a94fbe5`. Pro: 64 automated cases and Android passed. Core/College combined: 682 fast cases; College career and broad management/theme Android passed. Local UI-helper tests: 10 passed; packaged-resource check passed. Both status documents updated. The hourly continuation stays active because CPU autonomous trade offers, sourced cap reconciliation and the remaining roadmap are not complete. No merge or repository cleanup was performed.
-
-## Active batch — coordinator future commitments
-
-A focused GM review now previews a proposed coordinator transaction once and checks every committed future year, including bonus horizons and pending multi-year bids. A current-year discount cannot bypass the unit allocation. A declined preview keeps contracts, rosters, bids and transaction logs unchanged and records the reason in the private GM inbox. Non-worsening repairs of inherited future overages are allowed; head coaches retain full-team authority. Five new Pro regression cases cover these paths, including bonus-only commitment years. Final full Pro run and Android publication are pending; Pro 25 / College 383 remain the latest verified downloads. Shared-pick valuation review and autonomous CPU trade offers remain outstanding.
-
-Coordinator future-commitment checkpoint: five focused Pro cases passed. Final full suite and both Android workflows will validate the committed batch; the latest verified APKs remain Pro 25 / College 383 until those complete.
-
-Expanded GM checkpoint: seven focused Pro cases passed. Review now also protects both units' shared future team commitments, including pending bids, and allows zero-spend roster/cap repairs instead of blocking an over-budget coordinator from releasing a contract. The earlier full suite passed 68 cases before these additional cases; final CI will run all 71. Verified APK links stay unchanged until final Android checks finish.
-
-Current-batch local verification: all **71 Pro cases passed**, including twenty-season stability; **682 legacy combined Core/College fast cases passed**. Pro Android packaging passed locally; final GitHub Pro/College device jobs are running. Do not replace the verified APK links until they pass.
-
-## Active user refinements — league context and simpler offers
-
-Implementing per-team league averages/leaders/tied ranks for active roster/positions, age, cap commitments, regular-season per-game performance and draft inventory. Contract salary/bonus and restructuring controls use $250K steps; years use whole-year steppers. Opening terms reflect age, comparable recent contracts and competing CPU bids; sourced existing contracts retain exact accounting. Both trade panels expose draft-year filters and the existing next-three-class inventory.
-
-Four new comparison/default-term tests pass; full suite and Android checks pending. Also fixing two Android test assumptions: Pro navigation must scroll its sidebar rather than the largest content area; College takeover may legitimately offer a punt instead of a scrimmage call. Pro 27 build/tests passed but device navigation failed; College 385 build/career passed but this special-teams assertion failed. Latest fully verified downloads remain Pro 25 / College 383 until reruns pass. Main remains untouched.
-
-## Active refinement batch — source pending Android verification
-
-Latest user additions remain in this batch. Implemented: league averages/leaders/ranks, $250K offer/restructure steppers with market defaults, explicit future draft-year filters, regular-season cap/roster gate, reseeded playoff bracket, Overview/inbox alerts and persisted read status, expiring-contract desk with optional staff negotiations, dense draft grid and automatic 40-player scout-team reports.
-
-Draft selection no longer requires immediate cap-compliant signing: unaffordable rookie deals retain team draft rights as reserved/unsigned players, without cap forgiveness or playable unsigned rookies. They sign four-year deals once cap/roster room exists. Regression completes all 224 picks at zero cap. Source rookie-year/draft metadata fixes short estimated starting rookie contracts; current-year source cap charges remain intact and projected future rookie terms are explicitly marked estimated. Existing saves migrate unchanged negotiated contracts safely. First-round fifth-year option decisions and authoritative sourced cap reconciliation remain follow-up work.
-
-User chose illustrated portraits with editing rather than real photos. Pro player cards now edit skin tone, hair and facial hair with preview/save. Shared portrait/sprite skin palette and identity fallback agree, replacing the fixed sprite fallback and four-tone clamp. No unsupported ethnicity/skin-tone guesses are imported from names. Existing College imported appearance mapping/package/save identity is retained.
-
-Focused new regression checks pass; full Pro suite and both Android packaging/device workflows are pending. Do not label this source as a tested APK yet. Latest verified downloads remain Pro 25 / College 383. The prior Pro27/College385 device-test assumptions are fixed in the helper source; final reruns are required. Main is untouched; continuation remains active.
-
-Local refinement validation: **90 Pro cases passed**, including twenty-season simulation and the all-224-picks zero-cap regression; **682 combined Core/College fast cases passed**. UI helper tests: 10 passed; resources check passed. Final Android packaging/device acceptance pending.
-
-Final refinement corrections: **91 Pro cases passed** (including current-cap preservation when repairing legacy estimated rookie terms). Both apps package locally; emulator confirmed saved appearance. Fixed preseason analytics with no regular-season rows before final Android rerun. Source `a9e0d94` is superseded by this correction batch; retain the last fully verified APK links until the final workflows pass.
-
-Save-library acceptance correction: cached immutable rookie metadata and indexed player lookup remove repeated quadratic migration scans. Library deserialization runs in the background with a visible spinner and disabled entry controls until ready. Nineteen focused management/save cases pass. Local device verified Inbox, bracket, league comparisons, career and news; the final workflows must validate this loading correction.
+Final checkpoint: Pro 30 and College 388 are fully verified at the source above. Main is unchanged. The continuation stays active for the remaining acceptance work; no merge, release publication or repository cleanup was performed.
