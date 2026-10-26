@@ -11,9 +11,9 @@ Generated fallback terms must use known signing, rookie and draft metadata rathe
 ## Confirmed defects to fix
 
 - The factory defaults to generated contracts; the new-franchise picker selects Game contracts.
-- Veteran generated remaining terms currently use a GUID-based random one-to-four-year rule.
-- The importer loses original signing/playing-term metadata, conflates future allocated bonuses with signing cash, and can import total guarantees as guaranteed base salary.
-- Void accounting rows are treated as playing years and contribute phantom salaries to annual cash averages. Expiration and extension logic also uses the maximum accounting year.
+- Fixed in `6faa77f`: veteran generated remaining terms previously used a GUID-based random one-to-four-year rule. New terms use source playing dates where matched and explicit estimates otherwise.
+- Corrected initial metadata/cash separation in `6faa77f`: original signing year, inferred cap-only rows, bonus cash, reported APY and source guarantee totals are retained; guaranteed base is capped at salary. Source option origin, vesting and complete remaining guaranteed cash still require reconciliation.
+- Fixed initial void/employment defect in `6faa77f`: phantom salaries no longer inflate cash averages or delay expiration; proration still retains accounting years. Natural expiry, net extension replacement and void acceleration have targeted regressions.
 - Seattle's displayed allowance reconciles to the supplied CSV, but mixed sourced/generated obligations and accounting basis do not reconcile to the quoted real-world cap space. Do not force a balancing entry to match that number.
 
 ## Implementation order
