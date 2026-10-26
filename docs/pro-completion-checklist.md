@@ -1,6 +1,6 @@
 # Pro completion checklist
 
-Current verified Pro application source: `7687443` (core `6faa77f`), APK Build 36; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current verified Pro application source: `a2c74e8` (landscape), accounting `7687443` / core `6faa77f`, APK Build 37; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -62,7 +62,7 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 
 ## Newly reported live-view layout
 
-- [ ] Pro landscape quick-play controls fit without scrolling: resize field while choices are open, collapse the three choices after selection, restore field height for the play, and retain a clear way to change the call. Match College behavior. Verify phone/Fold landscape with the scoreboard, selected call and action controls visible. Added October 26; source `a2c74e8` compiles and Build 37 (`40408864223`) passed server tests/packaging; device checks are in progress. Do not repeat the build until its result/evidence is inspected. This is Pro live UI work and needs the relevant GameCast device flow when implemented.
+- [x] Pro landscape quick-play controls fit without scrolling: compact header/pinned controls, flexible field height, three horizontal choices, collapse after selection, expand field, restore choices after the snap and More for secondary actions. Source `a2c74e8`, Build 37 run `40408864223` all green. Device assertions and before/after screenshots reviewed. APK artifact `12691773553`; evidence `12693410970`. Broad Pro GameCast, watch/replay, saved final/reload/advance and coordinator checks also passed; College/shared source unchanged.
 
 ## Outstanding acceptance
 
@@ -79,7 +79,7 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 
 See [testing-scope.md](testing-scope.md): use finance-scoped Pro checks here and reuse unchanged College 389 evidence. Keep the continuation active while roadmap items remain. Do not merge unfinished Pro work or delete branches/artifacts as a substitute for acceptance.
 
-Verified downloads: [Pro 33](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40365289405/artifacts/12669723503), tested in successful [verification run 40366831239](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40366831239) · [College 389](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12665525718), all College jobs passed. Pro 33 uses financial-scoped device acceptance; last full shared GameCast walkthrough remains Pro 31 / College 389.
+Latest verified Pro: [Build 37](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40408864223/artifacts/12691773553), full Pro walkthrough plus landscape assertions passed. Earlier downloads: [Pro 33](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40365289405/artifacts/12669723503), tested in successful [verification run 40366831239](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40366831239) · [College 389](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12665525718), all College jobs passed. Pro 33 uses financial-scoped device acceptance; latest Pro GameCast walkthrough is Build 37; unchanged College remains verified at 389.
 
 ## Final repository cleanup — after current game tasks
 
