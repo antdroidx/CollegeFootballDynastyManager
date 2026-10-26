@@ -2,7 +2,7 @@
 
 Use the smallest acceptance flow that covers affected behavior. Reuse verified results for unchanged applications; do not rebuild College solely because Pro finance changed.
 
-- **Pro finance/data/contracts/rollover:** dispatch `pro-android.yml` with `validation_scope=finance`. Run all fast Pro transaction/career/save/financial regressions and the three-season cap lifecycle scenario; package the APK; run `build/pro-finance-smoke.py` on it. This checks new-franchise budgets, all 32 persisted/reconciled allocations, signed adjustments, financial UI, themes and reinstall/save survival. It excludes the unchanged broad GameCast walkthrough and two longer calibration cases.
+- **Pro finance/data/contracts/rollover:** dispatch `pro-android.yml` with `validation_scope=finance`. Run all fast Pro transaction/career/save/financial regressions and the three-season cap lifecycle scenario; package the APK; run `build/pro-finance-smoke.py` on it. This checks new-franchise budgets, all 32 persisted/reconciled allocations, signed adjustments, sourced JSN annual cash/playing term, compact contract details and expandable void accounting, themes and reinstall/save survival. It excludes the unchanged broad GameCast walkthrough and two longer calibration cases.
 - **Shared simulation, GameCast, renderer or live controls:** use `validation_scope=full`; verify both applications when shared application behavior changes. Full remains the default for unclassified pushes/manual runs.
 - **Pro management/UI changes outside finance:** use the full Pro acceptance until a relevant narrower flow exists.
 - **College-only changes:** run the appropriate College workflow/flow and affected Core/College tests. Pro builds are needed only if shared code is affected.

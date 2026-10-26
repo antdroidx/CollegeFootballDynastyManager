@@ -43,7 +43,7 @@ Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared
 
 ## Next authorized financial phase
 
-- [ ] Correct sourced employment/void/cash/guarantee semantics and dependent expiration/release calculations.
+- [ ] Correct sourced employment/void/cash/guarantee semantics and dependent expiration/release calculations. Initial implementation `6faa77f` is in verification; full option/vesting/source liability reconciliation remains pending.
 - [ ] Replace random fallback remaining terms with metadata-based terms and explicit rookie/undrafted exceptions.
 - [ ] Real contracts default for new franchises after reconciliation; preserve existing saves and explicit generated mode.
 - [ ] Simplified main contract display with optional detailed accounting.
