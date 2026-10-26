@@ -66,3 +66,15 @@ Pro Build 24 verified the trade/contract batch (57 automated Pro cases plus Andr
 Current-work.md is the authoritative current handoff; prior checkpoint paragraphs above are historical. Pro Build 24 and College Build 382 both passed all device checks. The follow-on morale/honors/camp/efficiency implementation passes **64 Pro cases**, including twenty seasons. Final Android source/build/device publication is pending.
 
 Implemented in the follow-on: weekly scoped positive/negative talks with gray cooldown state; signing/personality decay and severe contract trade requests; 90 total active/practice camp capacity and final 53 cutdown; saved awards/all-star snapshots, factual award news and isolated shared-engine exhibition; efficiency stats and sortable box-score grids. College device checks now cover custom-name entry/reload and visible deletion. See current-work for exact verified download links and remaining financial/AI acceptance gaps.
+
+## Verified release checkpoint — Pro 25 / College 383
+
+All jobs passed for source `a94fbe56e9d7c03d06654bf5d9aa7acecdcc6801`:
+
+- Pro APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40242451288/artifacts/12617286976
+- College APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40242451137/artifacts/12617143979
+- Pro: 64 automated cases including twenty seasons, plus full Android flow.
+- Core/College legacy combined: 682 fast cases; both College Android jobs passed, including custom-name persistence.
+- Local synchronization helper tests: 10 passed; packaged resources check passed.
+
+The follow-on morale/honors/camp/efficiency batch is now verified. Prior pending statements above are historical. CPU autonomous trade proposals, deeper GM future-commitment review, sourced cap reconciliation and broader long-term balancing remain acceptance gaps. Keep the continuation active and source accounting experimental.
