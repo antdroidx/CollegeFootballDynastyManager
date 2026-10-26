@@ -41,6 +41,10 @@ Seven new rule/save cases and all 123 scoped Pro cases passed. An earlier full 1
 
 After the current financial batch: use uppercase city names in Pro end zones (SEATTLE, LOS ANGELES, etc.); correct between-play referee/ball placement at the line of scrimmage in both College and Pro instead of inside the huddle. Audit shared presentation and verify both games if shared behavior changes. Do not mix these into the seasonal cap-counting APK.
 
+## Newly queued Pro aging / development changes
+
+User reports aging veterans retain 4–5 potential stars. ProOffseason.Advance already applies annual position-dependent overall/skill regression, but the potential ceiling stays fixed. Audit and make future growth outlook age/position-aware without changing College's canonical attributes or falsely treating current elite ability as years of future development. Add the College-style season-start OVR delta in Pro roster/player views and test aging trajectories across positions. Keep this separate from the current seasonal cap counting batch; details are in the completion checklist.
+
 ## Next authorized work
 
 Continue [pro-contract-reconciliation.md](pro-contract-reconciliation.md): complete opening source commitments/departed-player debt, seasonal Top-51 counting, option/vesting provenance and first-round fifth-year decisions before enabling the real-contract default. The default remains unchanged. Do not fabricate missing liabilities or force headline cap balances. Preserve negotiated saves and all College identity/save behavior.

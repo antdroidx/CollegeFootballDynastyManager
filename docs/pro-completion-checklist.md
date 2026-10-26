@@ -74,6 +74,12 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 - [ ] Pro end-zone text uses uppercase team city, e.g. SEATTLE / LOS ANGELES, matching College's presentation. Keep short abbreviations on scoreboard/city badges; verify long city names and both field directions/camera views.
 - [ ] Both College and Pro: between plays, place the referee with the ball at the line of scrimmage rather than inside a huddle. Audit shared pre-snap/huddle presentation; preserve official movement during live plays and replay. Because both games are affected, verify the relevant shared/College/Pro field flows when implemented.
 
+## Newly requested Pro development / aging
+
+- [ ] Audit aging veterans showing 4–5 potential stars. Current offseason progression reduces overall/attributes after position-specific peak age but leaves PotentialRating unchanged. Make remaining development outlook age/position-aware, distinguish elite current ability from future upside, and avoid an impossible ceiling below present ability. Preserve the shared canonical attribute system and College behavior.
+- [ ] Calibrate position-specific aging/regression (including athletic vs mental/technical attributes) and verify annual decline/retirement over several seasons; avoid a uniform age cutoff for every position.
+- [ ] Add College-style rating delta to Pro roster/player views, with an explicit season-start baseline and meaningful zero/up/down styling. Preserve legacy saves and avoid replacing imported current ratings just to change the display.
+
 ## Outstanding acceptance
 
 - [ ] CPU autonomous trade offers/counteroffers and shared-pick GM review.
