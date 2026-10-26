@@ -7,7 +7,7 @@ Use the smallest acceptance flow that covers affected behavior. Reuse verified r
 - **Shared simulation, GameCast, renderer or live controls:** use `validation_scope=full`; verify both applications when shared application behavior changes. Full remains the default for unclassified pushes/manual runs.
 - **Pro management/UI changes outside finance:** use the full Pro acceptance until a relevant narrower flow exists.
 - **College-only changes:** run the appropriate College workflow/flow and affected Core/College tests. Pro builds are needed only if shared code is affected.
-- **Test-helper changes:** run `python -m unittest discover -s build -p test_android_ui_smoke.py` (12 cases), plus the relevant device flow. Keep system-navigation clipping and fixed-footer regressions.
+- **Test-helper changes:** run `python -m unittest discover -s build -p test_android_ui_smoke.py` (13 cases), plus the relevant device flow. Keep system-navigation clipping and fixed-footer regressions.
 - **Documentation only:** use `[skip ci]`; do not rebuild APKs.
 
 Run longer financial/roster simulations when annual lifecycle, cap inflation, draft supply or CPU financial planning changes. They are not necessary on every display/data formatting edit. For this first measured-rollover implementation, all 108 Pro cases (including twenty estimated-contract seasons, five sourced-contract seasons and the new three-season imported-cap scenario) passed locally once. The normal finance CI subsequently runs 106 relevant cases rather than repeating those two longest scenarios.

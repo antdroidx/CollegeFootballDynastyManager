@@ -106,3 +106,6 @@ User authorized October 26; perform last, after the current implementation and v
 - [ ] Archive obsolete Java/Android project files under top-level `Archive/` (preferred reversible choice), or remove if clearly unnecessary. Preserve any assets/data still used by C# projects and update their references instead of breaking builds. Do not rewrite history or delete unrelated branches/releases as part of this request.
 - [ ] Rename GitHub repository from `antdroidx/CollegeFootballDynastyManager` to `antdroidx/Football-Sim-Engine`.
 - [ ] Update Git remotes, README/docs, workflow references, badges and source/download links as applicable; verify the renamed repository and both app build paths. Preserve application package IDs, saves and signing/update compatibility.
+
+
+Financial QA retry 40415642843 passed the exact-APK source guard and all 13 helper cases, then stopped because the contract term was visible at the bottom while the adjacent APY remained below the viewport. Evidence confirmed correct profile/term; the harness now explicitly scrolls to the APY before asserting it. This does not change application inputs. Reuse Build 39 again; it is not accepted until the complete financial flow passes.

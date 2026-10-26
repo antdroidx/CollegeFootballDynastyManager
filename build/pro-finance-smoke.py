@@ -53,7 +53,8 @@ try:
 
     click("jsn-profile","Jaxon Smith-Njigba")
     root=s.scroll_to_text("pro-finance-jsn-term","Content · Playing contract through 2031",max_swipes=20)
-    assert contains(root,"Contract value / year $42,150,000")
+    value=s.scroll_to_text("pro-finance-jsn-value","Contract value / year $42,150,000",max_swipes=10)
+    assert contains(value,"Contract value / year $42,150,000")
     compact=s.scroll_to_text("pro-finance-compact-pay","Show accounting details",max_swipes=10)
     assert not contains(compact,"2032 · Void")
     s.capture("pro-finance-compact-contract")
