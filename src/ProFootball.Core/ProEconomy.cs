@@ -22,7 +22,7 @@ public static class ProEconomy
             foreach (var p in players)
             {
                 var salary = p.PracticeSquad ? 300_000 : (long)Math.Max(1_000_000, MarketSalary(p) * scale);
-                var years = 1 + (p.Football.PlayerId.ToByteArray()[0] % 4); var bonus = p.PracticeSquad ? 0 : salary / 2;
+                var years = p.PracticeSquad ? 1 : p.RookieYear is int rookieYear && s.Year>=rookieYear && s.Year<rookieYear+(p.DraftOverall is >0?4:3) ? rookieYear+(p.DraftOverall is >0?4:3)-s.Year : 1 + (p.Football.PlayerId.ToByteArray()[0] % 4); var bonus = p.PracticeSquad ? 0 : salary / 2;
                 contracts.Add(new(p.Football.PlayerId, team.Name, s.Year, years, bonus, Enumerable.Range(0, years).Select(i => new ContractYear(s.Year + i, salary, i == 0 ? salary / 3 : 0)).ToList()));
             }
         }
@@ -54,8 +54,8 @@ public static class ProEconomy
     public static ProFranchise Sign(ProFranchise s, FreeAgentBid bid, bool rookieScale = false)
     {
         var p = s.Players.Single(p => p.Football.PlayerId == bid.PlayerId);
-        if (!(rookieScale && s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.Draft && s.Prospects.Any(x=>x.Football.PlayerId==bid.PlayerId) || ProNegotiation.Evaluate(p,bid.Years,bid.AnnualSalary,bid.Bonus).Accepted) || p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.CountForLimit(s, bid.Team) >= ProRoster.Limit(s)) return s;
-        var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, bid.AnnualSalary, i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false, LastChangedYear = s.Year };
+        if (!(rookieScale && (s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.Draft && s.Prospects.Any(x=>x.Football.PlayerId==bid.PlayerId) || s.UnsignedRookies.Any(x=>x.PlayerId==bid.PlayerId && x.Team==bid.Team)) || ProNegotiation.Evaluate(p,bid.Years,bid.AnnualSalary,bid.Bonus).Accepted) || p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.CountForLimit(s, bid.Team) >= ProRoster.Limit(s)) return s;
+        var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, bid.AnnualSalary, i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false };
         return ProMorale.Signing(Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == p.Football.PlayerId ? x with { Football = x.Football with { TeamName = bid.Team, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList(), Contracts = s.Contracts.Append(c).ToList() }, $"{bid.Team} signed {p.Football.FullName} for {bid.Years} years."), p.Football.PlayerId, bid.Team);
     }
     public static ProFranchise ResolveBids(ProFranchise s)
@@ -78,7 +78,7 @@ public static class ProEconomy
         for (var i = 0; i < contracts.Count; i++) if (contracts[i].Active && contracts[i].PlayerId == id)
         { var c = contracts[i]; dead += c.Years.Where(y => y.Year >= s.Year).Sum(y => y.Guaranteed) + Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => BonusCharge(c, y)); contracts[i] = c with { Active = false }; }
         var waivers = s.Waivers.ToList(); if (waive && (p.Experience < 4 || s.Phase == ProPhase.Playoffs || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.TransactionTick + 1, []));
-        return Log(s with { Contracts = contracts, DeadCap = dead == 0 ? s.DeadCap : s.DeadCap.Append(new(team, s.Year, id, dead)).ToList(), Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
+        return Log(s with { Contracts = contracts, UnsignedRookies = s.UnsignedRookies.Where(r=>r.PlayerId!=id).ToList(), DeadCap = dead == 0 ? s.DeadCap : s.DeadCap.Append(new(team, s.Year, id, dead)).ToList(), Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
     }
     public static ProFranchise Extend(ProFranchise s, string team, Guid id, int years, long annual, long bonus = 0)
     {

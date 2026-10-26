@@ -175,7 +175,7 @@ public sealed partial class ProLivePage : ContentPage
     }
     Border Marker(DynastyPlayer? player, Color primary, Color secondary, bool away)
     {
-        var sprite = new FootballSpriteView(primary, secondary, away, player?.Appearance?.SkinTone ?? 1, player?.JerseyNumber?.ToString() ?? player?.Position.ToString() ?? "");
+        var sprite = new FootballSpriteView(primary, secondary, away, PortraitAppearance.ForPlayer(player?.PlayerId ?? Guid.Empty, player?.Appearance).Skin, player?.JerseyNumber?.ToString() ?? player?.Position.ToString() ?? "");
         var host = new Border { WidthRequest = 28, HeightRequest = 28, Padding = 0, StrokeThickness = 0, BackgroundColor = Colors.Transparent, InputTransparent = true, Content = sprite };
         spritePlayers[sprite] = player; markerHosts[host] = (player, primary, secondary, away);
         if (player is not null) SemanticProperties.SetDescription(host, $"{player.Position} {player.FullName}");

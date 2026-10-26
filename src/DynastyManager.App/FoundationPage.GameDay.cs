@@ -481,7 +481,7 @@ public sealed partial class FoundationPage
             if (marker.Content is FootballSpriteView oldSprite) spritePlayers.Remove(oldSprite);
             if (useSprites)
             {
-                var sprite = new FootballSpriteView(color, secondary, awayTeam, player?.Appearance?.SkinTone ?? 1,
+                var sprite = new FootballSpriteView(color, secondary, awayTeam, PortraitAppearance.ForPlayer(player?.PlayerId ?? Guid.Empty, player?.Appearance).Skin,
                     showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "");
                 spritePlayers[sprite] = player;
                 marker.Stroke = Colors.Transparent; marker.StrokeThickness = 0; marker.BackgroundColor = Colors.Transparent;

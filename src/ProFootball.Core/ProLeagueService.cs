@@ -42,7 +42,7 @@ public static class ProLeagueService
             DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
         }));
         franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
-        return sourcedContracts ? ProContractData.Apply(franchise) : franchise;
+        return sourcedContracts ? ProContractData.Apply(franchise) : ProContractData.CompleteRookieTerms(franchise);
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {
@@ -111,6 +111,7 @@ public static class ProLeagueService
     {
         if (mode == GameDayMode.Play && game.Football.InvolvesTeam(state.UserTeam) && state.Career?.Unemployed == true) throw new InvalidOperationException("Accept a coaching job before controlling this team.");
         if (game.Football.HasPlayed || game.Phase != state.Phase || game.Football.Week != state.Week) throw new InvalidOperationException("Game is not available this week.");
+        if(state.Phase is ProPhase.RegularSeason or ProPhase.Playoffs && game.Football.InvolvesTeam(state.UserTeam)) ProSeasonEligibility.Require(state,state.UserTeam);
         var session = GameDayEngine.Start(game.Football, Profile(state, game.Football.HomeTeamName), Profile(state, game.Football.AwayTeamName), state.Players.Where(p => !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => p.Football).ToArray(), mode, rules: FootballRules.Professional with { Postseason = state.Phase == ProPhase.Playoffs });
         controlled ??= game.Football.InvolvesTeam(state.UserTeam) ? state.UserTeam : game.Football.HomeTeamName;
         if (!game.Football.InvolvesTeam(controlled)) throw new ArgumentException("Controlled team must be in this matchup.");
@@ -130,8 +131,9 @@ public static class ProLeagueService
     }
     public static ProFranchise Advance(ProFranchise state)
     {
-        if(state.Phase==ProPhase.Preseason&&state.Week==3&&state.Career?.Unemployed!=true&&ProRoster.Active(state,state.UserTeam)>53&&state.Games.Where(g=>g.Phase==ProPhase.Preseason&&g.Football.Week==3).All(g=>g.Football.HasPlayed))
-            throw new InvalidOperationException("Final cutdown is pending. Reduce your active roster to 53 before advancing the calendar.");
+        state = ProDraft.SignRookies(ProDraft.AutoScout(state));
+        if(state.Career?.Unemployed!=true && (state.Phase is ProPhase.RegularSeason or ProPhase.Playoffs || state.Phase==ProPhase.Preseason&&state.Week==3&&state.Games.Where(g=>g.Phase==ProPhase.Preseason&&g.Football.Week==3).All(g=>g.Football.HasPlayed)))
+            ProSeasonEligibility.Require(state,state.UserTeam);
         state = ProMorale.Advance(ProRoster.ResolveWaivers(state with { TransactionTick = state.TransactionTick + 1 }));
         if (state.Phase == ProPhase.Offseason) return ProOffseason.Advance(state);
         state = ProCpu.Manage(state);
@@ -140,10 +142,10 @@ public static class ProLeagueService
         if (state.Phase == ProPhase.Preseason)
         {
             if (state.Week < 3) return state with { Week = state.Week + 1 };
-            foreach (var team in state.League.Teams.Where(t => t.Name != state.UserTeam || state.Career?.Unemployed == true)) state = ProCpu.Trim(state, team.Name);
+            foreach (var team in state.League.Teams.Where(t => t.Name != state.UserTeam || state.Career?.Unemployed == true)) state = ProCpu.MakeRoom(ProCpu.Trim(state, team.Name), team.Name, 0);
             // Keep completed finale results while the user makes final cuts; no second simulation.
-            if (ProRoster.Active(state, state.UserTeam) > 53)
-                return ProEconomy.Log(state, "Final cutdown required: reduce the active roster to 53 before the regular season.");
+            if (ProSeasonEligibility.Issue(state,state.UserTeam) is {} issue)
+                return ProEconomy.Log(state, issue);
             return state with { Phase = ProPhase.RegularSeason, Week = 1 };
         }
         if (state.Phase == ProPhase.RegularSeason) return state.Week < 18 ? state with { Week = state.Week + 1 } : ProPlayoffs.Begin(state);

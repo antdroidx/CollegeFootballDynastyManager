@@ -8,7 +8,6 @@ namespace DynastyManager.App;
 public sealed class PersonPortrait(PortraitAppearance face, Color primary, Color secondary,
     bool staff, int age, bool naturalAging) : IDrawable
 {
-    private static readonly string[] Skin = ["#F0C9AB", "#DCAB84", "#C58D64", "#AB714C", "#8E583B", "#70432F", "#503125"];
     private static readonly string[] Hair = ["#201C1C", "#3B2924", "#60412C", "#9F773F", "#BB955B", "#6C3528", "#93928B", "#C8C9C5"];
 
     public static GraphicsView Create(Guid id, string name, Color primary, Color secondary,
@@ -33,7 +32,7 @@ public sealed class PersonPortrait(PortraitAppearance face, Color primary, Color
         // Team jersey/polo, shoulders and collar.
         canvas.FillColor = primary;
         canvas.FillRoundedRectangle(7, 75, 86, 25, 20);
-        var skin = Color.FromArgb(Skin[face.Skin]);
+        var skin = Color.FromArgb(PortraitAppearance.SkinColor(face.Skin));
         canvas.FillColor = skin;
         canvas.FillRectangle(41, 65, 18, 17);
         canvas.FillColor = secondary;

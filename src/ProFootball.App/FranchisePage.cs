@@ -16,7 +16,7 @@ public sealed partial class FranchisePage : ContentPage
     readonly Border loading = new() { IsVisible = false, InputTransparent = true, Padding = 12, VerticalOptions = LayoutOptions.Start, HorizontalOptions = LayoutOptions.End, BackgroundColor = DynastyTheme.Surface,
         Content = new HorizontalStackLayout { Spacing = 8, Children = { new ActivityIndicator { IsRunning = true, Color = DynastyTheme.Accent, WidthRequest = 24 }, new Label { Text = "Working…", TextColor = DynastyTheme.Text, VerticalTextAlignment = TextAlignment.Center } } } };
     ProFranchise? state; bool initialized, busy; string section = "Overview";
-    static readonly string[] Sections = ["Overview", "Roster", "Staff", "Front office", "Schedule", "Standings", "Statistics", "Analytics", "News", "Honors", "Career", "History"];
+    static readonly string[] Sections = ["Overview", "Roster", "Staff", "Front office", "Schedule", "Standings", "Playoffs", "Statistics", "Analytics", "Inbox", "News", "Honors", "Career", "History"];
     public FranchisePage()
     {
         Title = "Pro Football Franchise Manager"; NavigationPage.SetHasNavigationBar(this, false); BackgroundColor = DynastyTheme.Background;
@@ -40,7 +40,7 @@ public sealed partial class FranchisePage : ContentPage
         { bottom.ColumnDefinitions.Add(new(GridLength.Star)); var target = name; var b = Action(name, () => target == "League" ? LeagueMenu() : Open(target)); b.FontSize = 10; b.Padding = 4; b.HorizontalOptions = LayoutOptions.Fill; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; bottom.Add(b, index, 0); }
         LayoutShell();
     }
-    async Task LeagueMenu() { var pick = await GameDialogs.ActionSheetAsync(this, "League", "Cancel", null, "Schedule", "Standings", "Statistics", "Analytics", "News", "Honors", "Career", "History"); if (pick is "Schedule" or "Standings" or "Statistics" or "Analytics" or "News" or "Honors" or "Career" or "History") await Open(pick); }
+    async Task LeagueMenu() { var pick = await GameDialogs.ActionSheetAsync(this, "League", "Cancel", null, "Schedule", "Standings", "Playoffs", "Statistics", "Analytics", "Inbox", "News", "Honors", "Career", "History"); if (pick is "Schedule" or "Standings" or "Playoffs" or "Statistics" or "Analytics" or "Inbox" or "News" or "Honors" or "Career" or "History") await Open(pick); }
     View Panel(string title, params View[] views)
     { var content = new VerticalStackLayout { Spacing = 10 }; if(!string.IsNullOrEmpty(title)) content.Add(Text(title, 20, true)); foreach (var view in views) content.Add(view); return new Border { Padding = 14, BackgroundColor = DynastyTheme.Surface, StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = content }; }
     View Cards(params View[] views)
@@ -88,7 +88,7 @@ public sealed partial class FranchisePage : ContentPage
         var header = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(Action("‹ Exit", async () => { await Save(); await Library(); }), 0, 0); header.Add(new VerticalStackLayout { Children = { Text(section == "Staff" ? "Coaching Hub" : section, 25, true), Text($"{state.UserTeam} · {state.Year} · {state.Phase} · Week {state.Week}", 12) } }, 1, 0); header.Add(Action("Options", Options), 2, 0); body.Add(header);
         var team = state.League.Teams.Single(t => t.Name == state.UserTeam); body.Add(new Border { Padding = 14, BackgroundColor = Color.FromArgb(team.Primary), Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(team, 56), new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { new Label { Text = team.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = TeamBadgeView.Ink(team) }, new Label { Text = state.Name + " · " + state.Year, TextColor = TeamBadgeView.Ink(team) } } } } } });
-        switch (section) { case "Overview": Overview(); break; case "Roster": Roster(); break; case "Staff": Staff(); break; case "Front office": FrontOffice(); break; case "Schedule": Schedule(); break; case "Standings": Standings(); break; case "History": History(); break; case "Career": Career(); break; case "News": News(); break; case "Statistics": Statistics(); break; case "Analytics": Analytics(); break; case "Honors": Honors(); break; }
+        switch (section) { case "Overview": Overview(); break; case "Roster": Roster(); break; case "Staff": Staff(); break; case "Front office": FrontOffice(); break; case "Schedule": Schedule(); break; case "Standings": Standings(); break; case "Playoffs": PlayoffTree(); break; case "History": History(); break; case "Career": Career(); break; case "Inbox": Inbox(); break; case "News": News(); break; case "Statistics": Statistics(); break; case "Analytics": Analytics(); break; case "Honors": Honors(); break; }
         var actions = new ActionRow(); actions.Add(Action("Save franchise", async () => { await Save(); await GameDialogs.AlertAsync(this, "Saved", "Franchise and rolling backups saved.", "OK"); })); actions.Add(Action("Save & exit", async () => { await Save(); await Library(); })); body.Add(actions);
     }
     void Overview()
@@ -96,7 +96,14 @@ public sealed partial class FranchisePage : ContentPage
         var s = state!; var r = ProStandings.Build(s).Single(r => r.Team.Name == s.UserTeam);
         var actions = new ActionRow(); actions.Add(Action(s.Phase == ProPhase.Offseason ? "Advance offseason" : "Advance week", Advance, "pro-advance")); actions.Add(Action("This week's league games", () => OpenLeagueGames(), "pro-week-games")); body.Add(actions);
         body.Add(Action("My team’s season schedule", () => OpenTeamSchedule()));
+        body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
         body.Add(WeeklyTalkButton());
+        var notices=ProInbox.Build(s);var unread=notices.Count(n=>!s.ReadNotificationIds.Contains(n.Id));
+        body.Add(Panel($"Franchise inbox · {unread} unread",Text(notices.Count==0?"No current action items.":string.Join("\n",notices.Take(3).Select(n=>n.Title)),12),Action("Open inbox",()=>Open("Inbox"))));
+        if(s.UnsignedRookies.Any(r=>r.Team==s.UserTeam))
+            body.Add(Panel("Unsigned draft picks",Text("Selected rookies remain unavailable until their four-year contracts fit the cap and roster."),Action("Sign rookie contracts",async()=>{state=ProDraft.SignRookies(state!,state!.UserTeam);await Save();Render();})));
+        if(ProEconomy.Room(s,s.UserTeam)<0)
+            body.Add(Panel("Salary cap action required",Text($"{Money(-ProEconomy.Room(s,s.UserTeam))} over the cap · Regular-season entry and play are blocked until compliant."),Action("Manage contracts & cap",()=>Open("Front office"))));
         if (s.Phase == ProPhase.Preseason && s.Week == 3 && s.Games.Where(g => g.Phase == ProPhase.Preseason && g.Football.Week == 3).All(g => g.Football.HasPlayed) && ProRoster.Active(s, s.UserTeam) > 53)
             body.Add(Panel("Final roster cutdown", Text($"{ProRoster.Active(s, s.UserTeam)} active players · reduce to 53, then advance to the regular season."), Action("Manage roster", () => Open("Roster"))));
         if (s.Phase == ProPhase.Offseason) { body.Add(Panel("Offseason · " + s.OffseasonStep, Text(s.Champion is null ? "Build next season's roster." : "Champions · " + s.Champion), Action("Open front office", () => Open("Front office")))); }
@@ -124,6 +131,7 @@ public sealed partial class FranchisePage : ContentPage
 
     void Standings()
     {
+        body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
         foreach (var group in ProStandings.Build(state!).GroupBy(r => r.Team.Conference + " · " + r.Team.Division))
         { body.Add(Text(group.Key, 19, true)); body.Add(Table([("Team", 210), ("W", 40), ("L", 40), ("T", 40), ("Pct", 65), ("Diff", 65)], group.Select(r => new View[] { TeamCell(r.Team), Text(r.Wins.ToString()), Text(r.Losses.ToString()), Text(r.Ties.ToString()), Text(r.Percentage.ToString(".000")), Text(r.Differential.ToString()) }))); }
         body.Add(Text("Initial tiebreaks: percentage, division, conference, opponent strength, differential. Full official multi-team chains remain in development.", 12));

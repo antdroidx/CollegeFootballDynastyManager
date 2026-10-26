@@ -7,6 +7,8 @@ spec=importlib.util.spec_from_file_location("college_smoke",Path(__file__).with_
 s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
 def ready(name,label): return s.wait_for("pro-"+name,lambda r:label in s.texts(r),timeout=180)
 def click(name,label):
+    if label in {"Overview","Roster","Staff","Front office","Schedule","Standings","Playoffs","Statistics","Analytics","Inbox","News","Honors","Career","History"}:
+        navigate(label);return s.capture("pro-"+name)
     root=s.scroll_to_text("pro-"+name,label,max_swipes=20);s.tap(root,label);return root
 def horizontal_to_text(name,label):
     for attempt in range(6):
@@ -26,7 +28,19 @@ def navigate(label):
     elif "League" in s.texts(root):
         s.tap(root,"League");click("league-"+label.lower(),label)
     else:
-        click("sidebar-"+label.lower(),label)
+        for attempt in range(10):
+            root=s.capture("pro-sidebar-"+label.lower()+str(attempt))
+            if label in s.texts(root): s.tap(root,label); return
+            scrollables=[n for n in root.iter("node") if n.get("scrollable")=="true" and "Horizontal" not in n.get("class", "")]
+            assert scrollables,"No sidebar scroll container"
+            bounds=[tuple(map(int,re.findall(r"\d+",n.get("bounds")))) for n in scrollables]
+            left,top,right,bottom=min(bounds,key=lambda b:b[0])
+            destinations=["Overview","Roster","Staff","Front office","Schedule","Standings","Playoffs","Statistics","Analytics","Inbox","News","Honors","Career","History"]
+            visible=[destinations.index(n.get("text")) for n in root.iter("node") if n.get("text") in destinations and tuple(map(int,re.findall(r"\d+",n.get("bounds"))))[0]<right]
+            toward_start=bool(visible) and destinations.index(label)<min(visible)
+            y1=top+(bottom-top)*(1 if toward_start else 3)//4;y2=top+(bottom-top)*(3 if toward_start else 1)//4
+            s.adb("shell","input","swipe",str((left+right)//2),str(y1),str((left+right)//2),str(y2),"350")
+        raise AssertionError("Could not reach sidebar destination "+label)
 
 def coin(name,interactive=False):
     ready(name+"-toss","COIN TOSS")
@@ -73,6 +87,12 @@ try:
     assert not any("Madden" in (t or "") for t in s.texts(profile))
     s.capture("pro-player-profile")
     s.scroll_to_text("pro-player-skill-ratings","Kicking accuracy",max_swipes=20)
+    click("edit-appearance","Edit appearance")
+    edit=ready("appearance-editor","Skin tone");s.tap_id(edit,"pro-skin-tone")
+    tone=ready("appearance-tones","Deep");s.tap(tone,"Deep")
+    click("save-appearance","Save appearance")
+    ready("appearance-saved","Player profile")
+
     profile=s.scroll_to_text("pro-player-profile-back","‹ Back",max_swipes=20,toward_start=True)
     s.tap(profile,"‹ Back")
     click("front-office-tab","Front office")
@@ -88,6 +108,10 @@ try:
     ready("trading-block-ready","Trading block")
     s.capture("pro-trading-block")
     click("block-back","‹ Front office")
+    click("retention-open","Expiring contracts")
+    ready("retention-ready","Expiring contracts & retention")
+    s.capture("pro-retention-desk")
+    click("retention-back","‹ Front office")
     click("free-agents-open","Free agents")
     agents=ready("free-agents","All positions")
     s.capture("pro-free-agents-compact")
@@ -98,7 +122,8 @@ try:
     assert "Trevon Diggs" not in s.texts(agents)
     s.capture("pro-free-agents-filtered")
     offer=horizontal_to_text("free-agent-offer","Make offer");s.tap(offer,"Make offer")
-    ready("contract-workspace","Contract negotiation")
+    contract=ready("contract-workspace","Contract negotiation")
+    assert "Salary and bonus adjust in $250K steps" in s.texts(contract)
     cancel=s.scroll_to_text("pro-contract-cancel","Cancel",max_swipes=12)
     assert "Use player's counter" in s.texts(cancel)
     s.capture("pro-contract-negotiation")
@@ -190,9 +215,18 @@ try:
     click("light-roster-tab","Roster")
     s.wait_for("pro-light-roster",lambda r:any((t or "").startswith("Active roster ·") for t in s.texts(r)),timeout=180)
     s.capture("pro-roster-fold-light")
+    navigate("Inbox")
+    ready("inbox","Franchise inbox");s.capture("pro-inbox")
+    navigate("Playoffs")
+    ready("playoff-tree","Playoff bracket");s.capture("pro-playoff-bracket")
     navigate("Analytics")
     ready("analytics","Franchise analytics")
     s.capture("pro-analytics")
+    analytics=s.scroll_to_text("pro-comparison-section","Team performance",max_swipes=20)
+    s.tap(analytics,"Team performance");quality=ready("comparison-options","Roster quality");s.tap(quality,"Roster quality")
+    analytics=s.scroll_to_text("pro-league-comparisons","League avg",max_swipes=20)
+    analytics=horizontal_to_text("comparison-rank","Rank")
+    assert "Rank" in s.texts(analytics)
     navigate("Career")
     ready("career","Your career")
     s.capture("pro-career")

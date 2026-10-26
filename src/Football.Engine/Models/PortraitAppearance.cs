@@ -4,6 +4,8 @@ namespace DynastyManager.Core.Models;
 public sealed record PortraitAppearance(int Skin, int HairColor, int HairStyle, int FaceShape,
     int Brow, int FacialHair, int Detail)
 {
+    public static string SkinColor(int tone) => new[] { "#F0C9AB", "#DCAB84", "#C58D64", "#AB714C", "#8E583B", "#70432F", "#503125" }[Math.Clamp(tone, 0, 6)];
+
     public static PortraitAppearance ForPlayer(Guid id, NcaaPlayerAppearance? appearance)
     {
         var fallback = ForIdentity(id);

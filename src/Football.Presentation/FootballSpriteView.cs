@@ -45,7 +45,7 @@ public sealed class FootballSpriteView : GraphicsView
             var sx = -fy; var sy = fx * .45;
             var front = fy >= -.3;
             var ink = Color.FromArgb("#101923");
-            var skinColor = Color.FromArgb(new[] { "#E9B98E", "#C78B60", "#956343", "#65432F" }[Math.Clamp(skin, 0, 3)]);
+            var skinColor = Color.FromArgb(DynastyManager.Core.Models.PortraitAppearance.SkinColor(skin));
             var jersey = away ? Colors.White : primary;
             var pants = away ? Color.FromArgb("#E3E7EB") : secondary;
             Color Shade(Color c, float amount) => new(c.Red * amount, c.Green * amount, c.Blue * amount);

@@ -286,7 +286,7 @@ def main():
     tap(watch_box, "Return to game")
     ready = capture("takeover-ready")
     tap(ready, "Take over")
-    controlled = wait_for("takeover-controlled", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
+    controlled = wait_for("takeover-controlled", lambda r: "Watch CPU" in texts(r) and "Options" in texts(r))
     assert "Watch CPU" in texts(controlled), "Take over did not leave Watch mode"
     tap(controlled, "More")
     tap(scroll_to_text("skip-ready", "Skip to end"), "Skip to end")

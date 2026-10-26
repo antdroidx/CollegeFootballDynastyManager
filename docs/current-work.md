@@ -68,3 +68,23 @@ A focused GM review now previews a proposed coordinator transaction once and che
 Coordinator future-commitment checkpoint: five focused Pro cases passed. Final full suite and both Android workflows will validate the committed batch; the latest verified APKs remain Pro 25 / College 383 until those complete.
 
 Expanded GM checkpoint: seven focused Pro cases passed. Review now also protects both units' shared future team commitments, including pending bids, and allows zero-spend roster/cap repairs instead of blocking an over-budget coordinator from releasing a contract. The earlier full suite passed 68 cases before these additional cases; final CI will run all 71. Verified APK links stay unchanged until final Android checks finish.
+
+Current-batch local verification: all **71 Pro cases passed**, including twenty-season stability; **682 legacy combined Core/College fast cases passed**. Pro Android packaging passed locally; final GitHub Pro/College device jobs are running. Do not replace the verified APK links until they pass.
+
+## Active user refinements — league context and simpler offers
+
+Implementing per-team league averages/leaders/tied ranks for active roster/positions, age, cap commitments, regular-season per-game performance and draft inventory. Contract salary/bonus and restructuring controls use $250K steps; years use whole-year steppers. Opening terms reflect age, comparable recent contracts and competing CPU bids; sourced existing contracts retain exact accounting. Both trade panels expose draft-year filters and the existing next-three-class inventory.
+
+Four new comparison/default-term tests pass; full suite and Android checks pending. Also fixing two Android test assumptions: Pro navigation must scroll its sidebar rather than the largest content area; College takeover may legitimately offer a punt instead of a scrimmage call. Pro 27 build/tests passed but device navigation failed; College 385 build/career passed but this special-teams assertion failed. Latest fully verified downloads remain Pro 25 / College 383 until reruns pass. Main remains untouched.
+
+## Active refinement batch — source pending Android verification
+
+Latest user additions remain in this batch. Implemented: league averages/leaders/ranks, $250K offer/restructure steppers with market defaults, explicit future draft-year filters, regular-season cap/roster gate, reseeded playoff bracket, Overview/inbox alerts and persisted read status, expiring-contract desk with optional staff negotiations, dense draft grid and automatic 40-player scout-team reports.
+
+Draft selection no longer requires immediate cap-compliant signing: unaffordable rookie deals retain team draft rights as reserved/unsigned players, without cap forgiveness or playable unsigned rookies. They sign four-year deals once cap/roster room exists. Regression completes all 224 picks at zero cap. Source rookie-year/draft metadata fixes short estimated starting rookie contracts; current-year source cap charges remain intact and projected future rookie terms are explicitly marked estimated. Existing saves migrate unchanged negotiated contracts safely. First-round fifth-year option decisions and authoritative sourced cap reconciliation remain follow-up work.
+
+User chose illustrated portraits with editing rather than real photos. Pro player cards now edit skin tone, hair and facial hair with preview/save. Shared portrait/sprite skin palette and identity fallback agree, replacing the fixed sprite fallback and four-tone clamp. No unsupported ethnicity/skin-tone guesses are imported from names. Existing College imported appearance mapping/package/save identity is retained.
+
+Focused new regression checks pass; full Pro suite and both Android packaging/device workflows are pending. Do not label this source as a tested APK yet. Latest verified downloads remain Pro 25 / College 383. The prior Pro27/College385 device-test assumptions are fixed in the helper source; final reruns are required. Main is untouched; continuation remains active.
+
+Local refinement validation: **90 Pro cases passed**, including twenty-season simulation and the all-224-picks zero-cap regression; **682 combined Core/College fast cases passed**. UI helper tests: 10 passed; resources check passed. Final Android packaging/device acceptance pending.
