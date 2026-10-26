@@ -35,13 +35,13 @@ public class ManagementRefinementTests
     }
     [Fact] public void InboxResolvesCapAlertsAndReadStateSurvivesRefresh()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks") with{SalaryCap=0};var notices=ProInbox.Build(s);var cap=Assert.Single(notices,n=>n.Id.StartsWith("cap-"));
+        var s=ProLeagueService.Create("Seattle Seahawks") with{TeamCapAllocations=[],SalaryCap=0};var notices=ProInbox.Build(s);var cap=Assert.Single(notices,n=>n.Id.StartsWith("cap-"));
         s=s with{ReadNotificationIds=[cap.Id]};Assert.Equal(notices,ProInbox.Build(s));Assert.Contains(cap.Id,s.ReadNotificationIds);
-        Assert.DoesNotContain(ProInbox.Build(s with{SalaryCap=1_000_000_000}),n=>n.Id==cap.Id);
+        Assert.DoesNotContain(ProInbox.Build(s with{TeamCapAllocations=[],SalaryCap=1_000_000_000}),n=>n.Id==cap.Id);
     }
     [Fact] public void RetentionRespectsLetExpireAndCanRenewUnderBudget()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks") with{Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.Retention,SalaryCap=1_000_000_000};
+        var s=ProLeagueService.Create("Seattle Seahawks") with{Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.Retention,TeamCapAllocations=[],SalaryCap=1_000_000_000};
         var players=s.Players.Where(p=>p.Football.TeamName==s.UserTeam&&!p.Retired).Take(2).ToArray();var ids=players.Select(p=>p.Football.PlayerId).ToArray();
         s=s with{Contracts=s.Contracts.Where(c=>!ids.Contains(c.PlayerId)).Concat(players.Select(p=>new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,1_000_000,0)]))).ToList(),LetExpire=[ids[0]]};
         var next=ProRetention.Negotiate(s,s.UserTeam);

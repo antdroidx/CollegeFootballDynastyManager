@@ -8,7 +8,7 @@ public static class ProRetention
         foreach(var p in Expiring(s,team).Where(p=>!s.LetExpire.Contains(p.Football.PlayerId)&&(team!=s.UserTeam||ProCareer.Controls(s,p.Football.Position))))
         {
             var terms=ProOfferTerms.AgentDemand(s,p,true);var c=s.Contracts.Last(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
-            if(c.LastChangedYear==s.Year)continue;
+            if(c.LastChangedYear>=s.Year)continue;
             var first=c.Years.Max(y=>y.Year)+1;
             if(Enumerable.Range(first,terms.Years).Any(year=>s.Contracts.Where(c=>c.Team==team).Sum(c=>ProEconomy.CapHit(c,year))+s.DeadCap.Where(d=>d.Team==team&&d.Year==year).Sum(d=>d.Amount)+terms.Salary+terms.Bonus/terms.Years>ProFinance.Limit(s,team,year)))continue;
             try{

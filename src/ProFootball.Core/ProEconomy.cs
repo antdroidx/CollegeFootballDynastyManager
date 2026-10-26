@@ -8,8 +8,8 @@ public static class ProEconomy
     public static long BonusCharge(ProContract c, int year) => c.Years.FirstOrDefault(y => y.Year == year)?.ProratedBonus ?? (year < c.SignedYear || year >= c.SignedYear + c.BonusYears ? 0 : c.SigningBonus / c.BonusYears + (year - c.SignedYear < c.SigningBonus % c.BonusYears ? 1 : 0));
     public static long CapHit(ProContract c, int year) => !c.Active ? 0 : (c.Years.FirstOrDefault(y => y.Year == year)?.Salary ?? 0) + (c.Years.FirstOrDefault(y => y.Year == year)?.OtherCompensation ?? 0) + BonusCharge(c, year);
     public static long DeadOnRelease(ProFranchise s, Guid id) => s.Contracts.Where(c => c.Active && c.PlayerId == id).Sum(c => c.Years.Where(y => y.Year >= s.Year).Sum(y => y.Guaranteed) + Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => BonusCharge(c, y)));
-    public static long Used(ProFranchise s, string team) => s.Contracts.Where(c => c.Team == team).Sum(c => CapHit(c, s.Year)) + s.DeadCap.Where(c => c.Team == team && c.Year == s.Year).Sum(c => c.Amount);
-    public static long Room(ProFranchise s, string team) => ProFinance.Limit(s,team) - Used(s, team);
+    public static long Used(ProFranchise s,string team)=>ProFinance.Budget(s,team).TotalCommitments;
+    public static long Room(ProFranchise s,string team)=>ProFinance.Budget(s,team).Available;
     public static long Pending(ProFranchise s, string team, Guid? except = null) => s.Bids.Where(b => b.Team == team && b.PlayerId != except).Sum(b => b.AnnualSalary + b.Bonus / b.Years);
     public static ProFranchise Initialize(ProFranchise s)
     {
@@ -85,28 +85,29 @@ public static class ProEconomy
     {
         if (years is < 1 or > 5) throw new InvalidOperationException("Extension must be one to five years.");
         var p = s.Players.Single(p => p.Football.PlayerId == id); var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == id && c.Team == team) ?? throw new InvalidOperationException("No active contract.");
-        if (c.LastChangedYear == s.Year) throw new InvalidOperationException("This player already completed a contract change this season.");
+        if (c.LastChangedYear >= s.Year) throw new InvalidOperationException("This player already completed a contract change this season.");
         if (p.Football.TeamName != team || !ProNegotiation.Evaluate(p,years,annual,bonus,Math.Max(ProFinance.Minimum(s,p,practice:false),MarketSalary(s,p))).Accepted) throw new InvalidOperationException("Extension rejected. Increase the annual salary.");
         var first = c.Years.Max(y => y.Year) + 1;
         if(annual<ProFinance.Minimum(s,p,first,practice:false))throw new InvalidOperationException("Offer must meet the player’s league minimum salary.");
         if (first + years - s.Year > 6) throw new InvalidOperationException("Extend only when five or fewer future contract years would remain.");
         if (Enumerable.Range(first,years).Any(year => s.Contracts.Where(x => x.Team == team).Sum(x => CapHit(x,year)) + Math.Max(annual,ProFinance.Minimum(s,p,year,practice:false)) > ProFinance.Limit(s,team,year))) throw new InvalidOperationException("Future cap commitments cannot accommodate this extension.");
-        var extended = c with { LastChangedYear = s.Year, Years = c.Years.Concat(Enumerable.Range(0, years).Select(i => new ContractYear(first + i, Math.Max(annual,ProFinance.Minimum(s,p,first+i,practice:false)), i == 0 ? annual / 4 : 0))).ToList(), Estimated = false };
+        var changeYear=ProFinance.ContractChangeYear(s);
+        var extended = c with { LastChangedYear = changeYear, Years = c.Years.Concat(Enumerable.Range(0, years).Select(i => new ContractYear(first + i, Math.Max(annual,ProFinance.Minimum(s,p,first+i,practice:false)), i == 0 ? annual / 4 : 0))).ToList(), Estimated = false };
         if(bonus>0)
         {
-            var count=Math.Min(5,extended.Years.Max(y=>y.Year)-s.Year+1);
-            if(Room(s,team)<(bonus+count-1)/count)throw new InvalidOperationException("Insufficient current cap room for the extension bonus.");
-            extended=extended with {SigningBonus=c.SigningBonus+bonus,BonusCash=AddBonusCash(c,s.Year,bonus),BonusYears=Math.Max(c.BonusYears,s.Year+count-c.SignedYear),
-                Years=extended.Years.Select(y=>y with {ProratedBonus=BonusCharge(c,y.Year)+(y.Year>=s.Year&&y.Year<s.Year+count?bonus/count+(y.Year-s.Year<bonus%count?1:0):0)}).ToList()};
+            var count=Math.Min(5,extended.Years.Max(y=>y.Year)-changeYear+1);
+            if(ProFinance.Budget(s,team,changeYear).Available<(bonus+count-1)/count)throw new InvalidOperationException("Insufficient current cap room for the extension bonus.");
+            extended=extended with {SigningBonus=c.SigningBonus+bonus,BonusCash=AddBonusCash(c,changeYear,bonus),BonusYears=Math.Max(c.BonusYears,changeYear+count-c.SignedYear),
+                Years=extended.Years.Select(y=>y with {ProratedBonus=BonusCharge(c,y.Year)+(y.Year>=changeYear&&y.Year<changeYear+count?bonus/count+(y.Year-changeYear<bonus%count?1:0):0)}).ToList()};
         }
-        if(extended.Years.Where(y=>y.Year>=s.Year).Any(y=>s.Contracts.Where(x=>x.Team==team&&x!=c).Sum(x=>CapHit(x,y.Year))+CapHit(extended,y.Year)+s.DeadCap.Where(d=>d.Team==team&&d.Year==y.Year).Sum(d=>d.Amount)>ProFinance.Limit(s,team,y.Year)))throw new InvalidOperationException("Extension exceeds current or future cap space.");
+        if(extended.Years.Where(y=>y.Year>=s.Year).Any(y=>s.Contracts.Where(x=>x.Team==team&&x!=c).Sum(x=>CapHit(x,y.Year))+CapHit(extended,y.Year)+s.DeadCap.Where(d=>d.Team==team&&d.Year==y.Year).Sum(d=>d.Amount)+ProFinance.Budget(s,team,y.Year).RolloverReserved>ProFinance.Limit(s,team,y.Year)))throw new InvalidOperationException("Extension exceeds current or future cap space.");
         return ProMorale.ContractAgreement(Log(s with { Contracts = s.Contracts.Select(x => x == c ? extended : x).ToList() }, $"{p.Football.FullName} agreed to a {years}-year extension."), id);
     }
     public static ProFranchise Tag(ProFranchise s, string team, Guid id)
     {
         if (s.Phase != ProPhase.Offseason || s.OffseasonStep != OffseasonStep.Retention || s.TaggedTeams.Contains(team)) throw new InvalidOperationException("One tag per team is available during offseason retention.");
         var p = s.Players.Single(p => p.Football.PlayerId == id); var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == id && c.Team == team) ?? throw new InvalidOperationException("No contract.");
-        if (c.LastChangedYear == s.Year) throw new InvalidOperationException("This player already completed a contract change this season.");
+        if (c.LastChangedYear >= s.Year) throw new InvalidOperationException("This player already completed a contract change this season.");
         if (c.Years.Max(y => y.Year) != s.Year) throw new InvalidOperationException("Only an expiring contract may be tagged.");
         var top = s.Players.Where(x => x.Football.Position == p.Football.Position).Select(x => MarketSalary(s,x)).OrderDescending().Take(5).DefaultIfEmpty(1_000_000).Average();
         var salary = (long)Math.Max(top, (c.Years.Last().Salary + BonusCharge(c, s.Year)) * 1.2);

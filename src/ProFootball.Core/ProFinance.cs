@@ -1,13 +1,20 @@
 namespace ProFootball.Core;
-public sealed record ProFinanceYear(string Team,int Year,long BaseCap,long CarryIn,long CapSpent,long CashSpent,long CarryOut,long FloorPayment);
+public sealed record ProFinanceYear(string Team,int Year,long BaseCap,long CarryIn,long CapSpent,long CashSpent,long CarryOut,long FloorPayment) {public long OtherAdjustments {get;init;} public long AdjustedCap=>BaseCap+CarryIn+OtherAdjustments;}
 public static class ProFinance
 {
     public const long Base2026=301_200_000;
-    public static long Limit(ProFranchise s,string team,int? year=null)
+    static (long Base,long Rollover,long Adjustments) Allowance(ProFranchise s,string team,int year)
     {
-        var y=year??s.Year;var cap=ForecastCap(s,y);
-        return cap+(s.FinancialHistory.LastOrDefault(h=>h.Team==team&&h.Year==y-1)?.CarryOut??0);
+        var allocation=ProCapInitialization.Allocation(s,team,year);
+        return (allocation?.BaseCap??ForecastCap(s,year),allocation?.Rollover??s.FinancialHistory.LastOrDefault(h=>h.Team==team&&h.Year==year-1)?.CarryOut??s.RolloverElections.LastOrDefault(e=>e.Team==team&&e.Year==year-1)?.Amount??0,allocation?.OtherAdjustments??0);
     }
+    public static long Limit(ProFranchise s,string team,int? year=null){var a=Allowance(s,team,year??s.Year);return checked(a.Base+a.Rollover+a.Adjustments);}
+    public static ProCapBudget Budget(ProFranchise s,string team,int? year=null)
+    {
+        var y=year??s.Year;var a=Allowance(s,team,y);var rows=s.Contracts.Where(c=>c.Active&&c.Team==team).ToArray();
+        return new(a.Base,a.Rollover,a.Adjustments,checked(a.Base+a.Rollover+a.Adjustments),rows.Sum(c=>c.Years.FirstOrDefault(r=>r.Year==y)?.Salary??0),rows.Sum(c=>ProEconomy.BonusCharge(c,y)),rows.Sum(c=>c.Years.FirstOrDefault(r=>r.Year==y)?.OtherCompensation??0),s.DeadCap.Where(d=>d.Team==team&&d.Year==y).Sum(d=>d.Amount),s.RolloverElections.LastOrDefault(e=>e.Team==team&&e.Year==y)?.Amount??0);
+    }
+    public static int ContractChangeYear(ProFranchise s)=>s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention?s.Year+1:s.Year;
     public static double Growth(ProFranchise s,int year)
     {
         var seed=System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"revenue/{s.Id}/{year}"));
@@ -59,19 +66,21 @@ public static class ProFinance
     public static ProFranchise CloseYear(ProFranchise s)
     {
         if(s.FinancialHistory.Any(h=>h.Year==s.Year))return s;
+        s=ProRollover.MeasureCompletedTeams(s);
         var history=s.FinancialHistory.ToList();
         foreach(var team in s.League.Teams)
         {
             var room=Math.Max(0,ProEconomy.Room(s,team.Name));var cash=Cash(s,team.Name,s.Year);var floor=Floor(s,team.Name);var payment=s.Year==floor.End?Math.Max(0,floor.Required-floor.Paid):0;
-            var carry=(long)(room*(team.Name==s.UserTeam?s.CarryoverPercentage:100)/100d);
-            history.Add(new(team.Name,s.Year,s.SalaryCap,Limit(s,team.Name)-s.SalaryCap,ProEconomy.Used(s,team.Name),cash,carry,payment));
+            var budget=Budget(s,team.Name);var election=s.RolloverElections.LastOrDefault(e=>e.Team==team.Name&&e.Year==s.Year);
+            var carry=election?.Amount??(long)(room*(team.Name==s.UserTeam?s.CarryoverPercentage:100)/100m);
+            history.Add(new(team.Name,s.Year,budget.BaseCap,budget.Rollover,budget.TotalCommitments-budget.RolloverReserved,cash,carry,payment){OtherAdjustments=budget.OtherAdjustments});
             if(payment>0)s=ProEconomy.Log(s,$"{team.Name} paid ${payment:N0} to satisfy the league cash-spending floor.");
         }
         return s with{FinancialHistory=history};
     }
-    public static ProFranchise CpuBonuses(ProFranchise s)
+    public static ProFranchise CpuBonuses(ProFranchise s,string? onlyTeam=null)
     {
-        foreach(var team in s.League.Teams.Where(t=>t.Name!=s.UserTeam||s.Career?.Unemployed==true))
+        foreach(var team in s.League.Teams.Where(t=>(onlyTeam is null||t.Name==onlyTeam)&&(t.Name!=s.UserTeam||s.Career?.Unemployed==true)))
         {
             var room=Math.Max(0,ProEconomy.Room(s,team.Name));var invest=Math.Max(0,(long)(Limit(s,team.Name)*.90)-ProEconomy.Used(s,team.Name));invest=Math.Min(invest,room);if(invest==0)continue;
             var ids=s.Players.Where(p=>p.Football.TeamName==team.Name&&!p.Retired&&!p.PracticeSquad&&!p.Reserve).Select(p=>p.Football.PlayerId).ToHashSet();

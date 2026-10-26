@@ -19,7 +19,7 @@ public sealed class FinanceRefinementTests
     {
         var s=New() with{Contracts=[],DeadCap=[],CarryoverPercentage=50};var closed=ProFinance.CloseYear(s);
         var own=closed.FinancialHistory.Single(h=>h.Team==s.UserTeam);
-        Assert.Equal(s.SalaryCap/2,own.CarryOut);Assert.Equal((long)(s.SalaryCap*.9),own.FloorPayment);Assert.Equal(0,own.CapSpent);
+        Assert.Equal(ProFinance.Limit(s,s.UserTeam)/2,own.CarryOut);Assert.Equal((long)(s.SalaryCap*.9),own.FloorPayment);Assert.Equal(0,own.CapSpent);
         Assert.Equal(32,ProFinance.CloseYear(closed).FinancialHistory.Count);
         var next=closed with{Year=s.Year+1,SalaryCap=ProFinance.ForecastCap(s,s.Year+1)};
         Assert.Equal(next.SalaryCap+own.CarryOut,ProFinance.Limit(next,s.UserTeam));
@@ -71,9 +71,9 @@ public sealed class FinanceRefinementTests
     {
         var s=New();var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Experience>=4&&!p.PracticeSquad);
         p=p with{Experience=8,RookieYear=s.Year-8};var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year-1,3,3_000_000,[new(s.Year-1,30_000_000,0),new(s.Year,30_000_000,0),new(s.Year+1,30_000_000,0)]);
-        s=s with{Players=[p],Contracts=[c],SalaryCap=50_000_000};var before=ProFinance.Cash(s,s.UserTeam,s.Year);
-        var repaired=ProCpu.MakeRoom(s,s.UserTeam,25_000_000);
-        Assert.True(ProEconomy.Room(repaired,s.UserTeam)>=25_000_000);Assert.Equal(s.UserTeam,repaired.Players[0].Football.TeamName);Assert.Empty(repaired.DeadCap);Assert.Equal(before,ProFinance.Cash(repaired,s.UserTeam,s.Year));
+        s=s with{Players=[p],Contracts=[c],TeamCapAllocations=[],SalaryCap=60_000_000};var before=ProFinance.Cash(s,s.UserTeam,s.Year);
+        var repaired=ProCpu.MakeRoom(s,s.UserTeam,35_000_000);
+        Assert.True(ProEconomy.Room(repaired,s.UserTeam)>=35_000_000);Assert.Equal(s.UserTeam,repaired.Players[0].Football.TeamName);Assert.Empty(repaired.DeadCap);Assert.Equal(before,ProFinance.Cash(repaired,s.UserTeam,s.Year));
     }
     [Fact] public void SourcedFiveSeasonsCanFinishDraftsAndRepairCpuBudgets()
     {

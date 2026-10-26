@@ -60,6 +60,23 @@ class SmokeSynchronizationTests(unittest.TestCase):
             self.assertIs(second, smoke.scroll_to_text("picker", "Returns"))
             command.assert_called_once_with("shell", "input", "swipe", "300", "500", "300", "300", "350")
 
+    def test_clipped_button_near_system_navigation_is_scrolled_before_tapping(self):
+        def screen(button_bounds):
+            root=ET.Element("hierarchy")
+            viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]")
+            scroll=ET.SubElement(viewport,"node",attrib={"class":"android.widget.ScrollView","scrollable":"true","bounds":"[0,0][1080,2400]"})
+            ET.SubElement(scroll,"node",text="Edit appearance",bounds=button_bounds)
+            return root
+        clipped=screen("[42,2269][318,2385]");visible=screen("[42,1900][318,2016]")
+        with patch.object(smoke,"capture",side_effect=[clipped,visible]),patch.object(smoke,"adb") as command:
+            self.assertIs(visible,smoke.scroll_to_text("appearance","Edit appearance"))
+            command.assert_called_once_with("shell","input","swipe","540","1800","540","600","350")
+
+    def test_fixed_footer_above_navigation_remains_tappable(self):
+        root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]");ET.SubElement(viewport,"node",text="Overview",bounds="[16,2205][220,2321]")
+        with patch.object(smoke,"capture",return_value=root),patch.object(smoke,"adb") as command:
+            self.assertIs(root,smoke.scroll_to_text("footer","Overview"));command.assert_not_called()
+
     def test_retained_scroll_position_can_return_to_tabs_above(self):
         first = ET.Element("hierarchy")
         ET.SubElement(first, "node", attrib={"class":"android.widget.ScrollView", "scrollable":"true", "bounds":"[100,200][500,600]"})

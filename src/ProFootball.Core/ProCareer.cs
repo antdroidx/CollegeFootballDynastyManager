@@ -108,9 +108,10 @@ public static class ProManagement
         if (s.Career?.Unemployed == true) throw new InvalidOperationException("Accept a coaching job first.");
         if (ProCareer.Role(s) == StaffRole.HeadCoach) return execute(s);
         var unit = s.Players.Where(p => p.Football.TeamName == s.UserTeam && ProCareer.Controls(s, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
-        var spending = s.Contracts.Where(c => c.Team == s.UserTeam && unit.Contains(c.PlayerId)).Sum(c => ProEconomy.CapHit(c, s.Year));
-        var room = ProEconomy.Room(s, s.UserTeam) - ProEconomy.Pending(s, s.UserTeam);
-        var approved = extraCommitment == 0 || extraCommitment <= room && spending + Math.Max(0, extraCommitment) <= ProFinance.Limit(s,s.UserTeam) * .55;
+        var planningYear=ProFinance.ContractChangeYear(s);
+        var spending = s.Contracts.Where(c => c.Team == s.UserTeam && unit.Contains(c.PlayerId)).Sum(c => ProEconomy.CapHit(c, planningYear));
+        var room = ProFinance.Budget(s,s.UserTeam,planningYear).Available - ProEconomy.Pending(s, s.UserTeam);
+        var approved = extraCommitment == 0 || extraCommitment <= room && spending + Math.Max(0, extraCommitment) <= ProFinance.Limit(s,s.UserTeam,planningYear) * .55;
         if (sharedPicks && players.Count == 0) approved = false;
         var reason = approved ? "GM approved: within the team cap and your unit's spending allocation." : sharedPicks && players.Count == 0 ? "The GM retains control of pick-only trades; recommend a player acquisition for your unit." : "GM declined: protect shared cap room and the other unit's budget.";
         var proposal = s;
@@ -127,7 +128,7 @@ public static class ProManagement
                 return contracts + bids;
             }
             long TeamCost(ProFranchise state,int year) => state.Contracts.Where(c=>c.Team==state.UserTeam).Sum(c=>ProEconomy.CapHit(c,year))
-                + state.DeadCap.Where(c=>c.Team==state.UserTeam&&c.Year==year).Sum(c=>c.Amount)
+                + state.DeadCap.Where(c=>c.Team==state.UserTeam&&c.Year==year).Sum(c=>c.Amount)+ProFinance.Budget(state,state.UserTeam,year).RolloverReserved
                 + state.Bids.Where(b=>b.Team==state.UserTeam&&year>=state.Year&&year<state.Year+b.Years).Sum(b=>b.AnnualSalary+(b.Bonus+b.Years-1)/b.Years);
             var years = proposal.Contracts.Where(c => c.Active && c.Team == proposal.UserTeam).SelectMany(c => c.Years.Select(y => y.Year))
                 .Concat(proposal.Contracts.Where(c => c.Active && c.Team == proposal.UserTeam).SelectMany(c => Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year))))

@@ -41,6 +41,7 @@ public static class ProLeagueService
             Games = ProSchedule.Build(league, 2026),
             DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
         }));
+        franchise = ProCapInitialization.Initialize(franchise);
         franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
         return ProMorale.NormalizeContracts(sourcedContracts ? ProContractData.Apply(franchise) : ProContractData.CompleteRookieTerms(franchise));
     }
@@ -127,7 +128,7 @@ public static class ProLeagueService
             ?? throw new InvalidOperationException("This game does not belong to this franchise.");
         if (scheduled.Football.HasPlayed) return state; // Retrying a save must not award morale twice.
         var next = state with { Games = state.Games.Select(g => g.Football.GameId == game.GameId ? g with { Football = game } : g).ToList() };
-        return next with { Players = next.Players.Select(p => !game.InvolvesTeam(p.Football.TeamName) ? p : p with { Morale = Math.Clamp(GameDayCoachingService.LivePlayerMorale(session, p.Football, p.Morale) + (game.HomeScore == game.AwayScore ? 0 : game.WinnerTeamName == p.Football.TeamName ? 3 : -2), 10, 95) }).ToList() };
+        return ProRollover.MeasureCompletedTeams(next with { Players = next.Players.Select(p => !game.InvolvesTeam(p.Football.TeamName) ? p : p with { Morale = Math.Clamp(GameDayCoachingService.LivePlayerMorale(session, p.Football, p.Morale) + (game.HomeScore == game.AwayScore ? 0 : game.WinnerTeamName == p.Football.TeamName ? 3 : -2), 10, 95) }).ToList() });
     }
     public static ProFranchise Advance(ProFranchise state)
     {
@@ -148,7 +149,7 @@ public static class ProLeagueService
                 return ProEconomy.Log(state, issue);
             return state with { Phase = ProPhase.RegularSeason, Week = 1 };
         }
-        if (state.Phase == ProPhase.RegularSeason) return state.Week < 18 ? state with { Week = state.Week + 1 } : ProPlayoffs.Begin(state);
+        if (state.Phase == ProPhase.RegularSeason) return state.Week < 18 ? state with { Week = state.Week + 1 } : ProPlayoffs.Begin(ProRollover.MeasureCompletedTeams(state));
         if (state.Phase == ProPhase.Playoffs) return ProPlayoffs.Advance(state);
         return state;
     }

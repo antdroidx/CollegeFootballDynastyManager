@@ -30,7 +30,7 @@ public sealed partial class FranchisePage
             var projection=ProContractInsights.ProjectOffer(state!,player,y,a,b,extension);annualPreview.Content=AnnualContractTable(projection);
             var first=extension?state!.Contracts.Last(c=>c.Active&&c.PlayerId==player.Football.PlayerId).Years.Max(v=>v.Year)+1:state!.Year;var total=projection.Years.Where(v=>v.Year>=first).Sum(v=>v.Salary);
             var result=ProNegotiation.Evaluate(player,y,a,b,Math.Max(ProFinance.Minimum(state!,player,practice:false),ProEconomy.MarketSalary(state!,player)));response.Text=result.Message+$" Counter salary: ${ProOfferTerms.RoundUp(result.CounterSalary):N0}/year.";
-            preview.Text=$"New-term base salary ${total:N0} + bonus ${b:N0} · New cash ${total+b:N0}\n"+(extension?"Existing contract years remain. Signing bonus is prorated across up to five remaining years.":$"First-year cap estimate ${a+(b+y-1)/y:N0} · Team room ${ProEconomy.Room(state!,state!.UserTeam):N0}");
+            preview.Text=$"New-term base salary ${total:N0} + bonus ${b:N0} · New cash ${total+b:N0}\n"+(extension?"Existing contract years remain. New bonus starts in the applicable league year and is prorated over up to five years.":$"First-year cap estimate ${a+(b+y-1)/y:N0} · Team room ${ProEconomy.Room(state!,state!.UserTeam):N0}");
         }
         years.ValueChanged+=(_,_)=>Refresh();salary.ValueChanged+=(_,_)=>Refresh();bonus.ValueChanged+=(_,_)=>Refresh();
         counter.Clicked+=(_,_)=>{if(Terms(out var y,out var a,out var b))salary.Value=Math.Clamp(ProOfferTerms.RoundUp(ProNegotiation.Evaluate(player,y,a,b,Math.Max(ProFinance.Minimum(state!,player,practice:false),ProEconomy.MarketSalary(state!,player))).CounterSalary),(long)salary.Minimum,500_000_000);};
@@ -47,8 +47,9 @@ public sealed partial class FranchisePage
     {
         var c=state!.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==p.Football.PlayerId&&c.Team==state.UserTeam);
         if(c is null)return;
-        var salary=c.Years.FirstOrDefault(y=>y.Year==state.Year)?.Salary??0;
-        var minimum=ProFinance.Minimum(state!,p,practice:false);
+        var changeYear=ProFinance.ContractChangeYear(state!);
+        var salary=c.Years.FirstOrDefault(y=>y.Year==changeYear)?.Salary??0;
+        var minimum=ProFinance.Minimum(state!,p,changeYear,practice:false);
         var maximum=(salary-minimum)/ProOfferTerms.MoneyStep*ProOfferTerms.MoneyStep;
         if(maximum<ProOfferTerms.MoneyStep)throw new InvalidOperationException("No salary can be converted while retaining the league minimum.");
         var completion=new TaskCompletionSource<long?>(TaskCreationOptions.RunContinuationsAsynchronously);var closing=false;

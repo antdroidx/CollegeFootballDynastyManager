@@ -4,6 +4,12 @@ on:
   push:
     branches: [feature/pro-franchise-foundation]
   workflow_dispatch:
+    inputs:
+      validation_scope:
+        description: Finance runs focused Pro tests and financial device checks; full also runs long simulations and GameCast acceptance
+        type: choice
+        options: [full, finance]
+        default: full
 permissions:
   contents: read
 concurrency:
@@ -28,8 +34,14 @@ jobs:
           key: pro-nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','global.json') }}
           restore-keys: pro-nuget-${{ runner.os }}-
       - run: dotnet workload install maui-android --version 10.0.301.1
-      - name: Pro tests
+      - name: Test UI synchronization helpers
+        run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
+      - name: Full Pro tests
+        if: inputs.validation_scope != 'finance'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
+      - name: Pro financial and transaction regressions
+        if: inputs.validation_scope == 'finance'
+        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
       - name: Build independent pro APK
         run: >
           dotnet build src/ProFootball.App/ProFootball.App.csproj -c Debug -f net10.0-android
@@ -65,7 +77,11 @@ jobs:
           script: |
             adb install -r $(find apk -name '*-Signed.apk' -print -quit)
             adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
-            python3 -u build/pro-android-smoke.py
+            if [ "${{ inputs.validation_scope }}" = "finance" ]; then
+              python3 -u build/pro-finance-smoke.py
+            else
+              python3 -u build/pro-android-smoke.py
+            fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -74,4 +90,6 @@ jobs:
             android-pro-*.png
             android-pro-*.xml
             pro-logcat.txt
+            pro-finance-logcat.txt
+            pro-finance-ledger-check.json
           retention-days: 3

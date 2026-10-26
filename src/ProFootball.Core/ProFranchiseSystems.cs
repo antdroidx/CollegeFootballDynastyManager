@@ -143,6 +143,13 @@ public static class ProCpu
         }
         return s;
     }
+    public static long SigningSalary(ProFranchise s,ProPlayer p)
+    {
+        var market=Math.Max(ProFinance.Minimum(s,p,practice:false),ProEconomy.MarketSalary(s,p));
+        return ProOfferTerms.RoundUp(Math.Max(market,ProNegotiation.Evaluate(p,2,market,0,market).CounterSalary));
+    }
+    static long DepthMinimum(ProFranchise s)=>s.Players.Where(p=>p.Football.TeamName=="Free agent"&&!p.Retired&&!s.Waivers.Any(w=>w.PlayerId==p.Football.PlayerId))
+        .Select(p=>SigningSalary(s,p)).DefaultIfEmpty(1_500_000).Min();
     public static ProFranchise Manage(ProFranchise s, bool includeUser = false)
     {
         var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam || s.Career?.Unemployed == true).ToArray();
@@ -150,7 +157,7 @@ public static class ProCpu
             foreach (var team in teams)
             {
                 var rookies=s.UnsignedRookies.Where(r=>r.Team==team.Name).Sum(r=>r.Salary+(r.Bonus+3)/4);
-                var minimum=(long)(1_300_000*(s.SalaryCap/(double)ProFinance.Base2026));
+                var minimum=DepthMinimum(s);
                 s=MakeRoom(s,team.Name,rookies+Math.Max(0,53-ProRoster.Active(s,team.Name)-s.UnsignedRookies.Count(r=>r.Team==team.Name))*minimum);
                 s=ProDraft.SignRookies(s,team.Name);
             }
@@ -167,17 +174,19 @@ public static class ProCpu
             foreach (var team in teams.OrderBy(t => ProRoster.Active(s, t.Name)).ThenBy(t => t.Id))
             {
                 var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))) continue;
-                var remaining = Math.Max(1, 53 - count); var minimum=(long)(1_300_000*(s.SalaryCap/(double)ProFinance.Base2026)); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000 : 0;
-                var room = ProEconomy.Room(s, team.Name) - reserve; var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * minimum));
+                var minimum=DepthMinimum(s); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000 : 0;
+                var room = ProEconomy.Room(s, team.Name) - reserve;
+                var target=room<(53-count)*minimum?Math.Max(45,count+1):53;var remaining=Math.Max(1,target-count);
+                var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * minimum));
                 var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => Need(s, team.Name, p));
-                var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && Math.Max(ProFinance.Minimum(s,p,practice:false), ProEconomy.MarketSalary(s,p)) <= budget)
+                var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && SigningSalary(s,p) <= budget)
                     .OrderByDescending(p => needs[p.Football.Position] * 20 + p.Football.OverallRating + (p.Football.PlayerId.ToByteArray()[0] * (team.Id.Sum(c => (int)c)) + s.Year) % 11).FirstOrDefault();
                 if (candidate is null)
                 {
                     if(count<45)s=MakeRoom(s,team.Name,reserve+remaining*minimum);
                     continue;
                 }
-                try { s = ProEconomy.Offer(s, team.Name, candidate.Football.PlayerId, 2, Math.Max(ProFinance.Minimum(s,candidate,practice:false), ProEconomy.MarketSalary(s,candidate)), 0); offers++; } catch (InvalidOperationException) { }
+                try { s = ProEconomy.Offer(s, team.Name, candidate.Football.PlayerId, 2, SigningSalary(s,candidate), 0); offers++; } catch (InvalidOperationException) { }
             }
             s = ProEconomy.ResolveBids(s); if (offers == 0) break;
         }

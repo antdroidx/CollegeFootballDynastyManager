@@ -25,9 +25,10 @@ public static class ProContractInsights
         var old=extension?s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==p.Football.PlayerId):null;
         var first=old is null?s.Year:old.Years.Max(y=>y.Year)+1;
         var rows=(old?.Years??[]).Concat(Enumerable.Range(0,years).Select(i=>new ContractYear(first+i,Math.Max(annual,ProFinance.Minimum(s,p,first+i,practice:false)),i==0?annual/(old is null?3:4):0))).ToList();
-        var count=old is null?years:Math.Min(5,rows.Max(y=>y.Year)-s.Year+1);
-        return new(p.Football.PlayerId,old?.Team??s.UserTeam,old?.SignedYear??s.Year,Math.Max(old?.BonusYears??0,s.Year+count-(old?.SignedYear??s.Year)),(old?.SigningBonus??0)+bonus,
-            rows.Select(y=>y with{ProratedBonus=(old is null?0:ProEconomy.BonusCharge(old,y.Year))+(y.Year>=s.Year&&y.Year<s.Year+count?bonus/count+(y.Year-s.Year<bonus%count?1:0):0)}).ToList()){Estimated=false};
+        var changeYear=extension?ProFinance.ContractChangeYear(s):s.Year;
+        var count=old is null?years:Math.Min(5,rows.Max(y=>y.Year)-changeYear+1);
+        return new(p.Football.PlayerId,old?.Team??s.UserTeam,old?.SignedYear??s.Year,Math.Max(old?.BonusYears??0,changeYear+count-(old?.SignedYear??s.Year)),(old?.SigningBonus??0)+bonus,
+            rows.Select(y=>y with{ProratedBonus=(old is null?0:ProEconomy.BonusCharge(old,y.Year))+(y.Year>=changeYear&&y.Year<changeYear+count?bonus/count+(y.Year-changeYear<bonus%count?1:0):0)}).ToList()){Estimated=false};
     }
     public static long EarnedCash(ProFranchise s,ProContract c)
     {

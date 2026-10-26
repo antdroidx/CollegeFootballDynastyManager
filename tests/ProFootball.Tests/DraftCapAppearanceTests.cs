@@ -11,7 +11,7 @@ public class DraftCapAppearanceTests
     }
     [Fact] public void OverCapCpuCannotStallDraftOrPlayUnsignedRookie()
     {
-        var s=DraftState() with{SalaryCap=0};var pick=ProDraft.Current(s)!;var id=s.Prospects.First().Football.PlayerId;
+        var s=DraftState() with{TeamCapAllocations=[],SalaryCap=0};var pick=ProDraft.Current(s)!;var id=s.Prospects.First().Football.PlayerId;
         var next=ProDraft.Pick(s,id);
         Assert.Equal(1,next.DraftIndex);Assert.DoesNotContain(next.Prospects,p=>p.Football.PlayerId==id);
         Assert.Contains(next.DraftHistory,h=>h.Player.Football.PlayerId==id);
@@ -22,15 +22,15 @@ public class DraftCapAppearanceTests
     }
     [Fact] public void PendingRookieSignsFourYearsAfterCapRepairWithoutDuplication()
     {
-        var s=DraftState() with{SalaryCap=0};var id=s.Prospects.First().Football.PlayerId;
-        s=ProDraft.Pick(s,id) with{SalaryCap=1_000_000_000};s=ProDraft.SignRookies(s);
+        var s=DraftState() with{TeamCapAllocations=[],SalaryCap=0};var id=s.Prospects.First().Football.PlayerId;
+        s=ProDraft.Pick(s,id) with{TeamCapAllocations=[],SalaryCap=1_000_000_000};s=ProDraft.SignRookies(s);
         Assert.Empty(s.UnsignedRookies);var p=Assert.Single(s.Players,p=>p.Football.PlayerId==id);Assert.False(p.Reserve);
         var c=Assert.Single(s.Contracts,c=>c.PlayerId==id&&c.Active);Assert.Equal(4,c.Years.Count);
         Assert.Equal(s,ProDraft.SignRookies(s));
     }
     [Fact] public void EveryCpuPickCanCompleteWithNoCapRoom()
     {
-        var s=DraftState() with{SalaryCap=0};s=ProDraft.AutoUntilUser(s,true);
+        var s=DraftState() with{TeamCapAllocations=[],SalaryCap=0};s=ProDraft.AutoUntilUser(s,true);
         Assert.Null(ProDraft.Current(s));Assert.Equal(224,s.DraftIndex);Assert.Equal(224,s.UnsignedRookies.Count);
         Assert.Equal(224,s.DraftHistory.Count);Assert.Equal(224,s.UnsignedRookies.Select(r=>r.PlayerId).Distinct().Count());
     }

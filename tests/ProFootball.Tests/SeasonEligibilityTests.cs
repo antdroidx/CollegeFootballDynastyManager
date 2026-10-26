@@ -25,6 +25,6 @@ public class SeasonEligibilityTests
     }
     [Fact] public void ExactlyAtCapIsAllowed()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");s=s with{SalaryCap=ProEconomy.Used(s,s.UserTeam)};Assert.Null(ProSeasonEligibility.Issue(s,s.UserTeam));
+        var s=ProLeagueService.Create("Seattle Seahawks");s=s with{TeamCapAllocations=[],SalaryCap=ProEconomy.Used(s,s.UserTeam)};Assert.Null(ProSeasonEligibility.Issue(s,s.UserTeam));
     }
 }

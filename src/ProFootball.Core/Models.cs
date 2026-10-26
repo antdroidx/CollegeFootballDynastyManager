@@ -39,6 +39,9 @@ public sealed record ProFranchise
     public List<SeasonArchive> History { get; init; } = [];
     public List<ProSeasonHonors> Honors { get; init; } = [];
     public List<ProFinanceYear> FinancialHistory { get; init; } = [];
+    public int CapRulesVersion {get;init;}
+    public List<ProTeamCapAllocation> TeamCapAllocations {get;init;}=[];
+    public List<ProRolloverElection> RolloverElections {get;init;}=[];
     public int CarryoverPercentage { get; init; } = 100;
     public long SalaryCap { get; init; } = 301_200_000;
     public string DataSnapshot { get; init; } = "Legacy fictional franchise";

@@ -44,7 +44,7 @@ public class FranchiseTests
     [Fact] public void SnapshotHasRealIdentitiesStaffAndHonestRatingSources()
     {
         var s=New();Assert.Contains(s.Players,p=>p.Football.FullName=="Patrick Mahomes"&&p.RatingSource.StartsWith("Madden"));
-        Assert.All(s.League.Teams,t=>{Assert.InRange(t.Abbreviation.Length,2,4);Assert.Equal(4,s.Coaches.Count(c=>c.TeamId==t.Id));Assert.True(ProEconomy.Room(s,t.Name)>0);});
+        Assert.All(s.League.Teams,t=>{Assert.InRange(t.Abbreviation.Length,2,4);Assert.Equal(4,s.Coaches.Count(c=>c.TeamId==t.Id));Assert.Equal(ProFinance.Limit(s,t.Name)-ProEconomy.Used(s,t.Name),ProEconomy.Room(s,t.Name));});
         Assert.Contains(s.Coaches,c=>c.TeamId=="SEA"&&c.Name=="Mike Macdonald");Assert.NotEmpty(s.CoachCandidates);
         Assert.All(s.Players,p=>Assert.InRange(p.Football.OverallRating,1,99));
         Assert.All(Enumerable.Range(5,5),code=>Assert.True(s.Players.Count(p=>p.Football.Position==Position.OL&&p.Football.NcaaPositionCode==code)>=40,"Missing specific offensive line roles in the source pack"));
@@ -60,7 +60,7 @@ public class FranchiseTests
         var s=New() with{Phase=ProPhase.Offseason};var p=s.Players.First(p=>p.Football.TeamName=="Free agent"&&!p.Retired);var other=s.League.Teams.First(t=>t.Name!=s.UserTeam).Name;
         var salary=Math.Max(1_000_000,ProEconomy.MarketSalary(p));s=ProEconomy.Offer(s,s.UserTeam,p.Football.PlayerId,2,salary,0);s=ProEconomy.Offer(s,other,p.Football.PlayerId,2,salary*2,0);s=ProEconomy.ResolveBids(s);
         Assert.Equal(other,s.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId).Football.TeamName);Assert.Empty(s.Bids);
-        var poor=s with{SalaryCap=0};var free=poor.Players.First(p=>p.Football.TeamName=="Free agent"&&!p.Retired);Assert.Throws<InvalidOperationException>(()=>ProEconomy.Offer(poor,poor.UserTeam,free.Football.PlayerId,1,10_000_000,0));
+        var poor=s with{TeamCapAllocations=[],SalaryCap=0};var free=poor.Players.First(p=>p.Football.TeamName=="Free agent"&&!p.Retired);Assert.Throws<InvalidOperationException>(()=>ProEconomy.Offer(poor,poor.UserTeam,free.Football.PlayerId,1,10_000_000,0));
     }
     [Fact] public void PickTradesTransferOwnershipAndRejectDuplicateAssets()
     {

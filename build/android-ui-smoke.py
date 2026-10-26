@@ -62,7 +62,15 @@ def scroll_to_text(name, text, max_swipes=6, toward_start=False):
         for node in root.iter("node"):
             if node.get("text") == text:
                 left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
-                if right > left and bottom > top:
+                viewport=root.find("node")
+                bounds=re.findall(r"\d+",viewport.get("bounds", "")) if viewport is not None else []
+                safe=True
+                if len(bounds)==4:
+                    vx,vy,vr,vb=map(int,bounds)
+                    # Android can report a clipped app button under its navigation bar.
+                    # Scroll again rather than sending a tap to the system Back control.
+                    safe=vx<(left+right)/2<vr and vy<(top+bottom)/2<vb-(vb-vy)*.045
+                if right > left and bottom > top and safe:
                     return root
         scrollables = [node for node in root.iter("node") if node.get("scrollable") == "true"]
         if not scrollables or attempt == max_swipes:

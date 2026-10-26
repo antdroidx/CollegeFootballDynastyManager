@@ -4,7 +4,7 @@ public static class ProCpuBudget
 {
     public static ProFranchise Relieve(ProFranchise s,string team,long targetRoom)
     {
-        if(ProEconomy.Room(s,team)>=targetRoom)return s;
+        if(ProFinance.ContractChangeYear(s)!=s.Year||ProEconomy.Room(s,team)>=targetRoom)return s;
         var players=s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired).ToDictionary(p=>p.Football.PlayerId);
         var candidates=s.Contracts.Where(c=>c.Active&&c.Team==team&&c.LastChangedYear!=s.Year&&players.TryGetValue(c.PlayerId,out var p)&&!ProContractInsights.RookieDeal(s,p,c))
             .OrderByDescending(c=>players[c.PlayerId].Football.OverallRating).ThenBy(c=>c.PlayerId).ToArray();
