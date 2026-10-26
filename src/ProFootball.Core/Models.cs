@@ -88,9 +88,9 @@ public sealed record ProCoach(string TeamId, StaffRole Role, string Name, string
 { public bool Vacant { get; init; } public int Rating { get; init; } = 70; public int Development { get; init; } = 65; }
 public sealed record NflSnapshot(int Version, int Season, int Week, string RetrievedUtc, int MaddenMatched, int Estimated, List<ProPlayer> Players, List<ProCoach> Coaches) { public List<CoachCandidate> Candidates { get; init; } = []; }
 public sealed record ContractYear(int Year, long Salary, long Guaranteed)
-{ public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } }
+{ public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } public bool IsVoid { get; init; } public long? OtherCash { get; init; } public long? SourceGuaranteed { get; init; } }
 public sealed record ProContract(Guid PlayerId, string Team, int SignedYear, int BonusYears, long SigningBonus, List<ContractYear> Years)
-{ public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
+{ public int AccountingVersion { get; init; } public long? ReportedAnnualValue { get; init; } public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
 public sealed record DeadCapCharge(string Team, int Year, Guid PlayerId, long Amount) { public long CashAmount {get;init;} }
 public sealed record FreeAgentBid(Guid PlayerId, string Team, int Years, long AnnualSalary, long Bonus, int Priority);
 public sealed record ProDraftPick(Guid Id, int Year, int Round, int Slot, string OriginalTeam, string Owner);

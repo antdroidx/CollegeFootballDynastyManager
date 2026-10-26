@@ -85,7 +85,6 @@ public sealed partial class FranchisePage : ContentPage
         var preview = new ContentView(); void Preview() { var t = league.Teams[picker.SelectedIndex]; preview.Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(t, 70), Text(t.Name, 21, true) } }; }
         picker.SelectedIndexChanged += (_, _) => Preview(); Preview(); body.Add(preview);
         var finances = new Picker { Title = "Starting contract data", ItemsSource = new[] { "Game contracts", "Imported contracts" }, SelectedIndex = 0 }; body.Add(finances);
-        body.Add(Text("Sourced contracts preserve reported yearly cap charges. Team rollover, adjustments and departed-player dead money are not imported yet; some teams may start above the base cap. Existing saves retain their finances.", 12));
         body.Add(Text("Build your 2026 franchise. Regular-season rosters allow 53 active players and a 16-player practice squad."));
         body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text, finances.SelectedIndex == 1, role.SelectedIndex == 1 ? StaffRole.OffensiveCoordinator : role.SelectedIndex == 2 ? StaffRole.DefensiveCoordinator : StaffRole.HeadCoach, firing.IsToggled, coachName.Text)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
     }

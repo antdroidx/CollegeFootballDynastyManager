@@ -24,6 +24,7 @@ public static class ProNegotiation
         var changed=c with {LastChangedYear=changeYear,SigningBonus=c.SigningBonus+convert,BonusCash=ProEconomy.AddBonusCash(c,changeYear,convert),BonusYears=Math.Max(c.BonusYears,last-c.SignedYear+1),Estimated=false,
             Years=c.Years.Select(y=>y with {Salary=y.Year==changeYear?y.Salary-convert:y.Salary,Guaranteed=y.Year==changeYear?Math.Max(0,y.Guaranteed-convert):y.Guaranteed,
                 ProratedBonus=ProEconomy.BonusCharge(c,y.Year)+(y.Year>=changeYear&&y.Year<=last?convert/count+(y.Year-changeYear<convert%count?1:0):0)}).ToList()};
+        changed=ProContractInsights.NormalizeVoidCharges(changed);
         return ProEconomy.Log(s with{Contracts=s.Contracts.Select(x=>x==c?changed:x).ToList()},$"{team} restructured {s.Players.Single(p=>p.Football.PlayerId==id).Football.FullName}: converted ${convert:N0} salary to bonus, moving cap charges to future years.");
     }
 }

@@ -48,11 +48,12 @@ public static class ProFinance
         long cash=0;
         foreach(var c in s.Contracts.Where(c=>c.Team==team))
         {
+            if(c.TerminatedYear is int stopped&&year>stopped)continue;
             cash+=c.BonusCash is {} bonuses?bonuses.GetValueOrDefault(year):c.SignedYear==year?c.SigningBonus:0;
             var row=c.Years.FirstOrDefault(y=>y.Year==year);if(row is null)continue;
             if(c.TerminatedYear==year)cash+=c.EarnedCash;
             else if(c.TerminatedYear is int ended&&year>ended)continue;
-            else if(c.Active||c.TerminatedYear is int)cash+=row.Salary+Math.Max(0,row.OtherCompensation);
+            else if(c.Active||c.TerminatedYear is int)cash+=row.IsVoid?0:row.Salary+(row.OtherCash??Math.Max(0,row.OtherCompensation));
         }
         return cash+s.DeadCap.Where(d=>d.Team==team&&d.Year==year).Sum(d=>d.CashAmount);
     }
@@ -86,7 +87,7 @@ public static class ProFinance
             var ids=s.Players.Where(p=>p.Football.TeamName==team.Name&&!p.Retired&&!p.PracticeSquad&&!p.Reserve).Select(p=>p.Football.PlayerId).ToHashSet();
             var candidates=s.Contracts.Where(c=>c.Active&&ids.Contains(c.PlayerId)&&c.Years.Any(y=>y.Year==s.Year)).ToArray();if(candidates.Length==0)continue;
             var share=invest/candidates.Length;var remainder=invest%candidates.Length;var bonus=candidates.Select((c,i)=>(c.PlayerId,Amount:share+(i<remainder?1:0))).ToDictionary(x=>x.PlayerId,x=>x.Amount);
-            s=s with{Contracts=s.Contracts.Select(c=>c.Active&&bonus.TryGetValue(c.PlayerId,out var amount)?c with{Years=c.Years.Select(y=>y.Year==s.Year?y with{OtherCompensation=y.OtherCompensation+amount}:y).ToList()}:c).ToList()};
+            s=s with{Contracts=s.Contracts.Select(c=>c.Active&&bonus.TryGetValue(c.PlayerId,out var amount)?c with{Years=c.Years.Select(y=>y.Year==s.Year?y with{OtherCompensation=y.OtherCompensation+amount,OtherCash=y.OtherCash is long cash?cash+amount:null}:y).ToList()}:c).ToList()};
         }
         return s;
     }

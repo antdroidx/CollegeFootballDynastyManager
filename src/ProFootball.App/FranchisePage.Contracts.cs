@@ -28,7 +28,7 @@ public sealed partial class FranchisePage
             submit.IsEnabled=Terms(out var y,out var a,out var b)&&a>=ProFinance.Minimum(state!,player,practice:false);
             if(!submit.IsEnabled){response.Text="Bonus cannot exceed total base salary. Reduce the bonus or increase salary/years.";return;}
             var projection=ProContractInsights.ProjectOffer(state!,player,y,a,b,extension);annualPreview.Content=AnnualContractTable(projection);
-            var first=extension?state!.Contracts.Last(c=>c.Active&&c.PlayerId==player.Football.PlayerId).Years.Max(v=>v.Year)+1:state!.Year;var total=projection.Years.Where(v=>v.Year>=first).Sum(v=>v.Salary);
+            var first=extension?ProContractInsights.PlayingEnd(state!.Contracts.Last(c=>c.Active&&c.PlayerId==player.Football.PlayerId))+1:state!.Year;var total=projection.Years.Where(v=>v.Year>=first).Sum(v=>v.Salary);
             var result=ProNegotiation.Evaluate(player,y,a,b,Math.Max(ProFinance.Minimum(state!,player,practice:false),ProEconomy.MarketSalary(state!,player)));response.Text=result.Message+$" Counter salary: ${ProOfferTerms.RoundUp(result.CounterSalary):N0}/year.";
             preview.Text=$"New-term base salary ${total:N0} + bonus ${b:N0} · New cash ${total+b:N0}\n"+(extension?"Existing contract years remain. New bonus starts in the applicable league year and is prorated over up to five years.":$"First-year cap estimate ${a+(b+y-1)/y:N0} · Team room ${ProEconomy.Room(state!,state!.UserTeam):N0}");
         }

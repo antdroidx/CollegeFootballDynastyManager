@@ -38,11 +38,11 @@ public static class ProTrade
         var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId); var contracts = s.Contracts.ToList(); var dead = s.DeadCap.ToList();
         if(c is not null)
         {
-            var fraction=ProFinance.EarnedFraction(s);var current=c.Years.FirstOrDefault(y=>y.Year==s.Year);var earned=(long)((current?.Salary??0)*fraction)+Math.Max(0,current?.OtherCompensation??0);
+            var fraction=ProFinance.EarnedFraction(s);var current=c.Years.FirstOrDefault(y=>y.Year==s.Year);var earned=(long)((current?.Salary??0)*fraction)+(current?.OtherCash??Math.Max(0,current?.OtherCompensation??0));
             var bonus=Enumerable.Range(s.Year,Math.Max(0,c.SignedYear+c.BonusYears-s.Year)).Sum(y=>ProEconomy.BonusCharge(c,y));
             if(bonus+earned>0)dead.Add(new(c.Team,s.Year,c.PlayerId,bonus+earned));
-            contracts=contracts.Select(x=>x==c?c with{Active=false,TerminatedYear=s.Year,EarnedCash=earned}:x).ToList();
-            contracts.Add(c with{Team=to,SigningBonus=0,BonusCash=[],TerminatedYear=null,EarnedCash=0,SignedYear=s.Year,BonusYears=1,Source=null,Years=c.Years.Select(y=>y.Year==s.Year?y with{Salary=y.Salary-(long)(y.Salary*fraction),OtherCompensation=0,ProratedBonus=0,Guaranteed=Math.Max(0,y.Guaranteed-(long)(y.Salary*fraction))}:y with{ProratedBonus=0}).ToList()});
+            contracts=contracts.Select(x=>x==c?c with{Active=false,TerminatedYear=s.Year,EarnedCash=earned,BonusCash=c.BonusCash?.Where(b=>b.Key<=s.Year).ToDictionary()}:x).ToList();
+            contracts.Add(c with{Team=to,SigningBonus=0,BonusCash=c.BonusCash?.Where(b=>b.Key>s.Year).ToDictionary()??[],TerminatedYear=null,EarnedCash=0,SignedYear=s.Year,BonusYears=1,Source=null,Years=c.Years.Where(y=>y.Year>=s.Year).Select(y=>y.Year==s.Year?y with{Salary=y.Salary-(long)(y.Salary*fraction),OtherCompensation=0,OtherCash=0,ProratedBonus=0,Guaranteed=Math.Max(0,y.Guaranteed-(long)(y.Salary*fraction))}:y with{ProratedBonus=0,OtherCompensation=y.OtherCash??Math.Max(0,y.OtherCompensation)}).ToList()});
         }
 
         return s with { Contracts = contracts, DeadCap = dead, MoraleEffects = s.MoraleEffects.Where(e=>e.PlayerId!=p.Football.PlayerId).ToList(), Players = s.Players.Select(x => x == p ? x with { Football = x.Football with { TeamName = to, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false, TradeRequested = false, ContractConcernWeeks = 0, Morale = Math.Clamp(x.Morale+5,10,95) } : x).ToList() };
@@ -131,11 +131,16 @@ public static class ProCpu
     public static ProFranchise MakeRoom(ProFranchise s, string team, long room)
     {
         s=ProCpuBudget.Relieve(s,team,room);
-        for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < room || ProRoster.CountForLimit(s, team) >= ProRoster.Limit(s)); i++)
+        var startingDepth=ProRoster.Active(s,team);var replacementFloor=DepthMinimum(s);
+        long RequiredRoom()=>room+Math.Max(0,startingDepth-ProRoster.Active(s,team))*replacementFloor;
+        for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < RequiredRoom() || ProRoster.CountForLimit(s, team) >= ProRoster.Limit(s)); i++)
         {
-            long Saving(ProPlayer p) => s.Contracts.Where(c => c.Active && c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year)) - ProContractInsights.Release(s,p.Football.PlayerId).First().DeadMoney;
-            var capNeeded = ProEconomy.Room(s, team) < room;
-            var release = s.Players.Where(p => p.Football.TeamName == team && !p.Retired && !p.PracticeSquad && !p.Reserve && Need(s, team, p.Football.Position) == 0 && (!capNeeded || Saving(p) > 0))
+            var savings=new Dictionary<Guid,long>();
+            long Saving(ProPlayer p){if(!savings.TryGetValue(p.Football.PlayerId,out var value))savings[p.Football.PlayerId]=value=s.Contracts.Where(c=>c.Active&&c.PlayerId==p.Football.PlayerId).Sum(c=>ProEconomy.CapHit(c,s.Year))-ProContractInsights.Release(s,p.Football.PlayerId).First().DeadMoney;return value;}
+            var capNeeded = ProEconomy.Room(s, team) < RequiredRoom();
+            var replacementCosts=s.Players.Where(candidate=>candidate.Football.TeamName=="Free agent"&&!candidate.Retired&&!s.Waivers.Any(w=>w.PlayerId==candidate.Football.PlayerId)).GroupBy(candidate=>candidate.Football.Position).ToDictionary(g=>g.Key,g=>g.Min(candidate=>SigningSalary(s,candidate)));
+            bool Replaceable(ProPlayer p)=>Need(s,team,p.Football.Position)==0||capNeeded&&replacementCosts.GetValueOrDefault(p.Football.Position,long.MaxValue)<Saving(p);
+            var release = s.Players.Where(p => p.Football.TeamName == team && !p.Retired && !p.PracticeSquad && !p.Reserve && Replaceable(p) && (!capNeeded || Saving(p) > (ProRoster.Active(s,team)<53?replacementFloor:0)))
                 .OrderByDescending(p => capNeeded ? Saving(p) / (double)Math.Max(1, p.Football.OverallRating - 45) : 100 - p.Football.OverallRating).ThenByDescending(p => p.Age).FirstOrDefault();
             if (release is null) break;
             var next = ProEconomy.Release(s, team, release.Football.PlayerId, false);
@@ -170,7 +175,7 @@ public static class ProCpu
         var rounds = s.Phase == ProPhase.Offseason || s.Phase == ProPhase.Preseason ? 256 : 4;
         for (var round = 0; round < rounds; round++)
         {
-            var offers = 0;
+            var repairedBudget=false;var offers = 0;
             foreach (var team in teams.OrderBy(t => ProRoster.Active(s, t.Name)).ThenBy(t => t.Id))
             {
                 var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))) continue;
@@ -183,12 +188,12 @@ public static class ProCpu
                     .OrderByDescending(p => needs[p.Football.Position] * 20 + p.Football.OverallRating + (p.Football.PlayerId.ToByteArray()[0] * (team.Id.Sum(c => (int)c)) + s.Year) % 11).FirstOrDefault();
                 if (candidate is null)
                 {
-                    if(count<45)s=MakeRoom(s,team.Name,reserve+remaining*minimum);
+                    if(count<45){var beforeRepair=s;s=MakeRoom(s,team.Name,reserve+remaining*minimum);repairedBudget|=s!=beforeRepair;}
                     continue;
                 }
                 try { s = ProEconomy.Offer(s, team.Name, candidate.Football.PlayerId, 2, SigningSalary(s,candidate), 0); offers++; } catch (InvalidOperationException) { }
             }
-            s = ProEconomy.ResolveBids(s); if (offers == 0) break;
+            s = ProEconomy.ResolveBids(s); if (offers == 0&&!repairedBudget) break;
         }
         return s;
     }
@@ -214,9 +219,9 @@ public static class ProOffseason
             s = ProCareer.Review(s);
             foreach(var team in s.League.Teams.Where(t=>t.Name!=s.UserTeam||s.AutoNegotiateExpiring))s=ProRetention.Negotiate(s,team.Name);
             var owners = ProStandings.Build(s).Select(r => { var old = s.Owners.FirstOrDefault(o => o.Team == r.Team.Name) ?? new(r.Team.Name, 8, 65); var security = Math.Clamp(old.Security + (r.Wins - old.TargetWins) * 5, 0, 100); return old with { Security = security, Fired = security < 15 }; }).ToList();
-            foreach (var p in s.Players.Where(p => !p.Retired && p.Football.TeamName != "Free agent").ToArray())
-            { var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId); if (c is not null && c.Years.Max(y => y.Year) <= s.Year) s = ProEconomy.Release(s, p.Football.TeamName, p.Football.PlayerId, false); }
             s=ProFinance.CloseYear(ProFinance.CpuBonuses(s));
+            foreach (var p in s.Players.Where(p => !p.Retired && p.Football.TeamName != "Free agent").ToArray())
+            { var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId); if (c is not null && ProContractInsights.PlayingEnd(c) <= s.Year) s = ProEconomy.Expire(s, p.Football.TeamName, p.Football.PlayerId); }
             var nextCap=ProFinance.ForecastCap(s,s.Year+1);
             var year = s.Year + 1; var random = new Random(year * 71);
             var credited=s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.HasPlayed).SelectMany(g=>g.Football.PlayerStats).GroupBy(l=>l.PlayerId).Where(g=>g.Count()>=3).Select(g=>g.Key).ToHashSet();

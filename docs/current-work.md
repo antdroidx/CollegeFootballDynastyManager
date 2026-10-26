@@ -17,6 +17,14 @@ Updated October 26, 2026 (Pacific). This file is the current handoff; Git histor
 - Last full Pro GameCast walkthrough: Pro 31 at `51c5cef`; subsequent 33 verification was deliberately financial in scope. Do not claim a newly repeated full GameCast acceptance run.
 - Never merge unfinished Pro work or clean up branches/releases as part of this batch. `sources/` remains read-only.
 
+## Active contract accounting batch — not yet released
+
+Work in progress in the D: checkout. New source pack matches 2,012 contracts (October 26 Parquet SHA-256 `3f6f8906a20d48c688f5727e76856997bc01ad2d9e1ac0ed83b41559f4a12a9f`). Added playing/void distinction, separate bonus cash, annual cash and conservative guaranteed-base classification, cap-preserving guarded source migration, known generated remaining terms, and compact contract details with expandable accounting. Expiration now moves remaining void bonus debt to the following season; extension checks use net replacement commitments. CPU replacement budgets/retry and retention depth planning were necessary follow-ups to sourced multi-year regression failures. Targeted contract cases passed; the three-season snapshot scenario passed after CPU funding/retry corrections. Full regression and refreshed Android verification are still running/pending; do not claim a new tested APK. Default remains unchanged until source reconciliation is complete.
+
+Final cleanup is separately authorized for the end: audit/archive obsolete Java files from `Initial Base Upload`, rename the GitHub repository to `antdroidx/Football-Sim-Engine`, update remotes/links, and verify both application build paths. Do not perform this while current implementation/verification is unfinished.
+
+User also reported Pro landscape quick calls requiring scrolling. Add College-style collapse-after-selection and dynamic field height as the next live-view UI batch; do not interrupt the accounting verification to mix in unrelated layout changes. See checklist.
+
 ## Next authorized phase — real contracts and simpler presentation
 
 Implementation pending. See [pro-contract-reconciliation.md](pro-contract-reconciliation.md) for the confirmed importer/default/term defects, ordered implementation and acceptance criteria. User approved real salaries as the default after necessary fixes, realistic generated remaining terms, drafted four-year rookie contracts with separate first-round fifth-year options, and simpler primary financial wording. Do not switch the default before correcting cash/void-year accounting. Do not overwrite negotiated saves or invent missing source liabilities. The existing hourly continuation is requested to resume this phase when usage is available. No new application code or APK is included in this documentation checkpoint; Build 33 remains the verified download.

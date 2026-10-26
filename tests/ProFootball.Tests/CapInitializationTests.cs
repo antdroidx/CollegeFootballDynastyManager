@@ -70,7 +70,7 @@ public sealed class CapInitializationTests
             }
             Assert.Equal(ProPhase.Offseason,s.Phase);Assert.Equal(32,s.RolloverElections.Count(e=>e.Year==s.Year));
             s=ProOffseason.Advance(s);s=ProOffseason.Advance(s);s=ProDraft.AutoUntilUser(s,true);s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
-            Assert.Empty(s.UnsignedRookies);Assert.All(s.League.Teams,t=>{Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);Assert.InRange(ProRoster.Active(s,t.Name),45,90);});
+            Assert.True(s.UnsignedRookies.Count==0,string.Join(";",s.UnsignedRookies.Select(r=>r.Team).Distinct().Select(t=>$"{s.Year} {t} room={ProEconomy.Room(s,t)} active={ProRoster.Active(s,t)} debt={s.DeadCap.Where(d=>d.Team==t&&d.Year==s.Year).Sum(d=>d.Amount)} charges={string.Join(",",s.DeadCap.Where(d=>d.Team==t&&d.Year==s.Year).Select(d=>$"{s.Players.FirstOrDefault(p=>p.Football.PlayerId==d.PlayerId)?.Football.FullName}:{d.Amount}"))}")));Assert.All(s.League.Teams,t=>{Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);Assert.True(ProRoster.Active(s,t.Name)>=45&&ProRoster.Active(s,t.Name)<=90,$"{s.Year} {t.Name}: active={ProRoster.Active(s,t.Name)} room={ProEconomy.Room(s,t.Name)} debt={s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Sum(d=>d.Amount)} carry={ProFinance.Budget(s,t.Name).Rollover} cash={ProFinance.Cash(s,t.Name,s.Year)} charges={string.Join(";",s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Select(d=>$"{s.Players.FirstOrDefault(p=>p.Football.PlayerId==d.PlayerId)?.Football.FullName}:{d.Amount}"))}");});
             Assert.Equal((season+1)*32,s.FinancialHistory.Count);
         }
     }

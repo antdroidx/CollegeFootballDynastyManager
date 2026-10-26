@@ -13,7 +13,7 @@ public static class ProPickProjection
             var age=p.Age+horizon;var gain=p.Age<25?Math.Min(p.Football.PotentialRating-p.Football.OverallRating,horizon*1.5):0;
             var decline=Math.Max(0,age-peak)*Math.Min(horizon,3)*.8;
             var contract=deals.GetValueOrDefault(p.Football.PlayerId);
-            var uncertainty=contract is not null&&contract.Years.Max(y=>y.Year)<year?1.5:0;
+            var uncertainty=contract is not null&&ProContractInsights.PlayingEnd(contract)<year?1.5:0;
             return Math.Clamp(p.Football.OverallRating+gain-decline-uncertainty,35,99);
         }
         double Sum=0,weight=0;

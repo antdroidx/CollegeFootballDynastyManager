@@ -7,9 +7,9 @@ public sealed record ProOfferTerms(int Years,long Salary,long Bonus)
     {
         var years=player.Age>=33?1:player.Age>=30?2:player.Age<=25&&player.Football.PotentialRating>=player.Football.OverallRating+5?4:3;
         if(extension&&s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==player.Football.PlayerId) is {} current)
-            years=Math.Min(years,Math.Clamp(6-(current.Years.Max(y=>y.Year)-s.Year+1),1,5));
+            years=Math.Min(years,Math.Clamp(6-(ProContractInsights.PlayingEnd(current)-s.Year+1),1,5));
         var peers=s.Players.Where(p=>p.Football.Position==player.Football.Position&&Math.Abs(p.Football.OverallRating-player.Football.OverallRating)<=5).Select(p=>p.Football.PlayerId).ToHashSet();
-        var comparables=s.Contracts.Where(c=>c.Active&&!c.Estimated&&c.SignedYear>=s.Year-1&&peers.Contains(c.PlayerId)&&c.Years.Count>0).Select(c=>c.Years.Average(y=>(double)y.Salary)).Order().ToArray();
+        var comparables=s.Contracts.Where(c=>c.Active&&!c.Estimated&&c.SignedYear>=s.Year-1&&peers.Contains(c.PlayerId)&&c.Years.Count>0).Select(c=>(double)(c.ReportedAnnualValue??ProContractInsights.AverageCash(c))).Order().ToArray();
         var market=Math.Max(ProFinance.Minimum(s,player,practice:false),ProEconomy.MarketSalary(s,player));
         var recent=comparables.Length==0?market:Math.Clamp(comparables[comparables.Length/2],market*.85,market*1.25);
         var competition=Math.Min(5,s.Bids.Where(b=>b.PlayerId==player.Football.PlayerId&&b.Team!=s.UserTeam).Select(b=>b.Team).Distinct().Count());

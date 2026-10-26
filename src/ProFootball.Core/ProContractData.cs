@@ -17,6 +17,15 @@ public static class ProContractData
         var source = Load().ToDictionary(c => c.PlayerId);
         return CompleteRookieTerms(state with { Contracts = state.Contracts.Select(c => source.TryGetValue(c.PlayerId, out var actual) && actual.Team == c.Team ? actual : c).ToList() });
     }
+    public static ProFranchise MigrateAccounting(ProFranchise state)
+    {
+        var source=Load().ToDictionary(c=>c.PlayerId);
+        return state with { Contracts=state.Contracts.Select(c=>{
+            if(c.AccountingVersion!=0||c.Estimated||!c.Active||c.LastChangedYear!=0||c.BonusCash is not null||c.Source?.StartsWith("OverTheCap")!=true||!source.TryGetValue(c.PlayerId,out var actual)||actual.Team!=c.Team||actual.Years.Count!=c.Years.Count)return c;
+            if(c.Years.Any(y=>actual.Years.FirstOrDefault(a=>a.Year==y.Year) is not {} row||ProEconomy.CapHit(c,y.Year)!=ProEconomy.CapHit(actual,y.Year)||(!row.IsVoid&&row.Salary!=y.Salary)))return c;
+            return actual;
+        }).ToList() };
+    }
     public static ProFranchise CompleteRookieTerms(ProFranchise state)
     {
         var metadata=RookieMetadata.Value;
@@ -25,11 +34,12 @@ public static class ProContractData
         var contracts=state.Contracts.Select(c=>{
             var p=byId.GetValueOrDefault(c.PlayerId);
             if(p?.PracticeSquad==true||!c.Active||c.LastChangedYear!=0||(!c.Estimated&&c.Source?.StartsWith("OverTheCap")!=true)||p?.RookieYear is not int rookie||state.Year<rookie)return c;
+            if(c.AccountingVersion>0&&!c.Estimated&&c.SignedYear!=rookie)return c; // A later deal may follow a real release or extension.
             var end=rookie+(p.DraftOverall is >0?4:3)-1;
-            if(end<state.Year||c.Years.Max(y=>y.Year)>=end)return c;
+            if(end<state.Year||ProContractInsights.PlayingEnd(c)>=end)return c;
             var current=c.Years.SingleOrDefault(y=>y.Year==state.Year);if(current is null)return c;
             var years=c.Years.Select(y=>y with{ProratedBonus=ProEconomy.BonusCharge(c,y.Year)}).Concat(Enumerable.Range(state.Year+1,end-state.Year).Where(year=>!c.Years.Any(y=>y.Year==year)).Select(year=>new ContractYear(year,current.Salary,0){ProratedBonus=c.Estimated?0:current.ProratedBonus??0})).OrderBy(y=>y.Year).ToList();
-            return c with{Years=years,BonusYears=Math.Max(c.BonusYears,end-c.SignedYear+1),SigningBonus=years.Sum(y=>y.ProratedBonus??0),FutureTermsEstimated=true};
+            return c with{Years=years,BonusYears=Math.Max(c.BonusYears,end-c.SignedYear+1),SigningBonus=c.AccountingVersion>0?c.SigningBonus:years.Sum(y=>y.ProratedBonus??0),FutureTermsEstimated=true};
         }).ToList();
         return state with{Players=players,Contracts=contracts};
     }

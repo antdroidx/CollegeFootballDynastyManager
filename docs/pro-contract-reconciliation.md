@@ -1,6 +1,6 @@
 # Real-contract reconciliation phase
 
-Authorized October 26, 2026. Implementation is pending; Pro Build 33 remains the latest verified APK.
+Authorized October 26, 2026. Implementation is in progress; Pro Build 33 remains the latest verified APK until the new financial acceptance passes.
 
 ## Product decision
 
@@ -39,3 +39,15 @@ Generated fallback terms must use known signing, rookie and draft metadata rathe
 - https://overthecap.com/salary-cap-space
 - https://www.seahawks.com/news/seahawks-sign-jaxon-smith-njigba-to-multi-year-extension
 - NFL/NFLPA 2020 CBA: verify applicable rookie, option and cap-accounting provisions during implementation.
+
+## Current accounting implementation and limits
+
+The October 26 source Parquet SHA-256 is `3f6f8906a20d48c688f5727e76856997bc01ad2d9e1ac0ed83b41559f4a12a9f`. Importer now requires an explicit `--as-of` date. 2,012 active roster contracts match; 519 roster commitments still use generated fallbacks. The original signed year, reported deal APY, separate cash bonuses, total source guarantees and capped guaranteed-base component are retained. Bonus allocation totals are no longer labeled signing cash. Trailing future rows with zero cash after the last paid year are treated as inferred cap-only years; zero-cash current exempt/unknown rows are not automatically voided. The source does not preserve all trigger/vesting/option semantics, so those still need deeper reconciliation.
+
+Unchanged legacy source contracts migrate only if every annual cap charge and non-void salary still matches. Negotiated, restructured, traded, terminated or financially different deals remain untouched. New fallback terms use known playing end dates before original rookie metadata, preserve legitimate later short re-signings, and otherwise use explicit age-based estimates rather than GUID randomness.
+
+Employment expiration, extension and retention use playing years. Bonus proration still uses accounting years. Natural expiration records remaining bonus debt in the next season; extensions and restructures update void acceleration once. Traded future cash follows the remaining contract; departed contracts cannot continue paying future bonuses. Compact contract details show playing seasons/pay/cap/guaranteed salary; accounting is optional.
+
+The repeated 2029 sourced test exposed an existing CPU planning weakness: small cap-saving cuts could cost more to replace, and a no-offer round stopped even after a budget repair. Replacement funding/retry and retention depth reserves are included in this batch. Final multi-year results are recorded in current-work.md when verified. Do not promote the sourced default or call the 32 opening balances reconciled yet. Fifth-year option decisions remain a separate outstanding item.
+
+Run `dotnet run --project tools/ProContractAudit -- OUTPUT.json` for the developer ledger audit. Its full-roster model values are not an assertion of official Top-51 cap space. See pro-contract-source-audit.md.

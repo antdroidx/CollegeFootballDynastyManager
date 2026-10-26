@@ -13,12 +13,19 @@ public sealed partial class FranchisePage
             Text("Player commitments "+Dollars(b.PlayerCommitments)+" · Other cap charges "+Dollars(b.OtherCapCharges)),Text("Dead money "+Dollars(b.DeadMoney)+" · Rollover reserved "+Dollars(b.RolloverReserved)),
             Text("Available cap "+Dollars(b.Available)+" · Pending bids "+Dollars(ProEconomy.Pending(s,s.UserTeam)),12));
     }
-    View AnnualContractTable(ProContract c)=>Table([("Year",55),("Base salary",120),("Bonus / year",120),("Other cap",115),("Cap hit",125),("Guaranteed base",135)],ProContractInsights.Seasons(c).Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(y.Salary)),Text(Dollars(y.Bonus)),Text(Dollars(y.Other)),Text(Dollars(y.CapHit),14,true),Text(Dollars(y.Guaranteed))}));
+    View AnnualContractTable(ProContract c)=>Table([("Year",55),("Base salary",120),("Bonus / year",120),("Other cap",115),("Cap hit",125),("Guaranteed base",135)],ProContractInsights.Seasons(c).Select(y=>new View[]{Text(y.Year+(c.Years.Single(row=>row.Year==y.Year).IsVoid?" · Void":"")),Text(Dollars(y.Salary)),Text(Dollars(y.Bonus)),Text(Dollars(y.Other)),Text(Dollars(y.CapHit),14,true),Text(Dollars(y.Guaranteed))}));
     View ContractDetails(ProPlayer p,ProContract? c)
     {
         if(c is null)return Panel("Contract",Text("No active contract"));
-        return Panel("Contract",Text(ProContractInsights.Satisfaction(state!,p)+" · Average annual cash "+Dollars(ProContractInsights.AverageCash(c)),16,true),
-            AnnualContractTable(c),Text("Cap hit = base salary + allocated bonus + other cap charges. Guaranteed base is part of salary, not an additional charge. A signing bonus is paid up front and spread across contract years for cap purposes.",12));
+        var details=new VerticalStackLayout{Spacing=8,IsVisible=false};
+        details.Children.Add(AnnualContractTable(c));
+        details.Children.Add(Text("Void years affect the salary cap but do not keep the player under contract. Bonus allocations are cap charges, not extra yearly pay.",12));
+        var toggle=new Button{Text="Show accounting details",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};
+        toggle.Clicked+=(_,_)=>{details.IsVisible=!details.IsVisible;toggle.Text=details.IsVisible?"Hide accounting details":"Show accounting details";};
+        var playing=c.Years.Where(y=>!y.IsVoid&&y.Year>=state!.Year).OrderBy(y=>y.Year).ToArray();
+        return Panel("Contract",Text(ProContractInsights.Satisfaction(state!,p)+" · Playing contract through "+ProContractInsights.PlayingEnd(c),16,true),
+            Text(c.ReportedAnnualValue is long apy?"Contract value / year "+Dollars(apy):"Average annual pay "+Dollars(ProContractInsights.AverageCash(c))),
+            Table([("Season",65),("Pay",125),("Cap hit",125),("Guaranteed salary",140)],playing.Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(ProContractInsights.AnnualCash(c,y))),Text(Dollars(ProEconomy.CapHit(c,y.Year)),14,true),Text(Dollars(y.Guaranteed))})),toggle,details);
     }
     View ContractComparisons(ProPlayer p)
     {

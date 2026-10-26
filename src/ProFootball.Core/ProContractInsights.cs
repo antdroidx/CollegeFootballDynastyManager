@@ -11,7 +11,20 @@ public static class ProContractInsights
         return p.Experience<4&&c.SignedYear>=s.Year-p.Experience;
     }
     public static bool ConcernEligible(ProFranchise s,ProPlayer p,ProContract c)=>!RookieDeal(s,p,c)&&s.Year-Math.Max(c.SignedYear,c.LastChangedYear)>=2;
-    public static long AverageCash(ProContract c)=>c.Years.Count==0?0:(long)(c.Years.Average(y=>(double)y.Salary+Math.Max(0,y.OtherCompensation))+c.SigningBonus/(double)c.Years.Count);
+    public static int PlayingEnd(ProContract c)=>c.Years.Where(y=>!y.IsVoid).Select(y=>y.Year).DefaultIfEmpty(c.SignedYear-1).Max();
+    public static ProContract NormalizeVoidCharges(ProContract c)
+    {
+        var voidRows=c.Years.Where(y=>y.IsVoid).OrderBy(y=>y.Year).ToArray();
+        if(voidRows.Length==0)return c;
+        var first=voidRows[0].Year;var acceleration=voidRows.Sum(y=>ProEconomy.BonusCharge(c,y.Year));
+        return c with{Years=c.Years.Select(y=>y.IsVoid?y with{Salary=0,Guaranteed=0,OtherCash=0,OtherCompensation=(y.Year==first?acceleration:0)-ProEconomy.BonusCharge(c,y.Year)}:y).ToList()};
+    }
+    public static long AnnualCash(ProContract c,ContractYear y)=>y.IsVoid?0:y.Salary+(y.OtherCash??Math.Max(0,y.OtherCompensation))+(c.BonusCash?.GetValueOrDefault(y.Year)??(y.Year==c.SignedYear?c.SigningBonus:0));
+    public static long AverageCash(ProContract c)
+    {
+        var rows=c.Years.Where(y=>!y.IsVoid).ToArray();
+        return rows.Length==0?0:(long)rows.Average(y=>(double)AnnualCash(c,y));
+    }
     public static string Satisfaction(ProFranchise s,ProPlayer p)
     {
         var c=s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==p.Football.PlayerId);if(c is null)return "No contract";
@@ -23,17 +36,17 @@ public static class ProContractInsights
     public static ProContract ProjectOffer(ProFranchise s,ProPlayer p,int years,long annual,long bonus,bool extension)
     {
         var old=extension?s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==p.Football.PlayerId):null;
-        var first=old is null?s.Year:old.Years.Max(y=>y.Year)+1;
-        var rows=(old?.Years??[]).Concat(Enumerable.Range(0,years).Select(i=>new ContractYear(first+i,Math.Max(annual,ProFinance.Minimum(s,p,first+i,practice:false)),i==0?annual/(old is null?3:4):0))).ToList();
+        var first=old is null?s.Year:PlayingEnd(old)+1;
+        var rows=(old?.Years.Where(y=>!y.IsVoid).ToList()??[]).Concat(Enumerable.Range(0,years).Select(i=>new ContractYear(first+i,Math.Max(annual,ProFinance.Minimum(s,p,first+i,practice:false)),i==0?annual/(old is null?3:4):0))).Concat(old?.Years.Where(y=>y.IsVoid&&y.Year>=first+years)??[]).ToList();
         var changeYear=extension?ProFinance.ContractChangeYear(s):s.Year;
         var count=old is null?years:Math.Min(5,rows.Max(y=>y.Year)-changeYear+1);
-        return new(p.Football.PlayerId,old?.Team??s.UserTeam,old?.SignedYear??s.Year,Math.Max(old?.BonusYears??0,changeYear+count-(old?.SignedYear??s.Year)),(old?.SigningBonus??0)+bonus,
-            rows.Select(y=>y with{ProratedBonus=(old is null?0:ProEconomy.BonusCharge(old,y.Year))+(y.Year>=changeYear&&y.Year<changeYear+count?bonus/count+(y.Year-changeYear<bonus%count?1:0):0)}).ToList()){Estimated=false};
+        return NormalizeVoidCharges(new(p.Football.PlayerId,old?.Team??s.UserTeam,old?.SignedYear??s.Year,Math.Max(old?.BonusYears??0,changeYear+count-(old?.SignedYear??s.Year)),(old?.SigningBonus??0)+bonus,
+            rows.Select(y=>y with{ProratedBonus=(old is null?0:ProEconomy.BonusCharge(old,y.Year))+(y.Year>=changeYear&&y.Year<changeYear+count?bonus/count+(y.Year-changeYear<bonus%count?1:0):0)}).ToList()){Estimated=false,AccountingVersion=1,BonusCash=old is null?new Dictionary<int,long>{{s.Year,bonus}}:ProEconomy.AddBonusCash(old,changeYear,bonus)});
     }
     public static long EarnedCash(ProFranchise s,ProContract c)
     {
         var row=c.Years.FirstOrDefault(y=>y.Year==s.Year);if(row is null)return 0;
-        return Math.Max(row.Guaranteed,(long)(row.Salary*ProFinance.EarnedFraction(s)))+Math.Max(0,row.OtherCompensation);
+        return Math.Max(row.Guaranteed,(long)(row.Salary*ProFinance.EarnedFraction(s)))+(row.OtherCash??Math.Max(0,row.OtherCompensation));
     }
     public static IReadOnlyList<ReleaseSeasonView> Release(ProFranchise s,Guid id)
     {

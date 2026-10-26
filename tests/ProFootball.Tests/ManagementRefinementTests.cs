@@ -20,7 +20,7 @@ public class ManagementRefinementTests
     [Fact] public void RookieSourceCoverageKeepsCurrentCapAndMarksEstimatedFuture()
     {
         var s=ProLeagueService.Create("Seattle Seahawks");var source=ProContractData.Load();
-        var rookie=s.Players.First(p=>p.RookieYear==s.Year-1&&p.DraftOverall is >0&&!p.PracticeSquad&&source.Any(c=>c.PlayerId==p.Football.PlayerId&&c.Years.Count==1));
+        var rookie=s.Players.First(p=>p.RookieYear==s.Year-1&&p.DraftOverall is >0&&!p.PracticeSquad&&source.Any(c=>c.PlayerId==p.Football.PlayerId&&c.Years.Count==1&&c.SignedYear==p.RookieYear));
         var original=source.Single(c=>c.PlayerId==rookie.Football.PlayerId);var migrated=ProContractData.Apply(s);var contract=migrated.Contracts.Single(c=>c.PlayerId==rookie.Football.PlayerId);
         Assert.Equal(ProEconomy.CapHit(original,s.Year),ProEconomy.CapHit(contract,s.Year));Assert.Equal(3,contract.Years.Count);Assert.True(contract.FutureTermsEstimated);
         Assert.Equal(contract,ProContractData.CompleteRookieTerms(migrated).Contracts.Single(c=>c.PlayerId==rookie.Football.PlayerId));

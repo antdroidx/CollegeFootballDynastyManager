@@ -51,6 +51,10 @@ Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared
 
 See [phase details](pro-contract-reconciliation.md). These items are pending, not included in verified Build 33.
 
+## Newly reported live-view layout
+
+- [ ] Pro landscape quick-play controls fit without scrolling: resize field while choices are open, collapse the three choices after selection, restore field height for the play, and retain a clear way to change the call. Match College behavior. Verify phone/Fold landscape with the scoreboard, selected call and action controls visible. Added October 26; finish the current contract accounting batch first. This is Pro live UI work and needs the relevant GameCast device flow when implemented.
+
 ## Outstanding acceptance
 
 - [ ] CPU autonomous trade offers/counteroffers and shared-pick GM review.
@@ -67,3 +71,12 @@ See [phase details](pro-contract-reconciliation.md). These items are pending, no
 See [testing-scope.md](testing-scope.md): use finance-scoped Pro checks here and reuse unchanged College 389 evidence. Keep the continuation active while roadmap items remain. Do not merge unfinished Pro work or delete branches/artifacts as a substitute for acceptance.
 
 Verified downloads: [Pro 33](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40365289405/artifacts/12669723503), tested in successful [verification run 40366831239](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40366831239) · [College 389](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12665525718), all College jobs passed. Pro 33 uses financial-scoped device acceptance; last full shared GameCast walkthrough remains Pro 31 / College 389.
+
+## Final repository cleanup — after current game tasks
+
+User authorized October 26; perform last, after the current implementation and verification batches.
+
+- [ ] Identify files introduced by the original `Initial Base Upload` commit and audit current references/build/data dependencies.
+- [ ] Archive obsolete Java/Android project files under top-level `Archive/` (preferred reversible choice), or remove if clearly unnecessary. Preserve any assets/data still used by C# projects and update their references instead of breaking builds. Do not rewrite history or delete unrelated branches/releases as part of this request.
+- [ ] Rename GitHub repository from `antdroidx/CollegeFootballDynastyManager` to `antdroidx/Football-Sim-Engine`.
+- [ ] Update Git remotes, README/docs, workflow references, badges and source/download links as applicable; verify the renamed repository and both app build paths. Preserve application package IDs, saves and signing/update compatibility.
