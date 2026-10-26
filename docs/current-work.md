@@ -39,7 +39,7 @@ Seven new rule/save cases and all 123 scoped Pro cases passed. An earlier full 1
 
 ## Newly queued field changes
 
-After the current financial batch: use uppercase city names in Pro end zones (SEATTLE, LOS ANGELES, etc.); correct between-play referee/ball placement at the line of scrimmage in both College and Pro instead of inside the huddle. Audit shared presentation and verify both games if shared behavior changes. Do not mix these into the seasonal cap-counting APK.
+After the current financial batch: use uppercase city names in Pro end zones (SEATTLE, LOS ANGELES, etc.); correct between-play referee/ball placement at the line of scrimmage in both College and Pro instead of inside the huddle. Audit found the shared GameFieldDrawable paints its central official 12 yards behind the line (`YardLine - 12`), overlapping the offense huddle centered 9 yards behind. Next field batch should distinguish between-play spotting from live/replay official positioning, place the official/ball at projected LOS when awaiting a scrimmage snap, and verify both directions, goal-line cases and kickoff separation. Pro end-zone text is set by ProLivePage.HomeName and can use uppercase home.City while retaining HomeInitial/badge abbreviations. Verify both games for shared presentation changes. Do not mix these into the seasonal cap-counting APK.
 
 ## Newly queued Pro aging / development changes
 
