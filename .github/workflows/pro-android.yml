@@ -10,13 +10,23 @@ on:
         type: choice
         options: [full, finance]
         default: full
+      reuse_apk_run_id:
+        description: Optional prior run ID for test-only retries; app-source differences reject reuse
+        type: string
+        default: ''
+      reuse_apk_artifact:
+        description: Original APK artifact name when reusing a prior build
+        type: string
+        default: ''
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: pro-android-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   pro-build:
+    if: inputs.reuse_apk_run_id == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -55,14 +65,32 @@ jobs:
           retention-days: 7
   pro-device:
     needs: pro-build
+    if: always() && !cancelled() && (needs.pro-build.result == 'success' || inputs.reuse_apk_run_id != '')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Verify reused APK matches current application inputs
+        if: inputs.reuse_apk_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_RUN_ID: ${{ inputs.reuse_apk_run_id }}
+          APK_ARTIFACT: ${{ inputs.reuse_apk_artifact }}
+        run: |
+          [[ "$APK_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          [[ "$APK_ARTIFACT" =~ ^pro-football-apk-[0-9]+$ ]] || exit 1
+          source_sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$APK_RUN_ID" --jq '.head_sha')
+          git fetch --no-tags origin "$source_sha" --depth=1
+          git diff --exit-code "$source_sha" HEAD -- src Directory.Build.props Directory.Build.targets Directory.Packages.props global.json NuGet.Config build/keys
+      - name: Test changed UI synchronization helpers
+        if: inputs.reuse_apk_run_id != ''
+        run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
       - uses: actions/download-artifact@v4
         with:
-          name: pro-football-apk-${{ github.run_number }}
+          name: ${{ inputs.reuse_apk_artifact || format('pro-football-apk-{0}', github.run_number) }}
           path: apk
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.reuse_apk_run_id || github.run_id }}
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -77,11 +105,7 @@ jobs:
           script: |
             adb install -r $(find apk -name '*-Signed.apk' -print -quit)
             adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
-            if [ "${{ inputs.validation_scope }}" = "finance" ]; then
-              python3 -u build/pro-finance-smoke.py
-            else
-              python3 -u build/pro-android-smoke.py
-            fi
+            python3 -u build/${{ inputs.validation_scope == 'finance' && 'pro-finance-smoke.py' || 'pro-android-smoke.py' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

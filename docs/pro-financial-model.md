@@ -32,8 +32,10 @@ A five-season diagnostic first exposed CPU roster starvation/unsigned rookies af
 
 ## Supplied 2026 allowance file
 
-`src/ProFootball.Core/nfl_2026_salary_caps.csv` is an unchanged copy of the user's `2026-salarycap.csv` (32 rows, six columns). All 32 arithmetic identities reconcile, including 28 negative adjustment rows. Source SHA-256: `fa83ced04c16e36415ab69c78a666b92bd062c40ff283e9880e16a35aa4e6c52`.
+`src/ProFootball.Core/nfl_2026_salary_caps.csv` preserves all values from the user's `2026-salarycap.csv` (32 rows, six columns). All 32 arithmetic identities reconcile, including 28 negative adjustment rows. Git normalizes text line endings; source attachment SHA-256: `fa83ced04c16e36415ab69c78a666b92bd062c40ff283e9880e16a35aa4e6c52`.
 
 No commitment or opening available-space field is inferred from these allowances. `ProFinance.Budget` separately derives recorded salary, bonus allocation, other contract cap charges, dead money, reserved rollover and available game cap from the saved ledger. Applying the allowance file does not alter contracts, players, dead-money entries or past financial history. A real-world official opening available balance cannot be established from this CSV alone.
 
 Rollover timing follows CBA Article 13 §6(b)(v), printed pages 112–113 (PDF pages 128–129): final regular-game measuring date, current-year reservation and next-year credit. Administrative notice delivery is represented by the saved in-game election, not an external submission. Future incentives/guarantee offsets still require richer source data and rules.
+
+Repository CSV blob SHA-256 (normalized line endings): `d3d67f995d24ecce152509fa6a1ca22f377ba592c37b54956e6162d153d6a3e8`.
