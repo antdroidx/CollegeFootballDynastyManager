@@ -1,8 +1,8 @@
 # Pro completion checklist
 
-Current Pro source: `c8a5f86`; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
-## October 26 batch — supplied caps locally verified; scoped Pro build pending; College 389 verified
+## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
 - [x] Contract concern protection/grace and legacy migration.
 - [x] Current/offer/market tabs, annual salary/bonus/cap/guarantees and release schedule.
@@ -12,7 +12,7 @@ Current Pro source: `c8a5f86`; College/shared source: `51c5cef` on `feature/pro-
 - [x] Ordinary development disclaimers removed; editable photo-reference complexion overlay.
 - [x] 98 local Pro cases including twenty seasons; Pro Android packaging.
 - [x] Pro 31 and College 389: all Android build/device jobs passed; exact links in current-work.md.
-- [ ] Pro-only CPU restructure/depth/rookie budget follow-up: 100-case regression and Pro 32 packaging passed; local 31→32 save/staff/history update passed; full device CI failed on a clipped test tap; fixed helper and scoped replacement build pending.
+- [x] CPU restructure/depth/rookie budget follow-up included in Pro 33; 108 local Pro cases and 106 scoped CI cases passed. Clipped-tap/helper and workflow-selector errors fixed; 12 helper regressions and exact-APK financial device checks passed.
 
 ## Verified in Pro Build 30
 
@@ -47,7 +47,7 @@ Current Pro source: `c8a5f86`; College/shared source: `51c5cef` on `feature/pro-
 - [x] Supplied 2026 base/rollover/adjustment allowances: 32 teams, exact reconciliation, separate budget components and new-save initialization.
 - [x] Measured/reserved annual rollover and next-year contract changes; 108 local Pro tests including three imported-cap seasons.
 - [ ] Complete opening source commitments/departed-player dead money and historical cash reconciliation. **Source accounting remains experimental.**
-- [ ] Finance-scoped final APK/device verification for the supplied-cap batch.
+- [x] Finance-scoped exact Pro 33 APK verified in run 40366831239; source guard permitted reuse and avoided a rebuild.
 - [ ] First-round fifth-year option decisions and deeper rookie/waiver contract rules.
 - [ ] Richer scouting/combine/camp, CPU roster/contract calibration, automatic coordinator opposite-unit management and deeper career/job-market behavior.
 - [ ] Further rating/morale/statistical balancing and growth/scatter/draft-outcome analytics.
@@ -56,4 +56,4 @@ Current Pro source: `c8a5f86`; College/shared source: `51c5cef` on `feature/pro-
 
 See [testing-scope.md](testing-scope.md): use finance-scoped Pro checks here and reuse unchanged College 389 evidence. Keep the continuation active while roadmap items remain. Do not merge unfinished Pro work or delete branches/artifacts as a substitute for acceptance.
 
-Verified APKs: [Pro 30](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700523/artifacts/12629334513) · [College 388](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700543/artifacts/12629393797). Both workflows fully passed at `4a26f14`.
+Verified downloads: [Pro 33](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40365289405/artifacts/12669723503), tested in successful [verification run 40366831239](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40366831239) · [College 389](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12665525718), all College jobs passed. Pro 33 uses financial-scoped device acceptance; last full shared GameCast walkthrough remains Pro 31 / College 389.

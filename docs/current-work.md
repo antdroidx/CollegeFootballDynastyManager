@@ -2,21 +2,22 @@
 
 Updated October 26, 2026 (Pacific). This file is the current handoff; Git history preserves earlier checkpoints.
 
-## Branch and tested downloads
+## Branch and verified downloads
 
 - Work only on `feature/pro-franchise-foundation`. Stable `main` remains `fdd3d4898b5bd07eeec8dba346024d61f5289474` (remote verified October 26).
-- Pro source: `c8a5f86` (CPU follow-up after `51c5cef`). College/shared source: `51c5cef`. Subsequent documentation-only commits may follow.
-- **Pro Build 32:** 100 server-side tests and APK packaging passed; full CI device acceptance failed on a clipped test tap (fixed in the current helper). Exact downloaded APK installed over 31 locally and retained franchise, staff moves, theme and transactions.
-  APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40356688397/artifacts/12667575725
-  Run: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40356688397
-- **College Build 389: all jobs passed**, including 682 combined Core/College cases and broad management/theme + career device flows.
+- Current Pro application source: `e32c1e2`; scoped QA harness: `1ab25f0`. College/shared application source remains `51c5cef`. Later documentation/label-only commits do not change the APK.
+- **Pro APK Build 33 verified:** [download](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40365289405/artifacts/12669723503).
+  Original run `40365289405` passed 106 finance/transaction regressions, 12 helper cases and packaging. Its first device invocation failed on the workflow shell selector before app tests began.
+  **Verification run [40366831239](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40366831239) passed**, reusing that exact APK after a source/build-input equality check. Helper tests and scoped financial device flow passed; build was deliberately skipped. [Device evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40366831239/artifacts/12669654799).
+- Exact downloaded Pro 33 also installed locally and loaded an older 2026 save without silently importing cap allowances. Local new-save allocation/reinstall/theme checks passed; all 108 Pro cases passed locally once, including longer financial simulations.
+- **College Build 389: all jobs passed**, including 682 combined Core/College cases and broad management/theme + career device flows. No College/shared app changes occurred in the subsequent Pro-only batches, so no redundant rebuild was run.
   APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12665525718
-  Broad UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12664439444
-  Career UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12664754017
-- Previous fully verified Pro 31: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915349/artifacts/12665286547 (all jobs passed; detailed contract/staff/transaction/light/phone checks also passed locally).
+  Broad evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12664439444
+  Career evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12664754017
+- Last full Pro GameCast walkthrough: Pro 31 at `51c5cef`; subsequent 33 verification was deliberately financial in scope. Do not claim a newly repeated full GameCast acceptance run.
 - Never merge unfinished Pro work or clean up branches/releases as part of this batch. `sources/` remains read-only.
 
-## Current batch — supplied 2026 cap initialization (local checks passed; CI APK pending)
+## Completed batch — supplied 2026 cap initialization
 
 - User supplied `C:/Users/ahngu/Desktop/2026-salarycap.csv`; copied unchanged to `src/ProFootball.Core/nfl_2026_salary_caps.csv`. Exactly 32 unique teams and 28 negative adjustment rows; every cap equation reconciles. WAS/WSH alias explicit.
 - New Pro 2026 saves get exact integer base/rollover/other-adjustment/adjusted allowances. All cap budgets now use adjusted team allowances. Contract obligations, allocated bonus, other cap charges, dead money, reserved rollover and available game budget remain separate. No missing source commitments/debt/opening balances are inferred. Old saves are not re-budgeted.
@@ -25,7 +26,7 @@ Updated October 26, 2026 (Pacific). This file is the current handoff; Git histor
 - User requested efficient scoped QA. Added `validation_scope=finance` and `build/pro-finance-smoke.py`; see [testing-scope.md](testing-scope.md). Reuse College 389: no College/shared simulation/application changes.
 - Local validation: **108 Pro tests passed**, including 20 estimated-contract seasons, five sourced-contract seasons and three new imported-cap seasons. **12 UI-helper cases passed**; Pro packaging passed with zero warnings/errors. Targeted financial device flow passed locally: all allocations persisted/reconciled, signed adjustments displayed, reinstall/save and light theme checks passed.
 - Pro 32's full device job failed because a partially clipped appearance button was tapped over Android navigation. Captured XML/screenshot confirmed it; helper now rejects that clipped target while retaining fixed footer buttons. Both cases are unit tested. Pro 32 remains locally installed/update-tested, not a fully green CI release.
-- Do not report Pro 32 device CI as passing. Game source committed as `e32c1e2`. Pro 33 run `40365289405` passed 106 scoped tests, 12 helper cases and packaging; APK artifact `12669723503`. Its device step failed before testing due to the emulator action splitting the multiline shell selector. Fix is harness-only: retry finance device checks against the same APK with an application-source equality guard; no rebuild needed. Record the verification run and original artifact link. No routine full GameCast/College rerun for this Pro-only financial batch.
+- Do not report Pro 32 device CI as passing. Game source committed as `e32c1e2`. Pro 33 is now verified by successful QA-only run `40366831239` after the shell selector fix. Both exact APK and evidence links are above. No redundant compilation/storage or College run was required. No routine full GameCast/College rerun for this Pro-only financial batch.
 
 ## October 26 implementation batch
 
@@ -45,7 +46,7 @@ Working checkout was restored after the previous checkout disappeared: `C:/Users
 
 - First sourced-mode diagnostic failed: one CPU over cap, unsigned rookies and thin rosters after the first offseason. No cap forgiveness was applied.
 - CPU now attempts legal, once-per-season restructures before cutting core starters, preserves future budget, reserves inflated depth money and signs pending rookies before free-agent bids. Five sourced seasons (fixed franchise ID `53120000-0000-0000-0000-000000000001`) then completed 2027–31 with zero over-cap teams/unsigned rookies, minimum active rosters 47/53/53/53/53 and draft mean ratings 63.9/64.4/64.8/63.9/63.5. Camp rosters may exceed 53, capped at 90 until final cuts.
-- This proves continuity for this seed, not source reconciliation. The imported opening snapshot still has eight teams above the modeled base cap because authoritative adjustments/rollover/departed-player debt remain missing. Keep source finance experimental. Do not report all salary accounting complete.
+- This proves continuity for this seed, not source reconciliation. The imported opening snapshot still has eight teams above the modeled base cap because authoritative adjustments/rollover/departed-player debt remain missing. Keep full source-contract accounting experimental. The supplied 2026 allowances are now imported; do not report all opening commitments/debt/history reconciled.
 - Full 100-case Pro regression passed locally and in Pro 32 CI, including twenty estimated-contract seasons and five sourced-contract seasons. Pro 32 packaging/server tests and local update/save checks passed; full CI device flow failed on the clipped appearance-button test tap; the current scoped financial build supersedes it. College/shared source is unchanged from verified 389; retain its verification without rebuilding it solely for a Pro-only follow-up.
 
 ## Prior implemented refinements

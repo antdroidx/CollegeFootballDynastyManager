@@ -1,5 +1,5 @@
 name: Pro Football Android
-run-name: Pro build ${{ github.run_number }} · ${{ github.ref_name }}
+run-name: ${{ inputs.reuse_apk_run_id && format('Pro verify {0} · {1}', inputs.reuse_apk_artifact, github.ref_name) || format('Pro build {0} · {1} · {2}', github.run_number, inputs.validation_scope || 'full', github.ref_name) }}
 on:
   push:
     branches: [feature/pro-franchise-foundation]
