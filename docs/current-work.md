@@ -17,6 +17,10 @@ Updated October 26, 2026 (Pacific). This file is the current handoff; Git histor
 - Last full Pro GameCast walkthrough: Pro 31 at `51c5cef`; subsequent 33 verification was deliberately financial in scope. Do not claim a newly repeated full GameCast acceptance run.
 - Never merge unfinished Pro work or clean up branches/releases as part of this batch. `sources/` remains read-only.
 
+## Next authorized phase — real contracts and simpler presentation
+
+Implementation pending. See [pro-contract-reconciliation.md](pro-contract-reconciliation.md) for the confirmed importer/default/term defects, ordered implementation and acceptance criteria. User approved real salaries as the default after necessary fixes, realistic generated remaining terms, drafted four-year rookie contracts with separate first-round fifth-year options, and simpler primary financial wording. Do not switch the default before correcting cash/void-year accounting. Do not overwrite negotiated saves or invent missing source liabilities. The existing hourly continuation is requested to resume this phase when usage is available. No new application code or APK is included in this documentation checkpoint; Build 33 remains the verified download.
+
 ## Completed batch — supplied 2026 cap initialization
 
 - User supplied `C:/Users/ahngu/Desktop/2026-salarycap.csv`; copied unchanged to `src/ProFootball.Core/nfl_2026_salary_caps.csv`. Exactly 32 unique teams and 28 negative adjustment rows; every cap equation reconciles. WAS/WSH alias explicit.

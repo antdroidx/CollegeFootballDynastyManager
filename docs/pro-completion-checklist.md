@@ -41,6 +41,16 @@ Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared
 - [x] College Build 388 packages and career Android checks pass.
 - [x] College Build 388 broad Android acceptance passed, including management/themes and shared live-view/replay/advance regression checks.
 
+## Next authorized financial phase
+
+- [ ] Correct sourced employment/void/cash/guarantee semantics and dependent expiration/release calculations.
+- [ ] Replace random fallback remaining terms with metadata-based terms and explicit rookie/undrafted exceptions.
+- [ ] Real contracts default for new franchises after reconciliation; preserve existing saves and explicit generated mode.
+- [ ] Simplified main contract display with optional detailed accounting.
+- [ ] Source-dated team ledger reconciliation and affected financial/device verification.
+
+See [phase details](pro-contract-reconciliation.md). These items are pending, not included in verified Build 33.
+
 ## Outstanding acceptance
 
 - [ ] CPU autonomous trade offers/counteroffers and shared-pick GM review.
