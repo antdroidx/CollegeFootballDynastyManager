@@ -41,6 +41,14 @@ Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared
 - [x] College Build 388 packages and career Android checks pass.
 - [x] College Build 388 broad Android acceptance passed, including management/themes and shared live-view/replay/advance regression checks.
 
+## Contract accounting batch — source 6faa77f, Build 35 device verification pending
+
+- [x] Ten targeted cash/void/term/migration/trade/expiry regressions; all 118 Pro cases passed locally, including 20 generated + 5 sourced + 3 imported-cap seasons.
+- [x] Full source pack refreshed to October 26: 2,012 matched contracts; developer audit records 519 generated roster fallbacks and unresolved official accounting basis.
+- [x] Financial CI tests and Android packaging passed in run 40405152646.
+- [ ] Exact Build 35 contract/financial device acceptance and artifact/evidence links.
+- [ ] Finish broader source reconciliation and option rules before enabling the sourced default.
+
 ## Next authorized financial phase
 
 - [ ] Correct sourced employment/void/cash/guarantee semantics and dependent expiration/release calculations. Initial implementation `6faa77f` is in verification; full option/vesting/source liability reconciliation remains pending.
