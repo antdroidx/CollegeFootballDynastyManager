@@ -11,7 +11,8 @@ Current source: `4a26f14` on `feature/pro-franchise-foundation`. See [current-wo
 - [x] In-season coordinator staff changes; All-Pros/Pro Bowl naming; Front Office capitalization.
 - [x] Ordinary development disclaimers removed; editable photo-reference complexion overlay.
 - [x] 98 local Pro cases including twenty seasons; Pro Android packaging.
-- [ ] Both final Android workflows/device acceptance and exact artifacts.
+- [x] Pro 31 and College 389: all Android build/device jobs passed; exact links in current-work.md.
+- [ ] Pro-only CPU restructure/depth/rookie budget follow-up: 100-case regression passed; next APK verification pending.
 
 ## Verified in Pro Build 30
 

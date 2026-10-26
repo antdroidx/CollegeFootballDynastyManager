@@ -15,9 +15,9 @@ Updated October 26, 2026 (Pacific). This file is the current handoff; Git histor
   Career UI evidence: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40274700543/artifacts/12630590152
 - Never merge unfinished Pro work or clean up branches/releases as part of this batch. `sources/` remains read-only.
 
-## October 26 batch — implementation complete, Android verification pending
+## October 26 batch — Build 31 / College 389 verified; CPU follow-up in progress
 
-Working checkout was restored after the previous checkout disappeared: `C:/Users/ahngu/.codex/visualizations/2026/10/24/01a16ca7-5745-7053-846f-b6fa2f023af1/repo`. Branch unchanged. The downloads above remain the latest fully verified releases until this batch's CI/device jobs finish.
+Working checkout was restored after the previous checkout disappeared: `C:/Users/ahngu/.codex/visualizations/2026/10/24/01a16ca7-5745-7053-846f-b6fa2f023af1/repo`. Branch unchanged. Pro Build 31 and College Build 389 now passed all GitHub jobs at `51c5cef`. Pro APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915349/artifacts/12665286547 · College APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40352915636/artifacts/12665525718. A subsequent Pro-only CPU budget fix is being validated; no further College/shared changes.
 
 - Rookie/new contract concern protection, rare mid-contract dissatisfaction and legacy complaint cleanup; new deals are Content rather than automatically happier.
 - Unified offer/current-deal/position-market workspace, annual bonus/cap/guarantee rows and release consequences by season.
@@ -27,7 +27,14 @@ Working checkout was restored after the previous checkout disappeared: `C:/Users
 - Staff coordinator changes allowed during the season for employed head coaches; correct disabled permissions and empty candidate feedback. Awards & All-Pros contains league-wide first/second teams; Pro Bowl is named and opens after conference championships.
 - Front Office capitalization; ordinary source/development disclaimers removed in Pro and College. Useful gameplay explanations and attribution remain.
 - Photo-reference skin overlay for 1,944 bundled players, shared portrait/sprite color, existing/custom edits preserved. Other players remain editable; source photos/lighting are not assumed perfect.
-- Local validation: **98 Pro cases passed**, including twenty complete seasons and seven new regression cases. Pro Android packaging passed. 682 combined legacy Core/College tests and 10 UI-helper tests passed; College packaging and CI acceptance are in progress; do not call current APK device-tested yet.
+- Local validation: **98 Pro cases passed**, including twenty complete seasons and seven new regression cases. Pro Android packaging passed. 682 combined legacy Core/College tests and 10 UI-helper tests passed; Both APKs packaged without warnings/errors; Pro device flow and both College device flows passed. Exact Pro 31 APK also installed over a local build, loaded its saved franchise and passed current/offer/market tabs and cancelable annual release preview on a disposable emulator.
+
+### CPU follow-up discovered by sourced-mode stress
+
+- First sourced-mode diagnostic failed: one CPU over cap, unsigned rookies and thin rosters after the first offseason. No cap forgiveness was applied.
+- CPU now attempts legal, once-per-season restructures before cutting core starters, preserves future budget, reserves inflated depth money and signs pending rookies before free-agent bids. Five sourced seasons (fixed franchise ID `53120000-0000-0000-0000-000000000001`) then completed 2027–31 with zero over-cap teams/unsigned rookies, minimum active rosters 47/53/53/53/53 and draft mean ratings 63.9/64.4/64.8/63.9/63.5. Camp rosters may exceed 53, capped at 90 until final cuts.
+- This proves continuity for this seed, not source reconciliation. The imported opening snapshot still has eight teams above the modeled base cap because authoritative adjustments/rollover/departed-player debt remain missing. Keep source finance experimental. Do not report all salary accounting complete.
+- Full 100-case Pro regression passed locally, including twenty estimated-contract seasons and five sourced-contract seasons. The next Pro Android build is pending. College/shared source is unchanged from verified 389; retain its verification without rebuilding it solely for a Pro-only follow-up.
 
 ## Latest completed Pro refinements
 

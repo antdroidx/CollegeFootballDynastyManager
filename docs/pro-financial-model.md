@@ -21,3 +21,8 @@ This is developer documentation. Ordinary gameplay screens explain decisions wit
 ## Limits and validation
 
 Imported source accounting remains experimental: historical cash, rollover/team adjustments, departed-player debts, guarantee vesting and future projections are incomplete. No missing source amounts are asserted as verified zeroes. Twenty-season tests use estimated game contracts; they establish continuity and cap/roster/draft invariants, not authoritative NFL economic/statistical calibration. Regression tests cover annual release debt, restructure cash/cap conservation, legal minimums, rollover/floor separation and deterministic projections. Full sourced-ledger stress and distribution calibration remain pending.
+
+
+## Sourced-mode diagnostic follow-up
+
+A five-season diagnostic first exposed CPU roster starvation/unsigned rookies after source-contract releases. CPU planning now tries legal restructures before releasing core starters, reserves depth money at inflated minimum budgets and retries rookies before free agency. The fixed-seed 2027–31 run then had no over-cap clubs or unsigned rookies and at least 47 active players after the first offseason, 53 thereafter. Draft-class means stayed 63.5–64.8. This is one continuity scenario, not statistical calibration. The imported 2026 opening still lacks authoritative team adjustments and starts eight clubs above modeled base cap; it is not a reconciled real NFL ledger.

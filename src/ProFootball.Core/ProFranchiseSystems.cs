@@ -130,6 +130,7 @@ public static class ProCpu
     public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
     public static ProFranchise MakeRoom(ProFranchise s, string team, long room)
     {
+        s=ProCpuBudget.Relieve(s,team,room);
         for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < room || ProRoster.CountForLimit(s, team) >= ProRoster.Limit(s)); i++)
         {
             long Saving(ProPlayer p) => s.Contracts.Where(c => c.Active && c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year)) - ProContractInsights.Release(s,p.Football.PlayerId).First().DeadMoney;
@@ -145,8 +146,14 @@ public static class ProCpu
     public static ProFranchise Manage(ProFranchise s, bool includeUser = false)
     {
         var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam || s.Career?.Unemployed == true).ToArray();
-        if (s.Phase == ProPhase.Preseason)
-            foreach (var team in teams) s = MakeRoom(s, team.Name, Math.Max(0, 53 - ProRoster.Active(s, team.Name)) * 1_000_000);
+        if (s.Phase is ProPhase.Preseason or ProPhase.Offseason)
+            foreach (var team in teams)
+            {
+                var rookies=s.UnsignedRookies.Where(r=>r.Team==team.Name).Sum(r=>r.Salary+(r.Bonus+3)/4);
+                var minimum=(long)(1_300_000*(s.SalaryCap/(double)ProFinance.Base2026));
+                s=MakeRoom(s,team.Name,rookies+Math.Max(0,53-ProRoster.Active(s,team.Name)-s.UnsignedRookies.Count(r=>r.Team==team.Name))*minimum);
+                s=ProDraft.SignRookies(s,team.Name);
+            }
 
         foreach (var team in teams)
         {
@@ -160,12 +167,16 @@ public static class ProCpu
             foreach (var team in teams.OrderBy(t => ProRoster.Active(s, t.Name)).ThenBy(t => t.Id))
             {
                 var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))) continue;
-                var remaining = Math.Max(1, 53 - count); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000 : 0;
-                var room = ProEconomy.Room(s, team.Name) - reserve; var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * 1_000_000));
+                var remaining = Math.Max(1, 53 - count); var minimum=(long)(1_300_000*(s.SalaryCap/(double)ProFinance.Base2026)); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000 : 0;
+                var room = ProEconomy.Room(s, team.Name) - reserve; var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * minimum));
                 var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => Need(s, team.Name, p));
                 var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && Math.Max(ProFinance.Minimum(s,p,practice:false), ProEconomy.MarketSalary(s,p)) <= budget)
                     .OrderByDescending(p => needs[p.Football.Position] * 20 + p.Football.OverallRating + (p.Football.PlayerId.ToByteArray()[0] * (team.Id.Sum(c => (int)c)) + s.Year) % 11).FirstOrDefault();
-                if (candidate is null) continue;
+                if (candidate is null)
+                {
+                    if(count<45)s=MakeRoom(s,team.Name,reserve+remaining*minimum);
+                    continue;
+                }
                 try { s = ProEconomy.Offer(s, team.Name, candidate.Football.PlayerId, 2, Math.Max(ProFinance.Minimum(s,candidate,practice:false), ProEconomy.MarketSalary(s,candidate)), 0); offers++; } catch (InvalidOperationException) { }
             }
             s = ProEconomy.ResolveBids(s); if (offers == 0) break;

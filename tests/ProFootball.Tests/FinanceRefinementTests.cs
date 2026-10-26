@@ -67,4 +67,29 @@ public sealed class FinanceRefinementTests
         Assert.Equal(edited,ProAppearanceData.Apply(s with{Players=[edited]}).Players[0]);
         var legacy=edited with{AppearanceOrigin=null};Assert.Equal(legacy,ProAppearanceData.Apply(s with{Players=[legacy]}).Players[0]);
     }
+    [Fact] public void CpuUsesRestructureBeforeCuttingCoreStarter()
+    {
+        var s=New();var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Experience>=4&&!p.PracticeSquad);
+        p=p with{Experience=8,RookieYear=s.Year-8};var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year-1,3,3_000_000,[new(s.Year-1,30_000_000,0),new(s.Year,30_000_000,0),new(s.Year+1,30_000_000,0)]);
+        s=s with{Players=[p],Contracts=[c],SalaryCap=50_000_000};var before=ProFinance.Cash(s,s.UserTeam,s.Year);
+        var repaired=ProCpu.MakeRoom(s,s.UserTeam,25_000_000);
+        Assert.True(ProEconomy.Room(repaired,s.UserTeam)>=25_000_000);Assert.Equal(s.UserTeam,repaired.Players[0].Football.TeamName);Assert.Empty(repaired.DeadCap);Assert.Equal(before,ProFinance.Cash(repaired,s.UserTeam,s.Year));
+    }
+    [Fact] public void SourcedFiveSeasonsCanFinishDraftsAndRepairCpuBudgets()
+    {
+        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true) with{Id=Guid.Parse("53120000-0000-0000-0000-000000000001")};
+        for(var season=0;season<5;season++)
+        {
+            s=ProCpu.Manage(s,true);
+            for(var tick=0;tick<26&&s.Phase!=ProPhase.Offseason;tick++){
+                if(s.Phase==ProPhase.Preseason&&s.Week==3)s=ProCpu.Trim(s,s.UserTeam);
+                s=ProLeagueService.Advance(s);
+            }
+            Assert.Equal(ProPhase.Offseason,s.Phase);s=ProOffseason.Advance(s);
+            Assert.InRange(s.Prospects.Average(p=>p.Football.OverallRating),55,75);
+            s=ProOffseason.Advance(s);s=ProDraft.AutoUntilUser(s,true);s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
+            Assert.Empty(s.UnsignedRookies);Assert.All(s.League.Teams,t=>{Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);Assert.InRange(ProRoster.Active(s,t.Name),45,90);Assert.True(ProRoster.CountForLimit(s,t.Name)<=90);});
+            Assert.Equal((season+1)*32,s.FinancialHistory.Count);
+        }
+    }
 }
