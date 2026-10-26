@@ -62,6 +62,7 @@ try:
     assert contains(void,"2032 · Void")
     click("collapse-accounting","Hide accounting details",True)
     click("close-profile","‹ Back",True)
+    ready("profile-closed",lambda r:"Overview" in s.texts(r))
     click("overview-return","Overview");click("save","\u2039 Exit",True)
 
     library=ready("saved-library",lambda r:any((t or "").startswith(franchise_name+" · Seattle Seahawks") for t in s.texts(r)))

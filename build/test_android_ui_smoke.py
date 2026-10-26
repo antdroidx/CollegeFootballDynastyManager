@@ -72,6 +72,16 @@ class SmokeSynchronizationTests(unittest.TestCase):
             self.assertIs(visible,smoke.scroll_to_text("appearance","Edit appearance"))
             command.assert_called_once_with("shell","input","swipe","540","1800","540","600","350")
 
+    def test_clipped_back_button_under_status_bar_is_scrolled_fully_into_view(self):
+        def screen(button_bounds):
+            root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]")
+            scroll=ET.SubElement(viewport,"node",attrib={"class":"android.widget.ScrollView","scrollable":"true","bounds":"[0,0][1080,2400]"})
+            ET.SubElement(scroll,"node",text="‹ Back",bounds=button_bounds)
+            return root
+        first=screen("[42,50][181,166]");second=screen("[42,170][181,286]")
+        with patch.object(smoke,"capture",side_effect=[first,second]),patch.object(smoke,"adb") as command:
+            self.assertIs(second,smoke.scroll_to_text("profile","‹ Back",toward_start=True));command.assert_called_once()
+
     def test_fixed_footer_above_navigation_remains_tappable(self):
         root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]");ET.SubElement(viewport,"node",text="Overview",bounds="[16,2205][220,2321]")
         with patch.object(smoke,"capture",return_value=root),patch.object(smoke,"adb") as command:
