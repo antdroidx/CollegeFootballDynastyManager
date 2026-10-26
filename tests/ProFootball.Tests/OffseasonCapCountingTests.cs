@@ -57,4 +57,14 @@ public sealed class OffseasonCapCountingTests
         var b=ProFinance.Budget(s,s.UserTeam);
         Assert.Equal(0,b.OffseasonSalaryExcluded);Assert.Equal(1_020_000_000,b.TotalCommitments);
     }
+    [Fact] public void CpuFinalCutsDoNotEarnRegularSeasonSalaryDuringPreseasonWeekThree()
+    {
+        var s=Camp();var template=s.Players.First();
+        var extra=Enumerable.Range(100,3).Select(i=>template with{Football=template.Football with{PlayerId=Guid.Parse($"00000000-0000-0000-0000-{i:000000000000}")}}).ToArray();
+        s=s with{Week=3,Games=[],Career=s.Career! with{Unemployed=true},Players=s.Players.Concat(extra).ToList(),Contracts=s.Contracts.Select(c=>c with{Years=c.Years.Select(y=>y with{OtherCompensation=0}).ToList()}).Concat(extra.Select(p=>new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,1_000_000,0)]))).ToList()};
+        var advanced=ProLeagueService.Advance(s);
+        Assert.Equal(ProPhase.RegularSeason,advanced.Phase);Assert.Equal(1,advanced.Week);
+        Assert.Contains(advanced.Contracts,c=>!c.Active);
+        Assert.All(advanced.Contracts.Where(c=>!c.Active),c=>Assert.Equal(0,c.EarnedCash));
+    }
 }

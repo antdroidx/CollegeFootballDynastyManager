@@ -52,7 +52,8 @@ Current verified Pro application source: `a2c74e8` (landscape), accounting `7687
 
 ## Seasonal cap counting — active batch after Build 37
 
-- [ ] New-save v2 top-51/excess-salary counting, separate excluded salary, full opening-day gate, conservative CPU planning and inbox warning. Seven new rule/save cases and 123 scoped cases passed; final annual simulations/device verification pending.
+- [ ] New-save v2 top-51/excess-salary counting, separate excluded salary, full opening-day gate, conservative CPU planning and inbox warning. 123 scoped cases and the full 125-case annual run passed before the final-cut timing correction; eight targeted cases passed afterward. Final scoped/device verification pending.
+- [ ] Final-cut accounting fix: full-budget CPU compliance must use opening week 1 for earned-salary calculations, not preseason week 3. Build 38 canceled before device QA to include this correction.
 - [ ] Verify v0/v1 save compatibility and persist v2 on reinstall; update 32-team diagnostic without forcing official balances.
 
 ## Next authorized financial phase

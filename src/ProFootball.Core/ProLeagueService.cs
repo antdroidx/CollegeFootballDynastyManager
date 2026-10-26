@@ -143,9 +143,9 @@ public static class ProLeagueService
         if (state.Phase == ProPhase.Preseason)
         {
             if (state.Week < 3) return state with { Week = state.Week + 1 };
-            var finalCuts=state with{Phase=ProPhase.RegularSeason};
+            var finalCuts=state with{Phase=ProPhase.RegularSeason,Week=1};
             foreach (var team in state.League.Teams.Where(t => t.Name != state.UserTeam || state.Career?.Unemployed == true)) finalCuts = ProCpu.MakeRoom(ProCpu.Trim(finalCuts, team.Name), team.Name, 0,reserveRosterSlot:false);
-            state=finalCuts with{Phase=ProPhase.Preseason};
+            state=finalCuts with{Phase=ProPhase.Preseason,Week=state.Week};
             // Keep completed finale results while the user makes final cuts; no second simulation.
             if (ProSeasonEligibility.Issue(state,state.UserTeam) is {} issue)
                 return ProEconomy.Log(state, issue);
