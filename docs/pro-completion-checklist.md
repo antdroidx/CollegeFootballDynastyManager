@@ -62,7 +62,7 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 
 ## Newly reported live-view layout
 
-- [ ] Pro landscape quick-play controls fit without scrolling: resize field while choices are open, collapse the three choices after selection, restore field height for the play, and retain a clear way to change the call. Match College behavior. Verify phone/Fold landscape with the scoreboard, selected call and action controls visible. Added October 26; implementation is in progress after verified accounting Build 36, with Android checks pending. This is Pro live UI work and needs the relevant GameCast device flow when implemented.
+- [ ] Pro landscape quick-play controls fit without scrolling: resize field while choices are open, collapse the three choices after selection, restore field height for the play, and retain a clear way to change the call. Match College behavior. Verify phone/Fold landscape with the scoreboard, selected call and action controls visible. Added October 26; source `a2c74e8` compiles and Build 37 (`40408864223`) passed server tests/packaging; device checks are in progress. Do not repeat the build until its result/evidence is inspected. This is Pro live UI work and needs the relevant GameCast device flow when implemented.
 
 ## Outstanding acceptance
 
