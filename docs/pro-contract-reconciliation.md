@@ -1,6 +1,6 @@
 # Real-contract reconciliation phase
 
-Authorized October 26, 2026. Implementation is in progress; Pro Build 33 remains the latest verified APK until the new financial acceptance passes.
+Authorized October 26, 2026. Implementation is in progress; The first accounting/UI batch is verified in Pro Build 36; broader source reconciliation, option rules and the sourced default remain open.
 
 ## Product decision
 

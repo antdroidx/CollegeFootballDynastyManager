@@ -2,6 +2,10 @@
 
 This is developer documentation. Ordinary gameplay screens explain decisions without development/source disclaimers.
 
+## Latest verified contract batch
+
+Pro Build 36 (`7687443`, accounting core `6faa77f`) separates playing terms from inferred void rows and source bonus cash from cap allocations. Main contract information is compact; detailed accounting is optional. Annual source cash, cap-preserving migration, natural-expiry debt, net extension replacement, legitimate later rookie re-signings and trade cash ownership have targeted regressions. All 118 Pro cases passed locally (20 generated / 5 sourced / 3 imported-cap seasons); final scoped CI passed 116 cases plus financial device acceptance. Source option/vesting details and the real-contract default remain pending. See [reconciliation plan](pro-contract-reconciliation.md) and [32-team coverage audit](pro-contract-source-audit.md).
+
 ## Implemented accounting
 
 - Annual contract workspace separates salary, allocated bonus, other cap compensation, guaranteed base and total cap hit. Comparables use the same position within five overall points. Offers use $250K controls and start at age/market/competition-based agent demands. Existing deal and market tabs retain context without pushing offer controls below a long table.
@@ -27,7 +31,7 @@ Imported source accounting remains experimental: historical cash, departed-playe
 
 ## Sourced-mode diagnostic follow-up
 
-A five-season diagnostic first exposed CPU roster starvation/unsigned rookies after source-contract releases. CPU planning now tries legal restructures before releasing core starters, reserves depth money at inflated minimum budgets and retries rookies before free agency. The fixed-seed 2027–31 run then had no over-cap clubs or unsigned rookies and at least 47 active players after the first offseason, 53 thereafter. Draft-class means stayed 63.5–64.8. This is one continuity scenario, not statistical calibration. The imported 2026 opening still lacks authoritative team adjustments and starts eight clubs above modeled base cap; it is not a reconciled real NFL ledger.
+A five-season diagnostic first exposed CPU roster starvation/unsigned rookies after source-contract releases. CPU planning now tries legal restructures before releasing core starters, reserves depth money at inflated minimum budgets and retries rookies before free agency. The fixed-seed 2027–31 run then had no over-cap clubs or unsigned rookies and at least 47 active players after the first offseason, 53 thereafter. Draft-class means stayed 63.5–64.8. This is one continuity scenario, not statistical calibration. That earlier diagnostic preceded the supplied team-allowance CSV. Current allowances are imported; current contract/debt/counting gaps are recorded in the 32-team audit. It remains an unreconciled real NFL ledger.
 
 
 ## Supplied 2026 allowance file

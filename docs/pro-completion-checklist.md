@@ -1,6 +1,6 @@
 # Pro completion checklist
 
-Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current verified Pro application source: `7687443` (core `6faa77f`), APK Build 36; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -41,24 +41,24 @@ Current Pro application source: `e32c1e2`; QA harness: `1ab25f0`; College/shared
 - [x] College Build 388 packages and career Android checks pass.
 - [x] College Build 388 broad Android acceptance passed, including management/themes and shared live-view/replay/advance regression checks.
 
-## Contract accounting batch — source 6faa77f, Build 35 device verification pending
+## Contract accounting batch — core 6faa77f, final UI 7687443, Build 36 verified
 
 - [x] Ten targeted cash/void/term/migration/trade/expiry regressions; all 118 Pro cases passed locally, including 20 generated + 5 sourced + 3 imported-cap seasons.
 - [x] Full source pack refreshed to October 26: 2,012 matched contracts; developer audit records 519 generated roster fallbacks and unresolved official accounting basis.
 - [x] Financial CI tests and Android packaging passed in run 40405152646.
 - [x] Exact Build 35 financial/contract device acceptance passed: APK artifact 12690317621, evidence 12689689721, run 40405152646.
-- [ ] Final UI follow-up: widen accounting year column so Void label is readable; capture compact pay table fully and verify the next APK.
+- [x] Final UI follow-up: readable Void column/compact pay-table screenshot. Build 36 all jobs passed: run 40406332938, APK artifact 12690204175, evidence 12691288745; 116 scoped tests and exact-APK financial/contract/theme/reinstall acceptance.
 - [ ] Finish broader source reconciliation and option rules before enabling the sourced default.
 
 ## Next authorized financial phase
 
-- [ ] Correct sourced employment/void/cash/guarantee semantics and dependent expiration/release calculations. Initial implementation `6faa77f` is in verification; full option/vesting/source liability reconciliation remains pending.
-- [ ] Replace random fallback remaining terms with metadata-based terms and explicit rookie/undrafted exceptions.
+- [ ] Correct sourced employment/void/cash/guarantee semantics and dependent expiration/release calculations. Initial accounting implementation is verified in Build 36; full option/vesting/source liability reconciliation remains pending.
+- [x] Replace GUID-random fallback terms with source playing dates/rookie metadata and explicit estimates; preserve known later released/re-signed deals.
 - [ ] Real contracts default for new franchises after reconciliation; preserve existing saves and explicit generated mode.
-- [ ] Simplified main contract display with optional detailed accounting.
+- [x] Simplified main contract display with optional detailed accounting, verified in Build 36.
 - [ ] Source-dated team ledger reconciliation and affected financial/device verification.
 
-See [phase details](pro-contract-reconciliation.md). These items are pending, not included in verified Build 33.
+See [phase details](pro-contract-reconciliation.md). Checked items are included in verified Build 36. Unchecked source/option/default items remain pending.
 
 ## Newly reported live-view layout
 
