@@ -26,6 +26,10 @@ Updated October 26, 2026 (Pacific). This file is the current handoff; Git histor
 - Sourced annual simulations exposed CPU replacement-cost/retry and retention depth-budget weaknesses. Fixed without cap forgiveness, weakening tests or inventing players. Cached lookups avoid repeated scans. **118 local Pro cases passed in 2m57s**, including ten new cases, twenty generated-contract seasons, five sourced-contract seasons and three imported-cap seasons. Final CI runs **116** scoped cases, 12 helpers, packaging and the targeted financial device flow.
 - Build 35 passed initially; visual review prompted a wider accounting Year column and better compact-table screenshot. **Build 36 is the final verified artifact**, linked above. App source `7687443`, core `6faa77f`. College/shared code is unchanged; retain College 389 and prior Pro GameCast evidence.
 
+## Active Pro-only landscape layout batch
+
+In progress after verified Build 36: ProLivePage uses a fixed viewport with a flexible field row, compact landscape header and pinned primary controls. Landscape secondary controls move to More; portrait keeps the existing actions. Shared quick-call cards use the horizontal layout in landscape, collapse after selection and return after the next snap. Playbook selections also collapse the quick tray; field space is reclaimed automatically. No simulation, College or financial behavior changes. Android compilation and `live` scope acceptance are pending. New device checks must assert all three cards and Next snap fit without scrolling, selected cards collapse, field grows, next choices return and More exposes secondary controls. Do not claim this in Build 36.
+
 ## Next authorized work
 
 Continue [pro-contract-reconciliation.md](pro-contract-reconciliation.md): complete opening source commitments/departed-player debt, seasonal Top-51 counting, option/vesting provenance and first-round fifth-year decisions before enabling the real-contract default. The default remains unchanged. Do not fabricate missing liabilities or force headline cap balances. Preserve negotiated saves and all College identity/save behavior.

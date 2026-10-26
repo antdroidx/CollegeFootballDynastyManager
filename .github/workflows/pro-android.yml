@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       validation_scope:
-        description: Finance runs focused Pro tests and financial device checks; full also runs long simulations and GameCast acceptance
+        description: Finance checks financial UI; live checks GameCast/UI without repeating long financial simulations; full runs everything
         type: choice
-        options: [full, finance]
+        options: [full, finance, live]
         default: full
       reuse_apk_run_id:
         description: Optional prior run ID for test-only retries; app-source differences reject reuse
@@ -47,10 +47,10 @@ jobs:
       - name: Test UI synchronization helpers
         run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
       - name: Full Pro tests
-        if: inputs.validation_scope != 'finance'
+        if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'live'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
-      - name: Pro financial and transaction regressions
-        if: inputs.validation_scope == 'finance'
+      - name: Pro scoped regressions
+        if: inputs.validation_scope == 'finance' || inputs.validation_scope == 'live'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
       - name: Build independent pro APK
         run: >

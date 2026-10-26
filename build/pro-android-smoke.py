@@ -162,7 +162,27 @@ try:
     ready("back-to-live","Next snap")
     s.adb("shell","settings","put","system","accelerometer_rotation","0")
     s.adb("shell","settings","put","system","user_rotation","1")
-    time.sleep(2);s.capture("pro-live-landscape")
+    time.sleep(2)
+    landscape=s.capture("pro-live-landscape")
+    def tagged(root,identifier):
+        return next(n for n in root.iter("node") if n.get("resource-id","").endswith(identifier))
+    def bounds(node):return tuple(map(int,re.findall(r"\d+",node.get("bounds",""))))
+    def fits(root,node):
+        viewport=bounds(next(root.iter("node")));left,top,right,bottom=bounds(node)
+        assert left>=viewport[0] and top>=viewport[1] and right<=viewport[2] and bottom<=viewport[3]-24,"Live control outside visible viewport"
+    cards=[n for n in landscape.iter("node") if "quick-call-" in n.get("resource-id","")]
+    assert len(cards)==3,"Landscape must show three quick calls"
+    for card in cards:fits(landscape,card)
+    snap_node=next(n for n in landscape.iter("node") if n.get("text")=="Next snap");fits(landscape,snap_node)
+    field_before=bounds(tagged(landscape,"pro-live-field"));left,top,right,bottom=bounds(cards[0])
+    s.adb("shell","input","tap",str((left+right)//2),str((top+bottom)//2))
+    chosen=s.wait_for("pro-landscape-call-selected",lambda r:any((t or "").startswith("Selected: ") for t in s.texts(r)),timeout=30)
+    assert not any("quick-call-" in n.get("resource-id","") for n in chosen.iter("node")),"Quick calls did not collapse after selection"
+    field_after=bounds(tagged(chosen,"pro-live-field"));assert field_after[3]-field_after[1]>field_before[3]-field_before[1],"Field did not expand after call selection"
+    fits(chosen,next(n for n in chosen.iter("node") if n.get("text")=="Next snap"))
+    s.tap(chosen,"More");menu=ready("landscape-more","Game controls");assert "Viewing options" in s.texts(menu);s.tap(menu,"Cancel")
+    chosen=ready("landscape-call-ready","Next snap");s.tap(chosen,"Next snap")
+    s.wait_for("pro-landscape-next-choices",lambda r:sum("quick-call-" in n.get("resource-id","") for n in r.iter("node"))==3,timeout=90)
     s.adb("shell","settings","put","system","user_rotation","0")
     click("finish","Finish game")
     final=ready("final","FINAL · Saved")

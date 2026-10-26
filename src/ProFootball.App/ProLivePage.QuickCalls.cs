@@ -9,7 +9,7 @@ public sealed partial class ProLivePage
     void UpdateQuickCalls()
     {
         var defending = ProLiveControl.CanCall(session, true);
-        quickCalls.IsVisible = defending || ProLiveControl.CanCall(session, false);
+        quickCalls.IsVisible = !callConfirmed&&(defending || ProLiveControl.CanCall(session, false));
         quickCalls.Clear();
         if (!quickCalls.IsVisible) return;
         var profile = session.ControlledTeamName == session.Game.HomeTeamName ? session.HomeProfile : session.AwayProfile;
@@ -46,7 +46,7 @@ public sealed partial class ProLivePage
         {
             var choice = choices[i];
             var card = GameDayCallPicker.Card(choice.Name, choice.Formation, choice.Id == chosen ? "SELECTED · " + choice.Type : choice.Type, choice.Art,
-                () => { if (working || pending || !ProLiveControl.CanCall(session, defending)) return; if (defending) defense = choice.Id; else offense = choice.Id; selected.Text = "Selected: " + choice.Name; Update(); }, compact: true, portrait: Width < 650);
+                () => { if (working || pending || !ProLiveControl.CanCall(session, defending)) return; if (defending) defense = choice.Id; else offense = choice.Id; callConfirmed=true; selected.Text = "Selected: " + choice.Name; Update(); }, compact: true, portrait: Width < Height);
             card.AutomationId = "quick-call-" + i; card.Stroke = DynastyTheme.Selected; card.StrokeThickness = choice.Id == chosen ? 2 : 0;
             quickCalls.Add(card, i, 0);
         }

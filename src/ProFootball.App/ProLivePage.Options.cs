@@ -14,7 +14,7 @@ public sealed partial class ProLivePage
             if (team is null or "Cancel") return;
             session.ControlledTeamName = team; session.UserCoachRole = StaffRole.HeadCoach; offense = defense = null;
         }
-        session.Mode = GameDayMode.Play; pauseAfterAction = session.UserCoachRole == StaffRole.HeadCoach;
+        callConfirmed=false;session.Mode = GameDayMode.Play; pauseAfterAction = session.UserCoachRole == StaffRole.HeadCoach;
         selected.Text = "Coach mode · choose plays, then Next snap";
     }
     void FrameCamera(double x = .5, double y = .5) => GameCastCamera.Apply([turf, players], field.Width, field.Height, cameraMode, x, y);
@@ -61,7 +61,7 @@ public sealed partial class ProLivePage
         pickerLayer.Clear(); pickerLayer.Add(new GameDayCallPicker(defending ? "Choose defense" : "Choose play", choices, (defending ? defense : offense) ?? "", id =>
         {
             if (defending) defense = id; else offense = id;
-            selected.Text = (defending ? "Defense: " : "Offense: ") + choices.Single(c => c.Id == id).Name; closePicker?.Invoke();
+            callConfirmed=true;selected.Text = (defending ? "Defense: " : "Offense: ") + choices.Single(c => c.Id == id).Name; closePicker?.Invoke();
         }, () => closePicker?.Invoke()));
         pickerLayer.IsVisible = true; await closed.Task;
     }
