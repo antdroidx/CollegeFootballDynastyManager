@@ -39,6 +39,21 @@ public class GmCommitmentTests
         var result=ProManagement.Submit(s,"Bonus commitment",[qb.Football.PlayerId],0,x=>x with{Contracts=x.Contracts.Select(c=>c with{SigningBonus=400_000_000,BonusYears=2,Years=c.Years.Select(y=>y with{ProratedBonus=0}).ToList()}).ToList()});
         var decision=Assert.Single(result.GmDecisions);Assert.False(decision.Approved);Assert.Contains((s.Year+1).ToString(),decision.Reason);Assert.Same(s.Contracts,result.Contracts);
     }
+    [Fact] public void OtherUnitsCommitmentsRemainProtectedWhenOwnUnitIsWithinAllocation()
+    {
+        var(s,_,_)=Setup();var other=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Football.Position==Position.CB);
+        s=s with{Contracts=s.Contracts.Append(new(other.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year+1,180_000_000,0)])).ToList()};
+        var free=s.Players.First(p=>p.Football.TeamName=="Free agent"&&p.Football.Position==Position.RB&&!s.Waivers.Any(w=>w.PlayerId==p.Football.PlayerId));
+        var result=ProManagement.Submit(s,"Offer",[free.Football.PlayerId],35_000_000,x=>ProEconomy.Offer(x,x.UserTeam,free.Football.PlayerId,3,35_000_000,0));
+        var decision=Assert.Single(result.GmDecisions);Assert.False(decision.Approved);Assert.Contains("shared team commitments",decision.Reason);Assert.Empty(result.Bids);
+    }
+    [Fact] public void CoordinatorCanReleaseOwnOverBudgetContractToRepairAllocation()
+    {
+        var(s,qb,_)=Setup();s=s with{Contracts=[new(qb.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,200_000_000,0)])]};
+        var result=ProManagement.Submit(s,"Release",[qb.Football.PlayerId],0,x=>ProEconomy.Release(x,x.UserTeam,qb.Football.PlayerId,false));
+        Assert.True(Assert.Single(result.GmDecisions).Approved);Assert.Equal("Free agent",result.Players.Single(p=>p.Football.PlayerId==qb.Football.PlayerId).Football.TeamName);
+        Assert.Equal(0,ProEconomy.Used(result,s.UserTeam));
+    }
     [Fact] public void HeadCoachRetainsWholeTeamAllocation()
     {
         var(s,qb,_)=Setup();s=s with{Career=s.Career! with{Role=StaffRole.HeadCoach}};

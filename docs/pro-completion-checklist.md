@@ -82,3 +82,5 @@ The follow-on morale/honors/camp/efficiency batch is now verified. Prior pending
 Active follow-up: coordinator GM decisions preview future unit commitments and pending bids, reject atomically, and permit non-worsening inherited-overage repairs. Five new focused tests; final full/Android checks pending. This does not complete shared-pick review or sourced cap reconciliation.
 
 Coordinator future-commitment checkpoint: five focused Pro cases passed. Final full suite and both Android workflows will validate the committed batch; the latest verified APKs remain Pro 25 / College 383 until those complete.
+
+Expanded GM checkpoint: seven focused Pro cases passed. Review now also protects both units' shared future team commitments, including pending bids, and allows zero-spend roster/cap repairs instead of blocking an over-budget coordinator from releasing a contract. The earlier full suite passed 68 cases before these additional cases; final CI will run all 71. Verified APK links stay unchanged until final Android checks finish.
