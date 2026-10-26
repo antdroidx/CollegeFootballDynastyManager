@@ -128,12 +128,12 @@ public static class ProDraft
 public static class ProCpu
 {
     public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
-    public static ProFranchise MakeRoom(ProFranchise s, string team, long room)
+    public static ProFranchise MakeRoom(ProFranchise s, string team, long room,bool reserveRosterSlot=true)
     {
         s=ProCpuBudget.Relieve(s,team,room);
         var startingDepth=ProRoster.Active(s,team);var replacementFloor=DepthMinimum(s);
         long RequiredRoom()=>room+Math.Max(0,startingDepth-ProRoster.Active(s,team))*replacementFloor;
-        for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < RequiredRoom() || ProRoster.CountForLimit(s, team) >= ProRoster.Limit(s)); i++)
+        for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < RequiredRoom() || ProRoster.CountForLimit(s, team) > ProRoster.Limit(s)-(reserveRosterSlot?1:0)); i++)
         {
             var savings=new Dictionary<Guid,long>();
             long Saving(ProPlayer p){if(!savings.TryGetValue(p.Football.PlayerId,out var value))savings[p.Football.PlayerId]=value=s.Contracts.Where(c=>c.Active&&c.PlayerId==p.Football.PlayerId).Sum(c=>ProEconomy.CapHit(c,s.Year))-ProContractInsights.Release(s,p.Football.PlayerId).First().DeadMoney;return value;}
@@ -157,6 +157,9 @@ public static class ProCpu
         .Select(p=>SigningSalary(s,p)).DefaultIfEmpty(1_500_000).Min();
     public static ProFranchise Manage(ProFranchise s, bool includeUser = false)
     {
+        // Plan against opening-day obligations rather than spending temporary camp exclusions.
+        var actualCapRules=s.CapRulesVersion;
+        if(ProCapCounting.Offseason(s,s.Year))s=s with{CapRulesVersion=1};
         var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam || s.Career?.Unemployed == true).ToArray();
         if (s.Phase is ProPhase.Preseason or ProPhase.Offseason)
             foreach (var team in teams)
@@ -195,7 +198,7 @@ public static class ProCpu
             }
             s = ProEconomy.ResolveBids(s); if (offers == 0&&!repairedBudget) break;
         }
-        return s;
+        return s with{CapRulesVersion=actualCapRules};
     }
     public static ProFranchise Trim(ProFranchise s, string team)
     {

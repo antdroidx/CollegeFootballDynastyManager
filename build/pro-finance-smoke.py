@@ -87,6 +87,8 @@ try:
     assert all(y["salary"]==0 for y in contract["years"] if y["isVoid"])
     assert contract["bonusCash"]["2026"]==35_000_000
 
+    assert saved["capRulesVersion"]==2,"New franchises must persist seasonal cap counting"
+
     caps=saved["teamCapAllocations"];assert len(caps)==32 and len({r["teamAbbreviation"] for r in caps})==32
 
     assert all(r["baseCap"]+r["rollover"]+r["otherAdjustments"]==r["adjustedCap"] for r in caps)

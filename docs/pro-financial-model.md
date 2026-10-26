@@ -43,3 +43,7 @@ No commitment or opening available-space field is inferred from these allowances
 Rollover timing follows CBA Article 13 §6(b)(v), printed pages 112–113 (PDF pages 128–129): final regular-game measuring date, current-year reservation and next-year credit. Administrative notice delivery is represented by the saved in-game election, not an external submission. Future incentives/guarantee offsets still require richer source data and rules.
 
 Repository CSV blob SHA-256 (normalized line endings): `d3d67f995d24ecce152509fa6a1ca22f377ba592c37b54956e6162d153d6a3e8`.
+
+## Seasonal counting — implementation in verification
+
+New 2026 franchises opt into saved cap-rules version 2. Only current-year camp/free-agency phases use top-51 valuation. Non-top-51 base salary retains the excess required by CBA Article 13 section 6(a)(i); all bonus allocations and other cap charges remain. Existing source salary credits cannot receive duplicate exclusion. Full roster salary and excluded salary remain separate ledger fields. Closing-year retention and future planning use full salaries. Opening-season eligibility and CPU compliance use full obligations; CPU acquisition planning conservatively reserves opening-day funding rather than spending temporary exclusions. Existing v0/v1 saves are not upgraded silently. This does not import missing departed-player debts or reconcile official opening balances. See the source audit and current-work.md for validation.

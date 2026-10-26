@@ -31,6 +31,16 @@ Updated October 26, 2026 (Pacific). This file is the current handoff; Git histor
 
 ProLivePage now uses a fixed viewport with a flexible field row, compact landscape header and pinned primary controls. Landscape secondary controls move to More; portrait retains its actions. Shared quick-call cards use horizontal layout in landscape, collapse after quick/playbook selection, and return after the next snap. The field reclaims space automatically; animation/replay also hide the quick tray. No simulation, College or financial logic changed. Source `a2c74e8`; local packaging passed with zero warnings/errors. Build 37 run `40408864223` passed all jobs. Exact APK and evidence links are above; both before/after landscape screenshots were visually reviewed. The user confirmed the build had completed, and its final status/evidence were independently checked.
 
+## Active seasonal cap-counting batch — not in Build 37
+
+New 2026 franchises now use cap-rules version 2: offseason top-51 contract valuation, required non-top-51 Paragraph 5 excess, and all bonus/other charges retained. Excluded salary is separate from charged salary. Existing saves keep version 0/1/full-roster behavior. Opening-season eligibility explicitly uses full obligations; CPU financial planning is conservatively against opening-day obligations even in camp, and final CPU compliance uses regular-season counting. Inbox warns when preseason room is legal but opening room is negative. No source balancing amounts were invented and no College/shared code changed.
+
+Seven new rule/save cases and all 123 scoped Pro cases passed. An earlier full 123-case run passed before the final source-credit guard and extra save case; final 125-case annual regression and Android finance verification are pending. Source audit now shows Seattle camp room $5,672,598 with $15,095,373 excluded salaries, versus full-roster room -$9,422,775. This is still not reconciled to official source space/departed-player debt. Do not claim a new verified APK or enable the sourced default yet. Financial/UI/rule edits are uncommitted until this batch is validated.
+
+## Newly queued field changes
+
+After the current financial batch: use uppercase city names in Pro end zones (SEATTLE, LOS ANGELES, etc.); correct between-play referee/ball placement at the line of scrimmage in both College and Pro instead of inside the huddle. Audit shared presentation and verify both games if shared behavior changes. Do not mix these into the seasonal cap-counting APK.
+
 ## Next authorized work
 
 Continue [pro-contract-reconciliation.md](pro-contract-reconciliation.md): complete opening source commitments/departed-player debt, seasonal Top-51 counting, option/vesting provenance and first-round fifth-year decisions before enabling the real-contract default. The default remains unchanged. Do not fabricate missing liabilities or force headline cap balances. Preserve negotiated saves and all College identity/save behavior.

@@ -4,6 +4,8 @@ namespace ProFootball.Core;
 public sealed record ProTeamCapAllocation(int Year,string TeamAbbreviation,long BaseCap,long Rollover,long OtherAdjustments,long AdjustedCap);
 public sealed record ProCapBudget(long BaseCap,long Rollover,long OtherAdjustments,long AdjustedCap,long CommittedSalary,long AllocatedBonus,long OtherCapCharges,long DeadMoney,long RolloverReserved)
 {
+    public long OffseasonSalaryExcluded {get;init;}
+    public long RosterSalary=>checked(CommittedSalary+OffseasonSalaryExcluded);
     public long PlayerCommitments=>checked(CommittedSalary+AllocatedBonus);
     public long TotalCommitments=>checked(PlayerCommitments+OtherCapCharges+DeadMoney+RolloverReserved);
     public long Available=>checked(AdjustedCap-TotalCommitments);
@@ -38,7 +40,7 @@ public static class ProCapInitialization
     public static ProFranchise Initialize(ProFranchise s)
     {
         if(s.Year!=2026||s.TeamCapAllocations.Count>0)return s;
-        return s with{CapRulesVersion=1,SalaryCap=ProFinance.Base2026,TeamCapAllocations=Load(s.League).ToList()};
+        return s with{CapRulesVersion=2,SalaryCap=ProFinance.Base2026,TeamCapAllocations=Load(s.League).ToList()};
     }
     public static long RoundForDisplay(long dollars)=>checked((long)Math.Round(dollars/250_000m,0,MidpointRounding.AwayFromZero)*250_000);
     public static ProTeamCapAllocation? Allocation(ProFranchise s,string team,int year)

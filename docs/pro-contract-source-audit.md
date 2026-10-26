@@ -43,3 +43,44 @@ Importer source: https://github.com/nflverse/nflverse-data/releases/tag/contract
 Seattle reference: https://overthecap.com/salary-cap/seattle-seahawks
 
 Reproduce with `dotnet run --project tools/ProContractAudit -- OUTPUT.json`. Retain full dollars in the ledger; $250K steps apply to user offer controls/display rounding.
+
+## Seasonal counting follow-up — new franchises only
+
+Cap-rules version 2 applies offseason salary exclusions while retaining bonus/other charges. Existing rules 0/1 saves keep full-roster counting. A salary credit already present in a source row bounds any additional exclusion, preventing double relief. These are modeled figures, not a reconciliation to official space; source coverage/departed-player debt still need work.
+
+| Team | Excluded camp salary | Camp room | Full-roster room |
+|---|---:|---:|---:|
+| BUF | $8,363,323 | $41,779,778 | $33,416,455 |
+| MIA | $10,706,599 | $163,710,880 | $153,004,281 |
+| NE | $17,892,978 | $47,026,148 | $29,133,170 |
+| NYJ | $14,317,316 | $121,900,962 | $107,583,646 |
+| BAL | $14,193,094 | $15,799,463 | $1,606,369 |
+| CIN | $10,480,399 | $7,436,782 | $-3,043,617 |
+| CLE | $16,253,339 | $121,082,612 | $104,829,273 |
+| PIT | $13,617,595 | $12,619,618 | $-997,977 |
+| HOU | $18,194,172 | $85,545,336 | $67,351,164 |
+| IND | $12,290,345 | $9,592,401 | $-2,697,944 |
+| JAX | $13,096,260 | $53,982,729 | $40,886,469 |
+| TEN | $11,497,983 | $44,100,928 | $32,602,945 |
+| DEN | $13,023,400 | $11,185,466 | $-1,837,934 |
+| KC | $13,076,383 | $7,677,771 | $-5,398,612 |
+| LAC | $14,397,855 | $6,122,286 | $-8,275,569 |
+| LV | $13,327,317 | $53,468,376 | $40,141,059 |
+| DAL | $14,541,716 | $49,183,896 | $34,642,180 |
+| NYG | $16,563,283 | $48,975,023 | $32,411,740 |
+| PHI | $13,311,528 | $88,633,453 | $75,321,925 |
+| WSH | $12,161,056 | $26,648,061 | $14,487,005 |
+| CHI | $15,225,795 | $29,371,045 | $14,145,250 |
+| DET | $15,206,701 | $33,285,385 | $18,078,684 |
+| GB | $17,029,900 | $47,518,069 | $30,488,169 |
+| MIN | $10,223,673 | $46,000,808 | $35,777,135 |
+| ATL | $14,683,745 | $47,958,677 | $33,274,932 |
+| CAR | $14,618,423 | $28,347,573 | $13,729,150 |
+| NO | $15,551,689 | $128,865,474 | $113,313,785 |
+| TB | $11,004,883 | $11,309,260 | $304,377 |
+| ARI | $19,094,917 | $93,635,510 | $74,540,593 |
+| LAR | $15,479,561 | $9,296,205 | $-6,183,356 |
+| SEA | $15,095,373 | $5,672,598 | $-9,422,775 |
+| SF | $19,945,806 | $69,482,456 | $49,536,650 |
+
+Seattle camp room is $5,672,598 after $15,095,373 of permitted modeled exclusions; full-roster room remains -$9,422,775. No invented team adjustment closes the remaining gap to the quoted source figure.

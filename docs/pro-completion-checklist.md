@@ -50,6 +50,11 @@ Current verified Pro application source: `a2c74e8` (landscape), accounting `7687
 - [x] Final UI follow-up: readable Void column/compact pay-table screenshot. Build 36 all jobs passed: run 40406332938, APK artifact 12690204175, evidence 12691288745; 116 scoped tests and exact-APK financial/contract/theme/reinstall acceptance.
 - [ ] Finish broader source reconciliation and option rules before enabling the sourced default.
 
+## Seasonal cap counting — active batch after Build 37
+
+- [ ] New-save v2 top-51/excess-salary counting, separate excluded salary, full opening-day gate, conservative CPU planning and inbox warning. Seven new rule/save cases and 123 scoped cases passed; final annual simulations/device verification pending.
+- [ ] Verify v0/v1 save compatibility and persist v2 on reinstall; update 32-team diagnostic without forcing official balances.
+
 ## Next authorized financial phase
 
 - [ ] Correct sourced employment/void/cash/guarantee semantics and dependent expiration/release calculations. Initial accounting implementation is verified in Build 36; full option/vesting/source liability reconciliation remains pending.
@@ -63,6 +68,11 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 ## Newly reported live-view layout
 
 - [x] Pro landscape quick-play controls fit without scrolling: compact header/pinned controls, flexible field height, three horizontal choices, collapse after selection, expand field, restore choices after the snap and More for secondary actions. Source `a2c74e8`, Build 37 run `40408864223` all green. Device assertions and before/after screenshots reviewed. APK artifact `12691773553`; evidence `12693410970`. Broad Pro GameCast, watch/replay, saved final/reload/advance and coordinator checks also passed; College/shared source unchanged.
+
+## Newly requested field presentation — after current financial batch
+
+- [ ] Pro end-zone text uses uppercase team city, e.g. SEATTLE / LOS ANGELES, matching College's presentation. Keep short abbreviations on scoreboard/city badges; verify long city names and both field directions/camera views.
+- [ ] Both College and Pro: between plays, place the referee with the ball at the line of scrimmage rather than inside a huddle. Audit shared pre-snap/huddle presentation; preserve official movement during live plays and replay. Because both games are affected, verify the relevant shared/College/Pro field flows when implemented.
 
 ## Outstanding acceptance
 
