@@ -72,14 +72,14 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 
 ## Newly requested field presentation — after current financial batch
 
-- [ ] Pro end-zone text uses uppercase team city, e.g. SEATTLE / LOS ANGELES, matching College's presentation. Keep short abbreviations on scoreboard/city badges; verify long city names and both field directions/camera views.
-- [ ] Both College and Pro: between plays, place the referee with the ball at the line of scrimmage rather than inside a huddle. Audit shared pre-snap/huddle presentation; preserve official movement during live plays and replay. Because both games are affected, verify the relevant shared/College/Pro field flows when implemented.
+- [x] Pro uppercase city end zones, abbreviated badges retained; LOS ANGELES and cameras visually/device verified in Pro 44.
+- [x] Both games: idle referee/ball aligned with LOS and clear of huddles; live/replay spotting separated. Geometry and Pro 44/College 390 device/screenshot acceptance passed.
 
 ## Newly requested Pro development / aging
 
-- [ ] Audit aging veterans showing 4–5 potential stars. Current offseason progression reduces overall/attributes after position-specific peak age but leaves PotentialRating unchanged. Make remaining development outlook age/position-aware, distinguish elite current ability from future upside, and avoid an impossible ceiling below present ability. Preserve the shared canonical attribute system and College behavior.
+- [x] Pro age-aware ceiling and remaining-growth outlook, separated from elite current ability. Never imply a ceiling below current overall; College attributes/behavior preserved. Verified in Pro 44.
 - [ ] Calibrate position-specific aging/regression (including athletic vs mental/technical attributes) and verify annual decline/retirement over several seasons; avoid a uniform age cutoff for every position.
-- [ ] Add College-style rating delta to Pro roster/player views, with an explicit season-start baseline and meaningful zero/up/down styling. Preserve legacy saves and avoid replacing imported current ratings just to change the display.
+- [x] Pro roster/player rating delta, saved prior-season baseline, neutral/up/down styling and legacy fallback; generated prospects cannot inherit fictional prior-pro history. Verified in Pro 44.
 
 ## Outstanding acceptance
 
