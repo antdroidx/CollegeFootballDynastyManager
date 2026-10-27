@@ -24,6 +24,18 @@ def overview(week=0, phase="Regular season", busy=False, enabled=True):
 
 
 class SmokeSynchronizationTests(unittest.TestCase):
+    def test_library_slot_waits_for_loading_completion_before_tap(self):
+        root=ET.Element("hierarchy")
+        create=ET.SubElement(root,"node",text="New franchise",enabled="false")
+        ET.SubElement(root,"node",text="Synthetic option QA exercise · Seattle Seahawks")
+        loading=ET.SubElement(root,"node",text="Loading franchises…",attrib={"class":"android.widget.ProgressBar"})
+        self.assertFalse(smoke.library_entry_ready(root,"Synthetic option QA"))
+        create.set("enabled","true")
+        self.assertFalse(smoke.library_entry_ready(root,"Synthetic option QA"))
+        root.remove(loading)
+        self.assertTrue(smoke.library_entry_ready(root,"Synthetic option QA"))
+        self.assertFalse(smoke.library_entry_ready(root,"Another save"))
+
     def test_enabled_button_does_not_imply_an_advance_finished(self):
         old = overview()
         self.assertFalse(smoke.overview_ready(overview(), smoke.calendar(old)))

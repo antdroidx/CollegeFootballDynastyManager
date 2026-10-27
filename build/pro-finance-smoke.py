@@ -69,7 +69,7 @@ try:
     ready("profile-closed",lambda r:"Overview" in s.texts(r))
     click("overview-return","Overview");click("save","\u2039 Exit",True)
 
-    library=ready("saved-library",lambda r:any((t or "").startswith(franchise_name+" · Seattle Seahawks") for t in s.texts(r)))
+    library=ready("saved-library",lambda r:s.library_entry_ready(r,franchise_name+" · Seattle Seahawks"))
 
     # Inspect only the disposable emulator save produced by the UI; never manufacture opening obligations.
 
@@ -104,7 +104,7 @@ try:
 
     apk=next(Path("apk").glob("*-Signed.apk"));s.adb("install","-r",str(apk));s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
 
-    library=ready("updated-library",lambda r:any((t or "").startswith(franchise_name+" · Seattle Seahawks") for t in s.texts(r)));s.tap(library,next(t for t in s.texts(library) if (t or "").startswith(franchise_name+" · Seattle Seahawks")))
+    library=ready("updated-library",lambda r:s.library_entry_ready(r,franchise_name+" · Seattle Seahawks"));s.tap(library,next(t for t in s.texts(library) if (t or "").startswith(franchise_name+" · Seattle Seahawks")))
 
     ready("updated-overview",lambda r:"Advance week" in s.texts(r));click("updated-office","Front Office");cap_view("updated-cap")
 
@@ -132,8 +132,8 @@ try:
         s.adb("push",str(fixture_path),"/data/local/tmp/pro-option-fixture.json")
         s.adb("shell","run-as","antdroid.profootball.franchise","cp","/data/local/tmp/pro-option-fixture.json","files/pro-franchises-v1/"+fixture_id+".json")
         s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
-        library=ready("option-library",lambda r:any((t or "").startswith(fixture_name+" ·") for t in s.texts(r)))
-        s.tap(library,next(t for t in s.texts(library) if (t or "").startswith(fixture_name+" ·")))
+        library=ready("option-library",lambda r:s.library_entry_ready(r,fixture_name+" ·"))
+        click("option-loaded-slot",next(t for t in s.texts(library) if (t or "").startswith(fixture_name+" ·")))
         ready("option-overview",lambda r:"Advance offseason" in s.texts(r))
         click("option-office","Front Office")
         if not exercise:

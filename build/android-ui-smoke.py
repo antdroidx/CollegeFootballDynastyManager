@@ -95,6 +95,14 @@ def wait_for(name, predicate, timeout=120):
     raise AssertionError(f"Timed out waiting for {name}: {sorted(texts(root))}")
 
 
+def library_entry_ready(root, prefix, create_label="New franchise"):
+    # Rows appear before the loading panel is removed; their bounds shift afterward.
+    return (enabled(root, create_label)
+            and not any(n.get("class") == "android.widget.ProgressBar" for n in root.iter("node"))
+            and not any((value or "").startswith("Loading ") for value in texts(root))
+            and any((value or "").startswith(prefix) for value in texts(root)))
+
+
 def enabled(root, text):
     return any(n.get("text") == text and n.get("enabled") == "true" for n in root.iter("node"))
 
