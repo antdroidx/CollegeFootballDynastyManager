@@ -94,7 +94,7 @@ public sealed class ReserveActivationTests
         blocked=blocked with{Football=blocked.Football with{FullName="Reserve Injured",CurrentInjury=new PlayerInjury{WeeksRemaining=2}}};
         var fixture=s with{Id=Guid.NewGuid(),Name="Synthetic reserve QA",Games=[],Players=s.Players.Select(x=>x.Football.PlayerId==p.Football.PlayerId?p:x.Football.PlayerId==blocked.Football.PlayerId?blocked:x).ToList()};
         var directory=Path.Combine(Path.GetTempPath(),"pro-reserve-fixture-"+Guid.NewGuid());
-        try{var store=new ProSaveStore(directory);await store.Save(fixture);var loaded=await store.Load(fixture.Id);Assert.Null(ProReserve.ActivationReason(loaded,loaded.UserTeam,p.Football.PlayerId));Assert.Contains("2 weeks",ProReserve.ActivationReason(loaded,loaded.UserTeam,blocked.Football.PlayerId));}
+        try{var store=new ProSaveStore(directory);await store.Save(fixture);var loaded=await store.Load(fixture.Id);Assert.Equal(JsonSerializer.Serialize(fixture.Contracts),JsonSerializer.Serialize(loaded.Contracts));Assert.Null(ProReserve.ActivationReason(loaded,loaded.UserTeam,p.Football.PlayerId));Assert.Contains("2 weeks",ProReserve.ActivationReason(loaded,loaded.UserTeam,blocked.Football.PlayerId));}
         finally{if(Directory.Exists(directory))Directory.Delete(directory,true);}
         if(Environment.GetEnvironmentVariable("PRO_COORDINATOR_UI_FIXTURES") is string output)
         {

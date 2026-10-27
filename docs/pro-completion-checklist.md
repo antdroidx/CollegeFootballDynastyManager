@@ -1,5 +1,13 @@
 # Pro completion checklist
 
+## Accepted reserve activation — Pro63
+
+App/core source `a8ad14b`. [Exact APK63](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40530334315/artifacts/12745318137), [all-green run40530334315](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40530334315), [device evidence12745348663](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40530334315/artifacts/12745348663). Local Android build passed with zero warnings/errors.21 focused reserve/camp/depth cases and16 helpers passed; CI passed220 scoped Pro cases, helpers, source validator and packaging. Exact device flow verified available activation, disabled injured action/reason, unchanged contracts, retained blocked player, saved ACT state and reopening. Screenshots reviewed in .artifacts/pro63-ui. A stronger real-loader contract-equality assertion also passed locally after the build source; it changes tests only, not the APK.
+
+Open a reserve player's profile and use Activate to roster near the header, or Contract & roster actions / Activate from reserve. Activation checks team ownership, retirement, unsigned rookie rights, injury, known clearance restrictions,90/53 roster limits, active salary minimum, actual cap and pending offers. It preserves existing terms/negotiation locks except a required current minimum. Coordinator authority is enforced. Generic imported RES/INA/DEV codes do not establish a dated IR event; healthy signed players can be activated as game roster decisions. Explicit IR/PUP/suspension/exempt statuses with unverified clearance remain blocked. Full dated medical-return lifecycle is not claimed complete.
+
+Reserve task is accepted in this scope. Next three priorities remain real-contract semantics,32-team financial reconciliation, and full waiver/legally timed termination rules. Reuse62 financial/annual evidence and unchanged College390/GameCast44; no new College test/build required. Main and both app identities unchanged. The user removed automatic continuation; do not recreate it.
+
 ## Current four-task priority (user requested)
 
 1. Reserve-to-active roster activation first: available imported reserve players, actionable/disabled reasons near the profile header, roster/cap and career authority checks, saved status and device acceptance. Known medical/league restrictions and unsigned draft rights must not be bypassed. Do not infer an IR start date from generic RES status.
@@ -7,9 +15,9 @@
 3. Reconcile all32 dated team ledgers, player identity/status, departed debt and adjustments; enable real contracts by default only once reconciled.
 4. Complete waiver original-contract assumption and legally timed release/trade treatment, with consistent previews and conserved obligations.
 
-The user removed automatic continuation. Do not recreate it. Work resumes when the user continues this chat. Pro62 remains the accepted baseline until the new reserve APK passes.
+The user removed automatic continuation. Do not recreate it. Work resumes when the user continues this chat. Pro63 is accepted for reserve activation; Pro62 financial evidence remains reusable.
 
-Current verified Pro application source: `2ac5992`, financial core `94d77bc`, APK Build62 (finance/trades/coordinator management); full unchanged GameCast evidence Pro44 and College390. See current-work.md for exact artifacts and scope.
+Current verified Pro application/core source: `a8ad14b`, APK Build63 (reserve activation); Pro62 financial/trade/coordinator evidence, full unchanged GameCast Pro44 and College390 remain reusable. See current-work.md for exact artifacts and scope.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -282,3 +290,5 @@ All209 full local Pro cases passed in9m55s on unchanged financial core, includin
 Next: source-dated paid/future bonus events, vesting and departed-debt reconciliation. Real-source default remains off; no source liabilities or historical cash have been invented. Existing209-case evidence does not establish complete real-source accuracy. Remaining roadmap remains authorized.
 
 Reserve activation checkpoint:13 focused reserve cases plus8 camp/depth regressions pass (21 total). New activation preserves contract terms/locks except a required current active minimum, updates roster status/depth and rechecks pending bids/cap. Profile action appears before long attributes, with disabled reasons; contract/roster menu also supports it. Unknown EXE/suspension/IR/PUP clearances remain blocked rather than inventing eligibility. Imported generic RES/INA/DEV availability is treated as a game decision only when healthy and signed. Separate reserve device scope uses core-generated32-team fixture and avoids repeating unchanged finance/GameCast flows. Android packaging/device acceptance pending.
+
+Offline financial preparation: complete raw Parquet +32 team pages are consolidated in data/pro/source-snapshots/2026-10-26 (ignored local evidence; preserve outside build cleanup). Manifest records53,507 raw/2,540 current rows,2,532 unique OTC IDs and8 duplicate identities. New row-level comparison accounts for all2,539 current financial rows:1,997 matching,490 missing source contracts,32 identity/status reviews and20 differences. Reported debt residuals remain separate. Source defaults/accounting are unchanged; notes capture completed its bounded pass under separately dated2026-10-27:25 cached notes,70 request timeouts, all explicit in the report. Offline regeneration works; no missing guarantees are guessed. No new app build is needed for developer-only source preparation.

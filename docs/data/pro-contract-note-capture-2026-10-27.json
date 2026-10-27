@@ -1,0 +1,636 @@
+{
+  "observedOn": "2026-10-27",
+  "scope": "Offline reported contract notes for review only. No guarantee, vesting or source-data update is inferred.",
+  "summary": {
+    "cohort": 95,
+    "captured": 25,
+    "failures": 70
+  },
+  "contracts": [
+    {
+      "playerId": "004d7daf-7956-50fc-bd91-3ac7d557a95f",
+      "player": "Matthew Stafford",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "00727d30-22f5-590f-98f7-dbdc69e3edcf",
+      "player": "Jonathan Greenard",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "04d486c3-a1a9-56ef-826d-b59fed6dc693",
+      "player": "Zay Flowers",
+      "otcId": 10846,
+      "sourceUrl": "https://overthecap.com/player/zay-flowers/10846/",
+      "retrievedAt": "2026-10-27T15:26:15.271020+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "67d81b520b59733138af099dd5f7dffc1f67b32dfa8489edaf0102e4a54f671b",
+      "rawFile": "10846.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "0713dac8-fde1-526a-a549-0040422cb829",
+      "player": "Jake Elliott",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "0e1ef1bd-6b40-5cff-a4c4-0b168e109683",
+      "player": "Aidan Hutchinson",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "0ff0552f-d831-5be4-b68a-7ab7de8b8f3b",
+      "player": "Jake Tonges",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "10df2d68-e577-5bc5-b96b-5ae463258fea",
+      "player": "Jameson Williams",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "11713b54-f14b-5d21-9400-364b140bf328",
+      "player": "Jordan Mailata",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "12a7263c-7906-5294-b8b3-dc05d32ebcc8",
+      "player": "Jeremiah Owusu-Koramoah",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "14a00db3-4992-5f54-8b17-b9ee2a1e1e6d",
+      "player": "Leonard Williams",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "187c286b-6871-5188-8ed7-5fc08b2c1411",
+      "player": "Josh Allen",
+      "otcId": 6892,
+      "sourceUrl": "https://overthecap.com/player/josh-allen/6892/",
+      "retrievedAt": "2026-10-27T15:26:30.988921+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "6e97dc0b53199f320e0853c70ae2c60300ea3a351b35b9e591a5bf8bd778f4f5",
+      "rawFile": "6892.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "1ef96cd1-b6ad-58e7-a118-dbf0fdcc7aa2",
+      "player": "Myles Garrett",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "2126ce43-9977-554a-8435-7593065e2233",
+      "player": "Zach Allen",
+      "otcId": 7856,
+      "sourceUrl": "https://overthecap.com/player/zach-allen/7856/",
+      "retrievedAt": "2026-10-27T15:30:31.351328+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "9c111109a26882eda0888c5519754ebaab322569a0ff0e446e644547ad57fee7",
+      "rawFile": "7856.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "2535b1a0-cc1a-5103-9330-ea9057d2754e",
+      "player": "Luke Farrell",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "25f4b472-0dcb-5a8b-8813-26b54c7eb10e",
+      "player": "CeeDee Lamb",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "25fd1216-23ec-5de2-90e8-097add543a1b",
+      "player": "Denzel Ward",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "26055344-4b53-5190-bf12-a1a3884080bf",
+      "player": "Landon Dickerson",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "28eeccdb-afeb-5b70-ae1c-b015fb6a3730",
+      "player": "Jalen Hurts",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "2ba932bf-b955-5405-afe6-04ae1ec4ccca",
+      "player": "Kerby Joseph",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "302326ef-0067-52e1-bf36-30f403f5b6a2",
+      "player": "Josh Jobe",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "32e47aa6-5f10-53fe-86f2-d9ee48460a04",
+      "player": "Joe Burrow",
+      "otcId": 8741,
+      "sourceUrl": "https://overthecap.com/player/joe-burrow/8741/",
+      "retrievedAt": "2026-10-27T15:28:18.512563+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "30688cc2ff43d1c022e6a3f077f23a68c72d00a0e10f3b75eac707d2c530ad1f",
+      "rawFile": "8741.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "3862e4ee-ce73-5386-87b4-987bc97c998f",
+      "player": "D.J. Reed",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "38f33561-645e-5222-941a-f92056059a25",
+      "player": "Nik Bonitto",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "3db15e11-daca-5616-95ce-74ec71cbff73",
+      "player": "Brock Purdy",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "3ed88ddb-85d6-5f6c-95f3-4458f8a508cb",
+      "player": "Kyle Pitts",
+      "otcId": 9468,
+      "sourceUrl": "https://overthecap.com/player/kyle-pitts/9468/",
+      "retrievedAt": "2026-10-27T15:25:28.056292+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "4a313ad605929a16a3d0d1983c4e9212acc28d375da84b1ae0d845551601b0ac",
+      "rawFile": "9468.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "40d90df6-5604-5741-a38a-dce3a144dbe8",
+      "player": "Tytus Howard",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "433c62b3-5200-5d9a-b189-312e26cf1e23",
+      "player": "Dexter Lawrence",
+      "otcId": 7808,
+      "sourceUrl": "https://overthecap.com/player/dexter-lawrence/7808/",
+      "retrievedAt": "2026-10-27T15:27:02.452309+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "e85f52a98edacc7d04d5d3a8b09b06abcb6d02c01591d77ad9121a21c92986f2",
+      "rawFile": "7808.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "44ad0bb1-4a87-533b-a86e-211d9405b150",
+      "player": "Brenton Strange",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "4858940e-7fc4-565a-8bd1-7719bd249dc5",
+      "player": "Devon Witherspoon",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "48ab35af-2873-568d-b16e-6dd3d6468d44",
+      "player": "Ja'Marr Chase",
+      "otcId": 9469,
+      "sourceUrl": "https://overthecap.com/player/jamarr-chase/9469/",
+      "retrievedAt": "2026-10-27T15:27:02.454309+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "49fe4d6e0b73800340feb9f5d9be8cf79fb31de071a984283fd694262dc16901",
+      "rawFile": "9469.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "4eaf6ec6-552a-5053-8255-eccb6a359725",
+      "player": "Matthew Bergeron",
+      "otcId": 10862,
+      "sourceUrl": "https://overthecap.com/player/matthew-bergeron/10862/",
+      "retrievedAt": "2026-10-27T15:25:43.785728+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "57ce5b933b62e03264e4568632122905f60a4658ad5d4da16ddc02bd0bceba17",
+      "rawFile": "10862.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "5007eac0-4c37-5270-9ead-5e2e7efee8ba",
+      "player": "Charles Cross",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "50e48c6a-5445-5493-93c0-982d09794851",
+      "player": "Grant Delpit",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "523b6259-e162-5e08-8c2a-ed090dfb97a3",
+      "player": "Colton McKivitz",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "5300c2ea-c340-5afe-b04b-bcd10cb8def0",
+      "player": "Quinn Meinerz",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "57ca51e1-e2d0-5ae7-8d0b-385ecb233928",
+      "player": "Pat Surtain II",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "58a27d0f-307b-51f1-b1ca-f576030253b2",
+      "player": "O'Cyrus Torrence",
+      "otcId": 10883,
+      "sourceUrl": "https://overthecap.com/player/ocyrus-torrence/10883/",
+      "retrievedAt": "2026-10-27T15:26:46.698570+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "c4f3fd4ddde449c0753d29ad60c039bbd0e322e764e097078ea954ca4dd52aee",
+      "rawFile": "10883.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "5a159bb6-5cac-5195-a9b9-2d43404740fb",
+      "player": "Mike Evans",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "5c18912b-292c-54fa-acf1-36e019ba033c",
+      "player": "Saquon Barkley",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "5e1c39f9-351e-54f4-a881-b77f68b868f5",
+      "player": "Jake Ferguson",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "6178f052-117d-5c16-b947-37d48be83072",
+      "player": "Jerry Jeudy",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "633b5415-7716-5ea5-9016-34bbcc2f13c3",
+      "player": "Zack Baun",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "65b24f6c-b553-5a06-b55e-6c7cd8836e85",
+      "player": "Micah Parsons",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "6ab3e97b-96a9-58c3-a975-3912b7f16526",
+      "player": "DaRon Bland",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "6e96f753-c799-5082-ac05-e313729df014",
+      "player": "Bradley Chubb",
+      "otcId": 6890,
+      "sourceUrl": "https://overthecap.com/player/bradley-chubb/6890/",
+      "retrievedAt": "2026-10-27T15:26:15.271020+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "f9c318ad55138083a347bf263c2312817c02ba23d7f441c8d1eb35395c8d81b1",
+      "rawFile": "6890.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "6ef1b325-32e1-532d-8ecd-37093b036c4f",
+      "player": "Vederian Lowe",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "70c034d9-ec33-57f7-aa2c-00a11ff151dc",
+      "player": "Derrick Barnes",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "730e8a1e-31b0-5932-99fc-0e74494bdf37",
+      "player": "Talanoa Hufanga",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "737ff7bc-bea9-5b72-9f67-9b78615afae0",
+      "player": "Jordan Davis",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "76903ad1-85a3-5d80-9c79-d60f3ccdac2b",
+      "player": "Roquan Smith",
+      "otcId": 6893,
+      "sourceUrl": "https://overthecap.com/player/roquan-smith/6893/",
+      "retrievedAt": "2026-10-27T15:25:59.564229+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "4ea2fe9a5b62aef07ffeec4d3127a6e45a211b596cfaa4862da00bce6b289082",
+      "rawFile": "6893.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "7889c1a0-c9e1-569d-aa5d-c5337643f39e",
+      "player": "Elgton Jenkins",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "79cae6b4-216a-5f79-8bad-762a5d449caa",
+      "player": "Patrick Mahomes",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "7ae480a2-73f6-5500-bf94-de78b506aaf0",
+      "player": "Garrett Wilson",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "7b79ceeb-834d-53ab-9325-4066037d77ed",
+      "player": "Dontayvion Wicks",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "818e2e20-4d20-5784-ac68-a96dc5eca57f",
+      "player": "Eddy Pineiro",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "834b5948-7699-5ef6-822b-2a03f66fe4bb",
+      "player": "Amon-Ra St. Brown",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "84381acb-5bcb-5473-8dd7-f35c19d8734a",
+      "player": "DeVonta Smith",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "89124007-1d8f-5290-be7a-4f3401d00989",
+      "player": "Jack Campbell",
+      "otcId": 10842,
+      "sourceUrl": "https://overthecap.com/player/jack-campbell/10842/",
+      "retrievedAt": "2026-10-27T15:30:56.025050+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "ea631aa473a7871a9c3219bacb4516a08d72f84411b6bb2b6932b760cf285880",
+      "rawFile": "10842.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "8a005595-e248-5d3f-814a-b4f19d8c48f3",
+      "player": "Nolan Smith",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "8ed7e729-1928-5bef-8001-2e409eb03b7c",
+      "player": "Christian Gonzalez",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "8f5b15dd-daf4-57ed-9506-103863287d3c",
+      "player": "Lane Johnson",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "93e8cafe-42b0-5933-87aa-568748abe1b8",
+      "player": "Cade Mays",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "95e32156-22d3-5c05-98d9-06ca296f9659",
+      "player": "Braden Mann",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "998b356f-1dd7-5536-808e-760a97ab6850",
+      "player": "Jalen Carter",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "9f0b7601-cd9f-5b9c-bb9a-287adb7a2420",
+      "player": "Connor McGovern",
+      "otcId": 7881,
+      "sourceUrl": "https://overthecap.com/player/connor-mcgovern/7881/",
+      "retrievedAt": "2026-10-27T15:26:30.988921+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "b80ed7a4db1b078915c2434e7f98bf59f85af0a2171d04e862c86994cf85ff1c",
+      "rawFile": "7881.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "9f9bc6f4-8d12-5def-80f0-da0cf595c66f",
+      "player": "Rashan Gary",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "a21e1b71-87ea-55e7-8b8b-cc01d3580b3a",
+      "player": "Brian Thomas Jr.",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "ad72a1ba-bdb5-55ab-9f29-a33b74cccd00",
+      "player": "Gervon Dexter Sr.",
+      "otcId": 10877,
+      "sourceUrl": "https://overthecap.com/player/gervon-dexter/10877/",
+      "retrievedAt": "2026-10-27T15:25:28.056292+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "e69f6449b56e0086b3a04cb00866ccb116b8f76097362d9ac1a228a249dd3dc8",
+      "rawFile": "10877.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "adc1d674-a169-5910-8394-f170e0c337a8",
+      "player": "A.J. Brown",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "afe10024-91cc-526f-98ea-80c68a3d4758",
+      "player": "Zion Johnson",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "b0f3607a-9f23-5e68-af50-34a8e3d46ed7",
+      "player": "Malcolm Roach",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "b3d4bbd1-4bcd-5b89-8e9f-13ef372bcaa2",
+      "player": "Tyler Smith",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "c215aa2c-d534-56eb-9713-cfd7343abedb",
+      "player": "Luke Wattenberg",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "ccf8c165-3086-5514-8fe0-3ad2a488a684",
+      "player": "Drake London",
+      "otcId": 10053,
+      "sourceUrl": "https://overthecap.com/player/drake-london/10053/",
+      "retrievedAt": "2026-10-27T15:25:12.317095+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "3a28fcf62ae66d9b0534c93bd754dcb0a7d4ece1d7caadfaa7fe803b63c4d69b",
+      "rawFile": "10053.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "d1084497-f903-520d-b47c-299951e902c5",
+      "player": "Trevor Lawrence",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "d3bac4a3-67a7-5e9c-88a4-528ae9cb531a",
+      "player": "Laremy Tunsil",
+      "otcId": 4726,
+      "sourceUrl": "https://overthecap.com/player/laremy-tunsil/4726/",
+      "retrievedAt": "2026-10-27T15:35:27.887470+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "3156ea02afc0da9b468b7fd7952fbd5d229d68ebe3d86ae445050590460409e6",
+      "rawFile": "4726.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "d604860f-30c8-519d-be20-60b59375cbce",
+      "player": "Sauce Gardner",
+      "otcId": 10049,
+      "sourceUrl": "https://overthecap.com/player/ahmad-gardner/10049/",
+      "retrievedAt": "2026-10-27T15:31:20.777348+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "a5ec170a802e60a4efc525647641ccc360ab7fc2d15740aaa52444f3851ac88e",
+      "rawFile": "10049.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "d944a2fe-1af8-5a17-a46b-a1d438f818cd",
+      "player": "Travon Walker",
+      "otcId": 10046,
+      "sourceUrl": "https://overthecap.com/player/travon-walker/10046/",
+      "retrievedAt": "2026-10-27T15:31:33.443124+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "259d659e21bd2dbfead6f2dfb44e0ad394042effa7dfea129dc2bba43c4b1b3e",
+      "rawFile": "10046.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "daa0d17c-86a6-5750-a060-5b8d49ad7aec",
+      "player": "Jaxon Smith-Njigba",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "dd95e841-fcb3-53a0-a767-f241e6983a86",
+      "player": "Quincy Williams",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "e0137083-db90-59bf-9d85-8458bb633e3b",
+      "player": "Bijan Robinson",
+      "otcId": 10832,
+      "sourceUrl": "https://overthecap.com/player/bijan-robinson/10832/",
+      "retrievedAt": "2026-10-27T15:25:12.317095+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "f2f4833cc07dd2bc900743d707d9108150f1e057f4e52073e98086063cba6925",
+      "rawFile": "10832.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "e1ab9500-91b1-55e2-8fbc-7716c59794de",
+      "player": "Cam Jurgens",
+      "otcId": 10096,
+      "sourceUrl": "https://overthecap.com/player/cam-jurgens/10096/",
+      "retrievedAt": "2026-10-27T15:25:43.785728+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "ddd247bea7c3701f26881f625234010e704c095a04e42be3823bd6b570949a1d",
+      "rawFile": "10096.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "e32433c2-326b-54ac-9927-8f0506d406f5",
+      "player": "Alex Wright",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "e51a8e79-5014-540b-9b0e-c352e47d09bf",
+      "player": "Quinnen Williams",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "e574c201-cd53-5552-9356-d90c9fd59754",
+      "player": "Trey Hendrickson",
+      "otcId": 5689,
+      "sourceUrl": "https://overthecap.com/player/trey-hendrickson/5689/",
+      "retrievedAt": "2026-10-27T15:25:59.506714+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "e6456b3426b1ee78077d772f310e3d421cf11e132c8984218bd6b2c1a9746f80",
+      "rawFile": "5689.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "ec2480c2-bb8c-51c4-b238-729babf51957",
+      "player": "Jahmyr Gibbs",
+      "otcId": 10836,
+      "sourceUrl": "https://overthecap.com/player/jahmyr-gibbs/10836/",
+      "retrievedAt": "2026-10-27T15:30:56.024050+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "888012e359042899f17e2a131eb790811fa6210cfec92b2ba1acbb2681fe23b9",
+      "rawFile": "10836.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "ec2de202-990e-5b3c-b5d1-7c605d19de21",
+      "player": "Trent Williams",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "edbd8af7-d749-5323-b8bc-a7260ca6af0c",
+      "player": "Jordan Love",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "f0cd480d-69ad-5f2d-89d1-6f533c84c361",
+      "player": "Terence Steele",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "f258336e-3926-585d-a3a5-e8aaee36af06",
+      "player": "George Kittle",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "f337d83d-21a0-54bd-af09-88fe1efc0275",
+      "player": "Darnell Wright",
+      "otcId": 10834,
+      "sourceUrl": "https://overthecap.com/player/darnell-wright/10834/",
+      "retrievedAt": "2026-10-27T15:26:46.698570+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "7975944d6fb93e22aa3903c407b0f13170881904d582879fc14d0fec0bc527e2",
+      "rawFile": "10834.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "f42b1b4f-6cf8-5e65-bdae-5c97cd2e4c4c",
+      "player": "Drake Maye",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "f443eb3f-1871-5057-a678-ca3b416009bf",
+      "player": "Josh Metellus",
+      "error": "<urlopen error timed out>"
+    },
+    {
+      "playerId": "f4ea3814-e8ee-51f7-ba11-2637504e2d6b",
+      "player": "Wil Lutz",
+      "otcId": 5244,
+      "sourceUrl": "https://overthecap.com/player/wil-lutz/5244/",
+      "retrievedAt": "2026-10-27T15:30:31.305624+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "8731c6015dd0b25192db7f446aee48f51867ef256929256b58c43c535812e13c",
+      "rawFile": "5244.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "f7b65f94-3775-5ac6-ad2d-1946e2e39746",
+      "player": "Tee Higgins",
+      "otcId": 8773,
+      "sourceUrl": "https://overthecap.com/player/tee-higgins/8773/",
+      "retrievedAt": "2026-10-27T15:28:18.512563+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "255bb101ec3573463f4c64d411b52311403418e300cf31804344a1dd65b6091b",
+      "rawFile": "8773.html",
+      "reviewStatus": "unreviewed; not financial instructions"
+    }
+  ]
+}

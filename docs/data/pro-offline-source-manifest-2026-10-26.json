@@ -1,0 +1,390 @@
+{
+  "currentSourceContracts": 2540,
+  "duplicateCurrentIdentities": [
+    {
+      "otcId": 5812,
+      "sourceRows": [
+        {
+          "player": "David Moore",
+          "reportedValue": 1300000,
+          "signedYear": 2026,
+          "sourceTeam": "Panthers"
+        },
+        {
+          "player": "David Moore",
+          "reportedValue": 460672,
+          "signedYear": 2026,
+          "sourceTeam": "Panthers"
+        }
+      ]
+    },
+    {
+      "otcId": 9565,
+      "sourceRows": [
+        {
+          "player": "Ifeatu Melifonwu",
+          "reportedValue": 1215000,
+          "signedYear": 2026,
+          "sourceTeam": "Buccaneers"
+        },
+        {
+          "player": "Ifeatu Melifonwu",
+          "reportedValue": 545250,
+          "signedYear": 2026,
+          "sourceTeam": "Buccaneers"
+        }
+      ]
+    },
+    {
+      "otcId": 9824,
+      "sourceRows": [
+        {
+          "player": "Amen Ogbongbemiga",
+          "reportedValue": 1215000,
+          "signedYear": 2026,
+          "sourceTeam": "Lions"
+        },
+        {
+          "player": "Amen Ogbongbemiga",
+          "reportedValue": 379450,
+          "signedYear": 2026,
+          "sourceTeam": "Lions"
+        }
+      ]
+    },
+    {
+      "otcId": 10190,
+      "sourceRows": [
+        {
+          "player": "Darian Kinnard",
+          "reportedValue": 411300,
+          "signedYear": 2026,
+          "sourceTeam": "Raiders"
+        },
+        {
+          "player": "Darian Kinnard",
+          "reportedValue": 330300,
+          "signedYear": 2026,
+          "sourceTeam": "Giants"
+        }
+      ]
+    },
+    {
+      "otcId": 10490,
+      "sourceRows": [
+        {
+          "player": "Mike Brown",
+          "reportedValue": 1215000,
+          "signedYear": 2026,
+          "sourceTeam": "Patriots"
+        },
+        {
+          "player": "Mike Brown",
+          "reportedValue": 379450,
+          "signedYear": 2026,
+          "sourceTeam": "Patriots"
+        }
+      ]
+    },
+    {
+      "otcId": 10900,
+      "sourceRows": [
+        {
+          "player": "Marte Mapu",
+          "reportedValue": 330300,
+          "signedYear": 2026,
+          "sourceTeam": "Steelers"
+        },
+        {
+          "player": "Marte Mapu",
+          "reportedValue": 330300,
+          "signedYear": 2026,
+          "sourceTeam": "Steelers"
+        }
+      ]
+    },
+    {
+      "otcId": 11022,
+      "sourceRows": [
+        {
+          "player": "Jerrick Reed",
+          "reportedValue": 357211,
+          "signedYear": 2026,
+          "sourceTeam": "Titans"
+        },
+        {
+          "player": "Jerrick Reed",
+          "reportedValue": 330300,
+          "signedYear": 2026,
+          "sourceTeam": "Cardinals"
+        }
+      ]
+    },
+    {
+      "otcId": 13798,
+      "sourceRows": [
+        {
+          "player": "Dean Connors",
+          "reportedValue": 885000,
+          "signedYear": 2026,
+          "sourceTeam": "Rams"
+        },
+        {
+          "player": "Dean Connors",
+          "reportedValue": 282917,
+          "signedYear": 2026,
+          "sourceTeam": "Rams"
+        }
+      ]
+    }
+  ],
+  "formatVersion": 1,
+  "normalizedFile": "current-contracts.json.gz",
+  "normalizedSha256": "0a0e6759f1a08f6510b702b6a354000b0dbfebd92395c14b36559cbc3a8d8755",
+  "observedOn": "2026-10-26",
+  "rawContracts": {
+    "bytes": 11215113,
+    "file": "historical_contracts.parquet",
+    "sha256": "3f6f8906a20d48c688f5727e76856997bc01ad2d9e1ac0ed83b41559f4a12a9f"
+  },
+  "rawRows": 53507,
+  "scope": "Offline developer source bundle. Raw historical rows and current source status are retained separately; no game ownership, contract, debt or opening room is changed. Annual guaranteed_salary is a reported cash measure, not automatically guaranteed base. Missing vesting/payment conditions remain unresolved. No real-source default promotion.",
+  "sourceTimestamp": "2026-10-26 10:36:37 EDT",
+  "strictIdentitySummary": {
+    "current_ambiguous": 0,
+    "current_rows": 2539,
+    "current_team_conflicts": 10,
+    "current_unresolved": 22,
+    "current_verified": 2507,
+    "dead_rows": 703,
+    "dead_verified": 476
+  },
+  "teamCount": 32,
+  "teams": [
+    {
+      "file": "teams/ARI.html",
+      "observedOn": "2026-10-26",
+      "sha256": "e827a603d1e5b3ced8437084f46ed7a6142cc4d3c76eff21090fd478a55d9b37",
+      "team": "ARI",
+      "url": "https://overthecap.com/salary-cap/arizona-cardinals"
+    },
+    {
+      "file": "teams/ATL.html",
+      "observedOn": "2026-10-26",
+      "sha256": "680f9a72caa812ced6aa95e226130a796198186403aaa960f2fc120511df2e28",
+      "team": "ATL",
+      "url": "https://overthecap.com/salary-cap/atlanta-falcons"
+    },
+    {
+      "file": "teams/BAL.html",
+      "observedOn": "2026-10-26",
+      "sha256": "32b9490a97abf7791cc22cc89397442723791c800d57e3acc0436dfd4d08356f",
+      "team": "BAL",
+      "url": "https://overthecap.com/salary-cap/baltimore-ravens"
+    },
+    {
+      "file": "teams/BUF.html",
+      "observedOn": "2026-10-26",
+      "sha256": "3d368c8569d57b3429bc10a055bdcadb4923a3e221b48dbf2c0d0f015fdf96e0",
+      "team": "BUF",
+      "url": "https://overthecap.com/salary-cap/buffalo-bills"
+    },
+    {
+      "file": "teams/CAR.html",
+      "observedOn": "2026-10-26",
+      "sha256": "2c1afac3e1c581fb9a8585f7f845be6573e412dcf986c6a5a0ea43a6dbdf4484",
+      "team": "CAR",
+      "url": "https://overthecap.com/salary-cap/carolina-panthers"
+    },
+    {
+      "file": "teams/CHI.html",
+      "observedOn": "2026-10-26",
+      "sha256": "2ee2e1075730aee5ae029d31d527cba135736e85f62ae8dce77ba788059402a9",
+      "team": "CHI",
+      "url": "https://overthecap.com/salary-cap/chicago-bears"
+    },
+    {
+      "file": "teams/CIN.html",
+      "observedOn": "2026-10-26",
+      "sha256": "4295964d1e9de610b60fe16b2c00495b0f599f2631a9b45e08b115b1e43e0bf7",
+      "team": "CIN",
+      "url": "https://overthecap.com/salary-cap/cincinnati-bengals"
+    },
+    {
+      "file": "teams/CLE.html",
+      "observedOn": "2026-10-26",
+      "sha256": "8d041d293d0b52a93b6b15d8fd59fdf9e7d7d14bb65e2c0ab4983c70dd9d43d4",
+      "team": "CLE",
+      "url": "https://overthecap.com/salary-cap/cleveland-browns"
+    },
+    {
+      "file": "teams/DAL.html",
+      "observedOn": "2026-10-26",
+      "sha256": "536b5719c4260f4ba9ff3529b59cb01f4b97427146506bf2c1f266bea59a8243",
+      "team": "DAL",
+      "url": "https://overthecap.com/salary-cap/dallas-cowboys"
+    },
+    {
+      "file": "teams/DEN.html",
+      "observedOn": "2026-10-26",
+      "sha256": "4d1ff3075c66b84a18812b605f3fb00dca772afd39454f6744c1f0469d792425",
+      "team": "DEN",
+      "url": "https://overthecap.com/salary-cap/denver-broncos"
+    },
+    {
+      "file": "teams/DET.html",
+      "observedOn": "2026-10-26",
+      "sha256": "054202410414198666aa3bd80895d338a457487521cc81f1a2a15719aedf15f9",
+      "team": "DET",
+      "url": "https://overthecap.com/salary-cap/detroit-lions"
+    },
+    {
+      "file": "teams/GB.html",
+      "observedOn": "2026-10-26",
+      "sha256": "9d4ac77eac723db6a0d52ef77f5d292754d1aa0c08fdc484358ae66236824e40",
+      "team": "GB",
+      "url": "https://overthecap.com/salary-cap/green-bay-packers"
+    },
+    {
+      "file": "teams/HOU.html",
+      "observedOn": "2026-10-26",
+      "sha256": "183ac546d07a1045cbd9730515a59cdb0a599f45f2caaf8b93d28a609e123d69",
+      "team": "HOU",
+      "url": "https://overthecap.com/salary-cap/houston-texans"
+    },
+    {
+      "file": "teams/IND.html",
+      "observedOn": "2026-10-26",
+      "sha256": "a99876288b4c7f0f37efd88efbf46d58bc805847ea482cc59c0fec39cf21a7eb",
+      "team": "IND",
+      "url": "https://overthecap.com/salary-cap/indianapolis-colts"
+    },
+    {
+      "file": "teams/JAX.html",
+      "observedOn": "2026-10-26",
+      "sha256": "fb6147d48d6c6c7ef8e967769bf789f064e955ddfb0cd8cf897a744fcb0fa354",
+      "team": "JAX",
+      "url": "https://overthecap.com/salary-cap/jacksonville-jaguars"
+    },
+    {
+      "file": "teams/KC.html",
+      "observedOn": "2026-10-26",
+      "sha256": "cf63287372edc42e13e0b26eb5b3a36ef809f766a504843012cb42fa7e77bc06",
+      "team": "KC",
+      "url": "https://overthecap.com/salary-cap/kansas-city-chiefs"
+    },
+    {
+      "file": "teams/LAC.html",
+      "observedOn": "2026-10-26",
+      "sha256": "8f8b095303f52bb2790f282fe82e6305e04114d87541eb3011997cfc9a7cfae7",
+      "team": "LAC",
+      "url": "https://overthecap.com/salary-cap/los-angeles-chargers"
+    },
+    {
+      "file": "teams/LAR.html",
+      "observedOn": "2026-10-26",
+      "sha256": "adbe877922234a92005e30d585f2bbc3ff50b471c40019de72a11f60e26ac6d9",
+      "team": "LAR",
+      "url": "https://overthecap.com/salary-cap/los-angeles-rams"
+    },
+    {
+      "file": "teams/LV.html",
+      "observedOn": "2026-10-26",
+      "sha256": "29abe9f3e67e5b3713859973dcdb125b10bf077543770545aa95358071fd506c",
+      "team": "LV",
+      "url": "https://overthecap.com/salary-cap/las-vegas-raiders"
+    },
+    {
+      "file": "teams/MIA.html",
+      "observedOn": "2026-10-26",
+      "sha256": "93f0d459f434fc55b1f3546d2ae577d2eeb94ec697caa1affff0f85a71281791",
+      "team": "MIA",
+      "url": "https://overthecap.com/salary-cap/miami-dolphins"
+    },
+    {
+      "file": "teams/MIN.html",
+      "observedOn": "2026-10-26",
+      "sha256": "bb184528c99c069d6d7f0b038183a688dd2a48bfffc7bbe9ca53f0219af3f6e5",
+      "team": "MIN",
+      "url": "https://overthecap.com/salary-cap/minnesota-vikings"
+    },
+    {
+      "file": "teams/NE.html",
+      "observedOn": "2026-10-26",
+      "sha256": "b9f668c94098a4ae8579c59fe229819ab93df01bf222026a11838109f5fd9a9c",
+      "team": "NE",
+      "url": "https://overthecap.com/salary-cap/new-england-patriots"
+    },
+    {
+      "file": "teams/NO.html",
+      "observedOn": "2026-10-26",
+      "sha256": "0f58c8ffd49ad5e4b8c7493288a75100021e1e861dee5e457d794771a72d65a3",
+      "team": "NO",
+      "url": "https://overthecap.com/salary-cap/new-orleans-saints"
+    },
+    {
+      "file": "teams/NYG.html",
+      "observedOn": "2026-10-26",
+      "sha256": "d6b1a2f3a20b10de3913b5d11bd18a0702799602708eaa46d377d953dab82663",
+      "team": "NYG",
+      "url": "https://overthecap.com/salary-cap/new-york-giants"
+    },
+    {
+      "file": "teams/NYJ.html",
+      "observedOn": "2026-10-26",
+      "sha256": "c8c3493527d9d44f80084f36ebaad53d1c9222c4d14f147db417b8a9186fea01",
+      "team": "NYJ",
+      "url": "https://overthecap.com/salary-cap/new-york-jets"
+    },
+    {
+      "file": "teams/PHI.html",
+      "observedOn": "2026-10-26",
+      "sha256": "63724e73526c2d9e82791c30ccaa3cb09543c3cd325a565826fdd132e95410f3",
+      "team": "PHI",
+      "url": "https://overthecap.com/salary-cap/philadelphia-eagles"
+    },
+    {
+      "file": "teams/PIT.html",
+      "observedOn": "2026-10-26",
+      "sha256": "8789a1f8e2ab3b605498be36d5dc4be10a5bb7da45d60951ff1539c42f4a6b46",
+      "team": "PIT",
+      "url": "https://overthecap.com/salary-cap/pittsburgh-steelers"
+    },
+    {
+      "file": "teams/SEA.html",
+      "observedOn": "2026-10-26",
+      "sha256": "2d00faf4775c6b096771da14d151b0ae4ddecaec5cbfefa5e753fb11cc60b593",
+      "team": "SEA",
+      "url": "https://overthecap.com/salary-cap/seattle-seahawks"
+    },
+    {
+      "file": "teams/SF.html",
+      "observedOn": "2026-10-26",
+      "sha256": "5fefd016c27d381e749961da039532b52ca163a86f9068324db470e4ea495e06",
+      "team": "SF",
+      "url": "https://overthecap.com/salary-cap/san-francisco-49ers"
+    },
+    {
+      "file": "teams/TB.html",
+      "observedOn": "2026-10-26",
+      "sha256": "2fe9f5ad0e81c63fc731af5bdf4297d847341f625c454b19ca8a3ce8f157cffc",
+      "team": "TB",
+      "url": "https://overthecap.com/salary-cap/tampa-bay-buccaneers"
+    },
+    {
+      "file": "teams/TEN.html",
+      "observedOn": "2026-10-26",
+      "sha256": "6e962b90bc74d47d0ea38d93159f7ef37d82bd3b8a39f51bbc7fb8c4b33a50d8",
+      "team": "TEN",
+      "url": "https://overthecap.com/salary-cap/tennessee-titans"
+    },
+    {
+      "file": "teams/WSH.html",
+      "observedOn": "2026-10-26",
+      "sha256": "9b17111a0b9198557cf7b9a1afb541ed3b5a8d627af9a2f25eba6702e3f7ea63",
+      "team": "WSH",
+      "url": "https://overthecap.com/salary-cap/washington-commanders"
+    }
+  ],
+  "uniqueCurrentOtcIds": 2532
+}
