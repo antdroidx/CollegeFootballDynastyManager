@@ -1,6 +1,6 @@
 # Pro completion checklist
 
-Current verified Pro application source: `4f6bb2c`, APK Build 44, full device scope; College/shared source: `2acfcc1`, APK 390 on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current verified Pro application source: `c9cddbf`, APK Build 45 (finance/management scope), with full GameCast evidence at Pro 44; College/shared source: `2acfcc1`, APK 390 on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -83,7 +83,8 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 
 ## Outstanding acceptance
 
-- [ ] CPU autonomous trade offers/counteroffers and shared-pick GM review.
+- [ ] CPU autonomous trade offers/counteroffers.
+- [x] Coordinator shared-pick value review, verified in Pro 45; rejects unjustified future draft-capital spending atomically.
 - [x] Supplied 2026 base/rollover/adjustment allowances: 32 teams, exact reconciliation, separate budget components and new-save initialization.
 - [x] Measured/reserved annual rollover and next-year contract changes; 108 local Pro tests including three imported-cap seasons.
 - [ ] Complete opening source commitments/departed-player dead money and historical cash reconciliation. **Source accounting remains experimental.**
@@ -146,3 +147,10 @@ ProManagement now reviews actual pick/player ownership changes after a coordinat
 - Later Pro-only coordinator pick-value guard `c9cddbf` has 26 targeted tests passed but is not in APK 44. Its scoped financial/management build follows; no redundant College/GameCast rerun required.
 
 Coordinator draft-capital review is packaging/verification run 40440713067 (finance scope), application source c9cddbf. Accepted full GameCast remains Pro 44; accepted College remains 390. Hourly follow-up was updated with these completed batches and current queue; it remains ACTIVE.
+
+
+## Latest accepted Pro — Build 45, coordinator draft-capital guard
+
+Application source `c9cddbf` (later source commits only documentation). [Exact APK 45](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40440713067/artifacts/12705638936), [all-green run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40440713067), [financial device evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40440713067/artifacts/12706705306). All 136 scoped Pro cases, 13 helper cases, packaging and exact-APK financial device acceptance passed. Twenty-six relevant GM/trade/career cases also passed locally. This Pro-only guard changes no College/GameCast behavior: reuse full Pro 44 and College 390 evidence above, plus the 136-case annual aging run and post-prospect-fix targeted checks. No redundant College rebuild or full live walkthrough for this small management change.
+
+Coordinator future pick/value review is implemented and verified. Autonomous CPU proposals/counteroffers remain unfinished. First-round fifth-year choices, full sourced-contract/departed-debt/historical-cash reconciliation and default promotion remain outstanding. The indexed NFLPA cross-check supports the supplied rounded allowances but does not reconcile official opening balances. Retain experimental source accounting. Continue the roadmap, with Java archive/repository rename last. Main remains unchanged; no merge/release cleanup performed.
