@@ -74,3 +74,7 @@ After current APK acceptance continue this reconciliation plus remaining authori
 ## Working practices
 
 Use `.github/workflows/pro-android.yml` finance/live/full scopes. Harness-only retries may reuse the exact prior artifact after source/build-input equality check. Report original APK plus verifying run. Do not repeat unchanged College/GameCast/long simulations for documentation/harness/display-only changes. Avoid concurrent local builds/tests writing the same DLLs. Update this handoff and checklist after every implementation/verification batch.
+
+## Parallel read-only reconciliation audit
+
+`build/audit-otc-opening-obligations.py` observed all 32 OTC pages; offline replay passed with zero errors and exact reported section-to-liability sums. Aggregate URLs/hashes/totals are in `docs/data/otc-obligations-observation-2026-10-26.csv`; raw/full audit remains `.artifacts/otc-2026-10-26`. 157 unique same-team roster/dead-name candidates require identity/status review; both debts and new deals can legitimately coexist. Do not remove players or deduplicate debt by name. Dead totals exceed displayed named rows for every club; preserve explicit unallocated source residuals without inventing individual liabilities. No app/save data changes were made by this audit. Detailed next-source-pack constraints are in pro-contract-reconciliation.md.
