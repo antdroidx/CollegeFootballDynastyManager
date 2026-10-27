@@ -1,6 +1,6 @@
 # Pro completion checklist
 
-Current verified Pro application source: `26cb625`, APK Build 46 (finance/rookie-option scope), with full GameCast evidence at Pro 44; College/shared source: `2acfcc1`, APK 390 on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current verified Pro application source: `61022d9`, APK Build 50 (finance/budget/rookie-option scope), with full GameCast evidence at Pro 44; College/shared source: `2acfcc1`, APK 390 on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -189,3 +189,8 @@ The browser-rendered NFLPA public report observed October 26 shows two spending/
 New franchises use cap-rules version 3 (same seasonal counting). Version-2 saves retain their existing budgets unless the user explicitly selects Update 2026 cap budgets. Eligibility requires all original 32 allocations unchanged, base unchanged, 2026 not closed; custom, legacy and later-year budgets are excluded. Correction changes allowances only and preserves all contracts, transactions, debt and elections. Reported room is never imported as opening game cash/room. Source roster/guarantee/departed-debt reconciliation remains unfinished and real-source default remains off.
 
 Current verification: 32-pair source validator and 13 UI helpers passed. One stale rollover expected value was corrected; all 157 Pro cases passed in 4m20s, including twenty generated seasons, five sourced seasons and imported-cap lifecycle. No corrected-budget APK is accepted yet. This batch also makes option history compact and inactive staff decisions clearly unavailable. Main/College/shared engine unchanged.
+
+
+## Accepted corrected-budget batch — Pro 50
+
+Application/data source `61022d9` (core change `61ec66e`). Exact [APK 50](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40449248836/artifacts/12710150676). Build run 40449248836 passed 155 scoped Pro cases, source-data verification, helpers and packaging. Harness-only correction `9f4938c` waits for completed save-library layout. [Verification run 40451229268](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40451229268) passed application-input equality guard, 14 helpers and exact-APK financial device flow: new budgets/all 32 equations, signed adjustments/source cash, themes, reinstall/save survival, explicit old-budget correction with contracts retained, rookie-option exercise/decline and persisted guarantees. [Evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40451229268/artifacts/12709764334), downloaded `.artifacts/pro51-ui`. Corrected old-save budget and compact/disabled option-history screens were reviewed. All 157 full Pro cases passed locally in 4m20s, including annual simulations. No College/shared application changes; reuse full Pro 44 and College 390 evidence. Source obligations/default promotion and remaining roadmap remain unfinished.
