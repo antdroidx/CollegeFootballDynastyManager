@@ -8,7 +8,7 @@ Implement after the in-flight trade APK is accepted; keep application inputs sta
 - ProCpu.Manage excludes the user team unless includeUser or unemployment. Consequently a coordinator's uncontrolled unit does not receive the ordinary automatic free-agent/waiver/depth handling that other CPU units do.
 - Retention advancement skips the user team when AutoNegotiateExpiring is false. ProRetention.Negotiate also restricts user-team players to controlled positions. This leaves the opposite unit unmanaged, despite the coordinator lacking authority to renew those players.
 - A fired user's former team is still UserTeam; retention similarly skips it when delegation is false, while CPU in-season management correctly includes unemployed franchises.
-- Retention's LastChangedYear guard compares the ending season instead of ProFinance.ContractChangeYear; review one-year deals/new league-year availability against the once-per-season negotiation lock.
+- Review retention change-year semantics with tests before altering policy: the ending-season lock and next-year bonus booking are different concepts. New free-agent signings currently leave LastChangedYear at zero; do not assume one-year signings are automatically blocked. Preserve the established once-per-season lock unless a concrete failing case demonstrates a defect.
 - Draft recommendations currently stop at user-owned picks; audit GM selection for the other unit rather than forcing a coordinator to recommend only their own unit at every pick. Shared picks remain GM assets and require existing value/budget review.
 
 ## Incremental acceptance
