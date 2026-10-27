@@ -71,7 +71,7 @@ public sealed partial class FranchisePage
                 var pending = state.Bids.FirstOrDefault(b => b.Team == state.UserTeam && b.PlayerId == p.Football.PlayerId);
                 return new View[] { Text(p.Football.Position.ToString()), Link(p.Football.FullName, () => Player(player)), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString()), Text(Money(ProEconomy.MarketSalary(state!,p))), Text(waiver ? "Waivers" : pending is null ? "Available" : "Bid pending"), Action(waiver ? "Claim" : pending is null ? "Make offer" : "Revise bid", async () =>
                 {
-                    if (waiver) { var entry=state!.Waivers.Single(w=>w.PlayerId==player.Football.PlayerId); var terms=entry.OriginalContracts is {Count:>0}?"Remaining salary this season: "+Dollars(ProWaivers.CurrentSalary(entry,state.Year))+". Contract through "+entry.OriginalContracts.Max(ProContractInsights.PlayingEnd)+". Existing salary terms and guarantees transfer; the former club retains signing-bonus charges.":"This legacy claim requires a new contract."; if(await GameDialogs.AlertAsync(this,"Claim "+player.Football.FullName+"?",terms,"Claim","Cancel"))await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s,s.UserTeam,player.Football.PlayerId)); }
+                    if (waiver) await ClaimWaiver(player);
                     else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer",player.Football.PlayerId,o.Salary + o.Bonus/o.Years,s => ProEconomy.Offer(s,s.UserTeam,player.Football.PlayerId,o.Years,o.Salary,o.Bonus)); }
                     await FreeAgents();
                 }) };
@@ -81,6 +81,13 @@ public sealed partial class FranchisePage
         search.TextChanged += (_, _) => { freeAgentSearch = search.Text ?? ""; Draw(); };
         position.SelectedIndexChanged += (_, _) => { freeAgentPosition = (string?)position.SelectedItem ?? "All positions"; Draw(); };
         Draw(); return Task.CompletedTask;
+    }
+    async Task ClaimWaiver(ProPlayer player)
+    {
+        var entry=state!.Waivers.Single(w=>w.PlayerId==player.Football.PlayerId);
+        var terms=entry.OriginalContracts is {Count:>0}?"Remaining salary this season: "+Dollars(ProWaivers.CurrentSalary(entry,state.Year))+". Contract through "+entry.OriginalContracts.Max(ProContractInsights.PlayingEnd)+". Existing salary terms and guarantees transfer; the former club retains signing-bonus charges.":"This legacy claim requires a new contract.";
+        if(await GameDialogs.AlertAsync(this,"Claim "+player.Football.FullName+"?",terms,"Claim","Cancel"))
+            await Manage("Waiver claim",player.Football.PlayerId,0,s=>ProRoster.Claim(s,s.UserTeam,player.Football.PlayerId));
     }
     Task TradeHistory()
     {

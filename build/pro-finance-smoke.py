@@ -164,6 +164,9 @@ try:
     coordinator_spec=importlib.util.spec_from_file_location("coordinator_smoke",Path(__file__).with_name("pro-coordinator-smoke.py"))
     coordinator_module=importlib.util.module_from_spec(coordinator_spec);coordinator_spec.loader.exec_module(coordinator_module);coordinator_module.run(s)
 
+    termination_spec=importlib.util.spec_from_file_location("termination_smoke",Path(__file__).with_name("pro-termination-smoke.py"))
+    termination_module=importlib.util.module_from_spec(termination_spec);termination_spec.loader.exec_module(termination_module);termination_module.run(s)
+
     print("PASS: new 2026 adjusted budget, 32 persisted allocations, signed adjustments, exact reconciliation, reinstall/save and financial UI themes, sourced cash, compact contract and expandable void accounting; synthetic rookie-option exercise/decline and saved guarantees; explicit old-budget correction with contracts retained; isolated CPU trade offer counter/accept/decline and persisted ownership.")
 
 finally:

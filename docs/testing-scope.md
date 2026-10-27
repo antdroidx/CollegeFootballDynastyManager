@@ -97,3 +97,6 @@ Next: source-dated paid/future bonus events, vesting and departed-debt reconcili
 ## Reserve activation scope
 
 Use validation_scope=reserve for Pro-only reserve activation: fast Pro regressions, packaging and build/pro-reserve-smoke.py. Core-generated32-team synthetic fixture verifies a disabled injured action, available activation, unchanged contract terms, saved active status and reopening the save. Reuse accepted62 finance/annual/role evidence and unchanged College390/GameCast44. The workflow stages the compressed fixture outside the installed APK. This does not establish complete NFL IR/PUP return calendar or medical clearance semantics.
+
+
+Finance scope now also verifies original-contract waiver claim/award and earlyJune1 release preview/held savings using production-core generated32-team fixtures. Core regression fixtures use the real save loader; they are external to the APK. Signed source/transaction changes require the scoped regressions and annual simulations once, then exact-APK device checks. The current full run is in current-work.md; do not duplicate it.

@@ -13,6 +13,16 @@ public sealed class ContractSnapshotTests
         Assert.Equal(37_599_784, ProEconomy.CapHit(c, 2026));
         Assert.True(ProContractData.Load().Count > 1900);
     }
+    [Fact] public void RecoveredRookieAnnualTermsPreservePublishedCashCapAndGuarantees()
+    {
+        var s=ProLeagueService.Create("Arizona Cardinals",sourcedContracts:true);
+        var p=s.Players.Single(p=>p.Football.FullName=="Carson Beck");
+        var c=s.Contracts.Single(c=>c.PlayerId==p.Football.PlayerId);
+        Assert.False(c.Estimated);Assert.Equal(2026,c.SignedYear);Assert.Equal(2029,ProContractInsights.PlayingEnd(c));Assert.False(c.FutureTermsEstimated);
+        Assert.All(c.Years,y=>Assert.True(y.Salary>=y.Guaranteed&&y.Guaranteed>=0));
+        foreach(var contract in ProContractData.Load().Where(c=>c.BonusPayments is not null))
+            foreach(var year in contract.Years)Assert.InRange(ProBonusAccounting.PaidCharge(s,contract,year.Year),0,ProEconomy.BonusCharge(contract,year.Year));
+    }
     [Fact] public void ImportIsOptInAndNeverOverwritesSavedFranchiseAutomatically()
     {
         var s = ProLeagueService.Create("Seattle Seahawks");

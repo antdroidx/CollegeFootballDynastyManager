@@ -51,7 +51,24 @@ def main():
             if hashlib.sha256(path.read_bytes()).hexdigest()!=meta["sha256"]:raise ValueError("Raw page hash mismatch")
             current=table_rows(soup.select_one("table.current-contract"));history=table_rows(soup.select_one("table.salary-cap-history"))
             if not current and not history:raise ValueError("No annual contract rows")
-            result.append({"otcId":int(path.stem),**meta,"current":current,"history":history})
+            facts={}
+            for li in soup.find_all("li"):
+                value=li.get_text(" ",strip=True)
+                if value.startswith("Contract Value:"):
+                    money=re.findall(r"\$[0-9,]+",value)
+                    if money:facts["reportedValue"]=dollars(money[0])
+                    if len(money)>1:facts["reportedApy"]=dollars(money[1])
+                if value.startswith("Fully Guaranteed Money:"):
+                    money=re.search(r"\$[0-9,]+",value)
+                    if money:facts["reportedFullyGuaranteed"]=dollars(money.group())
+            heading=soup.find(lambda t:t.name=="h4" and t.get_text(" ",strip=True)=="Current Contract")
+            if heading is not None:
+                detail=heading.find_next("h5")
+                if detail is not None:
+                    facts["kind"]=detail.get_text(" ",strip=True)
+                    signed=re.search(r"signed (\d{4})",facts["kind"])
+                    if signed:facts["signedYear"]=int(signed.group(1))
+            result.append({"otcId":int(path.stem),**meta,**facts,"current":current,"history":history})
         except Exception as e:failures.append({"file":path.name,"error":str(e)})
     comparisons=[]
     if a.ledger:

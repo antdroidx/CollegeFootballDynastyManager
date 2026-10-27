@@ -65,6 +65,14 @@ public sealed class WaiverContractTests
         foreach(var year in new[]{2026,2027})Assert.Equal(ProFinance.Cash(s,s.UserTeam,year),ProFinance.Cash(next,s.UserTeam,year)+ProFinance.Cash(next,buyer,year));
         Assert.Equal(2_100_000,ProFinance.Cash(next,s.UserTeam,2027));Assert.Equal(8_000_000,ProFinance.Cash(next,buyer,2027));
     }
+    [Fact] public void CurrentVestedSalaryIsLimitedToTheUnpaidAssignedSalary()
+    {
+        var(s,p,buyer,c)=Setup();c=c with{CashVesting=[new(2026,6_000_000,2025)]};s=s with{Contracts=[c]};
+        var cut=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId);
+        var next=ProRoster.ResolveWaivers(ProRoster.Claim(cut,buyer,p.Football.PlayerId) with{TransactionTick=13});
+        var ended=ProEconomy.Release(next,buyer,p.Football.PlayerId,false);
+        Assert.Equal(6_000_000,ProFinance.Cash(ended,s.UserTeam,2026)+ProFinance.Cash(ended,buyer,2026));
+    }
     [Fact] public void FormerTeamCannotClaimItsOwnWaivedContract()
     {
         var(s,p,_,_)=Setup();s=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId);Assert.Throws<InvalidOperationException>(()=>ProRoster.Claim(s,s.UserTeam,p.Football.PlayerId));

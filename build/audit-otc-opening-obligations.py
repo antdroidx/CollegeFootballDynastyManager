@@ -3,7 +3,7 @@ Requires beautifulsoup4. Fetches at most four public pages concurrently and cach
 Usage: python build/audit-otc-opening-obligations.py --observed 2026-10-26 --year 2026
 The observed date is retrieval, not a claim of a published effective date.
 """
-import argparse, concurrent.futures, hashlib, json, re, unicodedata
+import argparse, concurrent.futures, hashlib, json, re, unicodedata, subprocess, shutil
 from pathlib import Path
 from urllib.request import urlopen
 from datetime import date, datetime, timezone
@@ -13,6 +13,7 @@ parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--observed',type=date.fromisoformat,required=True)
 parser.add_argument('--year',type=int,required=True)
 parser.add_argument('--offline',action='store_true')
+parser.add_argument('--transport',choices=['urllib','curl'],default='urllib')
 args=parser.parse_args()
 cache=root/'.artifacts'/('otc-'+str(args.observed));cache.mkdir(parents=True,exist_ok=True)
 league=json.loads((root/'src/ProFootball.Core/league.json').read_text(encoding='utf-8'))['Teams']
@@ -30,7 +31,12 @@ def observe(team):
     path=cache/(abbr+'.html')
     if not path.exists():
         if args.offline:raise ValueError('Missing cached '+abbr)
-        path.write_bytes(urlopen(url,timeout=30).read())
+        if args.transport=="curl":
+            executable=shutil.which("curl.exe") or shutil.which("curl")
+            raw=subprocess.run([executable,"--location","--fail","--silent","--show-error","--max-time","25",url],capture_output=True,timeout=30,check=True).stdout
+        else:raw=urlopen(url,timeout=30).read()
+        if BeautifulSoup(raw,"html.parser").find(id="y"+str(args.year)) is None:raise ValueError("No requested salary-cap table; refuse invalid evidence")
+        path.write_bytes(raw)
     raw=path.read_bytes();year=BeautifulSoup(raw,'html.parser').find(id='y'+str(args.year))
     if year is None:raise ValueError('Missing requested year '+abbr)
     text=year.get_text(' ',strip=True)

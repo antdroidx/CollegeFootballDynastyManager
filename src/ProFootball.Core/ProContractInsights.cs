@@ -1,6 +1,6 @@
 namespace ProFootball.Core;
 public sealed record ContractSeasonView(int Year,long Salary,long Bonus,long Other,long Guaranteed,long CapHit);
-public sealed record ReleaseSeasonView(int Year,long Before,long DeadMoney,long Savings);
+public sealed record ReleaseSeasonView(int Year,long Before,long DeadMoney,long Savings) { public long SeasonCash {get;init;} }
 public sealed record ContractComparable(Guid PlayerId,string Name,string Team,int Overall,long AverageCash,long CurrentCap);
 public static class ProContractInsights
 {
@@ -56,7 +56,8 @@ public static class ProContractInsights
         var last=contracts.SelectMany(c=>c.Years.Select(y=>y.Year)).Concat(charges.Select(d=>d.Year)).DefaultIfEmpty(s.Year).Max();
         return Enumerable.Range(s.Year,Math.Max(1,last-s.Year+1)).Select(year=>{
             var before=contracts.Sum(c=>ProEconomy.CapHit(c,year));var dead=charges.Where(d=>d.Year==year).Sum(d=>d.Amount);
-            return new ReleaseSeasonView(year,before,dead,before-dead);
+            var cash=year==s.Year?contracts.Sum(c=>EarnedCash(s,c)+(ProBonusAccounting.TerminatedCash(s,c)?.GetValueOrDefault(year)??(c.SignedYear==year?c.SigningBonus:0))):charges.Where(d=>d.Year==year).Sum(d=>d.CashAmount);
+            return new ReleaseSeasonView(year,before,dead,before-dead){SeasonCash=cash};
         }).ToArray();
     }
     public static IReadOnlyList<ContractComparable> Comparables(ProFranchise s,ProPlayer player)=>s.Players.Where(p=>!p.Retired&&!p.PracticeSquad&&p.Football.PlayerId!=player.Football.PlayerId&&p.Football.Position==player.Football.Position&&Math.Abs(p.Football.OverallRating-player.Football.OverallRating)<=5)

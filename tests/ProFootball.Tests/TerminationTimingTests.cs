@@ -16,7 +16,7 @@ public sealed class TerminationTimingTests
         var pre=ProEconomy.Release(before,s.UserTeam,c.PlayerId,false);Assert.Equal(71_002_325,pre.DeadCap.Where(d=>d.Year==2026).Sum(d=>d.Amount));
         var post=ProEconomy.Release(s,s.UserTeam,c.PlayerId,false);Assert.Equal(43_002_325,post.DeadCap.Where(d=>d.Year==2026).Sum(d=>d.Amount));Assert.Equal(28_000_000,post.DeadCap.Where(d=>d.Year==2027).Sum(d=>d.Amount));
         Assert.Equal(36_500_000,ProFinance.Cash(post,s.UserTeam,2026));Assert.Equal(32_630_996,ProFinance.Cash(post,s.UserTeam,2027));Assert.Equal(0,ProFinance.Cash(post,s.UserTeam,2029));
-        Assert.All(ProContractInsights.Release(s,c.PlayerId),r=>Assert.Equal(r.DeadMoney,post.DeadCap.Where(d=>d.Year==r.Year).Sum(d=>d.Amount)));
+        Assert.All(ProContractInsights.Release(s,c.PlayerId),r=>{Assert.Equal(r.DeadMoney,post.DeadCap.Where(d=>d.Year==r.Year).Sum(d=>d.Amount));Assert.Equal(ProFinance.Cash(post,s.UserTeam,r.Year),r.SeasonCash);});
     }
     [Fact] public void ReportedVestingCreatesObligationOnlyWhilePlayerRemainsUnderContract()
     {
@@ -51,6 +51,18 @@ public sealed class TerminationTimingTests
         var migrated=ProContractData.MigrateAccounting(s with{Contracts=[changed],DeadCap=[debt]});Assert.Same(changed,Assert.Single(migrated.Contracts));Assert.Same(debt,Assert.Single(migrated.DeadCap));
         var eligible=ProContractData.MigrateAccounting(s with{Contracts=[legacy],DeadCap=[debt]});Assert.NotNull(Assert.Single(eligible.Contracts).BonusPayments);Assert.Same(debt,Assert.Single(eligible.DeadCap));
         Assert.All(c.Years,y=>Assert.Equal(ProEconomy.CapHit(legacy,y.Year),ProEconomy.CapHit(Assert.Single(eligible.Contracts),y.Year)));
+    }
+    [Fact] public void TradeAfterOptionPaymentDoesNotGuaranteeTheBuyersSalaryTwice()
+    {
+        var(s,c)=Jsn();s=s with{Year=2029,Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.Draft};
+        var buyer=s.League.Teams.First(t=>t.Name!=s.UserTeam).Name;
+        var traded=ProTrade.Propose(s,s.UserTeam,buyer,[c.PlayerId],[],[],[]);
+        var acquired=Assert.Single(traded.Contracts,x=>x.Active);
+        Assert.Equal(19_900_000,ProBonusAccounting.NonBonusGuarantee(traded,acquired,acquired.Years.Single(y=>y.Year==2029)));
+        var released=ProEconomy.Release(traded,buyer,c.PlayerId,false);
+        Assert.Equal(31_000_000,ProFinance.Cash(released,s.UserTeam,2029)+ProFinance.Cash(released,buyer,2029));
+        Assert.Equal(11_100_000,ProFinance.Cash(released,s.UserTeam,2029));
+        Assert.Equal(19_900_000,ProFinance.Cash(released,buyer,2029));
     }
     [Fact] public void ConsecutiveDeficitsDoNotReuseTheSameProjectedRollover()
     {

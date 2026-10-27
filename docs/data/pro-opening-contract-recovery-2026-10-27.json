@@ -1,0 +1,4561 @@
+{
+  "scope": "Staged candidates only; no game pack, historical debt or ownership is changed. Exact published cap and annual cash are required. New signing cash is accepted only when the full published deal reconciles exactly with all published annual cash and signing allocations; no guarantee/vesting is inferred from residuals.",
+  "summary": {
+    "source_backed_candidate": 458,
+    "unresolved": 52
+  },
+  "unresolvedReasons": {
+    "No unambiguous published annual cash": 40,
+    "Partial-year cash needs explicit salary-rate treatment": 5,
+    "Current-page/team-snapshot charge differs or missing": 5,
+    "No cached player page": 2
+  },
+  "decisions": [
+    {
+      "team": "ARI",
+      "name": "Jeremiyah Love",
+      "playerId": "9f6324f1-7651-5706-b25c-2c03348e1bb8",
+      "otcId": 13147,
+      "status": "source_backed_candidate",
+      "sourceSha256": "dbd7e01b7139ae2adf7350bab499c9109c4b79037bdcf1b42cdb52e83d87d208",
+      "sourceUrl": "https://overthecap.com/player/jeremiyah-love/13147/"
+    },
+    {
+      "team": "ARI",
+      "name": "Carson Beck",
+      "playerId": "23fcd47e-2b45-56ea-887c-412dda2031b8",
+      "otcId": 13209,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5d7e747e54c9cd418e0be238020cd6b4cca1c0bb7b99861eab9bcd8d6a08d720",
+      "sourceUrl": "https://overthecap.com/player/carson-beck/13209/"
+    },
+    {
+      "team": "ARI",
+      "name": "Reggie Virgil",
+      "playerId": "89137acf-d6bd-549e-bdf2-6e4e98dd9549",
+      "otcId": 13287,
+      "status": "source_backed_candidate",
+      "sourceSha256": "89bcb04dcaff2e1a78e1d67e5a31960a23df5f893cdeecdb607f5516df14f26d",
+      "sourceUrl": "https://overthecap.com/player/reggie-virgil/13287/"
+    },
+    {
+      "team": "ARI",
+      "name": "Karson Sharar",
+      "playerId": "69aeba1f-13f8-5a77-a44a-e9b5efdfb5c4",
+      "otcId": 13327,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b34a9a2865b985fa0ddbac944a4f3ec951da3803898762124298c0311828608b",
+      "sourceUrl": "https://overthecap.com/player/karson-sharar/13327/"
+    },
+    {
+      "team": "ARI",
+      "name": "Jayden Williams",
+      "playerId": "460d82a7-21b9-5acc-a229-56557b4045c7",
+      "otcId": 13361,
+      "status": "source_backed_candidate",
+      "sourceSha256": "901c498ca3f21346a340eaa89e31cde995999ea061f7645290828e648f350972",
+      "sourceUrl": "https://overthecap.com/player/jayden-williams/13361/"
+    },
+    {
+      "team": "ARI",
+      "name": "Albert Reese IV",
+      "playerId": "605e83ee-1470-5053-b627-8bf40f7cfadb",
+      "otcId": 13747,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "ARI",
+      "name": "Cameron Robertson",
+      "playerId": "d7d69de7-a84a-5053-9110-22ed80e0372f",
+      "otcId": 13787,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "ARI",
+      "name": "Damonic Williams",
+      "playerId": "4664a051-a655-5dbc-84eb-c4a2633cf362",
+      "otcId": 13782,
+      "status": "source_backed_candidate",
+      "sourceSha256": "88e373b09d511b8487eaa099ce3cb165f4e6ac53f348cddb270695a0d42a1639",
+      "sourceUrl": "https://overthecap.com/player/damonic-williams/13782/"
+    },
+    {
+      "team": "ARI",
+      "name": "Harrison Wallace III",
+      "playerId": "0e8da17d-cd2f-53ec-b577-cb7be6288032",
+      "otcId": 13781,
+      "status": "source_backed_candidate",
+      "sourceSha256": "bbedce18a62a6d698574315cc97f945b781d2c9602ef4d374bcfa2d90e58a46c",
+      "sourceUrl": "https://overthecap.com/player/harrison-wallace-iii/13781/"
+    },
+    {
+      "team": "ARI",
+      "name": "Shawn Bowman",
+      "playerId": "fdabde8f-56e8-59c1-964a-3353555da572",
+      "otcId": 12186,
+      "status": "source_backed_candidate",
+      "sourceSha256": "72e0a26f7b500100cef06574afa0468c82f3b2ab3ac5161f4e8640591cc3621b",
+      "sourceUrl": "https://overthecap.com/player/shawn-bowman/12186/"
+    },
+    {
+      "team": "ARI",
+      "name": "Bradyn Swinson",
+      "playerId": "a029253c-2d10-558b-93e1-f2fcce0931d2",
+      "otcId": 12506,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5b4e65a3fd393166679ed4441321b7a99d662595748d9731cd72bb314a871431",
+      "sourceUrl": "https://overthecap.com/player/bradyn-swinson/12506/"
+    },
+    {
+      "team": "ARI",
+      "name": "Chase Bisontis",
+      "playerId": "b82214a5-7369-5a3d-a8f8-d9f167722acb",
+      "otcId": 13178,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9f835505eb0f0ccd8d0e7cf05f5af57407ee28d51bc9b4b24297e65fe857a446",
+      "sourceUrl": "https://overthecap.com/player/chase-bisontis/13178/"
+    },
+    {
+      "team": "ARI",
+      "name": "Kaleb Proctor",
+      "playerId": "3c162823-3df8-550c-9c87-9ed105fcb691",
+      "otcId": 13248,
+      "status": "source_backed_candidate",
+      "sourceSha256": "77da6e7618dc41145a77f4e213031f3501f57f179dfb5127036f2c4ef9f56217",
+      "sourceUrl": "https://overthecap.com/player/kaleb-proctor/13248/"
+    },
+    {
+      "team": "ARI",
+      "name": "Jameson Geers",
+      "playerId": "e804e3eb-7ba8-5653-9b5d-448e96748446",
+      "otcId": 13784,
+      "status": "source_backed_candidate",
+      "sourceSha256": "e77700d01b7f0c7ff414b543c2b5ea2a744ea71840f4d0f96cce24f4aff90028",
+      "sourceUrl": "https://overthecap.com/player/jameson-geers/13784/"
+    },
+    {
+      "team": "ATL",
+      "name": "Avieon Terrell",
+      "playerId": "79c14ec0-ae77-5db0-9578-fe212c8bc49b",
+      "otcId": 13192,
+      "status": "source_backed_candidate",
+      "sourceSha256": "71a782e319546023ac11db01a5ace82e679c1b00a2280c22df166c1253bd3855",
+      "sourceUrl": "https://overthecap.com/player/avieon-terrell/13192/"
+    },
+    {
+      "team": "ATL",
+      "name": "Zachariah Branch",
+      "playerId": "9f0c9715-cebc-53a2-a99b-5f4428753d33",
+      "otcId": 13223,
+      "status": "source_backed_candidate",
+      "sourceSha256": "75bd92404eab6dc98d51239ee956d5ba6f73550835c0c2bbd086d00dc0925fd8",
+      "sourceUrl": "https://overthecap.com/player/zachariah-branch/13223/"
+    },
+    {
+      "team": "ATL",
+      "name": "Kendal Daniels",
+      "playerId": "8ff9f791-f9ee-51ba-9dde-068af8bff6a7",
+      "otcId": 13278,
+      "status": "source_backed_candidate",
+      "sourceSha256": "02d88f412071f5ed68c6d63b1dc14c84fd3d5a33550d9a81734e5186a38eef6f",
+      "sourceUrl": "https://overthecap.com/player/kendal-daniels/13278/"
+    },
+    {
+      "team": "ATL",
+      "name": "Harold Perkins Jr.",
+      "playerId": "652bf775-e643-5911-8db1-2e340099780b",
+      "otcId": 13359,
+      "status": "source_backed_candidate",
+      "sourceSha256": "dd19855defce72e4d26270093f6de36862b38ef7dee6187dbf411f9f78cd9a17",
+      "sourceUrl": "https://overthecap.com/player/harold-perkins-jr/13359/"
+    },
+    {
+      "team": "ATL",
+      "name": "Ethan Onianwa",
+      "playerId": "0945d344-4f38-58bd-957a-9117db05d116",
+      "otcId": 13375,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1063c2e69ce6496f4fc9980647a55a719666db41921e11a82a34b1822162d885",
+      "sourceUrl": "https://overthecap.com/player/ethan-onianwa/13375/"
+    },
+    {
+      "team": "ATL",
+      "name": "Jack Strand",
+      "playerId": "b45e5d92-5d47-56a2-92ff-14441e16e8c2",
+      "otcId": 13739,
+      "status": "source_backed_candidate",
+      "sourceSha256": "79bd537cfbf48104598643cd1ef5355b599c80afbdce483f5ee4160e139a33ab",
+      "sourceUrl": "https://overthecap.com/player/jack-strand/13739/"
+    },
+    {
+      "team": "ATL",
+      "name": "Andy Dalton",
+      "playerId": "5e0da829-43bc-50c2-b4a3-49a29223d0e6",
+      "otcId": 160,
+      "status": "source_backed_candidate",
+      "sourceSha256": "246cbd44401045f26928a952e4fd80aff838844d40127459ea9010584d5d5e34",
+      "sourceUrl": "https://overthecap.com/player/andy-dalton/160/"
+    },
+    {
+      "team": "ATL",
+      "name": "Charles Snowden",
+      "playerId": "690d1e2e-5cc5-53d8-8ba1-a7884794595b",
+      "otcId": 9868,
+      "status": "source_backed_candidate",
+      "sourceSha256": "557fe87b8f8a2da88b82e6f5ce9aa4d31ba8f4417a5373e0dd6b8391c34a8d20",
+      "sourceUrl": "https://overthecap.com/player/charles-snowden/9868/"
+    },
+    {
+      "team": "ATL",
+      "name": "Vinny Anthony II",
+      "playerId": "559a1f69-607b-52bf-8abe-320b93d7d0bc",
+      "otcId": 13728,
+      "status": "source_backed_candidate",
+      "sourceSha256": "44be31c8526048a131fad01930504821a459dba28a3561a5e1d4bdb11d47ebbd",
+      "sourceUrl": "https://overthecap.com/player/vinny-anthony-ii/13728/"
+    },
+    {
+      "team": "ATL",
+      "name": "Kam Dewberry",
+      "playerId": "35fd6a09-d6f6-5e56-8fff-5058d1587394",
+      "otcId": 13729,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c3d3023985f5770b1f47f59c9075f9ec8718558a0281ef69d0fd4bfa5ce60e66",
+      "sourceUrl": "https://overthecap.com/player/kam-dewberry/13729/"
+    },
+    {
+      "team": "ATL",
+      "name": "Antwane Wells Jr.",
+      "playerId": "e6eb0079-275e-5989-92e0-efb0fdc2cec6",
+      "otcId": 12892,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2aa1cea6d3d78a230c4a08d1810d5db07a0caa8aaea2ff30e6ba3d3ffa82d7e6",
+      "sourceUrl": "https://overthecap.com/player/antwane-wells-jr/12892/"
+    },
+    {
+      "team": "ATL",
+      "name": "Jack Velling",
+      "playerId": "a4da789c-5fb2-5f41-8123-3de87cb9391d",
+      "otcId": 13731,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6b58088e2e92da1b5c7fe339dd93751a3c521724f7a13042353bea2efdad8a5e",
+      "sourceUrl": "https://overthecap.com/player/jack-velling/13731/"
+    },
+    {
+      "team": "ATL",
+      "name": "Josh Thompson",
+      "playerId": "5735635b-4cd3-54a0-9cda-9dc7b2784ff7",
+      "otcId": 13591,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ace7daabb1de67244455d9b07279870eb4df1eb7bed1671fa3e049d41ef1f52f",
+      "sourceUrl": "https://overthecap.com/player/josh-thompson/13591/"
+    },
+    {
+      "team": "ATL",
+      "name": "Riley Mahlman",
+      "playerId": "9a794c17-6060-5cbb-8bd8-1cb349a8b9ef",
+      "otcId": 13726,
+      "status": "source_backed_candidate",
+      "sourceSha256": "69de940970e20f180be17f363cbdc97971574c146897232f0e9af16d6612a783",
+      "sourceUrl": "https://overthecap.com/player/riley-mahlman/13726/"
+    },
+    {
+      "team": "ATL",
+      "name": "Jam Miller",
+      "playerId": "2aeef5d9-ed04-519e-b8fb-b2cd338ec0f7",
+      "otcId": 13389,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2b63e888b98fe81e92f3431f52c3d03c3b28158d5e570b0e4a485df9a3664358",
+      "sourceUrl": "https://overthecap.com/player/jam-miller/13389/"
+    },
+    {
+      "team": "ATL",
+      "name": "T.J. Quinn",
+      "playerId": "ae9ab6cd-46d6-52e9-9253-bd0bf3816ab6",
+      "otcId": 13702,
+      "status": "source_backed_candidate",
+      "sourceSha256": "945b40c5a3923236a65c68f5a001803f6c3f263846e8f7da6c0901024d35e9ec",
+      "sourceUrl": "https://overthecap.com/player/t-j-quinn/13702/"
+    },
+    {
+      "team": "ATL",
+      "name": "Anterio Thompson",
+      "playerId": "1c56f22f-e8c5-567a-b9a3-4b7151e152a0",
+      "otcId": 13352,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b06174a7c098c0a10272abc8b397bd648ed33e4e27fadae3207d35607e1e3b02",
+      "sourceUrl": "https://overthecap.com/player/anterio-thompson/13352/"
+    },
+    {
+      "team": "BAL",
+      "name": "Olaivavega Ioane",
+      "playerId": "617f9036-9ab6-524b-bf92-bff409fd81bb",
+      "otcId": 13158,
+      "status": "source_backed_candidate",
+      "sourceSha256": "00e7265e887f69b221c232f39cb7cad5a6f2a3e29e4ad8c092dc9b5d8cd4ec5f",
+      "sourceUrl": "https://overthecap.com/player/olaivavega-ioane/13158/"
+    },
+    {
+      "team": "BAL",
+      "name": "Zion Young",
+      "playerId": "85bde435-734c-5396-b94d-3200e2fff831",
+      "otcId": 13189,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5b3dc660151f5b344a890a527e6034cafcafafba2336ba2534c821cf96f820c5",
+      "sourceUrl": "https://overthecap.com/player/zion-young/13189/"
+    },
+    {
+      "team": "BAL",
+      "name": "Ja'Kobi Lane",
+      "playerId": "06929490-f6fc-5ecb-9e26-2cf163e8a51d",
+      "otcId": 13224,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cf32c2e6ab13960848e2d23e730aa78621e17992fe6e0302faff9867046ef1bd",
+      "sourceUrl": "https://overthecap.com/player/jakobi-lane/13224/"
+    },
+    {
+      "team": "BAL",
+      "name": "Elijah Sarratt",
+      "playerId": "a29c7ad5-a109-5885-8fce-6eb674dffcc4",
+      "otcId": 13259,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8ecdf7847ec3a0f84e2145a5002a0ea6ea87116c566f260d9afcd8d2c46405da",
+      "sourceUrl": "https://overthecap.com/player/elijah-sarratt/13259/"
+    },
+    {
+      "team": "BAL",
+      "name": "Matthew Hibner",
+      "playerId": "fc099777-da27-55f9-adf1-bbf5f2c5c238",
+      "otcId": 13277,
+      "status": "source_backed_candidate",
+      "sourceSha256": "39913ffab8d3a7348802faeb7f8bd2146ee7b7fb0d0bf638ab472aaa38a9e50c",
+      "sourceUrl": "https://overthecap.com/player/matthew-hibner/13277/"
+    },
+    {
+      "team": "BAL",
+      "name": "Chandler Rivers",
+      "playerId": "d8375bd2-7bbf-5cba-8f05-bd8d8373db2c",
+      "otcId": 13306,
+      "status": "source_backed_candidate",
+      "sourceSha256": "380d09420232d410ab28f34f94a7b0dac07022d5b6ad2f9e665b315b47dc803a",
+      "sourceUrl": "https://overthecap.com/player/chandler-rivers/13306/"
+    },
+    {
+      "team": "BAL",
+      "name": "Josh Cuevas",
+      "playerId": "016a3d05-c754-5dd0-8f47-bdc7a6df00c1",
+      "otcId": 13317,
+      "status": "source_backed_candidate",
+      "sourceSha256": "781305ab4ca48fe43c5a522e8ec4c0c3e9885d71f2b230f1748e02b6b1e21183",
+      "sourceUrl": "https://overthecap.com/player/josh-cuevas/13317/"
+    },
+    {
+      "team": "BAL",
+      "name": "Ryan Eckley",
+      "playerId": "4a265ab2-38a0-5ffc-990d-d51a829faac5",
+      "otcId": 13355,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ee958199182bf84a61a60167e0f761edc374a580e03bdb2be7f610d7464382be",
+      "sourceUrl": "https://overthecap.com/player/ryan-eckley/13355/"
+    },
+    {
+      "team": "BAL",
+      "name": "Ethan Burke",
+      "playerId": "4562e317-b61f-5a72-a67b-e10952081bbc",
+      "otcId": 13456,
+      "status": "source_backed_candidate",
+      "sourceSha256": "49b4f8be21133f25d16c5fde9a6c14f4a90133a731c9803139e6d5181f6c53ec",
+      "sourceUrl": "https://overthecap.com/player/ethan-burke/13456/"
+    },
+    {
+      "team": "BAL",
+      "name": "Joe Fagnano",
+      "playerId": "c86bf0ad-db48-58dd-9381-c5b932b9cae6",
+      "otcId": 13459,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0ac52de6669fb7e694bac9b1ffc71528a21549bccbf541ed7a122fc1cb4bfd4b",
+      "sourceUrl": "https://overthecap.com/player/joe-fagnano/13459/"
+    },
+    {
+      "team": "BAL",
+      "name": "Tyler Pezza",
+      "playerId": "077b6053-4cdc-5633-9396-c295ad97ed77",
+      "otcId": 13470,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5f657e6c491b7d461f74316ec49980b34c47bb2df95c48563fab430cdbe0931b",
+      "sourceUrl": "https://overthecap.com/player/tyler-pezza/13470/"
+    },
+    {
+      "team": "BAL",
+      "name": "Rayshaun Benny",
+      "playerId": "e4999824-8dbb-50a1-891a-e77f68d30a27",
+      "otcId": 13394,
+      "status": "source_backed_candidate",
+      "sourceSha256": "14a0b08d7a412f3f5d41e291979336e34545c22b6b7e50f70e9b5ccc57487468",
+      "sourceUrl": "https://overthecap.com/player/rayshaun-benny/13394/"
+    },
+    {
+      "team": "BAL",
+      "name": "Lardarius Webb Jr.",
+      "playerId": "8a133bcb-5e44-54d4-b6dc-f538f6c2b4f0",
+      "otcId": 13462,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3eef8eb10ec2ad689443c3eb85df21cddc4f879a1d691fad1ec31534fc53e0f1",
+      "sourceUrl": "https://overthecap.com/player/lardarius-webb-jr/13462/"
+    },
+    {
+      "team": "BAL",
+      "name": "Jake Moody",
+      "playerId": "2cecd657-5f08-5bfe-8901-e1722814f4c6",
+      "otcId": 10923,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7b7a59ac07d7f1cce461eed89102c299617c6238a295047512234ef4b6cac2b4",
+      "sourceUrl": "https://overthecap.com/player/jake-moody/10923/"
+    },
+    {
+      "team": "BAL",
+      "name": "Carl Jones Jr.",
+      "playerId": "f15a58ec-eeaa-58ff-91d5-a915a9a27420",
+      "otcId": 11918,
+      "status": "source_backed_candidate",
+      "sourceSha256": "14bc5067bc304ab991e97ee95b4b667da6ba9041dd635a99908bb2c587e8610b",
+      "sourceUrl": "https://overthecap.com/player/carl-jones-jr/11918/"
+    },
+    {
+      "team": "BAL",
+      "name": "Adam Randall",
+      "playerId": "d026f19a-2d05-5f5b-b918-ed0d65f4cd5a",
+      "otcId": 13318,
+      "status": "source_backed_candidate",
+      "sourceSha256": "060dba53488006edf82df2df68298b6152e64756453559baec4dd9e1ef508702",
+      "sourceUrl": "https://overthecap.com/player/adam-randall/13318/"
+    },
+    {
+      "team": "BAL",
+      "name": "JahQuez Robinson",
+      "playerId": "03ff0c07-fa36-5dab-ae9d-e758f68b926d",
+      "otcId": 13464,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ca5cf1f18e57f2e45c202f6a3e0e4ef3943a399d2eb1682f46086c326a3cefad",
+      "sourceUrl": "https://overthecap.com/player/jahquez-robinson/13464/"
+    },
+    {
+      "team": "BUF",
+      "name": "T.J. Parker",
+      "playerId": "ad6c015e-be5e-5ff9-9d8c-d1de3eda4b64",
+      "otcId": 13179,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c5ac54f152cdd2854f2e4908e95a303f410ba071ffc3753806e21fbb447d66ef",
+      "sourceUrl": "https://overthecap.com/player/t-j-parker/13179/"
+    },
+    {
+      "team": "BUF",
+      "name": "Davison Igbinosun",
+      "playerId": "cd45b560-8d78-5b9a-ac3a-264c2efa3978",
+      "otcId": 13206,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ad97559a86919512f54c17e0bc17e659094593d8a231d09f9d8dbcba161e0afc",
+      "sourceUrl": "https://overthecap.com/player/davison-igbinosun/13206/"
+    },
+    {
+      "team": "BUF",
+      "name": "Jude Bowry",
+      "playerId": "54d43f7d-edcf-50c1-9e1e-7be2c10028b9",
+      "otcId": 13246,
+      "status": "source_backed_candidate",
+      "sourceSha256": "571eec9e7e199c147bafada041b2c73f399893fcc1699af4c8ec60a4e0cc4c0f",
+      "sourceUrl": "https://overthecap.com/player/jude-bowry/13246/"
+    },
+    {
+      "team": "BUF",
+      "name": "Skyler Bell",
+      "playerId": "3456ba15-9ec0-535f-9edc-34a6730b5387",
+      "otcId": 13269,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5eb65972f3618989151fe491d5b709b1b272e8119fb7c6ae6900308240858abe",
+      "sourceUrl": "https://overthecap.com/player/skyler-bell/13269/"
+    },
+    {
+      "team": "BUF",
+      "name": "Kaleb Elarms-Orr",
+      "playerId": "6c0d7e1d-ab9e-5a36-a0f5-3082c26ecbe2",
+      "otcId": 13270,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4c403cc8eb5140fc2861d4c133663e2f277aeef2ceb678e273168e2efe28c351",
+      "sourceUrl": "https://overthecap.com/player/kaleb-elarms-orr/13270/"
+    },
+    {
+      "team": "BUF",
+      "name": "Jalon Kilgore",
+      "playerId": "1c952d55-2452-5f2c-aa28-ef2b8fa7bff4",
+      "otcId": 13311,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d66fd3420972b2be7788ddbf491969e2970fb9d87d4b17d696f4701fc2b95c9a",
+      "sourceUrl": "https://overthecap.com/player/jalon-kilgore/13311/"
+    },
+    {
+      "team": "BUF",
+      "name": "Tommy Doman",
+      "playerId": "29ae5aa5-e3dc-567b-a597-39bd6db68b27",
+      "otcId": 13383,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cde3cf2b1c89dfcb3f99055c4d5f87425ebec1731ef0777fb81f63d5cddc9517",
+      "sourceUrl": "https://overthecap.com/player/tommy-doman/13383/"
+    },
+    {
+      "team": "BUF",
+      "name": "Ar'Maj Reed-Adams",
+      "playerId": "b60c6e5e-7a94-56b4-97d5-1bd0909d5cab",
+      "otcId": 13385,
+      "status": "source_backed_candidate",
+      "sourceSha256": "849ab27c0617b29728eb91521ef81c6f9ee3b3acfc49bf78b96d65b081f4dadb",
+      "sourceUrl": "https://overthecap.com/player/armaj-reed-adams/13385/"
+    },
+    {
+      "team": "BUF",
+      "name": "Kani Walker",
+      "playerId": "2ee0edd2-35d8-581a-8561-dbaa3380688f",
+      "otcId": 13414,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "BUF",
+      "name": "Ja'Mori Maclin",
+      "playerId": "18c8c7e2-bd31-55f5-92da-e394a6f56bf2",
+      "otcId": 13410,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b3a8322a3349ae62a55c29f454cd1a181c7a1b3799165ea7592ad9bfaee5ec8a",
+      "sourceUrl": "https://overthecap.com/player/jamori-maclin/13410/"
+    },
+    {
+      "team": "BUF",
+      "name": "Zane Durant",
+      "playerId": "965ec42b-2e69-50d9-b7c1-b7ca924e3c0d",
+      "otcId": 13325,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ee628f9cd426a3bdfbc964ea63ccfe9d684dc935a4b225d32f4d7113c39397ae",
+      "sourceUrl": "https://overthecap.com/player/zane-durant/13325/"
+    },
+    {
+      "team": "CAR",
+      "name": "Monroe Freeling",
+      "playerId": "67756fdd-0a2a-5f55-a900-9d0bbc13a765",
+      "otcId": 13163,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ace2d6fe020aede880aad89f747394c00d5b5e75263a567ca84d959a8dd92b88",
+      "sourceUrl": "https://overthecap.com/player/monroe-freeling/13163/"
+    },
+    {
+      "team": "CAR",
+      "name": "Lee Hunter",
+      "playerId": "2857c87c-babc-5fa9-872f-3ae2e878f75e",
+      "otcId": 13193,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cea6473588e8ae914fa6c0d082d1b4bd6f25b081ad8c884c804f211c966bed63",
+      "sourceUrl": "https://overthecap.com/player/lee-hunter/13193/"
+    },
+    {
+      "team": "CAR",
+      "name": "Will Lee III",
+      "playerId": "b7cdd070-2e22-5f02-940f-c0701f81e68b",
+      "otcId": 13273,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b47647edad1c24f3f58d32d96e34bd505c71633e39d596623abaa4146d33d117",
+      "sourceUrl": "https://overthecap.com/player/will-lee-iii/13273/"
+    },
+    {
+      "team": "CAR",
+      "name": "Sam Hecht",
+      "playerId": "7c3ef76e-c46e-544a-ab87-9becedd8c479",
+      "otcId": 13288,
+      "status": "source_backed_candidate",
+      "sourceSha256": "28d729dc68b15011ac996c6665889d86f993851c2bc8bd8e7d5391fb512c7cc7",
+      "sourceUrl": "https://overthecap.com/player/sam-hecht/13288/"
+    },
+    {
+      "team": "CAR",
+      "name": "Zakee Wheatley",
+      "playerId": "d28d93b4-1355-52fa-a9fd-7f48ffa0632d",
+      "otcId": 13295,
+      "status": "source_backed_candidate",
+      "sourceSha256": "eab6a3226bc6f7487b09f919435a71bbd9023672cf7985d365000d46e3f04a18",
+      "sourceUrl": "https://overthecap.com/player/zakee-wheatley/13295/"
+    },
+    {
+      "team": "CAR",
+      "name": "Jackson Kuwatch",
+      "playerId": "2d4ab07f-008a-508b-a158-e8102074c9cb",
+      "otcId": 13371,
+      "status": "source_backed_candidate",
+      "sourceSha256": "703baa5c07ab6c02d247eb727740aa991ab045f62f899b84f6e6dc1137fac15c",
+      "sourceUrl": "https://overthecap.com/player/jackson-kuwatch/13371/"
+    },
+    {
+      "team": "CAR",
+      "name": "Aaron Hall",
+      "playerId": "ff28e348-768c-5b8d-b6de-6fe3650bd112",
+      "otcId": 13745,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b0a100571e50f12f15480cd1ed3538585c3ab418a42139d277f49ed7a39a6bc1",
+      "sourceUrl": "https://overthecap.com/player/aaron-hall/13745/"
+    },
+    {
+      "team": "CAR",
+      "name": "Haynes King",
+      "playerId": "3e2278f1-4e51-5cde-b975-796f512f1966",
+      "otcId": 13741,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9d6abb5aa86114592cead37979576c8bdc33e9e064862b728a4be2cbd26f9ab7",
+      "sourceUrl": "https://overthecap.com/player/haynes-king/13741/"
+    },
+    {
+      "team": "CAR",
+      "name": "Bam Martin-Scott",
+      "playerId": "3301e863-75f5-5be2-98db-9bf4792afa40",
+      "otcId": 12791,
+      "status": "unresolved",
+      "reason": "Partial-year cash needs explicit salary-rate treatment"
+    },
+    {
+      "team": "CAR",
+      "name": "Anthony Tyus III",
+      "playerId": "e31888ab-4907-54b1-9d02-f4808da2d2b4",
+      "otcId": 13023,
+      "status": "source_backed_candidate",
+      "sourceSha256": "19c9830f009bf2c826610ce956583303df2b09073d5a62618538879541d51ed5",
+      "sourceUrl": "https://overthecap.com/player/anthony-tyus-iii/13023/"
+    },
+    {
+      "team": "CAR",
+      "name": "David Moore",
+      "playerId": "20475bb6-a784-5455-a398-01f372ff84d7",
+      "otcId": 5812,
+      "status": "unresolved",
+      "reason": "Current-page/team-snapshot charge differs or missing"
+    },
+    {
+      "team": "CAR",
+      "name": "Parker Petersen",
+      "playerId": "1e937c49-3c5e-5ef1-a204-11fba689f3ef",
+      "otcId": 13750,
+      "status": "source_backed_candidate",
+      "sourceSha256": "06cf0503dde5a2db94858d2039ad909ea1931ea870e7051cb39107da3ff3d924",
+      "sourceUrl": "https://overthecap.com/player/parker-petersen/13750/"
+    },
+    {
+      "team": "CAR",
+      "name": "DeVonta Smith",
+      "playerId": "6d23e76a-f66f-57ae-8aec-5522a7c8bcf8",
+      "otcId": 13744,
+      "status": "source_backed_candidate",
+      "sourceSha256": "afdbc155631da8a20d8abae0ca6e998e31f50fa8a5cc07ad6678bf82644c5a0f",
+      "sourceUrl": "https://overthecap.com/player/devonta-smith/13744/"
+    },
+    {
+      "team": "CAR",
+      "name": "Chris Brazzell II",
+      "playerId": "2e11392d-ba3f-5282-8ed9-926540bb7c94",
+      "otcId": 13227,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3d9e696df301cb8525fb56997751b90a9e0c4e82b9f22b08f0aba3b80bfc1b35",
+      "sourceUrl": "https://overthecap.com/player/chris-brazzell-ii/13227/"
+    },
+    {
+      "team": "CHI",
+      "name": "Dillon Thieneman",
+      "playerId": "a43ccb1c-6dad-5361-863b-42f9808e189b",
+      "otcId": 13169,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "CHI",
+      "name": "Logan Jones",
+      "playerId": "36dfd3c5-e7d1-5ef3-a6b4-eb62106c007d",
+      "otcId": 13201,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b45841c8c9ee2683ea30f7c6f8b5c367e8a986a82e36a5983cd5e547b2b44a5b",
+      "sourceUrl": "https://overthecap.com/player/logan-jones/13201/"
+    },
+    {
+      "team": "CHI",
+      "name": "Sam Roush",
+      "playerId": "2d761e2c-71ab-5cb7-a2a8-c210b82761a1",
+      "otcId": 13213,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7e670ebcad0e4333d64c27604367074f2e6629c0afc2750b4836c4dd71d059f4",
+      "sourceUrl": "https://overthecap.com/player/sam-roush/13213/"
+    },
+    {
+      "team": "CHI",
+      "name": "Zavion Thomas",
+      "playerId": "b58cdb26-50fe-57b7-8116-3911d851cf51",
+      "otcId": 13233,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c838e731971db6d9a487ecdc57ac5cca8a30bd035b9e867cabe2439084b102e4",
+      "sourceUrl": "https://overthecap.com/player/zavion-thomas/13233/"
+    },
+    {
+      "team": "CHI",
+      "name": "Malik Muhammad",
+      "playerId": "9dcef7ef-8594-5655-8096-27332fc27c18",
+      "otcId": 13268,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f3e80dd7bc3e6e0095fafdbc292ef0bad3b378a0757a129f84d2641cdbae7dfd",
+      "sourceUrl": "https://overthecap.com/player/malik-muhammad/13268/"
+    },
+    {
+      "team": "CHI",
+      "name": "Keyshaun Elliott",
+      "playerId": "6f7d4a92-bba6-5835-8344-3ed8ccf9c76f",
+      "otcId": 13310,
+      "status": "source_backed_candidate",
+      "sourceSha256": "bb0917f91af85323f44095c91b6bc10dc1648185fbd99a4ff821c29b6596a9bb",
+      "sourceUrl": "https://overthecap.com/player/keyshaun-elliott/13310/"
+    },
+    {
+      "team": "CHI",
+      "name": "Jordan van den Berg",
+      "playerId": "58e4790d-a5a3-5ccf-9eee-51c02d2a4cbb",
+      "otcId": 13357,
+      "status": "source_backed_candidate",
+      "sourceSha256": "77c0f3ecd1bc1e57fad032a2ccd84b19bd0047afd36c63fb62f8ef8654d3ae4a",
+      "sourceUrl": "https://overthecap.com/player/jordan-van-den-berg/13357/"
+    },
+    {
+      "team": "CHI",
+      "name": "Jayden Loving",
+      "playerId": "e39473ad-2e2b-5188-9037-1735e238016c",
+      "otcId": 13674,
+      "status": "source_backed_candidate",
+      "sourceSha256": "70358f3f09628fd4365de41db29d7758a8281e2bdae8c405ba34eeda36fbb656",
+      "sourceUrl": "https://overthecap.com/player/jayden-loving/13674/"
+    },
+    {
+      "team": "CHI",
+      "name": "Skyler Thomas",
+      "playerId": "59be3369-8202-52cd-8c96-68422d19d7a8",
+      "otcId": 13678,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0fceecdf68da4ce2263deaf19be2a04de66c875a098abb26e8b80a184378c265",
+      "sourceUrl": "https://overthecap.com/player/skyler-thomas/13678/"
+    },
+    {
+      "team": "CHI",
+      "name": "Miller Moss",
+      "playerId": "693e0aa6-1392-5bdb-9b46-e07bb6849ff5",
+      "otcId": 13676,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "CHI",
+      "name": "Caden Barnett",
+      "playerId": "07e7b34e-3f1f-5271-95de-f5a2ba5f0d1b",
+      "otcId": 13673,
+      "status": "source_backed_candidate",
+      "sourceSha256": "77e47c042307f1abd53814d43f8e96dc264793369ca4e5ba04ec8159af7f5317",
+      "sourceUrl": "https://overthecap.com/player/caden-barnett/13673/"
+    },
+    {
+      "team": "CHI",
+      "name": "Wayne Matthews",
+      "playerId": "e8cdcb67-6417-59b4-b17b-6126b9fec9b9",
+      "otcId": 13687,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ff89433412037c5048e1568e5cb33da93638656d88ecfce4ee87237efd54d7fc",
+      "sourceUrl": "https://overthecap.com/player/wayne-matthews/13687/"
+    },
+    {
+      "team": "CHI",
+      "name": "Beau Gardner",
+      "playerId": "74bc0c68-e648-5650-aff2-f48036e751b1",
+      "otcId": 13680,
+      "status": "source_backed_candidate",
+      "sourceSha256": "e9d9f8fe55d62d5c692039bdbb185411063eefad5cff25597b11b5c2b269b10e",
+      "sourceUrl": "https://overthecap.com/player/beau-gardner/13680/"
+    },
+    {
+      "team": "CHI",
+      "name": "KC Eziomume",
+      "playerId": "ca274983-58da-566a-8e5e-cbce7eba7dd0",
+      "otcId": 13685,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f46ec8746a2acbaefdc70a53347ddfc1e03136f96a6d922e27c86bc54c0e33ca",
+      "sourceUrl": "https://overthecap.com/player/kc-eziomume/13685/"
+    },
+    {
+      "team": "CHI",
+      "name": "Hayden Large",
+      "playerId": "f695a1c2-9a64-5a99-9480-e4e5ce39990f",
+      "otcId": 13684,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a433f62b975f94a66fff2206de946870ce4dec86a9c9d7bbd887ce2949697aa9",
+      "sourceUrl": "https://overthecap.com/player/hayden-large/13684/"
+    },
+    {
+      "team": "CIN",
+      "name": "Cashius Howell",
+      "playerId": "bfbe1995-6f12-54c7-841a-2f61c90571b1",
+      "otcId": 13185,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6c21351d05c8aa89c3f71e221cc83b9a463dcdd364f068f401a0f6e3aebbe34f",
+      "sourceUrl": "https://overthecap.com/player/cashius-howell/13185/"
+    },
+    {
+      "team": "CIN",
+      "name": "Tacario Davis",
+      "playerId": "1e23ab11-805a-5728-8233-96183b82e8d1",
+      "otcId": 13216,
+      "status": "source_backed_candidate",
+      "sourceSha256": "aff3e2876ea45257d9734b16ab5762bc40da90e7791cfd22c226f3bf2172481a",
+      "sourceUrl": "https://overthecap.com/player/tacario-davis/13216/"
+    },
+    {
+      "team": "CIN",
+      "name": "Connor Lew",
+      "playerId": "56faedd8-b086-5d87-b5db-e582b34a7dcc",
+      "otcId": 13272,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cdb3329fcc26165053bafd6a15bcc0162f25b2e70f44af9be93eda04a5517fff",
+      "sourceUrl": "https://overthecap.com/player/connor-lew/13272/"
+    },
+    {
+      "team": "CIN",
+      "name": "Colbie Young",
+      "playerId": "fdcd64b8-742e-5248-b8c9-d9c6a37e02aa",
+      "otcId": 13284,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3471e2a9c24f0cbfe0409736e24601f2f5cd93b98edd660661d84d796fe9f455",
+      "sourceUrl": "https://overthecap.com/player/colbie-young/13284/"
+    },
+    {
+      "team": "CIN",
+      "name": "Jack Endries",
+      "playerId": "7d041868-e659-500d-b362-4deb820cad77",
+      "otcId": 13365,
+      "status": "source_backed_candidate",
+      "sourceSha256": "627161dc5c16989239c3845495ef8587e9b2f7019bf9660e497429dba6188165",
+      "sourceUrl": "https://overthecap.com/player/jack-endries/13365/"
+    },
+    {
+      "team": "CIN",
+      "name": "Landon Robinson",
+      "playerId": "9b341464-e44b-58fa-a3c8-fe27653c095f",
+      "otcId": 13370,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9af82313ca86146ec232f02fc17d0373f54a803d63849379b552a823418e2e7a",
+      "sourceUrl": "https://overthecap.com/player/landon-robinson/13370/"
+    },
+    {
+      "team": "CIN",
+      "name": "Dohnte Meyers",
+      "playerId": "88568015-154e-5f16-9170-a9ed365a2d64",
+      "otcId": 13140,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1b2195c52284191ee76c8e5090e922012d877c68218d8db251b80c81dd14429a",
+      "sourceUrl": "https://overthecap.com/player/dohnte-meyers/13140/"
+    },
+    {
+      "team": "CIN",
+      "name": "Kentrel Bullock",
+      "playerId": "ad0cecc9-97a5-5190-8036-8f38c6cd78ff",
+      "otcId": 13490,
+      "status": "source_backed_candidate",
+      "sourceSha256": "205d73591b717af21c00788a878c8a04668e336e61125b5048ef3e677a0f5a88",
+      "sourceUrl": "https://overthecap.com/player/kentrel-bullock/13490/"
+    },
+    {
+      "team": "CIN",
+      "name": "Noah Thomas",
+      "playerId": "f9debeac-c3a0-579a-9197-a1cb78835711",
+      "otcId": 13493,
+      "status": "source_backed_candidate",
+      "sourceSha256": "90dee8521d0c5b4b3e535c01ef1dda3bcbaeb9ade240e6891970263931d98937",
+      "sourceUrl": "https://overthecap.com/player/noah-thomas/13493/"
+    },
+    {
+      "team": "CIN",
+      "name": "Emany Johnson",
+      "playerId": "3aee7818-08cc-52bd-a774-afbe6e3f19e2",
+      "otcId": 11986,
+      "status": "source_backed_candidate",
+      "sourceSha256": "da285e7278450804f8755cab7d878f516c7da40a02d295ed4b59405534a955ca",
+      "sourceUrl": "https://overthecap.com/player/emany-johnson/11986/"
+    },
+    {
+      "team": "CIN",
+      "name": "Josh Kattus",
+      "playerId": "16d37d09-e199-5c7d-a44c-4342d3b98bf7",
+      "otcId": 13496,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2d80dead1f2b4582278adb0a6d8b4d0bb204cffe9e7f02914d88aa47081293e5",
+      "sourceUrl": "https://overthecap.com/player/josh-kattus/13496/"
+    },
+    {
+      "team": "CIN",
+      "name": "Brian Parker II",
+      "playerId": "d05e4508-d7cd-555a-b26c-8329938b2058",
+      "otcId": 13333,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b7d711d48327a7579ddd93cb0a5580435a920ffec8389ff1eb6757882863a941",
+      "sourceUrl": "https://overthecap.com/player/brian-parker-ii/13333/"
+    },
+    {
+      "team": "CLE",
+      "name": "Spencer Fano",
+      "playerId": "9757d85c-4501-5a54-8272-c22c0dd9ab97",
+      "otcId": 13153,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3852ad951bfd25ae3c6867ae5bc456d2f53204d4756d00bc9813735e0f292f19",
+      "sourceUrl": "https://overthecap.com/player/spencer-fano/13153/"
+    },
+    {
+      "team": "CLE",
+      "name": "KC Concepcion",
+      "playerId": "09b4ee3c-1fb0-57bb-8dd6-f7c11ad29099",
+      "otcId": 13168,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "CLE",
+      "name": "Denzel Boston",
+      "playerId": "7d90e95d-172c-5c31-98aa-87676e1b2834",
+      "otcId": 13183,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7c83ad46f94b360e2d904012f47423ce9fd145ede82fa77236fc8e3a9df70c0c",
+      "sourceUrl": "https://overthecap.com/player/denzel-boston/13183/"
+    },
+    {
+      "team": "CLE",
+      "name": "Emmanuel McNeil-Warren",
+      "playerId": "b1bc32bb-8589-5f32-a6a0-db30e806f054",
+      "otcId": 13202,
+      "status": "source_backed_candidate",
+      "sourceSha256": "20a429180568ec7f18ee013fa8b5e776e5c80235c5637afcf2a161d3f073615f",
+      "sourceUrl": "https://overthecap.com/player/emmanuel-mcneil-warren/13202/"
+    },
+    {
+      "team": "CLE",
+      "name": "Austin Barber",
+      "playerId": "9d5bc9d3-1d06-5c51-bd16-8308ef3d4b78",
+      "otcId": 13230,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0e86e3c68c0cff3ee2a99080a9a8e4d62a5567d201be153bdc496043e4ea0b38",
+      "sourceUrl": "https://overthecap.com/player/austin-barber/13230/"
+    },
+    {
+      "team": "CLE",
+      "name": "Dylan Sampson",
+      "playerId": "8412f2dd-6133-5080-90b4-6c99f39e6a5b",
+      "otcId": 12486,
+      "status": "unresolved",
+      "reason": "Partial-year cash needs explicit salary-rate treatment"
+    },
+    {
+      "team": "CLE",
+      "name": "Parker Brailsford",
+      "playerId": "9596e3a2-2f7f-5a78-ab65-2d764f31a8b7",
+      "otcId": 13290,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0c907baba13f76e81907ede16c4778c3319eff50ceaaadb0e7cd301f35909760",
+      "sourceUrl": "https://overthecap.com/player/parker-brailsford/13290/"
+    },
+    {
+      "team": "CLE",
+      "name": "Justin Jefferson",
+      "playerId": "b06c897f-3951-56d6-818b-e14b61775847",
+      "otcId": 13293,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2dcfbc380552ed793736d5aa0a6c488d54018d33051c8ab6df5e7e4b3b0d4fad",
+      "sourceUrl": "https://overthecap.com/player/justin-jefferson/13293/"
+    },
+    {
+      "team": "CLE",
+      "name": "Taylen Green",
+      "playerId": "2f0ee069-3e05-50c6-9573-b83611ba27de",
+      "otcId": 13326,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1ccb3d93957f466e46738c8e77fa79ba980991f29d56ec05571d786057c1867f",
+      "sourceUrl": "https://overthecap.com/player/taylen-green/13326/"
+    },
+    {
+      "team": "CLE",
+      "name": "Carsen Ryan",
+      "playerId": "7f565751-3e7e-543f-99c4-126f2693f70b",
+      "otcId": 13392,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d30cc5a051934075230b070fcd91472fc61ef6fd58f17b9dca2063c3c78b6cfb",
+      "sourceUrl": "https://overthecap.com/player/carsen-ryan/13392/"
+    },
+    {
+      "team": "CLE",
+      "name": "Toriano Pride Jr.",
+      "playerId": "fc09760c-92e4-5520-af45-de66cf81d40c",
+      "otcId": 13364,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "CLE",
+      "name": "Khordae Sydnor",
+      "playerId": "3161bd38-5bd9-56cb-9684-1997b7e47376",
+      "otcId": 13479,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9232efe50e756d0d21f3312b520bbd676a9675546c8847cdac81724af3267f3e",
+      "sourceUrl": "https://overthecap.com/player/khordae-sydnor/13479/"
+    },
+    {
+      "team": "CLE",
+      "name": "Michael Coats Jr.",
+      "playerId": "5abba955-0848-50e6-9f50-207144938594",
+      "otcId": 13476,
+      "status": "source_backed_candidate",
+      "sourceSha256": "40346f0089f0cf8f5be1f242e30557812a4ee4c52e7901a138fdb87f411f4788",
+      "sourceUrl": "https://overthecap.com/player/michael-coats-jr/13476/"
+    },
+    {
+      "team": "CLE",
+      "name": "Logan Fano",
+      "playerId": "c4640c7b-eaf9-5772-a672-60768cb96b44",
+      "otcId": 13475,
+      "status": "source_backed_candidate",
+      "sourceSha256": "629e0b61549df724b2ddbc2f72626c4aa5e6a18f6043cd5afc54568a5c6035dc",
+      "sourceUrl": "https://overthecap.com/player/logan-fano/13475/"
+    },
+    {
+      "team": "CLE",
+      "name": "Zion Washington",
+      "playerId": "8cc78fb8-7c2a-5f0e-a071-aa0f5f8342ff",
+      "otcId": 13478,
+      "status": "source_backed_candidate",
+      "sourceSha256": "43c73bdcf5659e4f9086bdd0f3e28c7ab278cee068fd206490a062df6e95ac65",
+      "sourceUrl": "https://overthecap.com/player/zion-washington/13478/"
+    },
+    {
+      "team": "CLE",
+      "name": "Eric Johnson",
+      "playerId": "4c90c974-c417-53bb-9b9b-2c1bb264f792",
+      "otcId": 10204,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7185fb10cfd6e2e514352df4ddb1a01fbcc8f3cf7b9e0c70151d018400bee1b3",
+      "sourceUrl": "https://overthecap.com/player/eric-johnson/10204/"
+    },
+    {
+      "team": "CLE",
+      "name": "John Saunders",
+      "playerId": "e9205c79-cd12-5a97-8274-721d8e468998",
+      "otcId": 13053,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8e14b4b8d9afc8866a8d8c23a3619b315905c808d328d18d0214afbb034d12f4",
+      "sourceUrl": "https://overthecap.com/player/john-saunders/13053/"
+    },
+    {
+      "team": "CLE",
+      "name": "Wes Pahl",
+      "playerId": "d43320c3-dd56-5eb2-9f65-c1a063f686f8",
+      "otcId": 13477,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f884dd849ce88840af620c5bc34f40bdff9713d705bb3750649da51f5481c167",
+      "sourceUrl": "https://overthecap.com/player/wes-pahl/13477/"
+    },
+    {
+      "team": "CLE",
+      "name": "Andrew Coker",
+      "playerId": "4c23b1e6-6f3d-500b-b0eb-b91f8050a1a3",
+      "otcId": 11879,
+      "status": "source_backed_candidate",
+      "sourceSha256": "bc25abb8d627e1de1b79fac9ed6152b0c89871ae0b36e689b34576c7d137ff20",
+      "sourceUrl": "https://overthecap.com/player/andrew-coker/11879/"
+    },
+    {
+      "team": "CLE",
+      "name": "Joe Royer",
+      "playerId": "cd0b9019-5b38-5a67-9470-e1d65eaeafcd",
+      "otcId": 13314,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c70af70157ad671fe11e577c7f9354df0a7ba553cbaf07cd2d17176d10bafd9c",
+      "sourceUrl": "https://overthecap.com/player/joe-royer/13314/"
+    },
+    {
+      "team": "DAL",
+      "name": "Caleb Downs",
+      "playerId": "cc95e1c8-92f5-514b-8456-dc89665183b9",
+      "otcId": 13155,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ded72fcb33c034062b8d3c1f232a781fc5a4fce8a124bc32884810a0668e8c6b",
+      "sourceUrl": "https://overthecap.com/player/caleb-downs/13155/"
+    },
+    {
+      "team": "DAL",
+      "name": "Malachi Lawrence",
+      "playerId": "b9f5a219-6415-5867-a782-eb1ae89bb997",
+      "otcId": 13167,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "DAL",
+      "name": "Jaishawn Barham",
+      "playerId": "20c301ae-1ca7-554a-a1b8-5cbf3365cac4",
+      "otcId": 13236,
+      "status": "source_backed_candidate",
+      "sourceSha256": "30c3fe8e9b499ca6adfdfd336df107d2b46d8e3391596dba417ea2f00d2d6cbf",
+      "sourceUrl": "https://overthecap.com/player/jaishawn-barham/13236/"
+    },
+    {
+      "team": "DAL",
+      "name": "Drew Shelton",
+      "playerId": "c1df4a6b-4cee-5f7a-8516-fd238f5906e5",
+      "otcId": 13256,
+      "status": "source_backed_candidate",
+      "sourceSha256": "27c9be5b65a752ba03ebf9435ea5ef9c9f5c617cb5d59ccd4f5a422305abc561",
+      "sourceUrl": "https://overthecap.com/player/drew-shelton/13256/"
+    },
+    {
+      "team": "DAL",
+      "name": "L.T. Overton",
+      "playerId": "5ab6d58c-97d1-50ea-83c6-fe13231eee49",
+      "otcId": 13281,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f5c5092e6869a50bb567496d6d786d5bc73968f32e303dca36995f0741238b40",
+      "sourceUrl": "https://overthecap.com/player/l-t-overton/13281/"
+    },
+    {
+      "team": "DAL",
+      "name": "Camden Brown",
+      "playerId": "f0ee46b5-c4c4-5895-887e-2b186e966cd5",
+      "otcId": 13650,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5ad297d148be29e203e1076aba99e9c0e95993f81690c178e177776662ff7b69",
+      "sourceUrl": "https://overthecap.com/player/camden-brown/13650/"
+    },
+    {
+      "team": "DAL",
+      "name": "Tommy Dunn",
+      "playerId": "6bbbca2f-19a0-5d98-95fb-7b7514d1a164",
+      "otcId": 13651,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cd5d33e1c564e32e472e64d736b76291e3636b2f22801f3304e44a29595cf1a0",
+      "sourceUrl": "https://overthecap.com/player/tommy-dunn/13651/"
+    },
+    {
+      "team": "DAL",
+      "name": "Jordan Hudson",
+      "playerId": "bfd5b35c-3d61-5ea4-bb01-04874ad7e474",
+      "otcId": 13645,
+      "status": "source_backed_candidate",
+      "sourceSha256": "16a5f087759dbb11c43880cab948cd3b2357c8ab4ab3be034ca662513b161711",
+      "sourceUrl": "https://overthecap.com/player/jordan-hudson/13645/"
+    },
+    {
+      "team": "DAL",
+      "name": "Michael Trigg",
+      "playerId": "84ea3350-b70c-5179-a03b-9d8b87530886",
+      "otcId": 13644,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0449c692fa18fe1718cc3c81dbec274b1df4c93b1aa5d143aaa7823d7b9abe13",
+      "sourceUrl": "https://overthecap.com/player/michael-trigg/13644/"
+    },
+    {
+      "team": "DAL",
+      "name": "Anthony Smith",
+      "playerId": "76d4ce55-2654-5144-aeaf-141629c9498a",
+      "otcId": 13362,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9baf518e81f680f94339199dc813c334fee6e7089ff94453be8276474c5da2bb",
+      "sourceUrl": "https://overthecap.com/player/anthony-smith/13362/"
+    },
+    {
+      "team": "DAL",
+      "name": "Kyle Trask",
+      "playerId": "81f36aa0-c1d7-5e42-b509-998798b8e193",
+      "otcId": 9528,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f9c2f670721f664df7a704cd2b49f7a57fce52f017dcc93644d1b25bb7faef55",
+      "sourceUrl": "https://overthecap.com/player/kyle-trask/9528/"
+    },
+    {
+      "team": "DAL",
+      "name": "Devin Moore",
+      "playerId": "f8112f7c-2b20-5853-8652-e0ec5ee1f1f3",
+      "otcId": 13258,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1cc45f8e546b277dd96acaa1d0ed7d0fe8c766cd577ada993deb86c0ba60e67e",
+      "sourceUrl": "https://overthecap.com/player/devin-moore/13258/"
+    },
+    {
+      "team": "DAL",
+      "name": "D.J. Rogers",
+      "playerId": "f27332a6-4eea-578f-b0f9-137cf3ab5f05",
+      "otcId": 13646,
+      "status": "source_backed_candidate",
+      "sourceSha256": "824c99aff26f2b6e37ac053123df77bf2845fc78c651c4d0674c54793e2e4e24",
+      "sourceUrl": "https://overthecap.com/player/d-j-rogers/13646/"
+    },
+    {
+      "team": "DAL",
+      "name": "Kelvin Gilliam",
+      "playerId": "f0cbb0cf-35ec-5f48-a42b-5abbd7a6607d",
+      "otcId": 13652,
+      "status": "source_backed_candidate",
+      "sourceSha256": "844a7f52756e1a6109e49de68e2f0fcff11e0ed9b0cea825162d27309aa8e811",
+      "sourceUrl": "https://overthecap.com/player/kelvin-gilliam/13652/"
+    },
+    {
+      "team": "DEN",
+      "name": "Tyler Onyedim",
+      "playerId": "958a7d9d-505f-5bee-a08b-302d9495fce4",
+      "otcId": 13210,
+      "status": "source_backed_candidate",
+      "sourceSha256": "47476098c1276c799fb1ce0af964fe2485502c34d753ad24fe056910cc53504d",
+      "sourceUrl": "https://overthecap.com/player/tyler-onyedim/13210/"
+    },
+    {
+      "team": "DEN",
+      "name": "Kage Casey",
+      "playerId": "5d2c7592-cd12-523f-b82d-2597ed03672b",
+      "otcId": 13255,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c611aa6a5f90e79403b6eaa50b73aa291b3a2d6e7418b27c5b71387e6d7cba8f",
+      "sourceUrl": "https://overthecap.com/player/kage-casey/13255/"
+    },
+    {
+      "team": "DEN",
+      "name": "Jonah Coleman",
+      "playerId": "97cfaa58-0e57-5cf3-951d-6b283b8105ea",
+      "otcId": 13252,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4d7a3e1bcc65c92ae85e40fa6283a6a7d9a6f9ccaecdd42d87825f4343318140",
+      "sourceUrl": "https://overthecap.com/player/jonah-coleman/13252/"
+    },
+    {
+      "team": "DEN",
+      "name": "Dallen Bentley",
+      "playerId": "0fbdedc7-82e5-5dcb-a274-d7b83d7c709d",
+      "otcId": 13400,
+      "status": "source_backed_candidate",
+      "sourceSha256": "545a12463808f36259e3292037d10f199360d74274cf44c071ed1fe9e932d4ae",
+      "sourceUrl": "https://overthecap.com/player/dallen-bentley/13400/"
+    },
+    {
+      "team": "DEN",
+      "name": "Sean Fresch",
+      "playerId": "b557fd3a-b11f-5845-957d-a63589998dae",
+      "otcId": 13849,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "DEN",
+      "name": "Kolbe Katsis",
+      "playerId": "ab953030-75f2-594c-bb46-7350fda9b388",
+      "otcId": 13566,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "DEN",
+      "name": "Brent Austin",
+      "playerId": "1ecedf9e-daf1-5f8a-82a5-6a6b6427edb2",
+      "otcId": 13563,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "DEN",
+      "name": "Miles Scott",
+      "playerId": "b178832d-9d96-5164-894f-bd3c7ea9c808",
+      "otcId": 13390,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8267d2cdd7cb4c8e61dd5eacc33cd21002c1403b1f696be393cd432d3cf10b54",
+      "sourceUrl": "https://overthecap.com/player/miles-scott/13390/"
+    },
+    {
+      "team": "DEN",
+      "name": "Dane Key",
+      "playerId": "9e612a66-13ea-5e14-a55f-8d5435190c89",
+      "otcId": 13561,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6e462ec00847e3226cefb56d48d13d32889224182e5bc788eb43c8239e144ddb",
+      "sourceUrl": "https://overthecap.com/player/dane-key/13561/"
+    },
+    {
+      "team": "DEN",
+      "name": "Gavin Ortega",
+      "playerId": "8b07dcaf-7491-5f82-8906-646c27370bb8",
+      "otcId": 13559,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3c15d1c0c5a7a94e79b773d355b0f934b6027674452f59888f8a0c4b94a6f4fb",
+      "sourceUrl": "https://overthecap.com/player/gavin-ortega/13559/"
+    },
+    {
+      "team": "DEN",
+      "name": "Tyler Miller",
+      "playerId": "e7cd3f10-ead4-5161-ac27-03ea0590a2a4",
+      "otcId": 13568,
+      "status": "source_backed_candidate",
+      "sourceSha256": "df611f34fd7e3989e1fd7008201909a77614cb532a412670d8057f915681f915",
+      "sourceUrl": "https://overthecap.com/player/tyler-miller/13568/"
+    },
+    {
+      "team": "DEN",
+      "name": "Red Murdock",
+      "playerId": "f4fa1cc8-b43c-5cb2-b0cf-1185aeb4f26d",
+      "otcId": 13401,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8059a1796e3987ee23ed4ab59021039879f4599a1eea29a7dded2cc367939658",
+      "sourceUrl": "https://overthecap.com/player/red-murdock/13401/"
+    },
+    {
+      "team": "DEN",
+      "name": "Cam Ross",
+      "playerId": "7ad57cb3-f403-5e17-a2ad-9343b2a97cd4",
+      "otcId": 13565,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cc1111943450bf364fe52285e453d22583ae436ce88d6ac0b770c0040baa9425",
+      "sourceUrl": "https://overthecap.com/player/cam-ross/13565/"
+    },
+    {
+      "team": "DET",
+      "name": "Blake Miller",
+      "playerId": "7e570966-803c-5470-92b4-0dcb607c6f70",
+      "otcId": 13161,
+      "status": "source_backed_candidate",
+      "sourceSha256": "43209e4e04b5cefa582d8274e2e892a62f25fdd7904b67311bd56d630b0b926c",
+      "sourceUrl": "https://overthecap.com/player/blake-miller/13161/"
+    },
+    {
+      "team": "DET",
+      "name": "Derrick Moore",
+      "playerId": "595ed67a-7578-56fb-8101-0e8c1f5ba2a8",
+      "otcId": 13188,
+      "status": "source_backed_candidate",
+      "sourceSha256": "523fcec7d75957b90031049783e53a24f8ddf2756d0adf583e0ed4010ea580ec",
+      "sourceUrl": "https://overthecap.com/player/derrick-moore/13188/"
+    },
+    {
+      "team": "DET",
+      "name": "Jimmy Rolder",
+      "playerId": "08c9e8b3-e09c-56cd-9747-a691003d2f99",
+      "otcId": 13262,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f905407df53d9455ae742ab91ad63a97b4e90a44b20e93a757ed5794b6a91be2",
+      "sourceUrl": "https://overthecap.com/player/jimmy-rolder/13262/"
+    },
+    {
+      "team": "DET",
+      "name": "Keith Abney II",
+      "playerId": "489c0e44-9850-5ac6-b1b0-c80ad70aa828",
+      "otcId": 13301,
+      "status": "source_backed_candidate",
+      "sourceSha256": "aef2056480bffe968c1d794d6b6e646be8cbc867c9c6925725fcf235c3a8a617",
+      "sourceUrl": "https://overthecap.com/player/keith-abney-ii/13301/"
+    },
+    {
+      "team": "DET",
+      "name": "Skyler Gill-Howard",
+      "playerId": "a7396662-48b2-5790-819d-3e4681214364",
+      "otcId": 13349,
+      "status": "source_backed_candidate",
+      "sourceSha256": "70df1d3d6cbc7dc922d3ec3e97d00f7d9e3c6fb9882bc07f5ec4b464277ffeed",
+      "sourceUrl": "https://overthecap.com/player/skyler-gill-howard/13349/"
+    },
+    {
+      "team": "DET",
+      "name": "Eric O'Neill",
+      "playerId": "45837024-c474-544d-8eac-a5ba4605cbdc",
+      "otcId": 13690,
+      "status": "source_backed_candidate",
+      "sourceSha256": "19784f6416f82429b861e5bf7e8977d5c9b58c9dd9bfa88eb2d4d087a1b533bf",
+      "sourceUrl": "https://overthecap.com/player/eric-oneill/13690/"
+    },
+    {
+      "team": "DET",
+      "name": "Bishop Fitzgerald",
+      "playerId": "a618b865-c06e-5381-91f4-abfd97a4755f",
+      "otcId": 13547,
+      "status": "source_backed_candidate",
+      "sourceSha256": "59e871cb8312981c791c31104ed38eec2d53308eff6a42db205966db6a54f47b",
+      "sourceUrl": "https://overthecap.com/player/bishop-fitzgerald/13547/"
+    },
+    {
+      "team": "DET",
+      "name": "DeAndre Carter",
+      "playerId": "f5849fdb-1530-5e10-9f3b-5244f1cbcd4e",
+      "otcId": 4390,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b4e5d8ee1fe0dade2d799eb58e07a301f8b2240a9e975269d32b8ce9f8b7c244",
+      "sourceUrl": "https://overthecap.com/player/deandre-carter/4390/"
+    },
+    {
+      "team": "DET",
+      "name": "Amen Ogbongbemiga",
+      "playerId": "ccc8e0b7-3c9c-5293-985e-e5debe582c84",
+      "otcId": 9824,
+      "status": "unresolved",
+      "reason": "Current-page/team-snapshot charge differs or missing"
+    },
+    {
+      "team": "DET",
+      "name": "Aamaris Brown",
+      "playerId": "0d542da3-d376-5c6b-85fb-e9664812069d",
+      "otcId": 13695,
+      "status": "source_backed_candidate",
+      "sourceSha256": "640d306ac8af5c01184a7b5463b5a622dd86fe79cd7cfc7ec334bb41f9ce5ca0",
+      "sourceUrl": "https://overthecap.com/player/aamaris-brown/13695/"
+    },
+    {
+      "team": "DET",
+      "name": "Luke Altmyer",
+      "playerId": "1c81fb0a-0c4c-57e9-b13e-dec8b04648e6",
+      "otcId": 13689,
+      "status": "source_backed_candidate",
+      "sourceSha256": "083899efac057c09105a70bdb4acf6333014c515bc2fe4037cb96f23c3911b94",
+      "sourceUrl": "https://overthecap.com/player/luke-altmyer/13689/"
+    },
+    {
+      "team": "DET",
+      "name": "Anthony Lucas",
+      "playerId": "374ec662-9056-5375-b967-572e0edd69c7",
+      "otcId": 13688,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1382ef7a68bce35ab61318ce439b6c06c441577d7c7c00442d83d5023753a928",
+      "sourceUrl": "https://overthecap.com/player/anthony-lucas/13688/"
+    },
+    {
+      "team": "DET",
+      "name": "Myles Bryant",
+      "playerId": "44178e7a-6586-5c2c-b4d1-6b6bcbffc229",
+      "otcId": 9271,
+      "status": "source_backed_candidate",
+      "sourceSha256": "25043bc6acf805d1fa42c2ec0b933863e7be61b8b05f0718c35c0084d38a5411",
+      "sourceUrl": "https://overthecap.com/player/myles-bryant/9271/"
+    },
+    {
+      "team": "DET",
+      "name": "Miles Kitselman",
+      "playerId": "9ca10ccb-8dd4-5865-a35d-037ef0c41de5",
+      "otcId": 13692,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6735ed9bb2b0d691c0e50dc6c169b9ca925ae4a85e47fe91e2a54ad69d146fcb",
+      "sourceUrl": "https://overthecap.com/player/miles-kitselman/13692/"
+    },
+    {
+      "team": "DET",
+      "name": "Lawrence Keys",
+      "playerId": "3804bfa6-c8c0-51f3-8976-ddd1c9dcb4a5",
+      "otcId": 12100,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fabe37949e4c6609f973b312a0bb07eef2d1dfe66ed3a8b4594e716c49cf84b7",
+      "sourceUrl": "https://overthecap.com/player/lawrence-keys/12100/"
+    },
+    {
+      "team": "DET",
+      "name": "Jeffrey M'ba",
+      "playerId": "8ab775ea-afac-54ca-bfd9-9ac1e960d78d",
+      "otcId": 13403,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c6e07e2d8ed6bfb7ae8fae7989f6ec4df4024dcb9f8d48c0cf55e35496424127",
+      "sourceUrl": "https://overthecap.com/player/jeffrey-mba/13403/"
+    },
+    {
+      "team": "DET",
+      "name": "Aidan Keanaaina",
+      "playerId": "6a07b777-6184-5191-b8a0-11ea8f5a535f",
+      "otcId": 13694,
+      "status": "source_backed_candidate",
+      "sourceSha256": "270d4b1362222ed11038243a5db0cda954d80a89605c7263db4cf8ea9c79ba06",
+      "sourceUrl": "https://overthecap.com/player/aidan-keanaaina/13694/"
+    },
+    {
+      "team": "DET",
+      "name": "Kendrick Law",
+      "playerId": "89bca8c5-7a8c-5d89-ad96-81aa865a390c",
+      "otcId": 13312,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cad2d9abdc538d0074d55a72f5a78f47478883fce1d063df8be1bf36372e6f3d",
+      "sourceUrl": "https://overthecap.com/player/kendrick-law/13312/"
+    },
+    {
+      "team": "GB",
+      "name": "Brandon Cisse",
+      "playerId": "b0fd7c7d-80a5-5a0d-b6d1-d725c8ea5dfa",
+      "otcId": 13196,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0bdfe4c8518cdae23bff71565f96cff4a9342308a70ba04a5994a1bf2df75517",
+      "sourceUrl": "https://overthecap.com/player/brandon-cisse/13196/"
+    },
+    {
+      "team": "GB",
+      "name": "Chris McClellan",
+      "playerId": "48a5a2a6-cdea-5a53-8b4d-d3168fffd68a",
+      "otcId": 13221,
+      "status": "source_backed_candidate",
+      "sourceSha256": "64bc8c52a9d3dcd8fd4a406c43421505e0f255ba0501216c6db71bdb86ec94a3",
+      "sourceUrl": "https://overthecap.com/player/chris-mcclellan/13221/"
+    },
+    {
+      "team": "GB",
+      "name": "Dani Dennis-Sutton",
+      "playerId": "7d1c1213-3963-524d-8afc-c6e542e9bdce",
+      "otcId": 13264,
+      "status": "source_backed_candidate",
+      "sourceSha256": "050f2be077f9cd7fd266433fcb17cc665a18d5823535d989548e24d6ca69ebc8",
+      "sourceUrl": "https://overthecap.com/player/dani-dennis-sutton/13264/"
+    },
+    {
+      "team": "GB",
+      "name": "Jager Burton",
+      "playerId": "14fe39fb-f0c7-5660-afc2-68507a13ccce",
+      "otcId": 13297,
+      "status": "source_backed_candidate",
+      "sourceSha256": "439e603d9140bfd66c46ab19464e0c03598d9f410d8cd7dadeecaae5507359fd",
+      "sourceUrl": "https://overthecap.com/player/jager-burton/13297/"
+    },
+    {
+      "team": "GB",
+      "name": "Jordon Riley",
+      "playerId": "21aca5bb-2423-5889-87fe-1da00bfc0a89",
+      "otcId": 11067,
+      "status": "unresolved",
+      "reason": "Partial-year cash needs explicit salary-rate treatment"
+    },
+    {
+      "team": "GB",
+      "name": "Trey Smack",
+      "playerId": "485bb22d-84b5-5d37-8aa4-47d83eba85e7",
+      "otcId": 13360,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2d4dcaef9ecc62ae6aae60c20e57a6588fdde818411e5d4d19cd089c9595a7ff",
+      "sourceUrl": "https://overthecap.com/player/trey-smack/13360/"
+    },
+    {
+      "team": "GB",
+      "name": "J. Michael Sturdivant",
+      "playerId": "fb6fc776-4024-5eec-9714-a5547b985149",
+      "otcId": 13697,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2186be8deddf024d4e859e3234eead2eafe0288af5c20586e2b88e99dbf6a753",
+      "sourceUrl": "https://overthecap.com/player/j-michael-sturdivant/13697/"
+    },
+    {
+      "team": "GB",
+      "name": "Nyjalik Kelly",
+      "playerId": "a6f95bb6-4707-5d5e-95ad-0ade98efd1fb",
+      "otcId": 13701,
+      "status": "source_backed_candidate",
+      "sourceSha256": "86bab1c46b3b064632769e7d356b76632a8a93dacc95c0beb6143e78c866df7d",
+      "sourceUrl": "https://overthecap.com/player/nyjalik-kelly/13701/"
+    },
+    {
+      "team": "GB",
+      "name": "Dillon Wade",
+      "playerId": "c7b8d8b9-c831-51bf-9dc3-a8e72c63a3a8",
+      "otcId": 13700,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2fad947f138cb70392f343c41565b472e389159bc39a00a9c5f8178e63ac7017",
+      "sourceUrl": "https://overthecap.com/player/dillon-wade/13700/"
+    },
+    {
+      "team": "GB",
+      "name": "Domani Jackson",
+      "playerId": "0828855d-b0ce-539e-9ec9-e44955596954",
+      "otcId": 13345,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4462ca0f7591e2a812f24a11c14f1859487b5c499c500591d8b6164029d9639f",
+      "sourceUrl": "https://overthecap.com/player/domani-jackson/13345/"
+    },
+    {
+      "team": "GB",
+      "name": "Quincy Skinner Jr.",
+      "playerId": "4a9d78e8-9029-56a5-9760-f87cf018a39f",
+      "otcId": 12952,
+      "status": "source_backed_candidate",
+      "sourceSha256": "20ea9b05ffdb540dfc8b3c22b286bb99274e74ff62d9cac22dc927b17bd28571",
+      "sourceUrl": "https://overthecap.com/player/quincy-skinner-jr/12952/"
+    },
+    {
+      "team": "GB",
+      "name": "Mazi Smith",
+      "playerId": "eeebd932-5016-56dc-81a1-62316b22a8d8",
+      "otcId": 10850,
+      "status": "source_backed_candidate",
+      "sourceSha256": "70379f086d0fd4ed1c60329a498ab7d2de548968737a0ee4609f4281c68f0722",
+      "sourceUrl": "https://overthecap.com/player/mazi-smith/10850/"
+    },
+    {
+      "team": "GB",
+      "name": "David Blay Jr.",
+      "playerId": "f364f4fa-5d37-5a79-85e2-aa8046a4b193",
+      "otcId": 13417,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d1a37978833fd9aafa8f25a4827b6bf2c1a4dc15729396515d52c7e23aaf83de",
+      "sourceUrl": "https://overthecap.com/player/david-blay-jr/13417/"
+    },
+    {
+      "team": "GB",
+      "name": "Jack Dingle",
+      "playerId": "e7c7c5d2-647f-5873-9bbc-787f2891f558",
+      "otcId": 13489,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ed90b4ed4e1eb1111f438a399152d7af9512c7db20bc729b6065af0dde427000",
+      "sourceUrl": "https://overthecap.com/player/jack-dingle/13489/"
+    },
+    {
+      "team": "HOU",
+      "name": "Keylan Rutledge",
+      "playerId": "37085a92-8a7d-54c8-8dcd-dd68091715ec",
+      "otcId": 13170,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "HOU",
+      "name": "Kayden McDonald",
+      "playerId": "6dbeaa8e-21b3-5763-aaeb-a4b4edf9b846",
+      "otcId": 13180,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ff3cbbc4383a7e7e63e3a7022a3a69c793ca79806a9b59f750e9022f869e587b",
+      "sourceUrl": "https://overthecap.com/player/kayden-mcdonald/13180/"
+    },
+    {
+      "team": "HOU",
+      "name": "Marlin Klein",
+      "playerId": "2bef6b8a-b8da-509f-945f-c43c4b742f82",
+      "otcId": 13203,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ef6049514c94a38e4a0d19d86bd7b9f89b88c3587be167d93c1e32865f2a328f",
+      "sourceUrl": "https://overthecap.com/player/marlin-klein/13203/"
+    },
+    {
+      "team": "HOU",
+      "name": "Febechi Nwaiwu",
+      "playerId": "aeef909c-b653-5c52-a30e-916e93a88887",
+      "otcId": 13250,
+      "status": "source_backed_candidate",
+      "sourceSha256": "22f1958f4b7c534f0057be23d7f7f84c8dafb18293cc71bb32cbb371d8581a2c",
+      "sourceUrl": "https://overthecap.com/player/febechi-nwaiwu/13250/"
+    },
+    {
+      "team": "HOU",
+      "name": "Wade Woodaz",
+      "playerId": "af788471-6ad2-52e9-b8f3-2d634aa7dc40",
+      "otcId": 13267,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b9111684e3b55c9468586fbc4f01ce44cc17059c2212cee94c517565af6e6adf",
+      "sourceUrl": "https://overthecap.com/player/wade-woodaz/13267/"
+    },
+    {
+      "team": "HOU",
+      "name": "Kamari Ramsey",
+      "playerId": "2e708e9d-d789-57b0-97b5-e3eb1d93855f",
+      "otcId": 13285,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7bdbab3a08dadc024e7b08822b8c72e31172826ac170554abf9a837725e8ecc5",
+      "sourceUrl": "https://overthecap.com/player/kamari-ramsey/13285/"
+    },
+    {
+      "team": "HOU",
+      "name": "Sabastian Harsh",
+      "playerId": "5494ee1a-cbd9-5eea-95d1-781b71939a12",
+      "otcId": 13511,
+      "status": "source_backed_candidate",
+      "sourceSha256": "e34e81e0ba8507af47cd9f475c9f0b4e4f0f481fa683094bda9360c9a5644e20",
+      "sourceUrl": "https://overthecap.com/player/sabastian-harsh/13511/"
+    },
+    {
+      "team": "HOU",
+      "name": "Bryce Hall",
+      "playerId": "751d223c-6ba5-5b02-bc25-b456a99c10c2",
+      "otcId": 8898,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5980437b29ac184416e8a291ab1695df414eb948cabe32ae2437a2879086ac42",
+      "sourceUrl": "https://overthecap.com/player/bryce-hall/8898/"
+    },
+    {
+      "team": "HOU",
+      "name": "Lewis Bond",
+      "playerId": "44620983-3e57-5ef3-b6e9-50b60b404065",
+      "otcId": 13348,
+      "status": "source_backed_candidate",
+      "sourceSha256": "98e9cf69abbfdb3dcc12ceb3f4b85a88571bb3b59427618da99af6dd13db0b97",
+      "sourceUrl": "https://overthecap.com/player/lewis-bond/13348/"
+    },
+    {
+      "team": "HOU",
+      "name": "Kenneth Murray",
+      "playerId": "f6927431-3ef9-5048-9385-d92e9c815424",
+      "otcId": 8763,
+      "status": "source_backed_candidate",
+      "sourceSha256": "550134e97d22c5e619b935f9584c16f94a4170d11ab423e145c6febe67166d1c",
+      "sourceUrl": "https://overthecap.com/player/kenneth-murray/8763/"
+    },
+    {
+      "team": "HOU",
+      "name": "James Neal III",
+      "playerId": "860ca64c-7459-5586-9b33-52625989a9e1",
+      "otcId": 13509,
+      "status": "source_backed_candidate",
+      "sourceSha256": "81cf40c3696683674c107d07549c7db1eb6be50e71ccbe4283e2537bd6148f08",
+      "sourceUrl": "https://overthecap.com/player/james-neal-iii/13509/"
+    },
+    {
+      "team": "HOU",
+      "name": "Collin Wright",
+      "playerId": "6e50357e-ea88-599d-9c4a-71c9c02e1ccd",
+      "otcId": 13506,
+      "status": "source_backed_candidate",
+      "sourceSha256": "32abcec121441130b61dcee7bac3c272e958043c1c7e8229b5024591cdb9a63c",
+      "sourceUrl": "https://overthecap.com/player/collin-wright/13506/"
+    },
+    {
+      "team": "HOU",
+      "name": "Sam Hagen",
+      "playerId": "d6c56e82-08c5-58f4-9ac6-78b2b527e82d",
+      "otcId": 13507,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7509323eb68c814951ef309929e56425d1c444ab9dc26b96958ad27cc216c89b",
+      "sourceUrl": "https://overthecap.com/player/sam-hagen/13507/"
+    },
+    {
+      "team": "HOU",
+      "name": "Noah Whittington",
+      "playerId": "ba91222a-f21c-5c2f-9e6d-4260b91a7ec5",
+      "otcId": 13505,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5c7e92417e749717f94d73efd7ad84340865084ad56fe04ef0cb269de8962edb",
+      "sourceUrl": "https://overthecap.com/player/noah-whittington/13505/"
+    },
+    {
+      "team": "IND",
+      "name": "C.J. Allen",
+      "playerId": "d414159e-1e73-5246-98f1-8c6f46b254f4",
+      "otcId": 13197,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f6381a623ef20c62cbf0508d807736bba92dd8b8d8de1b15f380433f5ad4841c",
+      "sourceUrl": "https://overthecap.com/player/c-j-allen/13197/"
+    },
+    {
+      "team": "IND",
+      "name": "A.J. Haulcy",
+      "playerId": "3d5d8058-9b33-53d2-afa7-e4684e3376c8",
+      "otcId": 13222,
+      "status": "source_backed_candidate",
+      "sourceSha256": "997bed3a9e461057facc54725b1213d1697f2f58943fe4471f75fd34dc632766",
+      "sourceUrl": "https://overthecap.com/player/a-j-haulcy/13222/"
+    },
+    {
+      "team": "IND",
+      "name": "Jalen Farmer",
+      "playerId": "b0cf10c8-a948-5e61-99be-e95163aec931",
+      "otcId": 13257,
+      "status": "source_backed_candidate",
+      "sourceSha256": "071c94cded6d064b5a06c3943a5b2a0c068569763c53632f186de1ae5053221a",
+      "sourceUrl": "https://overthecap.com/player/jalen-farmer/13257/"
+    },
+    {
+      "team": "IND",
+      "name": "Bryce Boettcher",
+      "playerId": "caef3220-4f3f-5d82-a31b-20b9a316d48d",
+      "otcId": 13279,
+      "status": "source_backed_candidate",
+      "sourceSha256": "331a3491d7b1f7050820079ae5fba35cf6c344963aa7176c3006060d80179622",
+      "sourceUrl": "https://overthecap.com/player/bryce-boettcher/13279/"
+    },
+    {
+      "team": "IND",
+      "name": "George Gumbs",
+      "playerId": "9919baa0-8a68-50f4-bc56-4226a39facb7",
+      "otcId": 13300,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8c45cd5658e341ec83499b3ef1c71922be58a6f3e5b20018b5990e4cd2b654e2",
+      "sourceUrl": "https://overthecap.com/player/george-gumbs/13300/"
+    },
+    {
+      "team": "IND",
+      "name": "Caden Curry",
+      "playerId": "009529e9-7754-589a-93cd-5a4d763880cb",
+      "otcId": 13358,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8c864909d5c501ba465d189e75fa4a97fff0b345a6b7d95f551402f6ab863394",
+      "sourceUrl": "https://overthecap.com/player/caden-curry/13358/"
+    },
+    {
+      "team": "IND",
+      "name": "Seth McGowan",
+      "playerId": "5410b8d8-1063-57a4-adeb-1b3c4ee655d3",
+      "otcId": 13381,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cc54eb2d9cb7175e1cfceeaf302a63609bbe7a8ff389440ad225e0b899d9c0e1",
+      "sourceUrl": "https://overthecap.com/player/seth-mcgowan/13381/"
+    },
+    {
+      "team": "IND",
+      "name": "Deion Burks",
+      "playerId": "a5df1ec0-f726-5397-81a3-c7aafecd4007",
+      "otcId": 13398,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1cbc6ec9c3748418601a191b3ebac4ab28d93629891b445db7a3b2c16d8d7202",
+      "sourceUrl": "https://overthecap.com/player/deion-burks/13398/"
+    },
+    {
+      "team": "IND",
+      "name": "Tahj Chambers",
+      "playerId": "df299f33-3e4e-5385-a2e7-8ced3a68a46c",
+      "otcId": 13524,
+      "status": "source_backed_candidate",
+      "sourceSha256": "532da2b5750d18cec563bbc72cfbbca83aeb0fa83e63806cb0c50a154c1bf622",
+      "sourceUrl": "https://overthecap.com/player/tahj-chambers/13524/"
+    },
+    {
+      "team": "IND",
+      "name": "Kapena Gushiken",
+      "playerId": "9c0e371d-df4b-573c-9065-d92d294faa63",
+      "otcId": 13659,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "IND",
+      "name": "Kenneth Harris",
+      "playerId": "f3c3cccc-2d4a-56fc-8145-5e4d6954b2ee",
+      "otcId": 13424,
+      "status": "source_backed_candidate",
+      "sourceSha256": "31e669bffcb3f2ec56f5bf3e5eb9d09d418037129366247acd1a21df320542e1",
+      "sourceUrl": "https://overthecap.com/player/kenneth-harris/13424/"
+    },
+    {
+      "team": "IND",
+      "name": "Germaine Pratt",
+      "playerId": "ad061867-b015-5c00-88bc-8f87f938be92",
+      "otcId": 7863,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9fb300c738dd0a4d28d91792611b9c47a62e271d09f9ae0a867040b40241f27b",
+      "sourceUrl": "https://overthecap.com/player/germaine-pratt/7863/"
+    },
+    {
+      "team": "IND",
+      "name": "Nolan Rucci",
+      "playerId": "d6a543dc-2df1-5836-8803-6ab177a35de7",
+      "otcId": 13518,
+      "status": "source_backed_candidate",
+      "sourceSha256": "779b883c211f99531f536e00866fa81b3b0158f8eed16505daadaae5b2be7c73",
+      "sourceUrl": "https://overthecap.com/player/nolan-rucci/13518/"
+    },
+    {
+      "team": "IND",
+      "name": "Cameron Ball",
+      "playerId": "8f7e705e-3c53-5ae4-a0d3-4c5a9dd1a320",
+      "otcId": 13517,
+      "status": "source_backed_candidate",
+      "sourceSha256": "305d90e5fb197ddd15202f6a115ef1b570adaa298614a24a2a4f724b0928b1ce",
+      "sourceUrl": "https://overthecap.com/player/cameron-ball/13517/"
+    },
+    {
+      "team": "IND",
+      "name": "Mitchell Melton",
+      "playerId": "17155bf0-e54e-51fb-827e-4ec409f61a02",
+      "otcId": 13519,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ec787240b79f241efc9ba163a95798086ea273bfa9996c9cb786c25c8bdd9ca8",
+      "sourceUrl": "https://overthecap.com/player/mitchell-melton/13519/"
+    },
+    {
+      "team": "IND",
+      "name": "West Weeks",
+      "playerId": "74536723-78fb-5372-bca6-8bf6361915ee",
+      "otcId": 13521,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d0cc89199a15e3581c5727612a96dfe7c52377e0ac21fce4887b2b2dbac1da1a",
+      "sourceUrl": "https://overthecap.com/player/west-weeks/13521/"
+    },
+    {
+      "team": "IND",
+      "name": "Davon Booth",
+      "playerId": "1279fdaf-d88c-5d71-80fe-1ec9593c861b",
+      "otcId": 13483,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7487e26d81eea08629f0f46383b6e191efaa04109ddab5e7ec42d5827432e421",
+      "sourceUrl": "https://overthecap.com/player/davon-booth/13483/"
+    },
+    {
+      "team": "IND",
+      "name": "Carson Towt",
+      "playerId": "7f84eca4-bcb3-5537-a70d-928f14ef7f52",
+      "otcId": 13143,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "JAX",
+      "name": "Nate Boerkircher",
+      "playerId": "b0f08652-f62a-5be9-a75a-f5957eebf255",
+      "otcId": 13200,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ada0eaaf6f0a96fe573ddfae7ba14493daeeba70791fdcf963cbceee050b3bb0",
+      "sourceUrl": "https://overthecap.com/player/nate-boerkircher/13200/"
+    },
+    {
+      "team": "JAX",
+      "name": "Albert Regis",
+      "playerId": "054104f1-0ef7-5949-be38-6ef51dcf28c7",
+      "otcId": 13225,
+      "status": "source_backed_candidate",
+      "sourceSha256": "413b500adc1b5eaa90ef714a8faff9f85daa6e17ca89f29510f2446ea1064270",
+      "sourceUrl": "https://overthecap.com/player/albert-regis/13225/"
+    },
+    {
+      "team": "JAX",
+      "name": "Emmanuel Pregnon",
+      "playerId": "6196c624-8a16-5227-bfbd-2ef38061c78b",
+      "otcId": 13232,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f73bf56a34bbd26d4fd9bf0a4f3be6e16a984ad71853a11a5d09a691d20b48b3",
+      "sourceUrl": "https://overthecap.com/player/emmanuel-pregnon/13232/"
+    },
+    {
+      "team": "JAX",
+      "name": "Jalen Huskey",
+      "playerId": "79c6f3e3-e49e-5889-8f66-3ac5493efade",
+      "otcId": 13244,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b48d94fac23df111c15a0566453b018192c6e8bf5791334941e777e92d185ab7",
+      "sourceUrl": "https://overthecap.com/player/jalen-huskey/13244/"
+    },
+    {
+      "team": "JAX",
+      "name": "Wesley Williams",
+      "playerId": "676b635e-eaa6-5450-a306-69b4e2295748",
+      "otcId": 13263,
+      "status": "source_backed_candidate",
+      "sourceSha256": "99a8b3d4da7d35e0eb0d1010cd7e49e0e6833a070efe2cfa350756c76ffd0cdc",
+      "sourceUrl": "https://overthecap.com/player/wesley-williams/13263/"
+    },
+    {
+      "team": "JAX",
+      "name": "Tanner Koziol",
+      "playerId": "4d2c85ee-9185-52b5-9ad1-6ce9ac251a18",
+      "otcId": 13308,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0206027f84df83d009d89bb37bdcdaa1b56e00bd354c3b983450ef44d6462b56",
+      "sourceUrl": "https://overthecap.com/player/tanner-koziol/13308/"
+    },
+    {
+      "team": "JAX",
+      "name": "Josh Cameron",
+      "playerId": "4b74bc9c-5456-5786-8656-1fa798573535",
+      "otcId": 13335,
+      "status": "source_backed_candidate",
+      "sourceSha256": "025b5137a9ee7d35223a665786e2127c1bbf1d9f6cbd09fd63bf613936680892",
+      "sourceUrl": "https://overthecap.com/player/josh-cameron/13335/"
+    },
+    {
+      "team": "JAX",
+      "name": "C.J. Williams",
+      "playerId": "34bc6a7e-9ba2-58cd-8397-bb5fba500e08",
+      "otcId": 13347,
+      "status": "source_backed_candidate",
+      "sourceSha256": "12df16427587c5960c3217ea7083512931b45e370a963eb54bc44d37d9f0a924",
+      "sourceUrl": "https://overthecap.com/player/c-j-williams/13347/"
+    },
+    {
+      "team": "JAX",
+      "name": "Bryan Thomas Jr.",
+      "playerId": "c9be28e9-4e17-5377-b439-3cba31d6ed04",
+      "otcId": 13530,
+      "status": "source_backed_candidate",
+      "sourceSha256": "957dfe65027df4ca246ad187dff293bdd05c0757ca7b950a5d53c631d4b80d7e",
+      "sourceUrl": "https://overthecap.com/player/bryan-thomas-jr/13530/"
+    },
+    {
+      "team": "JAX",
+      "name": "Trebor Pena",
+      "playerId": "e2cfba35-59a8-549f-8d6c-eca54417f74e",
+      "otcId": 13533,
+      "status": "source_backed_candidate",
+      "sourceSha256": "551bf967c4fd44a811116d0cce324e70031cc1b782eb1559295abe9b204037ca",
+      "sourceUrl": "https://overthecap.com/player/trebor-pena/13533/"
+    },
+    {
+      "team": "JAX",
+      "name": "Joey Aguilar",
+      "playerId": "c35a4b4e-6b08-59a8-aec8-9a6704bd2dc1",
+      "otcId": 13531,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c6826be8ca8f490a15c4aa6fdfa0f9a0c5e2feeb62516fba273066f678d59a70",
+      "sourceUrl": "https://overthecap.com/player/joey-aguilar/13531/"
+    },
+    {
+      "team": "JAX",
+      "name": "J'Mari Taylor",
+      "playerId": "59fe5d2b-f717-5ed7-9f5c-f2afb61558c0",
+      "otcId": 13529,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b4b4179137847d986d8c81144a5b3abf3d1563c4f1f91430efd33c302de7c18c",
+      "sourceUrl": "https://overthecap.com/player/jmari-taylor/13529/"
+    },
+    {
+      "team": "JAX",
+      "name": "T.J. Bollers",
+      "playerId": "d0ffcf7f-c187-5d87-8715-c0e0f62b3a55",
+      "otcId": 13539,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b5b8f0349fb6330eece1fa029f09ab7d1ad93ea27c7660bc341edaaab26eb995",
+      "sourceUrl": "https://overthecap.com/player/t-j-bollers/13539/"
+    },
+    {
+      "team": "JAX",
+      "name": "Michael Wortham",
+      "playerId": "ddb4fe30-6abe-5d2e-a41a-133fd2440bf8",
+      "otcId": 13536,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b146a5d5028da0fb66e5bee6ef8f6ee9d8600869d533f422f922d15633361066",
+      "sourceUrl": "https://overthecap.com/player/michael-wortham/13536/"
+    },
+    {
+      "team": "JAX",
+      "name": "Zach Durfee",
+      "playerId": "2e3c2a3a-420f-5c59-a62c-72d0be778b9b",
+      "otcId": 13377,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3a6d614fa686b5a7a4980fb42ede96ca9d0936a026e29d919bc57cb7d6afbd12",
+      "sourceUrl": "https://overthecap.com/player/zach-durfee/13377/"
+    },
+    {
+      "team": "JAX",
+      "name": "Parker Hughes",
+      "playerId": "d2182b8a-0b86-5ee6-9e86-2c6f6e216b53",
+      "otcId": 13384,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5af5a2a8a51cc8fa3c94e30b11b8b9710bd67d0f60961ef78b55f9f92dc640a6",
+      "sourceUrl": "https://overthecap.com/player/parker-hughes/13384/"
+    },
+    {
+      "team": "JAX",
+      "name": "Garrett DiGiorgio",
+      "playerId": "b389ce13-b11a-5858-aede-77eb3eb48694",
+      "otcId": 13532,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "KC",
+      "name": "Mansoor Delane",
+      "playerId": "099eee0e-8df3-5f5c-a9e8-113cf7c46066",
+      "otcId": 13150,
+      "status": "source_backed_candidate",
+      "sourceSha256": "620e8e79a943ec2ce9e04f75373aa10a70ddd2dc455530025884781d3ace5584",
+      "sourceUrl": "https://overthecap.com/player/mansoor-delane/13150/"
+    },
+    {
+      "team": "KC",
+      "name": "Peter Woods",
+      "playerId": "9e672bcb-6ca5-5794-aab7-4ff7b4b7baec",
+      "otcId": 13173,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b66663c88a6800daf317ba5635f8fd838137b9ae1813d0d0553c80b4ffc3dfde",
+      "sourceUrl": "https://overthecap.com/player/peter-woods/13173/"
+    },
+    {
+      "team": "KC",
+      "name": "R Mason Thomas",
+      "playerId": "5084b0f1-d77c-5abf-a137-802c0b3b541c",
+      "otcId": 13184,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9e5d040fc30f253bece3bf18126729b6db9155ec2d14b3f22ae931a541c73d6a",
+      "sourceUrl": "https://overthecap.com/player/r-mason-thomas/13184/"
+    },
+    {
+      "team": "KC",
+      "name": "Jadon Canady",
+      "playerId": "d01cf040-3cac-53f3-ba47-c2dff98722b2",
+      "otcId": 13253,
+      "status": "source_backed_candidate",
+      "sourceSha256": "04ee5406e6226544836e4382476481fcfd5f1690d323722cb549109430653834",
+      "sourceUrl": "https://overthecap.com/player/jadon-canady/13253/"
+    },
+    {
+      "team": "KC",
+      "name": "Emmett Johnson",
+      "playerId": "5eb513e8-54cb-5a77-84f0-f02c9f108b63",
+      "otcId": 13305,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b6481d609aff0161008a50425dbad8e6bdc2dc626fa03fcb20adea0c61bbc431",
+      "sourceUrl": "https://overthecap.com/player/emmett-johnson/13305/"
+    },
+    {
+      "team": "KC",
+      "name": "Cyrus Allen",
+      "playerId": "818235bd-2769-58cf-9192-2a873acac460",
+      "otcId": 13320,
+      "status": "source_backed_candidate",
+      "sourceSha256": "af84465c10a82b59416b705082e9fff5b113394dc867635b3cc264712352996a",
+      "sourceUrl": "https://overthecap.com/player/cyrus-allen/13320/"
+    },
+    {
+      "team": "KC",
+      "name": "Garrett Nussmeier",
+      "playerId": "9fd6af70-40a2-543d-bcc9-bd5dbd8495b6",
+      "otcId": 13393,
+      "status": "source_backed_candidate",
+      "sourceSha256": "50e832a0dc3c04f4a2488b92501def42a6ce6d9a899e7dfbde3f598290d94243",
+      "sourceUrl": "https://overthecap.com/player/garrett-nussmeier/13393/"
+    },
+    {
+      "team": "KC",
+      "name": "Xavier Nwankpa",
+      "playerId": "ebcb8308-82b6-53e8-9db1-190658f76453",
+      "otcId": 13575,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9440142cbc3d644ed7743cd83f34827ec16522db8f5212c7e91ce6b71f936d7f",
+      "sourceUrl": "https://overthecap.com/player/xavier-nwankpa/13575/"
+    },
+    {
+      "team": "KC",
+      "name": "Diego Pounds",
+      "playerId": "4e4eb6b3-6967-52c5-aa93-19136649bb81",
+      "otcId": 13455,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "KC",
+      "name": "Bryson Eason",
+      "playerId": "deedceeb-5c48-5c2d-b85a-443dc1a6d857",
+      "otcId": 13806,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "KC",
+      "name": "Jack Pyburn",
+      "playerId": "0e5a492b-244d-56a4-b2b3-3b332cfb75d9",
+      "otcId": 13765,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "KC",
+      "name": "Kahlil Benson",
+      "playerId": "caa7ef72-0c97-5501-b185-1df7a816591c",
+      "otcId": 13595,
+      "status": "source_backed_candidate",
+      "sourceSha256": "92e0afb7bdb320d97d2f2223212fde965ac1d608de48290a5d96cb17e385b963",
+      "sourceUrl": "https://overthecap.com/player/kahlil-benson/13595/"
+    },
+    {
+      "team": "KC",
+      "name": "Cooper McDonald",
+      "playerId": "df176bfe-2e55-5ee7-8e9c-936a02a3d4ad",
+      "otcId": 12986,
+      "status": "unresolved",
+      "reason": "Partial-year cash needs explicit salary-rate treatment"
+    },
+    {
+      "team": "KC",
+      "name": "Andrew Armstrong",
+      "playerId": "b12191ba-9164-5c6a-83d6-2b0fa06e34f1",
+      "otcId": 12623,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4a2e7d05c78296d0efcbc2291f47b624f696f6b9a66e0c86144ae194f838fbcc",
+      "sourceUrl": "https://overthecap.com/player/andrew-armstrong/12623/"
+    },
+    {
+      "team": "KC",
+      "name": "Jaydn Ott",
+      "playerId": "dc95147b-7a48-5565-8280-92bedc36236a",
+      "otcId": 13574,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f01fc613d48b099f70802691afc0ecb5a92984d15c327a621177218f306d57a8",
+      "sourceUrl": "https://overthecap.com/player/jaydn-ott/13574/"
+    },
+    {
+      "team": "KC",
+      "name": "Omari Evans",
+      "playerId": "2fb4d68f-5bcd-5be1-b1f5-822418925bf5",
+      "otcId": 13581,
+      "status": "source_backed_candidate",
+      "sourceSha256": "24a2f3ba4fabdf6ceae3a5bb4308670613951dfbe403dbaf88d40669fbc0d853",
+      "sourceUrl": "https://overthecap.com/player/omari-evans/13581/"
+    },
+    {
+      "team": "KC",
+      "name": "Pete Nygra",
+      "playerId": "42338d99-eb94-567f-9c53-91eab20923b2",
+      "otcId": 13583,
+      "status": "source_backed_candidate",
+      "sourceSha256": "86d14dbe317ca28b0d7e061eb7fb90665a77b9bac37c4023c312a1efdc9166ef",
+      "sourceUrl": "https://overthecap.com/player/pete-nygra/13583/"
+    },
+    {
+      "team": "KC",
+      "name": "DeShon Singleton",
+      "playerId": "d0319e3e-1b3f-5a24-95f2-1fc70580bd03",
+      "otcId": 13589,
+      "status": "source_backed_candidate",
+      "sourceSha256": "97e2696736dcca66ac9126c3b9aa7d36a8b86aa8da1af0d77cc460f260e85743",
+      "sourceUrl": "https://overthecap.com/player/deshon-singleton/13589/"
+    },
+    {
+      "team": "KC",
+      "name": "D'Arco Perkins-McAllister",
+      "playerId": "52ba30b5-55eb-56b3-8146-08d011af46aa",
+      "otcId": 13587,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a8fb95264414e02adb11ae284f7a1329a6677535e6db58534464d341ecc6b7bf",
+      "sourceUrl": "https://overthecap.com/player/darco-perkins-mcallister/13587/"
+    },
+    {
+      "team": "KC",
+      "name": "Michael Heldman",
+      "playerId": "08568dbe-6b6e-50ad-9471-dbbc4fa42c22",
+      "otcId": 13753,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4927ebd1af45135a239a8f2e85b4bed0ee84e23127489a4afda9f89303ffed54",
+      "sourceUrl": "https://overthecap.com/player/michael-heldman/13753/"
+    },
+    {
+      "team": "KC",
+      "name": "Aiden Fisher",
+      "playerId": "d44a2113-6ffb-5ef2-9683-9ab812497a45",
+      "otcId": 13387,
+      "status": "source_backed_candidate",
+      "sourceSha256": "e360d4f5495d81a0a0b4a0d08cf7d7c2da3cc6bb1680d43a2851d0b27a153ca6",
+      "sourceUrl": "https://overthecap.com/player/aiden-fisher/13387/"
+    },
+    {
+      "team": "KC",
+      "name": "Nate Carter",
+      "playerId": "a95766ff-585e-55c9-b9dc-8f77b6e95808",
+      "otcId": 12908,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d8139d3d674f52dff98d844a9562132ac06f584d8a02ee197cc960cbcbbd8272",
+      "sourceUrl": "https://overthecap.com/player/nate-carter/12908/"
+    },
+    {
+      "team": "KC",
+      "name": "Jeff Caldwell",
+      "playerId": "0e87dadb-b9de-5d6d-a951-fc12ba04a82f",
+      "otcId": 13572,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0a95bf5c61583df9c2183248bab717eb73e80418df0fa37c07a24a57ffbca9ab",
+      "sourceUrl": "https://overthecap.com/player/jeff-caldwell/13572/"
+    },
+    {
+      "team": "KC",
+      "name": "John Michael Gyllenborg",
+      "playerId": "ab364e53-71aa-50e5-b332-aec25997ea39",
+      "otcId": 13577,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fec761705ec69c543904df5796384aee9a7949ec005645a514f16b6bd6908dd1",
+      "sourceUrl": "https://overthecap.com/player/john-michael-gyllenborg/13577/"
+    },
+    {
+      "team": "LAC",
+      "name": "Akheem Mesidor",
+      "playerId": "c3cca793-c69e-5fc1-9aa2-196e9c14ff5d",
+      "otcId": 13166,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "LAC",
+      "name": "Jake Slaughter",
+      "playerId": "0c3c7885-d723-50c9-863b-5e64cd80df5e",
+      "otcId": 13207,
+      "status": "source_backed_candidate",
+      "sourceSha256": "637679609deb92a5625f4d5c08dfd80dfc2f2235f8da4bb5f687fd2fe52969e1",
+      "sourceUrl": "https://overthecap.com/player/jake-slaughter/13207/"
+    },
+    {
+      "team": "LAC",
+      "name": "Brenen Thompson",
+      "playerId": "1eeb5ac2-4f1c-5873-bc3c-1fc22b59059f",
+      "otcId": 13249,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5d1d75e85d022b79d394fa160776d86cd9fce8011f598e0be81cac2da61e1fe9",
+      "sourceUrl": "https://overthecap.com/player/brenen-thompson/13249/"
+    },
+    {
+      "team": "LAC",
+      "name": "Travis Burke",
+      "playerId": "83116f3c-2b8e-5abb-a00e-ed45d11ac3f2",
+      "otcId": 13261,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a8cbaa4f9f3c19be934174d78fc287e256a60bca8b66bfdd11ad4ea5a5e34baf",
+      "sourceUrl": "https://overthecap.com/player/travis-burke/13261/"
+    },
+    {
+      "team": "LAC",
+      "name": "Genesis Smith",
+      "playerId": "562599a7-d0fc-5c19-a498-e3fd9e609901",
+      "otcId": 13275,
+      "status": "source_backed_candidate",
+      "sourceSha256": "874c9720061f1c7e3203f4bc2cd0891a03137e2c9ff786ee56821ccb9d33a853",
+      "sourceUrl": "https://overthecap.com/player/genesis-smith/13275/"
+    },
+    {
+      "team": "LAC",
+      "name": "Nick Barrett",
+      "playerId": "35501e89-9dad-59cc-b3f0-c1144efc2373",
+      "otcId": 13289,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b4046d2f55a41bbc23e4dbb567de7835bdb42e552e39881c9bf20cb5cb9fc3c1",
+      "sourceUrl": "https://overthecap.com/player/nick-barrett/13289/"
+    },
+    {
+      "team": "LAC",
+      "name": "Logan Taylor",
+      "playerId": "9dcae10c-7a70-5593-8d2b-205aedba98e4",
+      "otcId": 13346,
+      "status": "source_backed_candidate",
+      "sourceSha256": "79a0880edfe5b875ceae850eafe7d8a1b469fec86c7e8e8e503d0e50be31d970",
+      "sourceUrl": "https://overthecap.com/player/logan-taylor/13346/"
+    },
+    {
+      "team": "LAC",
+      "name": "Alex Harkey",
+      "playerId": "08ecfa55-b8f1-51d1-8d75-930387e7955f",
+      "otcId": 13350,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6cbc87af758dfa1c76e49545556425a5275a53ec725ba752948c66ad8b251450",
+      "sourceUrl": "https://overthecap.com/player/alex-harkey/13350/"
+    },
+    {
+      "team": "LAC",
+      "name": "Jacob Spomer",
+      "playerId": "d0827496-670c-5a0e-8ada-b60952f0c57a",
+      "otcId": 13612,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2ed462dddcd787b154ac05bf173ef637ce1319efd1aaebf26f929ac81fb8ca4c",
+      "sourceUrl": "https://overthecap.com/player/jacob-spomer/13612/"
+    },
+    {
+      "team": "LAC",
+      "name": "Rodney Shelley",
+      "playerId": "0d3aa934-26b3-55e1-9a99-2173b7fce01f",
+      "otcId": 13611,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "LAC",
+      "name": "Lander Barton",
+      "playerId": "4975ca43-27db-56fe-b777-6ccd84a5b782",
+      "otcId": 13598,
+      "status": "source_backed_candidate",
+      "sourceSha256": "818b38d86e4accba7a4f7c27748fb23029a083fe896cc8d8a8a7b08093bc798c",
+      "sourceUrl": "https://overthecap.com/player/lander-barton/13598/"
+    },
+    {
+      "team": "LAC",
+      "name": "Greg Desrosiers Jr.",
+      "playerId": "a480bc51-a9fa-5eb6-8306-99c21c146a5c",
+      "otcId": 13601,
+      "status": "source_backed_candidate",
+      "sourceSha256": "e93b03a82c8bda567db674a0eea2b19f0f93a521794696e2d6bc93feb7e0aee9",
+      "sourceUrl": "https://overthecap.com/player/greg-desrosiers-jr/13601/"
+    },
+    {
+      "team": "LAC",
+      "name": "Terry Webb",
+      "playerId": "b051b7bd-bae0-5bd1-898b-0bb9f9583f41",
+      "otcId": 13613,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ce6a1083a752abd0a9b0d3f92949cdf6c428d2eff4b8d63fedd770b15bfdc386",
+      "sourceUrl": "https://overthecap.com/player/terry-webb/13613/"
+    },
+    {
+      "team": "LAC",
+      "name": "Evan Svoboda",
+      "playerId": "7854c1b3-33cb-5bfe-9477-24b87bee7ba2",
+      "otcId": 13600,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4d5c00859f2841eab03ef24601c89d5d13a266a12022edff1ecd3e4d5d8600ea",
+      "sourceUrl": "https://overthecap.com/player/evan-svoboda/13600/"
+    },
+    {
+      "team": "LAC",
+      "name": "Isaiah World",
+      "playerId": "f5f42419-7e43-5a65-bb82-1a77453adecd",
+      "otcId": 13596,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5ef41e0aa3c3e0ffa4f719f75d5b6429a4e45ebca91fc1860ac1804971c19864",
+      "sourceUrl": "https://overthecap.com/player/isaiah-world/13596/"
+    },
+    {
+      "team": "LAR",
+      "name": "Ty Simpson",
+      "playerId": "eb75860d-574a-502d-b8aa-39cb1951a2cf",
+      "otcId": 13157,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b1542febc8fc8603b4962cbed009ee4792584c0cddd7310731e58a6c7683c23b",
+      "sourceUrl": "https://overthecap.com/player/ty-simpson/13157/"
+    },
+    {
+      "team": "LAR",
+      "name": "Max Klare",
+      "playerId": "ef76ce5f-ca33-52a9-895c-97f2a4f66446",
+      "otcId": 13205,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c24c92c09c97b5d8d812ddba34c4cae5143292487ae5c3043bae30035552506c",
+      "sourceUrl": "https://overthecap.com/player/max-klare/13205/"
+    },
+    {
+      "team": "LAR",
+      "name": "Keagen Trost",
+      "playerId": "3160bb11-5f89-5a77-a8d3-ed8088450d4a",
+      "otcId": 13237,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fd5171930b12b39c916aa2931779d9a4b6161e76b03cd5686bd73e237978659a",
+      "sourceUrl": "https://overthecap.com/player/keagen-trost/13237/"
+    },
+    {
+      "team": "LAR",
+      "name": "C.J. Daniels",
+      "playerId": "39861395-4067-5b58-995a-c9a9e5d34717",
+      "otcId": 13341,
+      "status": "source_backed_candidate",
+      "sourceSha256": "70621594a88d2ca5d5bcc903bcabedffa1e7852cb5611545354a6927bb6e7cea",
+      "sourceUrl": "https://overthecap.com/player/c-j-daniels/13341/"
+    },
+    {
+      "team": "LAR",
+      "name": "Wesley Bailey",
+      "playerId": "bd3dfa11-76ba-5a24-a5c3-91ead5a0f7b6",
+      "otcId": 13788,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b8e005d72fa84a7c9dcb44642f882eec1192dcd06ea95b1858fb43f68594a9be",
+      "sourceUrl": "https://overthecap.com/player/wesley-bailey/13788/"
+    },
+    {
+      "team": "LAR",
+      "name": "Brandon McManus",
+      "playerId": "3047746a-185e-5f94-b54e-c18fa08583ea",
+      "otcId": 2672,
+      "status": "source_backed_candidate",
+      "sourceSha256": "93a727d2f1dbc0355dec4d5dc871a363353293b77c0ce9d0c21d97754a1473c1",
+      "sourceUrl": "https://overthecap.com/player/brandon-mcmanus/2672/"
+    },
+    {
+      "team": "LAR",
+      "name": "Maximus Pulley",
+      "playerId": "a1ca43fd-e96b-535c-9075-d437ca6a1c67",
+      "otcId": 13663,
+      "status": "source_backed_candidate",
+      "sourceSha256": "20193eb40b96cc96cc3e71f8da949c58f9ddf1f1b30bf773af106830efcab402",
+      "sourceUrl": "https://overthecap.com/player/maximus-pulley/13663/"
+    },
+    {
+      "team": "LAR",
+      "name": "Dean Connors",
+      "playerId": "44291237-e0f0-5549-9426-4e20097297ba",
+      "otcId": 13798,
+      "status": "source_backed_candidate",
+      "sourceSha256": "322446a53e350f3ed3ca092717d06a1bda228dd78851b93b9f13619ab7ce7951",
+      "sourceUrl": "https://overthecap.com/player/dean-connors/13798/"
+    },
+    {
+      "team": "LAR",
+      "name": "Darryl Peterson",
+      "playerId": "f1be2288-fde7-5dd4-82a0-12cf4f48df90",
+      "otcId": 13805,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4ff918adca1984cf323271e0dfde43610f4c484b0791572e230b3af4225ed5d4",
+      "sourceUrl": "https://overthecap.com/player/darryl-peterson/13805/"
+    },
+    {
+      "team": "LAR",
+      "name": "Dean Connors",
+      "playerId": "44291237-e0f0-5549-9426-4e20097297ba",
+      "otcId": 13798,
+      "status": "unresolved",
+      "reason": "Current-page/team-snapshot charge differs or missing"
+    },
+    {
+      "team": "LAR",
+      "name": "Jordan Waters",
+      "playerId": "32b47047-642f-54c9-8736-5adf41782c8a",
+      "otcId": 12957,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5fe7d215b843555b5efd8a1543b2bc9f5290f197972af03448d89fbe4c594bec",
+      "sourceUrl": "https://overthecap.com/player/jordan-waters/12957/"
+    },
+    {
+      "team": "LAR",
+      "name": "Dan Villari",
+      "playerId": "3b70aa80-94b2-5478-84bb-3d59f8f6025e",
+      "otcId": 13789,
+      "status": "source_backed_candidate",
+      "sourceSha256": "34dff5270dea590bfdd727ae34129fd44e26a4d5ffdc92d449b7e1825cf2ec15",
+      "sourceUrl": "https://overthecap.com/player/dan-villari/13789/"
+    },
+    {
+      "team": "LAR",
+      "name": "Austin Blaske",
+      "playerId": "ddcda3fd-9232-5ea3-9e9a-9183d3ee0c21",
+      "otcId": 13796,
+      "status": "source_backed_candidate",
+      "sourceSha256": "22503d7722bf213246ef1ca046004d45f82b54d0e026f4914b6c5de5a9977de2",
+      "sourceUrl": "https://overthecap.com/player/austin-blaske/13796/"
+    },
+    {
+      "team": "LAR",
+      "name": "Nyzier Fourqurean",
+      "playerId": "6aca125f-6fc9-5440-a247-1d8b98906671",
+      "otcId": 13799,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2b26847bd86bae28909ba0e4a46e34d2a853e9495d3bb4fdef2c050a90192252",
+      "sourceUrl": "https://overthecap.com/player/nyzier-fourqurean/13799/"
+    },
+    {
+      "team": "LAR",
+      "name": "Nick Andersen",
+      "playerId": "9970a509-5a60-5b27-8c57-8e66efcdb376",
+      "otcId": 13790,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fe0212aa1a68ca597436719e568c63ab644747d28342f150ecfb89c8983568b1",
+      "sourceUrl": "https://overthecap.com/player/nick-andersen/13790/"
+    },
+    {
+      "team": "LAR",
+      "name": "Jaxson Moi",
+      "playerId": "867194e5-161c-54e2-8a76-ef56ee8c8dac",
+      "otcId": 13804,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9fd48b0877159f4b2785d4e932f4321b950a157c46b7510e61bd08d3d6122913",
+      "sourceUrl": "https://overthecap.com/player/jaxson-moi/13804/"
+    },
+    {
+      "team": "LAR",
+      "name": "Jalen Hunt",
+      "playerId": "d9786c8b-7c23-5e2a-b711-d98b563ee4d5",
+      "otcId": 13543,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d50e4b50a1ec97d60ee8582decc56f028f23bd569fd6e9c33802331082c73247",
+      "sourceUrl": "https://overthecap.com/player/jalen-hunt/13543/"
+    },
+    {
+      "team": "LAR",
+      "name": "Matthew Caldwell",
+      "playerId": "878da81e-b3e6-5074-905a-b38d9b393894",
+      "otcId": 13797,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f1260df9385bd5068661066cb7794c460b588cdb1f795f705db9efbbefddca9f",
+      "sourceUrl": "https://overthecap.com/player/matthew-caldwell/13797/"
+    },
+    {
+      "team": "LAR",
+      "name": "Eddie Walls III",
+      "playerId": "06688d56-4652-51f0-b2b2-4337dc1940b6",
+      "otcId": 13792,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6d59008181a177e79f49d2775b24c65bb6b4d0e0783f9b8883a699044c4ea6a3",
+      "sourceUrl": "https://overthecap.com/player/eddie-walls-iii/13792/"
+    },
+    {
+      "team": "LV",
+      "name": "Fernando Mendoza",
+      "playerId": "397cbdfc-9b44-5e09-91bc-ee1e539c764d",
+      "otcId": 13145,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "LV",
+      "name": "Treydan Stukes",
+      "playerId": "1ad9521c-75fa-54e3-8b60-8dcf8d375362",
+      "otcId": 13182,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0b9e11ad1c06b69bbecf9df109b72e48284d8ab668d8a932864856552f7c9781",
+      "sourceUrl": "https://overthecap.com/player/treydan-stukes/13182/"
+    },
+    {
+      "team": "LV",
+      "name": "Trey Zuhn III",
+      "playerId": "5a887ab1-6788-56cf-b3ed-c446088b2a9c",
+      "otcId": 13235,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d558f964f7fbc63b9c26ca629d223fc429b1e5863ef2fe31bb0ca88474a66bae",
+      "sourceUrl": "https://overthecap.com/player/trey-zuhn-iii/13235/"
+    },
+    {
+      "team": "LV",
+      "name": "Jermod McCoy",
+      "playerId": "a8879476-dcad-55f6-a170-dd882c01b9e5",
+      "otcId": 13245,
+      "status": "source_backed_candidate",
+      "sourceSha256": "149a6a691ee00c7d31f664967e064b7b781837a537bd109ca8b8ab8a9cf1a7a9",
+      "sourceUrl": "https://overthecap.com/player/jermod-mccoy/13245/"
+    },
+    {
+      "team": "LV",
+      "name": "Mike Washington Jr.",
+      "playerId": "997410de-df6b-57c7-a977-cff11c114549",
+      "otcId": 13266,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ee7dd57969d264028ca74993e4634c94b76782d18d8586b7594360a5778d9ae6",
+      "sourceUrl": "https://overthecap.com/player/mike-washington-jr/13266/"
+    },
+    {
+      "team": "LV",
+      "name": "Dalton Johnson",
+      "playerId": "15f5cc2f-9624-513d-b3c5-5ac9df47dc87",
+      "otcId": 13294,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2b2831c521e1eb7e1b24facd9642514dd051dea14a7a20cb631503e2216a7581",
+      "sourceUrl": "https://overthecap.com/player/dalton-johnson/13294/"
+    },
+    {
+      "team": "LV",
+      "name": "Hezekiah Masses",
+      "playerId": "845e634b-1c56-5dcd-a272-928090943e94",
+      "otcId": 13319,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d767f5801a4ccc97cfaf4bc7397885a5c53572d29e9a6d24483b2e211c8ef142",
+      "sourceUrl": "https://overthecap.com/player/hezekiah-masses/13319/"
+    },
+    {
+      "team": "LV",
+      "name": "Malik Benson",
+      "playerId": "d624b5b6-dad1-5082-b913-b5fa76740c0f",
+      "otcId": 13339,
+      "status": "source_backed_candidate",
+      "sourceSha256": "40e506b05451172278d9bdbd6eff707d9ab8ec55fdfe8798b6740c01090d8bad",
+      "sourceUrl": "https://overthecap.com/player/malik-benson/13339/"
+    },
+    {
+      "team": "LV",
+      "name": "Cian Slone",
+      "playerId": "6909fd60-6374-5814-99db-d623585631b1",
+      "otcId": 13617,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "LV",
+      "name": "Roman Hemby",
+      "playerId": "d3660556-92c1-5ea4-a469-13ff1bb403c3",
+      "otcId": 13615,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "LV",
+      "name": "Darian Kinnard",
+      "playerId": "5197f87d-381d-5f70-9366-72dc60b2f0c0",
+      "otcId": 10190,
+      "status": "source_backed_candidate",
+      "sourceSha256": "00abd914806c19b7faf2226a0308c30a907a6115c9857e9861698de84d806dbc",
+      "sourceUrl": "https://overthecap.com/player/darian-kinnard/10190/"
+    },
+    {
+      "team": "LV",
+      "name": "Brandon Cleveland",
+      "playerId": "92f2e397-f23b-5595-a6b3-18f42371e3a5",
+      "otcId": 13373,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3fe7556cb54dcfa3bd62990e5f8c9eee299acb5c7541692e737d9029dc30104d",
+      "sourceUrl": "https://overthecap.com/player/brandon-cleveland/13373/"
+    },
+    {
+      "team": "LV",
+      "name": "Niklas Henning",
+      "playerId": "be4cbeb7-3a55-5ab6-8e97-8cce64d404c0",
+      "otcId": 13634,
+      "status": "source_backed_candidate",
+      "sourceSha256": "07547d4b41159519736b35595175b7b6ac5f66c0fa25658e7286804b4a57825d",
+      "sourceUrl": "https://overthecap.com/player/niklas-henning/13634/"
+    },
+    {
+      "team": "LV",
+      "name": "Tim Keenan III",
+      "playerId": "4a3b6549-8948-55e2-a2a6-4ecc0776be3c",
+      "otcId": 13376,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fa24ee09b55747bc66d5c3c362fc1860a358a6b13060de89a573c09ad6551edd",
+      "sourceUrl": "https://overthecap.com/player/tim-keenan-iii/13376/"
+    },
+    {
+      "team": "LV",
+      "name": "Patrick Gurd",
+      "playerId": "a0e44d69-6a83-5071-b6a4-aedb204dca4d",
+      "otcId": 13633,
+      "status": "source_backed_candidate",
+      "sourceSha256": "977d02476a24f478e2e347304024cfe4667b9776d97bdc5f400a4c3722ecaa0e",
+      "sourceUrl": "https://overthecap.com/player/patrick-gurd/13633/"
+    },
+    {
+      "team": "LV",
+      "name": "Amari Kight",
+      "playerId": "ebe6a635-2be8-55cf-9883-6933055d801e",
+      "otcId": 12995,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3e42ff5c2f741c83acbeed4a614de8407f632c009370dc8cd8c429c7e16124d8",
+      "sourceUrl": "https://overthecap.com/player/amari-kight/12995/"
+    },
+    {
+      "team": "LV",
+      "name": "Kansei Matsuzawa",
+      "playerId": "ffbf8663-b643-5701-a29b-0a12d94cea1e",
+      "otcId": 13620,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6b7124d76e6227724a0221091d0812b0d4e607935faf94f67ece2c679c1d43bc",
+      "sourceUrl": "https://overthecap.com/player/kansei-matsuzawa/13620/"
+    },
+    {
+      "team": "LV",
+      "name": "Keyron Crawford",
+      "playerId": "83eeeeb4-1d2e-57d8-a08a-3ed15a9d4a24",
+      "otcId": 13211,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2f064826717f370fae7410ad35687cc8116f61c1c025894b3336edfe423eb33e",
+      "sourceUrl": "https://overthecap.com/player/keyron-crawford/13211/"
+    },
+    {
+      "team": "LV",
+      "name": "Justin Pickett",
+      "playerId": "b4c03e6e-009d-5b34-ad5c-4ae8113415d4",
+      "otcId": 13626,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ca298642a70a3fd10efbd8b585851f8c00e70cb7cea7770167780410c23c124d",
+      "sourceUrl": "https://overthecap.com/player/justin-pickett/13626/"
+    },
+    {
+      "team": "MIA",
+      "name": "Kadyn Proctor",
+      "playerId": "4f1add1c-fd93-573b-9f29-3935d9832e9d",
+      "otcId": 13156,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7c21f4fe4085c1ef15bc42b4298b841cca9ad2fcf54e2c766cb90c85fd299e3d",
+      "sourceUrl": "https://overthecap.com/player/kadyn-proctor/13156/"
+    },
+    {
+      "team": "MIA",
+      "name": "Chris Johnson",
+      "playerId": "d8bba5c2-e5fe-5174-b04a-b7125d6bc2eb",
+      "otcId": 13171,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "MIA",
+      "name": "Jacob Rodriguez",
+      "playerId": "8fba833d-566d-512d-8e3c-4cd1f05bde84",
+      "otcId": 13187,
+      "status": "source_backed_candidate",
+      "sourceSha256": "62e03997750b376583c9eb75355b4ce0c0fc5d30eaa53cf7b8612103baf321f1",
+      "sourceUrl": "https://overthecap.com/player/jacob-rodriguez/13187/"
+    },
+    {
+      "team": "MIA",
+      "name": "Caleb Douglas",
+      "playerId": "2f4fa77a-ed99-5d01-9f61-0a480bf15903",
+      "otcId": 13219,
+      "status": "source_backed_candidate",
+      "sourceSha256": "832a6e782dd1c437647cfcebcf5f95596290ac39b78fee38989066e22368056e",
+      "sourceUrl": "https://overthecap.com/player/caleb-douglas/13219/"
+    },
+    {
+      "team": "MIA",
+      "name": "Will Kacmarek",
+      "playerId": "291249f9-3f20-5a34-80b1-e53d8d6af425",
+      "otcId": 13231,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4a79be220fc357bb3c1c23c486842312e814e8ddaddf323b7c8c3c66e57dcb95",
+      "sourceUrl": "https://overthecap.com/player/will-kacmarek/13231/"
+    },
+    {
+      "team": "MIA",
+      "name": "Chris Bell",
+      "playerId": "b1a0244d-337a-5615-9095-ccc2a2f709c3",
+      "otcId": 13238,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d525daa05525f617a1fac0d388acff7e18f71701aae92defded176cee479a90a",
+      "sourceUrl": "https://overthecap.com/player/chris-bell/13238/"
+    },
+    {
+      "team": "MIA",
+      "name": "Michael Taaffe",
+      "playerId": "1e507817-9068-5f9f-9685-ffcea43c3e8d",
+      "otcId": 13302,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d26faebe062e689681ccd148def18ccf7afad8a2236644b351a5452d625217c9",
+      "sourceUrl": "https://overthecap.com/player/michael-taaffe/13302/"
+    },
+    {
+      "team": "MIA",
+      "name": "Kevin Coleman Jr.",
+      "playerId": "3704d453-997a-5eeb-8366-028c630e06be",
+      "otcId": 13321,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4cb591c1cae9d158b1d98708f771ceb416623145696ddde5baabb688496e1707",
+      "sourceUrl": "https://overthecap.com/player/kevin-coleman-jr/13321/"
+    },
+    {
+      "team": "MIA",
+      "name": "Seydou Traore",
+      "playerId": "0dd94708-c9a7-5f6d-998b-e35c1268b3c8",
+      "otcId": 13324,
+      "status": "source_backed_candidate",
+      "sourceSha256": "794dde5c930715c83f2f4c485e8147a071485df9d2575facaae45a163040709e",
+      "sourceUrl": "https://overthecap.com/player/seydou-traore/13324/"
+    },
+    {
+      "team": "MIA",
+      "name": "Kyle Louis",
+      "playerId": "a2e79642-ff54-5da8-92e3-d8364e30c086",
+      "otcId": 13282,
+      "status": "source_backed_candidate",
+      "sourceSha256": "694a40ceb73ce54ac44c0b9ee32b8eed3dfab55bca42754b9fb5d74ca9ac04d7",
+      "sourceUrl": "https://overthecap.com/player/kyle-louis/13282/"
+    },
+    {
+      "team": "MIA",
+      "name": "D.J. Campbell",
+      "playerId": "b7e597c1-c45e-51c0-84fc-fe91d9aa83de",
+      "otcId": 13344,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ccf3480357e812c2a547718fef7dfcd178693a020512134d44d3096324ee4400",
+      "sourceUrl": "https://overthecap.com/player/d-j-campbell/13344/"
+    },
+    {
+      "team": "MIA",
+      "name": "Justin Joly",
+      "playerId": "cf0874a9-16ab-5df5-bfd3-96d9fd9b1cb6",
+      "otcId": 13296,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "MIA",
+      "name": "D.J. Herman",
+      "playerId": "7413ad04-65dc-525b-a232-7ff571af9f2e",
+      "otcId": 13441,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ba7d0f1f47a0024595b8e1cf1ecbeeec3567a9b3921df97fd75e64bc255e6304",
+      "sourceUrl": "https://overthecap.com/player/d-j-herman/13441/"
+    },
+    {
+      "team": "MIA",
+      "name": "Kaytron Allen",
+      "playerId": "706018b1-b1a2-5423-be95-d156c70c0517",
+      "otcId": 13331,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "MIA",
+      "name": "Rodney McGraw",
+      "playerId": "88a1bafd-bb5a-56e6-aab0-28fceca43819",
+      "otcId": 13439,
+      "status": "source_backed_candidate",
+      "sourceSha256": "24070b86fa992585bc0287fcebec7fb6840b2c766343d8b1970d11c8f1889464",
+      "sourceUrl": "https://overthecap.com/player/rodney-mcgraw/13439/"
+    },
+    {
+      "team": "MIA",
+      "name": "Max Llewellyn",
+      "playerId": "b7aee0ed-a593-58ac-a991-fcfe144092f2",
+      "otcId": 13382,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "MIA",
+      "name": "Major Burns",
+      "playerId": "b796356a-13f1-5eb8-8942-5c57d24b23c0",
+      "otcId": 12650,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f3d74aeebc81bacb3ac3abed918921ea7ec99c7225044a6434ac6656427079ae",
+      "sourceUrl": "https://overthecap.com/player/major-burns/12650/"
+    },
+    {
+      "team": "MIA",
+      "name": "Zane Gonzalez",
+      "playerId": "eef234d9-361a-5224-9226-c937eb805c27",
+      "otcId": 5810,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9062a239abc7545d37ef6a8d7d7b2c41bb40f2663d29bfc449e7364540bf2693",
+      "sourceUrl": "https://overthecap.com/player/zane-gonzalez/5810/"
+    },
+    {
+      "team": "MIA",
+      "name": "Trey Moore",
+      "playerId": "6501ed92-6dfe-5924-8165-ad886d754f85",
+      "otcId": 13274,
+      "status": "source_backed_candidate",
+      "sourceSha256": "be5a19b7d2e0e3400e86e97939316497f04a573e4f841521dc6decf76ce7181c",
+      "sourceUrl": "https://overthecap.com/player/trey-moore/13274/"
+    },
+    {
+      "team": "MIA",
+      "name": "Rene Konga",
+      "playerId": "cb97e99c-61d4-5050-a3d3-6c8f79d23fc1",
+      "otcId": 13433,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "MIN",
+      "name": "Caleb Banks",
+      "playerId": "2d01adc4-391e-5627-ac51-e48aa141d0d8",
+      "otcId": 13162,
+      "status": "source_backed_candidate",
+      "sourceSha256": "db58c1d3f3e8791811cd7caad0bb537d39ec94e84b27c6d31a6a86f63830c0da",
+      "sourceUrl": "https://overthecap.com/player/caleb-banks/13162/"
+    },
+    {
+      "team": "MIN",
+      "name": "Jake Golday",
+      "playerId": "61614ee8-1fb8-5773-9f56-9ce4d3ab8754",
+      "otcId": 13195,
+      "status": "source_backed_candidate",
+      "sourceSha256": "e6c7a3ff1e9cf9456dae6bc0e4489076adf64fe252378560562525dedfa92183",
+      "sourceUrl": "https://overthecap.com/player/jake-golday/13195/"
+    },
+    {
+      "team": "MIN",
+      "name": "Domonique Orange",
+      "playerId": "c6733eb7-444f-5710-8244-d5944d871ac3",
+      "otcId": 13226,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3db464d21c7645826aef9271c9dfc924b93bf7c79dd0342a24c03a890cd684ea",
+      "sourceUrl": "https://overthecap.com/player/domonique-orange/13226/"
+    },
+    {
+      "team": "MIN",
+      "name": "Jakobe Thomas",
+      "playerId": "cf2fef21-abe3-53e3-b097-784bc47eec3b",
+      "otcId": 13242,
+      "status": "source_backed_candidate",
+      "sourceSha256": "06ab67c7e5ef27585bbdb6c2ef2b8a38a2239cee64226ba4784be67154399bec",
+      "sourceUrl": "https://overthecap.com/player/jakobe-thomas/13242/"
+    },
+    {
+      "team": "MIN",
+      "name": "Caleb Tiernan",
+      "playerId": "be5e327f-0308-59c4-b76c-05805f9d1984",
+      "otcId": 13241,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6f1db1210d643002f7ce7d908127384d2e5fae1eb830b6764e91b197a5bd898f",
+      "sourceUrl": "https://overthecap.com/player/caleb-tiernan/13241/"
+    },
+    {
+      "team": "MIN",
+      "name": "Max Bredeson",
+      "playerId": "616437d2-7550-556c-be02-5bbc1a5218f7",
+      "otcId": 13303,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c8d4354a015ab345b7c9355112bc688eb3a5f5ed66f85df2d8b7219f77cfe8ca",
+      "sourceUrl": "https://overthecap.com/player/max-bredeson/13303/"
+    },
+    {
+      "team": "MIN",
+      "name": "Charles Demmings",
+      "playerId": "d7b66e5d-c67c-5aa9-bc66-9b47a44b560d",
+      "otcId": 13307,
+      "status": "source_backed_candidate",
+      "sourceSha256": "bb750e9732de6c354ccfa16452c7e3a78d1e29a8431e325083ef4eef3831b775",
+      "sourceUrl": "https://overthecap.com/player/charles-demmings/13307/"
+    },
+    {
+      "team": "MIN",
+      "name": "Demond Claiborne",
+      "playerId": "07a50ccb-0a1f-5e74-ace1-0f01271ed7fa",
+      "otcId": 13342,
+      "status": "source_backed_candidate",
+      "sourceSha256": "984cad5a8ae418e0d91071a620c1d514f14096e74e48dc5ed18b350527f779a5",
+      "sourceUrl": "https://overthecap.com/player/demond-claiborne/13342/"
+    },
+    {
+      "team": "MIN",
+      "name": "Brett Thorson",
+      "playerId": "ea3df1cf-cec0-5c46-8f98-e23f3f7ea05c",
+      "otcId": 13402,
+      "status": "source_backed_candidate",
+      "sourceSha256": "896455c3001f1eb7a491e2b2fc9f37c1daf894384027543bf85811204910f659",
+      "sourceUrl": "https://overthecap.com/player/brett-thorson/13402/"
+    },
+    {
+      "team": "MIN",
+      "name": "Jacob Thomas",
+      "playerId": "b114d169-b964-5573-9759-d4d39ab5662f",
+      "otcId": 13713,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a49f128ddd7504fa339637f568a0501367f7ca907cb993b217e01447a904184b",
+      "sourceUrl": "https://overthecap.com/player/jacob-thomas/13713/"
+    },
+    {
+      "team": "MIN",
+      "name": "Dillon Bell",
+      "playerId": "f4fbfa33-9da7-5351-93b6-c2f41ffecbf1",
+      "otcId": 13709,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "MIN",
+      "name": "Bangally Kamara",
+      "playerId": "19d56055-3db8-5626-bac7-625b74b4df3c",
+      "otcId": 13717,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cad16a8aa1e3ee5bc5f1b75d9ebe2a5271874fb428f2c3f31e6331a1d269d0ec",
+      "sourceUrl": "https://overthecap.com/player/bangally-kamara/13717/"
+    },
+    {
+      "team": "MIN",
+      "name": "Jahvaree Ritzie",
+      "playerId": "6167ce0a-b521-5ea6-ad25-c358f062e4eb",
+      "otcId": 12838,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4d1fd04abbe8c89a047011fed5ea0eb8c2bc22247b7b30cda6fc90b896919045",
+      "sourceUrl": "https://overthecap.com/player/jahvaree-ritzie/12838/"
+    },
+    {
+      "team": "MIN",
+      "name": "Michael Briscoe",
+      "playerId": "9ddfab56-ec33-55ea-a9d8-999bcbb5e84c",
+      "otcId": 13817,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0d42b20fb554e9a30767ffd9568b91ba7755843073a3d717d4fa6e7ca111918b",
+      "sourceUrl": "https://overthecap.com/player/michael-briscoe/13817/"
+    },
+    {
+      "team": "MIN",
+      "name": "Da'Veawn Armstead",
+      "playerId": "fd3b61bf-1400-5615-a7f7-2a2d1ccd46bd",
+      "otcId": 13721,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ff009274f566f46ed21b51d6d0087fd65d6c7b485e0d10ff57937e79772b56dc",
+      "sourceUrl": "https://overthecap.com/player/daveawn-armstead/13721/"
+    },
+    {
+      "team": "MIN",
+      "name": "Jihad Ward",
+      "playerId": "5b1fc739-60b9-52c8-9635-833502640cd2",
+      "otcId": 4757,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5f8db9ce8db268e59901f67ba5e2581f0956c355c60c4bf65186643ba91e460f",
+      "sourceUrl": "https://overthecap.com/player/jihad-ward/4757/"
+    },
+    {
+      "team": "MIN",
+      "name": "Natrone Brooks",
+      "playerId": "b32702ea-3442-500a-bdd6-c608ea4c7fc3",
+      "otcId": 11531,
+      "status": "source_backed_candidate",
+      "sourceSha256": "29c66970c61079569398fb5943558c39d9910d45d2b9366d673d09774f967651",
+      "sourceUrl": "https://overthecap.com/player/natrone-brooks/11531/"
+    },
+    {
+      "team": "NE",
+      "name": "Caleb Lomu",
+      "playerId": "58e05d44-041e-5ff9-90a5-0500f1180664",
+      "otcId": 13172,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9757bb5986e1dc8d2d4d4c76591390c358ee3acb9843b115c2be5d478497b88a",
+      "sourceUrl": "https://overthecap.com/player/caleb-lomu/13172/"
+    },
+    {
+      "team": "NE",
+      "name": "Gabe Jacas",
+      "playerId": "872afa8e-f9dd-59c5-a5ce-2f263d962a64",
+      "otcId": 13199,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6eb8ae6ea3040c64a9a8355f88e3d7f1905bfff0e16350cce90e498e712d2e3c",
+      "sourceUrl": "https://overthecap.com/player/gabe-jacas/13199/"
+    },
+    {
+      "team": "NE",
+      "name": "Eli Raridon",
+      "playerId": "49b19a0f-8038-505d-8b4c-67dd321563db",
+      "otcId": 13239,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4315df16d71e47a48aec1c16dc546e51b2329f6af0d5a026f6958cda38f0ae25",
+      "sourceUrl": "https://overthecap.com/player/eli-raridon/13239/"
+    },
+    {
+      "team": "NE",
+      "name": "Karon Prunty",
+      "playerId": "5b27ca74-13e7-5070-b75a-9f6c7237fa31",
+      "otcId": 13315,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8a8fa0815dc9ea8ef44de57ccd9ef6a4c83b3d3d06f87f13c162e410b9dd6af4",
+      "sourceUrl": "https://overthecap.com/player/karon-prunty/13315/"
+    },
+    {
+      "team": "NE",
+      "name": "Dametrious Crownover",
+      "playerId": "a4ed4461-4ede-5704-83e1-6d1df14ae084",
+      "otcId": 13340,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6bb4003e7136c4fc55f0760dfb409635027dde0c61a5a934a5c99fceca0c41c8",
+      "sourceUrl": "https://overthecap.com/player/dametrious-crownover/13340/"
+    },
+    {
+      "team": "NE",
+      "name": "Namdi Obiazor",
+      "playerId": "b05cb61a-c8b4-5b79-8609-d488061c49e5",
+      "otcId": 13356,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5a83a9d3082c278a109db4d4b058bbbbcb093368229f92719a8840dcd0a089e7",
+      "sourceUrl": "https://overthecap.com/player/namdi-obiazor/13356/"
+    },
+    {
+      "team": "NE",
+      "name": "Behren Morton",
+      "playerId": "ee0dd4c3-34ab-5638-a31a-ea689c644e42",
+      "otcId": 13378,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3a8a7f16f4150a577f9a49b37e3d84195a7cf3bea3b41272e8112b0ddfcf5fd1",
+      "sourceUrl": "https://overthecap.com/player/behren-morton/13378/"
+    },
+    {
+      "team": "NE",
+      "name": "Channing Canada",
+      "playerId": "b25105ec-3ef5-5816-a16d-31d92ec8561c",
+      "otcId": 13420,
+      "status": "source_backed_candidate",
+      "sourceSha256": "accf2e8d271974ca6fac8834b61b4edf5b8120143d84f148cec09822e0be10f4",
+      "sourceUrl": "https://overthecap.com/player/channing-canada/13420/"
+    },
+    {
+      "team": "NE",
+      "name": "Tanner Arkin",
+      "playerId": "60a18508-dc33-5a0c-82fd-55c6f89dbe7e",
+      "otcId": 13418,
+      "status": "source_backed_candidate",
+      "sourceSha256": "489575054c58275167eef39bc817e9e36302d8fe5dc28f0be3715b15ad4b0a2c",
+      "sourceUrl": "https://overthecap.com/player/tanner-arkin/13418/"
+    },
+    {
+      "team": "NE",
+      "name": "Erick Hunter",
+      "playerId": "77f07363-d89f-539d-b0e1-1c97d41ccdf4",
+      "otcId": 13691,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f5431960ed253e9d5fa1ef661b341ba66b998c88063ac18bc19ff0fbac128316",
+      "sourceUrl": "https://overthecap.com/player/erick-hunter/13691/"
+    },
+    {
+      "team": "NE",
+      "name": "Mike Brown",
+      "playerId": "5a2c44da-a0b1-5ec7-a1e0-4e1f7f50b789",
+      "otcId": 10490,
+      "status": "unresolved",
+      "reason": "Current-page/team-snapshot charge differs or missing"
+    },
+    {
+      "team": "NE",
+      "name": "Kyle Dixon",
+      "playerId": "01746e47-a013-5eef-ab65-fe9c0b4afef6",
+      "otcId": 13422,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b2cc40b4520c6255fc787f7cc263f395a43518217d4448ca9af8bb20358160ba",
+      "sourceUrl": "https://overthecap.com/player/kyle-dixon/13422/"
+    },
+    {
+      "team": "NE",
+      "name": "Cameron Dorner",
+      "playerId": "d2096c18-5dc0-5477-9432-233ce1e3426c",
+      "otcId": 13423,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f68dde28190ea100d7db24fa47590403b9906942389ac94aa17a6f2a6489e27f",
+      "sourceUrl": "https://overthecap.com/player/cameron-dorner/13423/"
+    },
+    {
+      "team": "NE",
+      "name": "Xavier Holmes",
+      "playerId": "79b01faf-e3ff-5920-bf62-b17ea8106d12",
+      "otcId": 13428,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ae4a37544b18b2f976285988e89b336c6c23a354803cd45fa101e6d4950983e8",
+      "sourceUrl": "https://overthecap.com/player/xavier-holmes/13428/"
+    },
+    {
+      "team": "NE",
+      "name": "Al'Zillion Hamilton",
+      "playerId": "b64258df-0555-5c97-a96b-feac9967deed",
+      "otcId": 13791,
+      "status": "source_backed_candidate",
+      "sourceSha256": "30f8ac3c357832b3fe44bb61e5cf3da2866ed7be2dc3792a0b4b60ac5e130072",
+      "sourceUrl": "https://overthecap.com/player/alzillion-hamilton/13791/"
+    },
+    {
+      "team": "NE",
+      "name": "Ryan Miller",
+      "playerId": "ae5547ad-7c2b-5249-9679-9888532a6373",
+      "otcId": 11504,
+      "status": "source_backed_candidate",
+      "sourceSha256": "444ff5ed724b820ab64765571b0052d7e6c38e1e03b667cde01d787365546585",
+      "sourceUrl": "https://overthecap.com/player/ryan-miller/11504/"
+    },
+    {
+      "team": "NE",
+      "name": "Jacob Rizy",
+      "playerId": "b311360e-2ec7-57b3-8f90-c83fe59e7965",
+      "otcId": 13427,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f1400f36daa6bdb205f96d158ab60bacc8c4d97bad30a77f75e5c14de1ae7766",
+      "sourceUrl": "https://overthecap.com/player/jacob-rizy/13427/"
+    },
+    {
+      "team": "NE",
+      "name": "Andrew Rupcich",
+      "playerId": "5f2a793d-79bb-585e-94a5-9f036a7699ab",
+      "otcId": 10730,
+      "status": "source_backed_candidate",
+      "sourceSha256": "941ee5e10ca6ec67590a8d50befcc234e4b4d82e27ec7c32bc91c375d4c35f3d",
+      "sourceUrl": "https://overthecap.com/player/andrew-rupcich/10730/"
+    },
+    {
+      "team": "NE",
+      "name": "Alijah Vera-Tucker",
+      "playerId": "0eebcd54-1ca6-5540-86f5-0bda03dbd5d8",
+      "otcId": 9478,
+      "status": "source_backed_candidate",
+      "sourceSha256": "dc9d44ecfaa33948c0fcee0d2cb55d92e63ac5432f193dcbeb7514b99d0c767c",
+      "sourceUrl": "https://overthecap.com/player/alijah-vera-tucker/9478/"
+    },
+    {
+      "team": "NE",
+      "name": "Quintayvious Hutchins",
+      "playerId": "b59c9285-37ab-5d13-b5a5-6c26b381d1a5",
+      "otcId": 13391,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ea9ee66c87b972d623cc521b2a2f5a6e50d9b6d5e07c520831ba0878f1a65605",
+      "sourceUrl": "https://overthecap.com/player/quintayvious-hutchins/13391/"
+    },
+    {
+      "team": "NE",
+      "name": "Myles Montgomery",
+      "playerId": "7b478df6-5d63-53be-8340-83bc144374c1",
+      "otcId": 13419,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f58d085b892900457e60f4a97ab8652a0bea7573d9ad505d57625d0401c7a242",
+      "sourceUrl": "https://overthecap.com/player/myles-montgomery/13419/"
+    },
+    {
+      "team": "NE",
+      "name": "Khalil Jacobs",
+      "playerId": "fd47f5d4-4c1c-52a5-832c-ba2acf839b33",
+      "otcId": 13416,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b3fd528bd4b02c764509cb6804cd32be1d4feca088a09257fdd595b24c7137bd",
+      "sourceUrl": "https://overthecap.com/player/khalil-jacobs/13416/"
+    },
+    {
+      "team": "NO",
+      "name": "Christen Miller",
+      "playerId": "5bf0b6f6-af2e-517c-92c7-9d4dcdb26961",
+      "otcId": 13186,
+      "status": "source_backed_candidate",
+      "sourceSha256": "63a7c374577bd874ddc467f08099a9f5ecc2eb8375dc228b6cf2b2864c8c2e89",
+      "sourceUrl": "https://overthecap.com/player/christen-miller/13186/"
+    },
+    {
+      "team": "NO",
+      "name": "Oscar Delp",
+      "playerId": "5a57a609-eb82-50a7-8c93-5448f213fb1d",
+      "otcId": 13217,
+      "status": "source_backed_candidate",
+      "sourceSha256": "962bdf2e053fe8bbaa7a44b9bc7e119faaba14edcc116006492434a173dfb05a",
+      "sourceUrl": "https://overthecap.com/player/oscar-delp/13217/"
+    },
+    {
+      "team": "NO",
+      "name": "Jeremiah Wright",
+      "playerId": "68d39979-5a60-52e8-abee-7f7e639d2d3c",
+      "otcId": 13276,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5325f968946084387dd441d4893292527e0a2b95154ce5816ff77a6df49bc9e3",
+      "sourceUrl": "https://overthecap.com/player/jeremiah-wright/13276/"
+    },
+    {
+      "team": "NO",
+      "name": "Bryce Lance",
+      "playerId": "39f60f0b-3ce3-5915-ae92-94765256c97b",
+      "otcId": 13280,
+      "status": "source_backed_candidate",
+      "sourceSha256": "914754b68c567ada79c9651a9da5f738772755e344bead63c6cd4c09b77f67fc",
+      "sourceUrl": "https://overthecap.com/player/bryce-lance/13280/"
+    },
+    {
+      "team": "NO",
+      "name": "Barion Brown",
+      "playerId": "3d9e9d0b-0b30-5cd6-ab39-05cd2b789749",
+      "otcId": 13334,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5da3f862ebfe5718c064d4451affac11d4a715d3da434c9195ac4f0a68dfc96d",
+      "sourceUrl": "https://overthecap.com/player/barion-brown/13334/"
+    },
+    {
+      "team": "NO",
+      "name": "Lorenzo Styles Jr.",
+      "playerId": "76f66659-e776-5d9b-ae23-1e3bd44e75fd",
+      "otcId": 13316,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b7c8da76b5ee70f3671dfd5f82c91a8b93214102794c9e59fc673f9742800caf",
+      "sourceUrl": "https://overthecap.com/player/lorenzo-styles-jr/13316/"
+    },
+    {
+      "team": "NO",
+      "name": "Mason Murphy",
+      "playerId": "01185500-6e9b-5da7-a1bf-77f6e7cf18ad",
+      "otcId": 13679,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "NO",
+      "name": "C.J. Donaldson",
+      "playerId": "f6da212b-372a-5a0c-bfb8-3c03fa045c7b",
+      "otcId": 13754,
+      "status": "source_backed_candidate",
+      "sourceSha256": "57ec9a10d1adb8ea25c504e1bc850bf200aaadca9f71a0aa8e01331eff68923f",
+      "sourceUrl": "https://overthecap.com/player/c-j-donaldson/13754/"
+    },
+    {
+      "team": "NO",
+      "name": "T.J. Hall",
+      "playerId": "180064f9-72de-5be9-8b20-f5ba16cae5d0",
+      "otcId": 13363,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b216f626ecb5f6ad2d51e3cd31edc8c9bfc73b4c3fe9fce396aadb771afa58b1",
+      "sourceUrl": "https://overthecap.com/player/t-j-hall/13363/"
+    },
+    {
+      "team": "NO",
+      "name": "Alex Wollschlaeger",
+      "playerId": "f04340c5-ff90-5f42-92c1-4597e9f1924e",
+      "otcId": 13761,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2a91af940d084fef9a228ab4f309c12a5b37e2104230cefd56a62d9802112b60",
+      "sourceUrl": "https://overthecap.com/player/alex-wollschlaeger/13761/"
+    },
+    {
+      "team": "NO",
+      "name": "Jay'Viar Suggs",
+      "playerId": "9e70c056-3762-57e1-94ea-33006f561d0f",
+      "otcId": 13760,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3f5bcad181135459dbb42671fcb947b2c1dc65e7ce65078ec1ce171d455d054a",
+      "sourceUrl": "https://overthecap.com/player/jayviar-suggs/13760/"
+    },
+    {
+      "team": "NO",
+      "name": "Kevin Austin Jr.",
+      "playerId": "3b536b49-997a-5290-a10e-d45d1c121b36",
+      "otcId": 10540,
+      "status": "source_backed_candidate",
+      "sourceSha256": "383106cd3e9d11ce9f48e0f30907afe9e4a6d239dd1e10c1fe63de3d25500f0f",
+      "sourceUrl": "https://overthecap.com/player/kevin-austin-jr/10540/"
+    },
+    {
+      "team": "NO",
+      "name": "Jordyn Tyson",
+      "playerId": "218a467a-8d21-57cd-99e7-848de4ef9bb0",
+      "otcId": 13152,
+      "status": "source_backed_candidate",
+      "sourceSha256": "bda3a599c5882d5d2a47f9a61763e3417b680aeb9fa63e5445e4df4fc6c8d4f6",
+      "sourceUrl": "https://overthecap.com/player/jordyn-tyson/13152/"
+    },
+    {
+      "team": "NYG",
+      "name": "Arvell Reese",
+      "playerId": "b60078e0-2f4f-5273-b635-deaae9e6b15b",
+      "otcId": 13149,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c96a3d327fed9fc30b48dad78f5ca3d91995acef0015414e6fa8bd84288583c1",
+      "sourceUrl": "https://overthecap.com/player/arvell-reese/13149/"
+    },
+    {
+      "team": "NYG",
+      "name": "Francis Mauigoa",
+      "playerId": "32a20030-6483-513c-a202-5fba096f13c6",
+      "otcId": 13154,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9f7328f8f1105077948f8a53853dfb9dc1a081a6b351091eeac6f72797e11915",
+      "sourceUrl": "https://overthecap.com/player/francis-mauigoa/13154/"
+    },
+    {
+      "team": "NYG",
+      "name": "Colton Hood",
+      "playerId": "36df31f2-5b7f-5f67-8d72-5d4d6fb1d2cf",
+      "otcId": 13181,
+      "status": "source_backed_candidate",
+      "sourceSha256": "beb907c7491300392ee9488fac345df31c22c6884b9eeeef5d4c59427b913283",
+      "sourceUrl": "https://overthecap.com/player/colton-hood/13181/"
+    },
+    {
+      "team": "NYG",
+      "name": "Malachi Fields",
+      "playerId": "b77e41bd-0063-52ed-bf3d-39885f52a9e3",
+      "otcId": 13218,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a19376532e6fc55513da250d320e9ae209aa668c48fa773cbe90a24272051776",
+      "sourceUrl": "https://overthecap.com/player/malachi-fields/13218/"
+    },
+    {
+      "team": "NYG",
+      "name": "Bobby Jamison-Travis",
+      "playerId": "0d0db5ef-8190-5b4e-a2bb-5097ecbcdb54",
+      "otcId": 13330,
+      "status": "source_backed_candidate",
+      "sourceSha256": "28220d00976e503370f7ee38995beb41c22ce535e5ad1fe15bc2790368d974f3",
+      "sourceUrl": "https://overthecap.com/player/bobby-jamison-travis/13330/"
+    },
+    {
+      "team": "NYG",
+      "name": "J.C. Davis",
+      "playerId": "42dbacb7-74f8-502b-9a70-1bf101dd4773",
+      "otcId": 13336,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4c32082193bbab05abd69e6d0eb77ef19b831e4d4862ef15b046aeb0c737594e",
+      "sourceUrl": "https://overthecap.com/player/j-c-davis/13336/"
+    },
+    {
+      "team": "NYG",
+      "name": "Jack Kelly",
+      "playerId": "6847f43f-e010-51dd-8ce9-e4effc19af72",
+      "otcId": 13337,
+      "status": "source_backed_candidate",
+      "sourceSha256": "602d882fe72071f9128764d9f817c1c03908072aec8df0ea4a400b12a8250c34",
+      "sourceUrl": "https://overthecap.com/player/jack-kelly/13337/"
+    },
+    {
+      "team": "NYG",
+      "name": "Dominic Zvada",
+      "playerId": "fbf24c03-6f1a-5edf-9110-8feb22a68f13",
+      "otcId": 13638,
+      "status": "source_backed_candidate",
+      "sourceSha256": "acf436f986763714f9d75311ba4e63ab3c1f0a516ef1879e1a1d77fa8094d33f",
+      "sourceUrl": "https://overthecap.com/player/dominic-zvada/13638/"
+    },
+    {
+      "team": "NYG",
+      "name": "Ben Mann",
+      "playerId": "f5fa5804-25cc-56cf-b091-ed6bd2a70457",
+      "otcId": 13642,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ffbb6d341e1db7054510198a734a161c700805fc8e783c3d400b1163102d1f81",
+      "sourceUrl": "https://overthecap.com/player/ben-mann/13642/"
+    },
+    {
+      "team": "NYG",
+      "name": "Josh Sills",
+      "playerId": "a7cabfc5-2ae3-526e-a523-44f2ab47784a",
+      "otcId": 10553,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b0ba38e7d910c71f9c3b862a69d67bba082d6a0c604218494ea05653f0b9d631",
+      "sourceUrl": "https://overthecap.com/player/josh-sills/10553/"
+    },
+    {
+      "team": "NYG",
+      "name": "Geno VanDeMark",
+      "playerId": "cd77d378-b8a0-5ce9-a627-f206266c1f67",
+      "otcId": 13522,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ba1c11dea1d397ed4e88f66e9b54507a210e65252df92d21e8953be7e7ecc8a7",
+      "sourceUrl": "https://overthecap.com/player/geno-vandemark/13522/"
+    },
+    {
+      "team": "NYG",
+      "name": "Ryan Schernecke",
+      "playerId": "ba1cf36a-41ef-5a20-85a4-826132401dfc",
+      "otcId": 13639,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3a48381b24fb91532302ad401e5498902bd4d3a839c372a1dc15092e53a1ee2a",
+      "sourceUrl": "https://overthecap.com/player/ryan-schernecke/13639/"
+    },
+    {
+      "team": "NYG",
+      "name": "Josh Gesky",
+      "playerId": "e215ef31-fc37-5fff-893a-6ac0322f76c8",
+      "otcId": 13699,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2092e20d9808a1e136b8e802170d3b235ff802be58e5c79f405680bb137c3870",
+      "sourceUrl": "https://overthecap.com/player/josh-gesky/13699/"
+    },
+    {
+      "team": "NYG",
+      "name": "Jason Brownlee",
+      "playerId": "8d9a3804-61dd-5aaa-82f3-eba427913e57",
+      "otcId": 11252,
+      "status": "source_backed_candidate",
+      "sourceSha256": "37e0955cca12ba226798e18542db2f4f51b1dc2fdd694495f2297c53fac25edb",
+      "sourceUrl": "https://overthecap.com/player/jason-brownlee/11252/"
+    },
+    {
+      "team": "NYG",
+      "name": "Jarrod Gray",
+      "playerId": "7bafd77b-d0cd-5662-8a8d-64fd10984e25",
+      "otcId": 13841,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f33c4de4d0a8d1b36cb52fe6b2f1b4eb3a58fccc96a457477f4a67aa71ce8fbb",
+      "sourceUrl": "https://overthecap.com/player/jarrod-gray/13841/"
+    },
+    {
+      "team": "NYG",
+      "name": "Thaddeus Dixon",
+      "playerId": "c716857f-85a0-5acb-b198-164407e0a970",
+      "otcId": 13637,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a6b1218996c27d3c60a1d4787243c350ce2a3bbe2401c45c241a472499279575",
+      "sourceUrl": "https://overthecap.com/player/thaddeus-dixon/13637/"
+    },
+    {
+      "team": "NYJ",
+      "name": "David Bailey",
+      "playerId": "84e79d83-c2fd-5714-bc19-f101adad8ed5",
+      "otcId": 13146,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2d880389988eb75c346ea3610f22a247b24dae4cc9641e926998931a858db351",
+      "sourceUrl": "https://overthecap.com/player/david-bailey/13146/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Kenyon Sadiq",
+      "playerId": "766dc4ee-1b29-5f8f-a1fb-a6995690ad14",
+      "otcId": 13160,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "NYJ",
+      "name": "Omar Cooper",
+      "playerId": "80546e6d-fa04-5f8c-b7fd-89ade01ab5ef",
+      "otcId": 13174,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "NYJ",
+      "name": "D'Angelo Ponds",
+      "playerId": "baa4c6ec-f0ae-5487-986f-8cdbaeed55a5",
+      "otcId": 13194,
+      "status": "source_backed_candidate",
+      "sourceSha256": "56d5f86a6d9091ec3af3ba1cccea58627c258f9a14ce650a117866f8e6496c72",
+      "sourceUrl": "https://overthecap.com/player/dangelo-ponds/13194/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Darrell Jackson Jr.",
+      "playerId": "4d0acc08-4265-58f5-8070-72adbb485219",
+      "otcId": 13247,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c302770686338e7b218fe9b5550034bb6efd462c8783105af0bb855d07d85b9f",
+      "sourceUrl": "https://overthecap.com/player/darrell-jackson-jr/13247/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Cade Klubnik",
+      "playerId": "d58784dc-84ad-5305-83ea-b3d93fd2b71f",
+      "otcId": 13254,
+      "status": "source_backed_candidate",
+      "sourceSha256": "14377b494fb5f9c15543e0dadd25fa6b97b0c3752563590912d321a1670c03d0",
+      "sourceUrl": "https://overthecap.com/player/cade-klubnik/13254/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Malik McClain",
+      "playerId": "680c21e8-5529-5ada-852b-1fe021c61b0f",
+      "otcId": 13451,
+      "status": "source_backed_candidate",
+      "sourceSha256": "bf9f68c9bd7896e3aba945340238b5e18d0ec60ecb17692b000e62320834ca56",
+      "sourceUrl": "https://overthecap.com/player/malik-mcclain/13451/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Jaden Keller",
+      "playerId": "b8751aad-ec2e-5122-9513-4b44a28075ea",
+      "otcId": 13454,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "NYJ",
+      "name": "Mory Bamba",
+      "playerId": "46362959-ec47-57fa-bb9c-d6c8424be41d",
+      "otcId": 13444,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ed2c04a5c4a3fe0c53f9f4a056bdbb3140f9bc88f8feeda8f9683f26d0928bf2",
+      "sourceUrl": "https://overthecap.com/player/mory-bamba/13444/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Nick Dawkins",
+      "playerId": "9cfe5c75-81f9-5b1e-8040-ab837c4a106c",
+      "otcId": 13460,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4694c6743518a7f920f68c705854f740451b065bdf41e8079156fb22c75fe4d5",
+      "sourceUrl": "https://overthecap.com/player/nick-dawkins/13460/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Nathan Voorhis",
+      "playerId": "767bd8cb-6524-5c74-8c2d-45f4602b578c",
+      "otcId": 13446,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f1b77030f89c5657a49f30955bc76fbc815ba9722d6d9847f069702028ac7418",
+      "sourceUrl": "https://overthecap.com/player/nathan-voorhis/13446/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Anez Cooper",
+      "playerId": "29b18fae-2947-5c8a-96a2-8e8fa524a029",
+      "otcId": 13332,
+      "status": "source_backed_candidate",
+      "sourceSha256": "19b0aded035345ac8c6de1b62c8321534cd3ce53da3f9d92d3ce4b223a6465ae",
+      "sourceUrl": "https://overthecap.com/player/anez-cooper/13332/"
+    },
+    {
+      "team": "NYJ",
+      "name": "V.J. Payne",
+      "playerId": "d9b5a165-3f1e-5ff6-8f08-82277aa85347",
+      "otcId": 13372,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0daec2f4493b686fd5d46bf9db76911a74f29c918f7e619c0d3519a952479b8d",
+      "sourceUrl": "https://overthecap.com/player/v-j-payne/13372/"
+    },
+    {
+      "team": "NYJ",
+      "name": "Chip Trayanum",
+      "playerId": "c022d223-c4ab-5c6b-95aa-5526ae70f850",
+      "otcId": 13442,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "PHI",
+      "name": "Makai Lemon",
+      "playerId": "b5654b8c-5021-57c4-8a49-cc21ce9c81b9",
+      "otcId": 13164,
+      "status": "source_backed_candidate",
+      "sourceSha256": "36683b334d33374cfa855f636529feee05531fe885130475b6d5c37610f79d88",
+      "sourceUrl": "https://overthecap.com/player/makai-lemon/13164/"
+    },
+    {
+      "team": "PHI",
+      "name": "Markel Bell",
+      "playerId": "6c96d02a-20af-59c5-b44e-8f7423b430cc",
+      "otcId": 13212,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2deed38b0f35f02037dfaf7a91a0ee1994a9582dd543a4a705b8cb874ee5ed63",
+      "sourceUrl": "https://overthecap.com/player/markel-bell/13212/"
+    },
+    {
+      "team": "PHI",
+      "name": "Cole Payton",
+      "playerId": "f10458c6-7248-571a-99b7-b60e028edd2d",
+      "otcId": 13322,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d46833ca4a6c1e5fb53886035c3b5004086c1276cf1a0847120239fc0a452ce6",
+      "sourceUrl": "https://overthecap.com/player/cole-payton/13322/"
+    },
+    {
+      "team": "PHI",
+      "name": "Micah Morris",
+      "playerId": "6946d78b-fcfd-5c23-ba83-a3f4c4641576",
+      "otcId": 13351,
+      "status": "source_backed_candidate",
+      "sourceSha256": "287f17a6da109429c848ce9bde3d243cb443ef01e3c7051e6278b362c5c9f346",
+      "sourceUrl": "https://overthecap.com/player/micah-morris/13351/"
+    },
+    {
+      "team": "PHI",
+      "name": "Rocco Underwood",
+      "playerId": "a90c4303-bbde-5672-b480-3dcc288b9aff",
+      "otcId": 13661,
+      "status": "source_backed_candidate",
+      "sourceSha256": "bfd6252448223624a3f2e936cfc50aa3986d1710b4e99dcc1d094f2a54fb5de9",
+      "sourceUrl": "https://overthecap.com/player/rocco-underwood/13661/"
+    },
+    {
+      "team": "PHI",
+      "name": "Cole Wisniewski",
+      "playerId": "3687cb1c-3267-5353-a281-468fea45d5b2",
+      "otcId": 13388,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "PHI",
+      "name": "Keyshawn James-Newby",
+      "playerId": "86dd89c2-ac4e-5f84-ae1c-f713edb89bd8",
+      "otcId": 13396,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "PHI",
+      "name": "Mason Reiger",
+      "playerId": "5ea6861a-b649-5afb-bd0a-95d79e4513ca",
+      "otcId": 13431,
+      "status": "source_backed_candidate",
+      "sourceSha256": "207448ac2508f854beec35245c8f4eda7c7d2f1b00d02ad55d9f14eedb37c3ed",
+      "sourceUrl": "https://overthecap.com/player/mason-reiger/13431/"
+    },
+    {
+      "team": "PHI",
+      "name": "Joshua Weru",
+      "playerId": "8f6b2778-30e6-5bec-847c-d7059aca3921",
+      "otcId": 13660,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a75528dbced258d6ac3c8f80a3ba7d3f73f7b57ba8c9cf90fe0d58cf58c0c109",
+      "sourceUrl": "https://overthecap.com/player/joshua-weru/13660/"
+    },
+    {
+      "team": "PHI",
+      "name": "Elijah Mitchell",
+      "playerId": "64ac402f-7271-5825-9457-a2cd3bda641e",
+      "otcId": 9658,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0bcb031f531ae2bd3fadf804a2bb64c27f37b40214439e57e1ac737f549fa65d",
+      "sourceUrl": "https://overthecap.com/player/elijah-mitchell/9658/"
+    },
+    {
+      "team": "PHI",
+      "name": "Evan Neal",
+      "playerId": "b3387e59-2f39-5c49-bc8f-491e1174cec2",
+      "otcId": 10052,
+      "status": "source_backed_candidate",
+      "sourceSha256": "235e268cb3cb9c023cbaafa3e847459d35a520b1a838774354c178a5b3cc8196",
+      "sourceUrl": "https://overthecap.com/player/evan-neal/10052/"
+    },
+    {
+      "team": "PHI",
+      "name": "Zion Wilson",
+      "playerId": "80936e1e-8a14-5774-9ffb-67a90650d299",
+      "otcId": 13847,
+      "status": "source_backed_candidate",
+      "sourceSha256": "720a349a7b28d1ba5d0f33a6972b5dd5f99acebf53f1b41c8f4606e789cdf405",
+      "sourceUrl": "https://overthecap.com/player/zion-wilson/13847/"
+    },
+    {
+      "team": "PHI",
+      "name": "Jaydon Blue",
+      "playerId": "76d8f68c-315e-5894-a510-99db9216d060",
+      "otcId": 12509,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2adda61b1557a86a320af6e8b3e9232af0a1e0b0c540ec49e36cdf1d0d8494f5",
+      "sourceUrl": "https://overthecap.com/player/jaydon-blue/12509/"
+    },
+    {
+      "team": "PHI",
+      "name": "Anfernee Orji",
+      "playerId": "55e3d3e2-a105-5c33-8417-778558b218b4",
+      "otcId": 11092,
+      "status": "source_backed_candidate",
+      "sourceSha256": "aa9e8ec0cf9f9ed13f74b45bdcc743800ed05a47030bd7a1173cd41f0d4f9d62",
+      "sourceUrl": "https://overthecap.com/player/anfernee-orji/11092/"
+    },
+    {
+      "team": "PHI",
+      "name": "Eli Stowers",
+      "playerId": "7dd2a0e7-0fda-5adf-a2ac-4b1566d8cabb",
+      "otcId": 13198,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0493f85b3681b112802a3d0db13321a6aba7e23cb4c1f3e42c100dbcecbff870",
+      "sourceUrl": "https://overthecap.com/player/eli-stowers/13198/"
+    },
+    {
+      "team": "PHI",
+      "name": "Uar Bernard",
+      "playerId": "4c60f0fb-874d-5283-ad72-a1cfbdbfad38",
+      "otcId": 13395,
+      "status": "source_backed_candidate",
+      "sourceSha256": "62afd0964f68f55f748f1a8af705d4f5d2e0c4953e4d50d77942668edfb2eda0",
+      "sourceUrl": "https://overthecap.com/player/uar-bernard/13395/"
+    },
+    {
+      "team": "PHI",
+      "name": "Tucker Large",
+      "playerId": "854021f7-a440-51da-8ded-fc08186a5831",
+      "otcId": 13662,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2707942ac5866bf5c0ddb2621c604fea8fd8e80984eba0973d4cb12acfb09439",
+      "sourceUrl": "https://overthecap.com/player/tucker-large/13662/"
+    },
+    {
+      "team": "PIT",
+      "name": "Max Iheanachor",
+      "playerId": "2b0e1d73-c326-5f23-b225-dfa37478364c",
+      "otcId": 13165,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9af332ce8a9d3e0764fe8798ada0cd4dea26389c35ef7fcf7ed94950dd2e00cc",
+      "sourceUrl": "https://overthecap.com/player/max-iheanachor/13165/"
+    },
+    {
+      "team": "PIT",
+      "name": "Germie Bernard",
+      "playerId": "11ffefed-6d6b-54dc-8326-7c878bd54078",
+      "otcId": 13191,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f156532c0a4076c8435bf65d0f6104bcb291a9367c01a61a191417eb579f17e9",
+      "sourceUrl": "https://overthecap.com/player/germie-bernard/13191/"
+    },
+    {
+      "team": "PIT",
+      "name": "Drew Allar",
+      "playerId": "de6ea3b4-4593-5ae5-8403-d8cfd1141a17",
+      "otcId": 13220,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d48c237ab995c4e98470b4d1576ddab3250a1c7424238a8c18c9aa6621ee8fbe",
+      "sourceUrl": "https://overthecap.com/player/drew-allar/13220/"
+    },
+    {
+      "team": "PIT",
+      "name": "Daylen Everette",
+      "playerId": "03eb4348-b001-52bf-accb-9596ecb62987",
+      "otcId": 13229,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6da8767afac7ac4540413440ebd581e3070c47461923cab5c2226fc87cbc7642",
+      "sourceUrl": "https://overthecap.com/player/daylen-everette/13229/"
+    },
+    {
+      "team": "PIT",
+      "name": "Kaden Wetjen",
+      "playerId": "41c767d4-4978-594c-92c4-ac7a228cdf4a",
+      "otcId": 13265,
+      "status": "source_backed_candidate",
+      "sourceSha256": "68a8f882d3dcbea3f75f8d8d904d68a350700cea95612b4a8a964c7974455da1",
+      "sourceUrl": "https://overthecap.com/player/kaden-wetjen/13265/"
+    },
+    {
+      "team": "PIT",
+      "name": "Riley Nowakowski",
+      "playerId": "39bd053d-7149-512f-9252-c8480713c042",
+      "otcId": 13313,
+      "status": "source_backed_candidate",
+      "sourceSha256": "872348a02dba0effb47e641cf773a4eef50cf7cecda36da67ba4d2b48795496e",
+      "sourceUrl": "https://overthecap.com/player/riley-nowakowski/13313/"
+    },
+    {
+      "team": "PIT",
+      "name": "Gabriel Rubio",
+      "playerId": "02fd47a9-d64a-5304-a963-ef97eb477353",
+      "otcId": 13354,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4b95d313e85dadcb8a468669a0d239abdaa347577c964a26d64fb6ec97f6383e",
+      "sourceUrl": "https://overthecap.com/player/gabriel-rubio/13354/"
+    },
+    {
+      "team": "PIT",
+      "name": "Robert Spears-Jennings",
+      "playerId": "7c9dd54b-2b1f-5062-ba9f-00d149061e04",
+      "otcId": 13368,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6a5067985ff403e3c0c3471c1229ed6f332fa2ac991e50b41aa45fc47d0e1d61",
+      "sourceUrl": "https://overthecap.com/player/robert-spears-jennings/13368/"
+    },
+    {
+      "team": "PIT",
+      "name": "Eli Heidenreich",
+      "playerId": "2082cbc5-d00f-57d0-b64b-fa33ae6506fe",
+      "otcId": 13374,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a87dc3c2a7fd3ca650aaa1d06662696ca488ff30752c0d50b46f1386e48e82c5",
+      "sourceUrl": "https://overthecap.com/player/eli-heidenreich/13374/"
+    },
+    {
+      "team": "PIT",
+      "name": "Kevin Jobity Jr.",
+      "playerId": "ce5f57fa-7b4a-5098-ae37-6896031d23f1",
+      "otcId": 13499,
+      "status": "source_backed_candidate",
+      "sourceSha256": "025e8681809bbbbdfb06b86c7666b25747169eaf66cd707bf6230add1bf22d4c",
+      "sourceUrl": "https://overthecap.com/player/kevin-jobity-jr/13499/"
+    },
+    {
+      "team": "PIT",
+      "name": "Doneiko Slaughter",
+      "playerId": "608caf4c-5f6e-56a4-bd71-3795b69076d1",
+      "otcId": 12858,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f47dae839b3fccb26ef086f859b2269bdb966fe305ce2615262788a7e7f1d717",
+      "sourceUrl": "https://overthecap.com/player/doneiko-slaughter/12858/"
+    },
+    {
+      "team": "PIT",
+      "name": "Lake McRee",
+      "playerId": "55e3b66d-2322-5b78-8e33-bfc781d0e1ce",
+      "otcId": 13498,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1a28ac81b7f454196430fbc9e6d20c48923fabd9a00425205dd6238e93c210eb",
+      "sourceUrl": "https://overthecap.com/player/lake-mcree/13498/"
+    },
+    {
+      "team": "PIT",
+      "name": "Marquez Valdes-Scantling",
+      "playerId": "d1fe7aa6-3b9c-53f9-92d6-46d63b10a885",
+      "otcId": 7059,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3f28e7e521e49b23fb56a37364e86a90cf372b88ee09a1348c1279264c01d6f6",
+      "sourceUrl": "https://overthecap.com/player/marquez-valdes-scantling/7059/"
+    },
+    {
+      "team": "PIT",
+      "name": "Gennings Dunker",
+      "playerId": "4aebebd4-b6c7-5db4-ab22-2e13df69b1cf",
+      "otcId": 13240,
+      "status": "source_backed_candidate",
+      "sourceSha256": "5dd0816b5523913c367733c25c8cb0a0ffb0f2f695469617553ce1144b45ed1e",
+      "sourceUrl": "https://overthecap.com/player/gennings-dunker/13240/"
+    },
+    {
+      "team": "SEA",
+      "name": "Beau Stephens",
+      "playerId": "50bb9deb-ca08-5d09-8f72-2079f623d49e",
+      "otcId": 13292,
+      "status": "source_backed_candidate",
+      "sourceSha256": "117849e49a0810dd04e65e98e5381053476e16016c03e951fa31364fddf964da",
+      "sourceUrl": "https://overthecap.com/player/beau-stephens/13292/"
+    },
+    {
+      "team": "SEA",
+      "name": "Avery Smith",
+      "playerId": "bbd36525-b598-50ea-8377-21f6742a3d09",
+      "otcId": 13599,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "SEA",
+      "name": "Robert Henry Jr.",
+      "playerId": "924ad1b8-bae7-5092-b72e-c65b5a3eca26",
+      "otcId": 13665,
+      "status": "source_backed_candidate",
+      "sourceSha256": "22948858ee2aee8738cdbe3838810fb4f2898b833762ce16bd83090d2936c977",
+      "sourceUrl": "https://overthecap.com/player/robert-henry-jr/13665/"
+    },
+    {
+      "team": "SEA",
+      "name": "Aidan Hubbard",
+      "playerId": "68cd06cc-2db7-5328-8884-041fa6ac1d35",
+      "otcId": 13814,
+      "status": "source_backed_candidate",
+      "sourceSha256": "11e9bec10ecf0ba1713e1464ce42811da7e82f8fc2fa785dd4f526fc428f89ec",
+      "sourceUrl": "https://overthecap.com/player/aidan-hubbard/13814/"
+    },
+    {
+      "team": "SEA",
+      "name": "Michael Dansby",
+      "playerId": "7e6bc252-61f7-503a-bccb-32b5d190c230",
+      "otcId": 13399,
+      "status": "source_backed_candidate",
+      "sourceSha256": "745181435ae2a11cb44aa0cc42da3a31fc82426f335c04fd585110f2bb8df3a1",
+      "sourceUrl": "https://overthecap.com/player/michael-dansby/13399/"
+    },
+    {
+      "team": "SEA",
+      "name": "Deven Eastern",
+      "playerId": "0e0365c6-92df-5cb2-ba41-6162e0672491",
+      "otcId": 13386,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d0478801234923f43e4de74bd8d1956674c433b90990140f1f4d0869cbadbbcd",
+      "sourceUrl": "https://overthecap.com/player/deven-eastern/13386/"
+    },
+    {
+      "team": "SEA",
+      "name": "Andre Fuller",
+      "playerId": "e33efad0-b643-55ab-a1fe-aaead87fcdd5",
+      "otcId": 13380,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d3773e0d76a22c829270311904bb1d18d5946be1dbe97781c4378e1e0662e49f",
+      "sourceUrl": "https://overthecap.com/player/andre-fuller/13380/"
+    },
+    {
+      "team": "SEA",
+      "name": "Emmanuel Henderson",
+      "playerId": "e0841808-d873-5774-9cb4-5ebc3781242a",
+      "otcId": 13343,
+      "status": "source_backed_candidate",
+      "sourceSha256": "97409febb9b2dbc6fbd879d8677d7d916923ae49d5ec9f75c85c711846c2a239",
+      "sourceUrl": "https://overthecap.com/player/emmanuel-henderson/13343/"
+    },
+    {
+      "team": "SEA",
+      "name": "Josiah Deguara",
+      "playerId": "b86d1cc3-a1f4-5862-bab7-82222a722ff8",
+      "otcId": 8834,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b497a0bdce52bdc9ff03d3a371d2014ac0a0f49eb6396f513d33f64570b51306",
+      "sourceUrl": "https://overthecap.com/player/josiah-deguara/8834/"
+    },
+    {
+      "team": "SEA",
+      "name": "Gary Smith III",
+      "playerId": "b3205760-4009-567e-b030-ddc61fab24bd",
+      "otcId": 13619,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b2bbe00f743fa0019095417f3f1cd95102b999bcdc71c63b6911fe3d2954240b",
+      "sourceUrl": "https://overthecap.com/player/gary-smith-iii/13619/"
+    },
+    {
+      "team": "SEA",
+      "name": "Jackson Acker",
+      "playerId": "58d76a6c-4830-51ce-ab90-89f1cbe2ea0b",
+      "otcId": 13409,
+      "status": "source_backed_candidate",
+      "sourceSha256": "791bb7aa2e4da565eb1258bc8dd629f1177773cdbc455c0b17953a9bd86b4211",
+      "sourceUrl": "https://overthecap.com/player/jackson-acker/13409/"
+    },
+    {
+      "team": "SEA",
+      "name": "Josh Ross",
+      "playerId": "fd15cb47-a5b3-59aa-b214-06dfa34a7d50",
+      "otcId": 10495,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d74f209536c4a1e62464745560cd1c5868f164f848d874ab52f48634c1f34447",
+      "sourceUrl": "https://overthecap.com/player/josh-ross/10495/"
+    },
+    {
+      "team": "SEA",
+      "name": "Jadarian Price",
+      "playerId": "487fe560-e4af-5669-8166-544ce0fdb5a5",
+      "otcId": 13176,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0e238933ec603d5f04f4a09fc8b0be99875f4f8ea4285976a01c77feb3e234c5",
+      "sourceUrl": "https://overthecap.com/player/jadarian-price/13176/"
+    },
+    {
+      "team": "SEA",
+      "name": "Bud Clark",
+      "playerId": "e49dce76-38f8-59ad-ae91-51b941ee5e5f",
+      "otcId": 13208,
+      "status": "source_backed_candidate",
+      "sourceSha256": "adca09a39895b7a59251e22c1deb995ba0957a872273f276907e1ad58260ca48",
+      "sourceUrl": "https://overthecap.com/player/bud-clark/13208/"
+    },
+    {
+      "team": "SEA",
+      "name": "Julian Neal",
+      "playerId": "fcf7077a-abf0-5ce6-b5ea-7e9ae1ade7ea",
+      "otcId": 13243,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c1249d651087ff01f8ceba5c6b9b40f429e12dd3b4026e1592342751d596f9a7",
+      "sourceUrl": "https://overthecap.com/player/julian-neal/13243/"
+    },
+    {
+      "team": "SF",
+      "name": "Romello Height",
+      "playerId": "4caef533-9b11-5484-896a-c4d2d79587af",
+      "otcId": 13214,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "SF",
+      "name": "Kaelon Black",
+      "playerId": "518e723e-d040-576a-9c8b-070e6c9a1374",
+      "otcId": 13234,
+      "status": "source_backed_candidate",
+      "sourceSha256": "a0a9b83cdf2fa263015ae62c929359abc4e34871562a2dbef329a9c14ab14ff1",
+      "sourceUrl": "https://overthecap.com/player/kaelon-black/13234/"
+    },
+    {
+      "team": "SF",
+      "name": "Gracen Halton",
+      "playerId": "053003c4-0a4f-595f-a725-0a702f7961f5",
+      "otcId": 13251,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0f65b3f50dd533c6206795111b228e25d1badb4c8f9183f99e7cb8f45befeed1",
+      "sourceUrl": "https://overthecap.com/player/gracen-halton/13251/"
+    },
+    {
+      "team": "SF",
+      "name": "Carver Willis",
+      "playerId": "df10bbaa-e9d5-5dae-9176-381daee95296",
+      "otcId": 13271,
+      "status": "source_backed_candidate",
+      "sourceSha256": "35101b69af2e0834b0b346375044af201645c894c7ffd4d7892f3c4896cd8057",
+      "sourceUrl": "https://overthecap.com/player/carver-willis/13271/"
+    },
+    {
+      "team": "SF",
+      "name": "Ephesians Prysock",
+      "playerId": "10a838f3-91f3-57ab-85bc-ffe8f7fbab52",
+      "otcId": 13283,
+      "status": "source_backed_candidate",
+      "sourceSha256": "26c86572cd54b13883194b66c242e5907227472b48c5e64f6f82ddf05ccf1176",
+      "sourceUrl": "https://overthecap.com/player/ephesians-prysock/13283/"
+    },
+    {
+      "team": "SF",
+      "name": "Jaden Dugger",
+      "playerId": "f3045acd-76c8-5b9c-b2d3-c780aa6119e1",
+      "otcId": 13298,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1c52b8789d60351ad4b386a8a529c18f5a538312cf1ef324bed4ccdde24b765f",
+      "sourceUrl": "https://overthecap.com/player/jaden-dugger/13298/"
+    },
+    {
+      "team": "SF",
+      "name": "Enrique Cruz Jr.",
+      "playerId": "00cd6eb1-3dac-5075-bcf4-3bfff521b0d0",
+      "otcId": 13323,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9efbd38a99b5110f04d8abf2033846368a56b98c6b945e623d17ba2f1db77af4",
+      "sourceUrl": "https://overthecap.com/player/enrique-cruz-jr/13323/"
+    },
+    {
+      "team": "SF",
+      "name": "James Thompson Jr.",
+      "playerId": "fbcc2fdc-d0f6-5203-90c6-67df1daf0cd4",
+      "otcId": 13808,
+      "status": "source_backed_candidate",
+      "sourceSha256": "79700f2c320c8e91d6d535916802e8b56fec2a544fbe5c73857446f8d885383c",
+      "sourceUrl": "https://overthecap.com/player/james-thompson-jr/13808/"
+    },
+    {
+      "team": "SF",
+      "name": "Jalen Stroman",
+      "playerId": "6336ed25-6141-54ec-837e-e1f99fd2af46",
+      "otcId": 13812,
+      "status": "source_backed_candidate",
+      "sourceSha256": "91f839eed9c5194b1fcc75573cfa952dc7732e9dde40c6ac36d3ebbf0103445a",
+      "sourceUrl": "https://overthecap.com/player/jalen-stroman/13812/"
+    },
+    {
+      "team": "SF",
+      "name": "Wesley Grimes",
+      "playerId": "96ba4873-e7e2-5e23-977c-c1bfbbe51248",
+      "otcId": 13813,
+      "status": "source_backed_candidate",
+      "sourceSha256": "68b703d9e2c61a544be8af4219940e70177295b28122603c4c72eade9b89be81",
+      "sourceUrl": "https://overthecap.com/player/wesley-grimes/13813/"
+    },
+    {
+      "team": "SF",
+      "name": "Khalil Dinkins",
+      "playerId": "a67a0711-5c3a-5e0e-82f5-38c69ca9a44c",
+      "otcId": 13810,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ced1fd83eb4ecda61b2cf5d673e13d0fd8fab5a8190c4f6d31ac6937d7336089",
+      "sourceUrl": "https://overthecap.com/player/khalil-dinkins/13810/"
+    },
+    {
+      "team": "SF",
+      "name": "Will Pauling",
+      "playerId": "c7616e14-6876-5aa3-9735-d4b7d96a7364",
+      "otcId": 13811,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7028828d7f859a706038ddbc34de12e8930131e4e4f11775625fb1a8b25864f6",
+      "sourceUrl": "https://overthecap.com/player/will-pauling/13811/"
+    },
+    {
+      "team": "SF",
+      "name": "Naquan Jones",
+      "playerId": "59cba23f-5a4a-52b2-8c1e-04763dafaf16",
+      "otcId": 9800,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1a321ca4656ad33d82c6efe89dc10e4579b0d67feb7722ea42b4c3ae6fdf290f",
+      "sourceUrl": "https://overthecap.com/player/naquan-jones/9800/"
+    },
+    {
+      "team": "SF",
+      "name": "De'Zhaun Stribling",
+      "playerId": "a254fb38-8c50-5148-aad6-78a0aa1475a7",
+      "otcId": 13177,
+      "status": "source_backed_candidate",
+      "sourceSha256": "aa3a813d61dc1de0b609010a5c65dc50ad32049bb0211e48f7bca7bd10fc5899",
+      "sourceUrl": "https://overthecap.com/player/dezhaun-stribling/13177/"
+    },
+    {
+      "team": "SF",
+      "name": "Mikail Kamara",
+      "playerId": "11a69228-c0fc-5146-8d35-1562159f047d",
+      "otcId": 13807,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ba3f7bc452ea960c825b383c09aad0c13a2558d419219d351b2f2b659d7d52fe",
+      "sourceUrl": "https://overthecap.com/player/mikail-kamara/13807/"
+    },
+    {
+      "team": "TB",
+      "name": "Rueben Bain",
+      "playerId": "9a90302c-a0f8-5dff-b49c-e59d2fe6782f",
+      "otcId": 13159,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "TB",
+      "name": "Josiah Trotter",
+      "playerId": "02adaaa2-6d6c-5310-9d55-4eb8652bad83",
+      "otcId": 13190,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3726bb497d2bd11197fb619129ef991b03f9dfe14d749effd19a6184e8a27864",
+      "sourceUrl": "https://overthecap.com/player/josiah-trotter/13190/"
+    },
+    {
+      "team": "TB",
+      "name": "Ted Hurst",
+      "playerId": "464f9897-ffcb-55d5-90a5-413afcdff831",
+      "otcId": 13228,
+      "status": "source_backed_candidate",
+      "sourceSha256": "4720e6bb4e390c02eb0821e02f8f1b605d0a3fec62e2234e256b7f97257d622a",
+      "sourceUrl": "https://overthecap.com/player/ted-hurst/13228/"
+    },
+    {
+      "team": "TB",
+      "name": "Keionte Scott",
+      "playerId": "4edc8beb-a3fb-540b-b722-b3bf35ec07dd",
+      "otcId": 13260,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ae3aef35997375b272787810c9a573e2c02e69ca0409d9f7a9bc602a440b8e7e",
+      "sourceUrl": "https://overthecap.com/player/keionte-scott/13260/"
+    },
+    {
+      "team": "TB",
+      "name": "DeMonte Capehart",
+      "playerId": "0793496c-d183-5bd5-b5f5-2563b7489491",
+      "otcId": 13299,
+      "status": "source_backed_candidate",
+      "sourceSha256": "e5ad6ccf072c4c6b0d1399edc87629af3ef4178dea1ebe30b883755d79d7a35e",
+      "sourceUrl": "https://overthecap.com/player/demonte-capehart/13299/"
+    },
+    {
+      "team": "TB",
+      "name": "Billy Schrauth",
+      "playerId": "91a6171e-202a-5113-931a-3fe01d7326ee",
+      "otcId": 13304,
+      "status": "source_backed_candidate",
+      "sourceSha256": "3d014abf099f2955d6edf7de6c4c05936309913578d0a3a80e1626ea55d83fac",
+      "sourceUrl": "https://overthecap.com/player/billy-schrauth/13304/"
+    },
+    {
+      "team": "TB",
+      "name": "Bauer Sharp",
+      "playerId": "ef4c500f-4536-5be6-8448-e4b4cf4dd7b4",
+      "otcId": 13329,
+      "status": "source_backed_candidate",
+      "sourceSha256": "1be8fccdaec1d468d92ee731c5d8a34f87cd03fffec0fd3cff66e7f0635ce525",
+      "sourceUrl": "https://overthecap.com/player/bauer-sharp/13329/"
+    },
+    {
+      "team": "TB",
+      "name": "Jalon Daniels",
+      "playerId": "d8f13f05-b4c5-5986-9ccf-6baac1c00cdd",
+      "otcId": 13764,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6e0df5b71fea09a9328816afee98058360d0aabf5f547004ae4921f49a02811f",
+      "sourceUrl": "https://overthecap.com/player/jalon-daniels/13764/"
+    },
+    {
+      "team": "TB",
+      "name": "Ayden Garnes",
+      "playerId": "704a8cba-0337-5b73-be08-1d2f5b04165d",
+      "otcId": 13767,
+      "status": "source_backed_candidate",
+      "sourceSha256": "0ad2ab525583abd36e5e74ffc731297ab503990eb03caa841b4a8f1945ade494",
+      "sourceUrl": "https://overthecap.com/player/ayden-garnes/13767/"
+    },
+    {
+      "team": "TB",
+      "name": "Ifeatu Melifonwu",
+      "playerId": "e03c9a64-02ba-548c-b9cc-34520659c0b0",
+      "otcId": 9565,
+      "status": "unresolved",
+      "reason": "Current-page/team-snapshot charge differs or missing"
+    },
+    {
+      "team": "TB",
+      "name": "Caden Fordham",
+      "playerId": "0cf1dbf9-7e02-50bf-baf4-dfde42ba6d62",
+      "otcId": 13766,
+      "status": "unresolved",
+      "reason": "No unambiguous published annual cash"
+    },
+    {
+      "team": "TB",
+      "name": "Javin Wright",
+      "playerId": "282aff46-b61c-545a-a19a-a1ec82842a5e",
+      "otcId": 13780,
+      "status": "source_backed_candidate",
+      "sourceSha256": "ccd619d41aec864fe6f943558c2c2681f3c89b0a1f322f882b9d97e3688e7f0f",
+      "sourceUrl": "https://overthecap.com/player/javin-wright/13780/"
+    },
+    {
+      "team": "TB",
+      "name": "Yasir Holmes",
+      "playerId": "f35a3295-59f4-50dd-95c7-83840b226249",
+      "otcId": 13778,
+      "status": "source_backed_candidate",
+      "sourceSha256": "d30035194a6bf099661b69cf3a112a913bfedf6262fc309040348dc41ed3cbae",
+      "sourceUrl": "https://overthecap.com/player/yasir-holmes/13778/"
+    },
+    {
+      "team": "TB",
+      "name": "Silas Walters",
+      "playerId": "be2b111d-1b4b-5bbe-b610-f075982b8762",
+      "otcId": 13463,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9dab877f134ac0de50d923368e431f8c561187348802fd8119a7b8e144e1ff44",
+      "sourceUrl": "https://overthecap.com/player/silas-walters/13463/"
+    },
+    {
+      "team": "TB",
+      "name": "Eric Rivers",
+      "playerId": "d74a09e5-1680-588c-b2c4-dcc3e4aaa183",
+      "otcId": 13763,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b3b26852e1c4d5f74659905331bb9c64851afede3d91a7cae4493d74bd493e2e",
+      "sourceUrl": "https://overthecap.com/player/eric-rivers/13763/"
+    },
+    {
+      "team": "TB",
+      "name": "Dean Patterson",
+      "playerId": "cfeb6fac-2c35-538d-a429-6d9d5011233d",
+      "otcId": 13779,
+      "status": "source_backed_candidate",
+      "sourceSha256": "51a8f88f64ca8deeea3950eb31a9e45076c2aeb068567e6e5e200166849b196f",
+      "sourceUrl": "https://overthecap.com/player/dean-patterson/13779/"
+    },
+    {
+      "team": "TB",
+      "name": "Henry Lutovsky",
+      "playerId": "dfc2b327-552e-585d-b288-cb48485054d5",
+      "otcId": 13768,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2e0c56a189b549fc8f859cdfae170ca6c039ccdd56edfda4466c9a569019f330",
+      "sourceUrl": "https://overthecap.com/player/henry-lutovsky/13768/"
+    },
+    {
+      "team": "TB",
+      "name": "Paul Rubelt",
+      "playerId": "c6de3d52-da6d-5156-a8d4-0cc909a02209",
+      "otcId": 13771,
+      "status": "source_backed_candidate",
+      "sourceSha256": "6fdef66f47f40f304ee76e568f0144b8a8cf490180613edc1c01440a890b33e8",
+      "sourceUrl": "https://overthecap.com/player/paul-rubelt/13771/"
+    },
+    {
+      "team": "TEN",
+      "name": "Carnell Tate",
+      "playerId": "fb747438-4125-5d62-bcce-673700e7a118",
+      "otcId": 13148,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fa7cfaa549a0d99568ea48ea44b37c9656ef8986ba7bb31789288c178564046b",
+      "sourceUrl": "https://overthecap.com/player/carnell-tate/13148/"
+    },
+    {
+      "team": "TEN",
+      "name": "Keldric Faulk",
+      "playerId": "97295640-bc40-580f-96a9-dfe0ac2145a5",
+      "otcId": 13175,
+      "status": "source_backed_candidate",
+      "sourceSha256": "dbda3deec1ac41b870c0fa64044c94f23168f2cd6fea6c386b497e6ccb4f7e94",
+      "sourceUrl": "https://overthecap.com/player/keldric-faulk/13175/"
+    },
+    {
+      "team": "TEN",
+      "name": "Anthony Hill Jr.",
+      "playerId": "ad14a6ae-8a4b-5823-bc89-c45e4cb4038e",
+      "otcId": 13204,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9ffe81b3cd5b814e4af762c98e6b989005f5186f3bbce81584710a27fcaf511b",
+      "sourceUrl": "https://overthecap.com/player/anthony-hill-jr/13204/"
+    },
+    {
+      "team": "TEN",
+      "name": "Nick Singleton",
+      "playerId": "b41b7ef5-6865-594f-bf1e-aeab52f6ce63",
+      "otcId": 13309,
+      "status": "source_backed_candidate",
+      "sourceSha256": "843c666ad67dfc71c1b576d032381ea0fc3cb670bf49aa0e3b58dec3462d0c0c",
+      "sourceUrl": "https://overthecap.com/player/nick-singleton/13309/"
+    },
+    {
+      "team": "TEN",
+      "name": "Jackie Marshall",
+      "playerId": "197bd915-d628-5e38-886b-77dba2956271",
+      "otcId": 13328,
+      "status": "source_backed_candidate",
+      "sourceSha256": "915ce521f01e4079591c2e42583c0e83da34bd080c12e3564e8f7df331ed7cd1",
+      "sourceUrl": "https://overthecap.com/player/jackie-marshall/13328/"
+    },
+    {
+      "team": "TEN",
+      "name": "Pat Coogan",
+      "playerId": "3b720666-79fa-5b24-a351-0ea6b9c28859",
+      "otcId": 13338,
+      "status": "source_backed_candidate",
+      "sourceSha256": "967384d258e1877fb74e7453c6c7b42dc5d92b9accff3c9edc4bda4b715f43f4",
+      "sourceUrl": "https://overthecap.com/player/pat-coogan/13338/"
+    },
+    {
+      "team": "TEN",
+      "name": "Timmy Horne",
+      "playerId": "881c4ba5-9ba8-5b79-95d8-9c36d4ed6f0a",
+      "otcId": 10451,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f04c823134381c2ceb85bb7e9ca996cf790f28fec7bbc40f796354cc9d4f8227",
+      "sourceUrl": "https://overthecap.com/player/timmy-horne/10451/"
+    },
+    {
+      "team": "TEN",
+      "name": "K.J. Osborn",
+      "playerId": "8144cdeb-d7a5-5a98-acae-2ccfea60d3f0",
+      "otcId": 8916,
+      "status": "source_backed_candidate",
+      "sourceSha256": "09e1a67739b4fccfdfa4200c0793ae0f48cb41bffa52e2fa31b8c5ad6383ea6a",
+      "sourceUrl": "https://overthecap.com/player/k-j-osborn/8916/"
+    },
+    {
+      "team": "TEN",
+      "name": "Kalel Mullings",
+      "playerId": "8ebc146a-1cac-56fe-9ece-12de388b80c2",
+      "otcId": 12548,
+      "status": "source_backed_candidate",
+      "sourceSha256": "8a27e14e12160a2c557719497495688e2ffc69c176185660ff7eae510b75fc49",
+      "sourceUrl": "https://overthecap.com/player/kalel-mullings/12548/"
+    },
+    {
+      "team": "TEN",
+      "name": "Rasheed Miller",
+      "playerId": "073d0409-aed9-51c5-b527-9a634b85ecaa",
+      "otcId": 13554,
+      "status": "source_backed_candidate",
+      "sourceSha256": "13c4ac45da7fd69c8ad224419ba8e4ea0d6e5b61905a7f44d5bfd074182e1c19",
+      "sourceUrl": "https://overthecap.com/player/rasheed-miller/13554/"
+    },
+    {
+      "team": "TEN",
+      "name": "Tyren Montgomery",
+      "playerId": "a0496ec8-35c7-5a48-8910-e17abcb2cfc1",
+      "otcId": 13557,
+      "status": "source_backed_candidate",
+      "sourceSha256": "f0b1e406ebb40d09b3a67a35b0ec013abe7787a3b4485a167621dce68be2f9f8",
+      "sourceUrl": "https://overthecap.com/player/tyren-montgomery/13557/"
+    },
+    {
+      "team": "TEN",
+      "name": "Jackson Slater",
+      "playerId": "8495311a-061e-511f-8ef7-1ad3b91e04a3",
+      "otcId": 12527,
+      "status": "unresolved",
+      "reason": "Partial-year cash needs explicit salary-rate treatment"
+    },
+    {
+      "team": "TEN",
+      "name": "Fernando Carmona",
+      "playerId": "bd03fa29-1384-589b-a80c-56c2d6c8de3b",
+      "otcId": 13286,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fb457730d7803afd63a52f83b2092b0df91ab233c63c793fb934432c068e70a3",
+      "sourceUrl": "https://overthecap.com/player/fernando-carmona/13286/"
+    },
+    {
+      "team": "TEN",
+      "name": "Jaren Kanak",
+      "playerId": "f1271ea4-50b3-57dd-8a65-cd1989dd6745",
+      "otcId": 13369,
+      "status": "source_backed_candidate",
+      "sourceSha256": "7eb6ec99c2018e209dd4486d6841ee2f527f62c842bc1db820ccc1209afd0780",
+      "sourceUrl": "https://overthecap.com/player/jaren-kanak/13369/"
+    },
+    {
+      "team": "WSH",
+      "name": "Sonny Styles",
+      "playerId": "3a3b1726-c333-57a5-b79a-1b1f939a20d7",
+      "otcId": 13151,
+      "status": "source_backed_candidate",
+      "sourceSha256": "2df888bb3aef92e4077ecc7a4e8a596d0d5b7eabb81890c8fe4f942de2989e95",
+      "sourceUrl": "https://overthecap.com/player/sonny-styles/13151/"
+    },
+    {
+      "team": "WSH",
+      "name": "Antonio Williams",
+      "playerId": "fc74e654-be6a-5b51-8479-bbba625011f5",
+      "otcId": 13215,
+      "status": "source_backed_candidate",
+      "sourceSha256": "04320d5de3d70a00aec3b0b2404c3fcf13b19fda3ca35e5ca7f40ab6bed0230e",
+      "sourceUrl": "https://overthecap.com/player/antonio-williams/13215/"
+    },
+    {
+      "team": "WSH",
+      "name": "Joshua Josephs",
+      "playerId": "47ab1cea-eae7-5176-8826-cb7b8965f9cf",
+      "otcId": 13291,
+      "status": "source_backed_candidate",
+      "sourceSha256": "fe11b142b1b942745e6ae287aef75467cfefb1cd67bc86146e6003cc3ea252f9",
+      "sourceUrl": "https://overthecap.com/player/joshua-josephs/13291/"
+    },
+    {
+      "team": "WSH",
+      "name": "Matt Gulbin",
+      "playerId": "ab81606d-a2c7-522b-8915-3f3191035859",
+      "otcId": 13353,
+      "status": "source_backed_candidate",
+      "sourceSha256": "b3b5a3180fee452e7c6a48bcea9cdc0642b9732b9904d83f53d5bf96c9d2eba1",
+      "sourceUrl": "https://overthecap.com/player/matt-gulbin/13353/"
+    },
+    {
+      "team": "WSH",
+      "name": "Athan Kaliakmanis",
+      "playerId": "c742fa14-f0dc-5443-a3e7-2642e34a2301",
+      "otcId": 13367,
+      "status": "source_backed_candidate",
+      "sourceSha256": "982ace4d7506ea27fb1da8e12dda1dd13a861c71a781b303e908934dc6f8131a",
+      "sourceUrl": "https://overthecap.com/player/athan-kaliakmanis/13367/"
+    },
+    {
+      "team": "WSH",
+      "name": "Tanoa Togiai",
+      "playerId": "83afabde-2708-5685-97c9-7f3c70a4e4a0",
+      "otcId": 13670,
+      "status": "source_backed_candidate",
+      "sourceSha256": "9715017dde8d5317a09caa4e5432699663bc31f8cee44b8354cf068763295044",
+      "sourceUrl": "https://overthecap.com/player/tanoa-togiai/13670/"
+    },
+    {
+      "team": "WSH",
+      "name": "Drew Stevens",
+      "playerId": "40864118-58a6-51e6-9e2b-c967966ff6ac",
+      "otcId": 13669,
+      "status": "source_backed_candidate",
+      "sourceSha256": "c3d0816e93e39703ab8f0144f487a78e104b5cead69af3b40d6c8cce799d0f8f",
+      "sourceUrl": "https://overthecap.com/player/drew-stevens/13669/"
+    },
+    {
+      "team": "WSH",
+      "name": "Jaden Bradley",
+      "playerId": "e4ecbf3e-af98-5f5b-9d71-00ec64e6c735",
+      "otcId": 13672,
+      "status": "unresolved",
+      "reason": "No cached player page"
+    },
+    {
+      "team": "WSH",
+      "name": "Fred Davis II",
+      "playerId": "deddf866-cb0b-5f2f-bb36-9470e70dd5b2",
+      "otcId": 13666,
+      "status": "unresolved",
+      "reason": "No cached player page"
+    },
+    {
+      "team": "WSH",
+      "name": "Nick DeGennaro",
+      "playerId": "fe2acb5e-fec3-56f3-99ab-231df30d617d",
+      "otcId": 13421,
+      "status": "source_backed_candidate",
+      "sourceSha256": "cdf9d5ba9938d4ce3083a789251f40ea461791b6debdd5e3da7c71cb4c5aa50d",
+      "sourceUrl": "https://overthecap.com/player/nick-degennaro/13421/"
+    }
+  ],
+  "application": {
+    "newRecordsAdded": 447,
+    "previousRecords": 2012,
+    "resultRecords": 2459,
+    "previousPackSha256": "1ecf6508aa31e6e62e1391d5e6e1251eb670ef6a049f3b421e9cc469380e4bc6",
+    "resultPackSha256": "c1a2ad199b9689637ad2f1eafa2237b92e028c81beaa764351f7834ecb41628b",
+    "policy": "Only previously absent strict-identity, exact-cap, published-cash candidates were added. Existing source records and saved contracts remain unchanged. Unresolved source cases do not enable real-contract default."
+  }
+}

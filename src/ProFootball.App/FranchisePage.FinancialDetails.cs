@@ -41,7 +41,7 @@ public sealed partial class FranchisePage
         var result=new TaskCompletionSource<(bool Release,bool PostJune1)>();var closing=false;var page=new ContentPage{BackgroundColor=DynastyTheme.Background};
         var june=new Switch{IsEnabled=ProTermination.CanDesignate(state!,state!.UserTeam,p.Football.PlayerId),AutomationId="pro-june1-release"};
         var preview=new ContentView();
-        void Draw(){var rows=ProContractInsights.Release(state!,p.Football.PlayerId,june.IsToggled);preview.Content=Panel("Cap impact of release",Table([("Season",65),("Keep: cap hit",130),("Release: dead cap",150),("Cap saved",130)],rows.Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(y.Before)),Text(Dollars(y.DeadMoney)),Text(Dollars(y.Savings),14,true)})));}
+        void Draw(){var rows=ProContractInsights.Release(state!,p.Football.PlayerId,june.IsToggled);preview.Content=Panel("Cap impact of release",Table([("Season",65),("Keep: cap hit",130),("Release: dead cap",150),("Cap saved",130),("Season cash",130)],rows.Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(y.Before)),Text(Dollars(y.DeadMoney)),Text(Dollars(y.Savings),14,true),Text(Dollars(y.SeasonCash))})));}
         june.Toggled+=(_,_)=>Draw();Draw();
         var release=new Button{Text="Release player",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};var cancel=new Button{Text="Cancel",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};
         async Task Close(bool value){if(closing)return;closing=true;await Navigation.PopModalAsync();result.TrySetResult((value,value&&june.IsToggled));}
@@ -50,7 +50,7 @@ public sealed partial class FranchisePage
         var c=state!.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
         page.Content=new ScrollView{Content=new VerticalStackLayout{Padding=16,Spacing=12,Children={Text("Release "+p.Football.FullName+"?",24,true),ContractDetails(p,c),
             new HorizontalStackLayout{Spacing=10,Children={june,Text("Use a June 1 designation · maximum two per team",12)}},preview,
-            Text(june.IsEnabled?"A designation holds current cap space until preseason, when June 1 savings take effect. Guaranteed pay is assessed immediately; its cash payments retain their schedule.":"Bonus charges follow the current calendar. Guaranteed pay is assessed immediately; its cash payments retain their schedule.",12),new HorizontalStackLayout{Spacing=12,Children={cancel,release}}}}};
+            Text(june.IsEnabled?"Season cash includes amounts already paid this year. A designation holds current cap space until preseason, when June 1 savings take effect. Guaranteed pay is assessed immediately; its cash payments retain their schedule.":"Season cash includes amounts already paid this year. Bonus charges follow the current calendar. Guaranteed pay is assessed immediately; its cash payments retain their schedule.",12),new HorizontalStackLayout{Spacing=12,Children={cancel,release}}}}};
         await Navigation.PushModalAsync(page);return await result.Task;
     }
 }

@@ -143,4 +143,6 @@ jobs:
             pro-finance-ledger-check.json
             pro-reserve-logcat.txt
             pro-reserve-check.json
+            pro-termination-logcat.txt
+            pro-termination-check.json
           retention-days: 3

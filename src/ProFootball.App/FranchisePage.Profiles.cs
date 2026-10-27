@@ -42,9 +42,20 @@ public sealed partial class FranchisePage
         attributes.Add(Text("Higher ratings are better. Injury represents resistance to injury and wear.", 11));
         var actions = new ActionRow(); actions.Add(Action("Edit appearance",()=>EditPlayerAppearance(p))); if (f.TeamName == s.UserTeam) actions.Add(Action("Contract & roster actions", () => ManagePlayer(p)));
         var lines = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).SelectMany(g => g.Football.PlayerStats).Where(x => x.PlayerId == f.PlayerId).ToArray();
-        await ShowPage("Player profile", identity, ReserveActivationControls(p), Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
+        await ShowPage("Player profile", identity, ReserveActivationControls(p), WaiverControls(p), Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
             ContractDetails(p,contract),
             PlayerAnalytics(p), Panel("Regular season", Text($"Passing {lines.Sum(x => x.PassYards)} yd · {lines.Sum(x => x.PassingTouchdowns)} TD\nRushing {lines.Sum(x => x.RushYards)} yd · Receiving {lines.Sum(x => x.ReceivingYards)} yd\nTackles {lines.Sum(x => x.Tackles)} · Sacks {lines.Sum(x => x.Sacks)}")), actions);
+    }
+    View WaiverControls(ProPlayer p)
+    {
+        var entry=state!.Waivers.FirstOrDefault(w=>w.PlayerId==p.Football.PlayerId);
+        if(entry is null)return new VerticalStackLayout();
+        var claimed=entry.Claims.Contains(state.UserTeam);var controls=ProCareer.Controls(state,p.Football.Position);
+        var button=Action(claimed?"Claim submitted":"Claim from waivers",async()=>{
+            await ClaimWaiver(p);await Navigation.PopModalAsync();await Player(p);
+        });
+        button.IsEnabled=!claimed&&controls;button.AutomationId="pro-waiver-profile-claim";
+        return Panel("Waivers",Text(claimed?"Claim submitted. Priority, roster space and salary-cap room are checked when waivers resolve.":controls?"Assume the existing salary contract. Review remaining pay and years before submitting.":"The head coach manages waiver claims for the other unit.",12),button);
     }
     View ReserveActivationControls(ProPlayer p)
     {
