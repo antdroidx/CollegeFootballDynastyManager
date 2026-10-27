@@ -14,6 +14,10 @@ Updated October 27, 2026 (Pacific). This is the current handoff; Git history ret
 
 Pro58 coordinator roster/draft and pending-offer batch is accepted below; no build or local test is active. Continue source-dated commitments/guarantees/departed-debt reconciliation and market calibration before real-source default promotion, then the remaining documented roadmap. Preserve negotiated saves; do not invent liabilities or force published room. The ten primary roster/event reviews are developer-only evidence in docs/data/nfl-contract-status-review-2026-10-26.json;22 strict identifier gaps remain. Historical financial rows must not overwrite present roster ownership.
 
+## Financial calibration checkpoint
+
+Developer-only positional market audit added to tools/ProContractAudit (`--market`), with reproducible data/provenance in docs/data/pro-market-calibration-2026-10-27.json. It uses canonical game ratings and reported source APY, excludes original rookies/PS/generated/stale deals, and reconciles1,113 samples plus excluded categories to all2,531 contracts. Both audit modes compile/run; original ledger still returns32 unique teams. QB/WR/DE elite bands are underpriced while backup/specialist bands can be overpriced by the old curve; a flat multiplier would fail. Next implement bounded monotone positional/rating curves with sparse-sample handling and shared agent/CPU/extension/trade market usage, then long financial balance validation. Preserve signed saves, legal rookie/minimum rules and source-default gate. No application/shared source or pricing behavior changed in this audit; latest accepted APK remains58. No build/test is active.
+
 ## Latest verified APKs
 
 ## Accepted coordinator roster/draft batch — Pro58

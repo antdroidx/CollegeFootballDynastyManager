@@ -1,6 +1,13 @@
 using System.Text.Json;
 using ProFootball.Core;
 var state=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
+if(args.FirstOrDefault()=="--market")
+{
+    var marketReport=MarketAudit.Create(state);
+    var marketJson=JsonSerializer.Serialize(marketReport,new JsonSerializerOptions{WriteIndented=true,PropertyNamingPolicy=JsonNamingPolicy.CamelCase});
+    if(args.Length<2)Console.WriteLine(marketJson);else File.WriteAllText(args[1],marketJson);
+    return;
+}
 var report=state.League.Teams.Select(team=>{
     var contracts=state.Contracts.Where(c=>c.Active&&c.Team==team.Name).ToArray();
     var source=contracts.Where(c=>!c.Estimated&&c.Source is not null).ToArray();
