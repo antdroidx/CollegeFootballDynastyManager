@@ -10,13 +10,21 @@ Updated October 26, 2026 (Pacific). This is the current handoff; Git history ret
 - Do not duplicate active implementation/builds. Use scoped tests per [testing-scope.md](testing-scope.md).
 - Continue all authorized roadmap work autonomously. Hourly continuation `resume-pro-football-development` is active again; do not disable until everything is complete.
 
-## Active batch — coordinator retention (after accepted Pro56)
+## Prior implementation checkpoint — coordinator retention (accepted in Pro57 below)
 
 Uncommitted Pro-only retention fix: ProManagement shares its future/team/unit budget evaluator with an internal staff-unit path, preserving the user's coach identity and authority. ProRetention automatically negotiates the coordinator's other unit (including specialists), while own-unit choices remain manual/delegated. Retention advancement includes a fired user's former team as CPU-managed. Head-coach manual/delegated behavior and LetExpire remain unchanged; no contract-change-lock policy was altered. The screen explains own-unit delegation and gray availability for jobless/unavailable actions.
 
 Forty targeted career/GM/retention cases passed, including OC/DC symmetry, both head-coach delegation settings, own-unit manual expiry, unemployment, future-unit atomic rejection and three coordinator seasons with explicit GM roster/draft delegation. That annual scenario does not claim automatic opposite-unit roster/draft work is complete. New isolated OC/DC device fixtures and a retention-only flow are prepared; local fast suite and final APK/device acceptance still required. Auto FA/waiver/cut/draft handling for the uncontrolled unit remains the next coordinator task, per pro-coordinator-staff-plan.md. Latest accepted remains Pro56. No College/shared app change; reuse accepted evidence and long HC annual runs where unaffected.
 
 ## Latest verified APKs
+
+## Accepted coordinator-retention batch — Pro57
+
+Application/core source `4294f8e`. [Exact APK57](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40458818959/artifacts/12713836374), [all-green run40458818959](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40458818959), [device evidence12713851967](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40458818959/artifacts/12713851967).179 scoped Pro cases,15 synchronization helpers, source validator, packaging and OC/DC retention device flow passed. Both roles' UI explanations, own-unit delegation off, next-year advancement, opposite-unit renewal, manual-own expiry and persisted job/contract/GM outcomes were checked. Screenshots in .artifacts/pro57-ui reviewed. Synthetic fixture numbers/ages are not real roster facts.
+
+Forty targeted career/GM cases including three coordinator seasons with explicit GM roster/draft delegation also passed locally. No College/shared/market/trade mechanism change; reuse College390/full Pro44 and accepted Pro56 trade evidence. Head-coach long-simulation evidence is reused for unchanged branches. Retention is complete; automatic opposite-unit FA/waiver/cut/draft handling remains next, alongside documented financial/source/market/pending-bid and broader roadmap. No active build/test remains. Preserve existing contract-change-lock behavior unless a concrete failing case justifies a policy change.
+
+
 
 ## Accepted autonomous-trade batch — Pro 56
 
