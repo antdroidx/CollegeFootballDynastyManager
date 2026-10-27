@@ -8,6 +8,17 @@ public static class ProCpuBudget
         var count=s.Players.Count(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad&&!p.Reserve&&contracted.Contains(p.Football.PlayerId));
         return (long)(Math.Max(0,53-count)*1_500_000*Math.Max(1,ProFinance.ForecastCap(s,year)/(double)ProFinance.Base2026));
     }
+    public static long FutureRolloverNeed(ProFranchise s,string team)
+    {
+        // Planning only: this does not book cap charges or assume an unearned rollover election.
+        var full=s with{Phase=ProPhase.RegularSeason};long needed=0;
+        foreach(var year in Enumerable.Range(s.Year+1,4))
+        {
+            var cost=ProFinance.Budget(full,team,year).TotalCommitments+ProEconomy.PendingForYear(s,team,year)+DepthReserve(s,team,year);
+            needed=Math.Max(needed,cost-ProFinance.Limit(s,team,year));
+        }
+        return Math.Max(0,needed);
+    }
     public static ProFranchise Relieve(ProFranchise s,string team,long targetRoom,Func<ProPlayer,bool>? eligible=null)
     {
         if(ProFinance.ContractChangeYear(s)!=s.Year||ProEconomy.Room(s,team)>=targetRoom)return s;

@@ -65,6 +65,11 @@ public static class ProFinance
         var caps=past.Sum(h=>h.BaseCap)+s.SalaryCap;var paid=past.Sum(h=>h.CashSpent+h.FloorPayment)+Cash(s,team,s.Year);
         return(paid,(long)Math.Ceiling(caps*.90),window.End);
     }
+    public static bool HasFloorHistory(ProFranchise s,string team)
+    {
+        var window=FloorWindow(s.Year);
+        return Enumerable.Range(window.Start,Math.Max(0,s.Year-window.Start)).All(year=>s.FinancialHistory.Any(h=>h.Team==team&&h.Year==year));
+    }
     public static ProFranchise CloseYear(ProFranchise s)
     {
         if(s.FinancialHistory.Any(h=>h.Year==s.Year))return s;
@@ -73,7 +78,7 @@ public static class ProFinance
         var history=s.FinancialHistory.ToList();
         foreach(var team in s.League.Teams)
         {
-            var room=Math.Max(0,ProEconomy.Room(s,team.Name));var cash=Cash(s,team.Name,s.Year);var floor=Floor(s,team.Name);var payment=s.Year==floor.End?Math.Max(0,floor.Required-floor.Paid):0;
+            var room=Math.Max(0,ProEconomy.Room(s,team.Name));var cash=Cash(s,team.Name,s.Year);var floor=Floor(s,team.Name);var payment=s.Year==floor.End&&HasFloorHistory(s,team.Name)?Math.Max(0,floor.Required-floor.Paid):0;
             var budget=Budget(s,team.Name);var election=s.RolloverElections.LastOrDefault(e=>e.Team==team.Name&&e.Year==s.Year);
             var carry=election?.Amount??(long)(room*(team.Name==s.UserTeam?s.CarryoverPercentage:100)/100m);
             history.Add(new(team.Name,s.Year,budget.BaseCap,budget.Rollover,budget.TotalCommitments-budget.RolloverReserved,cash,carry,payment){OtherAdjustments=budget.OtherAdjustments});
@@ -85,7 +90,11 @@ public static class ProFinance
     {
         foreach(var team in s.League.Teams.Where(t=>(onlyTeam is null||t.Name==onlyTeam)&&(t.Name!=s.UserTeam||s.Career?.Unemployed==true)))
         {
-            var room=Math.Max(0,ProEconomy.Room(s,team.Name));var invest=Math.Max(0,(long)(Limit(s,team.Name)*.90)-ProEconomy.Used(s,team.Name));invest=Math.Min(invest,room);if(invest==0)continue;
+            var floor=Floor(s,team.Name);
+            // The rule measures a multi-year cash window, not90% of every year's adjusted cap.
+            // Preserve usable rollover; never invent prior cash for a franchise starting mid-window.
+            if(s.Year!=floor.End||!HasFloorHistory(s,team.Name))continue;
+            var room=Math.Max(0,ProEconomy.Room(s,team.Name));var invest=Math.Min(Math.Max(0,floor.Required-floor.Paid),room);if(invest==0)continue;
             var ids=s.Players.Where(p=>p.Football.TeamName==team.Name&&!p.Retired&&!p.PracticeSquad&&!p.Reserve).Select(p=>p.Football.PlayerId).ToHashSet();
             var candidates=s.Contracts.Where(c=>c.Active&&ids.Contains(c.PlayerId)&&c.Years.Any(y=>y.Year==s.Year)).ToArray();if(candidates.Length==0)continue;
             var share=invest/candidates.Length;var remainder=invest%candidates.Length;var bonus=candidates.Select((c,i)=>(c.PlayerId,Amount:share+(i<remainder?1:0))).ToDictionary(x=>x.PlayerId,x=>x.Amount);

@@ -230,8 +230,11 @@ public static class ProCpu
             foreach (var team in teams.OrderBy(t => ProRoster.Active(s, t.Name)).ThenBy(t => t.Id))
             {
                 var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))||Staff(team.Name)&&UnitCount(team.Name)>=Target(team.Name)) continue;
-                var minimum=DepthMinimum(s); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000 : 0;
-                var room = ProEconomy.Room(s, team.Name) - reserve;
+                var minimum=DepthMinimum(s); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000L : 0L;
+                var available=ProEconomy.Room(s,team.Name);
+                var futureBuffer=Math.Min(ProCpuBudget.FutureRolloverNeed(s,team.Name),Math.Max(0,available-reserve-Math.Max(0,53-count)*minimum));
+                reserve+=futureBuffer;
+                var room = available - reserve;
                 var target=room<(53-count)*minimum?Math.Max(45,count+1):53;var remaining=Math.Max(1,Staff(team.Name)?Math.Min(target-count,Target(team.Name)-UnitCount(team.Name)):target-count);
                 var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * minimum));
                 var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => Need(s, team.Name, p));

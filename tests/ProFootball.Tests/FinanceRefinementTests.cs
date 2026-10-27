@@ -19,7 +19,7 @@ public sealed class FinanceRefinementTests
     {
         var s=New() with{Contracts=[],DeadCap=[],CarryoverPercentage=50};var closed=ProFinance.CloseYear(s);
         var own=closed.FinancialHistory.Single(h=>h.Team==s.UserTeam);
-        Assert.Equal(ProFinance.Limit(s,s.UserTeam)/2,own.CarryOut);Assert.Equal((long)(s.SalaryCap*.9),own.FloorPayment);Assert.Equal(0,own.CapSpent);
+        Assert.Equal(ProFinance.Limit(s,s.UserTeam)/2,own.CarryOut);Assert.Equal(0,own.FloorPayment);Assert.Equal(0,own.CapSpent);
         Assert.Equal(32,ProFinance.CloseYear(closed).FinancialHistory.Count);
         var next=closed with{Year=s.Year+1,SalaryCap=ProFinance.ForecastCap(s,s.Year+1)};
         Assert.Equal(next.SalaryCap+own.CarryOut,ProFinance.Limit(next,s.UserTeam));
