@@ -18,6 +18,7 @@ public sealed partial class FranchisePage
     Task Manage(string action, Guid id, long commitment, Func<ProFranchise, ProFranchise> mutation) => Update(s => ProManagement.Submit(s, action, [id], commitment, mutation));
     async Task ManagePlayer(ProPlayer original)
     {
+        var before=state;
         var p = state!.Players.Single(x => x.Football.PlayerId == original.Football.PlayerId); var c = state.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);
         var choice = await GameDialogs.ActionSheetAsync(this, p.Football.FullName + " · " + p.Football.Position, "Close", null, "Player & contract", p.Reserve ? "Activate from reserve" : p.PracticeSquad ? "Promote to active" : "Move to practice squad", "Extend contract", "Restructure contract", "Franchise tag", state.TradeBlock.Contains(p.Football.PlayerId) ? "Remove from trading block" : "Add to trading block", "Release player");
         if (choice == "Player & contract") { await ShowPage("Player contract",ContractDetails(p,c),ContractComparisons(p)); }
@@ -29,6 +30,10 @@ public sealed partial class FranchisePage
         if (choice is "Add to trading block" or "Remove from trading block") await Update(s => ProTradeMarket.List(s,s.UserTeam,p.Football.PlayerId,choice == "Add to trading block"));
         if (choice == "Franchise tag") await Manage("Franchise tag", p.Football.PlayerId, 0, s => ProEconomy.Tag(s, s.UserTeam, p.Football.PlayerId));
         if (choice == "Release player") { var decision=await ConfirmRelease(p);if(decision.Release)await Manage("Release player", p.Football.PlayerId, 0, s => ProEconomy.Release(s, s.UserTeam, p.Football.PlayerId,postJune1:decision.PostJune1)); }
+        if(!ReferenceEquals(before,state)&&Navigation.ModalStack.LastOrDefault()?.Title=="Player profile")
+        {
+            await Navigation.PopModalAsync();await Player(state!.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId));
+        }
     }
     void Staff()
     {
@@ -69,12 +74,17 @@ public sealed partial class FranchisePage
             {
                 var player = p; var waiver = state.Waivers.Any(w => w.PlayerId == p.Football.PlayerId);
                 var pending = state.Bids.FirstOrDefault(b => b.Team == state.UserTeam && b.PlayerId == p.Football.PlayerId);
-                return new View[] { Text(p.Football.Position.ToString()), Link(p.Football.FullName, () => Player(player)), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString()), Text(Money(ProEconomy.MarketSalary(state!,p))), Text(waiver ? "Waivers" : pending is null ? "Available" : "Bid pending"), Action(waiver ? "Claim" : pending is null ? "Make offer" : "Revise bid", async () =>
+                var entry=state.Waivers.FirstOrDefault(w=>w.PlayerId==player.Football.PlayerId);
+                var ownRelease=entry?.OriginalContracts?.Any(c=>c.Team==state.UserTeam)==true;
+                var submitted=entry?.Claims.Contains(state.UserTeam)==true;
+                var offerButton=Action(waiver?(ownRelease?"Released by you":submitted?"Claim submitted":"Claim"):pending is null?"Make offer":"Revise bid",async()=>
                 {
                     if (waiver) await ClaimWaiver(player);
                     else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer",player.Football.PlayerId,o.Salary + o.Bonus/o.Years,s => ProEconomy.Offer(s,s.UserTeam,player.Football.PlayerId,o.Years,o.Salary,o.Bonus)); }
                     await FreeAgents();
-                }) };
+                });
+                offerButton.IsEnabled=!ownRelease&&!submitted;
+                return new View[] { Text(p.Football.Position.ToString()), Link(p.Football.FullName, () => Player(player)), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString()), Text(Money(ProEconomy.MarketSalary(state!,p))), Text(waiver?"Waivers":pending is null?"Available":"Bid pending"),offerButton };
             })));
             if (players.Length == 0) list.Add(Text("No available players match these filters."));
         }

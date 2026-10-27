@@ -1,5 +1,11 @@
 # Pro completion checklist
 
+## Latest accepted — Pro66
+
+App/core db88f28: run40579419877, APK12768613293, device evidence12768544312. All245 full local cases passed10m6,243 fast CI cases,16 helpers, source validator and packaging passed. Midseason claim/award/reload/release verified333333 cash after one elapsed week, preserving inherited terms and June1 held savings. Exact APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40579419877/artifacts/12768613293
+
+A small UI follow-up refreshes cards after contract/roster actions and disables own-release/duplicate claim actions. Android local build passes0 warnings/errors; core/data remain66 and their long tests are reused. Further source reconciliation/default promotion remains open. Read-only Seattle proof matches observed charges exactly without a balancing entry but is not yet app initialization. All four tasks are not claimed complete.
+
 ## Current acceptance and follow-up
 
 Pro64 app/core8b06fa7 is accepted. APK12754790693/run40547793852; exact-APK device verification40573852505 at harness00944a7 passed all scoped flows, evidence12766593020.239 full local Pro tests (5m22),237 fast CI cases,16 helpers and source validation passed. Finance/options/trades/coordinator/June1/waiver/reload checks passed; screenshots reviewed. Original fixture-glob failure is superseded. Exact APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40547793852/artifacts/12754790693

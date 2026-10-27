@@ -81,8 +81,12 @@ def run(s):
     cut=saved(fixture["id"],lambda x:not any(c["active"] and c["playerId"]==data["waiverPlayer"] for c in x["contracts"]))
     current=next(c for c in cut["contracts"] if c["playerId"]==data["waiverPlayer"] and c["team"]==fixture["userTeam"])
     assert current["earnedCash"]==data["postClaimReleaseCash"]==333333,"Buyer earned salary from before the claim"
+    profile=ready("released-profile-updated",lambda r:"Released by your team" in s.texts(r))
+    assert not s.enabled(profile,"Released by your team")
+    assert any("Free agent" in (text or "") for text in s.texts(profile))
+    assert "Contract & roster actions" not in s.texts(profile)
     s.capture("pro-termination-assigned-release")
-    Path("pro-termination-check.json").write_text(json.dumps({"june1HoldPreserved":True,"savedReleaseMatchesCore":True,"waiverSalaryAndTermReviewed":True,"claimDoesNotTransferEarly":True,"awardedContractEqualsCore":True,"reloadVerified":True,"midseasonAccrualVerified":True},indent=2),encoding="utf-8")
+    Path("pro-termination-check.json").write_text(json.dumps({"june1HoldPreserved":True,"savedReleaseMatchesCore":True,"waiverSalaryAndTermReviewed":True,"claimDoesNotTransferEarly":True,"awardedContractEqualsCore":True,"reloadVerified":True,"midseasonAccrualVerified":True,"releasedProfileRefreshed":True,"ownClaimDisabled":True},indent=2),encoding="utf-8")
     print("PASS: June1 preview/held savings/persisted designation and original-contract waiver claim/award/reload.")
 
 if __name__=="__main__":

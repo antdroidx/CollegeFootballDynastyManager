@@ -50,12 +50,13 @@ public sealed partial class FranchisePage
     {
         var entry=state!.Waivers.FirstOrDefault(w=>w.PlayerId==p.Football.PlayerId);
         if(entry is null)return new VerticalStackLayout();
+        var ownRelease=entry.OriginalContracts?.Any(c=>c.Team==state.UserTeam)==true;
         var claimed=entry.Claims.Contains(state.UserTeam);var controls=ProCareer.Controls(state,p.Football.Position);
-        var button=Action(claimed?"Claim submitted":"Claim from waivers",async()=>{
+        var button=Action(ownRelease?"Released by your team":claimed?"Claim submitted":"Claim from waivers",async()=>{
             await ClaimWaiver(p);await Navigation.PopModalAsync();await Player(p);
         });
-        button.IsEnabled=!claimed&&controls;button.AutomationId="pro-waiver-profile-claim";
-        return Panel("Waivers",Text(claimed?"Claim submitted. Priority, roster space and salary-cap room are checked when waivers resolve.":controls?"Assume the existing salary contract. Review remaining pay and years before submitting.":"The head coach manages waiver claims for the other unit.",12),button);
+        button.IsEnabled=!ownRelease&&!claimed&&controls;button.AutomationId="pro-waiver-profile-claim";
+        return Panel("Waivers",Text(ownRelease?"Other teams may claim this contract. Your club must wait for it to clear waivers.":claimed?"Claim submitted. Priority, roster space and salary-cap room are checked when waivers resolve.":controls?"Assume the existing salary contract. Review remaining pay and years before submitting.":"The head coach manages waiver claims for the other unit.",12),button);
     }
     View ReserveActivationControls(ProPlayer p)
     {

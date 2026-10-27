@@ -1,0 +1,41 @@
+{
+  "scope": "Read-only in-memory source proof, not application data or a save migration. No reported room is an input; allowance remains NFLPA-based. Uses the verified waiver/international designation, current-club salary tables/zero trade-bonus assessments, and the separately reported debt ledger. Unknown international cash remains the original generated estimate; only the verified cap exclusion is illustrated. Production needs typed exemption/status rules and safe new-franchise initialization.",
+  "before": {
+    "baseCap": 301200000,
+    "rollover": 15029706,
+    "otherAdjustments": -1176444,
+    "adjustedCap": 315053262,
+    "committedSalary": 155039809,
+    "allocatedBonus": 107994694,
+    "otherCapCharges": 34575734,
+    "deadMoney": 0,
+    "rolloverReserved": 0,
+    "offseasonSalaryExcluded": 0,
+    "rosterSalary": 155039809,
+    "playerCommitments": 263034503,
+    "totalCommitments": 297610237,
+    "available": 17443025
+  },
+  "after": {
+    "baseCap": 301200000,
+    "rollover": 15029706,
+    "otherAdjustments": -1176444,
+    "adjustedCap": 315053262,
+    "committedSalary": 154365109,
+    "allocatedBonus": 107595944,
+    "otherCapCharges": 34165634,
+    "deadMoney": 4844656,
+    "rolloverReserved": 0,
+    "offseasonSalaryExcluded": 0,
+    "rosterSalary": 154365109,
+    "playerCommitments": 261961053,
+    "totalCommitments": 300971343,
+    "available": 14081919
+  },
+  "reportedLiabilities": 300971343,
+  "difference": 0,
+  "exactCurrentCap": true,
+  "averyCurrentClubCash": 885000,
+  "diggsAnnualSalaryRate": 330300,
+  "diggsReportedCap": 220200
+}
