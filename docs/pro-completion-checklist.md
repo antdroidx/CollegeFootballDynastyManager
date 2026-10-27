@@ -1,5 +1,11 @@
 # Pro completion checklist
 
+## Latest accepted - Pro68
+
+App/core afe8b73, successful run40587763626, APK12772514300/evidence12773465745.249 fast CI Pro/16 helpers/source validator/packaging and focused opening device flow passed. All735 dated opening assessments/32 clubs/no invented historical cash/source keys/exact Seattle liabilities/contract display/themes/reinstall/save verified; screenshot reviewed. Final250 local cases (including five sourced/three imported-cap seasons) passed1m55; unchanged generated20/College390/GameCast44 evidence reused. APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40587763626/artifacts/12772514300
+
+Next guarded Roquan guarantee/cash classification correction is in progress.34 focused cases and all254 final local cases excluding unchanged twenty-generated-season case passed1m52. APK/device checks remain pending. Source default and broader32-team current-contract reconciliation remain open.
+
 ## Latest accepted - Pro67
 
 App faa55a1, all-green run40584307166, APK12770853072/evidence12771961687.243 fast Pro cases/16 helpers/source validator and packaging passed. Exact termination device scope verifies held June1 savings, inherited waiver terms/reload,333333 one-week buyer salary, refreshed Free agent card and disabled own/duplicate claims; screenshot reviewed. Core/data are66; reuse its245 full/annual cases. APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40584307166/artifacts/12770853072

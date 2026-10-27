@@ -5,7 +5,8 @@
   "Sources": [
     "https://overthecap.com/player/jaxon-smith-njigba/10844",
     "https://www.seahawks.com/news/seahawks-sign-jaxon-smith-njigba-to-multi-year-extension",
-    "https://overthecap.com/collective-bargaining-agreement/article/13/section/6"
+    "https://overthecap.com/collective-bargaining-agreement/article/13/section/6",
+    "https://overthecap.com/player/roquan-smith/6893/"
   ],
   "Contracts": [
     {
@@ -53,6 +54,64 @@
       "GuaranteedOtherCash": {
         "2026": 250000,
         "2027": 1100000
+      }
+    },
+    {
+      "PlayerId": "76903ad1-85a3-5d80-9c79-d60f3ccdac2b",
+      "SignedYear": 2023,
+      "Team": "Baltimore Ravens",
+      "BonusPayments": [],
+      "CashVesting": [],
+      "GuaranteedOtherCash": {
+        "2026": 4000000
+      },
+      "GuaranteedBase": {
+        "2026": 0
+      },
+      "OtherCash": {
+        "2027": 5000000
+      },
+      "BonusCash": {
+        "2026": 0,
+        "2027": 0
+      },
+      "ExpectedContract": {
+        "PlayerId": "76903ad1-85a3-5d80-9c79-d60f3ccdac2b",
+        "Team": "Baltimore Ravens",
+        "SignedYear": 2023,
+        "BonusYears": 5,
+        "SigningBonus": 0,
+        "BonusCash": {
+          "2026": 0,
+          "2027": 1000000
+        },
+        "AccountingVersion": 1,
+        "ReportedAnnualValue": 20000000,
+        "Years": [
+          {
+            "Year": 2026,
+            "Salary": 16000000,
+            "Guaranteed": 4000000,
+            "SourceGuaranteed": 4000000,
+            "ProratedBonus": 12718750,
+            "OtherCompensation": 4000000,
+            "OtherCash": 4000000,
+            "IsVoid": false
+          },
+          {
+            "Year": 2027,
+            "Salary": 15000000,
+            "Guaranteed": 0,
+            "SourceGuaranteed": 0,
+            "ProratedBonus": 12718750,
+            "OtherCompensation": 5000000,
+            "OtherCash": 4000000,
+            "IsVoid": false
+          }
+        ],
+        "Estimated": false,
+        "Source": "OverTheCap via nflverse \u00b7 2026-10-26",
+        "Active": true
       }
     }
   ]

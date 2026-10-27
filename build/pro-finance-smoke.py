@@ -131,7 +131,49 @@ try:
     click("light-hub","Financial overview");cap_view("light-finance");s.capture("pro-finance-light")
 
     if os.environ.get("PRO_FINANCE_OPENING_ONLY")=="1":
-        print("PASS: sourced opening ledger/current-club contracts,32 teams, exact Seattle liabilities, named debt, compact accounting, themes and reinstall/save.")
+        review=json.loads(Path("src/ProFootball.Core/pro-reviewed-contract-terms.json").read_text(encoding="utf-8"))
+        correction=next(c for c in review["Contracts"] if c.get("ExpectedContract"))
+        target=correction["PlayerId"]
+        actual=next(c for c in saved["contracts"] if c["playerId"]==target and c["active"])
+        assert next(y for y in actual["years"] if y["year"]==2026)["guaranteed"]==0
+        assert next(y for y in actual["years"] if y["year"]==2026)["guaranteedOtherCash"]==4_000_000
+        assert actual["bonusCash"]["2027"]==0 and next(y for y in actual["years"] if y["year"]==2027)["otherCash"]==5_000_000
+        def camel(x):
+            if isinstance(x,dict):return {k[:1].lower()+k[1:]:camel(v) for k,v in x.items()}
+            if isinstance(x,list):return [camel(v) for v in x]
+            return x
+        # Two complete32-team disposable saves; only one source contract differs from the UI-created baseline.
+        for locked in (False,True):
+            fixture=copy.deepcopy(saved);fixture_id=str(uuid.uuid4());fixture_name="Guarantee migration QA "+("locked" if locked else "unchanged")
+            original=camel(correction["ExpectedContract"])
+            if locked:
+                original.update(lastChangedYear=2026,source="Negotiated")
+                next(y for y in original["years"] if y["year"]==2027)["salary"]+=250_000
+            fixture.update(id=fixture_id,name=fixture_name,contracts=[original if c["playerId"]==target else c for c in fixture["contracts"]])
+            fixture_path=Path("pro-guarantee-fixture.json");fixture_path.write_text(json.dumps(fixture),encoding="utf-8")
+            s.adb("shell","am","force-stop","antdroid.profootball.franchise")
+            s.adb("push",str(fixture_path),"/data/local/tmp/pro-guarantee-fixture.json")
+            s.adb("shell","run-as","antdroid.profootball.franchise","cp","/data/local/tmp/pro-guarantee-fixture.json","files/pro-franchises-v1/"+fixture_id+".json")
+            s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
+            ready("guarantee-library",s.library_loaded)
+            click("guarantee-slot",fixture_name+" · "+fixture["userTeam"]+" · 2026 Preseason W1")
+            ready("guarantee-overview",s.pro_overview_loaded)
+            click("guarantee-save","\u2039 Exit",True);ready("guarantee-saved",s.library_loaded)
+            checked=json.loads(s.adb("exec-out","run-as","antdroid.profootball.franchise","cat","files/pro-franchises-v1/"+fixture_id+".json"))
+            after=next(c for c in checked["contracts"] if c["playerId"]==target and c["active"])
+            assert checked["deadCap"]==fixture["deadCap"] and checked["career"]==fixture["career"]
+            if locked:
+                for key in ("bonusCash","lastChangedYear","source"):assert after[key]==original[key],"Negotiated contract overwritten"
+                for row in original["years"]:
+                    current=next(y for y in after["years"] if y["year"]==row["year"])
+                    assert all(current[k]==v for k,v in row.items()),"Negotiated annual terms overwritten"
+                assert all(y.get("guaranteedOtherCash",0)==0 for y in after["years"])
+            else:
+                assert next(y for y in after["years"] if y["year"]==2026)["guaranteed"]==0
+                assert next(y for y in after["years"] if y["year"]==2026)["guaranteedOtherCash"]==4_000_000
+                assert after["bonusCash"]["2027"]==0 and next(y for y in after["years"] if y["year"]==2027)["otherCash"]==5_000_000
+        Path("pro-guarantee-migration-check.json").write_text(json.dumps({"newSourceAllocationVerified":True,"unchangedSourceMigrated":True,"negotiatedDealPreserved":True,"bookedDebtAndCareerPreserved":True},indent=2),encoding="utf-8")
+        print("PASS: sourced opening ledger/current-club contracts,32 teams, exact Seattle liabilities, named debt, compact accounting, themes/reinstall and guarded source-guarantee migration with negotiated saves preserved.")
         raise SystemExit(0)
 
     # Clearly synthetic, isolated option fixtures; never alter the imported cap-audit franchise above.

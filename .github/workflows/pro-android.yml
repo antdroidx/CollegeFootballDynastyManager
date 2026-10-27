@@ -142,6 +142,7 @@ jobs:
             pro-coordinator-logcat.txt
             pro-finance-ledger-check.json
             pro-opening-ledger-check.json
+            pro-guarantee-migration-check.json
             pro-reserve-logcat.txt
             pro-reserve-check.json
             pro-termination-logcat.txt
