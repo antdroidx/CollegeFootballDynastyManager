@@ -12,7 +12,17 @@ Updated October 27, 2026 (Pacific). This is the current handoff; Git history ret
 
 ## Next work
 
+Build62 is now accepted; see the acceptance record immediately below. Older checkpoint narratives are historical and superseded.
+
 Pro58 coordinator roster/draft and pending-offer batch is accepted below; the financial implementation/validation checkpoint follows. Continue source-dated commitments/guarantees/departed-debt reconciliation and market calibration before real-source default promotion, then the remaining documented roadmap. Preserve negotiated saves; do not invent liabilities or force published room. The ten primary roster/event reviews are developer-only evidence in docs/data/nfl-contract-status-review-2026-10-26.json;22 strict identifier gaps remain. Historical financial rows must not overwrite present roster ownership.
+
+## Accepted financial calibration — Pro62
+
+Application source `2ac5992`, financial core `94d77bc`. [Exact APK62](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40523114687/artifacts/12741879655), [successful run40523114687](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40523114687), [device evidence12742934656](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40523114687/artifacts/12742934656). Packaging,207 scoped Pro regressions,16 UI helpers and the32-pair source validator passed. Device acceptance passed32 persisted budgets/negative adjustments/reconciliation, financial themes, sourced annual cash and compact/expanded void displays, reinstall/save survival, explicit old-budget correction preserving contracts, rookie-option exercise/decline, trade counter/accept/decline with persisted ownership, and all six OC/DC retention/roster/draft scenarios. Evidence downloaded to .artifacts/pro62-ui; compact contract and light-budget screenshots reviewed. The displayed QA budget is a synthetic/test franchise, not a verified real-world opening balance.
+
+All209 full local Pro cases passed in9m55s on unchanged financial core, including20 generated seasons, five sourced seasons and the formerly failing imported-cap lifecycle.15 bounded positional market curves, multi-year tracked cash-floor policy, future-deficit spending protection and saved-franchise scroll reset are accepted in this scope. Reuse unchanged Pro44 GameCast and College390 evidence; this is not a fresh shared-renderer acceptance. Main/College/package identities remain unchanged. Build61's partial flow is superseded by62. No build/test remains active.
+
+Next: source-dated paid/future bonus events, vesting and departed-debt reconciliation. Real-source default remains off; no source liabilities or historical cash have been invented. Existing209-case evidence does not establish complete real-source accuracy. Remaining roadmap remains authorized.
 
 ## Financial calibration checkpoint
 
