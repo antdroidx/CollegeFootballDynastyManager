@@ -148,6 +148,40 @@
     "sha256": "3f6f8906a20d48c688f5727e76856997bc01ad2d9e1ac0ed83b41559f4a12a9f"
   },
   "rawRows": 53507,
+  "reviewFiles": [
+    {
+      "file": "reviews/identity-audit.json",
+      "sha256": "f5315aa623785a1e2339a3b50b3fe4872a25fa370c3b218d6e5322ca8b48095a"
+    },
+    {
+      "file": "reviews/nfl-contract-identity-audit-2026-10-26.json",
+      "sha256": "edb8604d873fd2c43090d57ef4e3166aa126391f257165962e4d99568b2da185"
+    },
+    {
+      "file": "reviews/nfl-contract-status-review-2026-10-26.json",
+      "sha256": "2d8336049dab033a320c7f19d00e01d392baf1492f4df246b9876b04c5dea325"
+    },
+    {
+      "file": "reviews/nfl_2026_salary_caps.csv",
+      "sha256": "b76a2d207b1d21d9d4afe7b68db1bf8e6319206955f94eb537e16d621b7a923d"
+    },
+    {
+      "file": "reviews/nflpa-cap-observation-2026-10-26.csv",
+      "sha256": "2fd3f38f948f996cbe0046171121364dcffb6f14f7290b6b7a4ffb93a882a311"
+    },
+    {
+      "file": "reviews/nflpa-cap-observation-2026-10-26.json",
+      "sha256": "8438ce5181413de46fe8331c7b359e00a65dd740924f53fc2dca731d0cd4258a"
+    },
+    {
+      "file": "reviews/obligations-audit.json",
+      "sha256": "9ba90a354c4721d348b9283d2b5b44f59bdac1e06037d5be805edd2eed9b68ae"
+    },
+    {
+      "file": "reviews/otc-obligations-observation-2026-10-26.csv",
+      "sha256": "c563a016a9a8314fc1f75ee73072cf392ba847630428aca78b61177e466e1430"
+    }
+  ],
   "scope": "Offline developer source bundle. Raw historical rows and current source status are retained separately; no game ownership, contract, debt or opening room is changed. Annual guaranteed_salary is a reported cash measure, not automatically guaranteed base. Missing vesting/payment conditions remain unresolved. No real-source default promotion.",
   "sourceTimestamp": "2026-10-26 10:36:37 EDT",
   "strictIdentitySummary": {

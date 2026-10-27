@@ -48,6 +48,8 @@ def main():
     for name in ["nflpa-cap-observation-2026-10-26.json","nflpa-cap-observation-2026-10-26.csv","nfl-contract-identity-audit-2026-10-26.json","nfl-contract-status-review-2026-10-26.json","otc-obligations-observation-2026-10-26.csv"]:
         preserve(root/"docs/data"/name,args.output/"reviews"/name)
     preserve(root/"src/ProFootball.Core/nfl_2026_salary_caps.csv",args.output/"reviews/nfl_2026_salary_caps.csv")
+    for name in ["identity-audit.json","obligations-audit.json"]:
+        preserve(args.team_cache/name,args.output/"reviews"/name)
     content=stable_json({"formatVersion":1,"moneyUnits":"integer USD; null means unavailable, never zero by inference","contracts":sorted(normalized,key=lambda r:(r["otcId"] or 0,r["signedYear"] or 0))})
     packed=gzip.compress(content,mtime=0);target=args.output/"current-contracts.json.gz"
     if target.exists() and target.read_bytes()!=packed:raise ValueError("Refusing changed normalized dataset in dated bundle")
@@ -56,6 +58,7 @@ def main():
     grouped=collections.defaultdict(list)
     for row in normalized:grouped[row["otcId"]].append(row)
     manifest["duplicateCurrentIdentities"]=[{"otcId":key,"sourceRows":[{"player":r["player"],"sourceTeam":r["sourceTeam"],"signedYear":r["signedYear"],"reportedValue":r["reportedValue"]} for r in values]} for key,values in sorted(grouped.items()) if len(values)>1]
+    manifest["reviewFiles"]=[{"file":"reviews/"+p.name,"sha256":digest(p)} for p in sorted((args.output/"reviews").iterdir()) if p.is_file()]
     encoded=stable_json(manifest);(args.output/"manifest.json").write_bytes(encoded);args.report.write_bytes(encoded)
     print(json.dumps({key:manifest[key] for key in ["rawRows","currentSourceContracts","uniqueCurrentOtcIds","teamCount","normalizedSha256"]}))
 if __name__=="__main__":main()
