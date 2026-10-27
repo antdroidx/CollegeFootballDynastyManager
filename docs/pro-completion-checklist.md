@@ -1,6 +1,6 @@
 # Pro completion checklist
 
-Current verified Pro application source: `4294f8e`, APK Build 57 (coordinator retention scope; trade Pro56, finance Pro50/52), with full GameCast evidence at Pro 44; College/shared source: `2acfcc1`, APK 390 on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current verified Pro application source: `aad411d`, APK Build 58 (coordinator retention/roster/draft scope; trade Pro56, finance Pro50/52), with full GameCast evidence at Pro 44; College/shared source: `2acfcc1`, APK 390 on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -235,8 +235,17 @@ Additional architecture audit: PlayerExport v1 and ProPlayerImport.Convert exist
 - [x] Implement staff-only cap repair/final cuts preserving controlled contracts and specific OL/kicking coverage.
 - [x] Implement automatic other-unit draft selection, own-unit recommendation stop, unsigned rights on budget rejection and signing-time GM review.
 - [x] Quote pending offers using actual future minimums and exact bonus allocation.
-- [ ] Finish final regressions/annual simulations and package/device acceptance. Current accepted APK remains57; see current-work.md.
+- [x] Final regressions/annual evidence and exact-APK58 coordinator device acceptance; see current-work.md.
 
 Waiver financial mechanics still use the existing simplified release/new-deal model; source reconciliation, full waiver assumption rules, market calibration, draft-class UI integration and remaining roadmap remain open.
 
 Pro58 verification follow-up: packaging and196 fast cases passed. Original device run verified retention but refused the invalid one-team synthetic draft save; corrected32-team fixtures and a real-loader check are being verified through an exact-APK retry. Do not mark roster/draft device acceptance complete until the retry passes.
+
+## Accepted coordinator roster/draft batch — Pro58
+
+Application/core source `aad411d`. [Exact APK58](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40462840012/artifacts/12714304881). Build run40462840012 passed196 fast Pro cases,15 UI helpers,32-pair source validation and packaging. Harness-only source6cf9b3b [verification run40485812027](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40485812027) passed app-input equality,16 fixture/loader cases and all six OC/DC retention/roster/draft device scenarios. [Device evidence12725815166](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40485812027/artifacts/12725815166) is downloaded in .artifacts/pro60-ui; draft and roster screenshots reviewed. Persisted staff FA acquisitions, other-unit GM draft selections/own-unit stops, controlled contract/ownership preservation, coach identity, retention/expiry and advancement all passed. Synthetic fixtures are outside the APK and do not represent real roster/cap facts.
+
+All196 full Pro cases passed locally in6m41s before two extra rollback cases;18 final targeted cases passed afterward including four real-loader fixture round trips. Long generated/sourced seasons and the existing three coordinator seasons with explicit broad GM delegation are included in the earlier full run; do not describe that annual test as an automatic-only coordinator career. Core cases additionally cover future-unit rejection, reserved unsigned rookie rights/recheck, waiver signing-time review, safe cuts and rollback. The exact-APK retries corrected invalid one-team fixtures and offscreen-control synchronization; no production save-validation change, app rebuild or duplicate long run was needed. Earlier failed runs are superseded for acceptance.
+
+Pending offers now share exact bonus remainder and future service-minimum quoting across GM/trade review. Staff use existing CPU transactions and shared budgets without role impersonation. Main, College/shared engine and GameCast remain unchanged: reuse College390/full Pro44 and prior trade/finance evidence. Waiver original-contract assumption and financial source reconciliation/default promotion remain unfinished. Mobile draft/retention tables still need more accessible primary actions without horizontal hunting; this acceptance proves the scoped decisions, not completion of all UI/roadmap work.
+
