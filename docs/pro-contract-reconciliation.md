@@ -78,3 +78,6 @@ Pricing is **not** simply a current-year average of salaries: section 7(g) refer
 Rule reference: https://overthecap.com/collective-bargaining-agreement/article/7/section/7 ; verify against the NFLPA-hosted executed CBA before acceptance. The model-generated future tender remains distinct from announced real NFL option salaries. This audit adds no financial obligations to saves.
 
 The option-deadline audit was cross-checked against the executed NFLPA CBA, Article 7 section 7(a), PDF page 56 (printed page 40), confirming the May 3 deadline. No option liabilities have been introduced yet.
+
+
+Observed-usage foundation: `ProRookieParticipation.Record` now runs after duplicate-final rejection and before saving the completed regular-season game. Additive rows track both unit counts/denominators, game IDs and missing-personnel flags for each first-round player's first three years. A season qualifies as fully observed only with at least 17 distinct recorded games and known personnel for that unit; missing earlier franchise history stays unknown. Injured/reserve teammates still accrue denominators, not invented participation. `MeetsPlayingTimeTier` applies two proven 75% seasons, weighted three-year 75%, or all-three-years 50%. Exercise/decline, guarantees, origin metadata, tender-price history and UI remain pending. Do not claim options are available to users yet.

@@ -127,7 +127,8 @@ public static class ProLeagueService
         var scheduled = state.Games.SingleOrDefault(g => g.Football.GameId == game.GameId)
             ?? throw new InvalidOperationException("This game does not belong to this franchise.");
         if (scheduled.Football.HasPlayed) return state; // Retrying a save must not award morale twice.
-        var next = state with { Games = state.Games.Select(g => g.Football.GameId == game.GameId ? g with { Football = game } : g).ToList() };
+        var next = ProRookieParticipation.Record(state, scheduled, session.Events);
+        next = next with { Games = state.Games.Select(g => g.Football.GameId == game.GameId ? g with { Football = game } : g).ToList() };
         return ProRollover.MeasureCompletedTeams(next with { Players = next.Players.Select(p => !game.InvolvesTeam(p.Football.TeamName) ? p : p with { Morale = Math.Clamp(GameDayCoachingService.LivePlayerMorale(session, p.Football, p.Morale) + (game.HomeScore == game.AwayScore ? 0 : game.WinnerTeamName == p.Football.TeamName ? 3 : -2), 10, 95) }).ToList() });
     }
     public static ProFranchise Advance(ProFranchise state)

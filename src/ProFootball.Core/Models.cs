@@ -39,6 +39,7 @@ public sealed record ProFranchise
     public List<ProGame> Games { get; init; } = [];
     public List<SeasonArchive> History { get; init; } = [];
     public List<ProSeasonHonors> Honors { get; init; } = [];
+    public List<ProRookieSeasonUsage> RookieParticipation { get; init; } = [];
     public List<ProFinanceYear> FinancialHistory { get; init; } = [];
     public int CapRulesVersion {get;init;}
     public List<ProTeamCapAllocation> TeamCapAllocations {get;init;}=[];
