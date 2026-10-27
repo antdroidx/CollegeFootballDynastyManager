@@ -84,3 +84,8 @@ Cap-rules version 2 applies offseason salary exclusions while retaining bonus/ot
 | SF | $19,945,806 | $69,482,456 | $49,536,650 |
 
 Seattle camp room is $5,672,598 after $15,095,373 of permitted modeled exclusions; full-roster room remains -$9,422,775. No invented team adjustment closes the remaining gap to the quoted source figure.
+
+
+## Official-source cross-check — October 26
+
+NFL Football Operations confirms the 2026 league base of $301.2M: https://operations.nfl.com/calendar-events/nfl-free-agency/nfl-salary-cap . The NFLPA public team report at https://nflpa.com/reports/public-salary-cap-report returned HTTP403 during this audit. Therefore the supplied 32-team rollover/adjustment table is arithmetically validated and source-attributed, but **not independently verified against a dated NFLPA team report**. Do not label its team amounts authoritative or infer omitted opening obligations. This does not block simulation against the explicitly imported budgets; complete source reconciliation/default promotion remains outstanding.
