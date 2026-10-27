@@ -21,3 +21,7 @@ Tests: OC and DC mirrored cases; head coach manual and delegated behavior; unemp
 
 
 Retention milestone accepted in Pro57 /4294f8e, run40458818959. Staff/opposite-unit and unemployed-former-team retention gaps are fixed and verified, including future unit/team budgets without role impersonation. Continue roster/waiver/cut/draft scope; do not repeat completed retention implementation or assume its annual test proved unimplemented automatic roster handling (the scenario explicitly delegates to GM). Retention table remains horizontally scrollable on phones; later mobile UI polish should make action access/swipe guidance clearer without rebuilding solely for wording.
+
+## Roster/draft implementation checkpoint
+
+The current uncommitted batch implements staff FA, waiver review/resolution, filtered cap repair/final cuts and automatic opposite-unit draft choices through the existing manager/transactions. Staff commitments use the shared GM review without changing career/team identity. Automatic rookie rights are preserved unsigned on future-budget rejection; later signing rechecks authority/budget. Draft UI resumes GM decisions on entry for existing saves. Tests/device acceptance are pending as detailed in current-work.md; do not call this APK-verified yet. NFL waiver original-contract assumption and broader financial/source/market roadmap remain separate unresolved work.

@@ -86,13 +86,14 @@ public static class ProDraft
         var template=(s.Prospects.FirstOrDefault()??s.Players.First()) with{Experience=0,CreditedSeasons=0,PracticeSquad=false};
         return Math.Max(ProFinance.Minimum(s,template,practice:false),(long)(Math.Max(1_100_000,5_000_000/round)*(s.SalaryCap/(double)ProFinance.Base2026)));
     }
-    public static ProFranchise Pick(ProFranchise s, Guid id)
+    public static ProFranchise Pick(ProFranchise s, Guid id)=>Pick(s,id,false);
+    static ProFranchise Pick(ProFranchise s,Guid id,bool deferSigning)
     {
         if (s.Phase != ProPhase.Offseason || s.OffseasonStep != OffseasonStep.Draft) throw new InvalidOperationException("The draft is not open.");
         var pick = Current(s) ?? throw new InvalidOperationException("Draft complete."); var p = s.Prospects.Single(p => p.Football.PlayerId == id) with { RookieYear = s.Year, DraftOverall = (pick.Round-1)*32+pick.Slot };
         var salary = RookieSalary(s,pick.Round); var bonus = salary;
         var pool = s with { Players = s.Players.Append(p with { Football = p.Football with { TeamName = "Free agent" } }).ToList() };
-        var signed = ProEconomy.Sign(pool, new(id, pick.Owner, 4, salary, bonus, 0), rookieScale: true);
+        var signed = deferSigning?pool:ProEconomy.Sign(pool, new(id, pick.Owner, 4, salary, bonus, 0), rookieScale: true);
         if (signed == pool)
             signed = ProEconomy.Log(s with {
                 Players = s.Players.Append(p with { Football = p.Football with { TeamName = pick.Owner }, Reserve = true, PracticeSquad = false }).ToList(),
@@ -104,22 +105,40 @@ public static class ProDraft
     {
         foreach (var rookie in s.UnsignedRookies.Where(r => team is null || r.Team == team).ToArray())
         {
-            var pool = s with { Players = s.Players.Select(p => p.Football.PlayerId == rookie.PlayerId ? p with { Football = p.Football with { TeamName = "Free agent" } } : p).ToList() };
-            var signed = ProEconomy.Sign(pool, new(rookie.PlayerId, rookie.Team, 4, rookie.Salary, rookie.Bonus, 0), rookieScale: true);
-            if (signed == pool) continue;
-            s = signed with { UnsignedRookies = signed.UnsignedRookies.Where(r => r.PlayerId != rookie.PlayerId).ToList() };
+            ProFranchise Sign(ProFranchise state)
+            {
+                var pool=state with{Players=state.Players.Select(p=>p.Football.PlayerId==rookie.PlayerId?p with{Football=p.Football with{TeamName="Free agent"}}:p).ToList()};
+                var signed=ProEconomy.Sign(pool,new(rookie.PlayerId,rookie.Team,4,rookie.Salary,rookie.Bonus,0),rookieScale:true);
+                return signed==pool?state:signed with{UnsignedRookies=signed.UnsignedRookies.Where(r=>r.PlayerId!=rookie.PlayerId).ToList()};
+            }
+            var player=s.Players.Single(p=>p.Football.PlayerId==rookie.PlayerId);
+            s=rookie.Team==s.UserTeam&&s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach&&!ProCareer.Controls(s,player.Football.Position)
+                ?ProManagement.SubmitStaff(s,"Staff rookie signing · "+player.Football.FullName,[rookie.PlayerId],Sign):Sign(s);
         }
         return s;
     }
     public static ProFranchise AutoUntilUser(ProFranchise s, bool includeUser = false)
     {
         var guard = 0;
-        while (Current(s) is { } pick && (includeUser || pick.Owner != s.UserTeam) && guard++ < 224)
+        while(Current(s) is {} pick&&guard++<224)
         {
-            var salary=RookieSalary(s,pick.Round);
-            s = ProCpu.MakeRoom(s, pick.Owner, salary+(salary+3)/4);
-            var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => ProCpu.Need(s, pick.Owner, p));
-            var chosen = s.Prospects.OrderByDescending(p => p.Football.OverallRating + needs[p.Football.Position] * 2).First(); s = Pick(s, chosen.Football.PlayerId);
+            var staff=pick.Owner==s.UserTeam&&!includeUser&&s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach;
+            var needs=Enum.GetValues<Position>().ToDictionary(p=>p,p=>ProCpu.Need(s,pick.Owner,p));
+            var chosen=s.Prospects.OrderByDescending(p=>p.Football.OverallRating+needs[p.Football.Position]*2).ThenBy(p=>p.Football.PlayerId).FirstOrDefault();
+            if(chosen is null)break;
+            if(pick.Owner==s.UserTeam&&!includeUser&&s.Career?.Unemployed!=true&&(!staff||ProCareer.Controls(s,chosen.Football.Position)))break;
+            if(staff)
+            {
+                var reviewed=ProManagement.SubmitStaff(s,"GM draft selection · "+chosen.Football.FullName,[chosen.Football.PlayerId],x=>Pick(x,chosen.Football.PlayerId));
+                // Draft rights remain with the club even when its unit cannot yet afford the statutory deal.
+                s=reviewed.DraftIndex>s.DraftIndex?reviewed:Pick(reviewed,chosen.Football.PlayerId,true);
+            }
+            else
+            {
+                var salary=RookieSalary(s,pick.Round);s=ProCpu.MakeRoom(s,pick.Owner,salary+(salary+3)/4);
+                chosen=s.Prospects.OrderByDescending(p=>p.Football.OverallRating+ProCpu.Need(s,pick.Owner,p.Football.Position)*2).First();
+                s=Pick(s,chosen.Football.PlayerId);
+            }
         }
         return s;
     }
@@ -128,9 +147,9 @@ public static class ProDraft
 public static class ProCpu
 {
     public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
-    public static ProFranchise MakeRoom(ProFranchise s, string team, long room,bool reserveRosterSlot=true)
+    public static ProFranchise MakeRoom(ProFranchise s, string team, long room,bool reserveRosterSlot=true,Func<ProPlayer,bool>? eligible=null)
     {
-        s=ProCpuBudget.Relieve(s,team,room);
+        s=ProCpuBudget.Relieve(s,team,room,eligible);
         var startingDepth=ProRoster.Active(s,team);var replacementFloor=DepthMinimum(s);
         long RequiredRoom()=>room+Math.Max(0,startingDepth-ProRoster.Active(s,team))*replacementFloor;
         for (var i = 0; i < 30 && (ProEconomy.Room(s, team) < RequiredRoom() || ProRoster.CountForLimit(s, team) > ProRoster.Limit(s)-(reserveRosterSlot?1:0)); i++)
@@ -140,13 +159,37 @@ public static class ProCpu
             var capNeeded = ProEconomy.Room(s, team) < RequiredRoom();
             var replacementCosts=s.Players.Where(candidate=>candidate.Football.TeamName=="Free agent"&&!candidate.Retired&&!s.Waivers.Any(w=>w.PlayerId==candidate.Football.PlayerId)).GroupBy(candidate=>candidate.Football.Position).ToDictionary(g=>g.Key,g=>g.Min(candidate=>SigningSalary(s,candidate)));
             bool Replaceable(ProPlayer p)=>Need(s,team,p.Football.Position)==0||capNeeded&&replacementCosts.GetValueOrDefault(p.Football.Position,long.MaxValue)<Saving(p);
-            var release = s.Players.Where(p => p.Football.TeamName == team && !p.Retired && !p.PracticeSquad && !p.Reserve && Replaceable(p) && (!capNeeded || Saving(p) > (ProRoster.Active(s,team)<53?replacementFloor:0)))
+            var release = s.Players.Where(p => p.Football.TeamName == team && !p.Retired && !p.PracticeSquad && !p.Reserve && (eligible is null||eligible(p)&&StaffDepthSurvives(s,p)) && Replaceable(p) && (!capNeeded || Saving(p) > (ProRoster.Active(s,team)<53?replacementFloor:0)))
                 .OrderByDescending(p => capNeeded ? Saving(p) / (double)Math.Max(1, p.Football.OverallRating - 45) : 100 - p.Football.OverallRating).ThenByDescending(p => p.Age).FirstOrDefault();
             if (release is null) break;
             var next = ProEconomy.Release(s, team, release.Football.PlayerId, false);
             if (ProEconomy.Room(next, team) <= ProEconomy.Room(s, team) && ProRoster.CountForLimit(s, team) < ProRoster.Limit(s)) break; s = next;
         }
         return s;
+    }
+    static bool StaffDepthSurvives(ProFranchise s,ProPlayer p)
+    {
+        var remaining=s.Players.Where(x=>x.Football.TeamName==p.Football.TeamName&&!x.Retired&&!x.Reserve&&!x.PracticeSquad&&x.Football.PlayerId!=p.Football.PlayerId).ToArray();
+        var next=s with{Players=remaining.ToList()};
+        return Need(next,p.Football.TeamName,p.Football.Position)==0&&
+            (p.Football.Position is not (Position.OL or Position.K)||p.Football.NcaaPositionCode is null||remaining.Any(x=>x.Football.Position==p.Football.Position&&x.Football.NcaaPositionCode==p.Football.NcaaPositionCode));
+    }
+    static ProFranchise ReviewStaffRoster(ProFranchise s,ProFranchise candidate,string action)
+    {
+        if(candidate==s)return s;
+        var changed=s.Players.Where(p=>p.Football.TeamName==s.UserTeam&&!ProCareer.Controls(s,p.Football.Position)&&
+            (candidate.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId)!=p||
+            !s.Contracts.Where(c=>c.PlayerId==p.Football.PlayerId).SequenceEqual(candidate.Contracts.Where(c=>c.PlayerId==p.Football.PlayerId))))
+            .Select(p=>p.Football.PlayerId).ToArray();
+        return ProManagement.SubmitStaff(s,action,changed,_=>candidate);
+    }
+    static ProFranchise RepairStaff(ProFranchise s,long room)=>ReviewStaffRoster(s,MakeRoom(s,s.UserTeam,room,eligible:p=>!ProCareer.Controls(s,p.Football.Position)),"Staff roster cap planning");
+    public static ProFranchise FinalizeStaffRoster(ProFranchise s)
+    {
+        if(s.Career?.Unemployed==true||ProCareer.Role(s)==StaffRole.HeadCoach)return s;
+        var trimmed=Trim(s,s.UserTeam,p=>!ProCareer.Controls(s,p.Football.Position));
+        s=ReviewStaffRoster(s,trimmed,"Staff final roster cuts");
+        return ProEconomy.Room(s,s.UserTeam)<0?RepairStaff(s,0):s;
     }
     public static long SigningSalary(ProFranchise s,ProPlayer p)
     {
@@ -160,20 +203,25 @@ public static class ProCpu
         // Plan against opening-day obligations rather than spending temporary camp exclusions.
         var actualCapRules=s.CapRulesVersion;
         if(ProCapCounting.Offseason(s,s.Year))s=s with{CapRulesVersion=1};
-        var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam || s.Career?.Unemployed == true).ToArray();
+        bool Staff(string team)=>!includeUser&&team==s.UserTeam&&s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach;
+        bool Eligible(string team,ProPlayer p)=>!Staff(team)||!ProCareer.Controls(s,p.Football.Position);
+        int Target(string team)=>Staff(team)?(ProCareer.Role(s)==StaffRole.OffensiveCoordinator?28:27):53;
+        int UnitCount(string team)=>s.Players.Count(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad&&!p.Reserve&&Eligible(team,p));
+        ProFranchise Repair(ProFranchise state,string team,long room)=>Staff(team)?RepairStaff(state,room):MakeRoom(state,team,room);
+        var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam || s.Career?.Unemployed == true||Staff(t.Name)).ToArray();
         if (s.Phase is ProPhase.Preseason or ProPhase.Offseason)
             foreach (var team in teams)
             {
                 var rookies=s.UnsignedRookies.Where(r=>r.Team==team.Name).Sum(r=>r.Salary+(r.Bonus+3)/4);
                 var minimum=DepthMinimum(s);
-                s=MakeRoom(s,team.Name,rookies+Math.Max(0,53-ProRoster.Active(s,team.Name)-s.UnsignedRookies.Count(r=>r.Team==team.Name))*minimum);
+                s=Repair(s,team.Name,rookies+Math.Max(0,Target(team.Name)-UnitCount(team.Name)-s.UnsignedRookies.Count(r=>r.Team==team.Name&&s.Players.Any(p=>p.Football.PlayerId==r.PlayerId&&Eligible(team.Name,p))))*minimum);
                 s=ProDraft.SignRookies(s,team.Name);
             }
 
         foreach (var team in teams)
         {
-            var claim = s.Waivers.Select(w => s.Players.Single(p => p.Football.PlayerId == w.PlayerId)).Where(p => Need(s, team.Name, p.Football.Position) > 0 && ProRoster.CountForLimit(s, team.Name) < ProRoster.Limit(s) && ProEconomy.Room(s, team.Name) >= Math.Max(ProFinance.Minimum(s,p,practice:false), ProEconomy.MarketSalary(s,p))).OrderByDescending(p => p.Football.OverallRating).FirstOrDefault();
-            if (claim is not null) s = ProRoster.Claim(s, team.Name, claim.Football.PlayerId);
+            var claim = s.Waivers.Select(w => s.Players.Single(p => p.Football.PlayerId == w.PlayerId)).Where(p => Eligible(team.Name,p) && (!Staff(team.Name)||UnitCount(team.Name)<Target(team.Name)) && Need(s, team.Name, p.Football.Position) > 0 && ProRoster.CountForLimit(s, team.Name) < ProRoster.Limit(s) && ProEconomy.Room(s, team.Name) >= Math.Max(ProFinance.Minimum(s,p,practice:false), ProEconomy.MarketSalary(s,p))).OrderByDescending(p => p.Football.OverallRating).FirstOrDefault();
+            if (claim is not null) s = Staff(team.Name)?ProRoster.ClaimStaff(s,team.Name,claim.Football.PlayerId):ProRoster.Claim(s, team.Name, claim.Football.PlayerId);
         }
         var rounds = s.Phase == ProPhase.Offseason || s.Phase == ProPhase.Preseason ? 256 : 4;
         for (var round = 0; round < rounds; round++)
@@ -181,29 +229,34 @@ public static class ProCpu
             var repairedBudget=false;var offers = 0;
             foreach (var team in teams.OrderBy(t => ProRoster.Active(s, t.Name)).ThenBy(t => t.Id))
             {
-                var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))) continue;
+                var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))||Staff(team.Name)&&UnitCount(team.Name)>=Target(team.Name)) continue;
                 var minimum=DepthMinimum(s); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000 : 0;
                 var room = ProEconomy.Room(s, team.Name) - reserve;
-                var target=room<(53-count)*minimum?Math.Max(45,count+1):53;var remaining=Math.Max(1,target-count);
+                var target=room<(53-count)*minimum?Math.Max(45,count+1):53;var remaining=Math.Max(1,Staff(team.Name)?Math.Min(target-count,Target(team.Name)-UnitCount(team.Name)):target-count);
                 var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * minimum));
                 var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => Need(s, team.Name, p));
-                var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && SigningSalary(s,p) <= budget)
+                var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && Eligible(team.Name,p) && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && SigningSalary(s,p) <= budget)
                     .OrderByDescending(p => needs[p.Football.Position] * 20 + p.Football.OverallRating + (p.Football.PlayerId.ToByteArray()[0] * (team.Id.Sum(c => (int)c)) + s.Year) % 11).FirstOrDefault();
                 if (candidate is null)
                 {
-                    if(count<45){var beforeRepair=s;s=MakeRoom(s,team.Name,reserve+remaining*minimum);repairedBudget|=s!=beforeRepair;}
+                    if(count<45){var beforeRepair=s;s=Repair(s,team.Name,reserve+remaining*minimum);repairedBudget|=!s.Contracts.SequenceEqual(beforeRepair.Contracts);}
                     continue;
                 }
-                try { s = ProEconomy.Offer(s, team.Name, candidate.Football.PlayerId, 2, SigningSalary(s,candidate), 0); offers++; } catch (InvalidOperationException) { }
+                try {
+                    var salary=SigningSalary(s,candidate);
+                    s=Staff(team.Name)?ProManagement.SubmitStaff(s,"Staff free-agent offer · "+candidate.Football.FullName,[candidate.Football.PlayerId],x=>ProEconomy.Offer(x,team.Name,candidate.Football.PlayerId,2,salary,0))
+                        :ProEconomy.Offer(s,team.Name,candidate.Football.PlayerId,2,salary,0);
+                    if(s.Bids.Any(b=>b.Team==team.Name&&b.PlayerId==candidate.Football.PlayerId))offers++;
+                } catch (InvalidOperationException) { }
             }
             s = ProEconomy.ResolveBids(s); if (offers == 0&&!repairedBudget) break;
         }
         return ProTradeAi.Process(s with{CapRulesVersion=actualCapRules});
     }
-    public static ProFranchise Trim(ProFranchise s, string team)
+    public static ProFranchise Trim(ProFranchise s, string team,Func<ProPlayer,bool>? eligible=null)
     {
         while (ProRoster.Active(s, team) > 53)
-        { var p = s.Players.Where(p => p.Football.TeamName == team && !p.Reserve && !p.PracticeSquad && !p.Retired).OrderBy(p => Need(s, team, p.Football.Position) > 0 ? 1 : 0).ThenBy(p => p.Football.OverallRating).First(); s = ProEconomy.Release(s, team, p.Football.PlayerId, false); }
+        { var p = s.Players.Where(p => p.Football.TeamName == team && !p.Reserve && !p.PracticeSquad && !p.Retired&&(eligible is null||eligible(p)&&StaffDepthSurvives(s,p))).OrderBy(p => Need(s, team, p.Football.Position) > 0 ? 1 : 0).ThenBy(p => p.Football.OverallRating).FirstOrDefault(); if(p is null)break; s = ProEconomy.Release(s, team, p.Football.PlayerId, false); }
         return s;
     }
 }

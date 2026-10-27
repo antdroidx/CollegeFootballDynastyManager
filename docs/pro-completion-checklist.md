@@ -227,3 +227,14 @@ Forty targeted career/GM cases including three coordinator seasons with explicit
 
 
 Additional architecture audit: PlayerExport v1 and ProPlayerImport.Convert exist and have a foundation test, but no app caller exports a college draft class or imports one into Pro scouting/draft. Complete the actual College export / Pro import UI and safe draft-stage integration later; do not claim the unused conversion helper delivers this user feature. Preserve all19 canonical attributes and version/duplicate validation. The current converter scales only part of PlayerSkills and returns free agents; audit skill completeness, age/eligibility, deterministic identity and scouting uncertainty before integrating.
+
+## Active coordinator roster/draft completion (not yet APK accepted)
+
+- [x] Implement automatic other-unit FA bids using existing CPU manager and shared GM review.
+- [x] Implement other-unit waiver claims with budget preflight and signing-time recheck.
+- [x] Implement staff-only cap repair/final cuts preserving controlled contracts and specific OL/kicking coverage.
+- [x] Implement automatic other-unit draft selection, own-unit recommendation stop, unsigned rights on budget rejection and signing-time GM review.
+- [x] Quote pending offers using actual future minimums and exact bonus allocation.
+- [ ] Finish final regressions/annual simulations and package/device acceptance. Current accepted APK remains57; see current-work.md.
+
+Waiver financial mechanics still use the existing simplified release/new-deal model; source reconciliation, full waiver assumption rules, market calibration, draft-class UI integration and remaining roadmap remain open.

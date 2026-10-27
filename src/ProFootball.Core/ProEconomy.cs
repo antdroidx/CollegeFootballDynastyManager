@@ -10,7 +10,15 @@ public static class ProEconomy
     public static long DeadOnRelease(ProFranchise s, Guid id) => s.Contracts.Where(c => c.Active && c.PlayerId == id).Sum(c => c.Years.Where(y => y.Year >= s.Year).Sum(y => y.Guaranteed) + Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => BonusCharge(c, y)));
     public static long Used(ProFranchise s,string team)=>ProFinance.Budget(s,team).TotalCommitments;
     public static long Room(ProFranchise s,string team)=>ProFinance.Budget(s,team).Available;
-    public static long Pending(ProFranchise s, string team, Guid? except = null) => s.Bids.Where(b => b.Team == team && b.PlayerId != except).Sum(b => b.AnnualSalary + b.Bonus / b.Years);
+    public static long BidCharge(ProFranchise s,FreeAgentBid bid,int year)
+    {
+        var offset=year-s.Year;if(bid.Years<1||offset<0||offset>=bid.Years)return 0;
+        var player=s.Players.FirstOrDefault(p=>p.Football.PlayerId==bid.PlayerId);
+        var salary=player is null?bid.AnnualSalary:Math.Max(bid.AnnualSalary,ProFinance.Minimum(s,player,year,practice:false));
+        return checked(salary+bid.Bonus/bid.Years+(offset<bid.Bonus%bid.Years?1:0));
+    }
+    public static long PendingForYear(ProFranchise s,string team,int year,Guid? except=null)=>s.Bids.Where(b=>b.Team==team&&b.PlayerId!=except).Sum(b=>BidCharge(s,b,year));
+    public static long Pending(ProFranchise s,string team,Guid? except=null)=>PendingForYear(s,team,s.Year,except);
     public static ProFranchise Initialize(ProFranchise s)
     {
         if (s.Contracts.Count > 0) return EnsurePickInventory(s);
@@ -164,11 +172,28 @@ public static class ProRoster
         var player = s.Players.Single(p => p.Football.PlayerId == id); if (ProEconomy.Room(s, team) < Math.Max(ProFinance.Minimum(s,player,practice:false), ProEconomy.MarketSalary(s,player))) throw new InvalidOperationException("Insufficient cap space for this claim.");
         var entry = s.Waivers.Single(w => w.PlayerId == id); if (entry.Claims.Contains(team)) return s; return s with { Waivers = s.Waivers.Select(w => w == entry ? w with { Claims = w.Claims.Append(team).ToList() } : w).ToList() };
     }
+    internal static ProFranchise ClaimStaff(ProFranchise s,string team,Guid id)
+    {
+        var p=s.Players.Single(p=>p.Football.PlayerId==id);
+        var quote=new FreeAgentBid(id,team,1,Math.Max(ProFinance.Minimum(s,p,practice:false),ProEconomy.MarketSalary(s,p)),0,s.Week);
+        var reviewed=ProManagement.SubmitStaff(s,"Staff waiver claim · "+p.Football.FullName,[id],x=>x with{Bids=x.Bids.Append(quote).ToList()});
+        return reviewed.GmDecisions.Last().Approved?Claim(reviewed with{Bids=s.Bids},team,id):reviewed;
+    }
     public static ProFranchise ResolveWaivers(ProFranchise s)
     {
         var order = ProStandings.Build(s).AsEnumerable().Reverse().Select(r => r.Team.Name).ToArray();
         foreach (var entry in s.Waivers.Where(w => w.ExpiresAfterWeek <= s.TransactionTick).ToArray())
-        { s = s with { Waivers = s.Waivers.Where(w => w != entry).ToList() }; foreach (var team in entry.Claims.OrderBy(t => Array.IndexOf(order, t))) { var p = s.Players.Single(p => p.Football.PlayerId == entry.PlayerId); var next = ProEconomy.Sign(s, new(p.Football.PlayerId, team, 1, Math.Max(ProFinance.Minimum(s,p,practice:false), ProEconomy.MarketSalary(s,p)), 0, 0)); if (next != s) { s = next; break; } } }
+        {
+            s=s with{Waivers=s.Waivers.Where(w=>w!=entry).ToList()};
+            foreach(var team in entry.Claims.OrderBy(t=>Array.IndexOf(order,t)))
+            {
+                var p=s.Players.Single(p=>p.Football.PlayerId==entry.PlayerId);
+                ProFranchise Sign(ProFranchise state)=>ProEconomy.Sign(state,new(p.Football.PlayerId,team,1,Math.Max(ProFinance.Minimum(state,p,practice:false),ProEconomy.MarketSalary(state,p)),0,0));
+                var staff=team==s.UserTeam&&s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach&&!ProCareer.Controls(s,p.Football.Position);
+                s=staff?ProManagement.SubmitStaff(s,"Staff waiver signing · "+p.Football.FullName,[p.Football.PlayerId],Sign):Sign(s);
+                if(s.Players.Single(x=>x.Football.PlayerId==entry.PlayerId).Football.TeamName==team)break;
+            }
+        }
         return s;
     }
 }

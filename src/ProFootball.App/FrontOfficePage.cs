@@ -93,10 +93,16 @@ public sealed partial class FranchisePage
     string draftPosition="All positions",draftSearch="";
     async Task Draft()
     {
+        if(state!.Phase==ProPhase.Offseason&&state.OffseasonStep==OffseasonStep.Draft)
+        {
+            var currentIndex=state.DraftIndex;state=await Task.Run(()=>ProDraft.AutoUntilUser(state));
+            if(state.DraftIndex!=currentIndex)await Save();
+        }
         var scouted=ProDraft.AutoScout(state!);if(scouted.Scouting.Count!=state!.Scouting.Count){state=scouted;await Save();}
         body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Draft & scouting",25,true));var s=state!;var current=ProDraft.Current(s);
         body.Add(Text(s.Phase==ProPhase.Offseason?$"{s.OffseasonStep} · "+(current is null?"Draft complete":$"R{current.Round} #{current.Slot} · {current.Owner}"):"Scouting opens during the offseason."));
         body.Add(Text($"Scout team reports automatically · {s.Scouting.Count(r=>r.Team==s.UserTeam&&r.Year==s.Year)}/40 reports · Projected grades are uncertain",12));
+        if(s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach)body.Add(Text("Recommend prospects for your unit. The GM selects for the other unit automatically, using team needs and available talent. Staff also fill the other unit in free agency."));
         if(s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft)body.Add(Action("Auto draft remaining picks",async()=>{state=await Task.Run(()=>ProDraft.AutoUntilUser(state!,true));await Save();await Draft();}));
         var search=new Entry{Placeholder="Find a prospect",Text=draftSearch};var choices=new[]{"All positions"}.Concat(Enum.GetNames<Position>()).ToArray();var position=new Picker{Title="Position",ItemsSource=choices,SelectedIndex=Array.IndexOf(choices,draftPosition)};
         var filters=new Grid{ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Auto)},ColumnSpacing=8};filters.Add(search,0,0);filters.Add(position,1,0);body.Add(filters);var rows=new VerticalStackLayout();body.Add(rows);

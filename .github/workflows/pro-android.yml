@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       validation_scope:
-        description: Finance checks cap/contracts/offers; trade checks offers only; live checks GameCast; retention checks coordinator renewals; full runs all Pro tests
+        description: Finance checks cap/contracts/offers; trade checks offers only; live checks GameCast; retention checks coordinator retention/roster/draft; full runs all Pro tests
         type: choice
         options: [full, finance, live, trade, retention]
         default: full
@@ -66,7 +66,7 @@ jobs:
           -p:AndroidPackageFormats=apk -p:ApplicationVersion=${{ github.run_number }}
           -p:ApplicationDisplayVersion=0.1.${{ github.run_number }}
       - name: Stage isolated management UI fixtures
-        run: cp pro-trade-ui-fixture.json.gz pro-coordinator-ui-*.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
+        run: cp pro-trade-ui-fixture.json.gz pro-coordinator-ui-*.json.gz pro-staff-*-ui-*.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
       - uses: actions/upload-artifact@v4
         with:
           name: pro-football-apk-${{ github.run_number }}
@@ -74,6 +74,7 @@ jobs:
             src/ProFootball.App/bin/Debug/net10.0-android/*-Signed.apk
             src/ProFootball.App/bin/Debug/net10.0-android/pro-trade-ui-fixture.json.gz
             src/ProFootball.App/bin/Debug/net10.0-android/pro-coordinator-ui-*.json.gz
+            src/ProFootball.App/bin/Debug/net10.0-android/pro-staff-*-ui-*.json.gz
           compression-level: 0
           retention-days: 7
   pro-device:

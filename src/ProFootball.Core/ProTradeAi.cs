@@ -38,7 +38,7 @@ public static class ProTradeAi
         var value=ProTrade.PlayerValue(s,p,buyer);
         return ProTradeMarket.CounterPicks(s,buyer,Math.Max(value*1.05,minimum),[],value*1.30,s.Year+1,s.Year+3);
     }
-    static long Pending(ProFranchise s,string team,int year)=>s.Bids.Where(b=>b.Team==team&&year>=s.Year&&year<s.Year+b.Years).Sum(b=>b.AnnualSalary+(b.Bonus+b.Years-1)/b.Years);
+    static long Pending(ProFranchise s,string team,int year)=>ProEconomy.PendingForYear(s,team,year);
     static void FutureBudget(ProFranchise before,ProFranchise after,string team)
     {
         var years=after.Contracts.Where(c=>c.Active&&c.Team==team).SelectMany(c=>c.Years.Select(y=>y.Year))

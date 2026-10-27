@@ -114,8 +114,8 @@ public static class ProManagement
             if(ProCareer.Role(s)==StaffRole.HeadCoach||s.Career?.Unemployed==true)throw new InvalidOperationException("There is no delegated coordinator unit.");
             foreach(var id in players)
             {
-                var p=s.Players.FirstOrDefault(p=>p.Football.PlayerId==id);
-                if(p is null||p.Football.TeamName!=s.UserTeam||!InUnit(s,p.Football.Position))throw new InvalidOperationException("Staff can manage only the other unit's players.");
+                var p=s.Players.Concat(s.Prospects).FirstOrDefault(p=>p.Football.PlayerId==id);
+                if(p is null||(p.Football.TeamName!=s.UserTeam&&p.Football.TeamName!="Free agent"&&!s.Prospects.Any(x=>x.Football.PlayerId==id))||!InUnit(s,p.Football.Position))throw new InvalidOperationException("Staff can manage only the other unit's players.");
             }
         }
         else foreach (var id in players) ProCareer.RequirePlayer(s, id);
@@ -138,12 +138,12 @@ public static class ProManagement
                 var own = state.Players.Where(p => p.Football.TeamName == state.UserTeam && InUnit(state, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
                 var contracts = state.Contracts.Where(c => c.Team == state.UserTeam && own.Contains(c.PlayerId)).Sum(c => ProEconomy.CapHit(c, year));
                 var bids = state.Bids.Where(b => b.Team == state.UserTeam && year >= state.Year && year < state.Year + b.Years && state.Players.Any(p => p.Football.PlayerId == b.PlayerId && InUnit(state, p.Football.Position)))
-                    .Sum(b => b.AnnualSalary + (b.Bonus + b.Years - 1) / b.Years);
+                    .Sum(b => ProEconomy.BidCharge(state,b,year));
                 return contracts + bids;
             }
             long TeamCost(ProFranchise state,int year) => state.Contracts.Where(c=>c.Team==state.UserTeam).Sum(c=>ProEconomy.CapHit(c,year))
                 + state.DeadCap.Where(c=>c.Team==state.UserTeam&&c.Year==year).Sum(c=>c.Amount)+ProFinance.Budget(state,state.UserTeam,year).RolloverReserved
-                + state.Bids.Where(b=>b.Team==state.UserTeam&&year>=state.Year&&year<state.Year+b.Years).Sum(b=>b.AnnualSalary+(b.Bonus+b.Years-1)/b.Years);
+                + ProEconomy.PendingForYear(state,state.UserTeam,year);
             var years = proposal.Contracts.Where(c => c.Active && c.Team == proposal.UserTeam).SelectMany(c => c.Years.Select(y => y.Year))
                 .Concat(proposal.Contracts.Where(c => c.Active && c.Team == proposal.UserTeam).SelectMany(c => Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year))))
                 .Concat(proposal.DeadCap.Where(c=>c.Team==proposal.UserTeam).Select(c=>c.Year))

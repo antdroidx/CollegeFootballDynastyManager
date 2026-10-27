@@ -2,10 +2,10 @@ namespace ProFootball.Core;
 /// <summary>CPU cap planning uses legal restructures before sacrificing core starters.</summary>
 public static class ProCpuBudget
 {
-    public static ProFranchise Relieve(ProFranchise s,string team,long targetRoom)
+    public static ProFranchise Relieve(ProFranchise s,string team,long targetRoom,Func<ProPlayer,bool>? eligible=null)
     {
         if(ProFinance.ContractChangeYear(s)!=s.Year||ProEconomy.Room(s,team)>=targetRoom)return s;
-        var players=s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired).ToDictionary(p=>p.Football.PlayerId);
+        var players=s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&(eligible is null||eligible(p))).ToDictionary(p=>p.Football.PlayerId);
         var candidates=s.Contracts.Where(c=>c.Active&&c.Team==team&&c.LastChangedYear!=s.Year&&players.TryGetValue(c.PlayerId,out var p)&&!ProContractInsights.RookieDeal(s,p,c))
             .OrderByDescending(c=>players[c.PlayerId].Football.OverallRating).ThenBy(c=>c.PlayerId).ToArray();
         foreach(var c in candidates)

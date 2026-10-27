@@ -135,7 +135,10 @@ public static class ProLeagueService
     {
         state = ProDraft.SignRookies(ProDraft.AutoScout(state));
         if(state.Career?.Unemployed!=true && (state.Phase is ProPhase.RegularSeason or ProPhase.Playoffs || state.Phase==ProPhase.Preseason&&state.Week==3&&state.Games.Where(g=>g.Phase==ProPhase.Preseason&&g.Football.Week==3).All(g=>g.Football.HasPlayed)))
+        {
+            state=ProCpu.FinalizeStaffRoster(state);
             ProSeasonEligibility.Require(state,state.UserTeam);
+        }
         state = ProMorale.Advance(ProRoster.ResolveWaivers(state with { TransactionTick = state.TransactionTick + 1 }));
         if (state.Phase == ProPhase.Offseason) return ProOffseason.Advance(state);
         state = ProCpu.Manage(state);
@@ -146,6 +149,7 @@ public static class ProLeagueService
             if (state.Week < 3) return state with { Week = state.Week + 1 };
             var finalCuts=state with{Phase=ProPhase.RegularSeason,Week=1};
             foreach (var team in state.League.Teams.Where(t => t.Name != state.UserTeam || state.Career?.Unemployed == true)) finalCuts = ProCpu.MakeRoom(ProCpu.Trim(finalCuts, team.Name), team.Name, 0,reserveRosterSlot:false);
+            finalCuts=ProCpu.FinalizeStaffRoster(finalCuts);
             state=finalCuts with{Phase=ProPhase.Preseason,Week=state.Week};
             // Keep completed finale results while the user makes final cuts; no second simulation.
             if (ProSeasonEligibility.Issue(state,state.UserTeam) is {} issue)
