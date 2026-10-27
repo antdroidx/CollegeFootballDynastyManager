@@ -129,7 +129,7 @@ try:
         s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
         library=ready("option-library",lambda r:any((t or "").startswith(fixture_name+" ·") for t in s.texts(r)))
         s.tap(library,next(t for t in s.texts(library) if (t or "").startswith(fixture_name+" ·")))
-        ready("option-overview",lambda r:"Advance week" in s.texts(r))
+        ready("option-overview",lambda r:"Advance offseason" in s.texts(r))
         click("option-office","Front Office");click("option-desk","Rookie options")
         ready("option-due",lambda r:"1 pending decisions" in s.texts(r))
         click("option-choice","Exercise option" if exercise else "Decline option")
