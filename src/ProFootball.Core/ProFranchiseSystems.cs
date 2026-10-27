@@ -31,7 +31,7 @@ public static class ProTrade
         var next = s;
         foreach (var p in a) next = Move(next, p, to); foreach (var p in b) next = Move(next, p, from);
         if (ProEconomy.Room(next, from) < 0 || ProEconomy.Room(next, to) < 0 || ProRoster.CountForLimit(next, from) > ProRoster.Limit(next) || ProRoster.CountForLimit(next, to) > ProRoster.Limit(next)) throw new InvalidOperationException("Trade violates the salary cap or active-roster limit.");
-        return ProEconomy.Log(next with { TradeHistory = next.TradeHistory.Append(new(Guid.NewGuid(), s.Year, s.Week, from, to, a.Select(p => p.Football.PlayerId).ToList(), b.Select(p => p.Football.PlayerId).ToList(), ap.ToList(), bp.ToList())).ToList(), Picks = next.Picks.Select(p => givePicks.Contains(p.Id) ? p with { Owner = to } : getPicks.Contains(p.Id) ? p with { Owner = from } : p).ToList() }, $"Trade completed: {from} / {to}.");
+        return ProEconomy.Log(next with { TradeHistory = next.TradeHistory.Append(new(Guid.NewGuid(), s.Year, s.Week, from, to, a.Select(p => p.Football.PlayerId).ToList(), b.Select(p => p.Football.PlayerId).ToList(), ap.ToList(), bp.ToList()){TransactionTick=s.TransactionTick}).ToList(), Picks = next.Picks.Select(p => givePicks.Contains(p.Id) ? p with { Owner = to } : getPicks.Contains(p.Id) ? p with { Owner = from } : p).ToList() }, $"Trade completed: {from} / {to}.");
     }
     static ProFranchise Move(ProFranchise s, ProPlayer p, string to)
     {
@@ -198,7 +198,7 @@ public static class ProCpu
             }
             s = ProEconomy.ResolveBids(s); if (offers == 0&&!repairedBudget) break;
         }
-        return s with{CapRulesVersion=actualCapRules};
+        return ProTradeAi.Process(s with{CapRulesVersion=actualCapRules});
     }
     public static ProFranchise Trim(ProFranchise s, string team)
     {

@@ -1,0 +1,190 @@
+{
+  "completedSeasons": 3,
+  "tradesByYear": [
+    {
+      "year": 2026,
+      "trades": 11,
+      "players": 11,
+      "futurePicks": 31
+    },
+    {
+      "year": 2027,
+      "trades": 1,
+      "players": 1,
+      "futurePicks": 3
+    },
+    {
+      "year": 2028,
+      "trades": 4,
+      "players": 4,
+      "futurePicks": 11
+    }
+  ],
+  "picksByOwner": [
+    {
+      "team": "Washington Commanders",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Tennessee Titans",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Tampa Bay Buccaneers",
+      "picks": 23,
+      "firstRounders": 5
+    },
+    {
+      "team": "San Francisco 49ers",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Seattle Seahawks",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Pittsburgh Steelers",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Philadelphia Eagles",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "New York Jets",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "New York Giants",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "New Orleans Saints",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "New England Patriots",
+      "picks": 24,
+      "firstRounders": 4
+    },
+    {
+      "team": "Minnesota Vikings",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Miami Dolphins",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Las Vegas Raiders",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Los Angeles Rams",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Los Angeles Chargers",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Kansas City Chiefs",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Jacksonville Jaguars",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Indianapolis Colts",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Houston Texans",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Green Bay Packers",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Detroit Lions",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Denver Broncos",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Dallas Cowboys",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Cleveland Browns",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Chicago Bears",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Carolina Panthers",
+      "picks": 21,
+      "firstRounders": 3
+    },
+    {
+      "team": "Buffalo Bills",
+      "picks": 23,
+      "firstRounders": 3
+    },
+    {
+      "team": "Atlanta Falcons",
+      "picks": 23,
+      "firstRounders": 3
+    },
+    {
+      "team": "Arizona Cardinals",
+      "picks": 17,
+      "firstRounders": 3
+    },
+    {
+      "team": "Baltimore Ravens",
+      "picks": 19,
+      "firstRounders": 1
+    },
+    {
+      "team": "Cincinnati Bengals",
+      "picks": 18,
+      "firstRounders": 2
+    }
+  ],
+  "activeRosterMinimum": 53,
+  "capRoomMinimum": 2283589,
+  "noSilentUserTrades": true,
+  "validation": "ThreeSeasonsPreserveImportedCapRolloverDraftAndCpuBudgets, sourced 2026 scenario, after trade AI and projection-cache changes",
+  "observed_date": "2026-10-26"
+}

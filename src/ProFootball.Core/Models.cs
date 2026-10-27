@@ -63,6 +63,8 @@ public sealed record ProFranchise
     public List<FreeAgentBid> Bids { get; init; } = [];
     public List<ProTradeRecord> TradeHistory { get; init; } = [];
     public List<Guid> TradeBlock { get; init; } = [];
+    public List<ProCpuTradeOffer> TradeOffers {get;init;}=[];
+    public int LastTradeMarketTick {get;init;}=-1;
     public List<ProWeeklyTalk> WeeklyTalks { get; init; } = [];
     public List<ProMoraleEffect> MoraleEffects { get; init; } = [];
     public int ContractMoraleVersion { get; init; }
@@ -113,7 +115,7 @@ public sealed record ProJobOffer(Guid Id, string Team, StaffRole Role, int Year,
 public sealed record ProCareerSeason(int Year, string Team, StaffRole Role, int Wins, int Losses, int Reputation, int Security, bool Fired);
 public sealed record ProGmDecision(Guid Id, int Year, int Week, string Action, bool Approved, string Reason);
 
-public sealed record ProTradeRecord(Guid Id, int Year, int Week, string From, string To, List<Guid> GivenPlayers, List<Guid> ReceivedPlayers, List<ProDraftPick> GivenPicks, List<ProDraftPick> ReceivedPicks);
+public sealed record ProTradeRecord(Guid Id, int Year, int Week, string From, string To, List<Guid> GivenPlayers, List<Guid> ReceivedPlayers, List<ProDraftPick> GivenPicks, List<ProDraftPick> ReceivedPicks) { public int TransactionTick {get;init;}=-1; }
 
 public sealed record ProNewsStory(string Id, int Year, int Week, string Category, string Headline, string Body, string? Team = null, string? GameId = null);
 

@@ -34,15 +34,27 @@ public static class ProTradeMarket
     public static double PackageValue(ProFranchise s, IEnumerable<Guid> players, IEnumerable<Guid> picks, string recipient) =>
         players.Sum(id=>ProTrade.PlayerValue(s,s.Players.Single(p=>p.Football.PlayerId==id),recipient)) + picks.Sum(id=>ProTrade.PickValue(s,s.Picks.Single(p=>p.Id==id)));
 
-    public static IReadOnlyList<Guid> CounterPicks(ProFranchise s, string owner, double shortfall, IEnumerable<Guid> selected)
+    public static IReadOnlyList<Guid> CounterPicks(ProFranchise s, string owner, double shortfall, IEnumerable<Guid> selected,
+        double maximumValue=double.MaxValue,int? minimumYear=null,int? maximumYear=null)
     {
         if(shortfall<=0)return [];
-        var used=selected.ToHashSet(); var result=new List<Guid>();
-        // Smallest sufficient asset first; otherwise combine at most three available picks.
-        var picks=s.Picks.Where(p=>p.Owner==owner&&ProTrade.Available(s,p)&&!used.Contains(p.Id)).OrderBy(p=>ProTrade.PickValue(s,p)).ToList();
-        var single=picks.FirstOrDefault(p=>ProTrade.PickValue(s,p)>=shortfall);
-        if(single is not null)return [single.Id];
-        foreach(var p in picks.OrderByDescending(p=>ProTrade.PickValue(s,p)).Take(3)) { result.Add(p.Id);shortfall-=ProTrade.PickValue(s,p);if(shortfall<=0)return result; }
-        return [];
+        var used=selected.ToHashSet();
+        var picks=s.Picks.Where(p=>p.Owner==owner&&ProTrade.Available(s,p)&&!used.Contains(p.Id)
+            &&(!minimumYear.HasValue||p.Year>=minimumYear)&&(!maximumYear.HasValue||p.Year<=maximumYear))
+            .Select(p=>(Pick:p,Value:ProTrade.PickValue(s,p))).OrderBy(p=>p.Value).ToArray();
+        Guid[] best=[];var cost=maximumValue;
+        void Consider(double value,Guid a,Guid? b=null,Guid? c=null){var count=c.HasValue?3:b.HasValue?2:1;if(value>=shortfall&&value<=cost&&(best.Length==0||value<cost||value==cost&&count<best.Length)){cost=value;best=c.HasValue?[a,b!.Value,c.Value]:b.HasValue?[a,b.Value]:[a];}}
+        for(var i=0;i<picks.Length;i++)
+        {
+            var a=picks[i];Consider(a.Value,a.Pick.Id);
+            for(var j=i+1;j<picks.Length&&a.Value+picks[j].Value<=cost;j++)
+            {
+                var b=picks[j];Consider(a.Value+b.Value,a.Pick.Id,b.Pick.Id);
+                if(a.Value+b.Value>=shortfall)continue;
+                for(var k=j+1;k<picks.Length&&a.Value+b.Value+picks[k].Value<=cost;k++)
+                    Consider(a.Value+b.Value+picks[k].Value,a.Pick.Id,b.Pick.Id,picks[k].Pick.Id);
+            }
+        }
+        return best;
     }
 }

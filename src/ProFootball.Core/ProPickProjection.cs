@@ -3,10 +3,12 @@ namespace ProFootball.Core;
 public static class ProPickProjection
 {
     static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ProFranchise,System.Collections.Concurrent.ConcurrentDictionary<int,Lazy<Dictionary<string,double>>>> Cache=new();
-    public static double Strength(ProFranchise s,string team,int year)
+    public static double Strength(ProFranchise s,string team,int year)=>Strength(s,team,year,
+        s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad&&!p.Reserve).ToArray(),
+        s.Contracts.Where(c=>c.Active).GroupBy(c=>c.PlayerId).ToDictionary(g=>g.Key,g=>g.Last()));
+    static double Strength(ProFranchise s,string team,int year,IEnumerable<ProPlayer> pool,IReadOnlyDictionary<Guid,ProContract> deals)
     {
-        var horizon=Math.Max(0,year-s.Year);var pool=s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad&&!p.Reserve).ToArray();
-        var deals=s.Contracts.Where(c=>c.Active).GroupBy(c=>c.PlayerId).ToDictionary(g=>g.Key,g=>g.Last());
+        var horizon=Math.Max(0,year-s.Year);
         double Talent(ProPlayer p)
         {
             var peak=ProDevelopment.PeakAge(p.Football.Position);
@@ -36,7 +38,10 @@ public static class ProPickProjection
     }
     static Dictionary<string,double> Build(ProFranchise s,int year)
     {
-        var ranking=s.League.Teams.OrderBy(t=>Strength(s,t.Name,year)).ThenBy(t=>Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(t.Id+"/"+year)))).ToArray();
+        // One contract index and roster grouping per projection, rather than rebuilding all contracts for each club.
+        var deals=s.Contracts.Where(c=>c.Active).GroupBy(c=>c.PlayerId).ToDictionary(g=>g.Key,g=>g.Last());
+        var pools=s.Players.Where(p=>!p.Retired&&!p.PracticeSquad&&!p.Reserve).ToLookup(p=>p.Football.TeamName);
+        var ranking=s.League.Teams.OrderBy(t=>Strength(s,t.Name,year,pools[t.Name],deals)).ThenBy(t=>Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(t.Id+"/"+year)))).ToArray();
         var uncertainty=Math.Clamp(.15+.2*Math.Max(0,year-s.Year-1),.15,.65);
         return ranking.Select((t,i)=>(t.Name,Slot:(i+1)*(1-uncertainty)+16.5*uncertainty)).ToDictionary(x=>x.Name,x=>x.Slot);
     }

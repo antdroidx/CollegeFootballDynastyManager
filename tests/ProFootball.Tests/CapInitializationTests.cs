@@ -112,5 +112,14 @@ public sealed class CapInitializationTests
             Assert.True(s.UnsignedRookies.Count==0,string.Join(";",s.UnsignedRookies.Select(r=>r.Team).Distinct().Select(t=>$"{s.Year} {t} room={ProEconomy.Room(s,t)} active={ProRoster.Active(s,t)} debt={s.DeadCap.Where(d=>d.Team==t&&d.Year==s.Year).Sum(d=>d.Amount)} charges={string.Join(",",s.DeadCap.Where(d=>d.Team==t&&d.Year==s.Year).Select(d=>$"{s.Players.FirstOrDefault(p=>p.Football.PlayerId==d.PlayerId)?.Football.FullName}:{d.Amount}"))}")));Assert.All(s.League.Teams,t=>{Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);Assert.True(ProRoster.Active(s,t.Name)>=45&&ProRoster.Active(s,t.Name)<=90,$"{s.Year} {t.Name}: active={ProRoster.Active(s,t.Name)} room={ProEconomy.Room(s,t.Name)} debt={s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Sum(d=>d.Amount)} carry={ProFinance.Budget(s,t.Name).Rollover} cash={ProFinance.Cash(s,t.Name,s.Year)} charges={string.Join(";",s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Select(d=>$"{s.Players.FirstOrDefault(p=>p.Football.PlayerId==d.PlayerId)?.Football.FullName}:{d.Amount}"))}");});
             Assert.Equal((season+1)*32,s.FinancialHistory.Count);
         }
+        if(Environment.GetEnvironmentVariable("PRO_TRADE_CALIBRATION") is string output)
+            File.WriteAllText(output,JsonSerializer.Serialize(new{
+                completedSeasons=3,
+                tradesByYear=s.TradeHistory.GroupBy(h=>h.Year).OrderBy(g=>g.Key).Select(g=>new{year=g.Key,trades=g.Count(),players=g.Sum(h=>h.GivenPlayers.Count+h.ReceivedPlayers.Count),futurePicks=g.Sum(h=>h.GivenPicks.Count+h.ReceivedPicks.Count)}),
+                picksByOwner=s.Picks.Where(p=>p.Year>s.Year&&p.Year<=s.Year+3).GroupBy(p=>p.Owner).Select(g=>new{team=g.Key,picks=g.Count(),firstRounders=g.Count(p=>p.Round==1)}),
+                activeRosterMinimum=s.League.Teams.Min(t=>ProRoster.Active(s,t.Name)),
+                capRoomMinimum=s.League.Teams.Min(t=>ProEconomy.Room(s,t.Name)),
+                noSilentUserTrades=s.TradeHistory.All(h=>h.From!=s.UserTeam&&h.To!=s.UserTeam)
+            },new JsonSerializerOptions{WriteIndented=true}));
     }
 }

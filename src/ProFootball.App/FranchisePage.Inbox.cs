@@ -13,7 +13,8 @@ public sealed partial class FranchisePage
         {
             var n=notice;body.Add(Panel((state!.ReadNotificationIds.Contains(n.Id)?"":"● ")+n.Title,Text(n.Detail),Action("Review",async()=>{
                 state=state! with{ReadNotificationIds=state.ReadNotificationIds.Append(n.Id).Distinct().ToList()};await Save();
-                if(n.PlayerId is Guid id&&state.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player)await Player(player);
+                if(n.Id.StartsWith("trade-offer-"))await TradeOffers();
+                else if(n.PlayerId is Guid id&&state.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player)await Player(player);
                 else if(n.Id.StartsWith("options-"))await RookieOptions();else if(n.Id.StartsWith("retention-"))await Retention();else await Open(n.Section);
             })));
         }
