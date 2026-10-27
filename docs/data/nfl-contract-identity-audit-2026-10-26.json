@@ -1,0 +1,484 @@
+{
+  "observed": "2026-10-26",
+  "year": 2026,
+  "contract_sha256": "3f6f8906a20d48c688f5727e76856997bc01ad2d9e1ac0ed83b41559f4a12a9f",
+  "scope": "Developer identity audit only; no statuses/contracts/debt are changed. Name-only candidates require review and are never promoted to verified mappings. Repeated debt rows remain separate.",
+  "summary": {
+    "current_rows": 2539,
+    "current_verified": 2507,
+    "current_team_conflicts": 10,
+    "current_unresolved": 22,
+    "current_ambiguous": 0,
+    "dead_rows": 703,
+    "dead_verified": 476
+  },
+  "teams": [
+    {
+      "team": "ARI",
+      "source_url": "https://overthecap.com/salary-cap/arizona-cardinals",
+      "source_sha256": "e827a603d1e5b3ced8437084f46ed7a6142cc4d3c76eff21090fd478a55d9b37",
+      "verified_current": 77,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Riley Wilson",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/riley-wilson/13853/",
+          "name_candidates": 1
+        },
+        {
+          "source_name": "Valentin Senn",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/valentin-senn/12853/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "ATL",
+      "source_url": "https://overthecap.com/salary-cap/atlanta-falcons",
+      "source_sha256": "680f9a72caa812ced6aa95e226130a796198186403aaa960f2fc120511df2e28",
+      "verified_current": 79,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "BAL",
+      "source_url": "https://overthecap.com/salary-cap/baltimore-ravens",
+      "source_sha256": "32b9490a97abf7791cc22cc89397442723791c800d57e3acc0436dfd4d08356f",
+      "verified_current": 77,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "David Olajiga",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/david-olajiga/12257/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "BUF",
+      "source_url": "https://overthecap.com/salary-cap/buffalo-bills",
+      "source_sha256": "3d368c8569d57b3429bc10a055bdcadb4923a3e221b48dbf2c0d0f015fdf96e0",
+      "verified_current": 73,
+      "current_conflicts": [
+        {
+          "source_name": "Jedrick Wills",
+          "roster_team": "Arizona Cardinals",
+          "source_player_url": "https://overthecap.com/player/jedrick-wills/8750/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Tre'Davious White",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/tredavious-white/5611/",
+          "name_candidates": 0
+        }
+      ]
+    },
+    {
+      "team": "CAR",
+      "source_url": "https://overthecap.com/salary-cap/carolina-panthers",
+      "source_sha256": "2c1afac3e1c581fb9a8585f7f845be6573e412dcf986c6a5a0ea43a6dbdf4484",
+      "verified_current": 79,
+      "current_conflicts": [
+        {
+          "source_name": "Malcolm DeWalt IV",
+          "roster_team": "Free agent",
+          "source_player_url": "https://overthecap.com/player/malcolm-dewalt-iv/13734/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Mapalo Mwansa",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/mapalo-mwansa/12618/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "CHI",
+      "source_url": "https://overthecap.com/salary-cap/chicago-bears",
+      "source_sha256": "2ee2e1075730aee5ae029d31d527cba135736e85f62ae8dce77ba788059402a9",
+      "verified_current": 81,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "CIN",
+      "source_url": "https://overthecap.com/salary-cap/cincinnati-bengals",
+      "source_sha256": "4295964d1e9de610b60fe16b2c00495b0f599f2631a9b45e08b115b1e43e0bf7",
+      "verified_current": 75,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "CLE",
+      "source_url": "https://overthecap.com/salary-cap/cleveland-browns",
+      "source_sha256": "8d041d293d0b52a93b6b15d8fd59fdf9e7d7d14bb65e2c0ab4983c70dd9d43d4",
+      "verified_current": 81,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Vershon Lee",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/vershon-lee/13099/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "DAL",
+      "source_url": "https://overthecap.com/salary-cap/dallas-cowboys",
+      "source_sha256": "536b5719c4260f4ba9ff3529b59cb01f4b97427146506bf2c1f266bea59a8243",
+      "verified_current": 79,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "DEN",
+      "source_url": "https://overthecap.com/salary-cap/denver-broncos",
+      "source_sha256": "4d1ff3075c66b84a18812b605f3fb00dca772afd39454f6744c1f0469d792425",
+      "verified_current": 78,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "David Ebuka Agoha",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/david-ebuka-agoha/11483/",
+          "name_candidates": 0
+        }
+      ]
+    },
+    {
+      "team": "DET",
+      "source_url": "https://overthecap.com/salary-cap/detroit-lions",
+      "source_sha256": "054202410414198666aa3bd80895d338a457487521cc81f1a2a15719aedf15f9",
+      "verified_current": 82,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Ahmed Hassanein",
+          "section": "Active roster",
+          "source_player_url": "https://overthecap.com/player/ahmed-hassanein/12556/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "GB",
+      "source_url": "https://overthecap.com/salary-cap/green-bay-packers",
+      "source_sha256": "9d4ac77eac723db6a0d52ef77f5d292754d1aa0c08fdc484358ae66236824e40",
+      "verified_current": 80,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Gino Gradkowski",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/gino-gradkowski/1376/",
+          "name_candidates": 0
+        },
+        {
+          "source_name": "Thomas Yassmin",
+          "section": "Injured Reserve",
+          "source_player_url": "https://overthecap.com/player/thomas-yassmin/12205/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "HOU",
+      "source_url": "https://overthecap.com/salary-cap/houston-texans",
+      "source_sha256": "183ac546d07a1045cbd9730515a59cdb0a599f45f2caaf8b93d28a609e123d69",
+      "verified_current": 83,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Max Pircher",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/max-pircher/9954/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "IND",
+      "source_url": "https://overthecap.com/salary-cap/indianapolis-colts",
+      "source_sha256": "a99876288b4c7f0f37efd88efbf46d58bc805847ea482cc59c0fec39cf21a7eb",
+      "verified_current": 75,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "JAX",
+      "source_url": "https://overthecap.com/salary-cap/jacksonville-jaguars",
+      "source_sha256": "fb6147d48d6c6c7ef8e967769bf789f064e955ddfb0cd8cf897a744fcb0fa354",
+      "verified_current": 77,
+      "current_conflicts": [
+        {
+          "source_name": "Jamal Hill",
+          "roster_team": "Free agent",
+          "source_player_url": "https://overthecap.com/player/jamal-hill/11796/"
+        }
+      ],
+      "unresolved_current": []
+    },
+    {
+      "team": "KC",
+      "source_url": "https://overthecap.com/salary-cap/kansas-city-chiefs",
+      "source_sha256": "cf63287372edc42e13e0b26eb5b3a36ef809f766a504843012cb42fa7e77bc06",
+      "verified_current": 78,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "LAC",
+      "source_url": "https://overthecap.com/salary-cap/los-angeles-chargers",
+      "source_sha256": "8f8b095303f52bb2790f282fe82e6305e04114d87541eb3011997cfc9a7cfae7",
+      "verified_current": 79,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "LAR",
+      "source_url": "https://overthecap.com/salary-cap/los-angeles-rams",
+      "source_sha256": "adbe877922234a92005e30d585f2bbc3ff50b471c40019de72a11f60e26ac6d9",
+      "verified_current": 79,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Jack Bouwmeester",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/jack-bouwmeester/13852/",
+          "name_candidates": 1
+        },
+        {
+          "source_name": "Daniel Rickert",
+          "section": "Injured Reserve",
+          "source_player_url": "https://overthecap.com/player/daniel-rickert/13866/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "LV",
+      "source_url": "https://overthecap.com/salary-cap/las-vegas-raiders",
+      "source_sha256": "29abe9f3e67e5b3713859973dcdb125b10bf077543770545aa95358071fd506c",
+      "verified_current": 78,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "MIA",
+      "source_url": "https://overthecap.com/salary-cap/miami-dolphins",
+      "source_sha256": "93f0d459f434fc55b1f3546d2ae577d2eeb94ec697caa1affff0f85a71281791",
+      "verified_current": 75,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Clelin Ferrell",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/clelin-ferrell/7795/",
+          "name_candidates": 0
+        }
+      ]
+    },
+    {
+      "team": "MIN",
+      "source_url": "https://overthecap.com/salary-cap/minnesota-vikings",
+      "source_sha256": "bb184528c99c069d6d7f0b038183a688dd2a48bfffc7bbe9ca53f0219af3f6e5",
+      "verified_current": 74,
+      "current_conflicts": [
+        {
+          "source_name": "DeeJay Dallas",
+          "roster_team": "Free agent",
+          "source_player_url": "https://overthecap.com/player/deejay-dallas/8884/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Maceo Beard",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/maceo-beard/13883/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "NE",
+      "source_url": "https://overthecap.com/salary-cap/new-england-patriots",
+      "source_sha256": "b9f668c94098a4ae8579c59fe229819ab93df01bf222026a11838109f5fd9a9c",
+      "verified_current": 84,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Hassan Haskins",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/hassan-haskins/10176/",
+          "name_candidates": 0
+        }
+      ]
+    },
+    {
+      "team": "NO",
+      "source_url": "https://overthecap.com/salary-cap/new-orleans-saints",
+      "source_sha256": "0f58c8ffd49ad5e4b8c7493288a75100021e1e861dee5e457d794771a72d65a3",
+      "verified_current": 80,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "NYG",
+      "source_url": "https://overthecap.com/salary-cap/new-york-giants",
+      "source_sha256": "d6b1a2f3a20b10de3913b5d11bd18a0702799602708eaa46d377d953dab82663",
+      "verified_current": 80,
+      "current_conflicts": [
+        {
+          "source_name": "Darian Kinnard",
+          "roster_team": "Las Vegas Raiders",
+          "source_player_url": "https://overthecap.com/player/darian-kinnard/10190/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Grant Finley",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/grant-finley/13863/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "NYJ",
+      "source_url": "https://overthecap.com/salary-cap/new-york-jets",
+      "source_sha256": "c8c3493527d9d44f80084f36ebaad53d1c9222c4d14f147db417b8a9186fea01",
+      "verified_current": 78,
+      "current_conflicts": [],
+      "unresolved_current": [
+        {
+          "source_name": "Paschal Ekeji",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/paschal-ekeji/13136/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "PHI",
+      "source_url": "https://overthecap.com/salary-cap/philadelphia-eagles",
+      "source_sha256": "63724e73526c2d9e82791c30ccaa3cb09543c3cd325a565826fdd132e95410f3",
+      "verified_current": 79,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "PIT",
+      "source_url": "https://overthecap.com/salary-cap/pittsburgh-steelers",
+      "source_sha256": "8789a1f8e2ab3b605498be36d5dc4be10a5bb7da45d60951ff1539c42f4a6b46",
+      "verified_current": 81,
+      "current_conflicts": [
+        {
+          "source_name": "Colby Sorsdal",
+          "roster_team": "Atlanta Falcons",
+          "source_player_url": "https://overthecap.com/player/colby-sorsdal/10976/"
+        }
+      ],
+      "unresolved_current": []
+    },
+    {
+      "team": "SEA",
+      "source_url": "https://overthecap.com/salary-cap/seattle-seahawks",
+      "source_sha256": "2d00faf4775c6b096771da14d151b0ae4ddecaec5cbfefa5e753fb11cc60b593",
+      "verified_current": 77,
+      "current_conflicts": [
+        {
+          "source_name": "Trevon Diggs",
+          "roster_team": "Free agent",
+          "source_player_url": "https://overthecap.com/player/trevon-diggs/8791/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Federico Maranges",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/federico-maranges/12944/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "SF",
+      "source_url": "https://overthecap.com/salary-cap/san-francisco-49ers",
+      "source_sha256": "5fefd016c27d381e749961da039532b52ca163a86f9068324db470e4ea495e06",
+      "verified_current": 85,
+      "current_conflicts": [
+        {
+          "source_name": "Ogbonnia Okoronkwo",
+          "roster_team": "Free agent",
+          "source_player_url": "https://overthecap.com/player/ogbonnia-okoronkwo/7045/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Brandon Aiyuk",
+          "section": "Suspended",
+          "source_player_url": "https://overthecap.com/player/brandon-aiyuk/8765/",
+          "name_candidates": 0
+        }
+      ]
+    },
+    {
+      "team": "TB",
+      "source_url": "https://overthecap.com/salary-cap/tampa-bay-buccaneers",
+      "source_sha256": "2fe9f5ad0e81c63fc731af5bdf4297d847341f625c454b19ca8a3ce8f157cffc",
+      "verified_current": 74,
+      "current_conflicts": [],
+      "unresolved_current": []
+    },
+    {
+      "team": "TEN",
+      "source_url": "https://overthecap.com/salary-cap/tennessee-titans",
+      "source_sha256": "6e962b90bc74d47d0ea38d93159f7ef37d82bd3b8a39f51bbc7fb8c4b33a50d8",
+      "verified_current": 76,
+      "current_conflicts": [
+        {
+          "source_name": "Jerrick Reed",
+          "roster_team": "Arizona Cardinals",
+          "source_player_url": "https://overthecap.com/player/jerrick-reed/11022/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Laki Tasi",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/laki-tasi/12619/",
+          "name_candidates": 1
+        }
+      ]
+    },
+    {
+      "team": "WSH",
+      "source_url": "https://overthecap.com/salary-cap/washington-commanders",
+      "source_sha256": "9b17111a0b9198557cf7b9a1afb541ed3b5a8d627af9a2f25eba6702e3f7ea63",
+      "verified_current": 74,
+      "current_conflicts": [
+        {
+          "source_name": "Austin Keys",
+          "roster_team": "Free agent",
+          "source_player_url": "https://overthecap.com/player/austin-keys/12767/"
+        }
+      ],
+      "unresolved_current": [
+        {
+          "source_name": "Quentin Moore",
+          "section": "Practice Squad",
+          "source_player_url": "https://overthecap.com/player/quentin-moore/13671/",
+          "name_candidates": 0
+        }
+      ]
+    }
+  ]
+}

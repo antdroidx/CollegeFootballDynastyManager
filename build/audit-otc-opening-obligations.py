@@ -53,7 +53,9 @@ def observe(team):
                 if 'player-information' not in cells[0].get('class',[]):continue
                 charge=dollars(cells[11].get_text(' ',strip=True))
             else:charge=dollars(cells[1].get_text(' ',strip=True))
-            entries.append(dict(name=label,cap=charge))
+            link=cells[0].find('a',href=True);href=link['href'] if link else None
+            identity=re.search(r'/player/[^/]+/(\d+)/?',href or '')
+            entries.append(dict(name=label,cap=charge,player_url='https://overthecap.com'+href if href and href.startswith('/') else href,otc_id=int(identity.group(1)) if identity else None))
         sections.append(dict(section=title,entries=entries,reported_total=total,visible_sum=sum(e['cap'] for e in entries),unallocated_source_difference=None if total is None else total-sum(e['cap'] for e in entries)))
     section_total=sum(s['reported_total'] if s['reported_total'] is not None else s['visible_sum'] for s in sections)
     if section_total!=headline('Total Cap Liabilities'):
