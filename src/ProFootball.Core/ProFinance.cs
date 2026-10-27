@@ -12,8 +12,8 @@ public static class ProFinance
     public static ProCapBudget Budget(ProFranchise s,string team,int? year=null)
     {
         var y=year??s.Year;var a=Allowance(s,team,y);var rows=s.Contracts.Where(c=>c.Active&&c.Team==team).ToArray();
-        var excluded=ProCapCounting.ExcludedSalary(s,team,y);
-        return new(a.Base,a.Rollover,a.Adjustments,checked(a.Base+a.Rollover+a.Adjustments),rows.Sum(c=>c.Years.FirstOrDefault(r=>r.Year==y)?.Salary??0)-excluded,rows.Sum(c=>ProEconomy.BonusCharge(c,y)),rows.Sum(c=>c.Years.FirstOrDefault(r=>r.Year==y)?.OtherCompensation??0)+s.DeadCap.Where(d=>d.Team==team&&d.Year==y&&d.RetainedContract).Sum(d=>d.Amount),s.DeadCap.Where(d=>d.Team==team&&d.Year==y&&!d.RetainedContract).Sum(d=>d.Amount),s.RolloverElections.LastOrDefault(e=>e.Team==team&&e.Year==y)?.Amount??0){OffseasonSalaryExcluded=excluded};
+        var excluded=ProCapCounting.ExcludedSalary(s,team,y);var international=ProInternationalPractice.ExcludedSalary(s,team,y);
+        return new(a.Base,a.Rollover,a.Adjustments,checked(a.Base+a.Rollover+a.Adjustments),rows.Sum(c=>c.Years.FirstOrDefault(r=>r.Year==y)?.Salary??0)-excluded-international,rows.Sum(c=>ProEconomy.BonusCharge(c,y)),rows.Sum(c=>c.Years.FirstOrDefault(r=>r.Year==y)?.OtherCompensation??0)+s.DeadCap.Where(d=>d.Team==team&&d.Year==y&&d.RetainedContract).Sum(d=>d.Amount),s.DeadCap.Where(d=>d.Team==team&&d.Year==y&&!d.RetainedContract).Sum(d=>d.Amount),s.RolloverElections.LastOrDefault(e=>e.Team==team&&e.Year==y)?.Amount??0){OffseasonSalaryExcluded=excluded,InternationalPracticeSalaryExcluded=international};
     }
     public static int ContractChangeYear(ProFranchise s)=>s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention?s.Year+1:s.Year;
     public static double Growth(ProFranchise s,int year)

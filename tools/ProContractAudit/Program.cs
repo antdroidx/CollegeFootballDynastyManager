@@ -29,7 +29,7 @@ var report=state.League.Teams.Select(team=>{
         generatedFallbacks=contracts.Count(c=>c.Estimated),
         generatedPlayers=contracts.Where(c=>c.Estimated).Select(c=>state.Players.Single(p=>p.Football.PlayerId==c.PlayerId).Football.FullName),
         capOnlyYears=source.Sum(c=>c.Years.Count(y=>y.IsVoid)),
-        caveat="Seasonal game budget; excluded camp salary is separate. Not reconciled to dated source liabilities or departed-player dead money."
+        caveat="Seasonal game budget; excluded camp salary is separate. Dated opening departed debt is initialized separately; current-contract/status/guarantee reconciliation remains incomplete."
     };
 }).ToArray();
 var json=JsonSerializer.Serialize(report,new JsonSerializerOptions{WriteIndented=true,PropertyNamingPolicy=JsonNamingPolicy.CamelCase});

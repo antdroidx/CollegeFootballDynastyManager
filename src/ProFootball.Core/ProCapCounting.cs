@@ -7,7 +7,7 @@ public static class ProCapCounting
     public static long ExcludedSalary(ProFranchise s,string team,int year)
     {
         if(!Offseason(s,year))return 0;
-        var contracts=s.Contracts.Where(c=>c.Active&&c.Team==team).ToArray();
+        var contracts=s.Contracts.Where(c=>c.Active&&c.Team==team&&!ProInternationalPractice.Exempt(s,team,c.PlayerId,year)).ToArray();
         var highest=contracts.GroupBy(c=>c.PlayerId).OrderByDescending(g=>g.Sum(c=>ProEconomy.CapHit(c,year))).ThenBy(g=>g.Key).Take(51).Select(g=>g.Key).ToHashSet();
         var players=s.Players.ToDictionary(p=>p.Football.PlayerId);long excluded=0;
         foreach(var c in contracts.Where(c=>!highest.Contains(c.PlayerId)))

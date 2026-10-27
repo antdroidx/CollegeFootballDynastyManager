@@ -1,74 +1,59 @@
-# Current work — shared Core, College and Pro
+# Current work - shared Core, College and Pro
 
-Updated October27,2026. This file records the current state; Git history retains superseded build narratives. Continue all four authorized tasks through completion during active work. The user deleted automatic continuation: do not recreate it.
+Updated October27,2026. Continue the four current priorities during active work. The user removed automatic continuation: do not recreate it. Git history retains superseded build narratives.
 
 ## Workspace and safeguards
 
-- Work only in D:/AppProjects/Codex/Football Simulation Engine on feature/pro-franchise-foundation.
-- Stable main remains fdd3d4898b5bd07eeec8dba346024d61f5289474 (verify exact ref before any future merge; no merge is currently authorized for unfinished Pro).
-- Preserve College package/save compatibility, separate Pro identity and Android update signing.
-- Follow docs/pro-contract-reconciliation.md and docs/testing-scope.md. Do not duplicate active builds or completed long simulations. No subagents authorized.
-- Raw source evidence belongs in data/pro/source-snapshots, not disposable .artifacts. Huge serialized franchise JSON can be136MB on one line: parse/select fields, never dump the raw file.
-- Archive obsolete Initial Base Upload Java files and rename the repository Football-Sim-Engine only after current application work.
+- Only D:/AppProjects/Codex/Football Simulation Engine, branch feature/pro-franchise-foundation.
+- Stable main remains fdd3d4898b5bd07eeec8dba346024d61f5289474. No merge of unfinished Pro.
+- Preserve College package/saves, Pro identity/update signing and negotiated contracts/booked debt.
+- No subagents authorized. No continuation automation exists. Archive obsolete Initial Base Upload Java and rename repo Football-Sim-Engine only at the end.
+- Raw evidence stays in data/pro/source-snapshots. Parse selected fields from huge .artifacts serialized states; never dump the one-line136MB files.
 
-## Current four tasks
+## Four priorities and actual completion
 
-1. Reserve activation: accepted Pro63 in the available imported reserve scope. Healthy signed generic RES/INA/DEV players activate with cap/roster/role checks and saved status. Explicit IR/PUP/SUSP/EXE unknown clearance remains blocked; no invented medical dates.
-2. Real-contract accounting: framework and JSN reviewed payments/guarantees/vesting are implemented; source-wide review remains open. Preserve signed contracts and historical debt. No inferred guarantees from a balancing difference.
-3.32-team financial reconciliation/default: corrected NFLPA allowances/counting are accepted.447 recovered contracts are packaged in64; dated current financial rows, departed debt, identity/status and guarantee discrepancies remain. Real contracts remain opt-in until corrected. Do not force reported room or invent liabilities/cash.
-4. Original-contract waivers and legal termination timing: packaged64/device accepted in its recorded scope; the assignment accrual follow-up below still requires its own APK before claiming the whole task complete.
+1. Reserve activation accepted63: healthy signed RES/INA/DEV players activate with roster/cap/role checks, saved ACT status and contract preservation. Explicit IR/PUP/SUSP/EXE unknown clearance remains blocked; no invented medical dates.
+2. Contract accounting framework accepted66/67: void/employment/cash/proration separation, reviewed JSN payment/guarantee/vesting, assignment accrual and original signing/change locks. Broader source guarantee/payment review remains open.
+3.32-team financial reconciliation: NFLPA allowances/seasonal counting accepted; current batch initializes independently reported opening debt plus verified Seattle corrections. Other current-contract/status/guarantee differences remain, so real contracts are still opt-in. No invented liabilities, historical cash or reported-room balancing entries.
+4. Original-contract waivers and legal termination timing accepted67 in recorded scope: tagged assessment reversal, inherited remaining salary/rookie/change locks, preflight/award rechecks, June1 designation/held savings and2030 final-year rules. Current batch adds explicit international practice handling and practice-contract release/trade guards.
 
-## Pro64 — accepted finance/management/termination
+## Latest accepted - Pro67
 
-App/core8b06fa7 packaged in run40547793852, APK12754790693:
-https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40547793852/artifacts/12754790693
+App faa55a1, all-green build/device run40584307166. APK12770853072:
+https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40584307166/artifacts/12770853072
 
-All239 full local Pro cases passed in5m22s, including20 generated/five sourced seasons.237 fast CI cases,16 helpers, source validator and packaging passed. Exact-APK verification40573852505 at harness00944a7 passed finance/budgets/source-cash/options, trade, six coordinator scenarios, June1 held release and original-contract waiver claim/award/reload. Evidence12766593020 is in .artifacts/pro64-accepted-ui; June1 and claim screenshots reviewed. The original run's broad fixture-glob failure is superseded, not an app failure. No app rebuild was required for acceptance.
+243 fast Pro cases,16 helpers, source validator and packaging passed. Core/data remain66: reuse245 full/annual cases. Device evidence12771961687 is in .artifacts/pro67-ui. All nine termination assertions pass: June1 held savings, inherited waiver terms/award/reload,333333 one-week buyer-earned cash, refreshed Free agent profile, removal of old contract actions and disabled own/duplicate claims. Assigned-release screenshot reviewed. This is termination scope, not new full College/GameCast acceptance.
 
-64 includes original-contract snapshots/tagged assessment reversal, remaining salary/rookie/lock preservation and claim/award cap/roster/role rechecks. Dated June1 split, two early designations/held savings,2030 final-year rules, cash/cap preview and a near-header waiver claim action are verified in this scope. Reserve63/full GameCast44/College390 evidence is reused where unchanged. Source default and the whole four-task request remain unfinished.
+## Current opening-ledger batch - not yet packaged/accepted
 
-## Accepted66 — salary assignment and further contract recovery
+New sourced2026 franchises initialize735 independently dated prior-contract cap assessments across32 clubs, total1591660715. Source names/event keys/hashes/unknown identities survive saves; no historical cash or future debt is inferred. Generated mode and existing saves are not backfilled. Signed saved contracts remain untouched. Source debt cannot be erased by a new release involving the same player.
 
-App/core db88f28, successful run40579419877. Exact APK12768613293:
-https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40579419877/artifacts/12768613293
+Verified Seattle source changes: Foster is no longer falsely under a generated current contract; Avery Smith uses published remaining current-club salary/guarantees without importing the original Chargers signing cash; Diggs uses the reviewed Seattle practice contract and primary-source ownership confirmation. Maranges has a typed club/year international practice designation, not a negative balancing charge. Only practice salary is excluded; promotion ends the designation, requires active minimum/cap including pending bids, and demotion cannot revive it. A released practice player clears directly rather than entering active-contract waivers; practice contracts cannot be traded. Release preserves earned cash without creating cap debt from exempt salary. No fabricated PS cash history/temporary-elevation lifecycle is claimed.
 
-All245 full local Pro cases passed10m6 (20 generated/five sourced seasons),243 fast CI cases/16 helpers/source validation/packaging passed. Device evidence12768544312 is in .artifacts/pro66-ui. June1 held release and a midseason original-contract claim/award/reload/release passed, including333333 buyer-earned cash for one elapsed week. Source64 finance/options/coordinator/trade UI and unchanged College/GameCast evidence are reused.
+Actual new-franchise runtime Seattle liabilities300971343 exactly match the dated source, difference0. NFLPA allowance315053262 yields14081919 room. OTC allowance differs639489, yielding its13442430 room. Never force different allowance bases to match. Tool: tools/ProContractAudit --seattle-source-proof OUTPUT; docs/data/pro-seattle-cap-source-proof-2026-10-27.json now records actual runtime rather than a prototype. International pay remains a generated fallback estimate; source default is not promoted.
 
-66 records salary assignment start year/fraction, preventing retroactive buyer earnings. Repeated assignments preserve original signing/negotiation terms and real-loader round trips preserve debt. Trades assume unpaid guaranteed option cash on the buyer while paid bonus charges stay on the seller; waiver non-salary handling remains separate.23 further strict-identity/exact-cap records bring the optional sourced pack to2482, SHA2cff3ae5b107c1e58ecda7ec6c4fd6f3dd3a53b705c40c1f1187954a86048895. Existing source records and saved contracts are unchanged. Current financial rows:2467 exact,19 missing source records,32 identity/status cases,21 differences. Real-source default still gated.
+Final250 Pro cases excluding the unchanged twenty-generated-season case passed in1m55 (.artifacts/opening-ledger-final-tests.txt), including five sourced seasons and three imported-cap seasons, all six new opening/roster/exemption/save tests, and changed waiver/trade guards. Earlier249 fast cases passed1m22 before final PS guard tweaks, followed by seven focused/five-season cases in1m17.16 helpers and32-pair validator pass. Reuse unchanged twenty-generated-season evidence from66; no College/shared engine changes. Local Android build passed with0 warnings/errors in2m15, log .artifacts/opening-ledger-android-build.txt. No local compilation remains active.
 
-## Current UI follow-up — not yet packaged
+New opening CI device scope reuses the financial source/budget/compact-accounting/theme/reinstall flow and ends before unrelated option/trade/coordinator fixtures. It additionally checks all735 dated source assessments, zero invented historical cash and Seattle exact liabilities. Dispatch opening CI after committing this source; package/verify and inspect screenshots before calling this batch accepted.
 
-Review of66's assigned-release screenshot confirmed that a successful release left the open profile displaying the old active contract. Player/roster/contract actions now reopen the profile from current saved state. Own-release and already-submitted claim actions are disabled with explicit status in the card/grid. Local Android build passed zero warnings/errors in2m19;16 helpers pass. Core/data are unchanged from accepted66: reuse245-case and annual results. Updated termination device scope additionally requires refreshed Free agent status, no old management action and a disabled own-claim button. New APK not dispatched yet.
+## Source cache, discrepancies and next work
 
-## Read-only Seattle source proof — not applied to app/saves
+Source pack has2482 records, SHA2cff3ae5b107c1e58ecda7ec6c4fd6f3dd3a53b705c40c1f1187954a86048895, -text in .gitattributes. Existing packed records were preserved when447 and23 missing records were added. New opening corrections are separate reviewed resources, applied only in the new-franchise factory. JSN reviewed metadata remains pack-hash guarded. No default promotion until remaining correction checks.
 
-`tools/ProContractAudit --seattle-source-proof OUTPUT` applies only verified roster events, current-club salary tables/zero paid-bonus assessments, international weekly-pay cap exclusion and the separately reported debt ledger in memory. It exactly reconciles Seattle's observed300971343 liabilities, with zero difference and no reported-room input. With the NFLPA315053262 allowance, computed room is14081919. The OTC allowance differs639489, explaining its13442430 room; never force those different allowance bases to match. Source proof is docs/data/pro-seattle-cap-source-proof-2026-10-27.json. Unknown international cash remains the original estimate in the proof; production must use typed exemption/status rules and safe new-franchise initialization. No real-default promotion or new historical cash claim is justified by this one-club proof.
+Offline cache:507 opening player pages (two bounded failures: Jaden Bradley/Fred Davis II),95 future-bonus pages,32 complete team pages,10 dated status-conflict pages. No source capture active. All32 source section sums reconcile exactly. Pack-only financial audit records2467 cap matches,19 missing records,32 identity/status events and21 differences across2539 financial events (not unique players). It predates reviewed opening overrides. Strict identity review:2507 same-team,10 dated conflicts,22 ID gaps. Financial spending does not establish current ownership. Source docs: nfl-contract-status-review-2026-10-26.json, pro-roster-status-review-2026-10-27.json, pro-opening-ledger-followup-2026-10-27.json.
 
-Primary CBA: https://overthecap.com/collective-bargaining-agreement/article/13/section/6 ; official copy https://nflpaweb.blob.core.windows.net/website/PDFs/CBA/March-15-2020-NFL-NFLPA-Collective-Bargaining-Agreement-Final-Executed-Copy.pdf . Keep payment-date/vesting uncertainty in developer evidence, not user-facing disclaimers.
+Parser uses semantic headers, keeps annotated future years and integer/null fields. Some source annual columns/cash-flow charts conflict (e.g. roster pay appears included in salary but also shown separately); do not invent cash to resolve them. Original Parquet53507 rows SHA3f6f8906a20d48c688f5727e76856997bc01ad2d9e1ac0ed83b41559f4a12a9f remains in2026-10-26 raw snapshots.
 
-## Source evidence and staged work
+37 payment-event candidates in .artifacts/pro-payment-event-candidates.json remain unpromoted;34 staged current cut cases match both pre/post source quotes, but future vesting/date semantics need review. A source current guarantee is not automatically a guarantee at original signing. Do not erase future guarantees to force a static future-year cut quote. Complete source-dated guarantees/vesting/current-club/departed assessments before default promotion. Prior market curves/audit1365d52 are unchanged; do not regenerate the old baseline report against new curves.
 
-Source pack64 has2459 contracts:447 previously absent strict-identity, exact-cap, published-cash records added, preserving every existing source record. Pack SHA c1a2ad199b9689637ad2f1eafa2237b92e028c81beaa764351f7834ecb41628b. JSN source-record equality was checked before updating its metadata hash guard. Source pack is -text in .gitattributes for byte preservation.
+Primary rules: official CBA https://nflpaweb.blob.core.windows.net/website/PDFs/CBA/March-15-2020-NFL-NFLPA-Collective-Bargaining-Agreement-Final-Executed-Copy.pdf ; current international updates https://operations.nfl.com/programs-initiatives/international-growth/international-player-pathway ; source status links are in the reviewed roster dossier. No full temporary-elevation or dated medical-return implementation claimed.
 
-Fresh October27 source cache contains32 complete team pages,507 opening-contract pages and95 future-bonus pages. Current financial audit:2444 exact cap rows,42 missing source records,32 identity/status cases and21 differences across2539 financial events. There are repeated player financial events; never collapse them by player ID or use financial spending to overwrite current roster ownership. Strict identity audit still has10 dated team conflicts and22 identifier gaps. Primary status reviews are docs/data/nfl-contract-status-review-2026-10-26.json.
+## Reusable accepted evidence
 
-Parser now uses semantic headers because OTC reuses bonus CSS, retains future years annotated with date tooltips, preserves exact dollars and extracts source cut/trade figures plus annual cash flow. Five parser regressions pass. None of these corrections changes the447 records in64.42 additional candidates are staged outside the app. Extension cash-flow charts describe new money, so they are excluded as full annual-pay evidence. Remaining partial-year/duplicate financial rows need review. Two opening player pages are still absent after bounded network retries.
+-66 app/core db88f28, run40579419877, APK12768613293/evidence12768544312,245 full cases10m6 (20 generated/five sourced),243 fast CI,16 helpers/source validation. Midseason original-contract claim/award/reload/release verifies333333 buyer cash. Exact APK https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40579419877/artifacts/12768613293 .
+-64 app/core8b06fa7, APK12754790693/run40547793852; exact-APK verification40573852505 at harness00944a7, evidence12766593020.239 full cases5m22,237 fast, finance/budgets/source cash/options/trades/six coordinator scenarios/June1/waiver/reload accepted. Original fixture-glob failure superseded.
+-63 reserve sourcea8ad14b, run40530334315, APK12745318137/evidence12745348663.21 focused reserve/camp/depth,220 fast and16 helpers. Available activation/disabled injury reason/contracts/ACT reload verified.
+-44 full GameCast/aging/field source4f6bb2c, run40438801865, APK12705098072/evidence12705962978.
+-College390 source2acfcc1, run40438515279, APK12705660863/evidence12705718044 and12705752478:690 legacy combined Core/College cases and both Android flows. Do not relabel690 exclusively Core/College until audited. No College rebuild for current Pro finance batch.
 
-Developer tools:
-- build/stage-pro-reviewed-events.py:37 source-column-derived review candidates; no app writes. Matching current cut quotes validates amounts, not future vesting dates.34 staged current cases match both source pre/post-June1 cuts; overall35 of95 match,60 require further review. Original unmodified-source audit had3 exact and92 review cases. Candidate file .artifacts/pro-payment-event-candidates.json; comparison .artifacts/pro-termination-candidate-comparison.json. Do not promote candidates automatically.
-- tools/ProContractAudit --termination-evidence PARSED_PAGES NOTE_IDENTITIES OUTPUT [REVIEW_CANDIDATES] executes actual core predictions with optional in-memory review candidates. No app pack or saved ledger is changed.
-- build/stage-pro-source-debt.py has staged735 reported2026 events across32 teams, total1,591,660,715, including each source aggregate remainder. All32 sums reconcile; no negative residuals. Null identities stay null, no historical cash/future debt/player ownership is invented. Output docs/data/pro-opening-dead-cap-2026-10-27.json is developer data only, not yet applied to a game.
-- Frozen positional market curves and prior1365d52 audit remain unchanged. Do not regenerate the old comparative report against the new curves.
-
-## Accepted/reusable evidence
-
-Reserve-specific accepted Pro63 app/core a8ad14b, run40530334315, APK12745318137, device evidence12745348663.21 focused reserve/camp/depth,220 scoped CI cases and16 helpers passed. Available activation, disabled injured reason, unchanged contracts, saved ACT status and reload were checked. https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40530334315/artifacts/12745318137
-
-Pro62 finance/management app2ac5992/core94d77bc, run40523114687, APK12741879655/evidence12742934656.207 fast CI cases,16 helpers, full finance/budgets/source cash/void UI/themes/reinstall/old-budget correction/options/trades and six OC/DC retention/roster/draft flows. Earlier209 full local cases passed9m55. https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40523114687/artifacts/12741879655
-
-Reuse unchanged Pro44 full GameCast/aging/field source4f6bb2c, run40438801865, APK12705098072/evidence12705962978. College390 source2acfcc1, run40438515279, APK12705660863, evidence12705718044 and12705752478:690 legacy combined Core/College tests and both Android flows. Do not relabel690 as exclusively Core or College until audited. No College/shared rendering changes in current financial work.
-
-Broader authorized roadmap remains in docs/pro-completion-checklist.md; do not lose the four current priorities in that wider list. No main merge, repository rename, Java archival or continuation automation has occurred.
-
-
-Primary Seattle roster review is in docs/data/pro-roster-status-review-2026-10-27.json: Foster was waived October24; Maranges is the designated international practice player. These source-only reviews do not yet change game data or infer historical payments. Ten dated status-conflict player pages are now cached (all10 successful) in data/pro/source-snapshots/2026-10-27/status-contracts; do not refetch completed pages.
+Remaining broader roadmap is in pro-completion-checklist.md: full waiver/PS lifecycle, actual College draft-class export/Pro import UI, career/offseason, analytics/factual news, NFL tiebreaks, mobile grid actions and audited test split. Finish the four current priorities first.

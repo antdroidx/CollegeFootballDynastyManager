@@ -5,7 +5,8 @@ public sealed record ProTeamCapAllocation(int Year,string TeamAbbreviation,long 
 public sealed record ProCapBudget(long BaseCap,long Rollover,long OtherAdjustments,long AdjustedCap,long CommittedSalary,long AllocatedBonus,long OtherCapCharges,long DeadMoney,long RolloverReserved)
 {
     public long OffseasonSalaryExcluded {get;init;}
-    public long RosterSalary=>checked(CommittedSalary+OffseasonSalaryExcluded);
+    public long InternationalPracticeSalaryExcluded {get;init;}
+    public long RosterSalary=>checked(CommittedSalary+OffseasonSalaryExcluded+InternationalPracticeSalaryExcluded);
     public long PlayerCommitments=>checked(CommittedSalary+AllocatedBonus);
     public long TotalCommitments=>checked(PlayerCommitments+OtherCapCharges+DeadMoney+RolloverReserved);
     public long Available=>checked(AdjustedCap-TotalCommitments);

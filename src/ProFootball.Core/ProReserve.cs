@@ -25,7 +25,7 @@ public static class ProReserve
     {
         var id=p.Football.PlayerId;
         var rows=c.Years.Select(y=>y.Year==s.Year?y with{Salary=Math.Max(y.Salary,ProFinance.ContractMinimum(s,p,c,y.Year))}:y).ToList();
-        return s with{Players=s.Players.Select(x=>x.Football.PlayerId==id?x with{Reserve=false,PracticeSquad=false,RosterStatus="ACT",Football=x.Football with{DepthChartOrder=99}}:x).ToList(),Contracts=s.Contracts.Select(x=>x==c?c with{Years=rows}:x).ToList()};
+        return s with{InternationalPracticeDesignations=s.InternationalPracticeDesignations.Where(d=>d.PlayerId!=id).ToList(),Players=s.Players.Select(x=>x.Football.PlayerId==id?x with{Reserve=false,PracticeSquad=false,RosterStatus="ACT",Football=x.Football with{DepthChartOrder=99}}:x).ToList(),Contracts=s.Contracts.Select(x=>x==c?c with{Years=rows}:x).ToList()};
     }
     public static ProFranchise Activate(ProFranchise s,string team,Guid id)
     {

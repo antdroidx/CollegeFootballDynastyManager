@@ -24,6 +24,7 @@ public static class ProTrade
         if (givePlayers.Concat(getPlayers).Distinct().Count() != givePlayers.Count + getPlayers.Count || givePicks.Concat(getPicks).Distinct().Count() != givePicks.Count + getPicks.Count) throw new InvalidOperationException("Duplicate trade assets.");
         var a = givePlayers.Select(id => s.Players.Single(p => p.Football.PlayerId == id && p.Football.TeamName == from && !p.Retired)).ToArray();
         var b = getPlayers.Select(id => s.Players.Single(p => p.Football.PlayerId == id && p.Football.TeamName == to && !p.Retired)).ToArray();
+        if(a.Concat(b).Any(p=>p.PracticeSquad))throw new InvalidOperationException("Practice-squad contracts cannot be traded. Promote the player and meet active-roster requirements first.");
         var ap = givePicks.Select(id => s.Picks.Single(p => p.Id == id && p.Owner == from && Available(s, p))).ToArray(); var bp = getPicks.Select(id => s.Picks.Single(p => p.Id == id && p.Owner == to && Available(s, p))).ToArray();
         if(s.UnsignedRookies.Any(r=>givePlayers.Concat(getPlayers).Contains(r.PlayerId))) throw new InvalidOperationException("Sign rookie contracts before trading these players.");
         if (a.Length + b.Length + ap.Length + bp.Length == 0) throw new InvalidOperationException("Select trade assets.");
@@ -51,7 +52,7 @@ public static class ProTrade
         }
 
         if(c?.BonusPayments is not null)contracts=contracts.Select(x=>x.Active&&x.PlayerId==p.Football.PlayerId&&x.Team==to?ProContractInsights.NormalizeVoidCharges(x):x).ToList();
-        return s with { Contracts = contracts, DeadCap = dead, MoraleEffects = s.MoraleEffects.Where(e=>e.PlayerId!=p.Football.PlayerId).ToList(), Players = s.Players.Select(x => x == p ? x with { Football = x.Football with { TeamName = to, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false, TradeRequested = false, ContractConcernWeeks = 0, Morale = Math.Clamp(x.Morale+5,10,95) } : x).ToList() };
+        return s with { InternationalPracticeDesignations=s.InternationalPracticeDesignations.Where(d=>d.PlayerId!=p.Football.PlayerId).ToList(), Contracts = contracts, DeadCap = dead, MoraleEffects = s.MoraleEffects.Where(e=>e.PlayerId!=p.Football.PlayerId).ToList(), Players = s.Players.Select(x => x == p ? x with { Football = x.Football with { TeamName = to, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false, TradeRequested = false, ContractConcernWeeks = 0, Morale = Math.Clamp(x.Morale+5,10,95) } : x).ToList() };
     }
 }
 

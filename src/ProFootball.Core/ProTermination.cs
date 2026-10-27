@@ -16,6 +16,7 @@ public static class ProTermination
     public static List<DeadCapCharge> Charges(ProFranchise s,ProContract c,Guid releaseId,bool designated=false)
     {
         var bonus=BonusSchedule(s,c,designated);var earned=ProContractInsights.EarnedCash(s,c);
+        if(ProInternationalPractice.Exempt(s,c.Team,c.PlayerId,s.Year))earned=Math.Max(0,earned-Math.Max(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Guaranteed??0,ProFinance.EarnedSalary(s,c)));
         var guaranteedBonus=ProBonusAccounting.UnpaidGuaranteed(s,c);
         var futureGuarantees=c.Years.Where(y=>y.Year>s.Year).Sum(y=>ProBonusAccounting.NonBonusGuarantee(s,c,y));
         var rows=new List<DeadCapCharge>();
@@ -32,7 +33,7 @@ public static class ProTermination
         }
         if(designated)
         {
-            var hold=Math.Max(0,ProEconomy.CapHit(c,s.Year)-(bonus.GetValueOrDefault(s.Year)+earned));
+            var hold=Math.Max(0,ProEconomy.CapHit(c,s.Year)-ProInternationalPractice.ContractExcludedSalary(s,c,s.Year)-(bonus.GetValueOrDefault(s.Year)+earned));
             if(hold>0)rows.Add(new(c.Team,s.Year,c.PlayerId,hold){ReleaseId=releaseId,June1Hold=true});
         }
         return rows;

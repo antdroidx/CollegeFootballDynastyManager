@@ -8,7 +8,7 @@ on:
       validation_scope:
         description: Finance checks financial management; termination checks release/waiver/accrual; live checks GameCast; other scopes cover their management flows
         type: choice
-        options: [full, finance, live, trade, retention, reserve, termination]
+        options: [full, finance, opening, live, trade, retention, reserve, termination]
         default: full
       reuse_apk_run_id:
         description: Optional prior run ID for test-only retries; app-source differences reject reuse
@@ -52,13 +52,13 @@ jobs:
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
-        if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade' && inputs.validation_scope != 'retention' && inputs.validation_scope != 'reserve' && inputs.validation_scope != 'termination'
+        if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'opening' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade' && inputs.validation_scope != 'retention' && inputs.validation_scope != 'reserve' && inputs.validation_scope != 'termination'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
       - name: Pro scoped regressions
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
-        if: inputs.validation_scope == 'termination' || inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve'
+        if: inputs.validation_scope == 'termination' || inputs.validation_scope == 'opening' || inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
       - name: Build independent pro APK
         run: >
@@ -128,7 +128,7 @@ jobs:
           script: |
             adb install -r $(find apk -name '*-Signed.apk' -print -quit)
             adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
-            python3 -u build/${{ inputs.validation_scope == 'termination' && 'pro-termination-smoke.py' || inputs.validation_scope == 'reserve' && 'pro-reserve-smoke.py' || inputs.validation_scope == 'finance' && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || (inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve') && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }}
+            PRO_FINANCE_OPENING_ONLY=${{ inputs.validation_scope == 'opening' && '1' || '0' }} python3 -u build/${{ inputs.validation_scope == 'termination' && 'pro-termination-smoke.py' || inputs.validation_scope == 'reserve' && 'pro-reserve-smoke.py' || (inputs.validation_scope == 'finance' || inputs.validation_scope == 'opening') && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || (inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve') && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -141,6 +141,7 @@ jobs:
             pro-trade-logcat.txt
             pro-coordinator-logcat.txt
             pro-finance-ledger-check.json
+            pro-opening-ledger-check.json
             pro-reserve-logcat.txt
             pro-reserve-check.json
             pro-termination-logcat.txt

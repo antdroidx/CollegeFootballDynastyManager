@@ -103,3 +103,8 @@ Finance scope now also verifies original-contract waiver claim/award and earlyJu
 
 
 **Termination/assignment scope:** `validation_scope=termination` runs the fast Pro financial/transaction/save regressions (including the three-season lifecycle), helpers and source validator, packages the APK and runs only pro-termination-smoke.py. It checks a held June1 designation plus a midseason original-contract claim, award, reload and release with correctly accrued salary. Reuse accepted64 finance/options/trades/coordinator UI and unchanged College/GameCast where those views are unchanged. Run annual calibrations once locally for financial lifecycle changes; do not duplicate them in every scoped CI. Exact-APK retries retain the application-input equality guard and regenerate production-core fixtures when needed.
+
+
+## Opening-ledger acceptance scope
+
+The opening device scope reuses the financial source-contract/budget/compact-accounting/theme/reinstall flow, ending before unrelated synthetic option/trade/coordinator scenarios. It verifies735 independently keyed observed2026 assessments across32 clubs, no invented historical cash, preserved source identifiers and exact Seattle current liabilities with its explicit international exemption. Existing generated mode/old-save preservation and promotion/release rules are checked in Pro regressions. Run the sourced five-season case for the changed opening debt; reuse unchanged twenty-generated-season, College390 and Pro44 GameCast evidence. Do not claim source-default promotion or all32 current contracts reconciled from this scope.

@@ -1,5 +1,11 @@
 # Pro completion checklist
 
+## Latest accepted - Pro67
+
+App faa55a1, all-green run40584307166, APK12770853072/evidence12771961687.243 fast Pro cases/16 helpers/source validator and packaging passed. Exact termination device scope verifies held June1 savings, inherited waiver terms/reload,333333 one-week buyer salary, refreshed Free agent card and disabled own/duplicate claims; screenshot reviewed. Core/data are66; reuse its245 full/annual cases. APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40584307166/artifacts/12770853072
+
+Active follow-up: source-only new-franchise initialization for735 observed prior-contract assessments across32 teams, verified Seattle roster/current-club changes and typed international practice exemption.Final250 local cases excluding unchanged twenty-generated-season case passed1m55, including five sourced and three imported-cap seasons. Local Android build passed0 warnings/errors in2m15. Focused device acceptance remains pending. Existing saves and generated mode remain unchanged; sourced default stays gated. No College/shared engine inputs changed.
+
 ## Latest accepted — Pro66
 
 App/core db88f28: run40579419877, APK12768613293, device evidence12768544312. All245 full local cases passed10m6,243 fast CI cases,16 helpers, source validator and packaging passed. Midseason claim/award/reload/release verified333333 cash after one elapsed week, preserving inherited terms and June1 held savings. Exact APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40579419877/artifacts/12768613293

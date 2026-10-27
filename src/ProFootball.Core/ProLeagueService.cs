@@ -43,7 +43,7 @@ public static class ProLeagueService
         }));
         franchise = ProCapInitialization.Initialize(franchise);
         franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
-        return ProMorale.NormalizeContracts(sourcedContracts ? ProContractData.Apply(franchise) : ProContractData.CompleteRookieTerms(franchise));
+        return ProMorale.NormalizeContracts(sourcedContracts ? ProReviewedOpeningRoster.InitializeNew(ProOpeningLedger.InitializeNew(ProContractData.Apply(franchise))) : ProContractData.CompleteRookieTerms(franchise));
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {

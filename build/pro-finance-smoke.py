@@ -1,5 +1,6 @@
 """Targeted Pro financial acceptance; no unchanged GameCast/College walkthrough."""
 
+import os
 import csv
 import copy
 import uuid
@@ -94,6 +95,23 @@ try:
 
     assert saved["capRulesVersion"]==3,"New franchises must persist seasonal cap counting"
 
+    assert saved["openingFinancialSnapshot"]=="2026-10-27"
+    observed=json.loads(Path("src/ProFootball.Core/pro-opening-ledger.json").read_text(encoding="utf-8"))["Entries"]
+    debt=saved["deadCap"]
+    assert len(debt)==len(observed)==735 and len({d["team"] for d in debt})==32
+    assert sum(d["amount"] for d in debt)==1_591_660_715
+    assert all(d["cashAmount"]==0 and d["year"]==2026 and d["sourceKey"] for d in debt)
+    assert {d["sourceKey"]:d["amount"] for d in debt}=={d["SourceKey"]:d["Amount"] for d in observed}
+    club=saved["userTeam"]
+    international={d["playerId"] for d in saved["internationalPracticeDesignations"] if d["team"]==club and d["year"]==2026}
+    contracts=[c for c in saved["contracts"] if c["active"] and c["team"]==club]
+    charge=sum(y["salary"]+y["otherCompensation"]+(y["proratedBonus"] or 0) for c in contracts for y in c["years"] if y["year"]==2026)
+    exempt=sum(y["salary"] for c in contracts if c["playerId"] in international for y in c["years"] if y["year"]==2026)
+    assert charge-exempt+sum(d["amount"] for d in debt if d["team"]==club)==300_971_343
+    assert sum(d["amount"] for d in debt if d["team"]==club)==4_844_656
+    Path("pro-opening-ledger-check.json").write_text(json.dumps({"teams":32,"assessments":735,"noHistoricalCashInvented":True,"seattleLiabilities":300971343,"seattleRegularSeasonRoom":14081919,"sourceKeysPreserved":True},indent=2),encoding="utf-8")
+
+
     caps=saved["teamCapAllocations"];assert len(caps)==32 and len({r["teamAbbreviation"] for r in caps})==32
 
     assert all(r["baseCap"]+r["rollover"]+r["otherAdjustments"]==r["adjustedCap"] for r in caps)
@@ -111,6 +129,10 @@ try:
     click("options","Options",True);options=ready("options",lambda r:"Appearance" in s.texts(r));s.tap(options,"Appearance");themes=ready("theme",lambda r:"Light" in s.texts(r));s.tap(themes,"Light");cap_view("light-budget")
 
     click("light-hub","Financial overview");cap_view("light-finance");s.capture("pro-finance-light")
+
+    if os.environ.get("PRO_FINANCE_OPENING_ONLY")=="1":
+        print("PASS: sourced opening ledger/current-club contracts,32 teams, exact Seattle liabilities, named debt, compact accounting, themes and reinstall/save.")
+        raise SystemExit(0)
 
     # Clearly synthetic, isolated option fixtures; never alter the imported cap-audit franchise above.
     for exercise in (True, False):

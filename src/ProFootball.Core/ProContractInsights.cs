@@ -55,7 +55,7 @@ public static class ProContractInsights
         var charges=contracts.SelectMany(c=>ProTermination.Charges(s,c,Guid.Empty,designated)).ToArray();
         var last=contracts.SelectMany(c=>c.Years.Select(y=>y.Year)).Concat(charges.Select(d=>d.Year)).DefaultIfEmpty(s.Year).Max();
         return Enumerable.Range(s.Year,Math.Max(1,last-s.Year+1)).Select(year=>{
-            var before=contracts.Sum(c=>ProEconomy.CapHit(c,year));var dead=charges.Where(d=>d.Year==year).Sum(d=>d.Amount);
+            var before=contracts.Sum(c=>ProEconomy.CapHit(c,year)-ProInternationalPractice.ContractExcludedSalary(s,c,year));var dead=charges.Where(d=>d.Year==year).Sum(d=>d.Amount);
             var cash=year==s.Year?contracts.Sum(c=>EarnedCash(s,c)+(ProBonusAccounting.TerminatedCash(s,c)?.GetValueOrDefault(year)??(c.SignedYear==year?c.SigningBonus:0))):charges.Where(d=>d.Year==year).Sum(d=>d.CashAmount);
             return new ReleaseSeasonView(year,before,dead,before-dead){SeasonCash=cash};
         }).ToArray();

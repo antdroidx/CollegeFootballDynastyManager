@@ -7,7 +7,7 @@ public sealed class ContractAccountingTests
     {
         var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
         var p=s.Players.Single(p=>p.Football.FullName=="Jaxon Smith-Njigba");
-        return(s,p,s.Contracts.Single(c=>c.PlayerId==p.Football.PlayerId));
+        return(s with{DeadCap=[]},p,s.Contracts.Single(c=>c.PlayerId==p.Football.PlayerId));
     }
     [Fact] public void SourceCashVoidYearsAndGuaranteesRemainDistinct()
     {

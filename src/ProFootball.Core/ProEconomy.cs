@@ -91,8 +91,8 @@ public static class ProEconomy
         var original=s.Contracts.Where(c=>c.Active&&c.PlayerId==id&&c.Team==team).ToList();
         var charges=original.SelectMany(c=>ProTermination.Charges(s,c,releaseId,postJune1)).ToList();var dead=charges.Sum(d=>d.Amount);
         var contracts=s.Contracts.Select(c=>c.Active&&c.PlayerId==id?c with{ReleaseId=releaseId,Active=false,TerminatedYear=s.Year,EarnedCash=ProContractInsights.EarnedCash(s,c),BonusCash=ProBonusAccounting.TerminatedCash(s,c)}:c).ToList();
-        var waivers = s.Waivers.ToList(); if (waive && (p.Experience < 4 || s.Phase == ProPhase.Playoffs || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.TransactionTick + 1, []){ReleaseId=releaseId,OriginalContracts=original,ReleasedFraction=ProFinance.EarnedFraction(s),ReleasedYear=s.Year});
-        return Log(s with { Contracts = contracts, UnsignedRookies = s.UnsignedRookies.Where(r=>r.PlayerId!=id).ToList(), DeadCap = s.DeadCap.Concat(charges).ToList(), June1Designations=postJune1?s.June1Designations.Append(new(team,s.Year,id,releaseId)).ToList():s.June1Designations, Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
+        var waivers = s.Waivers.ToList(); if (waive && !p.PracticeSquad && (p.Experience < 4 || s.Phase == ProPhase.Playoffs || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.TransactionTick + 1, []){ReleaseId=releaseId,OriginalContracts=original,ReleasedFraction=ProFinance.EarnedFraction(s),ReleasedYear=s.Year});
+        return Log(s with { InternationalPracticeDesignations=s.InternationalPracticeDesignations.Where(d=>d.PlayerId!=id).ToList(), Contracts = contracts, UnsignedRookies = s.UnsignedRookies.Where(r=>r.PlayerId!=id).ToList(), DeadCap = s.DeadCap.Concat(charges).ToList(), June1Designations=postJune1?s.June1Designations.Append(new(team,s.Year,id,releaseId)).ToList():s.June1Designations, Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
     }
     public static ProFranchise Expire(ProFranchise s,string team,Guid id)
     {
@@ -161,13 +161,14 @@ public static class ProRoster
     {
         var p = s.Players.Single(p => p.Football.PlayerId == id);
         if (p.Football.TeamName != team || p.Reserve || p.Retired) throw new InvalidOperationException("Unavailable player.");
-        if (practice && s.Players.Count(x => x.Football.TeamName == team && x.PracticeSquad) >= 16) throw new InvalidOperationException("Practice squad is full.");
+        if (practice && !p.PracticeSquad && ProInternationalPractice.OrdinaryPlayers(s,team) >= 16) throw new InvalidOperationException("Practice squad is full.");
         if (!practice && !IsCamp(s) && Active(s, team) >= Limit(s)) throw new InvalidOperationException("Active roster is full.");
         if (practice && p.Experience > 2 && s.Players.Count(x => x.Football.TeamName == team && x.PracticeSquad && x.Experience > 2) >= 6) throw new InvalidOperationException("Six veteran practice-squad slots are already occupied.");
         if(!practice)
         {
+            s=ProInternationalPractice.End(s,id);
             var c=s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==id);var minimum=c is null?ProFinance.Minimum(s,p,practice:false):ProFinance.ContractMinimum(s,p,c,s.Year);
-            if(c is not null){var extra=Math.Max(0,minimum-(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0));if(ProEconomy.Room(s,team)<extra)throw new InvalidOperationException("Promotion requires cap space for the active-roster minimum salary.");s=s with{Contracts=s.Contracts.Select(x=>x==c?c with{Years=c.Years.Select(y=>y with{Salary=Math.Max(y.Salary,ProFinance.ContractMinimum(s,p,c,y.Year))}).ToList()}:x).ToList()};}
+            if(c is not null){var extra=Math.Max(0,minimum-(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0));if(ProEconomy.Room(s,team)-ProEconomy.Pending(s,team)<extra)throw new InvalidOperationException("Promotion requires cap space for the active-roster minimum salary.");s=s with{Contracts=s.Contracts.Select(x=>x==c?c with{Years=c.Years.Select(y=>y with{Salary=Math.Max(y.Salary,ProFinance.ContractMinimum(s,p,c,y.Year))}).ToList()}:x).ToList()};}
         }
         return ProEconomy.Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { PracticeSquad = practice } : x).ToList() }, $"{p.Football.FullName} moved to {(practice ? "practice squad" : "active roster")}.");
     }
