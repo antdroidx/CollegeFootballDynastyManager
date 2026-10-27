@@ -1,6 +1,52 @@
+# Contract coverage / opening budget audit
+
+## Corrected allowance audit — source 61ec66e
+
+This section supersedes the older budget tables below. Exact allowance inputs use the paired NFLPA observation in docs/data; source commitments still contain generated fallbacks and no imported departed-player debt. Seasonal exclusions are shown separately. Reported source room is evidence only, never a balancing input.
+
+| Team | Sourced | Fallback | Allowance | Charged commitments | Camp excluded salary | Modeled room |
+|---|---:|---:|---:|---:|---:|---:|
+| BUF | 62 | 12 | $301,580,912 | $255,180,222 | $8,363,323 | $46,400,690 |
+| MIA | 55 | 20 | $308,878,443 | $138,539,120 | $10,706,599 | $170,339,323 |
+| NE | 63 | 20 | $352,979,254 | $300,503,852 | $17,892,978 | $52,475,402 |
+| NYJ | 64 | 16 | $323,863,800 | $192,349,038 | $14,317,316 | $131,514,762 |
+| BAL | 60 | 18 | $314,726,142 | $295,300,537 | $14,193,094 | $19,425,605 |
+| CIN | 63 | 12 | $317,958,913 | $300,183,218 | $10,480,399 | $17,775,695 |
+| CLE | 62 | 20 | $339,154,202 | $204,557,388 | $16,253,339 | $134,596,814 |
+| PIT | 66 | 14 | $321,760,072 | $294,970,382 | $13,617,595 | $26,789,690 |
+| HOU | 71 | 13 | $310,744,359 | $219,064,664 | $18,194,172 | $91,679,695 |
+| IND | 58 | 18 | $303,765,630 | $272,727,599 | $12,290,345 | $31,038,031 |
+| JAX | 60 | 18 | $310,713,790 | $251,297,271 | $13,096,260 | $59,416,519 |
+| TEN | 66 | 11 | $343,717,978 | $269,769,072 | $11,497,983 | $73,948,906 |
+| DEN | 65 | 14 | $304,221,900 | $287,484,534 | $13,023,400 | $16,737,366 |
+| KC | 56 | 22 | $302,110,749 | $291,022,229 | $13,076,383 | $11,088,520 |
+| LAC | 64 | 15 | $305,894,485 | $271,927,714 | $14,397,855 | $33,966,771 |
+| LV | 59 | 19 | $315,202,045 | $253,731,624 | $13,327,317 | $61,470,421 |
+| DAL | 65 | 14 | $332,065,571 | $262,816,104 | $14,541,716 | $69,249,467 |
+| NYG | 64 | 18 | $300,816,176 | $240,434,977 | $16,563,283 | $60,381,199 |
+| PHI | 62 | 17 | $316,623,458 | $218,046,547 | $13,311,528 | $98,576,911 |
+| WSH | 64 | 11 | $328,630,626 | $276,421,939 | $12,161,056 | $52,208,687 |
+| CHI | 66 | 15 | $309,914,708 | $273,208,955 | $15,225,795 | $36,705,753 |
+| DET | 64 | 18 | $323,032,099 | $253,544,615 | $15,206,701 | $69,487,484 |
+| GB | 67 | 15 | $314,903,931 | $257,401,931 | $17,029,900 | $57,502,000 |
+| MIN | 57 | 18 | $314,930,297 | $261,749,192 | $10,223,673 | $53,181,105 |
+| ATL | 63 | 17 | $305,612,517 | $226,941,323 | $14,683,745 | $78,671,194 |
+| CAR | 67 | 12 | $312,564,671 | $281,272,427 | $14,618,423 | $31,292,244 |
+| NO | 67 | 14 | $317,772,192 | $184,904,526 | $15,551,689 | $132,867,666 |
+| TB | 56 | 18 | $317,516,374 | $290,320,740 | $11,004,883 | $27,195,634 |
+| ARI | 64 | 18 | $328,107,832 | $222,374,490 | $19,094,917 | $105,733,342 |
+| LAR | 60 | 20 | $314,323,123 | $302,663,795 | $15,479,561 | $11,659,328 |
+| SEA | 62 | 17 | $315,053,262 | $296,427,402 | $15,095,373 | $18,625,860 |
+| SF | 70 | 15 | $341,170,524 | $236,757,544 | $19,945,806 | $104,412,980 |
+
+Seattle modeled camp room is $18,625,860; full-roster room is $3,530,487. OTC currently reports $13,442,430 with $300,971,343 total cap liabilities, implying a different $314,413,773 allowance/basis than the observed NFLPA $315,053,262. Date/basis, player statuses, source coverage and departed debt still require reconciliation; neither discrepancy is filled with invented charges.
+
+References: https://nflpa.com/reports/public-salary-cap-report ; https://overthecap.com/salary-cap/seattle-seahawks
+
+## Historical audit before allowance correction
 # October 26 contract coverage / opening budget audit
 
-Developer diagnostic, not reconciled NFL cap-space reporting. The supplied 2026 allowance CSV remains authoritative for game budgets. The contract pack uses the October 26 nflverse/OTC snapshot. All 32 rows below use full-roster game obligations, include generated fallback contracts, and have no imported departed-player debt. These differences must be resolved before switching the default to sourced contracts or claiming a real-world opening available balance. No artificial balancing adjustment was added.
+Historical developer diagnostic, superseded by the corrected audit above. The original supplied allowance CSV was subsequently found to contain rounded spending rather than actual allowances. The contract pack uses the October 26 nflverse/OTC snapshot. All 32 rows below use full-roster game obligations, include generated fallback contracts, and have no imported departed-player debt. These differences must be resolved before switching the default to sourced contracts or claiming a real-world opening available balance. No artificial balancing adjustment was added.
 
 | Team | Source deals | Fallbacks | Adjusted allowance | Modeled commitments | Modeled room |
 |---|---:|---:|---:|---:|---:|
