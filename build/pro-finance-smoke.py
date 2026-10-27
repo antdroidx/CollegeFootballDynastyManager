@@ -1,5 +1,6 @@
 """Targeted Pro financial acceptance; no unchanged GameCast/College walkthrough."""
 
+import csv
 import copy
 import uuid
 import importlib.util,json,re,time
@@ -26,11 +27,11 @@ def contains(root,value):return any(value in (t or "") for t in s.texts(root))
 
 def cap_view(name):
 
-    root=ready(name,lambda r:contains(r,"Adjusted team cap $302,100,000"))
+    root=ready(name,lambda r:contains(r,"Adjusted team cap $315,053,262"))
 
-    assert contains(root,"Rollover $15,030,000")
+    assert contains(root,"Rollover $15,029,706")
 
-    assert contains(root,"Other adjustments $-14,130,000")
+    assert contains(root,"Other adjustments $-1,176,444")
 
     assert contains(root,"Base league cap $301,200,000")
 
@@ -91,15 +92,15 @@ try:
     assert all(y["salary"]==0 for y in contract["years"] if y["isVoid"])
     assert contract["bonusCash"]["2026"]==35_000_000
 
-    assert saved["capRulesVersion"]==2,"New franchises must persist seasonal cap counting"
+    assert saved["capRulesVersion"]==3,"New franchises must persist seasonal cap counting"
 
     caps=saved["teamCapAllocations"];assert len(caps)==32 and len({r["teamAbbreviation"] for r in caps})==32
 
     assert all(r["baseCap"]+r["rollover"]+r["otherAdjustments"]==r["adjustedCap"] for r in caps)
 
-    assert sum(r["otherAdjustments"]<0 for r in caps)==28
+    assert sum(r["otherAdjustments"]<0 for r in caps)==4
 
-    Path("pro-finance-ledger-check.json").write_text(json.dumps({"teams":32,"negative_adjustments":28,"all_reconcile":True,"franchise_id":saved["id"]},indent=2))
+    Path("pro-finance-ledger-check.json").write_text(json.dumps({"teams":32,"negative_adjustments":4,"all_reconcile":True,"franchise_id":saved["id"]},indent=2))
 
     apk=next(Path("apk").glob("*-Signed.apk"));s.adb("install","-r",str(apk));s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
 
@@ -122,6 +123,10 @@ try:
             years=[dict(year=y,salary=1_000_000,guaranteed=0,proratedBonus=0,otherCompensation=0,otherCash=0,isVoid=False) for y in range(2023,2027)])
         fixture.update(id=fixture_id,name=fixture_name,year=2026,week=1,phase=3,offseasonStep=1,players=[player],contracts=[contract],games=[],honors=[],deadCap=[],bids=[],rookieOptionDecisions=[],rookieParticipation=[],salarySamples=[],autoManageRookieOptions=False,
             optionTenders=[dict(decisionYear=2026,positionGroup="QB",tier=0,salary=3_000_000,estimatedHistory=True)])
+        if not exercise:
+            old_rows=list(csv.DictReader(Path("src/ProFootball.Core/nfl_2026_salary_caps.user-original.csv").open(encoding="utf-8")))
+            fixture["capRulesVersion"]=2
+            fixture["teamCapAllocations"]=[dict(year=2026,teamAbbreviation=r["team_abbr"],baseCap=int(r["base_cap_2026"]),rollover=int(r["rollover_from_2025"]),otherAdjustments=int(r["other_adjustments"]),adjustedCap=int(r["adjusted_cap_2026"])) for r in old_rows]
         s.adb("shell","am","force-stop","antdroid.profootball.franchise")
         fixture_path=Path("pro-option-fixture.json");fixture_path.write_text(json.dumps(fixture),encoding="utf-8")
         s.adb("push",str(fixture_path),"/data/local/tmp/pro-option-fixture.json")
@@ -130,7 +135,15 @@ try:
         library=ready("option-library",lambda r:any((t or "").startswith(fixture_name+" ·") for t in s.texts(r)))
         s.tap(library,next(t for t in s.texts(library) if (t or "").startswith(fixture_name+" ·")))
         ready("option-overview",lambda r:"Advance offseason" in s.texts(r))
-        click("option-office","Front Office");click("option-desk","Rookie options")
+        click("option-office","Front Office")
+        if not exercise:
+            click("cap-correction","Update 2026 cap budgets")
+            confirm=ready("cap-correction-confirm",lambda r:"Update 2026 cap budgets?" in s.texts(r));s.tap(confirm,"Update")
+            cap_view("cap-corrected")
+            repaired=json.loads(s.adb("exec-out","run-as","antdroid.profootball.franchise","cat","files/pro-franchises-v1/"+fixture_id+".json"))
+            assert repaired["capRulesVersion"]==3 and len(repaired["contracts"])==1 and len(repaired["contracts"][0]["years"])==4
+            assert all(y["salary"]==1_000_000 and y["guaranteed"]==0 for y in repaired["contracts"][0]["years"])
+        click("option-desk","Rookie options")
         ready("option-due",lambda r:"1 pending decisions" in s.texts(r))
         click("option-choice","Exercise option" if exercise else "Decline option")
         confirm=ready("option-confirm",lambda r:("Exercise fifth-year option?" if exercise else "Decline fifth-year option?") in s.texts(r))
@@ -146,7 +159,7 @@ try:
             assert fourth["guaranteed"]==1_000_000 and fifth["salary"]==fifth["guaranteed"]==3_000_000
         else:assert max(y["year"] for y in deal["years"])==2026 and all(y["guaranteed"]==0 for y in deal["years"])
 
-    print("PASS: new 2026 adjusted budget, 32 persisted allocations, signed adjustments, exact reconciliation, reinstall/save and financial UI themes, sourced cash, compact contract and expandable void accounting; synthetic rookie-option exercise/decline and saved guarantees.")
+    print("PASS: new 2026 adjusted budget, 32 persisted allocations, signed adjustments, exact reconciliation, reinstall/save and financial UI themes, sourced cash, compact contract and expandable void accounting; synthetic rookie-option exercise/decline and saved guarantees; explicit old-budget correction with contracts retained.")
 
 finally:
 

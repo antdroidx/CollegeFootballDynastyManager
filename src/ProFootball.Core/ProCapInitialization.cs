@@ -16,7 +16,12 @@ public static class ProCapInitialization
     public static string Canonical(string abbreviation)=>abbreviation.Trim().ToUpperInvariant() switch {"WSH"=>"WAS",var value=>value};
     public static IReadOnlyList<ProTeamCapAllocation> Load(ProLeague league)
     {
-        using var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.nfl_2026_salary_caps.csv")??throw new InvalidDataException("Missing 2026 cap data.");
+        return LoadResource("nfl_2026_salary_caps.csv",league);
+    }
+    public static IReadOnlyList<ProTeamCapAllocation> LoadOriginal(ProLeague league)=>LoadResource("nfl_2026_salary_caps.user-original.csv",league);
+    static IReadOnlyList<ProTeamCapAllocation> LoadResource(string name,ProLeague league)
+    {
+        using var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core."+name)??throw new InvalidDataException("Missing 2026 cap data.");
         using var reader=new StreamReader(stream);return Parse(reader.ReadToEnd(),league);
     }
     public static IReadOnlyList<ProTeamCapAllocation> Parse(string csv,ProLeague league)
@@ -40,7 +45,15 @@ public static class ProCapInitialization
     public static ProFranchise Initialize(ProFranchise s)
     {
         if(s.Year!=2026||s.TeamCapAllocations.Count>0)return s;
-        return s with{CapRulesVersion=2,SalaryCap=ProFinance.Base2026,TeamCapAllocations=Load(s.League).ToList()};
+        return s with{CapRulesVersion=3,SalaryCap=ProFinance.Base2026,TeamCapAllocations=Load(s.League).ToList()};
+    }
+    public static bool CanCorrectOpeningBudgets(ProFranchise s) => s.Year==2026&&s.CapRulesVersion==2&&s.SalaryCap==ProFinance.Base2026
+        &&!s.FinancialHistory.Any(h=>h.Year==2026)&&s.TeamCapAllocations.Count==32
+        &&LoadOriginal(s.League).All(a=>s.TeamCapAllocations.Contains(a));
+    public static ProFranchise CorrectOpeningBudgets(ProFranchise s)
+    {
+        if(!CanCorrectOpeningBudgets(s))throw new InvalidOperationException("Only unchanged 2026 opening cap budgets can be updated before the year closes.");
+        return s with{CapRulesVersion=3,TeamCapAllocations=Load(s.League).ToList()};
     }
     public static long RoundForDisplay(long dollars)=>checked((long)Math.Round(dollars/250_000m,0,MidpointRounding.AwayFromZero)*250_000);
     public static ProTeamCapAllocation? Allocation(ProFranchise s,string team,int year)

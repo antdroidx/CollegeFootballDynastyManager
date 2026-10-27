@@ -46,6 +46,8 @@ jobs:
       - run: dotnet workload install maui-android --version 10.0.301.1
       - name: Test UI synchronization helpers
         run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
+      - name: Verify NFLPA cap data normalization
+        run: python3 build/verify-nflpa-cap-data.py
       - name: Full Pro tests
         if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'live'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
