@@ -1,20 +1,10 @@
 # Pro completion checklist
 
-## Build64 packaging and exact-APK retry
+## Current acceptance and follow-up
 
-App/core8b06fa7 packaged in run40547793852: APK12754790693. All239 full local Pro tests passed in5m22s, including20 generated/five sourced seasons;237 scoped CI cases,16 helpers and32-team source validator passed. Device finance/budget/source-cash/options and trade flows passed; coordinator helper stopped on an overly broad fixture glob that included the new reserve/termination fixtures. This is a harness selection error, not accepted full device verification. Narrowed the helper to its four roster/draft fixtures. Retry the same APK with finance scope; no app inputs, long rerun or College/GameCast rebuild needed. Prior evidence12754986174 is in .artifacts/pro64-ui.
+Pro64 app/core8b06fa7 is accepted. APK12754790693/run40547793852; exact-APK device verification40573852505 at harness00944a7 passed all scoped flows, evidence12766593020.239 full local Pro tests (5m22),237 fast CI cases,16 helpers and source validation passed. Finance/options/trades/coordinator/June1/waiver/reload checks passed; screenshots reviewed. Original fixture-glob failure is superseded. Exact APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40547793852/artifacts/12754790693
 
-Developer parser now handles repeated bonus CSS by semantic headers and year-cell tooltips (previously skipped annotated future years). Five parser cases pass. These corrections change none of the447 records already applied to64. They uncover42 additional staged candidates; do not add those while64 acceptance is pending. Extension cash-flow charts are new-money charts and are not used as total annual pay. Developer termination audit compares95 same-cap current cases:3 exact modeled/source cuts,92 require explicit payment/guarantee review. This is evidence of remaining source accuracy work, not permission to override liabilities or enable sourced default. No application data changed by these audit tools. Continue all four tasks after64 acceptance.
-
-## Active contract and waiver batch — acceptance in progress
-
-Pro63 remains the latest accepted APK. Current candidate adds original-contract waiver assignment; dated June1 release/trade splits, two early designations with held savings and final2030 treatment; paid/unpaid/conditional bonus and published vesting metadata; release cash/cap previews; and a near-header waiver claim action. Trade and waiver follow-up cases prevent paid bonuses or already-earned salary from becoming duplicate buyer guarantees. Legacy saves retain booked debt and negotiated contracts; metadata migration requires exact unchanged annual terms.
-
-447 previously absent strict-identity, exact-cap, published-cash contracts have been added to the optional sourced pack (2459 total), preserving every existing source record. Published rounding allocations are retained; an explicit payment event is attached only when its complete annual allocation matches exactly. New first-round/rookie terms use published rows, with unreported terms left to the existing explicitly estimated fallback. Source pack SHA is c1a2ad199b9689637ad2f1eafa2237b92e028c81beaa764351f7834ecb41628b. Reviewed JSN record equality was checked before updating its hash guard. No saved contracts are replaced by these additions.
-
-Fresh October27 offline evidence now contains all32 internally reconciled team pages,507 opening-contract pages and95 future-bonus pages. Dated raw pages/manifests remain in data/pro/source-snapshots. The new current ledger comparison has2444 exact cap matches,42 missing source contracts,32 identity/status cases and21 differences across2539 financial rows. These are source financial events, not2539 unique roster contracts. Reported room is never a balancing target. Real contracts remain opt-in: guarantees/vesting review, departed-debt application and identity/date discrepancies are still open; all four requested tasks are not yet complete.
-
-Verification:234 fast Pro cases passed after the447 additions;17 targeted source/waiver/termination cases passed, then16 targeted cases passed after the vested-assignment fix and new real-loader device fixtures.16 UI helpers pass. The full current Pro suite including20 generated/five sourced seasons is active (session92669, .artifacts/termination-full-final.txt); do not compile or duplicate it. Earlier local Android build passed before the final source/UI additions and is not final acceptance. Finance device flow now includes core-generated32-team June1 and waiver fixtures; final APK/device acceptance is pending. Reuse unchanged College390 and Pro44 GameCast evidence. No main/College/package identity changes. User removed automatic continuation; do not recreate it. Continue during active work through remaining tasks, without treating this checkpoint as completion.
+Post64 candidate repairs retroactive buyer salary accrual and unpaid guaranteed option transfer on trades, preserves original signing/lock data, and adds23 verified records (2482 optional sourced contracts total). Six accrual cases and31 combined contract/waiver/termination cases pass; all245 full cases passed in10m6s, no next APK yet. New device scope checks midseason claim/award/reload and release after one week. See current-work.md for exact source/evidence and actual gaps. Real-source default remains gated, and all four requested tasks are not yet complete.
 
 ## Accepted reserve activation — Pro63
 
@@ -116,13 +106,14 @@ See [phase details](pro-contract-reconciliation.md). Checked items are included 
 
 ## Outstanding acceptance
 
-- [ ] CPU autonomous trade offers/counteroffers.
+- [x] CPU autonomous trade offers/counteroffers, accepted Pro56 and reused management acceptance.
 - [x] Coordinator shared-pick value review, verified in Pro 45; rejects unjustified future draft-capital spending atomically.
 - [x] Supplied 2026 base/rollover/adjustment allowances: 32 teams, exact reconciliation, separate budget components and new-save initialization.
 - [x] Measured/reserved annual rollover and next-year contract changes; 108 local Pro tests including three imported-cap seasons.
 - [ ] Complete opening source commitments/departed-player dead money and historical cash reconciliation. **Source accounting remains experimental.**
 - [x] Finance-scoped exact Pro 33 APK verified in run 40366831239; source guard permitted reuse and avoided a rebuild.
-- [ ] First-round fifth-year option decisions and deeper rookie/waiver contract rules.
+- [x] First-round fifth-year exercise/decline decisions, accepted Pro46/64 finance scope.
+- [ ] Finish deeper source guarantee/vesting and waiver assignment-accrual follow-up; initial original-contract waiver flow accepted64.
 - [ ] Richer scouting/combine/camp, CPU roster/contract calibration, automatic coordinator opposite-unit management and deeper career/job-market behavior.
 - [ ] Further rating/morale/statistical balancing and growth/scatter/draft-outcome analytics.
 - [ ] Additional factual records/playoff-race/weekly-roundup stories.

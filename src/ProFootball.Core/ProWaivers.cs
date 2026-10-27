@@ -16,7 +16,7 @@ public static class ProWaivers
         foreach(var c in originals)
         {
             var current=c.Years.Single(y=>y.Year==s.Year);
-            var earned=(long)(current.Salary*entry.ReleasedFraction);
+            var earned=ProFinance.EarnedSalary(c,entry.ReleasedYear,entry.ReleasedFraction);
             var currentOther=current.OtherCash??Math.Max(0,current.OtherCompensation);
             // Remove only the uniquely tagged release assessment. Unrelated player/team debt is retained.
             var bonus=ProTermination.BonusSchedule(s,c);
@@ -41,7 +41,7 @@ public static class ProWaivers
             }
             // Historical cash remains on the former team. The salary guarantee is now assumed by the claimant.
             contracts=contracts.Select(x=>x.PlayerId==c.PlayerId&&x.Team==c.Team&&!x.Active&&x.TerminatedYear==s.Year?x with{EarnedCash=earned+currentOther}:x).ToList();
-            contracts.Add(c with{ReleaseId=null,Team=team,SigningBonus=0,BonusCash=[],TerminatedYear=null,EarnedCash=0,Active=true,Source="Waiver assignment",ReportedAnnualValue=null,
+            contracts.Add(c with{ReleaseId=null,SalaryAssignmentYear=s.Year,SalaryAssignmentFraction=entry.ReleasedFraction,Team=team,SigningBonus=0,BonusCash=[],TerminatedYear=null,EarnedCash=0,Active=true,Source="Waiver assignment",ReportedAnnualValue=null,
                 BonusPayments=[],CashVesting=c.CashVesting?.Select(v=>v with{GuaranteedCash=Math.Min(Math.Max(0,c.Years.Single(y=>y.Year==v.PaymentYear).Salary-(v.PaymentYear==s.Year?earned:0)),Math.Max(0,v.GuaranteedCash-c.Years.Single(y=>y.Year==v.PaymentYear).GuaranteedOtherCash-(c.BonusPayments?.Where(b=>b.Year==v.PaymentYear&&b.GuaranteedAtSigning).Sum(b=>b.Amount)??0)))}).ToList(),
                 Years=c.Years.Where(y=>y.Year>=s.Year).Select(y=>y with{GuaranteedOtherCash=0,Salary=y.IsVoid?0:y.Salary-(y.Year==s.Year?earned:0),Guaranteed=y.IsVoid?0:Math.Max(0,y.Guaranteed-(y.Year==s.Year?earned:0)),ProratedBonus=0,OtherCompensation=0,OtherCash=0,SourceGuaranteed=null}).ToList()});
         }
@@ -73,5 +73,5 @@ public static class ProWaivers
         return next.Players.Single(p=>p.Football.PlayerId==entry.PlayerId).Football.TeamName==team
             ?ProEconomy.Log(next,$"{team} claimed {p.Football.FullName}, assuming the remaining salary contract."):next;
     }
-    public static long CurrentSalary(WaiverEntry entry,int year)=>entry.OriginalContracts?.Sum(c=>c.Years.Where(y=>y.Year==year&&!y.IsVoid).Sum(y=>y.Salary-(year==entry.ReleasedYear?(long)(y.Salary*entry.ReleasedFraction):0)))??0;
+    public static long CurrentSalary(WaiverEntry entry,int year)=>entry.OriginalContracts?.Sum(c=>c.Years.Where(y=>y.Year==year&&!y.IsVoid).Sum(y=>y.Salary-(year==entry.ReleasedYear?ProFinance.EarnedSalary(c,year,entry.ReleasedFraction):0)))??0;
 }

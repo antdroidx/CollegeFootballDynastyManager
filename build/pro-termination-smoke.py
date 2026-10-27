@@ -25,7 +25,7 @@ def run(s):
         s.adb("shell","am","force-stop",package)
         s.adb("shell","monkey","-p",package,"-c","android.intent.category.LAUNCHER","1")
         ready("library",s.library_loaded)
-        phase="Offseason" if fixture["name"].endswith("June1 QA") else "Preseason"
+        phase="Offseason" if fixture["name"].endswith("June1 QA") else "RegularSeason"
         click("slot",f"{fixture['name']} · {fixture['userTeam']} · {fixture['year']} {phase} W{week or fixture['week']}")
         ready("overview",s.pro_overview_loaded)
     def install(fixture):
@@ -60,7 +60,7 @@ def run(s):
     click("waiver-player","Waiver Rookie")
     claim=ready("waiver-profile",lambda r:"Claim from waivers" in s.texts(r));s.tap(claim,"Claim from waivers")
     confirm=ready("claim-confirm",lambda r:"Claim Waiver Rookie?" in s.texts(r))
-    assert any("$6,000,000" in (t or "") and "2028" in (t or "") for t in s.texts(confirm))
+    assert any("$3,000,000" in (t or "") and "2028" in (t or "") for t in s.texts(confirm))
     s.capture("pro-termination-waiver-confirm");s.tap(confirm,"Claim")
     submitted=ready("claim-submitted",lambda r:"Claim submitted" in s.texts(r));assert not s.enabled(submitted,"Claim submitted")
     pending=read(fixture["id"]);assert pending["contracts"]==fixture["contracts"]
@@ -68,13 +68,21 @@ def run(s):
     click("close-profile","‹ Back",True);click("overview-return","Overview")
     click("advance","Advance week",True)
     confirm=ready("advance-confirm",lambda r:"Advance week?" in s.texts(r));s.tap(confirm,"Advance")
-    checked=saved(fixture["id"],lambda x:x["week"]==2)
+    checked=saved(fixture["id"],lambda x:x["week"]==11)
     acquired=[c for c in checked["contracts"] if c["playerId"]==data["waiverPlayer"] and c["active"]]
     assert acquired==[data["assumed"]],"Waiver award repriced or shortened the existing contract"
     assert next(p for p in checked["players"] if p["football"]["playerId"]==data["waiverPlayer"])["football"]["teamName"]==fixture["userTeam"]
-    open_slot(fixture,week=2);roster_profile("Waiver Rookie")
+    open_slot(fixture,week=11);roster_profile("Waiver Rookie")
     assert "Claim from waivers" not in s.texts(s.capture("pro-termination-waiver-awarded"))
-    Path("pro-termination-check.json").write_text(json.dumps({"june1HoldPreserved":True,"savedReleaseMatchesCore":True,"waiverSalaryAndTermReviewed":True,"claimDoesNotTransferEarly":True,"awardedContractEqualsCore":True,"reloadVerified":True},indent=2),encoding="utf-8")
+    click("assumed-contract-actions","Contract & roster actions")
+    click("assumed-release-action","Release player")
+    ready("assumed-release-preview",lambda r:"Cap impact of release" in s.texts(r))
+    click("assumed-release-confirm","Release player")
+    cut=saved(fixture["id"],lambda x:not any(c["active"] and c["playerId"]==data["waiverPlayer"] for c in x["contracts"]))
+    current=next(c for c in cut["contracts"] if c["playerId"]==data["waiverPlayer"] and c["team"]==fixture["userTeam"])
+    assert current["earnedCash"]==data["postClaimReleaseCash"]==333333,"Buyer earned salary from before the claim"
+    s.capture("pro-termination-assigned-release")
+    Path("pro-termination-check.json").write_text(json.dumps({"june1HoldPreserved":True,"savedReleaseMatchesCore":True,"waiverSalaryAndTermReviewed":True,"claimDoesNotTransferEarly":True,"awardedContractEqualsCore":True,"reloadVerified":True,"midseasonAccrualVerified":True},indent=2),encoding="utf-8")
     print("PASS: June1 preview/held savings/persisted designation and original-contract waiver claim/award/reload.")
 
 if __name__=="__main__":

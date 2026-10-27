@@ -47,7 +47,7 @@ public static class ProContractInsights
     public static long EarnedCash(ProFranchise s,ProContract c)
     {
         var row=c.Years.FirstOrDefault(y=>y.Year==s.Year);if(row is null)return 0;
-        return Math.Max(ProBonusAccounting.NonBonusGuarantee(s,c,row),(long)(row.Salary*ProFinance.EarnedFraction(s))+(row.OtherCash??Math.Max(0,row.OtherCompensation)));
+        return Math.Max(ProBonusAccounting.NonBonusGuarantee(s,c,row),ProFinance.EarnedSalary(s,c)+(row.OtherCash??Math.Max(0,row.OtherCompensation)));
     }
     public static IReadOnlyList<ReleaseSeasonView> Release(ProFranchise s,Guid id,bool designated=false)
     {

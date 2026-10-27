@@ -166,8 +166,8 @@ public static class ProRoster
         if (practice && p.Experience > 2 && s.Players.Count(x => x.Football.TeamName == team && x.PracticeSquad && x.Experience > 2) >= 6) throw new InvalidOperationException("Six veteran practice-squad slots are already occupied.");
         if(!practice)
         {
-            var minimum=ProFinance.Minimum(s,p,practice:false);var c=s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==id);
-            if(c is not null){var extra=Math.Max(0,minimum-(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0));if(ProEconomy.Room(s,team)<extra)throw new InvalidOperationException("Promotion requires cap space for the active-roster minimum salary.");s=s with{Contracts=s.Contracts.Select(x=>x==c?c with{Years=c.Years.Select(y=>y with{Salary=Math.Max(y.Salary,ProFinance.Minimum(s,p,y.Year,practice:false))}).ToList()}:x).ToList()};}
+            var c=s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==id);var minimum=c is null?ProFinance.Minimum(s,p,practice:false):ProFinance.ContractMinimum(s,p,c,s.Year);
+            if(c is not null){var extra=Math.Max(0,minimum-(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0));if(ProEconomy.Room(s,team)<extra)throw new InvalidOperationException("Promotion requires cap space for the active-roster minimum salary.");s=s with{Contracts=s.Contracts.Select(x=>x==c?c with{Years=c.Years.Select(y=>y with{Salary=Math.Max(y.Salary,ProFinance.ContractMinimum(s,p,c,y.Year))}).ToList()}:x).ToList()};}
         }
         return ProEconomy.Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { PracticeSquad = practice } : x).ToList() }, $"{p.Football.FullName} moved to {(practice ? "practice squad" : "active roster")}.");
     }

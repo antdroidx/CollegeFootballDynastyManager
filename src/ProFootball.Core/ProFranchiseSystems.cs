@@ -38,19 +38,16 @@ public static class ProTrade
         var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId); var contracts = s.Contracts.ToList(); var dead = s.DeadCap.ToList();
         if(c is not null)
         {
-            var fraction=ProFinance.EarnedFraction(s);var current=c.Years.FirstOrDefault(y=>y.Year==s.Year);var earned=(long)((current?.Salary??0)*fraction)+(current?.OtherCash??Math.Max(0,current?.OtherCompensation??0));
+            var fraction=ProFinance.EarnedFraction(s);var current=c.Years.FirstOrDefault(y=>y.Year==s.Year);var earnedSalary=ProFinance.EarnedSalary(s,c);var earned=earnedSalary+(current?.OtherCash??Math.Max(0,current?.OtherCompensation??0));
             var bonus=ProTermination.BonusSchedule(s,c);
-            var unpaid=ProBonusAccounting.UnpaidGuaranteed(s,c);bonus[s.Year]=bonus.GetValueOrDefault(s.Year)+unpaid;
-            foreach(var payment in c.BonusPayments?.Where(b=>b.Year>s.Year&&b.GuaranteedAtSigning)??[])
-                dead.Add(new(c.Team,payment.Year,c.PlayerId,0){CashAmount=payment.Amount});
             foreach(var item in bonus)if(item.Value+(item.Key==s.Year?earned:0)>0)dead.Add(new(c.Team,item.Key,c.PlayerId,item.Value+(item.Key==s.Year?earned:0)));
-            contracts=contracts.Select(x=>x==c?c with{Active=false,TerminatedYear=s.Year,EarnedCash=earned,BonusCash=ProBonusAccounting.TerminatedCash(s,c)?.Where(b=>b.Key<=s.Year).ToDictionary()}:x).ToList();
+            contracts=contracts.Select(x=>x==c?c with{Active=false,TerminatedYear=s.Year,EarnedCash=earned,BonusCash=ProBonusAccounting.TransferredCash(s,c)?.Where(b=>b.Key<=s.Year).ToDictionary()}:x).ToList();
             // Vesting figures describe total compensation. Retained bonus payments and
             // already earned current-year cash cannot become a second buyer guarantee.
             var vesting=c.CashVesting?.Select(v=>v with{GuaranteedCash=Math.Max(0,v.GuaranteedCash
-                -(c.BonusPayments?.Where(b=>b.Year==v.PaymentYear&&(ProBonusAccounting.Paid(s,b)||b.GuaranteedAtSigning)).Sum(b=>b.Amount)??0)
+                -(c.BonusPayments?.Where(b=>b.Year==v.PaymentYear&&ProBonusAccounting.Paid(s,b)).Sum(b=>b.Amount)??0)
                 -(v.PaymentYear==s.Year?earned:0))}).ToList();
-            contracts.Add(c with{Team=to,SigningBonus=0,CashVesting=vesting,BonusPayments=c.BonusPayments?.Where(b=>!ProBonusAccounting.Paid(s,b)&&!b.GuaranteedAtSigning).ToList(),BonusCash=c.BonusPayments is null?c.BonusCash?.Where(b=>b.Key>s.Year).ToDictionary()??[]:c.BonusPayments.Where(b=>!ProBonusAccounting.Paid(s,b)&&!b.GuaranteedAtSigning).GroupBy(b=>b.Year).ToDictionary(g=>g.Key,g=>g.Sum(b=>b.Amount)),TerminatedYear=null,EarnedCash=0,SignedYear=s.Year,BonusYears=Math.Max(1,c.SignedYear+c.BonusYears-s.Year),Source=null,Years=c.Years.Where(y=>y.Year>=s.Year).Select(y=>y.Year==s.Year?y with{Salary=y.Salary-(long)(y.Salary*fraction),OtherCompensation=0,OtherCash=0,ProratedBonus=ProBonusAccounting.UnpaidConditionalCharge(s,c,y.Year),GuaranteedOtherCash=0,Guaranteed=Math.Max(0,y.Guaranteed-(long)(y.Salary*fraction))}:y with{ProratedBonus=ProBonusAccounting.UnpaidConditionalCharge(s,c,y.Year),OtherCompensation=y.IsVoid?0:y.OtherCash??Math.Max(0,y.OtherCompensation)}).ToList()});
+            contracts.Add(c with{Team=to,SalaryAssignmentYear=s.Year,SalaryAssignmentFraction=fraction,SigningBonus=0,CashVesting=vesting,BonusPayments=c.BonusPayments?.Where(b=>!ProBonusAccounting.Paid(s,b)).ToList(),BonusCash=c.BonusPayments is null?c.BonusCash?.Where(b=>b.Key>s.Year).ToDictionary()??[]:c.BonusPayments.Where(b=>!ProBonusAccounting.Paid(s,b)).GroupBy(b=>b.Year).ToDictionary(g=>g.Key,g=>g.Sum(b=>b.Amount)),TerminatedYear=null,EarnedCash=0,Source="Trade assignment",Years=c.Years.Where(y=>y.Year>=s.Year).Select(y=>y.Year==s.Year?y with{Salary=y.Salary-earnedSalary,OtherCompensation=0,OtherCash=0,ProratedBonus=ProBonusAccounting.UnpaidCharge(s,c,y.Year),GuaranteedOtherCash=0,Guaranteed=Math.Max(0,y.Guaranteed-earnedSalary)}:y with{ProratedBonus=ProBonusAccounting.UnpaidCharge(s,c,y.Year),OtherCompensation=y.IsVoid?0:y.OtherCash??Math.Max(0,y.OtherCompensation)}).ToList()});
         }
 
         if(c?.BonusPayments is not null)contracts=contracts.Select(x=>x.Active&&x.PlayerId==p.Football.PlayerId&&x.Team==to?ProContractInsights.NormalizeVoidCharges(x):x).ToList();

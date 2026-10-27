@@ -44,6 +44,18 @@ public static class ProFinance
         if(s.Phase==ProPhase.Playoffs||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention&&s.Games.Any(g=>g.Phase==ProPhase.RegularSeason&&g.Football.HasPlayed))return 1;
         return s.Phase==ProPhase.RegularSeason?Math.Clamp((s.Week-1)/18d,0,1):0;
     }
+    public static long EarnedSalary(ProFranchise s,ProContract c)=>EarnedSalary(c,s.Year,EarnedFraction(s));
+    public static long EarnedSalary(ProContract c,int year,double fraction)
+    {
+        var salary=c.Years.FirstOrDefault(y=>y.Year==year)?.Salary??0;
+        var start=c.SalaryAssignmentYear==year?Math.Clamp(c.SalaryAssignmentFraction,0,1):0;
+        return start>=1?0:(long)(salary*Math.Clamp((fraction-start)/(1-start),0,1));
+    }
+    public static long ContractMinimum(ProFranchise s,ProPlayer p,ProContract c,int year,bool practice=false)
+    {
+        var start=c.SalaryAssignmentYear==year?Math.Clamp(c.SalaryAssignmentFraction,0,1):0;
+        return (long)Math.Ceiling(Minimum(s,p,year,practice)*(1-start));
+    }
     public static long Cash(ProFranchise s,string team,int year)
     {
         long cash=0;

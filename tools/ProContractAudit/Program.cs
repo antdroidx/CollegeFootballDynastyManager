@@ -3,8 +3,8 @@ using ProFootball.Core;
 var state=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
 if(args.FirstOrDefault()=="--termination-evidence")
 {
-    if(args.Length!=4)throw new ArgumentException("--termination-evidence PARSED_PAGES NOTE_IDENTITIES OUTPUT");
-    var terminationReport=TerminationAudit.Create(state,args[1],args[2]);
+    if(args.Length is not (4 or 5))throw new ArgumentException("--termination-evidence PARSED_PAGES NOTE_IDENTITIES OUTPUT [REVIEW_CANDIDATES]");
+    var terminationReport=TerminationAudit.Create(state,args[1],args[2],args.Length==5?args[4]:null);
     File.WriteAllText(args[3],JsonSerializer.Serialize(terminationReport,new JsonSerializerOptions{WriteIndented=true,PropertyNamingPolicy=JsonNamingPolicy.CamelCase}));return;
 }
 if(args.FirstOrDefault()=="--market")

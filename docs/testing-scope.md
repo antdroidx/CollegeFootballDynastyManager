@@ -100,3 +100,6 @@ Use validation_scope=reserve for Pro-only reserve activation: fast Pro regressio
 
 
 Finance scope now also verifies original-contract waiver claim/award and earlyJune1 release preview/held savings using production-core generated32-team fixtures. Core regression fixtures use the real save loader; they are external to the APK. Signed source/transaction changes require the scoped regressions and annual simulations once, then exact-APK device checks. The current full run is in current-work.md; do not duplicate it.
+
+
+**Termination/assignment scope:** `validation_scope=termination` runs the fast Pro financial/transaction/save regressions (including the three-season lifecycle), helpers and source validator, packages the APK and runs only pro-termination-smoke.py. It checks a held June1 designation plus a midseason original-contract claim, award, reload and release with correctly accrued salary. Reuse accepted64 finance/options/trades/coordinator UI and unchanged College/GameCast where those views are unchanged. Run annual calibrations once locally for financial lifecycle changes; do not duplicate them in every scoped CI. Exact-APK retries retain the application-input equality guard and regenerate production-core fixtures when needed.

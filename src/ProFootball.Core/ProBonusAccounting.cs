@@ -17,6 +17,8 @@ public static class ProBonusAccounting
     }
     public static long UnpaidGuaranteed(ProFranchise s,ProContract c,int? year=null)=>c.BonusPayments?.Where(p=>!Paid(s,p)&&p.GuaranteedAtSigning&&(year is null||p.Year==year)).Sum(p=>p.Amount)??0;
     public static long UnpaidConditionalCharge(ProFranchise s,ProContract c,int year)=>c.BonusPayments?.Where(p=>!Paid(s,p)&&!p.GuaranteedAtSigning).Sum(p=>Allocated(p,year))??0;
+    public static long UnpaidCharge(ProFranchise s,ProContract c,int year)=>c.BonusPayments?.Where(p=>!Paid(s,p)).Sum(p=>Allocated(p,year))??0;
+    public static Dictionary<int,long>? TransferredCash(ProFranchise s,ProContract c)=>c.BonusCash?.ToDictionary(x=>x.Key,x=>x.Value-(x.Key==s.Year?c.BonusPayments?.Where(p=>p.Year==s.Year&&!Paid(s,p)).Sum(p=>p.Amount)??0:0));
     public static long NonBonusGuarantee(ProFranchise s,ProContract c,ContractYear row)
     {
         var baseCash=row.Guaranteed+row.GuaranteedOtherCash;

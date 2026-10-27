@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cohort",choices=["bonuses","opening-ledger"],default="bonuses");parser.add_argument("bundle",type=Path);parser.add_argument("output",type=Path)
+    parser.add_argument("--cohort",choices=["bonuses","opening-ledger","status-review"],default="bonuses");parser.add_argument("bundle",type=Path);parser.add_argument("output",type=Path)
     parser.add_argument("--observed",required=True,type=date.fromisoformat);parser.add_argument("--report",required=True,type=Path)
     parser.add_argument("--transport",choices=["urllib","curl"],default="urllib");parser.add_argument("--offline",action="store_true");parser.add_argument("--max-fetches",type=int,default=8,help="Bound online observations per invocation; missing pages remain explicit")
     args=parser.parse_args()
@@ -19,6 +19,9 @@ def main():
         ledger=json.loads((root/"docs/data/pro-opening-ledger-comparison-2026-10-27.json").read_text(encoding="utf-8"))
         cohort=[{"playerId":p["playerId"],"name":p["name"]} for t in ledger["teams"] for p in t["currentRows"] if p["classification"] in ["missing_source_contract","cap_difference"] and p["playerId"]]
         cohort=list({p["playerId"]:p for p in cohort}.values())
+    if args.cohort=="status-review":
+        audit=json.loads((root/"data/pro/source-snapshots/2026-10-27/teams/identity-audit.json").read_text(encoding="utf-8"))
+        cohort=list({r["player_id"]:{"playerId":r["player_id"],"name":r["roster_name"]} for t in audit["teams"] for r in t["rows"] if r["status"]=="dated_team_conflict" and r["player_id"]}.values())
     players={p["Football"]["PlayerId"]:p for p in json.loads((root/"src/ProFootball.Core/nfl-snapshot.json").read_text(encoding="utf-8"))["Players"]}
     source=json.loads(gzip.decompress((args.bundle/"current-contracts.json.gz").read_bytes()))["contracts"]
     args.output.mkdir(parents=True,exist_ok=True)

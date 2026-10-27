@@ -16,17 +16,21 @@ public sealed class TerminationDeviceFixtures
         var candidate=template.Players.First(p=>p.Football.TeamName!=template.UserTeam&&!p.Reserve&&!p.PracticeSquad);
         candidate=candidate with{Experience=2,RookieYear=2025,DraftOverall=12,Football=candidate.Football with{FullName="Waiver Rookie",CurrentInjury=null}};
         var contract=new ProContract(candidate.Football.PlayerId,candidate.Football.TeamName,2025,4,12_000_000,[new(2026,6_000_000,3_000_000),new(2027,8_000_000,5_000_000),new(2028,10_000_000,0)]){OriginalRookieYear=2025,LastChangedYear=2025};
-        var waiver=template with{Id=Guid.NewGuid(),Name="Synthetic waiver QA",Phase=ProPhase.Preseason,Week=1,Players=template.Players.Select(p=>p.Football.PlayerId==candidate.Football.PlayerId?candidate:p).ToList(),Contracts=template.Contracts.Select(c=>c.PlayerId==candidate.Football.PlayerId?contract:c).ToList()};
+        var bench=template.Players.First(p=>p.Football.TeamName==template.UserTeam&&!p.PracticeSquad&&!p.Reserve).Football.PlayerId;
+        var waiver=template with{Id=Guid.NewGuid(),Name="Synthetic waiver QA",Phase=ProPhase.RegularSeason,Week=10,Players=template.Players.Select(p=>p.Football.PlayerId==candidate.Football.PlayerId?candidate:p.Football.PlayerId==bench?p with{Reserve=true}:p).ToList(),Contracts=template.Contracts.Select(c=>c.PlayerId==candidate.Football.PlayerId?contract:c).ToList()};
         waiver=ProEconomy.Release(waiver,candidate.Football.TeamName,candidate.Football.PlayerId);
         var awarded=ProRoster.ResolveWaivers(ProRoster.Claim(waiver,waiver.UserTeam,candidate.Football.PlayerId) with{TransactionTick=1});
         var assumed=Assert.Single(awarded.Contracts,c=>c.Active&&c.PlayerId==candidate.Football.PlayerId);Assert.Equal(2028,ProContractInsights.PlayingEnd(assumed));Assert.Equal(2025,assumed.LastChangedYear);
+        var reReleased=ProEconomy.Release(awarded with{Week=11},awarded.UserTeam,candidate.Football.PlayerId,false);
+        var cashState=reReleased with{Contracts=reReleased.Contracts.Where(c=>c.PlayerId==candidate.Football.PlayerId).ToList(),DeadCap=reReleased.DeadCap.Where(d=>d.PlayerId==candidate.Football.PlayerId).ToList()};
+        var postClaimReleaseCash=ProFinance.Cash(cashState,awarded.UserTeam,2026);Assert.Equal(333_333,postClaimReleaseCash);
         var root=Path.Combine(Path.GetTempPath(),"termination-fixtures-"+Guid.NewGuid());
         try{var store=new ProSaveStore(root);foreach(var save in new[]{release,waiver}){await store.Save(save);var loaded=await store.Load(save.Id);Assert.Equal(JsonSerializer.Serialize(save.Contracts),JsonSerializer.Serialize(loaded.Contracts));Assert.Equal(JsonSerializer.Serialize(save.Waivers),JsonSerializer.Serialize(loaded.Waivers));}}
         finally{if(Directory.Exists(root))Directory.Delete(root,true);}
         if(Environment.GetEnvironmentVariable("PRO_COORDINATOR_UI_FIXTURES") is string output)
         {
             using var file=File.Create(Path.Combine(output,"pro-staff-termination-ui-fixture.json.gz"));using var gzip=new GZipStream(file,CompressionLevel.SmallestSize);
-            JsonSerializer.Serialize(gzip,new{release,releasePlayer=player.Football.PlayerId,releaseDebt=released.DeadCap,waiver,waiverPlayer=candidate.Football.PlayerId,assumed},new JsonSerializerOptions{PropertyNamingPolicy=JsonNamingPolicy.CamelCase});
+            JsonSerializer.Serialize(gzip,new{release,releasePlayer=player.Football.PlayerId,releaseDebt=released.DeadCap,waiver,waiverPlayer=candidate.Football.PlayerId,assumed,postClaimReleaseCash},new JsonSerializerOptions{PropertyNamingPolicy=JsonNamingPolicy.CamelCase});
         }
     }
 }
