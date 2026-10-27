@@ -24,6 +24,16 @@ def overview(week=0, phase="Regular season", busy=False, enabled=True):
 
 
 class SmokeSynchronizationTests(unittest.TestCase):
+    def test_pro_overview_can_finish_loading_below_the_fold(self):
+        root=ET.Element("hierarchy")
+        for value in ("Overview","Your coaching career","Front Office"):
+            ET.SubElement(root,"node",text=value)
+        self.assertTrue(smoke.pro_overview_loaded(root))
+        loading=ET.SubElement(root,"node",attrib={"class":"android.widget.ProgressBar"})
+        self.assertFalse(smoke.pro_overview_loaded(root));root.remove(loading)
+        library=ET.Element("hierarchy");ET.SubElement(library,"node",text="New franchise")
+        self.assertFalse(smoke.pro_overview_loaded(library))
+
     def test_loaded_library_can_reach_a_slot_below_the_fold(self):
         root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]")
         scroll=ET.SubElement(viewport,"node",attrib={"class":"android.widget.ScrollView","scrollable":"true","bounds":"[0,0][1080,2400]"})

@@ -29,7 +29,8 @@ def run(s):
         ready("trade-library",s.library_loaded)
         slot_label=f"{fixture['name']} · {fixture['userTeam']} · {fixture['year']} Preseason W{fixture['week']}"
         click("trade-loaded-slot",slot_label)
-        ready("trade-overview",lambda r:"Advance week" in s.texts(r))
+        ready("trade-overview",s.pro_overview_loaded)
+        s.scroll_to_text("pro-trade-overview-top","Advance week",max_swipes=20,toward_start=True)
         click("trade-office","Front Office");click("trade-offers","Trade offers (1)")
         ready("trade-pending",lambda r:"1 open offers" in s.texts(r));s.capture("pro-trade-offer")
         if accept:

@@ -55,7 +55,7 @@ def run(s):
         ready("staff-library",s.library_loaded)
         phase="Offseason" if kind=="draft" else "RegularSeason"
         click("staff-slot",f"{fixture['name']} · {fixture['userTeam']} · {fixture['year']} {phase} W{fixture['week']}")
-        ready("staff-overview",lambda r:"Overview" in s.texts(r) and any(t in s.texts(r) for t in ("Advance offseason","Advance week","Your coaching career","Season overview")))
+        ready("staff-overview",s.pro_overview_loaded)
         s.scroll_to_text("pro-coordinator-staff-overview-top","Advance offseason" if kind=="draft" else "Advance week",max_swipes=20,toward_start=True)
         if kind=="draft":
             click("staff-office","Front Office");click("staff-draft","Draft & scouting")

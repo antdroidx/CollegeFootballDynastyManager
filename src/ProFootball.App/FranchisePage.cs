@@ -60,7 +60,7 @@ public sealed partial class FranchisePage : ContentPage
                 try
                 {
                     var saved=await Task.Run(()=>store.Load(slot));label=$"{saved.Name} · {saved.UserTeam} · {saved.Year} {saved.Phase} W{saved.Week}";
-                    row.Add(Action(label,async()=>{state=await Task.Run(()=>store.Load(slot));section="Overview";Render();}));
+                    row.Add(Action(label,async()=>{state=await Task.Run(()=>store.Load(slot));section="Overview";Render();await scroll.ScrollToAsync(0,0,false);}));
                 }
                 catch(Exception){label="Unavailable save · "+slot;row.Add(Text(label));}
                 row.Add(Action("Delete save",async()=>{if(!await GameDialogs.AlertAsync(this,"Delete franchise?",label+"\nThis removes this franchise and its rolling backups. Other saves are unaffected.","Delete","Cancel"))return;await store.Delete(slot);await Library();}));body.Add(row);

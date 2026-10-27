@@ -28,6 +28,8 @@ All209 full Pro cases now pass in9m55s, including twenty generated seasons, five
 
 Application source94d77bc is packaging Pro61 in run40520236827 with finance scope. Follow that run; do not duplicate it or change app inputs during acceptance. The passing diagnostic trace now records PHI2029 with46 active players and28,456,310 carry-in; league minimum active count46. This is recovery to a legal modeled roster without deleting debt, not a claim that every team has53 players. CPU practice-squad promotion/depth optimization remains a possible later improvement. The trace file was overwritten by the passing rerun; historical failure details remain in test logs/Git handoff.
 
+Pro61 packaged (APK12741296890) and passed207 scoped Pro cases/15 helpers/source validation. Its device flow completed finance/budget/source-cash/options assertions, then timed out in the trade helper waiting for an offscreen Advance control after selecting a later save. Evidence12741374051 is downloaded .artifacts/pro61-ui. Shared loaded-overview synchronization now recognizes scrolled content and busy overlays (16 helpers pass); trade/coordinator helpers restore the real control before interaction. In addition, opening a saved franchise now resets to the top of Overview, fixing the actual user-facing scroll-position issue. That UI input change requires a new APK rather than reusing61; core94d77bc/209-case9m55 long evidence is unchanged and reused. Do not repeat long simulations or College/GameCast for this UI-only follow-up.
+
 ## Latest verified APKs
 
 ## Accepted coordinator roster/draft batch — Pro58

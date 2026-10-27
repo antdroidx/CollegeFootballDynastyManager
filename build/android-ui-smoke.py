@@ -102,6 +102,12 @@ def library_loaded(root, create_label="New franchise"):
             and not any((value or "").startswith("Loading ") for value in texts(root)))
 
 
+def pro_overview_loaded(root):
+    values=texts(root)
+    return ("Overview" in values and any(label in values for label in ("Advance week","Advance offseason","Your coaching career","Season overview"))
+            and not any(n.get("class")=="android.widget.ProgressBar" for n in root.iter("node")))
+
+
 def library_entry_ready(root, prefix, create_label="New franchise"):
     return library_loaded(root, create_label) and any((value or "").startswith(prefix) for value in texts(root))
 
