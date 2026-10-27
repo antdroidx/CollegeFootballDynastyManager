@@ -525,6 +525,7 @@ public sealed partial class FoundationPage
             if (viewerClosed || replay is not null || animating || session.IsComplete || !NeedsUserCall()) return;
             fieldPlayers.Children.Clear(); markerLabels.Clear(); spritePlayers.Clear(); markerHosts.Clear(); activeBallOwners.Clear();
             var direction = (session.PossessionTeamName == game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1);
+            fieldArt.SpottingBall = !session.KickoffPending;
             fieldArt.YardLine = session.YardLine; fieldArt.Distance = session.Distance; fieldArt.Direction = direction; fieldLines.Invalidate();
             foreach (var team in new[] { game.HomeTeamName, game.AwayTeamName })
             {

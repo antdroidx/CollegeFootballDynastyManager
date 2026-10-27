@@ -19,6 +19,13 @@ public static class GameDayLivePresentation
         return new(Math.Clamp(center + Math.Cos(angle) * .026, .10, .90), .5 + Math.Sin(angle) * .12);
     }
 
+    public static GameFieldPoint BallSpot(int yardLine, int direction) =>
+        new(GameDayAnimationPlanner.ProjectYardLine(yardLine, direction), .5);
+
+    // The official stands alongside the spot, outside either huddle's longitudinal footprint.
+    public static GameFieldPoint SpottingOfficial(int yardLine, int direction) =>
+        new(GameDayAnimationPlanner.ProjectYardLine(yardLine, direction), .68);
+
     public static GameFieldPoint DeflectedBallPoint(GameFieldPoint contact, int direction, double progress, double catchProgress)
     {
         var p = Math.Clamp((progress - catchProgress) / Math.Max(.01, 1 - catchProgress), 0, 1);

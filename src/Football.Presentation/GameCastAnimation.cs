@@ -50,6 +50,7 @@ public static class GameCastAnimation
             : $"LIVE · {snap.OffenseTeamName} · {PlayEditorService.OffensiveLibrary(controlledPlan).FirstOrDefault(p => p.Id == snap.OffensivePlayId)?.Name ?? (snap.Outcome is SnapOutcome.Punt or SnapOutcome.Kickoff ? "Kick and return" : "Play in progress")}";
         fieldPlayers.AbortAnimation("snap-movement");
         fieldPlayers.Children.Clear(); context.ClearMarkers();
+        fieldArt.SpottingBall = false;
         fieldArt.YardLine = snap.StartYardLine; fieldArt.Distance = snap.Distance;
         fieldArt.HomeColor = TeamColor(game.HomeTeamName);
         var offenseColor = TeamColor(snap.OffenseTeamName);

@@ -160,3 +160,8 @@ The exact [Build 39 APK](https://github.com/antdroidx/CollegeFootballDynastyMana
 Added Pro-only position-specific peak ages, earlier athletic than technical/mental decline, shrinking future headroom, and persistent previous-season overall. The canonical College 19-attribute overall formula remains unchanged. Growth outlook is separate from present ability/projected ceiling; elite veterans no longer carry misleading young-prospect growth stars. Roster delta and profile annual change expose offseason decline; old saves without previous-season history use an existing baseline or unknown, never fabricated history. Trade/pick forecasts use the same age-aware headroom. Fifteen targeted development/shared-rating cases passed; broad annual/Android validation remains pending. Do not call this batch accepted until its build/device checks pass.
 
 Aging batch: local Android compilation passed with zero warnings/errors; 15 targeted tests passed. Full annual regression started; Android acceptance pending.
+
+
+## Active shared field batch
+
+Pro end zones now use uppercase home city, retaining abbreviated scoreboard/center badges. Both hosts mark idle scrimmage huddles for ball spotting: central official uses projected LOS, offset across the field to clear both huddles, and a ball is drawn at the spot. Shared animation disables idle spotting before live/replay movement; kickoff huddles and coin ceremony remain separate. Eight goal-line/midfield/both-direction geometry cases were added; 36 affected shared presentation/live cases passed in Release. App device/visual acceptance remains pending. Pro aging APK source stays `56e7d1b`; this field batch is later and must be verified in both apps. Do not claim College 389 covers these new shared changes.

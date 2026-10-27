@@ -7,6 +7,23 @@ namespace DynastyManager.Core.Tests;
 
 public class GameDayLivePolishTests
 {
+    [Theory]
+    [InlineData(1, 1)] [InlineData(1, -1)] [InlineData(25, 1)] [InlineData(25, -1)]
+    [InlineData(75, 1)] [InlineData(75, -1)] [InlineData(99, 1)] [InlineData(99, -1)]
+    public void BetweenPlayOfficialAndBallAlignWithLineAndClearBothHuddles(int yardLine, int direction)
+    {
+        var ball = GameDayLivePresentation.BallSpot(yardLine, direction);
+        var official = GameDayLivePresentation.SpottingOfficial(yardLine, direction);
+        Assert.Equal(GameDayAnimationPlanner.ProjectYardLine(yardLine, direction), ball.X, 8);
+        Assert.Equal(ball.X, official.X, 8); Assert.True(official.Y > ball.Y);
+        foreach (var offense in new[] { true, false })
+            for (var slot = 0; slot < 11; slot++)
+                {
+                    var huddle = GameDayLivePresentation.HuddlePoint(yardLine, direction, offense, slot);
+                    Assert.True(Math.Sqrt(Math.Pow(huddle.X - official.X, 2) + Math.Pow(huddle.Y - official.Y, 2)) > .04);
+                }
+    }
+
     [Fact]
     public void UserTimeoutIsRecordedWithoutAdvancingClockDownOrStats()
     {

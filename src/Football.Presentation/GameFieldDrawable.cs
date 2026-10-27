@@ -14,6 +14,7 @@ public sealed class GameFieldDrawable : IDrawable
         public string HomeInitial { get; set; } = "H";
         public string HomeName { get; set; } = "HOME";
         public bool CoinCeremony { get; set; }
+        public bool SpottingBall { get; set; }
         public GameWeather Weather { get; set; } = new();
         public double WeatherPhase { get; set; }
 
@@ -107,8 +108,16 @@ public sealed class GameFieldDrawable : IDrawable
             canvas.StrokeColor = DynastyTheme.Palette("#E7C45B"); canvas.StrokeSize = 3; canvas.DrawLine(gain, 0, gain, rect.Height);
             if (!CoinCeremony)
             {
-                var officialX = rect.Width * (float)GameDayAnimationPlanner.ProjectFieldYardLine(Math.Clamp(YardLine - 12, 5, 95), Direction);
-                FootballOfficialDrawable.Paint(canvas, officialX, rect.Height * .55f, .7f);
+                var official = SpottingBall ? GameDayLivePresentation.SpottingOfficial(YardLine, Direction)
+                    : new GameFieldPoint(GameDayAnimationPlanner.ProjectFieldYardLine(Math.Clamp(YardLine - 12, 5, 95), Direction), .55);
+                FootballOfficialDrawable.Paint(canvas, rect.Width * (float)official.X, rect.Height * (float)official.Y, .7f);
+                if (SpottingBall)
+                {
+                    var spot = GameDayLivePresentation.BallSpot(YardLine, Direction);
+                    var bx = rect.Width * (float)spot.X; var by = rect.Height * (float)spot.Y;
+                    canvas.FillColor = Color.FromArgb("#8A4D25"); canvas.FillEllipse(bx - 5, by - 3, 10, 6);
+                    canvas.StrokeColor = Colors.White; canvas.StrokeSize = 1; canvas.DrawLine(bx - 2, by, bx + 2, by);
+                }
                 var sidelineX = rect.Width * (float)GameDayAnimationPlanner.ProjectFieldYardLine(YardLine, Direction);
                 FootballOfficialDrawable.Paint(canvas, sidelineX, rect.Height * .045f, .65f);
                 FootballOfficialDrawable.Paint(canvas, sidelineX, rect.Height * .955f, .65f);

@@ -36,7 +36,7 @@ public sealed partial class ProLivePage : ContentPage
         this.session = session; this.league = league; this.save = save; this.chooseTeamOnTakeover = chooseTeamOnTakeover; BackgroundColor = DynastyTheme.Background;
         speed = Math.Clamp(speed, .5, 2); replaySpeed = Math.Clamp(replaySpeed, .5, 2);
         var home = league.Teams.Single(t => t.Name == session.Game.HomeTeamName); var away = league.Teams.Single(t => t.Name == session.Game.AwayTeamName);
-        art = new() { HomeName = home.Abbreviation, HomeInitial = home.Abbreviation, HomeColor = Color.FromArgb(home.Primary), HomeSecondaryColor = Color.FromArgb(home.Secondary), HashMarkFraction = .30, Weather = session.Weather };
+        art = new() { HomeName = home.City.ToUpperInvariant(), HomeInitial = home.Abbreviation, HomeColor = Color.FromArgb(home.Primary), HomeSecondaryColor = Color.FromArgb(home.Secondary), HashMarkFraction = .30, Weather = session.Weather };
         turf = new() { Drawable = art, InputTransparent = true }; field.Add(turf); field.Add(players); field.Add(replayChip);
         var header = new Grid { ColumnSpacing=6, ColumnDefinitions=new(){new(GridLength.Star),new(new GridLength(0))}, RowDefinitions=new(){new(GridLength.Auto),new(GridLength.Auto)} };
         var scoreboard=GameCastScoreboard.Create(
@@ -174,6 +174,7 @@ public sealed partial class ProLivePage : ContentPage
         if (working || pending || session.IsComplete) return;
         players.Clear(); spritePlayers.Clear(); markerHosts.Clear(); ballOwners.Clear();
         var direction = (session.PossessionTeamName == session.Game.HomeTeamName ? 1 : -1) * (session.Quarter % 2 == 0 ? -1 : 1);
+        art.SpottingBall = !session.KickoffPending;
         art.Direction = direction; art.YardLine = session.YardLine; art.Distance = session.Distance; turf.Invalidate();
         foreach (var team in new[] { session.Game.HomeTeamName, session.Game.AwayTeamName })
         {
