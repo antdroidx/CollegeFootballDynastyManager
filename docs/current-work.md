@@ -30,6 +30,8 @@ Application source94d77bc is packaging Pro61 in run40520236827 with finance scop
 
 Pro61 packaged (APK12741296890) and passed207 scoped Pro cases/15 helpers/source validation. Its device flow completed finance/budget/source-cash/options assertions, then timed out in the trade helper waiting for an offscreen Advance control after selecting a later save. Evidence12741374051 is downloaded .artifacts/pro61-ui. Shared loaded-overview synchronization now recognizes scrolled content and busy overlays (16 helpers pass); trade/coordinator helpers restore the real control before interaction. In addition, opening a saved franchise now resets to the top of Overview, fixing the actual user-facing scroll-position issue. That UI input change requires a new APK rather than reusing61; core94d77bc/209-case9m55 long evidence is unchanged and reused. Do not repeat long simulations or College/GameCast for this UI-only follow-up.
 
+Active replacement finance APK run is40523114687, app source2ac5992 (core94d77bc unchanged). Follow that run and freeze app inputs; do not duplicate61 or the long209-case run. Developer bonus-event audit is now in docs/data/pro-bonus-event-audit-2026-10-27.json:95 contracts have future scheduled cash;79 are mathematically compatible with an up-to-five-year event split,1 rounding review and15 incompatible. This is not proof of payment/guarantees, does not change source data and is the next source-reconciliation input after APK acceptance.
+
 ## Latest verified APKs
 
 ## Accepted coordinator roster/draft batch — Pro58
