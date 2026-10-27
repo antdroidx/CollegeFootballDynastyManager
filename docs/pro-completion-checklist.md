@@ -1,6 +1,6 @@
 # Pro completion checklist
 
-Current verified Pro application source: `561dc4f`, APK Build 39 (financial scope); full GameCast/landscape verified at Build 37 `a2c74e8`; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current verified Pro application source: `4f6bb2c`, APK Build 44, full device scope; College/shared source: `2acfcc1`, APK 390 on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -135,3 +135,12 @@ Draft-generation review found template players could carry their previous-season
 ## Next Pro-only batch — coordinator draft-capital review
 
 ProManagement now reviews actual pick/player ownership changes after a coordinator trade recommendation, in addition to existing current/future unit/team salary checks. Spending shared picks requires incoming package value to justify outgoing players/picks (10% valuation tolerance); projected pick strength/year discount uses existing ProTrade valuation. Rejection keeps rosters/contracts/picks/transactions unchanged and records a GM reason. Pick-only coordinator proposals remain GM-controlled; ordinary draft selections are not mistaken for traded picks. Twenty-six relevant career/trade/GM cases passed locally, including two new asset-review regressions. This is **not in Build 44** (source `4f6bb2c`); do not cancel its active device acceptance. Scope/package the next Pro-only batch after Build 44 is accepted. Autonomous CPU trade proposals/counteroffers remain outstanding.
+
+
+## Accepted combined aging / field batch — Pro 44 and College 390
+
+- Pro application source `4f6bb2c`: [APK 44](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40438801865/artifacts/12705098072), [all-green run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40438801865), [evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40438801865/artifacts/12705962978). 134 scoped Pro cases, 13 helpers, packaging and full device walkthrough passed. Local 136-case annual evidence at `56e7d1b` plus 15 targeted cases after the prospect-history fix is retained. Device checks cover growth/delta display, play/watch/team control, kickoff/quick calls, collapse/field expansion, replay, themes/Fold, saved final, reinstall/reload/advance, appearance and career restrictions.
+- College/shared application source `2acfcc1`: [APK 390](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40438515279/artifacts/12705660863), [all-green run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40438515279), [broad device evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40438515279/artifacts/12705718044), [career evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40438515279/artifacts/12705752478). 690 legacy combined Core/College cases, packaging and both Android flows passed. Do not relabel 690 as exclusively Core or College.
+- Screenshots visually reviewed: Pro projected ceiling/growth/delta, landscape cards before/after collapse, LOS official/ball, readable LOS ANGELES end zones; College landscape LOS spotting and normal quick calls. Both cameras/animated flows passed their existing device checks. Eight new geometry cases cover both directions and goal-line/midfield locations. No simulation rules/College attributes changed.
+- Stable main independently reconfirmed unchanged at `fdd3d4898b5bd07eeec8dba346024d61f5289474`.
+- Later Pro-only coordinator pick-value guard `c9cddbf` has 26 targeted tests passed but is not in APK 44. Its scoped financial/management build follows; no redundant College/GameCast rerun required.
