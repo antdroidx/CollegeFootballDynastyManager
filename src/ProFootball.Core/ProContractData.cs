@@ -6,10 +6,22 @@ namespace ProFootball.Core;
 public static class ProContractData
 {
     static readonly Lazy<Dictionary<string, ProPlayer>> RookieMetadata = new(() => ProLeagueService.Snapshot().Players.Where(p=>!string.IsNullOrEmpty(p.ExternalId)).DistinctBy(p=>p.ExternalId).ToDictionary(p=>p.ExternalId));
+    sealed record ReviewedContract(Guid PlayerId,int SignedYear,string Team,List<ProBonusPayment> BonusPayments,List<ProCashVesting> CashVesting,Dictionary<int,long> GuaranteedOtherCash);
+    sealed record ReviewPack(int Version,string SourcePackSha256,List<ReviewedContract> Contracts);
+    static readonly Lazy<ReviewPack> Reviews=new(()=>{
+        using var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.pro-reviewed-contract-terms.json")!;
+        return JsonSerializer.Deserialize<ReviewPack>(stream)!;
+    });
     public static IReadOnlyList<ProContract> Load()
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.nfl-contracts.json")!;
-        return JsonSerializer.Deserialize<List<ProContract>>(stream)!;
+        using var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("ProFootball.Core.nfl-contracts.json")!;
+        using var bytes=new MemoryStream();stream.CopyTo(bytes);var data=bytes.ToArray();
+        var source=JsonSerializer.Deserialize<List<ProContract>>(data)!;
+        var pack=Reviews.Value;
+        if(pack.Version!=1||!Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(data)).Equals(pack.SourcePackSha256,StringComparison.Ordinal))return source;
+        var reviews=pack.Contracts.ToDictionary(r=>r.PlayerId);
+        return source.Select(c=>reviews.TryGetValue(c.PlayerId,out var r)&&c.SignedYear==r.SignedYear&&c.Team==r.Team
+            ?c with{BonusPayments=r.BonusPayments,CashVesting=r.CashVesting,Years=c.Years.Select(y=>y with{GuaranteedOtherCash=r.GuaranteedOtherCash.GetValueOrDefault(y.Year)}).ToList()}:c).ToArray();
     }
     public static ProFranchise Apply(ProFranchise state)
     {
@@ -21,6 +33,10 @@ public static class ProContractData
     {
         var source=Load().ToDictionary(c=>c.PlayerId);
         return state with { Contracts=state.Contracts.Select(c=>{
+            if(c.AccountingVersion==1&&c.BonusPayments is null&&!c.Estimated&&c.Active&&c.LastChangedYear==0&&c.Source?.StartsWith("OverTheCap")==true&&source.TryGetValue(c.PlayerId,out var reviewed)&&reviewed.BonusPayments is not null&&reviewed.Team==c.Team&&reviewed.SignedYear==c.SignedYear&&reviewed.Years.Count==c.Years.Count
+                &&c.Years.All(y=>reviewed.Years.FirstOrDefault(r=>r.Year==y.Year) is {} r&&r.Salary==y.Salary&&r.Guaranteed==y.Guaranteed&&r.OtherCash==y.OtherCash&&r.OtherCompensation==y.OtherCompensation&&r.ProratedBonus==y.ProratedBonus&&r.IsVoid==y.IsVoid)
+                &&(c.BonusCash??[]).OrderBy(x=>x.Key).SequenceEqual((reviewed.BonusCash??[]).OrderBy(x=>x.Key)))
+                return c with{BonusPayments=reviewed.BonusPayments,CashVesting=reviewed.CashVesting,Years=c.Years.Select(y=>y with{GuaranteedOtherCash=reviewed.Years.Single(r=>r.Year==y.Year).GuaranteedOtherCash}).ToList()};
             if(c.AccountingVersion!=0||c.Estimated||!c.Active||c.LastChangedYear!=0||c.BonusCash is not null||c.Source?.StartsWith("OverTheCap")!=true||!source.TryGetValue(c.PlayerId,out var actual)||actual.Team!=c.Team||actual.Years.Count!=c.Years.Count)return c;
             if(c.Years.Any(y=>actual.Years.FirstOrDefault(a=>a.Year==y.Year) is not {} row||ProEconomy.CapHit(c,y.Year)!=ProEconomy.CapHit(actual,y.Year)||(!row.IsVoid&&row.Salary!=y.Salary)))return c;
             return actual;

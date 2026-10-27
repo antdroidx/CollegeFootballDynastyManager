@@ -47,17 +47,16 @@ public static class ProContractInsights
     public static long EarnedCash(ProFranchise s,ProContract c)
     {
         var row=c.Years.FirstOrDefault(y=>y.Year==s.Year);if(row is null)return 0;
-        return Math.Max(row.Guaranteed,(long)(row.Salary*ProFinance.EarnedFraction(s)))+(row.OtherCash??Math.Max(0,row.OtherCompensation));
+        return Math.Max(ProBonusAccounting.NonBonusGuarantee(s,c,row),(long)(row.Salary*ProFinance.EarnedFraction(s))+(row.OtherCash??Math.Max(0,row.OtherCompensation)));
     }
-    public static IReadOnlyList<ReleaseSeasonView> Release(ProFranchise s,Guid id)
+    public static IReadOnlyList<ReleaseSeasonView> Release(ProFranchise s,Guid id,bool designated=false)
     {
         var contracts=s.Contracts.Where(c=>c.Active&&c.PlayerId==id).ToArray();
-        var last=contracts.SelectMany(c=>c.Years.Select(y=>y.Year).Append(c.SignedYear+c.BonusYears-1)).DefaultIfEmpty(s.Year).Max();
+        var charges=contracts.SelectMany(c=>ProTermination.Charges(s,c,Guid.Empty,designated)).ToArray();
+        var last=contracts.SelectMany(c=>c.Years.Select(y=>y.Year)).Concat(charges.Select(d=>d.Year)).DefaultIfEmpty(s.Year).Max();
         return Enumerable.Range(s.Year,Math.Max(1,last-s.Year+1)).Select(year=>{
-            var before=contracts.Sum(c=>ProEconomy.CapHit(c,year));
-            var guarantees=year==s.Year?contracts.Sum(c=>EarnedCash(s,c)):contracts.Sum(c=>c.Years.Where(y=>y.Year==year).Sum(y=>y.Guaranteed));
-            var bonus=year==s.Year?contracts.Sum(c=>Enumerable.Range(s.Year,Math.Max(0,c.SignedYear+c.BonusYears-s.Year)).Sum(y=>ProEconomy.BonusCharge(c,y))):0;
-            return new ReleaseSeasonView(year,before,guarantees+bonus,before-guarantees-bonus);
+            var before=contracts.Sum(c=>ProEconomy.CapHit(c,year));var dead=charges.Where(d=>d.Year==year).Sum(d=>d.Amount);
+            return new ReleaseSeasonView(year,before,dead,before-dead);
         }).ToArray();
     }
     public static IReadOnlyList<ContractComparable> Comparables(ProFranchise s,ProPlayer player)=>s.Players.Where(p=>!p.Retired&&!p.PracticeSquad&&p.Football.PlayerId!=player.Football.PlayerId&&p.Football.Position==player.Football.Position&&Math.Abs(p.Football.OverallRating-player.Football.OverallRating)<=5)

@@ -28,7 +28,7 @@ public sealed partial class FranchisePage
         if(choice=="Restructure contract") await RestructureContract(p);
         if (choice is "Add to trading block" or "Remove from trading block") await Update(s => ProTradeMarket.List(s,s.UserTeam,p.Football.PlayerId,choice == "Add to trading block"));
         if (choice == "Franchise tag") await Manage("Franchise tag", p.Football.PlayerId, 0, s => ProEconomy.Tag(s, s.UserTeam, p.Football.PlayerId));
-        if (choice == "Release player" && await ConfirmRelease(p)) await Manage("Release player", p.Football.PlayerId, 0, s => ProEconomy.Release(s, s.UserTeam, p.Football.PlayerId));
+        if (choice == "Release player") { var decision=await ConfirmRelease(p);if(decision.Release)await Manage("Release player", p.Football.PlayerId, 0, s => ProEconomy.Release(s, s.UserTeam, p.Football.PlayerId,postJune1:decision.PostJune1)); }
     }
     void Staff()
     {
@@ -71,7 +71,7 @@ public sealed partial class FranchisePage
                 var pending = state.Bids.FirstOrDefault(b => b.Team == state.UserTeam && b.PlayerId == p.Football.PlayerId);
                 return new View[] { Text(p.Football.Position.ToString()), Link(p.Football.FullName, () => Player(player)), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString()), Text(Money(ProEconomy.MarketSalary(state!,p))), Text(waiver ? "Waivers" : pending is null ? "Available" : "Bid pending"), Action(waiver ? "Claim" : pending is null ? "Make offer" : "Revise bid", async () =>
                 {
-                    if (waiver) await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s,s.UserTeam,player.Football.PlayerId));
+                    if (waiver) { var entry=state!.Waivers.Single(w=>w.PlayerId==player.Football.PlayerId); var terms=entry.OriginalContracts is {Count:>0}?"Remaining salary this season: "+Dollars(ProWaivers.CurrentSalary(entry,state.Year))+". Contract through "+entry.OriginalContracts.Max(ProContractInsights.PlayingEnd)+". Existing salary terms and guarantees transfer; the former club retains signing-bonus charges.":"This legacy claim requires a new contract."; if(await GameDialogs.AlertAsync(this,"Claim "+player.Football.FullName+"?",terms,"Claim","Cancel"))await Manage("Waiver claim", player.Football.PlayerId, 0, s => ProRoster.Claim(s,s.UserTeam,player.Football.PlayerId)); }
                     else { var offer = await ContractTerms(player); if (offer is { } o) await Manage("Free-agent offer",player.Football.PlayerId,o.Salary + o.Bonus/o.Years,s => ProEconomy.Offer(s,s.UserTeam,player.Football.PlayerId,o.Years,o.Salary,o.Bonus)); }
                     await FreeAgents();
                 }) };

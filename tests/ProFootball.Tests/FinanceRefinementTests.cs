@@ -41,7 +41,7 @@ public sealed class FinanceRefinementTests
         var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,3,6_000_000,[new(s.Year,8_000_000,1_000_000),new(s.Year+1,8_000_000,2_000_000),new(s.Year+2,8_000_000,0)]);
         s=s with{Contracts=[c]};var preview=ProContractInsights.Release(s,p.Football.PlayerId);var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId);
         Assert.All(preview,row=>Assert.Equal(row.DeadMoney,released.DeadCap.Where(d=>d.Year==row.Year).Sum(d=>d.Amount)));
-        Assert.Equal(10_000_000,preview[0].DeadMoney);Assert.Equal(2_000_000,preview[1].DeadMoney);
+        Assert.Equal(8_000_000,preview[0].DeadMoney);Assert.Equal(4_000_000,preview[1].DeadMoney);
         Assert.Equal(10_000_000,ProFinance.Cash(released,s.UserTeam,s.Year));
     }
     [Fact] public void FuturePickProjectionTracksStrengthAndOriginalTeam()

@@ -7,7 +7,7 @@ public static class ProEconomy
     public static long MarketSalary(ProFranchise s,ProPlayer p)=>(long)(MarketSalary(p)*(s.SalaryCap/(double)ProFinance.Base2026));
     public static long BonusCharge(ProContract c, int year) => c.Years.FirstOrDefault(y => y.Year == year)?.ProratedBonus ?? (year < c.SignedYear || year >= c.SignedYear + c.BonusYears ? 0 : c.SigningBonus / c.BonusYears + (year - c.SignedYear < c.SigningBonus % c.BonusYears ? 1 : 0));
     public static long CapHit(ProContract c, int year) => !c.Active ? 0 : (c.Years.FirstOrDefault(y => y.Year == year)?.Salary ?? 0) + (c.Years.FirstOrDefault(y => y.Year == year)?.OtherCompensation ?? 0) + BonusCharge(c, year);
-    public static long DeadOnRelease(ProFranchise s, Guid id) => s.Contracts.Where(c => c.Active && c.PlayerId == id).Sum(c => c.Years.Where(y => y.Year >= s.Year).Sum(y => y.Guaranteed) + Enumerable.Range(s.Year, Math.Max(0, c.SignedYear + c.BonusYears - s.Year)).Sum(y => BonusCharge(c, y)));
+    public static long DeadOnRelease(ProFranchise s, Guid id) => ProContractInsights.Release(s,id).Sum(y=>y.DeadMoney);
     public static long Used(ProFranchise s,string team)=>ProFinance.Budget(s,team).TotalCommitments;
     public static long Room(ProFranchise s,string team)=>ProFinance.Budget(s,team).Available;
     public static long BidCharge(ProFranchise s,FreeAgentBid bid,int year)
@@ -81,17 +81,22 @@ public static class ProEconomy
         }
         return s with {Bids=[]};
     }
-    public static ProFranchise Release(ProFranchise s, string team, Guid id, bool waive = true)
+    public static ProFranchise Release(ProFranchise s, string team, Guid id, bool waive = true, bool postJune1 = false)
     {
         var p = s.Players.Single(p => p.Football.PlayerId == id);
         if (p.Football.TeamName != team || p.Retired) throw new InvalidOperationException("Player is not on this team.");
-        var charges=ProContractInsights.Release(s,id);var dead=charges.Sum(y=>y.DeadMoney);
-        var contracts=s.Contracts.Select(c=>c.Active&&c.PlayerId==id?c with{Active=false,TerminatedYear=s.Year,EarnedCash=ProContractInsights.EarnedCash(s,c)}:c).ToList();
-        var waivers = s.Waivers.ToList(); if (waive && (p.Experience < 4 || s.Phase == ProPhase.Playoffs || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.TransactionTick + 1, []));
-        return Log(s with { Contracts = contracts, UnsignedRookies = s.UnsignedRookies.Where(r=>r.PlayerId!=id).ToList(), DeadCap = dead == 0 ? s.DeadCap : s.DeadCap.Concat(charges.Where(y=>y.DeadMoney>0).Select(y=>new DeadCapCharge(team,y.Year,id,y.DeadMoney){CashAmount=y.Year>s.Year?s.Contracts.Where(c=>c.Active&&c.PlayerId==id).Sum(c=>c.Years.Where(row=>row.Year==y.Year).Sum(row=>row.Guaranteed)):0})).ToList(), Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
+        s=ProTermination.CloseRetained(s,id);
+        if(postJune1&&!ProTermination.CanDesignate(s,team,id))throw new InvalidOperationException("June 1 designation requires an unchanged contract before June 1, with no more than two designations per team/year; unavailable in 2030.");
+        var releaseId=Guid.NewGuid();
+        var original=s.Contracts.Where(c=>c.Active&&c.PlayerId==id&&c.Team==team).ToList();
+        var charges=original.SelectMany(c=>ProTermination.Charges(s,c,releaseId,postJune1)).ToList();var dead=charges.Sum(d=>d.Amount);
+        var contracts=s.Contracts.Select(c=>c.Active&&c.PlayerId==id?c with{ReleaseId=releaseId,Active=false,TerminatedYear=s.Year,EarnedCash=ProContractInsights.EarnedCash(s,c),BonusCash=ProBonusAccounting.TerminatedCash(s,c)}:c).ToList();
+        var waivers = s.Waivers.ToList(); if (waive && (p.Experience < 4 || s.Phase == ProPhase.Playoffs || s.Phase == ProPhase.RegularSeason && s.Week > 9)) waivers.Add(new(id, s.TransactionTick + 1, []){ReleaseId=releaseId,OriginalContracts=original,ReleasedFraction=ProFinance.EarnedFraction(s),ReleasedYear=s.Year});
+        return Log(s with { Contracts = contracts, UnsignedRookies = s.UnsignedRookies.Where(r=>r.PlayerId!=id).ToList(), DeadCap = s.DeadCap.Concat(charges).ToList(), June1Designations=postJune1?s.June1Designations.Append(new(team,s.Year,id,releaseId)).ToList():s.June1Designations, Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { Football = x.Football with { TeamName = "Free agent" }, PracticeSquad = false, Reserve = false } : x).ToList(), Waivers = waivers }, $"{team} released {p.Football.FullName}; dead cap ${dead:N0}.");
     }
     public static ProFranchise Expire(ProFranchise s,string team,Guid id)
     {
+        s=ProTermination.CloseRetained(s,id);
         var contracts=s.Contracts.Where(c=>c.Active&&c.PlayerId==id&&c.Team==team).ToArray();
         if(contracts.Length==0||contracts.Any(c=>ProContractInsights.PlayingEnd(c)>s.Year))throw new InvalidOperationException("Contract has not expired.");
         var nextYear=s.Year+1;
@@ -168,12 +173,14 @@ public static class ProRoster
     }
     public static ProFranchise Claim(ProFranchise s, string team, Guid id)
     {
+        if(s.Waivers.FirstOrDefault(w=>w.PlayerId==id) is {OriginalContracts.Count:>0,ReleaseId:not null} original)return ProWaivers.Claim(s,team,original);
         if (!s.League.Teams.Any(t => t.Name == team) || CountForLimit(s, team) >= Limit(s)) throw new InvalidOperationException("No roster space for a waiver claim.");
         var player = s.Players.Single(p => p.Football.PlayerId == id); if (ProEconomy.Room(s, team) < Math.Max(ProFinance.Minimum(s,player,practice:false), ProEconomy.MarketSalary(s,player))) throw new InvalidOperationException("Insufficient cap space for this claim.");
         var entry = s.Waivers.Single(w => w.PlayerId == id); if (entry.Claims.Contains(team)) return s; return s with { Waivers = s.Waivers.Select(w => w == entry ? w with { Claims = w.Claims.Append(team).ToList() } : w).ToList() };
     }
     internal static ProFranchise ClaimStaff(ProFranchise s,string team,Guid id)
     {
+        if(s.Waivers.FirstOrDefault(w=>w.PlayerId==id) is {OriginalContracts.Count:>0,ReleaseId:not null} original)return ProWaivers.Claim(s,team,original,staff:true);
         var p=s.Players.Single(p=>p.Football.PlayerId==id);
         var quote=new FreeAgentBid(id,team,1,Math.Max(ProFinance.Minimum(s,p,practice:false),ProEconomy.MarketSalary(s,p)),0,s.Week);
         var reviewed=ProManagement.SubmitStaff(s,"Staff waiver claim · "+p.Football.FullName,[id],x=>x with{Bids=x.Bids.Append(quote).ToList()});
@@ -187,6 +194,12 @@ public static class ProRoster
             s=s with{Waivers=s.Waivers.Where(w=>w!=entry).ToList()};
             foreach(var team in entry.Claims.OrderBy(t=>Array.IndexOf(order,t)))
             {
+                if(entry is {OriginalContracts.Count:>0,ReleaseId:not null})
+                {
+                    try{s=ProWaivers.Award(s,team,entry);}catch(InvalidOperationException){continue;}
+                    if(s.Players.Single(p=>p.Football.PlayerId==entry.PlayerId).Football.TeamName==team)break;
+                    continue;
+                }
                 var p=s.Players.Single(p=>p.Football.PlayerId==entry.PlayerId);
                 ProFranchise Sign(ProFranchise state)=>ProEconomy.Sign(state,new(p.Football.PlayerId,team,1,Math.Max(ProFinance.Minimum(state,p,practice:false),ProEconomy.MarketSalary(state,p)),0,0));
                 var staff=team==s.UserTeam&&s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach&&!ProCareer.Controls(s,p.Football.Position);

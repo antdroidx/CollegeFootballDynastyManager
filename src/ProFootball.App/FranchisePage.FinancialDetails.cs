@@ -20,13 +20,15 @@ public sealed partial class FranchisePage
         if(c is null)return Panel("Contract",Text("No active contract"));
         var details=new VerticalStackLayout{Spacing=8,IsVisible=false};
         details.Children.Add(AnnualContractTable(c));
+        if(c.BonusPayments is {Count:>0})details.Children.Add(Panel("Bonus payments",c.BonusPayments.Select(b=>Text(b.Year+": "+Dollars(b.Amount)+(b.GuaranteedAtSigning?" · Guaranteed":" · Option payment"),12)).ToArray()));
+        if(c.CashVesting is {Count:>0})details.Children.Add(Panel("Future guarantees",c.CashVesting.Select(v=>Text(v.PaymentYear+" pay: "+Dollars(v.GuaranteedCash)+" guaranteed after the "+v.AfterSeason+" season if retained",12)).ToArray()));
         details.Children.Add(Text("Void years affect the salary cap but do not keep the player under contract. Bonus allocations are cap charges, not extra yearly pay.",12));
         var toggle=new Button{Text="Show accounting details",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};
         toggle.Clicked+=(_,_)=>{details.IsVisible=!details.IsVisible;toggle.Text=details.IsVisible?"Hide accounting details":"Show accounting details";};
         var playing=c.Years.Where(y=>!y.IsVoid&&y.Year>=state!.Year).OrderBy(y=>y.Year).ToArray();
         return Panel("Contract",Text(ProContractInsights.Satisfaction(state!,p)+" · Playing contract through "+ProContractInsights.PlayingEnd(c),16,true),
             Text(c.ReportedAnnualValue is long apy?"Contract value / year "+Dollars(apy):"Average annual pay "+Dollars(ProContractInsights.AverageCash(c))),
-            Table([("Season",65),("Pay",125),("Cap hit",125),("Guaranteed salary",140)],playing.Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(ProContractInsights.AnnualCash(c,y))),Text(Dollars(ProEconomy.CapHit(c,y.Year)),14,true),Text(Dollars(y.Guaranteed))})),toggle,details);
+            Table([("Season",65),("Pay",125),("Cap hit",125),("Guaranteed pay",140)],playing.Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(ProContractInsights.AnnualCash(c,y))),Text(Dollars(ProEconomy.CapHit(c,y.Year)),14,true),Text(Dollars(ProBonusAccounting.TotalGuarantee(state!,c,y)))})),toggle,details);
     }
     View ContractComparisons(ProPlayer p)
     {
@@ -34,17 +36,21 @@ public sealed partial class FranchisePage
         return Panel("Position market · "+p.Football.Position,Text("Expected annual pay "+Dollars(ProOfferTerms.AgentDemand(state!,p).Salary)+(peers.Count==0?"": " · Comparable average "+Dollars((long)peers.Average(x=>(double)x.AverageCash))),14,true),
             peers.Count==0?Text("No comparable contracts available."):Table([("Player",180),("Team",180),("OVR",50),("Average / year",130),("Current cap",125)],peers.Select(x=>new View[]{Text(x.Name),Text(x.Team),Text(x.Overall.ToString()),Text(Dollars(x.AverageCash)),Text(Dollars(x.CurrentCap))})),Text("Comparisons use the same position and players within five overall points.",12));
     }
-    async Task<bool> ConfirmRelease(ProPlayer p)
+    async Task<(bool Release,bool PostJune1)> ConfirmRelease(ProPlayer p)
     {
-        var result=new TaskCompletionSource<bool>();var closing=false;var page=new ContentPage{BackgroundColor=DynastyTheme.Background};
-        var rows=ProContractInsights.Release(state!,p.Football.PlayerId);var release=new Button{Text="Release player",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};var cancel=new Button{Text="Cancel",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};
-        async Task Close(bool value){if(closing)return;closing=true;await Navigation.PopModalAsync();result.TrySetResult(value);}
+        var result=new TaskCompletionSource<(bool Release,bool PostJune1)>();var closing=false;var page=new ContentPage{BackgroundColor=DynastyTheme.Background};
+        var june=new Switch{IsEnabled=ProTermination.CanDesignate(state!,state!.UserTeam,p.Football.PlayerId),AutomationId="pro-june1-release"};
+        var preview=new ContentView();
+        void Draw(){var rows=ProContractInsights.Release(state!,p.Football.PlayerId,june.IsToggled);preview.Content=Panel("Cap impact of release",Table([("Season",65),("Keep: cap hit",130),("Release: dead cap",150),("Cap saved",130)],rows.Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(y.Before)),Text(Dollars(y.DeadMoney)),Text(Dollars(y.Savings),14,true)})));}
+        june.Toggled+=(_,_)=>Draw();Draw();
+        var release=new Button{Text="Release player",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};var cancel=new Button{Text="Cancel",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};
+        async Task Close(bool value){if(closing)return;closing=true;await Navigation.PopModalAsync();result.TrySetResult((value,value&&june.IsToggled));}
         release.Clicked+=async(_,_)=>await Close(true);cancel.Clicked+=async(_,_)=>await Close(false);
-        page.Disappearing+=(_,_)=>page.Dispatcher.Dispatch(()=>{if(!closing&&!Navigation.ModalStack.Contains(page))result.TrySetResult(false);});
+        page.Disappearing+=(_,_)=>page.Dispatcher.Dispatch(()=>{if(!closing&&!Navigation.ModalStack.Contains(page))result.TrySetResult((false,false));});
         var c=state!.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
         page.Content=new ScrollView{Content=new VerticalStackLayout{Padding=16,Spacing=12,Children={Text("Release "+p.Football.FullName+"?",24,true),ContractDetails(p,c),
-            Panel("Cap impact of release",Table([("Season",65),("Keep: cap hit",130),("Release: dead cap",150),("Cap saved",130)],rows.Select(y=>new View[]{Text(y.Year.ToString()),Text(Dollars(y.Before)),Text(Dollars(y.DeadMoney)),Text(Dollars(y.Savings),14,true)}))),
-            Text("Unallocated signing bonus accelerates into this season. Remaining guaranteed base stays charged in its scheduled season. Negative savings means the release costs cap space. Waivers apply where eligible.",12),new HorizontalStackLayout{Spacing=12,Children={cancel,release}}}}};
+            new HorizontalStackLayout{Spacing=10,Children={june,Text("Use a June 1 designation · maximum two per team",12)}},preview,
+            Text(june.IsEnabled?"A designation holds current cap space until preseason, when June 1 savings take effect. Guaranteed pay is assessed immediately; its cash payments retain their schedule.":"Bonus charges follow the current calendar. Guaranteed pay is assessed immediately; its cash payments retain their schedule.",12),new HorizontalStackLayout{Spacing=12,Children={cancel,release}}}}};
         await Navigation.PushModalAsync(page);return await result.Task;
     }
 }

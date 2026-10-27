@@ -39,12 +39,16 @@ public static class ProTrade
         if(c is not null)
         {
             var fraction=ProFinance.EarnedFraction(s);var current=c.Years.FirstOrDefault(y=>y.Year==s.Year);var earned=(long)((current?.Salary??0)*fraction)+(current?.OtherCash??Math.Max(0,current?.OtherCompensation??0));
-            var bonus=Enumerable.Range(s.Year,Math.Max(0,c.SignedYear+c.BonusYears-s.Year)).Sum(y=>ProEconomy.BonusCharge(c,y));
-            if(bonus+earned>0)dead.Add(new(c.Team,s.Year,c.PlayerId,bonus+earned));
-            contracts=contracts.Select(x=>x==c?c with{Active=false,TerminatedYear=s.Year,EarnedCash=earned,BonusCash=c.BonusCash?.Where(b=>b.Key<=s.Year).ToDictionary()}:x).ToList();
-            contracts.Add(c with{Team=to,SigningBonus=0,BonusCash=c.BonusCash?.Where(b=>b.Key>s.Year).ToDictionary()??[],TerminatedYear=null,EarnedCash=0,SignedYear=s.Year,BonusYears=1,Source=null,Years=c.Years.Where(y=>y.Year>=s.Year).Select(y=>y.Year==s.Year?y with{Salary=y.Salary-(long)(y.Salary*fraction),OtherCompensation=0,OtherCash=0,ProratedBonus=0,Guaranteed=Math.Max(0,y.Guaranteed-(long)(y.Salary*fraction))}:y with{ProratedBonus=0,OtherCompensation=y.OtherCash??Math.Max(0,y.OtherCompensation)}).ToList()});
+            var bonus=ProTermination.BonusSchedule(s,c);
+            var unpaid=ProBonusAccounting.UnpaidGuaranteed(s,c);bonus[s.Year]=bonus.GetValueOrDefault(s.Year)+unpaid;
+            foreach(var payment in c.BonusPayments?.Where(b=>b.Year>s.Year&&b.GuaranteedAtSigning)??[])
+                dead.Add(new(c.Team,payment.Year,c.PlayerId,0){CashAmount=payment.Amount});
+            foreach(var item in bonus)if(item.Value+(item.Key==s.Year?earned:0)>0)dead.Add(new(c.Team,item.Key,c.PlayerId,item.Value+(item.Key==s.Year?earned:0)));
+            contracts=contracts.Select(x=>x==c?c with{Active=false,TerminatedYear=s.Year,EarnedCash=earned,BonusCash=ProBonusAccounting.TerminatedCash(s,c)?.Where(b=>b.Key<=s.Year).ToDictionary()}:x).ToList();
+            contracts.Add(c with{Team=to,SigningBonus=0,BonusPayments=c.BonusPayments?.Where(b=>!ProBonusAccounting.Paid(s,b)&&!b.GuaranteedAtSigning).ToList(),BonusCash=c.BonusPayments is null?c.BonusCash?.Where(b=>b.Key>s.Year).ToDictionary()??[]:c.BonusPayments.Where(b=>!ProBonusAccounting.Paid(s,b)&&!b.GuaranteedAtSigning).GroupBy(b=>b.Year).ToDictionary(g=>g.Key,g=>g.Sum(b=>b.Amount)),TerminatedYear=null,EarnedCash=0,SignedYear=s.Year,BonusYears=Math.Max(1,c.SignedYear+c.BonusYears-s.Year),Source=null,Years=c.Years.Where(y=>y.Year>=s.Year).Select(y=>y.Year==s.Year?y with{Salary=y.Salary-(long)(y.Salary*fraction),OtherCompensation=0,OtherCash=0,ProratedBonus=ProBonusAccounting.UnpaidConditionalCharge(s,c,y.Year),GuaranteedOtherCash=0,Guaranteed=Math.Max(0,y.Guaranteed-(long)(y.Salary*fraction))}:y with{ProratedBonus=ProBonusAccounting.UnpaidConditionalCharge(s,c,y.Year),OtherCompensation=y.IsVoid?0:y.OtherCash??Math.Max(0,y.OtherCompensation)}).ToList()});
         }
 
+        if(c?.BonusPayments is not null)contracts=contracts.Select(x=>x.Active&&x.PlayerId==p.Football.PlayerId&&x.Team==to?ProContractInsights.NormalizeVoidCharges(x):x).ToList();
         return s with { Contracts = contracts, DeadCap = dead, MoraleEffects = s.MoraleEffects.Where(e=>e.PlayerId!=p.Football.PlayerId).ToList(), Players = s.Players.Select(x => x == p ? x with { Football = x.Football with { TeamName = to, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false, TradeRequested = false, ContractConcernWeeks = 0, Morale = Math.Clamp(x.Morale+5,10,95) } : x).ToList() };
     }
 }
@@ -232,7 +236,7 @@ public static class ProCpu
                 var count = ProRoster.Active(s, team.Name); if (count >= Math.Min(53, ProRoster.Limit(s))||Staff(team.Name)&&UnitCount(team.Name)>=Target(team.Name)) continue;
                 var minimum=DepthMinimum(s); var reserve = s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.FreeAgency ? 20_000_000L : 0L;
                 var available=ProEconomy.Room(s,team.Name);
-                var futureBuffer=Math.Min(ProCpuBudget.FutureRolloverNeed(s,team.Name),Math.Max(0,available-reserve-Math.Max(0,53-count)*minimum));
+                var futureBuffer=Math.Min(ProCpuBudget.FutureRolloverNeed(s,team.Name),Math.Max(0,available-reserve-Math.Max(0,45-count)*minimum));
                 reserve+=futureBuffer;
                 var room = available - reserve;
                 var target=room<(53-count)*minimum?Math.Max(45,count+1):53;var remaining=Math.Max(1,Staff(team.Name)?Math.Min(target-count,Target(team.Name)-UnitCount(team.Name)):target-count);
@@ -307,7 +311,7 @@ public static class ProOffseason
             return s with { OffseasonStep = OffseasonStep.RosterCuts, Players = s.Players.Concat(s.Prospects.Select(p => p with { Football = p.Football with { TeamName = "Free agent" } })).ToList(), Prospects = [] };
         }
         if (ProRoster.CountForLimit(s, s.UserTeam) > 90 || ProEconomy.Room(s, s.UserTeam) < 0) throw new InvalidOperationException("Keep your camp roster at 90 or fewer and get under the cap first. Final 53-player cuts follow preseason.");
-        s = ProCpu.Manage(s with { Phase = ProPhase.Preseason, Week = 1 });
+        s = ProCpu.Manage(ProTermination.ProcessJune1(s with { Phase = ProPhase.Preseason, Week = 1 }));
         return s with { Phase = ProPhase.Preseason, Week = 1, OffseasonStep = OffseasonStep.Retention, Games = ProSchedule.Build(s.League, s.Year), TaggedTeams = [], Picks = s.Picks.Concat(ProEconomy.CreatePicks(s, s.Year + 1)).DistinctBy(p => (p.Year, p.Round, p.OriginalTeam)).ToList() };
     }
 }

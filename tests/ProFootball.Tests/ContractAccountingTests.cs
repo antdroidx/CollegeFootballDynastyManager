@@ -102,7 +102,7 @@ public sealed class ContractAccountingTests
         Assert.All(acquired.Years,y=>Assert.True(ProEconomy.CapHit(acquired,y.Year)>=0));
         foreach(var year in Enumerable.Range(2026,9))
             Assert.Equal(ProFinance.Cash(s,s.UserTeam,year),ProFinance.Cash(moved,s.UserTeam,year)+ProFinance.Cash(moved,other,year));
-        Assert.Equal(0,ProFinance.Cash(moved,s.UserTeam,2027));
+        Assert.Equal(30_000_000,ProFinance.Cash(moved,s.UserTeam,2027));
     }
     [Fact] public void RestructuredVoidRowsAccelerateOnceAndExtensionDefersTheirTrigger()
     {

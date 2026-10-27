@@ -26,6 +26,7 @@ public sealed record SeasonArchive(int Year, string Champion, List<ProGame> Game
 public sealed record ProFranchise
 {
     public int SchemaVersion { get; init; } = 2;
+    public List<ProJune1Designation> June1Designations {get;init;}=[];
     public int RatingSystemVersion { get; init; }
     public Guid Id { get; init; } = Guid.NewGuid();
     public string Name { get; init; } = "My franchise";
@@ -96,15 +97,16 @@ public sealed record ProCoach(string TeamId, StaffRole Role, string Name, string
 { public bool Vacant { get; init; } public int Rating { get; init; } = 70; public int Development { get; init; } = 65; }
 public sealed record NflSnapshot(int Version, int Season, int Week, string RetrievedUtc, int MaddenMatched, int Estimated, List<ProPlayer> Players, List<ProCoach> Coaches) { public List<CoachCandidate> Candidates { get; init; } = []; }
 public sealed record ContractYear(int Year, long Salary, long Guaranteed)
-{ public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } public bool IsVoid { get; init; } public long? OtherCash { get; init; } public long? SourceGuaranteed { get; init; } }
+{ public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } public bool IsVoid { get; init; } public long? OtherCash { get; init; } public long? SourceGuaranteed { get; init; } public long GuaranteedOtherCash {get;init;} }
 public sealed record ProContract(Guid PlayerId, string Team, int SignedYear, int BonusYears, long SigningBonus, List<ContractYear> Years)
-{ public int? OriginalRookieYear { get; init; } public int AccountingVersion { get; init; } public long? ReportedAnnualValue { get; init; } public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
-public sealed record DeadCapCharge(string Team, int Year, Guid PlayerId, long Amount) { public long CashAmount {get;init;} }
+{ public Guid? ReleaseId {get;init;} public List<ProBonusPayment>? BonusPayments {get;init;} public List<ProCashVesting>? CashVesting {get;init;} public int? OriginalRookieYear { get; init; } public int AccountingVersion { get; init; } public long? ReportedAnnualValue { get; init; } public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
+public sealed record DeadCapCharge(string Team, int Year, Guid PlayerId, long Amount) { public long CashAmount {get;init;} public Guid? ReleaseId {get;init;} public bool June1Hold {get;init;} public bool RetainedContract {get;init;} public int? FundingYear {get;init;} public bool RetainedBonus {get;init;} }
 public sealed record FreeAgentBid(Guid PlayerId, string Team, int Years, long AnnualSalary, long Bonus, int Priority);
 public sealed record ProDraftPick(Guid Id, int Year, int Round, int Slot, string OriginalTeam, string Owner);
 public sealed record DraftSelection(int Year, int Round, int Slot, string Team, ProPlayer Player);
 public sealed record ScoutReport(Guid PlayerId, string Team, int Year, int Grade, int Confidence);
-public sealed record WaiverEntry(Guid PlayerId, int ExpiresAfterWeek, List<string> Claims);
+public sealed record WaiverEntry(Guid PlayerId, int ExpiresAfterWeek, List<string> Claims)
+{ public Guid? ReleaseId {get;init;} public List<ProContract>? OriginalContracts {get;init;} public double ReleasedFraction {get;init;} public int ReleasedYear {get;init;} }
 public sealed record OwnerExpectation(string Team, int TargetWins, int Security, bool Fired = false);
 
 public sealed record CoachCandidate(string Name, string SourceTeam, string Title, string Source);
@@ -129,3 +131,8 @@ public sealed record ProSeasonHonors(int Year,List<ProAward> Awards,List<ProAllS
 public sealed record ProAllProSelection(ProPlayer Player,int Team);
 
 public sealed record PendingRookie(Guid PlayerId, string Team, int Year, int Round, long Salary, long Bonus);
+
+public sealed record ProJune1Designation(string Team,int Year,Guid PlayerId,Guid ReleaseId);
+
+public sealed record ProBonusPayment(int Year,long Amount,int AllocationYears,bool GuaranteedAtSigning) {public bool PaidAtExecution {get;init;} }
+public sealed record ProCashVesting(int PaymentYear,long GuaranteedCash,int AfterSeason);

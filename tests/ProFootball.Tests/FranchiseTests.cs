@@ -53,7 +53,7 @@ public class FranchiseTests
     {
         var s=New();var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam);var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,3,10,[new(s.Year,12,4),new(s.Year+1,12,3),new(s.Year+2,12,0)]);
         Assert.Equal(10,Enumerable.Range(s.Year,3).Sum(y=>ProEconomy.BonusCharge(c,y)));Assert.Equal(16,ProEconomy.CapHit(c,s.Year));
-        s=s with{Contracts=[c]};var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId,false);Assert.Equal(14,ProEconomy.Used(released,s.UserTeam));Assert.Equal(3,released.DeadCap.Where(d=>d.Year==s.Year+1).Sum(d=>d.Amount));Assert.Equal(17,released.DeadCap.Sum(d=>d.Amount));Assert.False(released.Contracts[0].Active);
+        s=s with{Contracts=[c]};var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId,false);Assert.Equal(11,ProEconomy.Used(released,s.UserTeam));Assert.Equal(6,released.DeadCap.Where(d=>d.Year==s.Year+1).Sum(d=>d.Amount));Assert.Equal(17,released.DeadCap.Sum(d=>d.Amount));Assert.False(released.Contracts[0].Active);
     }
     [Fact] public void OffersCompeteAndCannotExceedReservedCap()
     {

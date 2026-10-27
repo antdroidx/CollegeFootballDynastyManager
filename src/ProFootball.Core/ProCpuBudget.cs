@@ -11,11 +11,13 @@ public static class ProCpuBudget
     public static long FutureRolloverNeed(ProFranchise s,string team)
     {
         // Planning only: this does not book cap charges or assume an unearned rollover election.
-        var full=s with{Phase=ProPhase.RegularSeason};long needed=0;
+        var full=s with{Phase=ProPhase.RegularSeason};long needed=0,cumulative=0;
         foreach(var year in Enumerable.Range(s.Year+1,4))
         {
             var cost=ProFinance.Budget(full,team,year).TotalCommitments+ProEconomy.PendingForYear(s,team,year)+DepthReserve(s,team,year);
-            needed=Math.Max(needed,cost-ProFinance.Limit(s,team,year));
+            // Carryover is consumed by a deficit; do not reuse it or assume unearned future surpluses.
+            cumulative+=Math.Max(0,cost-ProFinance.Limit(s,team,year));
+            needed=Math.Max(needed,cumulative);
         }
         return Math.Max(0,needed);
     }

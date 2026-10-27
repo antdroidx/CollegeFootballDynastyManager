@@ -101,14 +101,21 @@ public sealed class CapInitializationTests
     {
         var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true) with{Id=Guid.Parse("53120000-0000-0000-0000-000000000001")};
         s=s with{AutoManageRookieOptions=true};
+        void Trace(string phase)
+        {
+            if(Environment.GetEnvironmentVariable("PRO_FINANCE_PLAN_TRACE") is not string output)return;
+            var team="Philadelphia Eagles";var b=ProFinance.Budget(s,team);var next=ProFinance.Budget(s,team,s.Year+1);
+            File.AppendAllText(output,JsonSerializer.Serialize(new{phase,s.Year,s.Phase,s.OffseasonStep,active=ProRoster.Active(s,team),currentRoom=b.Available,nextLimit=next.AdjustedCap,nextCommit=next.TotalCommitments,nextDepth=ProCpuBudget.DepthReserve(s,team,s.Year+1),buffer=ProCpuBudget.FutureRolloverNeed(s,team)})+"\n");
+        }
         for(var season=0;season<3;season++){
+            Trace("before annual management");
             s=ProCpu.Manage(s,true);
             for(var tick=0;tick<26&&s.Phase!=ProPhase.Offseason;tick++){
                 if(s.Phase==ProPhase.Preseason&&s.Week==3)s=ProCpu.Trim(s,s.UserTeam);
                 s=ProLeagueService.Advance(s);
             }
             Assert.Equal(ProPhase.Offseason,s.Phase);Assert.Equal(32,s.RolloverElections.Count(e=>e.Year==s.Year));
-            s=ProOffseason.Advance(s);s=ProOffseason.Advance(s);s=ProDraft.AutoUntilUser(s,true);s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
+            Trace("end season");s=ProOffseason.Advance(s);Trace("after retention");s=ProOffseason.Advance(s);Trace("after free agency");s=ProDraft.AutoUntilUser(s,true);s=ProOffseason.Advance(s);Trace("after draft");s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);Trace("after camp management");s=ProCpu.Manage(s,true);Trace("after final management");
             if(Environment.GetEnvironmentVariable("PRO_MARKET_TRACE") is string trace)File.WriteAllText(trace,JsonSerializer.Serialize(s));
             Assert.True(s.UnsignedRookies.Count==0,string.Join(";",s.UnsignedRookies.Select(r=>r.Team).Distinct().Select(t=>$"{s.Year} {t} room={ProEconomy.Room(s,t)} active={ProRoster.Active(s,t)} debt={s.DeadCap.Where(d=>d.Team==t&&d.Year==s.Year).Sum(d=>d.Amount)} charges={string.Join(",",s.DeadCap.Where(d=>d.Team==t&&d.Year==s.Year).Select(d=>$"{s.Players.FirstOrDefault(p=>p.Football.PlayerId==d.PlayerId)?.Football.FullName}:{d.Amount}"))}")));Assert.All(s.League.Teams,t=>{Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);Assert.True(ProRoster.Active(s,t.Name)>=45&&ProRoster.Active(s,t.Name)<=90,$"{s.Year} {t.Name}: active={ProRoster.Active(s,t.Name)} room={ProEconomy.Room(s,t.Name)} debt={s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Sum(d=>d.Amount)} carry={ProFinance.Budget(s,t.Name).Rollover} cash={ProFinance.Cash(s,t.Name,s.Year)} charges={string.Join(";",s.DeadCap.Where(d=>d.Team==t.Name&&d.Year==s.Year).Select(d=>$"{s.Players.FirstOrDefault(p=>p.Football.PlayerId==d.PlayerId)?.Football.FullName}:{d.Amount}"))}");});
             Assert.Equal((season+1)*32,s.FinancialHistory.Count);
