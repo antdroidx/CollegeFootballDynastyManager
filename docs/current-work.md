@@ -1,5 +1,14 @@
 # Current work — shared Core, College and Pro
 
+## Current four-task priority (user requested)
+
+1. Reserve-to-active roster activation first: available imported reserve players, actionable/disabled reasons near the profile header, roster/cap and career authority checks, saved status and device acceptance. Known medical/league restrictions and unsigned draft rights must not be bypassed. Do not infer an IR start date from generic RES status.
+2. Complete real-contract bonus/guarantee/vesting/void/release accounting, using a dated offline raw-source dataset before corrections.
+3. Reconcile all32 dated team ledgers, player identity/status, departed debt and adjustments; enable real contracts by default only once reconciled.
+4. Complete waiver original-contract assumption and legally timed release/trade treatment, with consistent previews and conserved obligations.
+
+The user removed automatic continuation. Do not recreate it. Work resumes when the user continues this chat. Pro62 remains the accepted baseline until the new reserve APK passes.
+
 Updated October 27, 2026 (Pacific). This is the current handoff; Git history retains prior build narratives.
 
 ## Workspace and safeguards
@@ -8,7 +17,7 @@ Updated October 27, 2026 (Pacific). This is the current handoff; Git history ret
 - Stable main remains `fdd3d4898b5bd07eeec8dba346024d61f5289474`. Do not merge unfinished Pro work.
 - Preserve College package identity/save compatibility, independent Pro package/saves and update signing.
 - Do not duplicate active implementation/builds. Use scoped tests per [testing-scope.md](testing-scope.md).
-- Continue all authorized roadmap work autonomously. Hourly continuation `resume-pro-football-development` is active again; do not disable until everything is complete.
+- Continue the authorized roadmap during active work. The user removed hourly continuation; do not recreate it.
 
 ## Next work
 
@@ -169,3 +178,5 @@ Focused trade retry40455576333 at ec8611a passed input equality/helpers and reac
 After the compact-history app fix, run40456011770 was immediately superseded/cancelled to avoid repeating unaffected finance device checks. Current new APK build is40456067627 (trade scope) at0e72ba4; it runs all fast Pro regressions, source validator/helpers, packaging and focused offer UI. Reuse Build52's finance/option assertions and earlier annual evidence because only offer-history presentation changed. Do not accept until new exact-APK counter/accept/decline ownership checks and screenshots pass. Source obligations/market pricing and pending-bid minimum/remainder audit remain future financial work.
 
 Coordinator retention checkpoint: all **179 scoped Pro cases passed locally in 51s**, including three coordinator seasons and imported-cap lifecycle, plus **40 targeted cases** in22s and15 UI helpers. Source-only staff-unit authority reuses the existing GM evaluator; no global market/contract-lock/HC CPU policy change. OC/DC synthetic fixture exports are valid (about376KB each), isolated from production. New `retention` device scope validates the delegation explanation, advances the stage with own-unit auto negotiation off, and checks saved opposite-unit renewal, manual own-unit expiry, job identity and GM decision. Finance scope invokes this same flow after its existing checks; helpers can select saved slots below the fold. Package and verify this batch; do not report a new accepted APK yet.
+
+Reserve activation checkpoint:13 focused reserve cases plus8 camp/depth regressions pass (21 total). New activation preserves contract terms/locks except a required current active minimum, updates roster status/depth and rechecks pending bids/cap. Profile action appears before long attributes, with disabled reasons; contract/roster menu also supports it. Unknown EXE/suspension/IR/PUP clearances remain blocked rather than inventing eligibility. Imported generic RES/INA/DEV availability is treated as a game decision only when healthy and signed. Separate reserve device scope uses core-generated32-team fixture and avoids repeating unchanged finance/GameCast flows. Android packaging/device acceptance pending.

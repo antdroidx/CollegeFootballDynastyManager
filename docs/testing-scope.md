@@ -93,3 +93,7 @@ Application source `2ac5992`, financial core `94d77bc`. [Exact APK62](https://gi
 All209 full local Pro cases passed in9m55s on unchanged financial core, including20 generated seasons, five sourced seasons and the formerly failing imported-cap lifecycle.15 bounded positional market curves, multi-year tracked cash-floor policy, future-deficit spending protection and saved-franchise scroll reset are accepted in this scope. Reuse unchanged Pro44 GameCast and College390 evidence; this is not a fresh shared-renderer acceptance. Main/College/package identities remain unchanged. Build61's partial flow is superseded by62. No build/test remains active.
 
 Next: source-dated paid/future bonus events, vesting and departed-debt reconciliation. Real-source default remains off; no source liabilities or historical cash have been invented. Existing209-case evidence does not establish complete real-source accuracy. Remaining roadmap remains authorized.
+
+## Reserve activation scope
+
+Use validation_scope=reserve for Pro-only reserve activation: fast Pro regressions, packaging and build/pro-reserve-smoke.py. Core-generated32-team synthetic fixture verifies a disabled injured action, available activation, unchanged contract terms, saved active status and reopening the save. Reuse accepted62 finance/annual/role evidence and unchanged College390/GameCast44. The workflow stages the compressed fixture outside the installed APK. This does not establish complete NFL IR/PUP return calendar or medical clearance semantics.

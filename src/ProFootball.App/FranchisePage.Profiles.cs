@@ -42,9 +42,22 @@ public sealed partial class FranchisePage
         attributes.Add(Text("Higher ratings are better. Injury represents resistance to injury and wear.", 11));
         var actions = new ActionRow(); actions.Add(Action("Edit appearance",()=>EditPlayerAppearance(p))); if (f.TeamName == s.UserTeam) actions.Add(Action("Contract & roster actions", () => ManagePlayer(p)));
         var lines = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).SelectMany(g => g.Football.PlayerStats).Where(x => x.PlayerId == f.PlayerId).ToArray();
-        await ShowPage("Player profile", identity, Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
+        await ShowPage("Player profile", identity, ReserveActivationControls(p), Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"), Text(f.CurrentInjury is { WeeksRemaining: > 0 } injury ? $"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining" : "Available"), Text($"Morale {p.Morale} · Depth {f.DepthChartOrder} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
             ContractDetails(p,contract),
             PlayerAnalytics(p), Panel("Regular season", Text($"Passing {lines.Sum(x => x.PassYards)} yd · {lines.Sum(x => x.PassingTouchdowns)} TD\nRushing {lines.Sum(x => x.RushYards)} yd · Receiving {lines.Sum(x => x.ReceivingYards)} yd\nTackles {lines.Sum(x => x.Tackles)} · Sacks {lines.Sum(x => x.Sacks)}")), actions);
+    }
+    View ReserveActivationControls(ProPlayer p)
+    {
+        if(!p.Reserve||p.Football.TeamName!=state!.UserTeam)return new VerticalStackLayout();
+        var reason=ProReserve.ActivationReason(state,state.UserTeam,p.Football.PlayerId);
+        if(!ProCareer.Controls(state,p.Football.Position))reason="The head coach manages reserve activation for the other unit.";
+        var button=Action("Activate to roster",async()=>{
+            await Manage("Reserve activation",p.Football.PlayerId,0,s=>ProReserve.Activate(s,s.UserTeam,p.Football.PlayerId));
+            var current=state!.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId);
+            if(!current.Reserve){await Navigation.PopModalAsync();await Player(current);}
+        });
+        button.AutomationId="pro-activate-reserve";button.IsEnabled=reason is null;
+        return Panel("Reserve activation",Text(reason??"Available to activate. Your existing contract is retained; roster and cap limits are checked.",12),button);
     }
     async Task EditPlayerAppearance(ProPlayer original)
     {

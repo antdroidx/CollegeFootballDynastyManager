@@ -148,7 +148,7 @@ public sealed partial class FranchisePage : ContentPage
     {
         var s = state!; var teams = s.League.Teams.OrderBy(t => t.Name).ToArray();
         var team = new Picker { Title = "Team", ItemsSource = teams.Select(t => t.Name).ToArray(), SelectedIndex = Array.FindIndex(teams, t => t.Name == s.UserTeam) };
-        var search = new SearchBar { Placeholder = "Find a player" }; var positions = new Picker { Title = "Position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
+        var search = new SearchBar { Placeholder = "Find a player", AutomationId = "pro-roster-search" }; var positions = new Picker { Title = "Position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
         var list = new VerticalStackLayout { Spacing = 12 };
         var showRatings = false;
         var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(tools); body.Add(team); body.Add(search); body.Add(positions);
