@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       validation_scope:
-        description: Finance checks financial UI; live checks GameCast/UI without repeating long financial simulations; full runs everything
+        description: Finance checks cap/contracts/offers; trade checks offers only; live checks GameCast; full runs all Pro tests
         type: choice
         options: [full, finance, live, trade]
         default: full

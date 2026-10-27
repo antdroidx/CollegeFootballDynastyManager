@@ -38,6 +38,6 @@ public sealed partial class FranchisePage
             if(o.Response.Length>0)views.Add(Text(o.Response,12,true));views.Add(actions);body.Add(Panel("Offer from "+buyer.Name,views.ToArray()));
         }
         var history=s.TradeOffers.Where(o=>o.Status!=ProTradeOfferStatus.Open).TakeLast(10).Reverse().ToArray();
-        if(history.Length>0){body.Add(Text("Recent offer decisions",18,true));body.Add(Table([("Year",50),("Team",170),("Player",160),("Result",90)],history.Select(o=>new View[]{Text(o.Year.ToString()),Text(o.Buyer,12),Text(s.Players.FirstOrDefault(p=>p.Football.PlayerId==o.PlayerId)?.Football.FullName??"Former player",12),Text(o.Status.ToString(),12)})));}
+        if(history.Length>0){body.Add(Text("Recent offer decisions",18,true));body.Add(Table([("Year",40),("Player / team",170),("Result",85)],history.Select(o=>new View[]{Text(o.Year.ToString(),12),new VerticalStackLayout{Spacing=2,Children={Text(s.Players.FirstOrDefault(p=>p.Football.PlayerId==o.PlayerId)?.Football.FullName??"Former player",12,true),Text(o.Buyer,11)}},Text(o.Status.ToString(),12)})));}
     }
 }
