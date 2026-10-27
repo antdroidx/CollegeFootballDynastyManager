@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       validation_scope:
-        description: Finance checks cap/contracts/offers; trade checks offers only; live checks GameCast; full runs all Pro tests
+        description: Finance checks cap/contracts/offers; trade checks offers only; live checks GameCast; retention checks coordinator renewals; full runs all Pro tests
         type: choice
-        options: [full, finance, live, trade]
+        options: [full, finance, live, trade, retention]
         default: full
       reuse_apk_run_id:
         description: Optional prior run ID for test-only retries; app-source differences reject reuse
@@ -51,26 +51,29 @@ jobs:
       - name: Full Pro tests
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
-        if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade'
+          PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
+        if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade' && inputs.validation_scope != 'retention'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
       - name: Pro scoped regressions
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
-        if: inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade'
+          PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
+        if: inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
       - name: Build independent pro APK
         run: >
           dotnet build src/ProFootball.App/ProFootball.App.csproj -c Debug -f net10.0-android
           -p:AndroidPackageFormats=apk -p:ApplicationVersion=${{ github.run_number }}
           -p:ApplicationDisplayVersion=0.1.${{ github.run_number }}
-      - name: Stage isolated trade UI fixture
-        run: cp pro-trade-ui-fixture.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
+      - name: Stage isolated management UI fixtures
+        run: cp pro-trade-ui-fixture.json.gz pro-coordinator-ui-*.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
       - uses: actions/upload-artifact@v4
         with:
           name: pro-football-apk-${{ github.run_number }}
           path: |
             src/ProFootball.App/bin/Debug/net10.0-android/*-Signed.apk
             src/ProFootball.App/bin/Debug/net10.0-android/pro-trade-ui-fixture.json.gz
+            src/ProFootball.App/bin/Debug/net10.0-android/pro-coordinator-ui-*.json.gz
           compression-level: 0
           retention-days: 7
   pro-device:
@@ -115,7 +118,7 @@ jobs:
           script: |
             adb install -r $(find apk -name '*-Signed.apk' -print -quit)
             adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
-            python3 -u build/${{ inputs.validation_scope == 'finance' && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || 'pro-android-smoke.py' }}
+            python3 -u build/${{ inputs.validation_scope == 'finance' && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || inputs.validation_scope == 'retention' && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -126,5 +129,6 @@ jobs:
             pro-logcat.txt
             pro-finance-logcat.txt
             pro-trade-logcat.txt
+            pro-coordinator-logcat.txt
             pro-finance-ledger-check.json
           retention-days: 3

@@ -103,11 +103,25 @@ public static class ProCareer
 public static class ProManagement
 {
     public static ProFranchise Submit(ProFranchise s, string action, IReadOnlyList<Guid> players, long extraCommitment, Func<ProFranchise, ProFranchise> execute, bool sharedPicks = false)
+        =>Review(s,action,players,extraCommitment,execute,sharedPicks,false);
+    internal static ProFranchise SubmitStaff(ProFranchise s,string action,IReadOnlyList<Guid> players,Func<ProFranchise,ProFranchise> execute)
+        =>Review(s,action,players,0,execute,false,true);
+    static ProFranchise Review(ProFranchise s,string action,IReadOnlyList<Guid> players,long extraCommitment,Func<ProFranchise,ProFranchise> execute,bool sharedPicks,bool staffUnit)
     {
-        foreach (var id in players) ProCareer.RequirePlayer(s, id);
+        bool InUnit(ProFranchise state,Position position)=>staffUnit?!ProCareer.Controls(state,position):ProCareer.Controls(state,position);
+        if(staffUnit)
+        {
+            if(ProCareer.Role(s)==StaffRole.HeadCoach||s.Career?.Unemployed==true)throw new InvalidOperationException("There is no delegated coordinator unit.");
+            foreach(var id in players)
+            {
+                var p=s.Players.FirstOrDefault(p=>p.Football.PlayerId==id);
+                if(p is null||p.Football.TeamName!=s.UserTeam||!InUnit(s,p.Football.Position))throw new InvalidOperationException("Staff can manage only the other unit's players.");
+            }
+        }
+        else foreach (var id in players) ProCareer.RequirePlayer(s, id);
         if (s.Career?.Unemployed == true) throw new InvalidOperationException("Accept a coaching job first.");
         if (ProCareer.Role(s) == StaffRole.HeadCoach) return execute(s);
-        var unit = s.Players.Where(p => p.Football.TeamName == s.UserTeam && ProCareer.Controls(s, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
+        var unit = s.Players.Where(p => p.Football.TeamName == s.UserTeam && InUnit(s, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
         var planningYear=ProFinance.ContractChangeYear(s);
         var spending = s.Contracts.Where(c => c.Team == s.UserTeam && unit.Contains(c.PlayerId)).Sum(c => ProEconomy.CapHit(c, planningYear));
         var room = ProFinance.Budget(s,s.UserTeam,planningYear).Available - ProEconomy.Pending(s, s.UserTeam);
@@ -121,9 +135,9 @@ public static class ProManagement
             // A current-year discount must not bypass review of back-loaded contracts or reserved bids.
             long UnitCost(ProFranchise state, int year)
             {
-                var own = state.Players.Where(p => p.Football.TeamName == state.UserTeam && ProCareer.Controls(state, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
+                var own = state.Players.Where(p => p.Football.TeamName == state.UserTeam && InUnit(state, p.Football.Position)).Select(p => p.Football.PlayerId).ToHashSet();
                 var contracts = state.Contracts.Where(c => c.Team == state.UserTeam && own.Contains(c.PlayerId)).Sum(c => ProEconomy.CapHit(c, year));
-                var bids = state.Bids.Where(b => b.Team == state.UserTeam && year >= state.Year && year < state.Year + b.Years && state.Players.Any(p => p.Football.PlayerId == b.PlayerId && ProCareer.Controls(state, p.Football.Position)))
+                var bids = state.Bids.Where(b => b.Team == state.UserTeam && year >= state.Year && year < state.Year + b.Years && state.Players.Any(p => p.Football.PlayerId == b.PlayerId && InUnit(state, p.Football.Position)))
                     .Sum(b => b.AnnualSalary + (b.Bonus + b.Years - 1) / b.Years);
                 return contracts + bids;
             }
@@ -177,6 +191,7 @@ public static class ProManagement
                 }
             }
         }
+        if(staffUnit)reason=reason.Replace("your unit","the other unit");
         var decision = new ProGmDecision(Guid.NewGuid(), s.Year, s.Week, action, approved, reason);
         var result = approved ? proposal : s;
         return result with { GmDecisions = s.GmDecisions.Append(decision).TakeLast(100).ToList() };

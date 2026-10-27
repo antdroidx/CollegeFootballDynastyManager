@@ -10,6 +10,12 @@ Updated October 26, 2026 (Pacific). This is the current handoff; Git history ret
 - Do not duplicate active implementation/builds. Use scoped tests per [testing-scope.md](testing-scope.md).
 - Continue all authorized roadmap work autonomously. Hourly continuation `resume-pro-football-development` is active again; do not disable until everything is complete.
 
+## Active batch — coordinator retention (after accepted Pro56)
+
+Uncommitted Pro-only retention fix: ProManagement shares its future/team/unit budget evaluator with an internal staff-unit path, preserving the user's coach identity and authority. ProRetention automatically negotiates the coordinator's other unit (including specialists), while own-unit choices remain manual/delegated. Retention advancement includes a fired user's former team as CPU-managed. Head-coach manual/delegated behavior and LetExpire remain unchanged; no contract-change-lock policy was altered. The screen explains own-unit delegation and gray availability for jobless/unavailable actions.
+
+Forty targeted career/GM/retention cases passed, including OC/DC symmetry, both head-coach delegation settings, own-unit manual expiry, unemployment, future-unit atomic rejection and three coordinator seasons with explicit GM roster/draft delegation. That annual scenario does not claim automatic opposite-unit roster/draft work is complete. New isolated OC/DC device fixtures and a retention-only flow are prepared; local fast suite and final APK/device acceptance still required. Auto FA/waiver/cut/draft handling for the uncontrolled unit remains the next coordinator task, per pro-coordinator-staff-plan.md. Latest accepted remains Pro56. No College/shared app change; reuse accepted evidence and long HC annual runs where unaffected.
+
 ## Latest verified APKs
 
 ## Accepted autonomous-trade batch — Pro 56
@@ -119,3 +125,5 @@ Focused trade retry40455576333 at ec8611a passed input equality/helpers and reac
 
 
 After the compact-history app fix, run40456011770 was immediately superseded/cancelled to avoid repeating unaffected finance device checks. Current new APK build is40456067627 (trade scope) at0e72ba4; it runs all fast Pro regressions, source validator/helpers, packaging and focused offer UI. Reuse Build52's finance/option assertions and earlier annual evidence because only offer-history presentation changed. Do not accept until new exact-APK counter/accept/decline ownership checks and screenshots pass. Source obligations/market pricing and pending-bid minimum/remainder audit remain future financial work.
+
+Coordinator retention checkpoint: all **179 scoped Pro cases passed locally in 51s**, including three coordinator seasons and imported-cap lifecycle, plus **40 targeted cases** in22s and15 UI helpers. Source-only staff-unit authority reuses the existing GM evaluator; no global market/contract-lock/HC CPU policy change. OC/DC synthetic fixture exports are valid (about376KB each), isolated from production. New `retention` device scope validates the delegation explanation, advances the stage with own-unit auto negotiation off, and checks saved opposite-unit renewal, manual own-unit expiry, job identity and GM decision. Finance scope invokes this same flow after its existing checks; helpers can select saved slots below the fold. Package and verify this batch; do not report a new accepted APK yet.

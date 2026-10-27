@@ -69,7 +69,7 @@ try:
     ready("profile-closed",lambda r:"Overview" in s.texts(r))
     click("overview-return","Overview");click("save","\u2039 Exit",True)
 
-    library=ready("saved-library",lambda r:s.library_entry_ready(r,franchise_name+" · Seattle Seahawks"))
+    library=ready("saved-library",s.library_loaded)
 
     # Inspect only the disposable emulator save produced by the UI; never manufacture opening obligations.
 
@@ -104,7 +104,7 @@ try:
 
     apk=next(Path("apk").glob("*-Signed.apk"));s.adb("install","-r",str(apk));s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
 
-    library=ready("updated-library",lambda r:s.library_entry_ready(r,franchise_name+" · Seattle Seahawks"));s.tap(library,next(t for t in s.texts(library) if (t or "").startswith(franchise_name+" · Seattle Seahawks")))
+    ready("updated-library",s.library_loaded);click("updated-slot",franchise_name+" · Seattle Seahawks · 2026 Preseason W1")
 
     ready("updated-overview",lambda r:"Advance week" in s.texts(r));click("updated-office","Front Office");cap_view("updated-cap")
 
@@ -132,8 +132,8 @@ try:
         s.adb("push",str(fixture_path),"/data/local/tmp/pro-option-fixture.json")
         s.adb("shell","run-as","antdroid.profootball.franchise","cp","/data/local/tmp/pro-option-fixture.json","files/pro-franchises-v1/"+fixture_id+".json")
         s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
-        library=ready("option-library",lambda r:s.library_entry_ready(r,fixture_name+" ·"))
-        click("option-loaded-slot",next(t for t in s.texts(library) if (t or "").startswith(fixture_name+" ·")))
+        ready("option-library",s.library_loaded)
+        click("option-loaded-slot",fixture_name+" · "+fixture["userTeam"]+" · 2026 Offseason W1")
         ready("option-overview",lambda r:"Advance offseason" in s.texts(r))
         click("option-office","Front Office")
         if not exercise:
@@ -161,6 +161,8 @@ try:
 
     trade_spec=importlib.util.spec_from_file_location("trade_smoke",Path(__file__).with_name("pro-trade-smoke.py"))
     trade_module=importlib.util.module_from_spec(trade_spec);trade_spec.loader.exec_module(trade_module);trade_module.run(s)
+    coordinator_spec=importlib.util.spec_from_file_location("coordinator_smoke",Path(__file__).with_name("pro-coordinator-smoke.py"))
+    coordinator_module=importlib.util.module_from_spec(coordinator_spec);coordinator_spec.loader.exec_module(coordinator_module);coordinator_module.run(s)
 
     print("PASS: new 2026 adjusted budget, 32 persisted allocations, signed adjustments, exact reconciliation, reinstall/save and financial UI themes, sourced cash, compact contract and expandable void accounting; synthetic rookie-option exercise/decline and saved guarantees; explicit old-budget correction with contracts retained; isolated CPU trade offer counter/accept/decline and persisted ownership.")
 

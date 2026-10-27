@@ -1,11 +1,15 @@
+using DynastyManager.Core.Models;
 namespace ProFootball.Core;
 public static class ProRetention
 {
     public static IReadOnlyList<ProPlayer> Expiring(ProFranchise s,string team) => s.Players.Where(p=>!p.Retired&&p.Football.TeamName==team&&s.Contracts.Any(c=>c.Active&&c.PlayerId==p.Football.PlayerId&&c.Team==team&&ProContractInsights.PlayingEnd(c)<=s.Year)).OrderByDescending(p=>p.Football.OverallRating).ToArray();
-    public static ProFranchise Negotiate(ProFranchise s,string team)
+    public static ProFranchise Negotiate(ProFranchise s,string team)=>Negotiate(s,team,false);
+    public static ProFranchise NegotiateStaffUnit(ProFranchise s)=>s.Career?.Unemployed==true?Negotiate(s,s.UserTeam,false)
+        :ProCareer.Role(s)==StaffRole.HeadCoach?s:Negotiate(s,s.UserTeam,true);
+    static ProFranchise Negotiate(ProFranchise s,string team,bool staffUnit)
     {
         if(s.Phase!=ProPhase.Offseason||s.OffseasonStep!=OffseasonStep.Retention)throw new InvalidOperationException("Retention negotiations open at the end of the season.");
-        foreach(var p in Expiring(s,team).Where(p=>!s.LetExpire.Contains(p.Football.PlayerId)&&(team!=s.UserTeam||ProCareer.Controls(s,p.Football.Position))))
+        foreach(var p in Expiring(s,team).Where(p=>!s.LetExpire.Contains(p.Football.PlayerId)&&(team!=s.UserTeam||s.Career?.Unemployed==true||(ProCareer.Controls(s,p.Football.Position)!=staffUnit))))
         {
             var terms=ProOfferTerms.AgentDemand(s,p,true);var c=s.Contracts.Last(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
             if(c.LastChangedYear>=s.Year)continue;
@@ -21,7 +25,9 @@ public static class ProRetention
                 return before-ProEconomy.CapHit(c,year)+ProEconomy.CapHit(proposal,year)>Math.Max(planningLimit,before);
             }))continue;
             try{
-                s=team==s.UserTeam?ProManagement.Submit(s,"Staff retention negotiation",[p.Football.PlayerId],0,x=>ProEconomy.Extend(x,team,p.Football.PlayerId,terms.Years,terms.Salary,terms.Bonus)):ProEconomy.Extend(s,team,p.Football.PlayerId,terms.Years,terms.Salary,terms.Bonus);
+                if(team!=s.UserTeam||s.Career?.Unemployed==true)s=ProEconomy.Extend(s,team,p.Football.PlayerId,terms.Years,terms.Salary,terms.Bonus);
+                else if(staffUnit)s=ProManagement.SubmitStaff(s,"Staff retention · "+p.Football.FullName,[p.Football.PlayerId],x=>ProEconomy.Extend(x,team,p.Football.PlayerId,terms.Years,terms.Salary,terms.Bonus));
+                else s=ProManagement.Submit(s,"Staff retention negotiation",[p.Football.PlayerId],0,x=>ProEconomy.Extend(x,team,p.Football.PlayerId,terms.Years,terms.Salary,terms.Bonus));
             }catch(InvalidOperationException){ /* Unresolved players remain visible until expiration. */ }
         }
         return s;

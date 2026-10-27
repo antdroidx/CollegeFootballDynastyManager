@@ -221,7 +221,8 @@ public static class ProOffseason
         if (s.OffseasonStep == OffseasonStep.Retention)
         {
             s = ProCareer.Review(s);
-            foreach(var team in s.League.Teams.Where(t=>t.Name!=s.UserTeam||s.AutoNegotiateExpiring))s=ProRetention.Negotiate(s,team.Name);
+            foreach(var team in s.League.Teams.Where(t=>t.Name!=s.UserTeam||s.AutoNegotiateExpiring||s.Career?.Unemployed==true))s=ProRetention.Negotiate(s,team.Name);
+            if(s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach)s=ProRetention.NegotiateStaffUnit(s);
             var owners = ProStandings.Build(s).Select(r => { var old = s.Owners.FirstOrDefault(o => o.Team == r.Team.Name) ?? new(r.Team.Name, 8, 65); var security = Math.Clamp(old.Security + (r.Wins - old.TargetWins) * 5, 0, 100); return old with { Security = security, Fired = security < 15 }; }).ToList();
             s=ProFinance.CloseYear(ProFinance.CpuBonuses(s));
             foreach (var p in s.Players.Where(p => !p.Retired && p.Football.TeamName != "Free agent").ToArray())
