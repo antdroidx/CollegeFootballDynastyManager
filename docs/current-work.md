@@ -179,3 +179,8 @@ Draft-generation review found template players could carry their previous-season
 - Pro combined aging/city/referee: run 40438801865, `live` scope at `4f6bb2c` (full device flow + fast regressions). Runs 40438135849 and 40438635362 were superseded to consolidate fixes; neither is an accepted release.
 - College shared referee: run 40438515279, application source `2acfcc1`, both Android flows requested; unrelated long career/calibration excluded. Later changes are Pro-only/docs.
 - Remaining financial source reconciliation, fifth-year choices, trade AI, wider roadmap and final archive/rename remain pending. Keep automation active. No main merge or cleanup performed.
+
+
+## Next Pro-only batch — coordinator draft-capital review
+
+ProManagement now reviews actual pick/player ownership changes after a coordinator trade recommendation, in addition to existing current/future unit/team salary checks. Spending shared picks requires incoming package value to justify outgoing players/picks (10% valuation tolerance); projected pick strength/year discount uses existing ProTrade valuation. Rejection keeps rosters/contracts/picks/transactions unchanged and records a GM reason. Pick-only coordinator proposals remain GM-controlled; ordinary draft selections are not mistaken for traded picks. Twenty-six relevant career/trade/GM cases passed locally, including two new asset-review regressions. This is **not in Build 44** (source `4f6bb2c`); do not cancel its active device acceptance. Scope/package the next Pro-only batch after Build 44 is accepted. Autonomous CPU trade proposals/counteroffers remain outstanding.

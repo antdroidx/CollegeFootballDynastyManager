@@ -154,6 +154,29 @@ public static class ProManagement
                 break;
             }
         }
+        if (approved && sharedPicks)
+        {
+            var beforePicks = s.Picks.ToDictionary(p => p.Id);
+            var afterPicks = proposal.Picks.ToDictionary(p => p.Id);
+            var sent = s.Picks.Where(p => p.Owner == s.UserTeam && afterPicks.TryGetValue(p.Id, out var after) && after.Owner != s.UserTeam).ToArray();
+            if (sent.Length > 0)
+            {
+                var beforePlayers = s.Players.ToDictionary(p => p.Football.PlayerId);
+                var afterPlayers = proposal.Players.ToDictionary(p => p.Football.PlayerId);
+                var paid = sent.Sum(p => ProTrade.PickValue(s, p)) + s.Players
+                    .Where(p => p.Football.TeamName == s.UserTeam && afterPlayers.TryGetValue(p.Football.PlayerId, out var after) && after.Football.TeamName != s.UserTeam)
+                    .Sum(p => ProTrade.PlayerValue(s, p, s.UserTeam));
+                var received = proposal.Picks.Where(p => p.Owner == s.UserTeam && beforePicks.TryGetValue(p.Id, out var before) && before.Owner != s.UserTeam)
+                    .Sum(p => ProTrade.PickValue(s, p)) + proposal.Players
+                    .Where(p => p.Football.TeamName == s.UserTeam && beforePlayers.TryGetValue(p.Football.PlayerId, out var before) && before.Football.TeamName != s.UserTeam)
+                    .Sum(p => ProTrade.PlayerValue(s, beforePlayers[p.Football.PlayerId], s.UserTeam));
+                if (paid > received * 1.10)
+                {
+                    approved = false;
+                    reason = "GM declined: the incoming package does not justify the players and shared future draft capital being traded away.";
+                }
+            }
+        }
         var decision = new ProGmDecision(Guid.NewGuid(), s.Year, s.Week, action, approved, reason);
         var result = approved ? proposal : s;
         return result with { GmDecisions = s.GmDecisions.Append(decision).TakeLast(100).ToList() };

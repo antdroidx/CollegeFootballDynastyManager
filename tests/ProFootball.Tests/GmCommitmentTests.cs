@@ -12,6 +12,29 @@ public class GmCommitmentTests
         s=s with{Contracts=[new(qb.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,1_000_000,0)]),new(receiver.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year+1,100_000_000,0)])]};
         return(s,qb,receiver);
     }
+    [Fact] public void FuturePickOverpaymentIsRejectedAtomicallyEvenWhenCapCostsDoNotIncrease()
+    {
+        var (s,qb,_) = Setup();
+        var other = s.League.Teams.First(t => t.Name != s.UserTeam).Name;
+        var sent = s.Picks.Where(p => p.Owner == s.UserTeam && p.Round == 1).Select(p => p.Id).ToHashSet();
+        var result = ProManagement.Submit(s, "Trade recommendation", [qb.Football.PlayerId], 0,
+            x => x with { Picks = x.Picks.Select(p => sent.Contains(p.Id) ? p with { Owner = other } : p).ToList() }, sharedPicks: true);
+        Assert.False(Assert.Single(result.GmDecisions).Approved);
+        Assert.Contains("draft capital", result.GmDecisions[0].Reason);
+        Assert.Same(s.Picks, result.Picks); Assert.Same(s.Players, result.Players); Assert.Same(s.Contracts, result.Contracts);
+    }
+    [Fact] public void FuturePickReviewAcceptsAnAssetImprovementAndDoesNotTreatDraftSelectionAsTrade()
+    {
+        var (s,qb,_) = Setup();
+        var sent = s.Picks.Where(p => p.Owner == s.UserTeam).MinBy(p => ProTrade.PickValue(s,p))!;
+        var received = s.Picks.Where(p => p.Owner != s.UserTeam).MaxBy(p => ProTrade.PickValue(s,p))!;
+        var result = ProManagement.Submit(s, "Trade recommendation", [qb.Football.PlayerId], 0,
+            x => x with { Picks = x.Picks.Select(p => p.Id == sent.Id ? p with { Owner = received.Owner } : p.Id == received.Id ? p with { Owner = s.UserTeam } : p).ToList() }, sharedPicks: true);
+        Assert.True(Assert.Single(result.GmDecisions).Approved);
+        Assert.Equal(s.UserTeam, result.Picks.Single(p => p.Id == received.Id).Owner);
+        var unchanged = ProManagement.Submit(s, "Draft recommendation", [qb.Football.PlayerId], 0, x => x, sharedPicks: true);
+        Assert.True(Assert.Single(unchanged.GmDecisions).Approved);
+    }
     [Fact] public void FutureExtensionIsReviewedAndRejectedWithoutApplyingSideEffects()
     {
         var(s,qb,_)=Setup();var calls=0;
