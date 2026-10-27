@@ -1,6 +1,6 @@
 # Pro completion checklist
 
-Current verified Pro application source: `a2c74e8` (landscape), accounting `7687443` / core `6faa77f`, APK Build 37; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
+Current verified Pro application source: `561dc4f`, APK Build 39 (financial scope); full GameCast/landscape verified at Build 37 `a2c74e8`; College/shared source: `51c5cef` on `feature/pro-franchise-foundation`. See [current-work.md](current-work.md) for exact artifacts, validation limits and continuation instructions.
 
 ## October 26 batch — Pro APK 33 financially verified; College 389 preserved
 
@@ -109,3 +109,14 @@ User authorized October 26; perform last, after the current implementation and v
 
 
 Financial QA retry 40415642843 passed the exact-APK source guard and all 13 helper cases, then stopped because the contract term was visible at the bottom while the adjacent APY remained below the viewport. Evidence confirmed correct profile/term; the harness now explicitly scrolls to the APY before asserting it. This does not change application inputs. Reuse Build 39 again; it is not accepted until the complete financial flow passes.
+
+
+## Financial Build 39 accepted
+
+The exact [Build 39 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40414202682/artifacts/12694921409), application source `561dc4f`, passed financial device acceptance in [QA-only run 40416144714](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40416144714). [Evidence 12695832869](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40416144714/artifacts/12695832869). Source/build-input equality passed, 13 helper regressions passed, 124 scoped Pro cases and packaging passed in the original run. The complete financial flow checked imported terms/cash, compact/void details, all 32 cap allocations, signed adjustments, reinstall/save and light theme. Screenshots reviewed. Prior 125-case annual run and eight final-cut regressions remain as recorded above; College/shared code unchanged, reuse College 389. Seattle modeled camp room is $5,672,598 vs full-season room -$9,422,775, not a claim of official $13.442M reconciliation. No balancing credits invented; sourced default remains experimental.
+
+## Active Pro aging batch — not in Build 39
+
+Added Pro-only position-specific peak ages, earlier athletic than technical/mental decline, shrinking future headroom, and persistent previous-season overall. The canonical College 19-attribute overall formula remains unchanged. Growth outlook is separate from present ability/projected ceiling; elite veterans no longer carry misleading young-prospect growth stars. Roster delta and profile annual change expose offseason decline; old saves without previous-season history use an existing baseline or unknown, never fabricated history. Trade/pick forecasts use the same age-aware headroom. Fifteen targeted development/shared-rating cases passed; broad annual/Android validation remains pending. Do not call this batch accepted until its build/device checks pass.
+
+Aging batch: local Android compilation passed with zero warnings/errors; 15 targeted tests passed. Full annual regression started; Android acceptance pending.

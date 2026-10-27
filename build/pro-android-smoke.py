@@ -87,6 +87,10 @@ try:
     # Names are the same interactive cells used by the college-style profile flow.
     click("player-profile-open","Sam Darnold")
     ready("player-profile","Player profile")
+    growth=ready("player-growth-delta","Change since season start")
+    assert any((t or "").startswith("OVR ") and "Projected ceiling" in t for t in s.texts(growth))
+    assert any((t or "").startswith("Remaining growth ·") for t in s.texts(growth))
+    s.capture("pro-player-growth-delta")
     profile=ready("player-attributes","Character traits")
     assert not any("Madden" in (t or "") for t in s.texts(profile))
     s.capture("pro-player-profile")

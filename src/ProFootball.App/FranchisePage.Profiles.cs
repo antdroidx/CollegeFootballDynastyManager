@@ -6,6 +6,14 @@ namespace ProFootball.App;
 
 public sealed partial class FranchisePage
 {
+    View RatingDelta(ProPlayer p)
+    {
+        var delta = ProDevelopment.Delta(p);
+        var label = Text(delta is null ? "—" : delta > 0 ? "+" + delta : delta.ToString()!, 14, true);
+        if (delta > 0) label.TextColor = Color.FromArgb(DynastyTheme.IsLight ? "#146B40" : "#71D8A2");
+        else if (delta < 0) label.TextColor = Color.FromArgb(DynastyTheme.IsLight ? "#A52828" : "#FF9A8E");
+        return label;
+    }
     View PlayerCell(ProPlayer p) => new HorizontalStackLayout { Spacing = 8, Children = { Portrait(p, 38), Link(p.Football.FullName, () => Player(p)) } };
     View Portrait(ProPlayer p, double size)
     {
@@ -27,7 +35,7 @@ public sealed partial class FranchisePage
         var s = state!; var p = s.Players.FirstOrDefault(x => x.Football.PlayerId == original.Football.PlayerId) ?? original; var f = p.Football;
         var contract = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == f.PlayerId);
         var identity = new HorizontalStackLayout { Spacing = 14, Children = { Portrait(p, 108), new VerticalStackLayout { Children = { Text(f.FullName, 23, true), Text($"#{f.JerseyNumber} · {OffensiveLineService.Label(f)} · {f.TeamName}"), Text($"Age {p.Age} · Experience {p.Experience} · {f.HeightInches / 12}′{f.HeightInches % 12}″ · {f.WeightPounds} lb") } } } };
-        var attributes = new List<View> { Text($"OVR {f.OverallRating} · Potential {PlayerAttributeCatalog.PotentialStars(f.PotentialRating)}", 20, true) };
+        var attributes = new List<View> { Text($"OVR {f.OverallRating} · Projected ceiling {ProDevelopment.Ceiling(p)}", 20, true), Text("Remaining growth · " + ProDevelopment.Growth(p)), new HorizontalStackLayout { Spacing = 8, Children = { Text(p.PreviousSeasonOverall is not null ? "Change since last offseason" : "Change since season start"), RatingDelta(p) } } };
         foreach (var group in PlayerAttributeCatalog.Groups(f))
             attributes.Add(PlayerAttributeViews.Group(group.Title, group.Subtitle, group.Attributes,
                 (title, subtitle) => new VerticalStackLayout { Spacing = 3, Children = { Text(title, 15, true), Text(subtitle, 11) } }));

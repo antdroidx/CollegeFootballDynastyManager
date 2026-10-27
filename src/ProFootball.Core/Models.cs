@@ -7,6 +7,7 @@ public sealed record ProLeague(int Version, string Name, int ActiveRosterLimit, 
 public enum ProPhase { Preseason, RegularSeason, Playoffs, Offseason }
 public sealed record ProPlayer(DynastyPlayer Football, int Age, int Experience, bool PracticeSquad)
 {
+    public int? PreviousSeasonOverall { get; init; }
     public int? CreditedSeasons {get;init;}
     public int? RookieYear { get; init; }
     public int? DraftOverall { get; init; }

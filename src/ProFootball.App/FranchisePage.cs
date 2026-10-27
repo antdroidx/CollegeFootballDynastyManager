@@ -152,7 +152,7 @@ public sealed partial class FranchisePage : ContentPage
         var list = new VerticalStackLayout { Spacing = 12 };
         var showRatings = false;
         var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(tools); body.Add(team); body.Add(search); body.Add(positions);
-        body.Add(Text("Tap a player for all attributes · Swipe the table for more columns", 12));
+        body.Add(Text("Δ since last offseason (season start for new saves) · Growth is remaining upside · Swipe for more columns", 12));
         body.Add(list);
         void Draw()
         {
@@ -162,11 +162,11 @@ public sealed partial class FranchisePage : ContentPage
             foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"))
             {
                 list.Add(Text(group.Key + " · " + group.Count(), 21, true));
-                var columns = new List<(string, int)> { ("Pos", 48), ("Player", 220), ("Age", 45), ("OVR", 50), ("Potential", 68), ("Morale", 65), ("Cap hit", 90) };
+                var columns = new List<(string, int)> { ("Pos", 48), ("Player", 220), ("Age", 45), ("OVR", 50), ("Δ", 45), ("Growth", 100), ("Morale", 65), ("Cap hit", 90) };
                 if (showRatings) columns.AddRange(PlayerAttributeCatalog.Groups(players[0].Football).SelectMany(g => g.Attributes).Select(a => (a.Name, 95)));
                 list.Add(Table(columns.ToArray(), group.OrderBy(p => p.Football.Position).ThenBy(p => p.Football.DepthChartOrder).Select(p =>
                 {
-                    var cells = new List<View> { Text(OffensiveLineService.Label(p.Football), 12), PlayerCell(p), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString(), 15, true), Text(PlayerAttributeCatalog.PotentialStars(p.Football.PotentialRating)), Text(p.Morale.ToString()), Text(Money(s.Contracts.Where(c => c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year))), 12) };
+                    var cells = new List<View> { Text(OffensiveLineService.Label(p.Football), 12), PlayerCell(p), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString(), 15, true), RatingDelta(p), Text(ProDevelopment.Growth(p)), Text(p.Morale.ToString()), Text(Money(s.Contracts.Where(c => c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year))), 12) };
                     if (showRatings) cells.AddRange(PlayerAttributeCatalog.Groups(p.Football).SelectMany(g => g.Attributes).Select(a => Text(a.Rating.ToString())));
                     return cells.ToArray();
                 })));

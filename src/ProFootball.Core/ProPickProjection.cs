@@ -9,8 +9,8 @@ public static class ProPickProjection
         var deals=s.Contracts.Where(c=>c.Active).GroupBy(c=>c.PlayerId).ToDictionary(g=>g.Key,g=>g.Last());
         double Talent(ProPlayer p)
         {
-            var peak=p.Football.Position==Position.QB?31:p.Football.Position==Position.K?34:p.Football.Position==Position.RB?26:29;
-            var age=p.Age+horizon;var gain=p.Age<25?Math.Min(p.Football.PotentialRating-p.Football.OverallRating,horizon*1.5):0;
+            var peak=ProDevelopment.PeakAge(p.Football.Position);
+            var age=p.Age+horizon;var gain=Math.Min(ProDevelopment.Headroom(p),horizon*1.5);
             var decline=Math.Max(0,age-peak)*Math.Min(horizon,3)*.8;
             var contract=deals.GetValueOrDefault(p.Football.PlayerId);
             var uncertainty=contract is not null&&ProContractInsights.PlayingEnd(contract)<year?1.5:0;
