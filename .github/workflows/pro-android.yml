@@ -8,7 +8,7 @@ on:
       validation_scope:
         description: Finance checks financial UI; live checks GameCast/UI without repeating long financial simulations; full runs everything
         type: choice
-        options: [full, finance, live]
+        options: [full, finance, live, trade]
         default: full
       reuse_apk_run_id:
         description: Optional prior run ID for test-only retries; app-source differences reject reuse
@@ -51,12 +51,12 @@ jobs:
       - name: Full Pro tests
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
-        if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'live'
+        if: inputs.validation_scope != 'finance' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
       - name: Pro scoped regressions
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
-        if: inputs.validation_scope == 'finance' || inputs.validation_scope == 'live'
+        if: inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
       - name: Build independent pro APK
         run: >
@@ -115,7 +115,7 @@ jobs:
           script: |
             adb install -r $(find apk -name '*-Signed.apk' -print -quit)
             adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
-            python3 -u build/${{ inputs.validation_scope == 'finance' && 'pro-finance-smoke.py' || 'pro-android-smoke.py' }}
+            python3 -u build/${{ inputs.validation_scope == 'finance' && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || 'pro-android-smoke.py' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -125,5 +125,6 @@ jobs:
             android-pro-*.xml
             pro-logcat.txt
             pro-finance-logcat.txt
+            pro-trade-logcat.txt
             pro-finance-ledger-check.json
           retention-days: 3
