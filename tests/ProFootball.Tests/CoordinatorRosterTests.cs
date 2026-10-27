@@ -10,15 +10,23 @@ public class CoordinatorRosterTests
         var removed=s.Players.Where(p=>p.Football.TeamName==s.UserTeam&&!p.Retired&&!p.Reserve&&!p.PracticeSquad&&!ProCareer.Controls(s,p.Football.Position)).Take(3).Select(p=>p.Football.PlayerId).ToHashSet();
         var candidate=s.Players.First(p=>removed.Contains(p.Football.PlayerId));
         candidate=candidate with{Age=25,Experience=3,CreditedSeasons=3,Football=candidate.Football with{TeamName="Free agent",OverallRating=55,PotentialRating=55}};
-        s=s with{League=s.League with{Teams=s.League.Teams.Where(t=>t.Name==s.UserTeam).ToList()},Phase=ProPhase.RegularSeason,Week=10,SalaryCap=2_000_000_000,TeamCapAllocations=[],
+        s=s with{Phase=ProPhase.RegularSeason,Week=10,SalaryCap=2_000_000_000,TeamCapAllocations=[],
             Players=s.Players.Where(p=>!removed.Contains(p.Football.PlayerId)).Select(p=>p.Football.TeamName=="Free agent"?p with{Retired=true}:p).Append(candidate).ToList(),
             Contracts=s.Contracts.Where(c=>!removed.Contains(c.PlayerId)).ToList()};
+        // Isolate the one-player market using legal, full opposing rosters, not an invalid one-team league.
+        foreach(var team in s.League.Teams.Where(t=>t.Name!=s.UserTeam))
+            while(ProRoster.Active(s,team.Name)<53)
+            {
+                var reserve=s.Players.First(p=>p.Football.TeamName==team.Name&&p.PracticeSquad&&!p.Reserve&&!p.Retired);
+                s=ProRoster.Practice(s,team.Name,reserve.Football.PlayerId,false);
+            }
         return(s,candidate);
     }
     static void Fixture(ProFranchise s,ProPlayer p,StaffRole role,string kind)
     {
         if(Environment.GetEnvironmentVariable("PRO_COORDINATOR_UI_FIXTURES") is not string directory)return;
         var fixture=s with{Id=Guid.NewGuid(),Name="Synthetic staff "+kind+" QA "+role,Games=[]};
+        ProLeagueService.Validate(fixture.League);
         using var file=File.Create(Path.Combine(directory,"pro-staff-"+kind+"-ui-"+role+".json.gz"));
         using var gzip=new System.IO.Compression.GZipStream(file,System.IO.Compression.CompressionLevel.SmallestSize);
         System.Text.Json.JsonSerializer.Serialize(gzip,new{franchise=fixture,player=p.Football.PlayerId,controlledPlayers=s.Players.Where(x=>x.Football.TeamName==s.UserTeam&&ProCareer.Controls(s,x.Football.Position)).Select(x=>x.Football.PlayerId).ToArray()},new System.Text.Json.JsonSerializerOptions{PropertyNamingPolicy=System.Text.Json.JsonNamingPolicy.CamelCase});
@@ -124,5 +132,24 @@ public class CoordinatorRosterTests
         var next=ProCpu.FinalizeStaffRoster(s);
         Assert.Equal(s.Contracts,next.Contracts);Assert.Equal(s.Players,next.Players);Assert.Equal(s.DeadCap,next.DeadCap);Assert.Equal(s.SalaryCap,next.SalaryCap);
         Assert.True(ProEconomy.Room(next,s.UserTeam)<0);Assert.Contains(next.GmDecisions,d=>!d.Approved&&d.Reason.Contains((s.Year+1).ToString()));
+    }
+    [Fact] public async Task ScopedDeviceFixturesPassTheRealSaveLoader()
+    {
+        var root=Path.Combine(Path.GetTempPath(),"pro-coordinator-fixture-"+Guid.NewGuid());
+        try
+        {
+            var store=new ProSaveStore(root);
+            foreach(var role in new[]{StaffRole.OffensiveCoordinator,StaffRole.DefensiveCoordinator})
+            {
+                var(roster,_)=Setup(role);var(draft,_,_)=Draft(role);
+                foreach(var state in new[]{roster,draft})
+                {
+                    await store.Save(state);var loaded=await store.Load(state.Id);
+                    Assert.Equal(32,loaded.League.Teams.Count);Assert.Equal(state.Career,loaded.Career);
+                    Assert.Equal(state.Prospects.Count,loaded.Prospects.Count);Assert.Equal(state.Phase,loaded.Phase);
+                }
+            }
+        }
+        finally{if(Directory.Exists(root))Directory.Delete(root,true);}
     }
 }

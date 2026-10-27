@@ -238,3 +238,5 @@ Additional architecture audit: PlayerExport v1 and ProPlayerImport.Convert exist
 - [ ] Finish final regressions/annual simulations and package/device acceptance. Current accepted APK remains57; see current-work.md.
 
 Waiver financial mechanics still use the existing simplified release/new-deal model; source reconciliation, full waiver assumption rules, market calibration, draft-class UI integration and remaining roadmap remain open.
+
+Pro58 verification follow-up: packaging and196 fast cases passed. Original device run verified retention but refused the invalid one-team synthetic draft save; corrected32-team fixtures and a real-loader check are being verified through an exact-APK retry. Do not mark roster/draft device acceptance complete until the retry passes.

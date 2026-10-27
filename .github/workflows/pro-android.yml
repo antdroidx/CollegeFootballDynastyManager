@@ -105,6 +105,15 @@ jobs:
           path: apk
           github-token: ${{ github.token }}
           run-id: ${{ inputs.reuse_apk_run_id || github.run_id }}
+      - uses: actions/setup-dotnet@v4
+        if: inputs.reuse_apk_run_id != '' && inputs.validation_scope == 'retention'
+        with:
+          dotnet-version: '10.0.x'
+      - name: Regenerate scoped coordinator fixtures for exact-APK retries
+        if: inputs.reuse_apk_run_id != '' && inputs.validation_scope == 'retention'
+        env:
+          PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}/apk
+        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~CoordinatorRosterTests'
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
