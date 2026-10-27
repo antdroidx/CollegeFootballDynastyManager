@@ -20,6 +20,8 @@ Packaging source `aad411d` in run40462840012 (coordinator retention/roster/draft
 
 Pro58 packaged successfully (artifact12714304881) and passed196 scoped Pro cases,15 helpers and source validation in run40462840012. Its device run completed both retention flows, then rejected a synthetic roster/draft save because the test fixture used a one-team league, which the production save loader correctly disallows. This is a fixture failure, not accepted roster/draft device evidence. Corrected fixtures retain32 teams and legally promote opposing practice players to full53 rosters to isolate the intended market. Eighteen affected cases pass on these corrected fixtures, including all four real-save-loader round trips. A harness-only exact-APK retry regenerates these fixtures from current core tests, preserving app inputs and the APK58 source guard. No APK rebuild or repeated long simulations are needed.
 
+Harness-only source c94b7fa queued exact-APK58 verification in run40484403327. Eighteen targeted cases and15 helpers passed; app source remains aad411d. Follow this retry, not the superseded failed device invocation.
+
 ## Latest verified APKs
 
 ## Accepted coordinator-retention batch — Pro57
