@@ -50,11 +50,11 @@ Current verified Pro application source: `561dc4f`, APK Build 39 (financial scop
 - [x] Final UI follow-up: readable Void column/compact pay-table screenshot. Build 36 all jobs passed: run 40406332938, APK artifact 12690204175, evidence 12691288745; 116 scoped tests and exact-APK financial/contract/theme/reinstall acceptance.
 - [ ] Finish broader source reconciliation and option rules before enabling the sourced default.
 
-## Seasonal cap counting — active batch after Build 37
+## Seasonal cap counting — verified in Build 39
 
-- [ ] New-save v2 top-51/excess-salary counting, separate excluded salary, full opening-day gate, conservative CPU planning and inbox warning. 123 scoped cases and the full 125-case annual run passed before the final-cut timing correction; eight targeted cases passed afterward. Final scoped/device verification pending.
-- [ ] Final-cut accounting fix: full-budget CPU compliance must use opening week 1 for earned-salary calculations, not preseason week 3. Build 38 canceled before device QA to include this correction.
-- [ ] Verify v0/v1 save compatibility and persist v2 on reinstall; update 32-team diagnostic without forcing official balances.
+- [x] New-save v2 seasonal counting, excluded salary, full opening-day gate, conservative CPU planning and inbox warning. Build 39 passed 124 scoped cases; exact-APK financial acceptance succeeded in 40416144714. Annual and final-cut evidence is detailed in current-work.md.
+- [x] Final-cut accounting uses opening week 1; targeted regression passed. Build 38 was superseded by verified Build 39.
+- [x] v0/v1 compatibility, v2 reinstall persistence and 32-team arithmetic checks verified; official opening commitments remain unreconciled.
 
 ## Next authorized financial phase
 
