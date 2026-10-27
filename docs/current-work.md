@@ -1,5 +1,11 @@
 # Current work — shared Core, College and Pro
 
+## Build64 packaging and exact-APK retry
+
+App/core8b06fa7 packaged in run40547793852: APK12754790693. All239 full local Pro tests passed in5m22s, including20 generated/five sourced seasons;237 scoped CI cases,16 helpers and32-team source validator passed. Device finance/budget/source-cash/options and trade flows passed; coordinator helper stopped on an overly broad fixture glob that included the new reserve/termination fixtures. This is a harness selection error, not accepted full device verification. Narrowed the helper to its four roster/draft fixtures. Retry the same APK with finance scope; no app inputs, long rerun or College/GameCast rebuild needed. Prior evidence12754986174 is in .artifacts/pro64-ui.
+
+Developer parser now handles repeated bonus CSS by semantic headers and year-cell tooltips (previously skipped annotated future years). Five parser cases pass. These corrections change none of the447 records already applied to64. They uncover42 additional staged candidates; do not add those while64 acceptance is pending. Extension cash-flow charts are new-money charts and are not used as total annual pay. Developer termination audit compares95 same-cap current cases:3 exact modeled/source cuts,92 require explicit payment/guarantee review. This is evidence of remaining source accuracy work, not permission to override liabilities or enable sourced default. No application data changed by these audit tools. Continue all four tasks after64 acceptance.
+
 ## Active contract and waiver batch — acceptance in progress
 
 Pro63 remains the latest accepted APK. Current candidate adds original-contract waiver assignment; dated June1 release/trade splits, two early designations with held savings and final2030 treatment; paid/unpaid/conditional bonus and published vesting metadata; release cash/cap previews; and a near-header waiver claim action. Trade and waiver follow-up cases prevent paid bonuses or already-earned salary from becoming duplicate buyer guarantees. Legacy saves retain booked debt and negotiated contracts; metadata migration requires exact unchanged annual terms.

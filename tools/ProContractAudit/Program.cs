@@ -1,6 +1,12 @@
 using System.Text.Json;
 using ProFootball.Core;
 var state=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
+if(args.FirstOrDefault()=="--termination-evidence")
+{
+    if(args.Length!=4)throw new ArgumentException("--termination-evidence PARSED_PAGES NOTE_IDENTITIES OUTPUT");
+    var terminationReport=TerminationAudit.Create(state,args[1],args[2]);
+    File.WriteAllText(args[3],JsonSerializer.Serialize(terminationReport,new JsonSerializerOptions{WriteIndented=true,PropertyNamingPolicy=JsonNamingPolicy.CamelCase}));return;
+}
 if(args.FirstOrDefault()=="--market")
 {
     var marketReport=MarketAudit.Create(state);

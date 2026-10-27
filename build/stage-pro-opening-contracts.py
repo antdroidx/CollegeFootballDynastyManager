@@ -29,9 +29,10 @@ def main():
      if r["void"]:cash=0;bonus=0
      elif new_cash_proof:cash=salary+other+(signing if year==signed else 0);bonus=signing if year==signed else 0
      else:
+      published=None if "Extension" in page.get("kind","") else page.get("annualCash",{}).get(str(year))
       historic=[h for h in page["history"] if h["year"]==year and h.get("cashPaid") is not None and h.get("cap")==r["cap"]]
-      if len(historic)!=1:raise ValueError("No unambiguous published annual cash")
-      cash=historic[0]["cashPaid"];bonus=cash-salary-other
+      if published is None and len(historic)!=1:raise ValueError("No unambiguous published annual cash")
+      cash=published if published is not None else historic[0]["cashPaid"];bonus=cash-salary-other
       if bonus<0:raise ValueError("Partial-year cash needs explicit salary-rate treatment")
      bonus_cash[str(year)]=bonus
      rows.append({"Year":year,"Salary":salary,"Guaranteed":min(salary,r.get("reportedGuaranteedCash") or 0),"SourceGuaranteed":r.get("reportedGuaranteedCash"),"GuaranteedOtherCash":other if fully_guaranteed else 0,"ProratedBonus":proration,"OtherCompensation":r["cap"]-salary-proration,"OtherCash":other,"IsVoid":r["void"]})

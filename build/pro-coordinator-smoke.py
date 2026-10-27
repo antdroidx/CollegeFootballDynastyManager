@@ -43,7 +43,7 @@ def run(s):
         assert any(c["active"] and c["playerId"]==data["otherPlayer"] and max(y["year"] for y in c["years"] if not y["isVoid"])>=checked["year"] for c in checked["contracts"])
         assert any(d["approved"] and d["action"].startswith("Staff retention ·") for d in checked["gmDecisions"])
         s.capture("pro-coordinator-"+str(role)+"-advanced")
-    staff_packs=sorted(Path("apk").glob("**/pro-staff-*-ui-*.json.gz"));assert len(staff_packs)==4
+    staff_packs=sorted([*Path("apk").glob("**/pro-staff-roster-ui-*.json.gz"),*Path("apk").glob("**/pro-staff-draft-ui-*.json.gz")]);assert len(staff_packs)==4
     for pack in staff_packs:
         data=json.loads(gzip.decompress(pack.read_bytes()));fixture=data["franchise"];fixture_id=fixture["id"]
         kind="draft" if "-draft-" in pack.name else "roster";role=fixture["career"]["role"]
