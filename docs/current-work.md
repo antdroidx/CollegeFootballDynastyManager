@@ -24,7 +24,7 @@ https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40584307
 
 243 fast Pro cases,16 helpers, source validator and packaging passed. Core/data remain66: reuse245 full/annual cases. Device evidence12771961687 is in .artifacts/pro67-ui. All nine termination assertions pass: June1 held savings, inherited waiver terms/award/reload,333333 one-week buyer-earned cash, refreshed Free agent profile, removal of old contract actions and disabled own/duplicate claims. Assigned-release screenshot reviewed. This is termination scope, not new full College/GameCast acceptance.
 
-## Current opening-ledger batch - not yet packaged/accepted
+## Current opening-ledger batch - Pro68 acceptance running
 
 New sourced2026 franchises initialize735 independently dated prior-contract cap assessments across32 clubs, total1591660715. Source names/event keys/hashes/unknown identities survive saves; no historical cash or future debt is inferred. Generated mode and existing saves are not backfilled. Signed saved contracts remain untouched. Source debt cannot be erased by a new release involving the same player.
 
@@ -34,7 +34,7 @@ Actual new-franchise runtime Seattle liabilities300971343 exactly match the date
 
 Final250 Pro cases excluding the unchanged twenty-generated-season case passed in1m55 (.artifacts/opening-ledger-final-tests.txt), including five sourced seasons and three imported-cap seasons, all six new opening/roster/exemption/save tests, and changed waiver/trade guards. Earlier249 fast cases passed1m22 before final PS guard tweaks, followed by seven focused/five-season cases in1m17.16 helpers and32-pair validator pass. Reuse unchanged twenty-generated-season evidence from66; no College/shared engine changes. Local Android build passed with0 warnings/errors in2m15, log .artifacts/opening-ledger-android-build.txt. No local compilation remains active.
 
-New opening CI device scope reuses the financial source/budget/compact-accounting/theme/reinstall flow and ends before unrelated option/trade/coordinator fixtures. It additionally checks all735 dated source assessments, zero invented historical cash and Seattle exact liabilities. Dispatch opening CI after committing this source; package/verify and inspect screenshots before calling this batch accepted.
+New opening CI device scope reuses the financial source/budget/compact-accounting/theme/reinstall flow and ends before unrelated option/trade/coordinator fixtures. It additionally checks all735 dated source assessments, zero invented historical cash and Seattle exact liabilities. App/core afe8b73 is in Pro68 run40587763626 (opening scope).249 fast CI cases/16 helpers/source validator and APK packaging passed; device flow remains active. Follow this run, do not dispatch another APK or change app inputs until its acceptance finishes. Exact artifacts still to record.
 
 ## Source cache, discrepancies and next work
 
@@ -44,7 +44,7 @@ Offline cache:507 opening player pages (two bounded failures: Jaden Bradley/Fred
 
 Parser uses semantic headers, keeps annotated future years and integer/null fields. Some source annual columns/cash-flow charts conflict (e.g. roster pay appears included in salary but also shown separately); do not invent cash to resolve them. Original Parquet53507 rows SHA3f6f8906a20d48c688f5727e76856997bc01ad2d9e1ac0ed83b41559f4a12a9f remains in2026-10-26 raw snapshots.
 
-37 payment-event candidates in .artifacts/pro-payment-event-candidates.json remain unpromoted;34 staged current cut cases match both pre/post source quotes, but future vesting/date semantics need review. A source current guarantee is not automatically a guarantee at original signing. Do not erase future guarantees to force a static future-year cut quote. Complete source-dated guarantees/vesting/current-club/departed assessments before default promotion. Prior market curves/audit1365d52 are unchanged; do not regenerate the old baseline report against new curves.
+Original37 payment-event candidates in .artifacts/pro-payment-event-candidates.json remain unpromoted; strengthened offline staging now retains36 (.artifacts/pro-payment-event-candidates-v2.json), rejecting cash without a new published option-allocation increase.34 staged current cut cases match both pre/post source quotes, but future vesting/date semantics need review. A source current guarantee is not automatically a guarantee at original signing. Do not erase future guarantees to force a static future-year cut quote. Complete source-dated guarantees/vesting/current-club/departed assessments before default promotion. Prior market curves/audit1365d52 are unchanged; do not regenerate the old baseline report against new curves.
 
 Primary rules: official CBA https://nflpaweb.blob.core.windows.net/website/PDFs/CBA/March-15-2020-NFL-NFLPA-Collective-Bargaining-Agreement-Final-Executed-Copy.pdf ; current international updates https://operations.nfl.com/programs-initiatives/international-growth/international-player-pathway ; source status links are in the reviewed roster dossier. No full temporary-elevation or dated medical-return implementation claimed.
 
@@ -57,3 +57,10 @@ Primary rules: official CBA https://nflpaweb.blob.core.windows.net/website/PDFs/
 -College390 source2acfcc1, run40438515279, APK12705660863/evidence12705718044 and12705752478:690 legacy combined Core/College cases and both Android flows. Do not relabel690 exclusively Core/College until audited. No College rebuild for current Pro finance batch.
 
 Remaining broader roadmap is in pro-completion-checklist.md: full waiver/PS lifecycle, actual College draft-class export/Pro import UI, career/offseason, analytics/factual news, NFL tiebreaks, mobile grid actions and audited test split. Finish the four current priorities first.
+
+
+## Follow-up offline findings during Pro68 CI
+
+Actual32-team runtime audit is docs/data/pro-runtime-opening-reconciliation-2026-10-27.json, produced by tools/ProContractAudit --opening-reconciliation OUTPUT:6 teams exactly reconcile (CIN/LV/DAL/PHI/CHI/SEA), remaining deltas are recorded, not hidden in budget balancing entries. Pack-only and runtime counts differ because of fallback/status/ownership records.
+
+Eight specific guarantee/payment findings are in docs/data/pro-guarantee-semantic-review-2026-10-27.json. Roquan2026 reported4m guarantee corresponds to due roster pay, not a second4m guaranteed P5 salary. The2027 published cash remainder1m has no new option-proration increase; it should remain unallocated non-prorated other cash rather than a fabricated option event. Read-only tools/ProContractAudit --roquan-guarantee-proof OUTPUT verifies reclassification preserves every annual cash/cap amount, matches current source cut figures and prevents false buyer guarantee/release cash. Proof: docs/data/pro-roquan-guarantee-proof-2026-10-27.json. No app/source/save correction applied yet. Next implement a guarded reviewed correction with safe unchanged-source migration and a regression for buyer release; preserve already booked debt and negotiated/assigned contracts. Future-guarantee source notes also contain conflicts/typos: do not auto-promote the36 candidates. Staging flag is explicitly an as-of comparison assumption, not proof of guarantee at original signing.

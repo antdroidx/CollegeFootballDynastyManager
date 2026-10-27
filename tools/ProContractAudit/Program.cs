@@ -1,6 +1,24 @@
 using System.Text.Json;
 using ProFootball.Core;
 var state=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
+if(args.FirstOrDefault()=="--roquan-guarantee-proof")
+{
+    if(args.Length!=2)throw new ArgumentException("--roquan-guarantee-proof OUTPUT");
+    File.WriteAllText(args[1],JsonSerializer.Serialize(RoquanGuaranteeProof.Create(state),new JsonSerializerOptions{WriteIndented=true}));return;
+}
+if(args.FirstOrDefault()=="--opening-reconciliation")
+{
+    if(args.Length!=2)throw new ArgumentException("--opening-reconciliation OUTPUT");
+    var observed=System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText("docs/data/pro-opening-ledger-followup-2026-10-27.json"))!["teams"]!.AsArray().ToDictionary(t=>t!["team"]!.GetValue<string>(),t=>t!);
+    var rows=state.League.Teams.Select(team=>{
+        var b=ProFinance.Budget(state with{Phase=ProPhase.RegularSeason},team.Name);
+        var source=observed[team.Abbreviation];var expected=source["reportedLiabilities"]!.GetValue<long>();
+        return new{team=team.Abbreviation,budget=b,reportedLiabilities=expected,difference=b.TotalCommitments-expected,exact=b.TotalCommitments==expected,
+            generatedFallbacks=state.Contracts.Where(c=>c.Active&&c.Team==team.Name&&c.Estimated).Select(c=>new{id=c.PlayerId,name=state.Players.Single(p=>p.Football.PlayerId==c.PlayerId).Football.FullName,cap=ProEconomy.CapHit(c,2026)}),
+            observedSourceSha256=source["sourceSha256"]!.GetValue<string>()};
+    }).ToArray();
+    File.WriteAllText(args[1],JsonSerializer.Serialize(new{scope="Actual new sourced2026 runtime regular-season counting with observed opening debt and reviewed roster/exemption changes. Reported liabilities are comparison evidence only, never a budget or balancing input. Different source allowance bases remain separate. Unresolved contract/status/guarantee review prevents default promotion.",teams=32,exactTeams=rows.Count(r=>r.exact),rows},new JsonSerializerOptions{WriteIndented=true,PropertyNamingPolicy=JsonNamingPolicy.CamelCase}));return;
+}
 if(args.FirstOrDefault()=="--seattle-source-proof")
 {
     if(args.Length!=2)throw new ArgumentException("--seattle-source-proof OUTPUT");
