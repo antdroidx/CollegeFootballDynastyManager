@@ -64,6 +64,6 @@ See [the current parity audit](docs/pro-parity-audit.md) for implemented screens
 
 ## Shared player ratings and GameCast
 
-Both games use the same 19 player attributes, position-weighted overall calculation, potential-star scale, and responsive attribute tiles. Pro imports supply attribute data; external overall ratings are not the in-game overall. Existing pro saves adopt the shared calculation once while retaining player IDs, contracts, and historical results.
+Both games use the same 19 player attributes, position-weighted overall calculation, and responsive attribute tiles. Pro imports supply attribute data; external overall ratings are not the in-game overall. Existing pro saves adopt the shared calculation once while retaining player IDs, contracts, and historical results. College retains its potential-star scale. Pro separates current ability, an age/position-aware projected ceiling, and remaining-growth stars; annual rating deltas preserve the last offseason change. Athletic decline begins before technical and mental decline, with different prime ages by position.
 
 The college GameCast animation, playbook cards/diagrams, camera framing, broadcast scoreboard layout, and detailed live box-score page live in `Football.Presentation` and are called by both apps. Professional rules and aging remain league-specific. See the [parity audit](docs/pro-parity-audit.md) for remaining work.
