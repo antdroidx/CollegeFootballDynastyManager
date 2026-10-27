@@ -35,6 +35,7 @@ public sealed class SharedRatingsTests
         var state = ProLeagueService.Create("Seattle Seahawks") with { Phase = ProPhase.Offseason };
         state = ProOffseason.Advance(state);
         Assert.NotEmpty(state.Prospects);
+        Assert.All(state.Prospects, p => Assert.Null(p.PreviousSeasonOverall));
         Assert.All(state.Players.Concat(state.Prospects), p => Assert.Equal(PlayerRatingService.CalculateOverall(p.Football), p.Football.OverallRating));
     }
     [Fact] public async Task OldSaveAdoptsSharedRatingsWithoutReplacingContracts()

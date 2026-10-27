@@ -168,3 +168,5 @@ Pro end zones now use uppercase home city, retaining abbreviated scoreboard/cent
 
 
 Aging validation at `56e7d1b`: all **136 Pro cases passed locally in 4m03s**, including twenty generated-contract seasons, five sourced-contract seasons and imported-cap lifecycle coverage. Local Android build passed, zero warnings/errors. Run 40438135849 reached APK packaging; supersede it with the combined aging/shared-field build at `2acfcc1` to avoid a redundant interim APK/device walkthrough. The next Pro `live` scope reuses the completed annual evidence, reruns affected fast cases and performs the full Pro UI/GameCast flow. College run 40438515279 verifies the shared field batch with both device flows, without repeating unrelated long career/calibration simulations.
+
+Draft-generation review found template players could carry their previous-season OVR into newly generated prospects. Clear that additive history field at creation; generated draft players have no prior pro season. Fifteen affected tests passed, including the new assertion. Supersede 40438635362 before packaging to include this correction in the final combined APK; College source/verification is unaffected.
