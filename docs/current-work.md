@@ -1,6 +1,6 @@
 # Current work — shared Core, College and Pro
 
-Updated October 26, 2026 (Pacific). This is the current handoff; Git history retains prior build narratives.
+Updated October 27, 2026 (Pacific). This is the current handoff; Git history retains prior build narratives.
 
 ## Workspace and safeguards
 
@@ -23,6 +23,8 @@ Pro58 packaged successfully (artifact12714304881) and passed196 scoped Pro cases
 Harness-only source c94b7fa queued exact-APK58 verification in run40484403327. Eighteen targeted cases and15 helpers passed; app source remains aad411d. Follow this retry, not the superseded failed device invocation.
 
 Exact-APK retry40484403327 passed the application-input guard and regenerated all four valid32-team fixtures, but its UI synchronization waited for the above-fold Advance button while the newly opened save retained the library's scroll offset. The overview itself loaded correctly. Harness now recognizes a loaded scrolled overview, scrolls to its real Advance control and restores the draft heading before checking outcomes. No app/save-loader policy change is warranted; follow the next exact-APK retry. Evidence12724348403 is in .artifacts/pro59-ui.
+
+Active exact-APK58 retry is run40485812027 at harness-only source6cf9b3b. Fifteen helpers pass. Do not duplicate it; app source remains aad411d and acceptance is still pending.
 
 ## Latest verified APKs
 
