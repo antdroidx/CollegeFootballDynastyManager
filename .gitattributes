@@ -1,0 +1,2 @@
+# Preserve the supplied cap evidence byte-for-byte across Windows and Linux.
+src/ProFootball.Core/nfl_2026_salary_caps.user-original.csv -text
