@@ -3,7 +3,7 @@ namespace ProFootball.Core;
 
 public static class ProEconomy
 {
-    public static long MarketSalary(ProPlayer p) => (long)(Math.Pow(Math.Max(1, p.Football.OverallRating - 48), 2) * 6500 * (p.Football.Position == Position.QB ? 2.5 : 1));
+    public static long MarketSalary(ProPlayer p) => ProMarket.BaseSalary(p);
     public static long MarketSalary(ProFranchise s,ProPlayer p)=>(long)(MarketSalary(p)*(s.SalaryCap/(double)ProFinance.Base2026));
     public static long BonusCharge(ProContract c, int year) => c.Years.FirstOrDefault(y => y.Year == year)?.ProratedBonus ?? (year < c.SignedYear || year >= c.SignedYear + c.BonusYears ? 0 : c.SigningBonus / c.BonusYears + (year - c.SignedYear < c.SigningBonus % c.BonusYears ? 1 : 0));
     public static long CapHit(ProContract c, int year) => !c.Active ? 0 : (c.Years.FirstOrDefault(y => y.Year == year)?.Salary ?? 0) + (c.Years.FirstOrDefault(y => y.Year == year)?.OtherCompensation ?? 0) + BonusCharge(c, year);

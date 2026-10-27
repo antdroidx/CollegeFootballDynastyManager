@@ -29,8 +29,9 @@ public sealed class ContractAccountingTests
     {
         var(s,p,c)=Jsn();s=s with{Year=2031,Contracts=[c],TeamCapAllocations=[],SalaryCap=1_000_000_000,Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.Retention};
         Assert.Contains(p,ProRetention.Expiring(s,s.UserTeam));
-        var quote=ProContractInsights.ProjectOffer(s,p,2,100_000_000,0,true);
-        var changed=ProEconomy.Extend(s,s.UserTeam,p.Football.PlayerId,2,100_000_000).Contracts.Single();
+        var salary=Math.Max(100_000_000,ProOfferTerms.RoundUp(ProEconomy.MarketSalary(s,p)));
+        var quote=ProContractInsights.ProjectOffer(s,p,2,salary,0,true);
+        var changed=ProEconomy.Extend(s,s.UserTeam,p.Football.PlayerId,2,salary).Contracts.Single();
         Assert.Equal(2033,ProContractInsights.PlayingEnd(changed));
         Assert.Equal(changed.Years.Count,changed.Years.Select(y=>y.Year).Distinct().Count());
         Assert.Equal(ProEconomy.BonusCharge(c,2032),ProEconomy.BonusCharge(changed,2032));
@@ -87,7 +88,7 @@ public sealed class ContractAccountingTests
         var c=new ProContract(p.Football.PlayerId,s.UserTeam,2031,3,0,[new(2031,1_000_000,0){ProratedBonus=0},new(2032,0,0){IsVoid=true,ProratedBonus=20_000_000,OtherCompensation=80_000_000},new(2033,0,0){IsVoid=true,ProratedBonus=80_000_000,OtherCompensation=-80_000_000}]);
         var other=c with{PlayerId=Guid.NewGuid(),Years=[new(2032,60_000_000,0)]};s=s with{Contracts=[c,other]};
         var before=ProFinance.Budget(s,s.UserTeam,2032).TotalCommitments;
-        var changed=ProEconomy.Extend(s,s.UserTeam,p.Football.PlayerId,2,10_000_000,2_000_000);
+        var changed=ProEconomy.Extend(s,s.UserTeam,p.Football.PlayerId,2,Math.Max(10_000_000,ProOfferTerms.RoundUp(ProEconomy.MarketSalary(s,p))),2_000_000);
         Assert.True(ProFinance.Budget(changed,s.UserTeam,2032).TotalCommitments<before);
         Assert.Equal(100_000_000,changed.Contracts.Single(x=>x.PlayerId==p.Football.PlayerId).Years.Sum(y=>y.ProratedBonus??0)-2_000_000);
         Assert.Equal(2_000_000,changed.Contracts.Single(x=>x.PlayerId==p.Football.PlayerId).BonusCash![2032]);

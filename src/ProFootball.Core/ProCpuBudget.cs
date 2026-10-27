@@ -2,6 +2,12 @@ namespace ProFootball.Core;
 /// <summary>CPU cap planning uses legal restructures before sacrificing core starters.</summary>
 public static class ProCpuBudget
 {
+    public static long DepthReserve(ProFranchise s,string team,int year)
+    {
+        var contracted=s.Contracts.Where(c=>c.Active&&c.Team==team&&ProContractInsights.PlayingEnd(c)>=year).Select(c=>c.PlayerId).ToHashSet();
+        var count=s.Players.Count(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad&&!p.Reserve&&contracted.Contains(p.Football.PlayerId));
+        return (long)(Math.Max(0,53-count)*1_500_000*Math.Max(1,ProFinance.ForecastCap(s,year)/(double)ProFinance.Base2026));
+    }
     public static ProFranchise Relieve(ProFranchise s,string team,long targetRoom,Func<ProPlayer,bool>? eligible=null)
     {
         if(ProFinance.ContractChangeYear(s)!=s.Year||ProEconomy.Room(s,team)>=targetRoom)return s;
@@ -17,7 +23,7 @@ public static class ProCpuBudget
             foreach(var year in Enumerable.Range(s.Year+1,count-1))
             {
                 var committed=s.Contracts.Where(x=>x.Team==team).Sum(x=>ProEconomy.CapHit(x,year))+s.DeadCap.Where(d=>d.Team==team&&d.Year==year).Sum(d=>d.Amount);
-                maximum=Math.Min(maximum,Math.Max(0,ProFinance.Limit(s,team,year)-committed-15_000_000)*count);
+                maximum=Math.Min(maximum,Math.Max(0,ProFinance.Limit(s,team,year)-committed-Math.Max(15_000_000,DepthReserve(s,team,year))-ProEconomy.PendingForYear(s,team,year))*count);
             }
             var needed=(long)Math.Ceiling((targetRoom-ProEconomy.Room(s,team))/(1-1d/count));
             var convert=Math.Min(maximum,ProOfferTerms.RoundUp(needed));convert=convert/ProOfferTerms.MoneyStep*ProOfferTerms.MoneyStep;if(convert<=0)continue;

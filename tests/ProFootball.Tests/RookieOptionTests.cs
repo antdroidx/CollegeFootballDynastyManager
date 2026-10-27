@@ -67,7 +67,7 @@ public class RookieOptionTests
     }
     [Fact] public void OppositeUnitIsStaffManagedAndManualCoordinatorExerciseIsRestricted()
     {
-        var(s,p,_)=Setup();s=s with{Career=s.Career! with{Role=StaffRole.DefensiveCoordinator}};
+        var(s,p,_)=Setup();p=p with{Football=p.Football with{OverallRating=95}};s=s with{Players=[p],Career=s.Career! with{Role=StaffRole.DefensiveCoordinator}};
         Assert.Throws<InvalidOperationException>(()=>ProManagement.Submit(s,"Rookie option",[p.Football.PlayerId],0,x=>ProRookieOptions.Decide(x,x.UserTeam,p.Football.PlayerId,true)));
         var managed=ProRookieOptions.ManageCpu(s);
         Assert.True(Assert.Single(managed.RookieOptionDecisions).Exercised);

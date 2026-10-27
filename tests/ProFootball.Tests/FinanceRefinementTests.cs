@@ -71,9 +71,9 @@ public sealed class FinanceRefinementTests
     {
         var s=New();var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Experience>=4&&!p.PracticeSquad);
         p=p with{Experience=8,RookieYear=s.Year-8};var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year-1,3,3_000_000,[new(s.Year-1,30_000_000,0),new(s.Year,30_000_000,0),new(s.Year+1,30_000_000,0)]);
-        s=s with{Players=[p],Contracts=[c],TeamCapAllocations=[],SalaryCap=60_000_000};var before=ProFinance.Cash(s,s.UserTeam,s.Year);
-        var repaired=ProCpu.MakeRoom(s,s.UserTeam,35_000_000);
-        Assert.True(ProEconomy.Room(repaired,s.UserTeam)>=35_000_000);Assert.Equal(s.UserTeam,repaired.Players[0].Football.TeamName);Assert.Empty(repaired.DeadCap);Assert.Equal(before,ProFinance.Cash(repaired,s.UserTeam,s.Year));
+        s=s with{Players=[p],Contracts=[c],TeamCapAllocations=[],SalaryCap=150_000_000};var before=ProFinance.Cash(s,s.UserTeam,s.Year);
+        var repaired=ProCpu.MakeRoom(s,s.UserTeam,125_000_000);
+        Assert.True(ProEconomy.Room(repaired,s.UserTeam)>=125_000_000);Assert.Equal(s.UserTeam,repaired.Players[0].Football.TeamName);Assert.Empty(repaired.DeadCap);Assert.Equal(before,ProFinance.Cash(repaired,s.UserTeam,s.Year));
     }
     [Fact] public void SourcedFiveSeasonsCanFinishDraftsAndRepairCpuBudgets()
     {

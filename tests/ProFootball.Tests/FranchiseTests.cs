@@ -58,7 +58,7 @@ public class FranchiseTests
     [Fact] public void OffersCompeteAndCannotExceedReservedCap()
     {
         var s=New() with{Phase=ProPhase.Offseason};var p=s.Players.First(p=>p.Football.TeamName=="Free agent"&&!p.Retired);var other=s.League.Teams.First(t=>t.Name!=s.UserTeam).Name;
-        var salary=Math.Max(1_000_000,ProEconomy.MarketSalary(p));s=ProEconomy.Offer(s,s.UserTeam,p.Football.PlayerId,2,salary,0);s=ProEconomy.Offer(s,other,p.Football.PlayerId,2,salary*2,0);s=ProEconomy.ResolveBids(s);
+        var salary=Math.Max(ProFinance.Minimum(s,p,practice:false),ProEconomy.MarketSalary(s,p));s=ProEconomy.Offer(s,s.UserTeam,p.Football.PlayerId,2,salary,0);s=ProEconomy.Offer(s,other,p.Football.PlayerId,2,salary*2,0);s=ProEconomy.ResolveBids(s);
         Assert.Equal(other,s.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId).Football.TeamName);Assert.Empty(s.Bids);
         var poor=s with{TeamCapAllocations=[],SalaryCap=0};var free=poor.Players.First(p=>p.Football.TeamName=="Free agent"&&!p.Retired);Assert.Throws<InvalidOperationException>(()=>ProEconomy.Offer(poor,poor.UserTeam,free.Football.PlayerId,1,10_000_000,0));
     }

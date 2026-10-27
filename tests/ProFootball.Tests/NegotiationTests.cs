@@ -26,7 +26,7 @@ public class NegotiationTests
     [Fact] public void AcceptedExtensionCannotRepeatWithinSeason()
     {
         var s=ProLeagueService.Create("Seattle Seahawks");var c=s.Contracts.First(c=>c.Team==s.UserTeam&&c.Years.Count==1);var p=s.Players.Single(p=>p.Football.PlayerId==c.PlayerId);
-        var changed=ProEconomy.Extend(s,s.UserTeam,p.Football.PlayerId,1,Math.Max(1_000_000,ProEconomy.MarketSalary(p)));
+        var changed=ProEconomy.Extend(s,s.UserTeam,p.Football.PlayerId,1,ProOfferTerms.RoundUp(Math.Max(ProFinance.Minimum(s,p,ProContractInsights.PlayingEnd(c)+1,practice:false),ProEconomy.MarketSalary(s,p))));
         Assert.Throws<InvalidOperationException>(()=>ProEconomy.Extend(changed,s.UserTeam,p.Football.PlayerId,1,50_000_000));
     }
 }

@@ -73,7 +73,7 @@ public static class ProRookieOptions
                 Years=c.Years.Where(y=>y.Year!=optionYear).Select(y=>y.Year==rookie+3?y with{Guaranteed=y.Salary}:y)
                     .Append(new ContractYear(optionYear,q.Salary,q.Salary){ProratedBonus=ProEconomy.BonusCharge(c,optionYear)}).OrderBy(y=>y.Year).ToList()});
             var proposed=s with{Contracts=s.Contracts.Select(x=>x==c?changed:x).ToList()};
-            if(changed.Years.Where(y=>y.Year>=s.Year).Any(y=>ProFinance.Budget(proposed,team,y.Year).TotalCommitments+ProEconomy.Pending(proposed,team)>Math.Max(ProFinance.Limit(s,team,y.Year),ProFinance.Budget(s,team,y.Year).TotalCommitments+ProEconomy.Pending(s,team))))
+            if(changed.Years.Where(y=>y.Year>=s.Year).Any(y=>ProFinance.Budget(proposed,team,y.Year).TotalCommitments+ProEconomy.PendingForYear(proposed,team,y.Year)>Math.Max(ProFinance.Limit(s,team,y.Year),ProFinance.Budget(s,team,y.Year).TotalCommitments+ProEconomy.PendingForYear(s,team,y.Year))))
                 throw new InvalidOperationException("The option would exceed future cap space. Clear room or decline it.");
             s=proposed;
         }
@@ -86,6 +86,15 @@ public static class ProRookieOptions
         foreach(var p in Pending(s,onlyTeam).Where(p=>includeUser||p.Football.TeamName!=s.UserTeam||s.AutoManageRookieOptions||!ProCareer.Controls(s,p.Football.Position)).ToArray())
         {
             var exercise=p.Football.OverallRating>=73&&Quote(s,p).Salary<=ProEconomy.MarketSalary(s,p)*1.25;
+            if(exercise)
+            {
+                try
+                {
+                    var preview=Decide(s,p.Football.TeamName,p.Football.PlayerId,true);var optionYear=Origin(p,s.Contracts.Last(c=>c.Active&&c.PlayerId==p.Football.PlayerId))!.Value+4;
+                    exercise=ProFinance.Budget(preview,p.Football.TeamName,optionYear).TotalCommitments+ProEconomy.PendingForYear(preview,p.Football.TeamName,optionYear)+ProCpuBudget.DepthReserve(preview,p.Football.TeamName,optionYear)<=ProFinance.Limit(s,p.Football.TeamName,optionYear);
+                }
+                catch(InvalidOperationException){exercise=false;}
+            }
             try
             {
                 s=p.Football.TeamName==s.UserTeam&&ProCareer.Controls(s,p.Football.Position)
