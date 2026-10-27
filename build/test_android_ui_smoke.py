@@ -24,6 +24,16 @@ def overview(week=0, phase="Regular season", busy=False, enabled=True):
 
 
 class SmokeSynchronizationTests(unittest.TestCase):
+    def test_loaded_library_can_reach_a_slot_below_the_fold(self):
+        root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]")
+        scroll=ET.SubElement(viewport,"node",attrib={"class":"android.widget.ScrollView","scrollable":"true","bounds":"[0,0][1080,2400]"})
+        ET.SubElement(scroll,"node",text="New franchise",enabled="true")
+        ET.SubElement(scroll,"node",text="Earlier save",bounds="[42,1800][882,1916]")
+        self.assertTrue(smoke.library_loaded(root));self.assertFalse(smoke.library_entry_ready(root,"Fourth save"))
+        shown=ET.fromstring(ET.tostring(root));ET.SubElement(shown.find("node/node"),"node",text="Fourth save",bounds="[42,1600][882,1716]")
+        with patch.object(smoke,"capture",side_effect=[root,shown]),patch.object(smoke,"adb") as command:
+            self.assertIs(shown,smoke.scroll_to_text("late-save","Fourth save"));command.assert_called_once()
+
     def test_library_slot_waits_for_loading_completion_before_tap(self):
         root=ET.Element("hierarchy")
         create=ET.SubElement(root,"node",text="New franchise",enabled="false")

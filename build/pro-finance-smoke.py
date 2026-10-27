@@ -171,8 +171,9 @@ try:
         s.adb("push",str(path),"/data/local/tmp/pro-trade-fixture.json")
         s.adb("shell","run-as","antdroid.profootball.franchise","cp","/data/local/tmp/pro-trade-fixture.json","files/pro-franchises-v1/"+fixture_id+".json")
         s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
-        library=ready("trade-library",lambda r:s.library_entry_ready(r,fixture["name"]+" ·"))
-        click("trade-loaded-slot",next(t for t in s.texts(library) if (t or "").startswith(fixture["name"]+" ·")))
+        ready("trade-library",s.library_loaded)
+        slot_label=f"{fixture['name']} · {fixture['userTeam']} · {fixture['year']} Preseason W{fixture['week']}"
+        click("trade-loaded-slot",slot_label)
         ready("trade-overview",lambda r:"Advance week" in s.texts(r))
         click("trade-office","Front Office");click("trade-offers","Trade offers (1)")
         ready("trade-pending",lambda r:"1 open offers" in s.texts(r));s.capture("pro-trade-offer")
