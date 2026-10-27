@@ -68,6 +68,7 @@ public static class ProFinance
     public static ProFranchise CloseYear(ProFranchise s)
     {
         if(s.FinancialHistory.Any(h=>h.Year==s.Year))return s;
+        s=ProRookieOptions.CaptureYear(s);
         s=ProRollover.MeasureCompletedTeams(s);
         var history=s.FinancialHistory.ToList();
         foreach(var team in s.League.Teams)

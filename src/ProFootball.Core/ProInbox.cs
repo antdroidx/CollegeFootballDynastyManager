@@ -21,6 +21,8 @@ public static class ProInbox
             var count=ProRetention.Expiring(s,team).Count;
             if(count>0)list.Add(new($"retention-{s.Year}-{team}","Expiring contracts",$"{count} players need a retention decision before offseason advancement.","Front office",1));
         }
+        var options=ProRookieOptions.Pending(s,team).Count(p=>ProCareer.Controls(s,p.Football.Position));
+        if(options>0)list.Add(new($"options-{s.Year}-{team}","Rookie option decisions",$"{options} fifth-year decisions due before leaving the next draft stage.","Front Office",1));
         foreach(var d in s.GmDecisions.TakeLast(30))list.Add(new("gm-"+d.Id,(d.Approved?"GM approved: ":"GM declined: ")+d.Action,d.Reason,"Career",2));
         if(s.JobOffers.Count>0)list.Add(new($"jobs-{s.Year}-{s.JobOffers.Count}","Coaching job offers",$"{s.JobOffers.Count} offers are available.","Career",1));
         return list.OrderBy(n=>n.Priority).ThenBy(n=>n.Title).ToArray();

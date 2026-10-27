@@ -217,6 +217,7 @@ public static class ProOffseason
     }
     public static ProFranchise Advance(ProFranchise s)
     {
+        s=ProRookieOptions.ManageCpu(s);
         if (s.OffseasonStep == OffseasonStep.Retention)
         {
             s = ProCareer.Review(s);
@@ -245,6 +246,7 @@ public static class ProOffseason
         if (s.OffseasonStep == OffseasonStep.Draft)
         {
             if (ProDraft.Current(s) is not null) throw new InvalidOperationException("Finish all seven draft rounds first.");
+            if(ProRookieOptions.Pending(s,s.UserTeam).Any(p=>ProCareer.Controls(s,p.Football.Position)))throw new InvalidOperationException("Decide your fifth-year rookie options before leaving the draft. Open Front Office → Rookie options, or delegate to staff.");
             return s with { OffseasonStep = OffseasonStep.RosterCuts, Players = s.Players.Concat(s.Prospects.Select(p => p with { Football = p.Football with { TeamName = "Free agent" } })).ToList(), Prospects = [] };
         }
         if (ProRoster.CountForLimit(s, s.UserTeam) > 90 || ProEconomy.Room(s, s.UserTeam) < 0) throw new InvalidOperationException("Keep your camp roster at 90 or fewer and get under the cap first. Final 53-player cuts follow preseason.");

@@ -1,5 +1,7 @@
 """Targeted Pro financial acceptance; no unchanged GameCast/College walkthrough."""
 
+import copy
+import uuid
 import importlib.util,json,re,time
 
 from pathlib import Path
@@ -109,7 +111,42 @@ try:
 
     click("light-hub","Financial overview");cap_view("light-finance");s.capture("pro-finance-light")
 
-    print("PASS: new 2026 adjusted budget, 32 persisted allocations, signed adjustments, exact reconciliation, reinstall/save and financial UI themes, sourced cash, compact contract and expandable void accounting.")
+    # Clearly synthetic, isolated option fixtures; never alter the imported cap-audit franchise above.
+    for exercise in (True, False):
+        fixture=copy.deepcopy(saved);fixture_id=str(uuid.uuid4());player_id=str(uuid.uuid4())
+        fixture_name="Synthetic option QA "+("exercise" if exercise else "decline")
+        player=copy.deepcopy(next(p for p in saved["players"] if p["football"]["position"] in (0,"QB") and p["football"]["teamName"]==saved["userTeam"]))
+        player.update(age=24,experience=3,creditedSeasons=3,rookieYear=2023,draftOverall=1,practiceSquad=False,reserve=False,retired=False,externalId="",contractConcernWeeks=0)
+        player["football"].update(playerId=player_id,fullName="Option QA Rookie",teamName=saved["userTeam"])
+        contract=dict(playerId=player_id,team=saved["userTeam"],signedYear=2023,originalRookieYear=2023,bonusYears=4,signingBonus=0,accountingVersion=1,active=True,estimated=False,lastChangedYear=0,
+            years=[dict(year=y,salary=1_000_000,guaranteed=0,proratedBonus=0,otherCompensation=0,otherCash=0,isVoid=False) for y in range(2023,2027)])
+        fixture.update(id=fixture_id,name=fixture_name,year=2026,week=1,phase=3,offseasonStep=1,players=[player],contracts=[contract],games=[],honors=[],deadCap=[],bids=[],rookieOptionDecisions=[],rookieParticipation=[],salarySamples=[],autoManageRookieOptions=False,
+            optionTenders=[dict(decisionYear=2026,positionGroup="QB",tier=0,salary=3_000_000,estimatedHistory=True)])
+        s.adb("shell","am","force-stop","antdroid.profootball.franchise")
+        fixture_path=Path("pro-option-fixture.json");fixture_path.write_text(json.dumps(fixture),encoding="utf-8")
+        s.adb("push",str(fixture_path),"/data/local/tmp/pro-option-fixture.json")
+        s.adb("shell","run-as","antdroid.profootball.franchise","cp","/data/local/tmp/pro-option-fixture.json","files/pro-franchises-v1/"+fixture_id+".json")
+        s.adb("shell","monkey","-p","antdroid.profootball.franchise","-c","android.intent.category.LAUNCHER","1")
+        library=ready("option-library",lambda r:any((t or "").startswith(fixture_name+" ·") for t in s.texts(r)))
+        s.tap(library,next(t for t in s.texts(library) if (t or "").startswith(fixture_name+" ·")))
+        ready("option-overview",lambda r:"Advance week" in s.texts(r))
+        click("option-office","Front Office");click("option-desk","Rookie options")
+        ready("option-due",lambda r:"1 pending decisions" in s.texts(r))
+        click("option-choice","Exercise option" if exercise else "Decline option")
+        confirm=ready("option-confirm",lambda r:("Exercise fifth-year option?" if exercise else "Decline fifth-year option?") in s.texts(r))
+        s.tap(confirm,"Exercise" if exercise else "Decline")
+        ready("option-complete",lambda r:"0 pending decisions" in s.texts(r))
+        s.scroll_to_text("pro-option-history","Exercised" if exercise else "Declined",max_swipes=12)
+        s.capture("pro-option-"+("exercised" if exercise else "declined"))
+        checked=json.loads(s.adb("exec-out","run-as","antdroid.profootball.franchise","cat","files/pro-franchises-v1/"+fixture_id+".json"))
+        decision=checked["rookieOptionDecisions"];assert len(decision)==1 and decision[0]["exercised"]==exercise
+        deal=checked["contracts"][0];assert deal["lastChangedYear"]==0
+        if exercise:
+            fourth=next(y for y in deal["years"] if y["year"]==2026);fifth=next(y for y in deal["years"] if y["year"]==2027)
+            assert fourth["guaranteed"]==1_000_000 and fifth["salary"]==fifth["guaranteed"]==3_000_000
+        else:assert max(y["year"] for y in deal["years"])==2026 and all(y["guaranteed"]==0 for y in deal["years"])
+
+    print("PASS: new 2026 adjusted budget, 32 persisted allocations, signed adjustments, exact reconciliation, reinstall/save and financial UI themes, sourced cash, compact contract and expandable void accounting; synthetic rookie-option exercise/decline and saved guarantees.")
 
 finally:
 

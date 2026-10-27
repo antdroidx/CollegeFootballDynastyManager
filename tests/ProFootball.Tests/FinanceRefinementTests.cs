@@ -77,7 +77,7 @@ public sealed class FinanceRefinementTests
     }
     [Fact] public void SourcedFiveSeasonsCanFinishDraftsAndRepairCpuBudgets()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true) with{Id=Guid.Parse("53120000-0000-0000-0000-000000000001")};
+        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true) with{Id=Guid.Parse("53120000-0000-0000-0000-000000000001"),AutoManageRookieOptions=true};
         for(var season=0;season<5;season++)
         {
             s=ProCpu.Manage(s,true);

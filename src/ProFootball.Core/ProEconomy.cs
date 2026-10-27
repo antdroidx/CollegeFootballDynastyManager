@@ -25,7 +25,7 @@ public static class ProEconomy
             {
                 var salary = p.PracticeSquad ? Math.Max(300_000,ProFinance.Minimum(s,p)) : (long)Math.Max(ProFinance.Minimum(s,p), MarketSalary(p) * scale);
                 var years = p.PracticeSquad ? 1 : sourceTerms.TryGetValue(p.Football.PlayerId,out var term)&&term.Team==team.Name?Math.Max(1,ProContractInsights.PlayingEnd(term)-s.Year+1):p.RookieYear is int rookieYear && s.Year>=rookieYear && s.Year<rookieYear+(p.DraftOverall is >0?4:3) ? rookieYear+(p.DraftOverall is >0?4:3)-s.Year : p.Age>=33?1:2; var bonus = p.PracticeSquad ? 0 : salary / 2;
-                contracts.Add(new(p.Football.PlayerId, team.Name, s.Year, years, bonus, Enumerable.Range(0, years).Select(i => new ContractYear(s.Year + i, Math.Max(salary,ProFinance.Minimum(s,p,s.Year+i)), i == 0 ? salary / 3 : 0)).ToList()));
+                contracts.Add(new(p.Football.PlayerId, team.Name, s.Year, years, bonus, Enumerable.Range(0, years).Select(i => new ContractYear(s.Year + i, Math.Max(salary,ProFinance.Minimum(s,p,s.Year+i)), i == 0 ? salary / 3 : 0)).ToList()){OriginalRookieYear=p.RookieYear is int r&&p.DraftOverall is >0&&s.Year<=r+3&&(!sourceTerms.TryGetValue(p.Football.PlayerId,out var original)||original.SignedYear==r)?r:null});
             }
         }
         return EnsurePickInventory(s with { SchemaVersion = 2, Contracts = contracts, Picks = s.Picks.Count > 0 ? s.Picks : CreatePicks(s, s.Year + 1), Owners = s.League.Teams.Select(t => new OwnerExpectation(t.Name, 8, 65)).ToList() });
@@ -58,7 +58,7 @@ public static class ProEconomy
     {
         var p = s.Players.Single(p => p.Football.PlayerId == bid.PlayerId);
         if (!(rookieScale && (s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.Draft && s.Prospects.Any(x=>x.Football.PlayerId==bid.PlayerId) || s.UnsignedRookies.Any(x=>x.PlayerId==bid.PlayerId && x.Team==bid.Team)) || ProNegotiation.Evaluate(p,bid.Years,bid.AnnualSalary,bid.Bonus,Math.Max(ProFinance.Minimum(s,p,practice:false),MarketSalary(s,p))).Accepted) || bid.AnnualSalary<ProFinance.Minimum(s,p,practice:false) || p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.CountForLimit(s, bid.Team) >= ProRoster.Limit(s)) return s;
-        var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, Math.Max(bid.AnnualSalary,ProFinance.Minimum(s,p,s.Year+i,practice:false)), i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false };
+        var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, Math.Max(bid.AnnualSalary,ProFinance.Minimum(s,p,s.Year+i,practice:false)), i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false, OriginalRookieYear=rookieScale?p.RookieYear??s.Year:null };
         return ProMorale.Signing(Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == p.Football.PlayerId ? x with { Football = x.Football with { TeamName = bid.Team, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList(), Contracts = s.Contracts.Append(c).ToList() }, $"{bid.Team} signed {p.Football.FullName} for {bid.Years} years."), p.Football.PlayerId, bid.Team);
     }
     public static ProFranchise ResolveBids(ProFranchise s)

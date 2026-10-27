@@ -78,7 +78,7 @@ public class FranchiseTests
     }
     [Fact] public void TwentySeasonsPreserveCapRosterDraftAndAging()
     {
-        var s=New();var first=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Age<28);var age=first.Age;
+        var s=New() with{AutoManageRookieOptions=true};var first=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Age<28);var age=first.Age;
         for(var season=0;season<20;season++)
         {
             for(var week=0;week<26&&s.Phase!=ProPhase.Offseason;week++)

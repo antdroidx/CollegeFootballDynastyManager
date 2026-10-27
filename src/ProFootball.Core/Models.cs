@@ -40,6 +40,10 @@ public sealed record ProFranchise
     public List<SeasonArchive> History { get; init; } = [];
     public List<ProSeasonHonors> Honors { get; init; } = [];
     public List<ProRookieSeasonUsage> RookieParticipation { get; init; } = [];
+    public List<ProSalarySample> SalarySamples { get; init; } = [];
+    public List<ProOptionTender> OptionTenders { get; init; } = [];
+    public List<ProOptionDecision> RookieOptionDecisions { get; init; } = [];
+    public bool AutoManageRookieOptions { get; init; }
     public List<ProFinanceYear> FinancialHistory { get; init; } = [];
     public int CapRulesVersion {get;init;}
     public List<ProTeamCapAllocation> TeamCapAllocations {get;init;}=[];
@@ -92,7 +96,7 @@ public sealed record NflSnapshot(int Version, int Season, int Week, string Retri
 public sealed record ContractYear(int Year, long Salary, long Guaranteed)
 { public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } public bool IsVoid { get; init; } public long? OtherCash { get; init; } public long? SourceGuaranteed { get; init; } }
 public sealed record ProContract(Guid PlayerId, string Team, int SignedYear, int BonusYears, long SigningBonus, List<ContractYear> Years)
-{ public int AccountingVersion { get; init; } public long? ReportedAnnualValue { get; init; } public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
+{ public int? OriginalRookieYear { get; init; } public int AccountingVersion { get; init; } public long? ReportedAnnualValue { get; init; } public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
 public sealed record DeadCapCharge(string Team, int Year, Guid PlayerId, long Amount) { public long CashAmount {get;init;} }
 public sealed record FreeAgentBid(Guid PlayerId, string Team, int Years, long AnnualSalary, long Bonus, int Priority);
 public sealed record ProDraftPick(Guid Id, int Year, int Round, int Slot, string OriginalTeam, string Owner);
