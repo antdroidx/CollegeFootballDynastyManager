@@ -1,3 +1,15 @@
+## Accepted contextual UI — October28,2026
+
+College394 source f2ec0ad/run40724719708/APK12832202972:703 combined Core/College cases, packaging0 warnings/errors. Pro81 app f345f90/core f2ec0ad/run40725321084/APK12833235834:286 fast Pro cases (five new calendar-label cases), helpers/source validator and packaging0 warnings/errors; presentation device acceptance passed. Evidence12833821291 in .artifacts/contextual-pro81. Original Pro80 build is superseded by phone-width headline refinement.
+
+Exact two-app verification40727973325 at harness59127ee/evidence12833838921 (.artifacts/contextual-exchange82) passes all flags, including actual header-to-team-page navigation, native College save/share, Pro import/reload and preserved contracts/roster/career. Team-page screenshot reviewed: unboxed linked names and headers. Existing synthetic class/display fixture scope remains explicit. No unrelated annual/GameCast tests repeated. No active build/test remains.
+
+Changes: removed default button outlines, restoring flat player links, College headers/sidebar while preserving text contrast; Pro team cells and main team banner open a roster/schedule team page, College school banners use existing OpenSchool navigation. Pro game cards use linked team cells. Pro overview contains three actual headline/body previews plus News/Statistics links. Structured transaction phase displays P1/W1/PO1/offseason, with unknown legacy stages labeled honestly. No save schema, financial rules, simulation, package or main changes.
+
+Exact APKs:
+- Pro: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40725321084/artifacts/12833235834
+- College: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40724719708/artifacts/12832202972
+
 # Pro completion checklist
 
 ## Active October28 UI/efficiency batch
