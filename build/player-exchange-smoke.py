@@ -87,7 +87,12 @@ try:
     def load_pro():
         s.adb("shell","monkey","-p",pro,"-c","android.intent.category.LAUNCHER","1");ready("pro-library",s.library_loaded)
         click("pro-slot",f"{fixture['name']} · {fixture['userTeam']} · {draft_year} Offseason W1");ready("pro-overview",s.pro_overview_loaded)
-    load_pro();navigate("Front Office");click("import","Import College draft class");pick_document(filename)
+    load_pro()
+    root=s.capture("exchange-pro-contextual-team")
+    target=next(n for n in root.iter("node") if n.get("content-desc")=="View team "+fixture["userTeam"])
+    b=list(map(int,re.findall(r"\d+",target.get("bounds"))));s.adb("shell","input","tap",str((b[0]+b[2])//2),str((b[1]+b[3])//2))
+    ready("contextual-team-page",lambda r:"Players" in s.texts(r));s.capture("exchange-pro-team-page");click("contextual-team-back","‹ Back",True)
+    navigate("Front Office");click("import","Import College draft class");pick_document(filename)
     root=ready("pro-preview",lambda r:"Import class for "+str(draft_year) in s.texts(r));s.capture("exchange-pro-preview")
     click("apply","Import class for "+str(draft_year));ready("class-loaded",lambda r:any("5 imported + 315 generated" in t for t in s.texts(r) if t));s.capture("exchange-pro-imported")
     def saved():return json.loads(s.adb("exec-out","run-as",pro,"cat","files/pro-franchises-v1/"+fixture["id"]+".json"))
@@ -100,6 +105,6 @@ try:
     invalid=dict(exported,formatVersion=999);bad=Path("unsupported-class.json");bad.write_text(json.dumps(invalid),encoding="utf-8");s.adb("push",str(bad),"/sdcard/Download/unsupported-class.json")
     navigate("Front Office");click("invalid-import","Import College draft class");pick_document("unsupported-class.json")
     s.wait_for("exchange-rejected",lambda r:"Unable to continue" in s.texts(r));s.capture("exchange-unsupported-rejected");assert saved()["importedDraftClass"]==checked["importedDraftClass"]
-    Path("player-exchange-check.json").write_text(json.dumps({"syntheticCollegeSnapshot":True,"realCollegeExport":True,"nativeShareSheet":True,"nativeDocumentSave":True,"androidDocumentPicker":True,"fiveImported":True,"generatedFiller":315,"identityAppearance":True,"financialRosterCareerPreserved":True,"reload":True,"unsupportedRejected":True},indent=2),encoding="utf-8")
+    Path("player-exchange-check.json").write_text(json.dumps({"syntheticCollegeSnapshot":True,"realCollegeExport":True,"contextualTeamPage":True,"nativeShareSheet":True,"nativeDocumentSave":True,"androidDocumentPicker":True,"fiveImported":True,"generatedFiller":315,"identityAppearance":True,"financialRosterCareerPreserved":True,"reload":True,"unsupportedRejected":True},indent=2),encoding="utf-8")
     print("PASS: College export/share, Android picker preview/import, translated prospects, preserved franchise and reload/invalid rejection.")
 finally:Path("player-exchange-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1200"))
