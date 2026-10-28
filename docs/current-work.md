@@ -1,4 +1,16 @@
-## Active shared news/roster alignment batch
+## Accepted shared news/roster UI — College398 / Pro88
+
+Final app/shared source9cc34c5. College398 run40739215922/APK12839440855 passes703 combined Core/College cases and packaging0 warnings/errors. Pro88 run40739211829/APK12837753565 passes286 fast Pro cases, helpers/source validator and packaging0 warnings/errors. Exact tested APKs:
+- Pro: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40739211829/artifacts/12837753565
+- College: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40739215922/artifacts/12839440855
+
+Exact two-app verification40740101064/evidence12839197534 (.artifacts/roster-sync-exchange89) passes source equality guards, actual wide filter bounds (all four College controls share a row), opponent roster selection, no duplicate profile button, restored own-team controls, contextual Pro team navigation, direct native save/share/import, reload and preserved roster/contracts/picks/debt/career. College wide roster screenshot reviewed and confirms one row. Test class/display fixture remains explicitly synthetic, not a season played on-device.
+
+Pro84 presentation40732039464/evidence12837400520 (.artifacts/roster-sync-pro84) supplies unchanged news/card, light/dark, management and landscape evidence; Pro landscape roster screenshot reviewed. Only final compact-filter geometry differs; final89 rechecks that component in both hosts. Earlier functional exchange85/87 and flex-row candidates are superseded for final geometry. No unrelated annual/cap/full GameCast scenarios repeated. No active build/test or automation.
+
+Both apps now use FootballNewsCard for left-aligned thumbnail/metadata/headline/preview/story links and a shared responsive card grid. CompactFilters uses explicit responsive Grid columns to avoid native flex rounding. College team links and legacy Teams navigation route to the unified roster with team picker; redundant Profile column removed. Opponent injuries follow the selected roster, own depth-chart management stays hidden for opponents and returns on own selection. Pro roster filters occupy one row on wide screens; phones use available columns. No simulation/finance rules, save schemas, package IDs, signing or stable main changes. Source workspace remains D:/AppProjects/Codex/Football Simulation Engine; branch feature/pro-franchise-foundation.
+
+## Shared news/roster alignment implementation — completed
 
 User requests identical College/Pro news cards, compact one-row roster filters and College team browsing through the roster instead of redundant Teams screen. Implementation in progress; prior College394/Pro81 remain accepted. Shared FootballNewsCard and CompactFilters added; College contextual team links now choose roster team, with user management hidden for opponents. Verify compilation, team-picker persistence/ownership, news alignment and phone/Fold layouts in both apps. No new build accepted yet.
 
