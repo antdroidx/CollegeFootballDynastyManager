@@ -1,6 +1,22 @@
 # Current work - Football Sim Engine
 
-Updated October27,2026. Canonical workspace D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve main fdd3d4898b5bd07eeec8dba346024d61f5289474, both app identities, College saves and negotiated Pro contracts. No subagents or continuation automation. Exchange and management batches are accepted. New UI/efficiency batch is in implementation; see ui-efficiency-plan.md. No new APK is accepted yet.
+Updated October28,2026. Canonical workspace D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve main fdd3d4898b5bd07eeec8dba346024d61f5289474, both app identities, College saves and negotiated Pro contracts. No subagents or continuation automation. Exchange and management batches are accepted. New UI/efficiency batch is in implementation; see ui-efficiency-plan.md. No new APK is accepted yet.
+
+## Accepted October28 UI/efficiency — College393 / Pro78
+
+Application/shared source ceeeb34. Pro78 run40648950218 passed281 fast Pro cases,16 helpers/source validator, packaging0 warnings/errors and complete presentation-device acceptance. Exact APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40648950218/artifacts/12798821913 . Evidence12799118166 (.artifacts/ui-efficiency-pro78) passes light efficiency/definitions, trade selection/removal, landscape trade, contract presets/optional yearly details, existing dense grids, Fold and dark theme. Contract screenshot reviewed.
+
+College393 run40648953014 passed703 combined Core/College cases and packaging0 warnings/errors. Exact APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40648953014/artifacts/12798946403 . Exact two-app verification40651057545/evidence12800585172 (.artifacts/ui-efficiency-exchange79) passed source guards, College light settings/efficiency, direct native Save/Share, Pro picker/preview/apply, preserved identities/finances/career, reload and unsupported-format rejection. Display box scores/class snapshot are deliberately synthetic; real telemetry/formulas/lifecycle have separate Core tests.36 affected local Core/GameDay/contrast cases pass. No unrelated annual/cap/full GameCast runs were repeated.
+
+Both hosts now share measured contrast, visible control boundaries and disabled states; Pro uses navy/teal. Trades have filters/removable assets; offers have current-deal context and Low/Agent/Strong presets. Efficiency uses documented own-game formulas, not proprietary PFF grades/official DVOA. Old context is not fabricated. Save schemas/identities, signed contracts, RNG/rules and main remain preserved. No active build/test remains; no automation recreated. Archive/rename/release review remain later work.
+
+## Active UI/efficiency batch — source ceeeb34
+
+Implementation is committed/pushed on feature/pro-franchise-foundation. Shared contrast uses WCAG relative sRGB luminance with 4.5:1 text correction, visible button edges and disabled states; Pro now uses navy/teal. Trade workspace has per-team name/position filters and removable selected assets. Offers show current deal/agent demand, Low/Agent/Strong presets and optional yearly accounting. College Save/Share directly prepares its file. Existing responsive navigation and sortable grids remain shared.
+
+Both apps expose game-derived opponent-adjusted efficiency, league charts/ranks, success/explosive/sack/turnover/third-down rates and same-position player rate comparisons. New optional full-play aggregates do not consume RNG or change rules; old save context remains unavailable. Formula/scope in efficiency-metrics.md. No proprietary PFF grades or official DVOA claims.
+
+Local36 affected Core/GameDay/contrast cases,281 fast Pro cases and16 helpers pass. Local College Android packaging passes0 warnings/errors. College393 run40648953014 passes703 combined Core/College cases and packaging0 warnings/errors; packaged APK12798946403. Pro78 build job in40648950218 passes and packages APK12798821913; emulator presentation acceptance is in progress. These packaged artifacts are NOT yet accepted device builds. Next finish Pro light/dark/trade/contract/efficiency screens, then exact two-app College light/export checks without rebuilding app inputs. Reuse unchanged annual/cap/full GameCast evidence. No merge/rename/archive actions.
 
 ## Latest accepted - College392 / Pro74 draft-class exchange
 

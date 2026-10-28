@@ -1,3 +1,7 @@
+## Accepted October28 UI/efficiency
+
+Source ceeeb34:703 combined Core/College and281 fast Pro CI cases,16 helpers, both packages0 warnings/errors. Pro78 presentation acceptance40648950218/evidence12799118166; College393/Pro78 exact handoff40651057545/evidence12800585172. Local36 affected cases pass. Screens cover light/dark, dense phone/Fold grids, landscape trade, selection/removal, presets/yearly toggle, College light efficiency and direct native save/share/import. Synthetic display snapshots are explicit; no fabricated historical context. No active build/test. Reuse unchanged long finance/GameCast evidence.
+
 ## Active October28 UI/efficiency scope
 
 Shared theme/contrast, optional full-play context and analytics touch both hosts. New contrast/efficiency/save tests plus existing GameDay mode consistency:36 cases pass locally. Pro fast281 pass1m21;16 UI helper cases pass. First local Pro Android build passed0 warnings/errors before the final player-rate addition; College build is in progress. No new APK is accepted yet. Do not repeat unrelated annual/cap audits; reuse accepted Pro73 generated20/sourced5 evidence. Shared full-play telemetry requires combined Core/College regression and both Android packages. Device presentation scope now checks light/dark, advanced efficiency, trade selection/removal, landscape workspace and contract presets/detail toggle; exchange checks direct save/share and College light-theme efficiency with explicitly synthetic display box scores.

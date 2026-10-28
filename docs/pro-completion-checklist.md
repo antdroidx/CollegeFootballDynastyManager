@@ -2,12 +2,12 @@
 
 ## Active October28 UI/efficiency batch
 
-- [ ] Shared light/dark contrast and new Pro navy/teal palette.
-- [ ] Table/navigation/disabled-state polish; direct export; simpler trades/contracts.
-- [ ] Shared documented game-derived efficiency and league comparisons in both apps.
-- [ ] Scoped tests, both Android packages and affected device acceptance.
+- [x] Shared light/dark contrast and new Pro navy/teal palette.
+- [x] Table/navigation/disabled-state polish; direct export; simpler trades/contracts.
+- [x] Shared documented game-derived efficiency and league comparisons in both apps.
+- [x] Scoped tests, both Android packages and affected device acceptance. Pro78 run40648950218/APK12798821913; College393 run40648953014/APK12798946403; two-app verification40651057545/evidence12800585172 passed. See current-work.md for exact scope.
 
-See ui-efficiency-plan.md. Prior College392/Pro74 remain latest accepted.
+See ui-efficiency-plan.md. Prior College392/Pro74 remain latest accepted. New source ceeeb34 packages College393/APK12798946403 (703 combined tests) and Pro78/APK12798821913; device acceptance is pending in40648950218.
 
 
 ## Draft-class exchange - accepted College392 / Pro74
