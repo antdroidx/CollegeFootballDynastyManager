@@ -173,13 +173,13 @@ public sealed partial class FranchisePage : ContentPage
         var search = new SearchBar { Placeholder = "Find a player", AutomationId = "pro-roster-search" }; var positions = new Picker { Title = "Position", AutomationId="pro-roster-position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
         var list = new VerticalStackLayout { Spacing = 12 };
         var showRatings = false;
-        var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(CompactFilters.Create((team,210),(search,210),(positions,130)));body.Add(tools);
+        var tools = new ActionRow(); var organize=Action("Organize depth chart", DepthChart);tools.Add(organize); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(CompactFilters.Create((team,210),(search,210),(positions,130)));body.Add(tools);
         body.Add(Text("Δ since last offseason (season start for new saves) · Growth is remaining upside · Swipe for more columns", 12));
         body.Add(list);
         void Draw()
         {
             list.Clear(); if (team.SelectedIndex < 0) return;
-            var selectedTeam = teams[team.SelectedIndex].Name;
+            var selectedTeam = teams[team.SelectedIndex].Name;organize.IsVisible=selectedTeam==s.UserTeam;
             var players = s.Players.Where(p => p.Football.TeamName == selectedTeam && !p.Retired && (string.IsNullOrWhiteSpace(search.Text) || p.Football.FullName.Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)) && (positions.SelectedIndex <= 0 || p.Football.Position.ToString() == (string)positions.SelectedItem)).ToArray();
             foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"))
             {

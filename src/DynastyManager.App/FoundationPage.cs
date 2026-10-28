@@ -1890,7 +1890,7 @@ public sealed partial class FoundationPage : ContentPage
 
         RenderRosterManagement(userRoster);
 
-        var activeInjuries = userRoster
+        var activeInjuries = _currentDynasty.ActiveRoster.Where(p=>p.TeamName==(_rosterTeamName??_currentDynasty.UserTeamName))
             .Where(player => player.CurrentInjury is not null)
             .OrderByDescending(player => player.CurrentInjury!.Severity)
             .ThenByDescending(player => player.CurrentInjury!.WeeksRemaining)
