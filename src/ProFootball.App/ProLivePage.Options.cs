@@ -82,7 +82,7 @@ public sealed partial class ProLivePage
     }
     async Task DepthChart()
     {
-        var positions = session.Roster.Where(p => p.TeamName == session.ControlledTeamName && UserCoachControlService.ControlsPosition(session.UserCoachRole, p.Position)).Select(p => OffensiveLineService.Label(p)).Distinct().Order().ToArray();
+        var positions = ProDepthPositions.Sort(session.Roster.Where(p => p.TeamName == session.ControlledTeamName && UserCoachControlService.ControlsPosition(session.UserCoachRole, p.Position)).Select(p => OffensiveLineService.Label(p))).ToArray();
         var position = await GameDialogs.ActionSheetAsync(this, "Position", "Cancel", null, positions);
         if (position is null or "Cancel") return;
         var starters = GameDayCoachingService.Starters(session, session.ControlledTeamName!);
