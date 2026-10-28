@@ -70,7 +70,7 @@ try:
     assert json.loads(s.adb("exec-out","cat","/sdcard/Download/"+filename))==exported
     click("share","Share / save draft class");ready("share-sheet",lambda r:r.find("node").get("package")!=college);s.capture("exchange-share-sheet");s.adb("shell","input","keyevent","4")
     path=Path(filename);path.write_bytes(content)
-    fixture=json.loads(gzip.decompress(next(Path("pro-apk").glob("**/pro-staff-exchange-ui-fixture.json.gz")).read_bytes()));assert fixture["year"]==draft_year
+    fixture=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-exchange-ui-fixture.json.gz")).read_bytes()));assert fixture["year"]==draft_year
     fp=Path("exchange-pro.json");fp.write_text(json.dumps(fixture),encoding="utf-8")
     s.adb("shell","monkey","-p",pro,"-c","android.intent.category.LAUNCHER","1");ready("pro-initial",s.library_loaded);s.adb("shell","am","force-stop",pro)
     s.adb("push",str(fp),"/data/local/tmp/exchange-pro.json");s.adb("shell","run-as",pro,"mkdir","-p","files/pro-franchises-v1");s.adb("shell","run-as",pro,"cp","/data/local/tmp/exchange-pro.json","files/pro-franchises-v1/"+fixture["id"]+".json")
