@@ -104,6 +104,7 @@ public sealed partial class FranchisePage : ContentPage
         var actions = new ActionRow(); actions.Add(Action(s.Phase == ProPhase.Offseason ? "Advance offseason" : "Advance week", Advance, "pro-advance")); actions.Add(Action("This week's league games", () => OpenLeagueGames(), "pro-week-games")); body.Add(actions);
         body.Add(Action("My team’s season schedule", () => OpenTeamSchedule()));
         if(s.Phase==ProPhase.Playoffs||s.Phase==ProPhase.RegularSeason&&s.Week>=14||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
+        if(s.Phase==ProPhase.Preseason||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.RosterCuts)body.Add(Action("Training camp & roster battles",Camp));
         body.Add(WeeklyTalkButton());
         var notices=ProInbox.Build(s);var unread=notices.Count(n=>!s.ReadNotificationIds.Contains(n.Id));
         body.Add(Panel($"Franchise inbox · {unread} unread",Text(notices.Count==0?"No current action items.":string.Join("\n",notices.Take(3).Select(n=>n.Title)),12),Action("Open inbox",()=>Open("Inbox"))));
@@ -141,7 +142,7 @@ public sealed partial class FranchisePage : ContentPage
         body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
         foreach (var group in ProStandings.Build(state!).GroupBy(r => r.Team.Conference + " · " + r.Team.Division))
         { body.Add(Text(group.Key, 19, true)); body.Add(Table([("Team", 210), ("W", 40), ("L", 40), ("T", 40), ("Pct", 65), ("Diff", 65)], group.Select(r => new View[] { TeamCell(r.Team), Text(r.Wins.ToString()), Text(r.Losses.ToString()), Text(r.Ties.ToString()), Text(r.Percentage.ToString(".000")), Text(r.Differential.ToString()) }))); }
-        body.Add(Text("Initial tiebreaks: percentage, division, conference, opponent strength, differential. Full official multi-team chains remain in development.", 12));
+        body.Add(Text("Ties use head-to-head, division/common/conference records, opponent strength and scoring tiebreakers.", 12));
     }
     View TeamCell(ProTeam team) => new HorizontalStackLayout { Spacing = 8, Children = { new TeamBadgeView(team, 28), Text(team.Name, 12) } };
     void Roster()

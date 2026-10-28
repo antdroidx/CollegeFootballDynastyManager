@@ -59,7 +59,7 @@ public static class ProCareer
         var reputation = Math.Clamp(career.Reputation + (standing.Wins - expected) * 2 + (s.Champion == s.UserTeam ? 12 : 0), 10, 99);
         var fired = career.Unemployed || career.FiringEnabled && security < 15;
         var offers = new List<ProJobOffer>();
-        foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam).OrderBy(t => t.Id))
+        foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam).OrderBy(t => s.Owners.FirstOrDefault(o=>o.Team==t.Name)?.Security??65).ThenByDescending(t=>s.Coaches.Count(c=>c.TeamId==t.Id&&c.Vacant)).ThenBy(t => t.Id))
         {
             var owner = s.Owners.FirstOrDefault(o => o.Team == team.Name);
             foreach (var role in new[] { StaffRole.OffensiveCoordinator, StaffRole.DefensiveCoordinator, StaffRole.HeadCoach })

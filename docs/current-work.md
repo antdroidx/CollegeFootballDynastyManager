@@ -2,6 +2,12 @@
 
 Updated October27,2026. Work only in D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve stable main fdd3d4898b5bd07eeec8dba346024d61f5289474, College identity/saves and Pro update signing. The user removed automatic continuation; do not recreate it. No subagents authorized.
 
+## Active user priorities - UI, rules, franchise depth, analytics/news
+
+User deferred College-to-Pro draft-class exchange UI (#3). Work on #1 UI/UX, #2 NFL tiebreaks, #4 career/offseason and #5 analytics/news now. No subagents or continuation automation. Finance remains closed. Candidate adds primary first-column draft/retention actions, category-based analytics/development/draft outcomes/career records, automatic staff/combine scouting, once-per-year measured staff development, less-secure-club career prioritization, weekly summaries and late-season projected races. NFL postseason tiebreaks use official division/wild-card chains, restart after reductions, preserve division order between wild cards, aggregate opponent records and seeded final coin toss. Source: https://www.nfl.com/standings/tie-breaking-procedures .
+
+Candidate is NOT accepted yet. Initial local Android compilation passed 0 warnings/errors in2m36 before final report-persistence change. Five initial standings and automatic-scouting cases passed. First broader local run found a real prior-season draft lookup regression (fixed by explicitly using archive year), plus fixture-export failures from a missing output directory (environment setup, not production). Final271 fast Pro cases and16 UI helpers now pass. Both annual scenarios are running locally (.artifacts/roadmap-long-tests.txt); management APK/device scope remains pending. Camp/depth-battle screen uses existing starter/roster guards. Latest accepted APK remains70 below. Both status docs will record exact final evidence. College/shared renderer unchanged; reuse their acceptance.
+
 ## Financial phase complete - practical model
 
 Latest user direction: stop financial minutiae, use reasonable assumptions/estimates, keep the game simple and wrap finance promptly. This supersedes historical source-perfect/default-promotion gates. Follow docs/pro-practical-finance-policy.md. Missing/private/conflicting details remain game estimates in developer provenance; exact agreement with every public website is not a release gate. Keep the simulation and College independent of Pro finances.

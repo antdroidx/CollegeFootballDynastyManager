@@ -16,6 +16,9 @@ public sealed partial class FranchisePage
         body.Add(new HorizontalStackLayout { Spacing = 8, Children = { firing, Text("Coach can be fired") } });
         body.Add(Text("When off, poor results still affect reputation and job security but cannot dismiss you. Roles change through job offers.", 12));
         body.Add(Panel("Role responsibilities", Text(c.Role == StaffRole.HeadCoach ? "You manage the franchise and both sides of the football team." : "Manage your unit's players, game plan, calls and motivation. The GM reviews shared financial and draft-pick decisions; the staff manages the opposite side.")));
+        var expectation=s.Owners.FirstOrDefault(o=>o.Team==s.UserTeam);
+        if(expectation is not null)body.Add(Panel("Ownership expectations",Text($"Target {expectation.TargetWins} wins · Security {c.Security}/100"),Text("Results against the target influence job security and reputation. Openings at less secure clubs receive priority in the job market.",12)));
+        if(s.CoachingHistory.Count>0)body.Add(Panel("Career progress",FootballBarChart.Create(s.CoachingHistory.Select(h=>(h.Year.ToString(),(double)h.Reputation))),Text("Reputation by season",12)));
         body.Add(Text("Job offers", 21, true));
         if (s.JobOffers.Count == 0) body.Add(Text("Offers arrive during the offseason based on your record and reputation."));
         foreach (var offer in s.JobOffers)

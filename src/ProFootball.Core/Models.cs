@@ -96,7 +96,7 @@ public sealed record ProStanding(ProTeam Team, int Wins, int Losses, int Ties, d
 
 public enum OffseasonStep { Retention, FreeAgency, Draft, RosterCuts }
 public sealed record ProCoach(string TeamId, StaffRole Role, string Name, string Title, string Source)
-{ public bool Vacant { get; init; } public int Rating { get; init; } = 70; public int Development { get; init; } = 65; }
+{ public int LastDevelopmentYear {get;init;} public bool Vacant { get; init; } public int Rating { get; init; } = 70; public int Development { get; init; } = 65; }
 public sealed record NflSnapshot(int Version, int Season, int Week, string RetrievedUtc, int MaddenMatched, int Estimated, List<ProPlayer> Players, List<ProCoach> Coaches) { public List<CoachCandidate> Candidates { get; init; } = []; }
 public sealed record ContractYear(int Year, long Salary, long Guaranteed)
 { public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } public bool IsVoid { get; init; } public long? OtherCash { get; init; } public long? SourceGuaranteed { get; init; } public long GuaranteedOtherCash {get;init;} }

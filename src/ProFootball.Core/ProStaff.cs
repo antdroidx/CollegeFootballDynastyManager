@@ -3,6 +3,17 @@ namespace ProFootball.Core;
 
 public static class ProStaff
 {
+    public static ProFranchise DevelopSeason(ProFranchise s)
+    {
+        var standings=ProStandings.Build(s).ToDictionary(r=>r.Team.Id);
+        return s with {Coaches=s.Coaches.Select(c=>{
+            if(c.Vacant||c.LastDevelopmentYear>=s.Year||!standings.TryGetValue(c.TeamId,out var row)||row.Wins+row.Losses+row.Ties==0)return c;
+            var target=s.Owners.FirstOrDefault(o=>o.Team==row.Team.Name)?.TargetWins??8;
+            var change=Math.Clamp((row.Wins-target)/3,-1,2);
+            var learners=s.Players.Where(p=>p.Football.TeamName==row.Team.Name&&!p.Retired&&p.Age<=26&&DynastyManager.Core.Simulation.UserCoachControlService.ControlsPosition(c.Role,p.Football.Position)).Where(p=>ProDevelopment.Delta(p)>0).Count();
+            return c with {Rating=Math.Clamp(c.Rating+change,40,95),Development=Math.Clamp(c.Development+(learners>=3?1:0),40,95),LastDevelopmentYear=s.Year};
+        }).ToList()};
+    }
     public static ProFranchise ManageCpu(ProFranchise s)
     {
         foreach (var team in s.League.Teams.Where(t => t.Name != s.UserTeam || s.Career?.Unemployed == true))

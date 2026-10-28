@@ -47,7 +47,7 @@ public sealed partial class FranchisePage
     {
         var s = state!; body.Add(CapSummary(s));
         if(ProCapInitialization.CanCorrectOpeningBudgets(s))body.Add(Action("Update 2026 cap budgets",CorrectOpeningBudgets));
-        var row = new ActionRow(); row.Add(Action("Financial overview",FinanceHub)); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", () => Trade())); row.Add(Action("Trading block", TradingBlock)); row.Add(Action($"Trade offers ({ProTradeAi.OpenOffers(s).Count})", TradeOffers)); row.Add(Action("Trade history", TradeHistory)); row.Add(Action("Draft & scouting", Draft)); row.Add(Action("Expiring contracts", Retention)); row.Add(Action("Rookie options", RookieOptions)); body.Add(row);
+        var row = new ActionRow(); row.Add(Action("Financial overview",FinanceHub)); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", () => Trade())); row.Add(Action("Trading block", TradingBlock)); row.Add(Action($"Trade offers ({ProTradeAi.OpenOffers(s).Count})", TradeOffers)); row.Add(Action("Trade history", TradeHistory)); row.Add(Action("Draft & scouting", Draft)); row.Add(Action("Training camp", Camp)); row.Add(Action("Expiring contracts", Retention)); row.Add(Action("Rookie options", RookieOptions)); body.Add(row);
         var rosterTools = new ActionRow(); rosterTools.Add(Action("Ask GM to fill roster", () => Update(x => ProCpu.Manage(x, true)))); rosterTools.Add(Action("Ask GM to trim to 53", () => Update(x => ProCpu.Trim(x, x.UserTeam)))); body.Add(rosterTools);
         body.Add(Text("Contracts · select a player", 21, true)); body.Add(Table([("Player", 170), ("Ends", 55), ("Salary",100), ("Bonus / season",110), ("Cap hit", 100)], s.Contracts.Where(c => c.Active && c.Team == s.UserTeam).OrderByDescending(c => ProEconomy.CapHit(c, s.Year)).Select(c => { var p = s.Players.Single(p => p.Football.PlayerId == c.PlayerId); return new View[] { Link(p.Football.FullName, () => Player(p)), Text(ProContractInsights.PlayingEnd(c).ToString()), Text(Money(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0)), Text(Money(ProEconomy.BonusCharge(c,s.Year))),Text(Money(ProEconomy.CapHit(c, s.Year))) }; })));
         body.Add(Panel("Dead money", Text(string.Join("\n", s.DeadCap.Where(d => d.Team == s.UserTeam && d.Year == s.Year).Select(d => $"{d.SourceName ?? s.Players.FirstOrDefault(p => p.Football.PlayerId == d.PlayerId)?.Football.FullName ?? "Prior contract"}: {Money(d.Amount)}")), 12)));
@@ -116,10 +116,11 @@ public sealed partial class FranchisePage
             var currentIndex=state.DraftIndex;state=await Task.Run(()=>ProDraft.AutoUntilUser(state));
             if(state.DraftIndex!=currentIndex)await Save();
         }
-        var scouted=ProDraft.AutoScout(state!);if(scouted.Scouting.Count!=state!.Scouting.Count){state=scouted;await Save();}
+        var scouted=ProDraft.AutoScout(state!);if(!scouted.Scouting.SequenceEqual(state!.Scouting)){state=scouted;await Save();}
         body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Draft & scouting",25,true));var s=state!;var current=ProDraft.Current(s);
         body.Add(Text(s.Phase==ProPhase.Offseason?$"{s.OffseasonStep} · "+(current is null?"Draft complete":$"R{current.Round} #{current.Slot} · {current.Owner}"):"Scouting opens during the offseason."));
         body.Add(Text($"Scout team reports automatically · {s.Scouting.Count(r=>r.Team==s.UserTeam&&r.Year==s.Year)}/40 reports · Projected grades are uncertain",12));
+        body.Add(Text("Staff ability shapes report confidence. Combine evaluations update automatically when the draft opens.",12));
         if(s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach)body.Add(Text("Recommend prospects for your unit. The GM selects for the other unit automatically, using team needs and available talent. Staff also fill the other unit in free agency."));
         if(s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft)body.Add(Action("Auto draft remaining picks",async()=>{state=await Task.Run(()=>ProDraft.AutoUntilUser(state!,true));await Save();await Draft();}));
         var search=new Entry{Placeholder="Find a prospect",Text=draftSearch};var choices=new[]{"All positions"}.Concat(Enum.GetNames<Position>()).ToArray();var position=new Picker{Title="Position",ItemsSource=choices,SelectedIndex=Array.IndexOf(choices,draftPosition)};
@@ -128,10 +129,12 @@ public sealed partial class FranchisePage
         {
             rows.Clear();var prospects=state!.Prospects.Where(p=>(draftPosition=="All positions"||p.Football.Position.ToString()==draftPosition)&&p.Football.FullName.Contains(draftSearch.Trim(),StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>state.DraftBoard.Contains(p.Football.PlayerId)).ThenByDescending(ProDraft.PublicGrade).ToArray();
             rows.Add(Text($"{prospects.Length} prospects · tap a heading to sort",12));
-            rows.Add(Table([("Pos",48),("Prospect",180),("Age",45),("Projected",70),("Scouted",70),("Confidence",80),("Board",105),("Select",80)],prospects.Select(p=>{
+            rows.Add(Table([("Prospect / actions",220),("Pos",48),("Age",45),("Projected",70),("Scouted",70),("Confidence",80)],prospects.Select(p=>{
                 var report=state.Scouting.FirstOrDefault(r=>r.Team==state.UserTeam&&r.Year==state.Year&&r.PlayerId==p.Football.PlayerId);
                 var choose=Action("Draft",async()=>{state=ProDraft.AutoUntilUser(ProManagement.Submit(state!,"Draft recommendation",[p.Football.PlayerId],0,x=>ProDraft.Pick(x,p.Football.PlayerId),true));await Save();await Draft();});choose.IsEnabled=state.Phase==ProPhase.Offseason&&state.OffseasonStep==OffseasonStep.Draft&&current?.Owner==state.UserTeam&&ProCareer.Controls(state,p.Football.Position);
-                return new View[]{Text(p.Football.Position.ToString()),Text(p.Football.FullName),Text(p.Age.ToString()),Text(ProDraft.PublicGrade(p).ToString()),Text(report?.Grade.ToString()??"—"),Text(report is null?"Pending":report.Confidence+"%"),Action(state.DraftBoard.Contains(p.Football.PlayerId)?"On board":"Add to board",async()=>{state=state! with{DraftBoard=state.DraftBoard.Contains(p.Football.PlayerId)?state.DraftBoard.Where(id=>id!=p.Football.PlayerId).ToList():state.DraftBoard.Append(p.Football.PlayerId).ToList()};await Save();Draw();}),choose};
+                var board=Action(state.DraftBoard.Contains(p.Football.PlayerId)?"On board":"Shortlist",async()=>{state=state! with{DraftBoard=state.DraftBoard.Contains(p.Football.PlayerId)?state.DraftBoard.Where(id=>id!=p.Football.PlayerId).ToList():state.DraftBoard.Append(p.Football.PlayerId).ToList()};await Save();Draw();});
+                var actions=new ActionRow();actions.Add(choose);actions.Add(board);
+                return new View[]{new VerticalStackLayout{Spacing=3,Children={Text(p.Football.FullName,14,true),actions}},Text(p.Football.Position.ToString()),Text(p.Age.ToString()),Text(ProDraft.PublicGrade(p).ToString()),Text(report?.Grade.ToString()??"—"),Text(report is null?"Pending":report.Confidence+"%")};
             })));
         }
         search.TextChanged+=(_,e)=>{draftSearch=e.NewTextValue??"";Draw();};position.SelectedIndexChanged+=(_,_)=>{if(position.SelectedIndex>=0){draftPosition=choices[position.SelectedIndex];Draw();}};Draw();

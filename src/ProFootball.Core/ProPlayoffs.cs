@@ -1,30 +1,6 @@
 using DynastyManager.Core.Models;
 namespace ProFootball.Core;
 
-public static class ProStandings
-{
-    public static List<ProStanding> Build(ProFranchise state)
-    {
-        var games = state.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).Select(g => g.Football).ToArray();
-        var byName = state.League.Teams.ToDictionary(t => t.Name);
-        double Percent(IEnumerable<ScheduledGame> set, string team)
-        { var a = set.ToArray(); return a.Length == 0 ? 0 : a.Sum(g => g.HomeScore == g.AwayScore ? .5 : g.WinnerTeamName == team ? 1d : 0) / a.Length; }
-        var rows = state.League.Teams.Select(t =>
-        {
-            var own = games.Where(g => g.InvolvesTeam(t.Name)).ToArray(); var ties = own.Count(g => g.HomeScore == g.AwayScore); var wins = own.Count(g => g.HomeScore != g.AwayScore && g.WinnerTeamName == t.Name);
-            string Opp(ScheduledGame g) => g.HomeTeamName == t.Name ? g.AwayTeamName : g.HomeTeamName;
-            return new ProStanding(t, wins, own.Length - wins - ties, ties, Percent(own, t.Name), Percent(own.Where(g => byName[Opp(g)].Division == t.Division && byName[Opp(g)].Conference == t.Conference), t.Name), Percent(own.Where(g => byName[Opp(g)].Conference == t.Conference), t.Name), own.Length == 0 ? 0 : own.Average(g => Percent(games.Where(o => o.InvolvesTeam(Opp(g))), Opp(g))), own.Sum(g => g.HomeTeamName == t.Name ? g.HomeScore!.Value - g.AwayScore!.Value : g.AwayScore!.Value - g.HomeScore!.Value));
-        }).ToList();
-        // Deterministic foundation order. Full official multi-team/common-game tiebreak chains are Phase 4.
-        return rows.OrderByDescending(r => r.Percentage).ThenByDescending(r => r.DivisionPercentage).ThenByDescending(r => r.ConferencePercentage).ThenByDescending(r => r.OpponentPercentage).ThenByDescending(r => r.Differential).ThenBy(r => r.Team.Id).ToList();
-    }
-    public static List<ProStanding> Seeds(ProFranchise state, string conference)
-    {
-        var all = Build(state).Where(r => r.Team.Conference == conference).ToList();
-        var winners = all.GroupBy(r => r.Team.Division).Select(g => g.First()).OrderBy(r => all.IndexOf(r)).ToList();
-        return winners.Concat(all.Where(r => !winners.Contains(r)).Take(3)).ToList();
-    }
-}
 public static class ProPlayoffs
 {
     static ProGame Pair(ProFranchise s, ProStanding home, ProStanding away, int week) => new(new ScheduledGame { GameId = $"{s.Year}-playoffs-{week}-{home.Team.Id}-{away.Team.Id}", SeasonYear = s.Year, Week = week, HomeTeamName = home.Team.Name, AwayTeamName = away.Team.Name, HomeSeed = ProStandings.Seeds(s, home.Team.Conference).FindIndex(r => r.Team.Id == home.Team.Id) + 1, AwaySeed = ProStandings.Seeds(s, away.Team.Conference).FindIndex(r => r.Team.Id == away.Team.Id) + 1, SimulationSeed = s.Year * 10000 + week * 100 + s.League.Teams.IndexOf(home.Team), IsNeutralSite = week == 4 }, ProPhase.Playoffs, week);

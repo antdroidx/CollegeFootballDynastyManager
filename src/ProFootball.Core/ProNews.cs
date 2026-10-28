@@ -27,9 +27,31 @@ public static class ProNews
         {
             foreach (var team in s.League.Teams)
             {
-                var run = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed && g.Football.Week <= group.Key && g.Football.InvolvesTeam(team.Name)).OrderByDescending(g => g.Football.Week).TakeWhile(g => g.Football.WinnerTeamName == team.Name).ToArray();
+                var run = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed && g.Football.Week <= group.Key && g.Football.InvolvesTeam(team.Name)).OrderByDescending(g => g.Football.Week).TakeWhile(g => g.Football.HomeScore != g.Football.AwayScore && g.Football.WinnerTeamName == team.Name).ToArray();
                 if (run.Length < 3) continue;
                 Add(new($"streak-{s.Year}-{group.Key}-{team.Id}", s.Year, group.Key, "Form", team.Name + $" wins {run.Length} straight", "Consecutive regular-season wins keep the momentum building.", team.Name));
+            }
+        }
+        foreach(var week in s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.SeasonYear==s.Year).GroupBy(g=>g.Football.Week))
+        {
+            if(week.Any(g=>!g.Football.HasPlayed))continue;
+            var id=$"weekly-{s.Year}-{week.Key}";
+            if(!stories.ContainsKey(id))
+            {
+                var biggest=week.OrderByDescending(g=>Math.Abs(g.Football.HomeScore!.Value-g.Football.AwayScore!.Value)).First().Football;
+                var leader=week.SelectMany(g=>g.Football.PlayerStats).GroupBy(p=>p.PlayerId).Select(g=>new{Name=g.First().PlayerName,Yards=g.Sum(p=>p.PassYards)}).OrderByDescending(p=>p.Yards).FirstOrDefault();
+                var detail=$"{week.Count()} games completed. Largest margin: {biggest.AwayTeamName} {biggest.AwayScore} – {biggest.HomeScore} {biggest.HomeTeamName}.";
+                if(leader is {Yards:>0})detail+=$" Passing leader: {leader.Name}, {leader.Yards:N0} yards.";
+                Add(new(id,s.Year,week.Key,"Weekly review",$"Week {week.Key} around the league",detail));
+            }
+            if(week.Key<14)continue;
+            var snapshot=s with{Games=s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.Week<=week.Key).ToList()};
+            foreach(var conference in s.League.Teams.Select(t=>t.Conference).Distinct())
+            {
+                var raceId=$"race-{s.Year}-{week.Key}-{conference}";if(stories.ContainsKey(raceId))continue;
+                var seeds=ProStandings.Seeds(snapshot,conference);
+                Add(new(raceId,s.Year,week.Key,"Playoff race",conference+" playoff picture · Week "+week.Key,
+                    "Current projected qualifiers: "+string.Join(", ",seeds.Select((r,i)=>$"{i+1}. {r.Team.Name} ({r.Wins}–{r.Losses}–{r.Ties})"))+". Projection from completed results, not a clinching announcement."));
             }
         }
         foreach(var honors in s.Honors)

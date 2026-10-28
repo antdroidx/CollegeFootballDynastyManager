@@ -1,3 +1,9 @@
+## Active management/UI batch after Pro70
+
+User scope: #1 UI/UX, #2 postseason tiebreakers, #4 career/offseason/staff/scouting and #5 analytics/news; draft-class exchange UI deferred.271 final fast Pro cases and16 UI helper tests pass. Local Android compilation passed before final UI-only additions; final packaging runs in CI. Run generated20/sourced5 once for changed annual/scouting/standings behavior. Reuse unchanged College390/full GameCast44; no College/shared inputs changed.
+
+New validation_scope=roadmap packages the final APK and checks synthetic32-team fixtures that pass the production save loader. Verify analytics category views, completed weekly news, career ownership context, camp screen, standings and primary draft/retention actions visible in portrait/landscape without horizontal hunting. Fixtures are not real-world roster or cap facts. Exact APK/device acceptance is pending; Pro70 remains latest accepted until it passes.
+
 # Scope Android verification to the change
 
 Use the smallest acceptance flow that covers affected behavior. Reuse verified results for unchanged applications; do not rebuild College solely because Pro finance changed.

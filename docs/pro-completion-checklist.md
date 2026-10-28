@@ -1,5 +1,12 @@
 # Pro completion checklist
 
+## Active priorities after Pro70
+
+- College-to-Pro draft-class exchange UI is deferred at user request.
+- Work on UI/UX finishing, NFL postseason tiebreaks, career/offseason/staff/scouting depth and analytics/factual news.
+- Candidate management batch is in progress, not APK-accepted; current-work.md has actual test results and remaining acceptance. No source-finance gate is reopened.
+- Initial candidate features: first-column mobile draft/retention actions; division/wild-card chains; staff/combine scouting and annual development; career opening priority; category-based development/draft/career analytics; completed weekly reviews and explicitly projected late-season playoff pictures.
+
 ## Current result - financial phase complete (Pro70)
 
 User-approved practical-estimate policy: use best available real contracts with reasonable game estimates, simplify the visible finances and stop source-perfect auditing as a release gate.

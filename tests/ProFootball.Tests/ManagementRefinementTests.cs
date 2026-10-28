@@ -15,7 +15,7 @@ public class ManagementRefinementTests
     {
         var s=ProLeagueService.Create("Seattle Seahawks") with{Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.FreeAgency};s=ProDraft.Generate(s);
         Assert.Equal(40,s.Scouting.Count(r=>r.Team==s.UserTeam));var next=ProDraft.AutoScout(s);Assert.Equal(s.Scouting,next.Scouting);
-        Assert.All(s.Scouting,r=>Assert.Equal(75,r.Confidence));
+        Assert.All(s.Scouting,r=>Assert.InRange(r.Confidence,60,95));
     }
     [Fact] public void RookieSourceCoverageKeepsCurrentCapAndMarksEstimatedFuture()
     {
