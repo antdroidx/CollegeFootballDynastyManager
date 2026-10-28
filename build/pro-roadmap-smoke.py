@@ -73,6 +73,9 @@ def ui_polish():
         for key in ["homeStats","awayStats"]:
             f[key]={"passAttempts":30,"rushAttempts":30,"passYards":210,"rushYards":100,"passingTouchdowns":2,"rushingTouchdowns":1,"turnovers":1,"sacksAllowed":3,"explosivePasses20":3,"explosiveRuns20":1,"efficiency":{"plays":60,"yards":310,"successful":27,"thirdDowns":12,"thirdDownConversions":5,"sackYardsLost":18}}
     load(regular);navigate("Overview");click("polish-options","Options");click("polish-appearance","Appearance");click("polish-light","Light")
+    navigate("Roster");ready("compact-roster",lambda r:any(t and t.startswith("Active roster") for t in s.texts(r)));s.capture("pro-presentation-compact-roster-phone")
+    rotate(1);navigate("Roster");s.capture("pro-presentation-compact-roster-landscape");rotate(0)
+    navigate("Overview");root=s.scroll_to_text("pro-news-cards","League news",max_swipes=20);s.capture("pro-presentation-overview-news-cards")
     navigate("Analytics");category("Advanced efficiency")
     root=s.scroll_to_text("pro-polish-efficiency","Adjusted net efficiency",max_swipes=20)
     s.capture("pro-presentation-light-efficiency")

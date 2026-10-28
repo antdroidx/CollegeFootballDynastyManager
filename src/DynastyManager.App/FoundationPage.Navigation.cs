@@ -95,8 +95,8 @@ public sealed partial class FoundationPage
         try
         {
             while (Navigation.ModalStack.Count > 0) await Navigation.PopModalAsync(false);
-            _teamBrowserPicker.SelectedItem = name;
-            ShowSection(AppSection.Teams);
+            _rosterTeamName=name;
+            ShowSection(AppSection.Roster);
         }
         finally { _openingSchool = false; }
     }
@@ -175,7 +175,7 @@ public sealed partial class FoundationPage
             _homeHighlights.Children.Add(recap);
         }
         var stories = DynastyNewsService.BuildOverview(state);
-        if(stories.Count>0) _homeHighlights.Children.Add(ResponsivePanels(stories.Select(NewsCard).ToArray()));
+        if(stories.Count>0) _homeHighlights.Children.Add(FootballNewsCard.Layout(stories.Select(NewsCard)));
         if (stories.Count == 0) _homeHighlights.Children.Add(new Label { Text = "Results, recruiting and injury updates will appear as your dynasty develops.", TextColor = DynastyTheme.Muted });
     }
 
@@ -328,18 +328,7 @@ public sealed partial class FoundationPage
                 Content = new Label { Text = story.TeamName.Length > 0 ? story.TeamName[..1] : "•", FontSize = 27,
                     FontAttributes = FontAttributes.Bold, TextColor = BrandInk(Color.FromArgb(brand.Primary)),
                     HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center } };
-        var heading = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(44), new(GridLength.Star) } };
-        heading.Add(icon, 0, 0);
-        heading.Add(new VerticalStackLayout { Spacing = 4, Children = {
-            new Label { Text = $"{story.Category.ToUpperInvariant()} · {story.SeasonYear} · Week {story.Week}", FontSize = 10, TextColor = ManagementAccent },
-            new Label { Text = story.Headline, FontSize = 15, FontAttributes = FontAttributes.Bold }
-        } }, 1, 0);
-        var card = new Border { Padding = 12, BackgroundColor = DynastyTheme.Surface, StrokeThickness = 0,
-            Content = new VerticalStackLayout { Spacing = 9, Children = {
-                heading,
-                new Label { Text = story.Body, FontSize = 12, MaxLines = 3, LineBreakMode = LineBreakMode.TailTruncation, TextColor = DynastyTheme.Muted },
-                new Label { Text = "Read story ›", FontSize = 12, TextColor = ManagementAccent }
-            } } };
+        var card=FootballNewsCard.Create(icon,$"{story.Category.ToUpperInvariant()} · {story.SeasonYear} · Week {story.Week}",story.Headline,story.Body,ManagementAccent);
         SemanticProperties.SetDescription(card, story.Category + ": " + story.Headline + ". Open story.");
         var open = new TapGestureRecognizer(); open.Tapped += async (_, _) =>
         {
@@ -380,7 +369,7 @@ public sealed partial class FoundationPage
         if (_currentDynasty is null) return;
         _newsRows.Children.Add(SectionTitle("News & headlines", "Dynasty Wire · results, people and stories from around the league"));
         var stories = DynastyNewsService.Build(_currentDynasty);
-        if (stories.Count > 0) _newsRows.Children.Add(ResponsivePanels(stories.Select(NewsCard).ToArray()));
+        if (stories.Count > 0) _newsRows.Children.Add(FootballNewsCard.Layout(stories.Select(NewsCard)));
         if (stories.Count == 0) _newsRows.Children.Add(new Label { Text = "No stories yet. Check back as your season develops." });
     }
 

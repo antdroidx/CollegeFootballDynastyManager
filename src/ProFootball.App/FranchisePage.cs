@@ -120,9 +120,14 @@ public sealed partial class FranchisePage : ContentPage
         body.Add(Panel("Your coaching career", Text($"{s.Career?.Name} · {RoleName(ProCareer.Role(s))}", 17, true), Text(s.Career?.Unemployed == true ? "Seeking employment · Open your job offers" : $"Job security {s.Career?.Security ?? 65}/100 · Reputation {s.Career?.Reputation ?? 50}/100"), Action("Career & job offers ›", () => Open("Career"))));
         var owner = s.Owners.FirstOrDefault(o => o.Team == s.UserTeam); body.Add(Cards(Panel("Season overview", Text($"{r.Wins}–{r.Losses}–{r.Ties}", 28, true), Text(r.Team.Conference + " · " + r.Team.Division), Action("Open standings ›", () => Open("Standings"))), Panel("Front Office", Text($"{Money(ProEconomy.Room(s, s.UserTeam))} cap room", 24, true), Text($"Roster {ProRoster.CountForLimit(s, s.UserTeam)}/{ProRoster.Limit(s)} · Owner security {owner?.Security ?? 65}/100"), Action("Contracts & salary cap ›", () => Open("Front Office")))));
         state=ProNews.Refresh(state!);s=state;
-        var news=new List<View>();
-        foreach(var story in s.News.Take(3)){var n=story;var heading=new Grid{ColumnSpacing=8,ColumnDefinitions=new(){new(GridLength.Auto),new(GridLength.Star)}};heading.Add(NewsThumbnail(n),0,0);var headline=(Button)Link(n.Headline,()=>ShowPage(n.Headline,Text(n.Body),n.Team is null?Text("League news"):TeamCell(s.League.Teams.FirstOrDefault(t=>t.Name==n.Team)??r.Team)));headline.LineBreakMode=LineBreakMode.WordWrap;headline.HorizontalOptions=LayoutOptions.Fill;heading.Add(headline,1,0);news.Add(heading);news.Add(Text(n.Body,12));}
-        if(news.Count==0)news.Add(Text("Results, injuries and league activity will appear here as your franchise advances.",12));
+        var news=new List<View>();var newsCards=new List<View>();
+        foreach(var story in s.News.Take(3))
+        {
+            var n=story;var card=FootballNewsCard.Create(NewsThumbnail(n),$"{n.Category.ToUpperInvariant()} · {n.Year} · Week {n.Week}",n.Headline,n.Body,DynastyTheme.Accent);
+            var tap=new TapGestureRecognizer();tap.Tapped+=async(_,_)=>await ShowPage(n.Headline,Text(n.Body),n.Team is null?Text("League news"):TeamCell(s.League.Teams.FirstOrDefault(t=>t.Name==n.Team)??r.Team));card.GestureRecognizers.Add(tap);SemanticProperties.SetDescription(card,n.Headline+". Open story.");newsCards.Add(card);
+        }
+        if(newsCards.Count>0)news.Add(FootballNewsCard.Layout(newsCards));
+        if(newsCards.Count==0)news.Add(Text("Results, injuries and league activity will appear here as your franchise advances.",12));
         news.Add(Action("Headlines & results ›",()=>Open("News")));news.Add(Action("Statistics & leaders ›",()=>Open("Statistics")));body.Add(Panel("League news",news.ToArray()));
         body.Add(Panel("Latest transactions", Text(string.Join("\n", ProTransactions.Migrate(s).TransactionLog.TakeLast(4).Reverse().Select(t=>$"{t.Year} {ProTransactions.Period(t.Phase,t.Week)} · {t.Activity}")), 12),Action("View all transactions ›",()=>Open("Transactions"))));
     }
@@ -164,11 +169,11 @@ public sealed partial class FranchisePage : ContentPage
     void Roster()
     {
         var s = state!; var teams = s.League.Teams.OrderBy(t => t.Name).ToArray();
-        var team = new Picker { Title = "Team", ItemsSource = teams.Select(t => t.Name).ToArray(), SelectedIndex = Array.FindIndex(teams, t => t.Name == s.UserTeam) };
-        var search = new SearchBar { Placeholder = "Find a player", AutomationId = "pro-roster-search" }; var positions = new Picker { Title = "Position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
+        var team = new Picker { Title = "Team", AutomationId="pro-roster-team", ItemsSource = teams.Select(t => t.Name).ToArray(), SelectedIndex = Array.FindIndex(teams, t => t.Name == s.UserTeam) };
+        var search = new SearchBar { Placeholder = "Find a player", AutomationId = "pro-roster-search" }; var positions = new Picker { Title = "Position", AutomationId="pro-roster-position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
         var list = new VerticalStackLayout { Spacing = 12 };
         var showRatings = false;
-        var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(tools); body.Add(team); body.Add(search); body.Add(positions);
+        var tools = new ActionRow(); tools.Add(Action("Organize depth chart", DepthChart)); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(CompactFilters.Create((team,210),(search,210),(positions,130)));body.Add(tools);
         body.Add(Text("Δ since last offseason (season start for new saves) · Growth is remaining upside · Swipe for more columns", 12));
         body.Add(list);
         void Draw()

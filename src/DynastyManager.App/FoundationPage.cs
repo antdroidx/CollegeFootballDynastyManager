@@ -732,6 +732,7 @@ public sealed partial class FoundationPage : ContentPage
 
     private void ShowSection(AppSection section)
     {
+        if(section==AppSection.Teams)section=AppSection.Roster;
         if (_currentDynasty is null && section is not (AppSection.Home or AppSection.NewDynasty)) section = AppSection.Home;
         RememberSection(section);
         _activeSection = section;

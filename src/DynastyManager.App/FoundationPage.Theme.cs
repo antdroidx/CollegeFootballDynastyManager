@@ -68,6 +68,7 @@ public sealed partial class FoundationPage
             next._homeStatus.Text = _homeStatus.Text;
             next._newDynastyButton.IsEnabled = _newDynastyButton.IsEnabled;
             foreach(var order in _tableOrders) next._tableOrders[order.Key]=order.Value;
+            next._rosterTeamName=_rosterTeamName;
             next._rosterSearch.Text=_rosterSearch.Text;
             next._rosterPosition.SelectedIndex=_rosterPosition.SelectedIndex;
             next._rosterStatus.SelectedIndex=_rosterStatus.SelectedIndex;

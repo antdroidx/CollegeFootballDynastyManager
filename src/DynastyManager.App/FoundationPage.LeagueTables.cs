@@ -172,13 +172,13 @@ public sealed partial class FoundationPage
     };
 
     private View CreateTeamRosterTable(IEnumerable<DynastyPlayer> roster) => DataTable(
-        [("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Morale", 60), ("Year", 50), ("Potential", 75), ("HS", 45), ("Profile", 110), ("Height", 64), ("Wt lb", 60)],
+        [("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Morale", 60), ("Year", 50), ("Potential", 75), ("HS", 45), ("Height", 64), ("Wt lb", 60)],
         roster.OrderBy(p => p.Position).ThenBy(p => p.DepthChartOrder).Select(player => new View[]
         {
             TableText(OffensiveLineService.Label(player)), PlayerLink(player), RatingCell(player.OverallRating),
             TableText(FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty!, player))), MoraleIcon(player),
             TableText(FormatClassYear(player.ClassYear, player.IsRedshirted || player.HasRedshirted)), TableText(FormatPotentialStars(player.PotentialRating)),
-            TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"), CreateCareerStatsButton(player),
+            TableText(player.OriginalRecruitingStars is int stars ? $"{(player.RecruitingStarsEstimated ? "~" : "")}{stars}★" : "—"),
             HeightCell(player.HeightInches), TableText(player.WeightPounds > 0 ? player.WeightPounds.ToString() : "—")
         }));
 }

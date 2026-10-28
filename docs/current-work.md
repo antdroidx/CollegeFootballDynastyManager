@@ -1,3 +1,7 @@
+## Active shared news/roster alignment batch
+
+User requests identical College/Pro news cards, compact one-row roster filters and College team browsing through the roster instead of redundant Teams screen. Implementation in progress; prior College394/Pro81 remain accepted. Shared FootballNewsCard and CompactFilters added; College contextual team links now choose roster team, with user management hidden for opponents. Verify compilation, team-picker persistence/ownership, news alignment and phone/Fold layouts in both apps. No new build accepted yet.
+
 ## Accepted contextual UI — October28,2026
 
 College394 source f2ec0ad/run40724719708/APK12832202972:703 combined Core/College cases, packaging0 warnings/errors. Pro81 app f345f90/core f2ec0ad/run40725321084/APK12833235834:286 fast Pro cases (five new calendar-label cases), helpers/source validator and packaging0 warnings/errors; presentation device acceptance passed. Evidence12833821291 in .artifacts/contextual-pro81. Original Pro80 build is superseded by phone-width headline refinement.
