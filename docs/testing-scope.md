@@ -111,3 +111,8 @@ The opening device scope reuses the financial source-contract/budget/compact-acc
 
 
 The guarded source-guarantee allocation follow-up adds two valid32-team disposable saves to opening acceptance: an untouched old source contract migrates, while a deliberately negotiated/locked contract remains financially unchanged. Both retain all booked debt and career identity. Check the UI-created new source contract allocation too. Four new Core regressions cover annual cash/cap conservation, buyer release, exact-source migration/waiver snapshots and real-loader idempotence. Final254 local cases excluding unchanged generated20 passed; CI runs253 fast cases. No repeated local Android compile for a Core/resource-only correction; the scoped CI performs packaging and exact device checks. Do not claim another full College/GameCast walkthrough.
+
+
+## Accepted practical financial finish - Pro70
+
+App/core fabf464, successful run40613034696, APK12783469883/evidence12784307093.257 local Pro cases excluding unchanged generated20 passed1m40 (five sourced/three imported-cap seasons included),17 final source/hash guards passed and CI passed256 fast/16 helpers/source validator/Android packaging. Opening device scope verified new real-roster default, compact/expanded cap display, three first-round imports,32 allowances/735 source assessments, contract/void views, light/dark appearance, reinstall/save, unchanged-source migration and negotiated-contract/booked-debt/career preservation. Compact/expanded screenshots reviewed. Reuse unchanged College390/GameCast44/generated20 evidence; do not claim a new full walkthrough. Financial phase closes under the user's estimate policy, not a promise of exact agreement with every public financial source.

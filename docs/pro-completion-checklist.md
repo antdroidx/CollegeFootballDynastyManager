@@ -1,5 +1,23 @@
 # Pro completion checklist
 
+## Current result - financial phase complete (Pro70)
+
+User-approved practical-estimate policy: use best available real contracts with reasonable game estimates, simplify the visible finances and stop source-perfect auditing as a release gate.
+
+- [x] Reserve activation with roster/cap/role checks and saved status (63; unchanged evidence reused).
+- [x] Practical contract accounting and guarded source corrections; preserve negotiated contracts/booked debt (66/69).
+- [x]32-team adjusted budgets/opening assessments, real-roster default, sensible fallback estimates and optional cap breakdown (68/70).
+- [x] Original-contract waiver assumptions, assignment accrual, timed termination rules and preserved obligations (66/67/68).
+
+App/core fabf464, all-green run40613034696. Exact tested APK12783469883:
+https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40613034696/artifacts/12783469883
+
+257 relevant local Pro cases passed1m40 including five sourced/three imported-cap seasons;17 final source/hash checks passed; CI passed256 fast cases/16 helpers/source validator/packaging. Device evidence12784307093 in .artifacts/pro70-ui verifies default source selection, compact/expanded cap UI, three rookie imports,735 opening source assessments, contract/void views, themes/reinstall and guarded source migration/negotiated-deal/debt/career preservation. Compact and expanded screenshots reviewed. Main/College unchanged; generated20/College390/GameCast44 evidence reused. Source inconsistencies and four staged roster-review findings are ordinary later maintenance, not financial blockers.
+
+## Historical implementation records
+
+The earlier source-perfect/default-promotion gates below are superseded by the user direction and current practical policy. They are retained as history, not active financial tasks.
+
 ## User scope update - practical financial completion
 
 October27: stop detailed source-perfect accounting work, make reasonable estimates and wrap finance promptly. Historical strict source/default gates below are superseded by docs/pro-practical-finance-policy.md. Current finish: real-roster default, compact cap summary with optional details, already-reviewed three rookie imports.257 relevant local cases passed including five sourced seasons; final APK/device verification pending. No additional private-guarantee/source-room audit gate. Preserve saves/main/College.

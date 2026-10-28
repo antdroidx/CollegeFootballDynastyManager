@@ -60,7 +60,7 @@ See [LICENSE](LICENSE) for repository licensing and the historical documentation
 
 ## Pro parity and contract-data status
 
-See [the current parity audit](docs/pro-parity-audit.md) for implemented screens and remaining college UI/GameCast gaps. New pro franchises can select a dated OverTheCap/nflverse contract snapshot or estimated game contracts. [Contract provenance](docs/nfl-contract-data.json) records coverage and limitations; team cap room remains provisional until rollover, adjustments, and historical dead money are imported. Existing save finances are preserved.
+See [the current parity audit](docs/pro-parity-audit.md) for implemented screens and remaining college UI/GameCast gaps. New Pro franchises default to real-roster contracts, with reasonable game estimates for missing details and an optional generated-contract alternative. Starting2026 budgets include adjusted team caps, rollover and opening dead money. The cap panel shows the main numbers first, with an optional detailed breakdown. Existing saves preserve negotiated contracts and booked obligations. [Practical finance policy](docs/pro-practical-finance-policy.md) documents the modeling choices.
 
 ## Shared player ratings and GameCast
 
