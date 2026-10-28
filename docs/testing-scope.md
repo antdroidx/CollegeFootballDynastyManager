@@ -1,31 +1,12 @@
-## Active management/UI batch after Pro70
+## Latest acceptance - Pro73 management/presentation
 
-User scope: #1 UI/UX, #2 postseason tiebreakers, #4 career/offseason/staff/scouting and #5 analytics/news; draft-class exchange UI deferred.271 final fast Pro cases and16 UI helper tests pass. Local Android compilation passed before final UI-only additions; final packaging runs in CI. Both annual cases passed6m7:20 generated/five sourced seasons. Reuse unchanged College390/full GameCast44; no College/shared inputs changed.
+Final appa04ee62, unchanged core43635c0. Run40628330665 passed271 fast Pro cases,16 helpers, source validator, packaging and focused presentation flow. APK12789619809: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40628330665/artifacts/12789619809 . Device evidence12790617877/.artifacts/pro73-ui verifies actual phone bounds for primary analytics totals/comparisons, draft grades/actions, retention demand/actions and camp ratings, plus Fold/light/dark layouts. Screenshots reviewed.
 
-New validation_scope=roadmap packages the final APK and checks synthetic32-team fixtures that pass the production save loader. Verify analytics category views, completed weekly news, career ownership context, camp screen, standings and primary draft/retention actions visible in portrait/landscape without horizontal hunting. Fixtures are not real-world roster or cap facts. Pro71 app/core43635c0 packaged successfully in run40625932825, APK12789078287. Management device acceptance is pending; Pro70 remains latest accepted until it passes. A presentation-only exact-APK scope checks Fold/dark layout without replaying the existing management flow.
+Pro71 app/core43635c0 exact-APK verification40627341025 at harnessf4c1f61/evidence12789613796 verifies categories, news, career, camp, standings and portrait/landscape draft/retention actions. Initial settings-only rotation harness failure is superseded; explicit WindowManager rotation waits independently of vertical scrolling. Reuse unchanged71 behavior in73. Test fixtures are synthetic32-team states validated by the real save loader, not claims about real roster/cap facts.
 
-# Scope Android verification to the change
+All273 local Pro cases passed across271 fast (1m27) and2 long (6m7:20 generated/five sourced seasons). Do not repeat annual scenarios for final view/harness/docs-only changes. College/shared engine/renderer unchanged: reuse College390/full GameCast44 and690 legacy combined Core/College cases. Do not reclassify those690 until the audit. No active build/test remains. Draft-class exchange UI deferred; finances closed under practical estimates.
 
-Use the smallest acceptance flow that covers affected behavior. Reuse verified results for unchanged applications; do not rebuild College solely because Pro finance changed.
-
-- **Pro finance/data/contracts/rollover:** dispatch `pro-android.yml` with `validation_scope=finance`. Run all fast Pro transaction/career/save/financial regressions and the three-season cap lifecycle scenario; package the APK; run `build/pro-finance-smoke.py` on it. This checks new-franchise budgets, all 32 persisted/reconciled allocations, signed adjustments, sourced JSN annual cash/playing term, compact contract details and expandable void accounting, themes and reinstall/save survival. It excludes the unchanged broad GameCast walkthrough and two longer calibration cases.
-- **Pro-only live layout:** dispatch `validation_scope=live`: fast Pro regressions plus full Pro device walkthrough, including landscape fit/collapse/field expansion/reopening/More checks. Reuse the prior long financial simulations and College result when shared engine/presentation and College source are unchanged.
-- **Shared simulation, GameCast, renderer or live controls:** use `validation_scope=full`; verify both applications when shared application behavior changes. Full remains the default for unclassified pushes/manual runs.
-- **Pro management/UI changes outside finance:** use the full Pro acceptance until a relevant narrower flow exists.
-- **College-only changes:** run the appropriate College workflow/flow and affected Core/College tests. Pro builds are needed only if shared code is affected.
-- **Test-helper changes:** run `python -m unittest discover -s build -p test_android_ui_smoke.py` (13 cases), plus the relevant device flow. Keep system-navigation clipping and fixed-footer regressions.
-- **Documentation only:** use `[skip ci]`; do not rebuild APKs.
-
-Run longer financial/roster simulations when annual lifecycle, cap inflation, draft supply or CPU financial planning changes. They are not necessary on every display/data formatting edit. For this first measured-rollover implementation, all 108 Pro cases (including twenty estimated-contract seasons, five sourced-contract seasons and the new three-season imported-cap scenario) passed locally once. The normal finance CI subsequently runs 106 relevant cases rather than repeating those two longest scenarios.
-
-Core/College still has a legacy combined 690-case fast suite. Do not relabel it exclusively Core or College without auditing individual cases. Report Pro tests separately and state the device scope used; a finance-only run is not a new full-GameCast acceptance claim.
-
-
-For harness/workflow-only retries, supply `reuse_apk_run_id` and its `reuse_apk_artifact` alongside the validation scope. The device job fetches the original run's source SHA and rejects any difference under `src`, shared build properties, SDK/NuGet configuration or signing keys. It reruns helper tests and installs the original APK. The build job is skipped; this preserves the original build/version and avoids duplicate APK compilation/storage. Report the original APK link plus the later verification run. Do not use reuse to bypass application changes.
-
-
-Rookie option acceptance extends the financial script with two explicitly synthetic, isolated emulator saves: exercise and decline. It verifies the themed decision desk, once-only UI, persisted year-four/year-five guarantees and unchanged negotiation-change lock. The original imported franchise and its 32-team ledger assertions remain separate and unmodified. Core tests cover observed snap history, original contract/trade identity, all four modeled tender tiers, future cap/GM rejection, staff decisions, post-draft deadline, void debt and save round trips. Run long Pro simulations once for this lifecycle change; reuse unchanged College/shared rendering and Pro GameCast walkthrough evidence.
-
+## Historical acceptance records
 
 ## Latest acceptance — Pro 46 rookie options
 

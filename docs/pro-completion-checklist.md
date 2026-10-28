@@ -1,15 +1,19 @@
 # Pro completion checklist
 
-## Accepted Pro71 and final presentation polish
+## Current requested batch - accepted Pro73
 
-Pro71 app/core43635c0, APK12789078287/run40625932825; exact-APK verification40627341025/evidence12789613796 at harnessf4c1f61 passes all management/portrait/landscape/Fold/dark checks.271 fast Pro cases,16 helpers and both long cases (20 generated/five sourced seasons) pass. Final UI-only first-column number/comparison refinement is in progress; no core change or repeated long/College/GameCast test needed. See current-work.md for exact acceptance and pending final APK.
+- [x] #1 UI finishing batch: phone-visible primary actions/numbers, focused analytics, camp and portrait/landscape/Fold/theme checks.
+- [x] #2 NFL postseason division/wild-card chains, reductions/restarts and correct archived-season draft lookup.
+- [x] #4 Staff/combine scouting, measured annual staff development, camp/depth battles and career/ownership/job-market improvements.
+- [x] #5 Development/draft comparisons, recorded career leaders, completed weekly reviews and projected late-season playoff news.
+- [ ] #3 College-to-Pro draft-class exchange screens: deliberately deferred by user.
 
-## Active priorities after Pro70
+Final appa04ee62/core43635c0. All-green run40628330665; exact tested APK12789619809:
+https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40628330665/artifacts/12789619809
 
-- College-to-Pro draft-class exchange UI is deferred at user request.
-- Work on UI/UX finishing, NFL postseason tiebreaks, career/offseason/staff/scouting depth and analytics/factual news.
-- Candidate management batch:271 fast Pro cases,16 helpers and both long cases (20 generated/five sourced seasons) pass;71 packages successfully. Device scope is in progress, not APK-accepted; current-work.md has actual test results and remaining acceptance. No source-finance gate is reopened.
-- Initial candidate features: first-column mobile draft/retention actions; division/wild-card chains; staff/combine scouting and annual development; career opening priority; category-based development/draft/career analytics; completed weekly reviews and explicitly projected late-season playoff pictures.
+271 fast Pro cases/16 helpers/source validator/packaging and presentation-device checks passed. Evidence12790617877 in .artifacts/pro73-ui; phone metrics/draft/retention/camp, Fold and light/dark flags all true; screenshots reviewed. Core's additional generated20/sourced5 cases passed6m7 (273 local Pro cases combined). Pro71 management-device verification40627341025/evidence12789613796 supplies unchanged category/news/career/camp/standings and portrait/landscape action evidence. Earlier rotation harness timeout is superseded. No College/shared inputs changed; reuse College390/full GameCast44 and690 legacy combined Core/College cases. Main unchanged. No active build/test or continuation automation.
+
+Current-work.md is authoritative. Financial phase remains complete under practical estimates. Remaining later roadmap: deferred exchange UI, audited test split/release validation, then agreed archival/rename/release cleanup. Historical unchecked items below are not a fresh task list.
 
 ## Current result - financial phase complete (Pro70)
 

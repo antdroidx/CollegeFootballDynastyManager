@@ -1,24 +1,37 @@
 # Current work - Football Sim Engine
 
-Updated October27,2026. Work only in D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve stable main fdd3d4898b5bd07eeec8dba346024d61f5289474, College identity/saves and Pro update signing. The user removed automatic continuation; do not recreate it. No subagents authorized.
+Updated October27,2026. Canonical workspace D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve main fdd3d4898b5bd07eeec8dba346024d61f5289474, both app identities, College saves and negotiated Pro contracts. No subagents or continuation automation. Working batch is complete; no active build/test remains.
 
-## Accepted management foundation - Pro71; final mobile-number refinement pending
+## Latest accepted - Pro73
 
-App/core43635c0 packaged in run40625932825, APK12789078287. Exact-APK verification40627341025 at harnessf4c1f61 passed all management flows, portrait/landscape draft and retention actions, Fold layout and dark theme. Device evidence12789613796 is downloaded in .artifacts/pro71-accepted-ui; landscape retention and Fold analytics screenshots reviewed. The original rotation-settings harness failure is superseded.271 fast Pro/16 helpers/source validator/packaging and both long cases (20 generated/five sourced seasons,6m7) passed.
+Final application source a04ee62, financial/management core43635c0. All-green run40628330665:
+https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40628330665
 
-A final UI-only refinement now moves career totals, development comparisons, draft growth/league values, scouting grades and retention demand into the first visible columns; camp widths are tightened. New presentation-only device scope checks those phone columns/actions plus Fold/light/dark without replaying news/career/standings or long simulations. Packaging/acceptance of this UI-only refinement is pending. Do not rerun unchanged long/College/GameCast evidence. Draft-class exchange UI remains deferred.
+Exact tested APK12789619809:
+https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40628330665/artifacts/12789619809
 
-## Active user priorities - UI, rules, franchise depth, analytics/news
+Device evidence12790617877 is downloaded in .artifacts/pro73-ui. Every pro-presentation-check.json flag passed: visible phone totals/comparisons, draft grade/action, retention demand/action, camp ratings, Fold layout and light/dark themes. Phone career totals/draft outcomes and Fold light analytics screenshots reviewed. CI271 fast Pro cases,16 helpers,32-pair cap validator and packaging passed. Final refinement changes only Pro view column order/widths, not core/shared/College inputs.
 
-User deferred College-to-Pro draft-class exchange UI (#3). Work on #1 UI/UX, #2 NFL tiebreaks, #4 career/offseason and #5 analytics/news now. No subagents or continuation automation. Finance remains closed. Candidate adds primary first-column draft/retention actions, category-based analytics/development/draft outcomes/career records, automatic staff/combine scouting, once-per-year measured staff development, less-secure-club career prioritization, weekly summaries and late-season projected races. NFL postseason tiebreaks use official division/wild-card chains, restart after reductions, preserve division order between wild cards, aggregate opponent records and seeded final coin toss. Source: https://www.nfl.com/standings/tie-breaking-procedures .
+Management foundation app/core43635c0 was accepted as Pro71: APK12789078287/run40625932825, exact-APK verification40627341025 at harnessf4c1f61/evidence12789613796 (.artifacts/pro71-accepted-ui). All analytics categories, weekly news, career expectations, camp, standings, visible portrait/landscape draft/retention actions and Fold/dark checks passed. Landscape retention and Fold screenshots reviewed. Original settings-only emulator rotation timeout is superseded by explicit WindowManager rotation and independent orientation/scroll synchronization; it was not an app error. Reuse this unchanged behavior with73;73 specifically rechecks its altered presentation.
 
-Candidate is NOT accepted yet. Initial local Android compilation passed 0 warnings/errors in2m36 before final report-persistence change. Five initial standings and automatic-scouting cases passed. First broader local run found a real prior-season draft lookup regression (fixed by explicitly using archive year), plus fixture-export failures from a missing output directory (environment setup, not production). Final271 fast Pro cases and16 UI helpers now pass. Both annual cases passed in6m7 (.artifacts/roadmap-long-tests.txt):20 generated seasons and five sourced seasons. Pro71 app/core43635c0 packaged successfully in run40625932825 (APK12789078287); management device scope reached analytics/news/career/camp/standings and visible portrait draft actions, then failed because the emulator did not rotate with the legacy settings command. Harness-only retry uses explicit WindowManager rotation and waits for orientation separately from scrolling. APK inputs remain unchanged; acceptance pending. Camp/depth-battle screen uses existing starter/roster guards. Latest accepted APK remains70 below. Both status docs will record exact final evidence. College/shared renderer unchanged; reuse their acceptance.
+Local271 fast Pro cases pass1m27 (.artifacts/roadmap-fast-tests-final.txt). Both additional long cases passed6m7 (.artifacts/roadmap-long-tests.txt):20 generated-contract and five sourced-contract seasons. All273 Pro cases therefore passed on final core; do not repeat long simulations for view/harness/docs-only changes. New source includes8 standings and7 franchise/scouting/analytics/news/fixture cases. Existing690 combined Core/College cases and College390/full GameCast44 acceptance remain reusable; no College/shared engine/renderer change. Do not relabel690 as exclusively Core or College.
+
+## Completed user-selected batch (#1, #2, #4, #5)
+
+- UI: first-column draft/retention actions, primary numerical columns visible on phones, focused analytics category screens, responsive camp/depth views, phone/landscape/Fold/light/dark checks. Secondary table details still scroll horizontally as in College.
+- NFL standings: division and wild-card head-to-head/common/conference chains, aggregate strength of victory/schedule, tied scoring ranks, common/conference net points, net touchdowns and save-stable final coin toss. Multi-club reductions restart; wild-card selection preserves original division order. Rules source: https://www.nfl.com/standings/tie-breaking-procedures . Archived-season draft lookup explicitly uses the archive year, preventing the regression caught during this batch.
+- Franchise depth: automatic staff-quality scouting and draft-stage combine confidence upgrades, bounded once-per-season measured staff growth, less-secure-club job-market priority, ownership/career context and history chart. Camp uses existing depth, availability, roster/cap and coaching-authority rules; no duplicate roster model.
+- Analytics/news: position development comparisons, same-class/same-round draft outcomes, team/league recorded career leaders, shorter performance/roster/cap categories, completed-week factual reviews and explicitly projected late-season playoff pictures. Regular-season scope/deduplicated history, stable news IDs, no tied-game win streak and no premature weekly review are tested. No fabricated clinching claims.
+
+## Deferred / next roadmap
+
+#3 College-to-Pro draft-class export/import UI is explicitly deferred by the user; existing shared format is retained. Later work remains the audited Core/College/Pro test split, release validation and eventual Java archival/repository rename/branch-artifact cleanup. Do not merge unfinished work into main or perform cleanup ahead of the agreed release review. Further career/scouting/analytics enhancements can build on this accepted batch; source-perfect finance remains closed under the practical-estimate policy.
 
 ## Financial phase complete - practical model
 
 Latest user direction: stop financial minutiae, use reasonable assumptions/estimates, keep the game simple and wrap finance promptly. This supersedes historical source-perfect/default-promotion gates. Follow docs/pro-practical-finance-policy.md. Missing/private/conflicting details remain game estimates in developer provenance; exact agreement with every public website is not a release gate. Keep the simulation and College independent of Pro finances.
 
-## Latest accepted - Pro70
+## Financial-phase acceptance - Pro70 (reused where unchanged)
 
 App/core fabf464, run40613034696 (opening device scope):
 https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40613034696
@@ -63,4 +76,4 @@ Raw source cache stays in data/pro/source-snapshots (32 team pages,507 opening p
 
 Source dossiers/proofs are in docs/data, including opening debt, actual runtime comparison, guarantee semantic review, Roquan classification conservation and reviewed rookie cash/cap normalization. Source-perfect all32 room matching is explicitly deferred by user direction. Staged payment candidates remain review aids, not automatic imports. Four primary roster-review findings remain ordinary roster maintenance; they are not part of this financial completion gate.
 
-Broader remaining roadmap is retained in pro-completion-checklist.md/pro-parity-audit.md: actual College draft-class exchange UI, further career/offseason/analytics/news polish, NFL tiebreaks/mobile actions and audited test-category split. Preserve all completed work; no automatic continuation exists.
+Remaining requested roadmap: deferred draft-class exchange UI, audited test-category split, final release validation and end-of-project archival/repository rename/release cleanup. Historical parity notes are not current completion status. No automatic continuation exists.

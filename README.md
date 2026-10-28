@@ -7,6 +7,8 @@ Two independently installable Android football management games, built with C# a
 - **College Football Dynasty Manager** — college recruiting, roster and coaching management, seasons, statistics, and live GameCast. The current college release line is pre-release **0.20**; APKs also display their build number. Its Android package remains `antdroid.cfbcoach`.
 - **Pro Football Franchise Manager** — a development preview with 32 NFL teams, roster and coaching data, a professional season structure, franchise management foundations, and the shared GameCast engine. Its Android package is `antdroid.profootball.franchise`. Contracts, free agency, trades, scouting, draft, and CPU management are still being refined; this is not a completed feature release.
 
+Pro management includes automatic staff/combine scouting, annual staff development, camp depth battles, NFL division/wild-card tiebreakers, development and draft-outcome comparisons, career records, weekly league reviews and late-season playoff projections. Analytics is split into focused category views. College-to-Pro draft-class export/import screens are deferred. See [current work and exact accepted APKs](docs/current-work.md) for verified scope; historical parity notes are not a current completion checklist.
+
 Both applications use responsive layouts, light/dark themes, team colors, and separate save storage. Pro development is isolated on `feature/pro-franchise-foundation`; unfinished pro features are not merged into stable `main`.
 
 ## Repository layout
