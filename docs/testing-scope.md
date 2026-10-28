@@ -1,3 +1,9 @@
+## Active Pro schedule/depth/coaches batch — October28
+
+User requests College-order depth positions, phase-aware schedule weeks and closer illustrated real-coach faces. Implementation uses shared College position numbering with Pro grouped OL labels; schedule choices have three preseason weeks,18 regular weeks and four named playoff rounds, phase-qualified selections/current markers and safe reset on phase changes. ProCoachPortraits embeds127 visually reviewed official-headshot-derived art profiles, stable by normalized identity; vacancy/generated fallback unchanged. No photos bundled, source names/ownership/coaching ratings/saves untouched. PersonPortrait gains optional explicit glasses/moustache flags; default College/player rendering stays unchanged.
+
+Eight affected schedule/depth/portrait tests and all294 fast Pro cases pass; local Pro Android build0 warnings/errors before final data/harness refinements. Both final Android packages/device acceptance pending. Dedicated staff-calendar device scope checks preseason2 vs regular2 markers, depth order, playoff options, Seattle staff and real Kansas City new-franchise Andy Reid light/dark portraits. Prior College398/Pro88 remain accepted until this batch passes. Reuse unchanged financial/annual/GameCast evidence; no main or cleanup changes.
+
 ## Accepted shared news/roster UI — College398 / Pro88
 
 Final app/shared source9cc34c5. College398 run40739215922/APK12839440855 passes703 combined Core/College cases and packaging0 warnings/errors. Pro88 run40739211829/APK12837753565 passes286 fast Pro cases, helpers/source validator and packaging0 warnings/errors. Exact tested APKs:

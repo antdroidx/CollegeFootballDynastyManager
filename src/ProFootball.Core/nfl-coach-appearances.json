@@ -1,0 +1,1780 @@
+[
+  {
+    "Name": "Kevin Stefanski",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.atlantafalcons.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/falcons/hive6yboznqujosi0t6a.jpg"
+  },
+  {
+    "Name": "Tommy Rees",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.atlantafalcons.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/falcons/basdki1ygra8efjkn2dl.jpg"
+  },
+  {
+    "Name": "Jeff Ulbrich",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.atlantafalcons.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/falcons/lsbimbddujis4at4mzzp.jpg"
+  },
+  {
+    "Name": "Craig Aukerman",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 6,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.atlantafalcons.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/falcons/h23chkr6zz4v78amt3iw.jpg"
+  },
+  {
+    "Name": "Jesse Minter",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.baltimoreravens.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/ravens/omofhdjcdppnx8ngmnlh.jpg"
+  },
+  {
+    "Name": "Declan Doyle",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.baltimoreravens.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/ravens/kfl3lvkzgczyqlwohgci.jpg"
+  },
+  {
+    "Name": "Anthony Levine Sr.",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.baltimoreravens.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/ravens/k14xp9mnlzh3bepww2am.jpg"
+  },
+  {
+    "Name": "Anthony Weaver",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 5,
+      "HairStyle": 0,
+      "FacialHair": 2,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.baltimoreravens.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/ravens/ah2w85u3ixrodlktlchh.jpg"
+  },
+  {
+    "Name": "Klint Kubiak",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.raiders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/raiders/cemhaxoqp1pajpx8yjp7.jpg"
+  },
+  {
+    "Name": "Andrew Janocko",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.raiders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/v1779901209/raiders/fm00ayizan3vlhbsz7pp.jpg"
+  },
+  {
+    "Name": "Rob Leonard",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.raiders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/v1780958225/raiders/ekvlakdrktsi4gst1xac.jpg"
+  },
+  {
+    "Name": "Joe DeCamillis",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 6,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.raiders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/v1780955042/raiders/gci0bswjhyovxaxqxw5m.jpg"
+  },
+  {
+    "Name": "Jeff Hafley",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.miamidolphins.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/dolphins/cgnnqs8d7ngwnmssmhfa.jpg"
+  },
+  {
+    "Name": "Bobby Slowik",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 4,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.miamidolphins.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/dolphins/ww5qxutszxderq24t0wo.jpg"
+  },
+  {
+    "Name": "Sean Duggan",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.miamidolphins.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/dolphins/ipc38ygtepixa24prauv.jpg"
+  },
+  {
+    "Name": "Chris Tabor",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 4,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.miamidolphins.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/dolphins/ptrtu0shm2v6pxdpfrrg.jpg"
+  },
+  {
+    "Name": "Kevin O'Connell",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.vikings.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_editorial_landscape_mobile/f_auto/vikings/hozn31ftfmnuslvaojle.jpg"
+  },
+  {
+    "Name": "Matt Daniels",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.vikings.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/vikings/feggihyg9enl6t41schm.jpg"
+  },
+  {
+    "Name": "Brian Flores",
+    "Appearance": {
+      "SkinTone": 3,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 2,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.vikings.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/vikings/njq3aeug6vj7r7oejdyj.jpg"
+  },
+  {
+    "Name": "Wes Phillips",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.vikings.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/vikings/rzzjaguw0xrvmdepn8t8.jpg"
+  },
+  {
+    "Name": "Nick Sirianni",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.philadelphiaeagles.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_editorial_landscape_mobile/f_auto/v1613077310/eagles/bqj3sr1r5pbs3w6epgrx.jpg"
+  },
+  {
+    "Name": "Michael Clay",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.philadelphiaeagles.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/v1613078768/eagles/auax84lck5j6zajixsz7.jpg"
+  },
+  {
+    "Name": "Vic Fangio",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 6,
+      "FacialHair": 0,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.philadelphiaeagles.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/eagles/xbe3sxkbtqqqzpf38jet.jpg"
+  },
+  {
+    "Name": "Sean Mannion",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 3,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.philadelphiaeagles.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/eagles/bpixaidvibwkawmetq0m.png"
+  },
+  {
+    "Name": "Mike Macdonald",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.seahawks.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/seahawks/c9c4uivyfdcurorpmprs.jpg"
+  },
+  {
+    "Name": "Brian Fleury",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 3,
+      "HairStyle": 0,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.seahawks.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/seahawks/ai7cmquf01lmkcvxjjco.jpg"
+  },
+  {
+    "Name": "Aden Durde",
+    "Appearance": {
+      "SkinTone": 2,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.seahawks.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/seahawks/biagkcrccrzjcz45jge3.jpg"
+  },
+  {
+    "Name": "Jay Harbaugh",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 3,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": true,
+    "Moustache": false,
+    "Source": "https://www.seahawks.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/seahawks/n1m9ljvpp3fhhxxfsptt.jpg"
+  },
+  {
+    "Name": "Robert Saleh",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.tennesseetitans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/titans/fflteh2nl88z9oocmsnj.jpg"
+  },
+  {
+    "Name": "Brian Daboll",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 0,
+      "FacialHair": 3,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.tennesseetitans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/titans/a9bztzhfpemeemalfxkn.jpg"
+  },
+  {
+    "Name": "Gus Bradley",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 0,
+      "FacialHair": 2,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.tennesseetitans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/titans/m7yrk4kr4dboiqajfezt.jpg"
+  },
+  {
+    "Name": "Dan Quinn",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 0,
+      "FacialHair": 2,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.commanders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/commanders/gsrnytky7zjsvlxyk5gq.jpg"
+  },
+  {
+    "Name": "David Blough",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.commanders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/commanders/p7huagfywwgrwcwsyfp5.jpg"
+  },
+  {
+    "Name": "Larry Izzo",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 6,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.commanders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/commanders/ssuyuxtll4nvceek0wjb.jpg"
+  },
+  {
+    "Name": "Daronte Jones",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.commanders.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/commanders/zq0bffhhxs8ghslzive6.jpg"
+  },
+  {
+    "Name": "Mike LaFleur",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.azcardinals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/cardinals/oslbhmncmtr07ff5mnwu.jpg"
+  },
+  {
+    "Name": "Nick Rallis",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 2,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.azcardinals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/cardinals/ugrljxo7lhbf7veqghbu.jpg"
+  },
+  {
+    "Name": "Nathaniel Hackett",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 0,
+      "FacialHair": 2,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.azcardinals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/cardinals/tchepdqw3hk9q7h6ihya.jpg"
+  },
+  {
+    "Name": "Michael Ghobrial",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.azcardinals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/cardinals/uhb5fkc60q2g2mkrmbqi.jpg"
+  },
+  {
+    "Name": "Joe Brady",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.buffalobills.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bills/am3magndb9gofrw30jfk.jpg"
+  },
+  {
+    "Name": "Pete Carmichael",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": true,
+    "Moustache": false,
+    "Source": "https://www.buffalobills.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bills/ylnqoktf4cwsl4zkchdr.jpg"
+  },
+  {
+    "Name": "Jim Leonhard",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.buffalobills.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bills/rlbqbpyskcieb8rzklt7.jpg"
+  },
+  {
+    "Name": "Jeff Rodgers",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 2,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": true,
+    "Source": "https://www.buffalobills.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bills/otdpqfyuqyildinhoqd5.jpg"
+  },
+  {
+    "Name": "Dave Canales",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.panthers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/panthers/gnjgelxbhaldo4iskf45.jpg"
+  },
+  {
+    "Name": "Brad Idzik",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.panthers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/panthers/ssrdghpsx2xwa5zffcok.jpg"
+  },
+  {
+    "Name": "Ejiro Evero",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.panthers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/panthers/v18y7ec8mtaxktcgec4x.jpg"
+  },
+  {
+    "Name": "Tracy Smith",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.panthers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/panthers/zeuqzvylri41qprm7eij.jpg"
+  },
+  {
+    "Name": "Ben Johnson",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.chicagobears.com/team/coaches/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/v1737572263/bears/bexkjvilhtogegqjqfjx.jpg"
+  },
+  {
+    "Name": "Dennis Allen",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 6,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.chicagobears.com/team/coaches/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bears/y5plzlttfzrlr8lrik0f.jpg"
+  },
+  {
+    "Name": "Press Taylor",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.chicagobears.com/team/coaches/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bears/jywxbepne40raawidm6a.jpg"
+  },
+  {
+    "Name": "Richard Hightower",
+    "Appearance": {
+      "SkinTone": 3,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.chicagobears.com/team/coaches/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_editorial_landscape_mobile/f_auto/v1656012655/bears/ec7n5snenis8mps4dqjr.jpg"
+  },
+  {
+    "Name": "Zac Taylor",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.bengals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bengals/auyolyq5eqipvfgpeq5h.jpg"
+  },
+  {
+    "Name": "Dan Pitcher",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.bengals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bengals/nykqeor33cg0ik44iabv.jpg"
+  },
+  {
+    "Name": "Al Golden",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.bengals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bengals/tc1mqepcdxyejdrk2jcm.jpg"
+  },
+  {
+    "Name": "Todd Monken",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.clevelandbrowns.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/browns/y0rhqhw644qqu6bcxxuc.jpg"
+  },
+  {
+    "Name": "Mike Rutenberg",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.clevelandbrowns.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/browns/kwhfjwwtwbtie5u8ji5r.jpg"
+  },
+  {
+    "Name": "Travis Switzer",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.clevelandbrowns.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/browns/pa4o6y93miykxkphmexk.jpg"
+  },
+  {
+    "Name": "Byron Storer",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.clevelandbrowns.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/browns/dfrsifkivp3ovbky4bll.jpg"
+  },
+  {
+    "Name": "Brian Schottenheimer",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.dallascowboys.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/cowboys/x6xkpcqontxqwt8mdyr9.jpg"
+  },
+  {
+    "Name": "Klayton Adams",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.dallascowboys.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/cowboys/pg1nmocflsxszn8wrnye.jpg"
+  },
+  {
+    "Name": "Christian Parker",
+    "Appearance": {
+      "SkinTone": 3,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 2,
+      "Face": 14
+    },
+    "Glasses": true,
+    "Moustache": false,
+    "Source": "https://www.dallascowboys.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/cowboys/pez2mf6i9sj6poiihuva.png"
+  },
+  {
+    "Name": "Nick Sorensen",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.dallascowboys.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/cowboys/aaj7n44v0kbvh8prx1zq.jpg"
+  },
+  {
+    "Name": "Sean Payton",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.denverbroncos.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_editorial_landscape_mobile/f_auto/broncos/b1br0juh1rp9krapsae8.jpg"
+  },
+  {
+    "Name": "Davis Webb",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.denverbroncos.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/broncos/jyqa2i3yr2d4bhpei76w.jpg"
+  },
+  {
+    "Name": "Vance Joseph",
+    "Appearance": {
+      "SkinTone": 3,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.denverbroncos.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/broncos/aljefugdig4lmscpjzjv.jpg"
+  },
+  {
+    "Name": "Darren Rizzi",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.denverbroncos.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/broncos/pdnaor41rsejgfhur2sg.jpg"
+  },
+  {
+    "Name": "Dan Campbell",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.detroitlions.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/lions/wnlvnnw7pr8bcdf8yt7f.jpg"
+  },
+  {
+    "Name": "Drew Petzing",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.detroitlions.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/lions/wgkudg3q55jwroxbagfq.jpg"
+  },
+  {
+    "Name": "Kelvin Sheppard",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 0,
+      "HairStyle": 2,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.detroitlions.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/lions/vprdzzqentpcid3rrd4i.jpg"
+  },
+  {
+    "Name": "Dave Fipp",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.detroitlions.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/lions/h6ako2qzppbnnq00nhvz.jpg"
+  },
+  {
+    "Name": "Matt LaFleur",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.packers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_editorial_landscape_mobile/f_auto/packers/xyxyorftpjauf43ogpmv.jpg"
+  },
+  {
+    "Name": "Adam Stenavich",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.packers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/packers/bzjihgeok7dfkkjtsckt.png"
+  },
+  {
+    "Name": "Jonathan Gannon",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.packers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/packers/cvjhk4b3tcqjmxtye7ca.png"
+  },
+  {
+    "Name": "Cam Achord",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.packers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/packers/dmbciqcdtve0fvyolgys.png"
+  },
+  {
+    "Name": "DeMeco Ryans",
+    "Appearance": {
+      "SkinTone": 5,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.houstontexans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/texans/gzddlomivbtyuftuzrdi.png"
+  },
+  {
+    "Name": "Matt Burke",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.houstontexans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/texans/shdjaky9gbl37srbm7pn.png"
+  },
+  {
+    "Name": "Nick Caley",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.houstontexans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/texans/mfe89ryblg2qawelwnfa.png"
+  },
+  {
+    "Name": "Frank Ross",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.houstontexans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/texans/ydxn5exjwogw5lxvayn9.png"
+  },
+  {
+    "Name": "Shane Steichen",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.colts.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/colts/ryl3kamnc06bddbsbk6e.jpg"
+  },
+  {
+    "Name": "Lou Anarumo",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.colts.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/colts/iy4wfxmh6ijxu8diqjlf.jpg"
+  },
+  {
+    "Name": "Jim Bob Cooter",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.colts.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/colts/eu7y2ysdprgliwjwpwt9.jpg"
+  },
+  {
+    "Name": "Brian Mason",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 6,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.colts.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/colts/jb5hjujaagv1ww4sbgf8.jpg"
+  },
+  {
+    "Name": "Liam Coen",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.jaguars.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/jaguars/flrzd3amfwdd3ga71dag.jpg"
+  },
+  {
+    "Name": "Grant Udinski",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.jaguars.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/jaguars/rvhypeewchuulckrmh2g.jpg"
+  },
+  {
+    "Name": "Anthony Campanile",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.jaguars.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/jaguars/a34vnsoax3xek289dlck.jpg"
+  },
+  {
+    "Name": "Heath Farwell",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.jaguars.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/jaguars/wyahqbkamj65ie8xlybw.jpg"
+  },
+  {
+    "Name": "Andy Reid",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 4,
+      "HairStyle": 6,
+      "FacialHair": 0,
+      "Face": 15
+    },
+    "Glasses": true,
+    "Moustache": true,
+    "Source": "https://www.chiefs.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_editorial_landscape_mobile/f_auto/v1623959459/chiefs/khzpdwroubzinsqt38fx.jpg"
+  },
+  {
+    "Name": "Eric Bieniemy",
+    "Appearance": {
+      "SkinTone": 5,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": true,
+    "Moustache": false,
+    "Source": "https://www.chiefs.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/chiefs/sje0p8bmqimlyc3jrzrc.jpg"
+  },
+  {
+    "Name": "Steve Spagnuolo",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 6,
+      "FacialHair": 2,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": true,
+    "Source": "https://www.chiefs.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/v1558552489/chiefs/q8xacaiuqnaojqqrertp.jpg"
+  },
+  {
+    "Name": "Jim Harbaugh",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": true,
+    "Moustache": false,
+    "Source": "https://www.chargers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/chargers/mkoyd76svgrapwhpujxp.jpg"
+  },
+  {
+    "Name": "Chris O’Leary",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 0,
+      "FacialHair": 2,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.chargers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/chargers/dfqgwjxke1uzd1xixgch.jpg"
+  },
+  {
+    "Name": "Mike McDaniel",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 0,
+      "HairStyle": 2,
+      "FacialHair": 1,
+      "Face": 12
+    },
+    "Glasses": true,
+    "Moustache": false,
+    "Source": "https://www.chargers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/chargers/xj1ifsjajstwchqhgcfl.jpg"
+  },
+  {
+    "Name": "Ryan Ficken",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.chargers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/chargers/pgerqxfixocr0tmq5cf4.jpg"
+  },
+  {
+    "Name": "Sean McVay",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.therams.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/rams/nbgiqfbcuss2z5gfdkt0.jpg"
+  },
+  {
+    "Name": "Nate Scheelhaase",
+    "Appearance": {
+      "SkinTone": 2,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.therams.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/rams/iuveb79wsaaj1hank4bm.jpg"
+  },
+  {
+    "Name": "Chris Shula",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.therams.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/rams/uqqyzwihyesgyhpgvrxx.jpg"
+  },
+  {
+    "Name": "Bubba Ventrone",
+    "Appearance": {
+      "SkinTone": 1,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.therams.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/rams/nwhx9wojxuj4hbaign8u.jpg"
+  },
+  {
+    "Name": "Mike Vrabel",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.patriots.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_png/patriots/vyawltlzxdygn1ubmr7c.png"
+  },
+  {
+    "Name": "Josh McDaniels",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.patriots.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/patriots/bidlnwaxv8yq9fmel75c.png"
+  },
+  {
+    "Name": "Zak Kuhr",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.patriots.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/patriots/x3hgjac4pejjnrtz3rji.png"
+  },
+  {
+    "Name": "Jeremy Springer",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.patriots.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/patriots/usy58p88xcb1qexlcfr9.png"
+  },
+  {
+    "Name": "Kellen Moore",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.neworleanssaints.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/saints/ahvamdhwedu0nqkumb9h.jpg"
+  },
+  {
+    "Name": "Doug Nussmeier",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.neworleanssaints.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/saints/zxhcovmyv0kqer28r49d.jpg"
+  },
+  {
+    "Name": "Brandon Staley",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 0,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.neworleanssaints.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/saints/crs6v11guoqyiohtotlq.jpg"
+  },
+  {
+    "Name": "Phil Galiano",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 6,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.neworleanssaints.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_person_squared_mobile/f_auto/saints/e6vommswow9e0o0rzhkb.jpg"
+  },
+  {
+    "Name": "John Harbaugh",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.giants.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/giants/e5xqbb3eaaevzutrzyei.jpg"
+  },
+  {
+    "Name": "Matt Nagy",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 0,
+      "FacialHair": 1,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.giants.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/giants/nmkq4gyrtd0tbkhtourt.jpg"
+  },
+  {
+    "Name": "Dennard Wilson",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.giants.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/giants/yadslf0t6mioqiirws76.jpg"
+  },
+  {
+    "Name": "Aaron Glenn",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 2,
+      "Face": 13
+    },
+    "Glasses": true,
+    "Moustache": false,
+    "Source": "https://www.newyorkjets.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/jets/o9oqdjxllj9fiqdgd1sx.png"
+  },
+  {
+    "Name": "Chris Banjo",
+    "Appearance": {
+      "SkinTone": 5,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.newyorkjets.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/jets/aheytudlyirlxxaij3xy.png"
+  },
+  {
+    "Name": "Brian Duker",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.newyorkjets.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/jets/xomu5ytr5be7dfhi8mll.png"
+  },
+  {
+    "Name": "Frank Reich",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": true,
+    "Source": "https://www.newyorkjets.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_png/jets/aco3lepunfgtdyv6i2ks.png"
+  },
+  {
+    "Name": "Mike McCarthy",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 6,
+      "FacialHair": 0,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.steelers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/steelers/zpjgzcniseurh5r1yr7o.jpg"
+  },
+  {
+    "Name": "Brian Angelichio",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.steelers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/steelers/ddj4njduyy4gvhkbrfrf.jpg"
+  },
+  {
+    "Name": "Patrick Graham",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 5,
+      "HairStyle": 14,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.steelers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/steelers/bxuatzdmh7bkklmqceny.jpg"
+  },
+  {
+    "Name": "Danny Crossman",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 0,
+      "FacialHair": 1,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.steelers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/steelers/zto6dqwax7jjgahldo6x.jpg"
+  },
+  {
+    "Name": "Kyle Shanahan",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 1,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.49ers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_png/49ers/zeksyg5a7ztaigmqtqxx.png"
+  },
+  {
+    "Name": "Raheem Morris",
+    "Appearance": {
+      "SkinTone": 4,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.49ers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/49ers/at5ik7qtjdiwm42jrmun.jpg"
+  },
+  {
+    "Name": "Klay Kubiak",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 3,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.49ers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_png/49ers/uz0xnl4gyjrp3uhzfaq3.png"
+  },
+  {
+    "Name": "Brant Boyer",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.49ers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_png/49ers/fzogxw062pmxgclczli7.png"
+  },
+  {
+    "Name": "Todd Bowles",
+    "Appearance": {
+      "SkinTone": 5,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 1,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.buccaneers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/private/t_editorial_landscape_mobile/f_auto/buccaneers/jpogwxmoztyg1pusjnum.jpg"
+  },
+  {
+    "Name": "Zac Robinson",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 0,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.buccaneers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/buccaneers/zutxtvcex1kejjw6uqq7.jpg"
+  },
+  {
+    "Name": "Danny Smith",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.buccaneers.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/buccaneers/yxf8btgnipqoty7xikdw.jpg"
+  },
+  {
+    "Name": "Darrin Simmons",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 14
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.bengals.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/bengals/ofrdqk1rlje3r10xghtb.jpg"
+  },
+  {
+    "Name": "John Fassel",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 2,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 12
+    },
+    "Glasses": false,
+    "Moustache": true,
+    "Source": "https://www.tennesseetitans.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/titans/n2f3l06dhrdz8rjm5fh5.jpg"
+  },
+  {
+    "Name": "Dave Toub",
+    "Appearance": {
+      "SkinTone": 0,
+      "HairColor": 5,
+      "HairStyle": 4,
+      "FacialHair": 0,
+      "Face": 15
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.chiefs.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_person_squared_mobile/f_auto/chiefs/za8x1xxvglmkq5mzet3n.jpg"
+  },
+  {
+    "Name": "Chris Horton",
+    "Appearance": {
+      "SkinTone": 3,
+      "HairColor": 0,
+      "HairStyle": 0,
+      "FacialHair": 2,
+      "Face": 13
+    },
+    "Glasses": false,
+    "Moustache": false,
+    "Source": "https://www.giants.com/team/coaches-roster/",
+    "ImageUrl": "https://static.clubs.nfl.com/image/upload/t_editorial_landscape_mobile/f_auto/giants/wbkluc236dhgyslzuqeb.jpg"
+  }
+]

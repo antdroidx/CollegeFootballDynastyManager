@@ -21,7 +21,12 @@ public sealed partial class FranchisePage
         return PersonPortrait.Create(p.Football.PlayerId, p.Football.FullName, Color.FromArgb(team.Primary), Color.FromArgb(team.Secondary), size, age: p.Age, appearance: p.Football.Appearance);
     }
     static Guid CoachId(ProCoach c) => new(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(c.Name))[..16]);
-    View CoachIdentity(ProCoach c, ProTeam team) => new HorizontalStackLayout { Spacing = 12, Children = { PersonPortrait.Create(CoachId(c), c.Name, Color.FromArgb(team.Primary), Color.FromArgb(team.Secondary), 70, staff: true, age: 48), Text(c.Name, 22, true) } };
+    View CoachIdentity(ProCoach c, ProTeam team)
+    {
+        if(c.Vacant)return Text("Vacant",22,true);
+        var portrait=ProCoachPortraits.Find(c.Name);
+        return new HorizontalStackLayout { Spacing = 12, Children = { PersonPortrait.Create(CoachId(c), c.Name, Color.FromArgb(team.Primary), Color.FromArgb(team.Secondary), 70, staff: true, age: 48, appearance:portrait?.Appearance,glasses:portrait?.Glasses,moustache:portrait?.Moustache??false), Text(c.Name.Replace("\uFFFD","’"), 22, true) } };
+    }
     async Task ShowPage(string title, params View[] views)
     {
         var page = new ContentPage { Title = title, BackgroundColor = DynastyTheme.Background, AutomationId = "pro-detail" };

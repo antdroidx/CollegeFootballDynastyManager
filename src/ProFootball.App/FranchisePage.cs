@@ -200,7 +200,7 @@ public sealed partial class FranchisePage : ContentPage
     }
     Task DepthChart()
     {
-        var s = state!; var picker = new Picker { Title = "Position", ItemsSource = s.Players.Where(p => p.Football.TeamName == s.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => OffensiveLineService.Label(p.Football)).Distinct().Order().ToArray() };
+        var s = state!; var picker = new Picker { Title = "Position", AutomationId="pro-depth-position", ItemsSource = ProDepthPositions.Sort(s.Players.Where(p => p.Football.TeamName == s.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => OffensiveLineService.Label(p.Football))).ToArray() };
         var list = new VerticalStackLayout { Spacing = 10 };
         void Draw()
         {

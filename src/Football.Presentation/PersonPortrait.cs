@@ -6,18 +6,18 @@ namespace DynastyManager.App;
 
 /// <summary>Lightweight, offline illustrated headshots. No image cache or network required.</summary>
 public sealed class PersonPortrait(PortraitAppearance face, Color primary, Color secondary,
-    bool staff, int age, bool naturalAging) : IDrawable
+    bool staff, int age, bool naturalAging, bool? glasses = null, bool moustache = false) : IDrawable
 {
     private static readonly string[] Hair = ["#201C1C", "#3B2924", "#60412C", "#9F773F", "#BB955B", "#6C3528", "#93928B", "#C8C9C5"];
 
     public static GraphicsView Create(Guid id, string name, Color primary, Color secondary,
-        double size = 76, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null)
+        double size = 76, bool staff = false, int age = 20, NcaaPlayerAppearance? appearance = null, bool? glasses = null, bool moustache = false)
     {
         var view = new GraphicsView { WidthRequest = size, HeightRequest = size,
             HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center,
             BackgroundColor = Colors.Transparent, InputTransparent = true, Drawable = new PersonPortrait(
                 staff ? PortraitAppearance.ForStaff(id, age, appearance) : PortraitAppearance.ForPlayer(id, appearance),
-                primary, secondary, staff, age, appearance?.HairColor.HasValue != true) };
+                primary, secondary, staff, age, appearance?.HairColor.HasValue != true, glasses, moustache) };
         SemanticProperties.SetDescription(view, $"Illustrated portrait of {name}");
         return view;
     }
@@ -112,6 +112,7 @@ public sealed class PersonPortrait(PortraitAppearance face, Color primary, Color
             canvas.FillRoundedRectangle(42, 56, 16, 3, 1);
             canvas.FillColor = skin; canvas.FillRoundedRectangle(45, 62, 10, 3, 1);
         }
+        if(moustache){canvas.FillColor=hair;canvas.FillRoundedRectangle(39,55,22,5,2);}
         // Keep the mouth visible against beard and goatee fills.
         canvas.StrokeColor = Color.FromArgb("#714331"); canvas.StrokeSize = 1.3f;
         canvas.DrawLine(46, 61, 55, 61 + face.Detail % 2);
@@ -127,9 +128,9 @@ public sealed class PersonPortrait(PortraitAppearance face, Color primary, Color
             canvas.DrawLine(34, 51, 40, 52); canvas.DrawLine(60, 52, 66, 51);
             if (age >= 55) { canvas.DrawLine(41, 35, 59, 35); canvas.DrawLine(42, 37, 58, 37); }
         }
-        if (staff && age >= 45 && face.Detail == 0)
+        if (glasses ?? (staff && age >= 45 && face.Detail == 0))
         {
-            canvas.StrokeColor = secondary; canvas.StrokeSize = 1.2f;
+            canvas.StrokeColor = glasses==true?Color.FromArgb("#253040"):secondary; canvas.StrokeSize = 1.2f;
             canvas.DrawRoundedRectangle(32, 43, 14, 10, 3); canvas.DrawRoundedRectangle(54, 43, 14, 10, 3);
             canvas.DrawLine(46, 47, 54, 47);
         }

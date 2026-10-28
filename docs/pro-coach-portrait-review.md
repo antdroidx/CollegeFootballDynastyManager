@@ -1,0 +1,7 @@
+# NFL illustrated coach portrait review — October28,2026
+
+All127 named coaches in the bundled128-slot staff snapshot (one vacant slot) were visually reviewed using official club roster headshots. nfl-coach-appearances.json retains the individual primary page and image URLs. Only illustrative visible features are recorded: skin palette, hair color/style, facial hair, face width, glasses and moustache. These are art approximations, not inferred ethnicity, biometric identification, age or other personal attributes. Images were used as references and are not bundled in either APK. Reference contact sheets are local QA artifacts, not game assets.
+
+Matching strips punctuation/diacritics and is case-insensitive, so coaches keep their face when changing teams. Source names/ownership/roles and career ratings are not overwritten; a malformed apostrophe in Chris O’Leary is normalized only for display/lookup. Vacancies show no invented coach portrait. Unknown/generated names keep the existing deterministic illustrated fallback. No save migration or signed-contract change. Pro supplies explicit glasses to avoid random eyewear; default College/player rendering remains unchanged.
+
+Official team pages were observed October28. Source records are tied to the existing snapshot, not a roster update. Examples: https://www.seahawks.com/team/coaches-roster/ and https://www.chiefs.com/team/coaches-roster/ .
