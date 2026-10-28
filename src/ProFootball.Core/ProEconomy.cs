@@ -43,7 +43,7 @@ public static class ProEconomy
         var picks = s.Picks.ToList();
         foreach (var year in Enumerable.Range(s.Year + 1, 3))
             foreach (var pick in CreatePicks(s, year))
-                if (!picks.Any(p => p.Year == year && p.Round == pick.Round && p.OriginalTeam == pick.OriginalTeam)) picks.Add(pick);
+                if (!picks.Any(p => p.Year == year && p.Round == pick.Round && p.OriginalTeam == pick.OriginalTeam && !p.Compensatory)) picks.Add(pick);
         return s with { Picks = picks };
     }
     public static List<ProDraftPick> CreatePicks(ProFranchise s, int year)
@@ -67,7 +67,8 @@ public static class ProEconomy
         var p = s.Players.Single(p => p.Football.PlayerId == bid.PlayerId);
         if (!(rookieScale && (s.Phase == ProPhase.Offseason && s.OffseasonStep == OffseasonStep.Draft && s.Prospects.Any(x=>x.Football.PlayerId==bid.PlayerId) || s.UnsignedRookies.Any(x=>x.PlayerId==bid.PlayerId && x.Team==bid.Team)) || ProNegotiation.Evaluate(p,bid.Years,bid.AnnualSalary,bid.Bonus,Math.Max(ProFinance.Minimum(s,p,practice:false),MarketSalary(s,p))).Accepted) || bid.AnnualSalary<ProFinance.Minimum(s,p,practice:false) || p.Football.TeamName != "Free agent" || p.Retired || s.Waivers.Any(w => w.PlayerId == bid.PlayerId) || Room(s, bid.Team) < bid.AnnualSalary + (bid.Bonus + bid.Years - 1) / bid.Years || ProRoster.CountForLimit(s, bid.Team) >= ProRoster.Limit(s)) return s;
         var c = new ProContract(p.Football.PlayerId, bid.Team, s.Year, bid.Years, bid.Bonus, Enumerable.Range(0, bid.Years).Select(i => new ContractYear(s.Year + i, Math.Max(bid.AnnualSalary,ProFinance.Minimum(s,p,s.Year+i,practice:false)), i == 0 ? bid.AnnualSalary / 3 : 0)).ToList()) { Estimated = false, OriginalRookieYear=rookieScale?p.RookieYear??s.Year:null };
-        return ProMorale.Signing(Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == p.Football.PlayerId ? x with { Football = x.Football with { TeamName = bid.Team, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList(), Contracts = s.Contracts.Append(c).ToList() }, $"{bid.Team} signed {p.Football.FullName} for {bid.Years} years."), p.Football.PlayerId, bid.Team);
+        var signed = ProMorale.Signing(Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == p.Football.PlayerId ? x with { Football = x.Football with { TeamName = bid.Team, DepthChartOrder = 99 }, PracticeSquad = false, Reserve = false } : x).ToList(), Contracts = s.Contracts.Append(c).ToList() }, $"{bid.Team} signed {p.Football.FullName} for {bid.Years} years."), p.Football.PlayerId, bid.Team);
+        return ProCompensatoryDraft.Signed(s,signed,p,c,rookieScale);
     }
     public static ProFranchise ResolveBids(ProFranchise s)
     {
@@ -85,7 +86,7 @@ public static class ProEconomy
     {
         var p = s.Players.Single(p => p.Football.PlayerId == id);
         if (p.Football.TeamName != team || p.Retired) throw new InvalidOperationException("Player is not on this team.");
-        s=ProTermination.CloseRetained(s,id);
+        s=ProCompensatoryDraft.Released(ProTermination.CloseRetained(s,id),id);
         if(postJune1&&!ProTermination.CanDesignate(s,team,id))throw new InvalidOperationException("June 1 designation requires an unchanged contract before June 1, with no more than two designations per team/year; unavailable in 2030.");
         var releaseId=Guid.NewGuid();
         var original=s.Contracts.Where(c=>c.Active&&c.PlayerId==id&&c.Team==team).ToList();
@@ -99,6 +100,7 @@ public static class ProEconomy
         s=ProTermination.CloseRetained(s,id);
         var contracts=s.Contracts.Where(c=>c.Active&&c.PlayerId==id&&c.Team==team).ToArray();
         if(contracts.Length==0||contracts.Any(c=>ProContractInsights.PlayingEnd(c)>s.Year))throw new InvalidOperationException("Contract has not expired.");
+        s=ProCompensatoryDraft.Expired(s,s.Players.Single(p=>p.Football.PlayerId==id),team);
         var nextYear=s.Year+1;
         var remainingBonus=contracts.Sum(c=>Enumerable.Range(nextYear,Math.Max(0,c.SignedYear+c.BonusYears-nextYear)).Sum(y=>BonusCharge(c,y)));
         return Log(s with{

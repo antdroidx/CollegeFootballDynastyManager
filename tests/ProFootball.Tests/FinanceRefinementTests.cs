@@ -29,7 +29,7 @@ public sealed class FinanceRefinementTests
     {
         var s=New();var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&!p.PracticeSquad);
         var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year-1,3,3_000_000,[new(s.Year-1,8_000_000,0),new(s.Year,8_000_000,0),new(s.Year+1,8_000_000,0)]);
-        s=s with{Contracts=[c]};var cash=ProFinance.Cash(s,s.UserTeam,s.Year);var before=Enumerable.Range(s.Year,2).Sum(y=>ProEconomy.CapHit(c,y));
+        s=s with{Contracts=[c],DeadCap=[]};var cash=ProFinance.Cash(s,s.UserTeam,s.Year);var before=Enumerable.Range(s.Year,2).Sum(y=>ProEconomy.CapHit(c,y));
         var changed=ProNegotiation.Restructure(s,s.UserTeam,p.Football.PlayerId,4_000_000);var revised=changed.Contracts[0];
         Assert.Equal(cash,ProFinance.Cash(changed,s.UserTeam,s.Year));Assert.Equal(before,Enumerable.Range(s.Year,2).Sum(y=>ProEconomy.CapHit(revised,y)));
         Assert.True(ProEconomy.CapHit(revised,s.Year)<ProEconomy.CapHit(c,s.Year));Assert.Throws<InvalidOperationException>(()=>ProNegotiation.Restructure(changed,s.UserTeam,p.Football.PlayerId,250_000));
@@ -39,7 +39,7 @@ public sealed class FinanceRefinementTests
     {
         var s=New() with{Phase=ProPhase.RegularSeason,Week=10};var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam);
         var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,3,6_000_000,[new(s.Year,8_000_000,1_000_000),new(s.Year+1,8_000_000,2_000_000),new(s.Year+2,8_000_000,0)]);
-        s=s with{Contracts=[c]};var preview=ProContractInsights.Release(s,p.Football.PlayerId);var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId);
+        s=s with{Contracts=[c],DeadCap=[]};var preview=ProContractInsights.Release(s,p.Football.PlayerId);var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId);
         Assert.All(preview,row=>Assert.Equal(row.DeadMoney,released.DeadCap.Where(d=>d.Year==row.Year).Sum(d=>d.Amount)));
         Assert.Equal(8_000_000,preview[0].DeadMoney);Assert.Equal(4_000_000,preview[1].DeadMoney);
         Assert.Equal(10_000_000,ProFinance.Cash(released,s.UserTeam,s.Year));
@@ -71,7 +71,7 @@ public sealed class FinanceRefinementTests
     {
         var s=New();var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Experience>=4&&!p.PracticeSquad);
         p=p with{Experience=8,RookieYear=s.Year-8};var c=new ProContract(p.Football.PlayerId,s.UserTeam,s.Year-1,3,3_000_000,[new(s.Year-1,30_000_000,0),new(s.Year,30_000_000,0),new(s.Year+1,30_000_000,0)]);
-        s=s with{Players=[p],Contracts=[c],TeamCapAllocations=[],SalaryCap=150_000_000};var before=ProFinance.Cash(s,s.UserTeam,s.Year);
+        s=s with{Players=[p],Contracts=[c],DeadCap=[],TeamCapAllocations=[],SalaryCap=150_000_000};var before=ProFinance.Cash(s,s.UserTeam,s.Year);
         var repaired=ProCpu.MakeRoom(s,s.UserTeam,125_000_000);
         Assert.True(ProEconomy.Room(repaired,s.UserTeam)>=125_000_000);Assert.Equal(s.UserTeam,repaired.Players[0].Football.TeamName);Assert.Empty(repaired.DeadCap);Assert.Equal(before,ProFinance.Cash(repaired,s.UserTeam,s.Year));
     }

@@ -72,7 +72,9 @@ public class CoordinatorStaffTests
                 s=ProLeagueService.Advance(s);
             }
             Assert.Equal(ProPhase.Offseason,s.Phase);s=ProOffseason.Advance(s);s=ProOffseason.Advance(s);s=ProDraft.AutoUntilUser(s,true);
-            s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
+            s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);
+            Assert.True(ProEconomy.Room(s,s.UserTeam)>=0,$"Before camp {s.Year}: active {ProRoster.Active(s,s.UserTeam)}, roster {ProRoster.CountForLimit(s,s.UserTeam)}, room {ProEconomy.Room(s,s.UserTeam)}, debt {s.DeadCap.Where(d=>d.Team==s.UserTeam&&d.Year==s.Year).Sum(d=>d.Amount)}");
+            s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
             Assert.Equal(StaffRole.OffensiveCoordinator,s.Career!.Role);Assert.False(s.Career.Unemployed);Assert.Empty(s.UnsignedRookies);
             Assert.All(s.League.Teams,t=>{Assert.True(ProEconomy.Room(s,t.Name)>=0,t.Name);Assert.InRange(ProRoster.Active(s,t.Name),45,90);});
         }

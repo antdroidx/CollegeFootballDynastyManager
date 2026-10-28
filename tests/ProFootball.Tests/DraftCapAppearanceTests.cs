@@ -31,8 +31,8 @@ public class DraftCapAppearanceTests
     [Fact] public void EveryCpuPickCanCompleteWithNoCapRoom()
     {
         var s=DraftState() with{TeamCapAllocations=[],SalaryCap=0};s=ProDraft.AutoUntilUser(s,true);
-        Assert.Null(ProDraft.Current(s));Assert.Equal(224,s.DraftIndex);Assert.Equal(224,s.UnsignedRookies.Count);
-        Assert.Equal(224,s.DraftHistory.Count);Assert.Equal(224,s.UnsignedRookies.Select(r=>r.PlayerId).Distinct().Count());
+        Assert.Null(ProDraft.Current(s));Assert.Equal(s.Picks.Count(p=>p.Year==s.Year),s.DraftIndex);Assert.Equal(s.DraftIndex,s.UnsignedRookies.Count);
+        Assert.Equal(s.DraftIndex,s.DraftHistory.Count);Assert.Equal(s.DraftIndex,s.UnsignedRookies.Select(r=>r.PlayerId).Distinct().Count());
     }
     [Fact] public void ExplicitAppearanceUsesAllSevenConsistentSkinColors()
     {

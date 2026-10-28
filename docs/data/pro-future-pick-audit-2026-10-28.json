@@ -1,0 +1,1104 @@
+{
+  "Version": 1,
+  "ObservedOn": "2026-10-28",
+  "Sources": [
+    {
+      "Id": "0",
+      "Url": "https://www.nfl.com/news/washington-dc-host-2027-nfl-draft",
+      "Title": "Washington, D.C., to host 2027 NFL Draft",
+      "Sha256": "a5ef1ac999200bcc98f668d15ab496c29fea030bf8c262731d3bf876300b3a1e"
+    },
+    {
+      "Id": "1",
+      "Url": "https://www.packers.com/news/packers-agree-to-terms-on-trade-with-cowboys-acquire-micah-parsons",
+      "Title": "Packers agree to terms on trade with Cowboys, acquire DL Micah Parsons",
+      "Sha256": "9e52b016d9c29af3ec5b303a2bbba792b91f8c4fb51a0daed418c54f756134e3"
+    },
+    {
+      "Id": "2",
+      "Url": "https://www.colts.com/news/colts-acquire-cb-sauce-gardner-from-new-york-jets-in-exchange-for-2026-2027-first-round-picks-and-wr-adonai-mitchell",
+      "Title": "Colts acquire CB Sauce Gardner from New York Jets in exchange for 2026, 2027 first-round picks and WR Adonai Mitchell",
+      "Sha256": "c0acf42b7fc312fd1b8f010872184e89f719497b62e2b3b49df1200a1104fe6d"
+    },
+    {
+      "Id": "3",
+      "Url": "https://www.dallascowboys.com/news/cowboys-in-the-process-of-finalizing-trade-for-dt-quinnen-williams",
+      "Title": "Cowboys finalize trade for DT Quinnen Williams",
+      "Sha256": "8dfc4fca030a6fdde879812603025e216d7357846bf365338e3dbe37e6c207f4"
+    },
+    {
+      "Id": "4",
+      "Url": "https://www.therams.com/news/rams-agree-to-terms-on-trade-myles-garrett-browns",
+      "Title": "Rams agree to terms on trade to acquire Myles Garrett from Browns",
+      "Sha256": "86df0550c29523e21740aa533b5898042ea2f2cd2a61e63bc9b0205080a21a37"
+    },
+    {
+      "Id": "5",
+      "Url": "https://www.azcardinals.com/news/marvin-harrison-jr-trade-from-cardinals-to-texans-becomes-official",
+      "Title": "Marvin Harrison Jr. Trade From Cardinals To Texans Becomes Official",
+      "Sha256": "e061acef533203d7f934a4046ce478c52c6e758ff299b6c0f5337116c101e2c5"
+    },
+    {
+      "Id": "6",
+      "Url": "https://www.therams.com/news/rams-acquire-cb-trent-mcduffie-in-trade-with-chiefs-agree-to-terms-with-mcduffie-on-four-year-contract-extension-nfl-free-agency-2026",
+      "Title": "Rams acquire CB Trent McDuffie in trade with Chiefs, agree to terms with McDuffie on four-year contract extension",
+      "Sha256": "2e919ca707a389e8a896fdc8ba6d2613d56ccd8d8894006bef26046734c6de9b"
+    },
+    {
+      "Id": "7",
+      "Url": "https://www.vikings.com/news/jonathan-greenard-trade-eagles-nfl-draft-2026",
+      "Title": "Vikings Trade Jonathan Greenard to Eagles; Receive 2026 & 2027 Round 3 Picks",
+      "Sha256": "8f64d267350d46c9ff0122b22b9b2b97ef56e6ff798cfc5ef4e3f716f2275ad6"
+    },
+    {
+      "Id": "8",
+      "Url": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-ot-broderick-jones",
+      "Title": "Cowboys agree to terms on trade for OT Broderick Jones",
+      "Sha256": "ae7616b4b8bd00570e5ec0be265186c643d1e7e427b0c1a07ca6c3c33985f4c7"
+    },
+    {
+      "Id": "9",
+      "Url": "https://www.seahawks.com/news/seahawks-acquire-all-pro-guard-quenton-nelson-in-trade-with-colts-pending-physical",
+      "Title": "Seahawks Acquire All-Pro Guard Quenton Nelson In Trade With Colts, Pending Physical",
+      "Sha256": "5969d8d85de51e9a3ec01763a511e67a126d87cee3305529b5f29855fc311c9e"
+    },
+    {
+      "Id": "10",
+      "Url": "https://www.vikings.com/news/adam-thielen-acquired-trade-carolina-panthers-wide-receiver-2025",
+      "Title": "Vikings Returning Adam Thielen to Minnesota in Trade with Carolina Panthers",
+      "Sha256": "1c2685180850894f67dd3f7d4d4bbd03e163471eb151a236d06c6b810cd462e9"
+    },
+    {
+      "Id": "11",
+      "Url": "https://www.packers.com/news/packers-announce-trade-with-cowboys-march-11-2026",
+      "Title": "Packers announce trade with Cowboys",
+      "Sha256": "471dc2e71d88409b193ac8ce45c04a4c199009adc13b42b0311b1718bb60cef5"
+    },
+    {
+      "Id": "12",
+      "Url": "https://www.clevelandbrowns.com/news/browns-trade-no-74-pick-to-the-giants",
+      "Title": "Browns trade No. 74 pick to the Giants",
+      "Sha256": "4bfbf6931e60a5f6463c8beae8e50891057a48617f201d4cb063dd77ece19e0c"
+    },
+    {
+      "Id": "13",
+      "Url": "https://www.seahawks.com/news/seahawks-trade-up-to-no-148-in-fifth-round",
+      "Title": "Seahawks Trade Up To No. 148 In Fifth Round",
+      "Sha256": "2d922eef004f44767e44ca71ecab97e2980a8672ff16cc41cafd813709998a3c"
+    },
+    {
+      "Id": "14",
+      "Url": "https://www.colts.com/news/colts-acquire-2027-fourth-round-pick-in-exchange-for-dt-deforest-buckner-in-trade-with-san-francisco-49ers",
+      "Title": "Colts acquire 2027 fourth-round pick in exchange for DT DeForest Buckner in trade with San Francisco 49ers",
+      "Sha256": "8d62522c451105c1f8bdef0323cfe21d08931974a975411486ce2df67911970e"
+    },
+    {
+      "Id": "15",
+      "Url": "https://www.houstontexans.com/news/draft-day-trade-texans-deal-pair-of-picks-get-back-3-from-cleveland-browns",
+      "Title": "DRAFT DAY TRADE: Texans deal pair of picks, get back 3 from Cleveland Browns",
+      "Sha256": "10dac6fc9058bf94e6ba7720c8dfbceaf41756fc6f4b5faf3d10c0362f7366b1"
+    },
+    {
+      "Id": "16",
+      "Url": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-wr-george-pickens",
+      "Title": "Cowboys finalize trade for WR George Pickens",
+      "Sha256": "7c49452822b3c298aa17c772e786bb3de20b2b629378159200006a5c98beac0e"
+    },
+    {
+      "Id": "17",
+      "Url": "https://www.steelers.com/news/steelers-agree-to-acquire-ramsey-smith",
+      "Title": "Steelers agree to acquire Ramsey, Smith",
+      "Sha256": "af338b3aacaafdc1034893f3f89171ffc7a92a2a05eff5a20cba862b59febdad"
+    },
+    {
+      "Id": "18",
+      "Url": "https://www.chicagobears.com/news/chicago-bears-acquire-ol-garrett-bradbury-and-second-round-pick-via-trades",
+      "Title": "Chicago Bears acquire OL Garrett Bradbury and second-round pick via trades",
+      "Sha256": "8a4512f8eda3b22290829e1d7fca7b2fbe7e5bfe86205d41d52c6d9473232a69"
+    },
+    {
+      "Id": "19",
+      "Url": "https://www.philadelphiaeagles.com/news/eagles-trade-aj-brown-to-the-patriots",
+      "Title": "Eagles agree to trade A.J. Brown to the Patriots",
+      "Sha256": "515868f69dff5bb38c5cf5d6b65749ab0295aa5ae0cdec0ff9b252920bfc6495"
+    },
+    {
+      "Id": "20",
+      "Url": "https://www.vikings.com/news/jj-mccarthy-quarterback-trade-new-york-giants-2026-nfl-season",
+      "Title": "Vikings Trade J.J. McCarthy to Giants for 2027 Fifth-Round Pick",
+      "Sha256": "188c26442780c473c7e2ed28c1e6934dbc76faa5881b75b37f22d1db0eee26d3"
+    },
+    {
+      "Id": "21",
+      "Url": "https://www.philadelphiaeagles.com/news/eagles-agree-to-trade-cam-jurgens-to-the-ravens",
+      "Title": "Eagles agree to trade Cam Jurgens to the Ravens",
+      "Sha256": "fca0e6c709257fab1da4b10087434dffc7475a92550d211a0752f7c490e30674"
+    },
+    {
+      "Id": "22",
+      "Url": "https://www.49ers.com/news/49ers-trade-for-wr-skyy-moore-sign-qb-tanner-mordecai-in-roster-moves",
+      "Title": "49ers Trade for WR Skyy Moore, Sign QB Tanner Mordecai in Roster Moves",
+      "Sha256": "28f54ff4187592d422942916d47a6d750cab2266978505905a0491b5124d71a9"
+    },
+    {
+      "Id": "23",
+      "Url": "https://www.newyorkjets.com/news/jets-trade-for-harrison-phillips-vikings-08-21-2025",
+      "Title": "Jets Acquire DT Harrison Phillips from the Vikings",
+      "Sha256": "5cea468cd220459ef743060c62197a927238861edcd3f4462e8e9e54f061f9d2"
+    },
+    {
+      "Id": "24",
+      "Url": "https://www.packers.com/news/packers-acquire-t-g-darian-kinnard-in-trade-with-eagles-aug-25-2025",
+      "Title": "Packers acquire T/G Darian Kinnard in trade with Eagles",
+      "Sha256": "fc66091cc6e31e81d37cf3ae52a13c112a98c05f6fbebbae93857d63634facd4"
+    },
+    {
+      "Id": "25",
+      "Url": "https://www.nfl.com/news/patriots-trading-second-year-wr-ja-lynn-polk-to-saints-for-draft-picks",
+      "Title": "Patriots trade former second-round WR Ja'Lynn Polk to Saints",
+      "Sha256": "33e81ad4f2747dc7678e561bf2376490c75454702c829bb6c73cf4c19a53f03b"
+    },
+    {
+      "Id": "26",
+      "Url": "https://www.clevelandbrowns.com/news/browns-and-texans-agree-to-trade-for-t-cam-robinson",
+      "Title": "Browns and Texans agree to trade for T Cam Robinson",
+      "Sha256": "6a984af94f2d3a6ff8d974296e2bfc1ea0b87c909cd240985b4e0c6ac2f8dbca"
+    },
+    {
+      "Id": "27",
+      "Url": "https://www.newyorkjets.com/news/jets-acquire-john-metchie-iii-from-eagles-michael-carter-ii-sent-to-philly-trade-10-29-2025",
+      "Title": "Jets Agree to Acquire WR John Metchie III from Eagles; CB Michael Carter II Sent to Philly",
+      "Sha256": "a401030524f1d88747dfa5d367fd0d8b533220f3f10ba582a1866f6daed1b923"
+    },
+    {
+      "Id": "28",
+      "Url": "https://www.chargers.com/news/acquire-trevor-penning-saints-conditional-pick-jets-jasir-taylor-2025",
+      "Title": "Los Angeles Chargers Acquire Trevor Penning from Saints; Conditional Pick from Jets for Ja'Sir Taylor",
+      "Sha256": "affff84b88671977a095113aab1903730522a8e74ad94b6ab13a975c50a3506a"
+    },
+    {
+      "Id": "29",
+      "Url": "https://www.newyorkjets.com/news/jets-trade-justin-fields-kansas-city-chiefs-03-18-2026",
+      "Title": "Jets Trade QB Justin Fields to Kansas City Chiefs",
+      "Sha256": "1d01ea0f0e4e44a086de7f5a46d0159c2a1388379277b4aac8d966fbeb5227fb"
+    },
+    {
+      "Id": "30",
+      "Url": "https://www.philadelphiaeagles.com/news/eagles-agree-to-acquire-dontayvion-wicks-from-packers",
+      "Title": "Eagles agree to acquire WR Dontayvion Wicks from Packers",
+      "Sha256": "aa06fee6c33c57ddd2fb985dfb1536c90aaade7e6de5d3a12a20019b5b68eb13"
+    },
+    {
+      "Id": "31",
+      "Url": "https://www.49ers.com/news/trade-alert-49ers-add-5th-round-and-future-pick-in-day-3-trade-with-ravens",
+      "Title": "TRADE ALERT: 49ers Add 5th Round and Future Pick in Day 3 Trade With Ravens",
+      "Sha256": "f86d215042cdfab8a685d2776b92578313e2b432b414171b74ab823dac27fbef"
+    },
+    {
+      "Id": "32",
+      "Url": "https://www.vikings.com/news/demond-claiborne-2026-nfl-draft-running-back-wake-forest",
+      "Title": "Vikings Draft Wake Forest Running Back Demond Claiborne with 198th Pick",
+      "Sha256": "d9b7711ff86b9407a02ac3be7ac8809919dbdc268374c5e68a210682f8be4ad4"
+    },
+    {
+      "Id": "33",
+      "Url": "https://www.atlantafalcons.com/news/falcons-trade-chiefs-2027-nfl-draft-wanya-morris",
+      "Title": "Falcons trade 2027 sixth-round pick to Chiefs for Wanya Morris, seventh-round pick",
+      "Sha256": "87067f2dc274f3d7f797e16657337751b4cffca26d5d16c085cf8ff381d4523e"
+    },
+    {
+      "Id": "34",
+      "Url": "https://www.giants.com/news/giants-trade-daniel-faalele-to-jacksonville-jaguars-for-2027-nfl-draft-pick-details",
+      "Title": "Giants trade OL Daniel Faalele to Jaguars for 2027 draft pick",
+      "Sha256": "eacaa98d9406306b6d91bfb2956d8dc5169592b129f0a19cd2c65dbcbda01e0a"
+    },
+    {
+      "Id": "35",
+      "Url": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-steelers-cb-joey-porter-jr",
+      "Title": "Cowboys trading for Steelers CB Joey Porter Jr",
+      "Sha256": "fb979304023d6ba07b3ce59b9f68236f7042ddf2ebbff36156ad5a49e9da601d"
+    },
+    {
+      "Id": "36",
+      "Url": "https://www.baltimoreravens.com/news/ravens-trade-tredavious-white-trade-deadline-2024",
+      "Title": "Ravens Trade for Tre'Davious White",
+      "Sha256": "3a31b6b266613dd67ff39bce66f8d8df4666fd30d0ba33c66aae41de5fec4f7c"
+    },
+    {
+      "Id": "37",
+      "Url": "https://www.chargers.com/news/acquire-outside-linebacker-odafe-oweh-2025",
+      "Title": "Los Angeles Chargers Acquire Outside Linebacker Odafe Oweh",
+      "Sha256": "2d72cfce1040af764be0cd2e0a5af2c91411c36d065510b96f00f5bb56a3c20e"
+    },
+    {
+      "Id": "38",
+      "Url": "https://www.denverbroncos.com/news/broncos-agree-to-terms-on-trade-with-saints-to-acquire-fourth-seventh-round-picks-in-exchange-for-wr-devaughn-vele",
+      "Title": "Broncos agree to terms on trade with Saints to acquire fourth-, seventh-round picks in exchange for WR Devaughn Vele",
+      "Sha256": "af78492d3e0d1eca5b13b5f0da73a858c212a01dc1cad210d63e35afe0020926"
+    },
+    {
+      "Id": "39",
+      "Url": "https://www.philadelphiaeagles.com/news/trade-eagles-agree-to-acquire-sam-howell-from-vikings",
+      "Title": "Trade: Eagles agree to acquire QB Sam Howell from Vikings",
+      "Sha256": "7b248013fe711f5c2c8a3f284a9c29d12655fa7ec928e0ce299231049cca2229"
+    },
+    {
+      "Id": "40",
+      "Url": "https://www.chargers.com/news/acquire-tackle-austin-deculus-2025",
+      "Title": "Los Angeles Chargers Acquire Tackle Austin Deculus",
+      "Sha256": "d5628d841aa7e7a2f768ed1af982a131a03ba03661b95c556721a9808695a2f4"
+    },
+    {
+      "Id": "41",
+      "Url": "https://www.atlantafalcons.com/news/report-falcons-trade-for-seahawks-offensive-tackle",
+      "Title": "Falcons trade for Seahawks offensive tackle",
+      "Sha256": "cab3872fa601673067159d4ce4ace816a5c9fca99604779d786aebf8755d651b"
+    },
+    {
+      "Id": "42",
+      "Url": "https://www.giants.com/news/darren-waller-trade-details-retirement-miami-dolphins-tight-end-draft-picks",
+      "Title": "Giants trade TE Darren Waller to Dolphins",
+      "Sha256": "dae770fff0aebffe67614bfc8a70a77a134d02a183f0998e6f466313553ce9e3"
+    },
+    {
+      "Id": "43",
+      "Url": "https://www.baltimoreravens.com/news/ravens-trade-jaire-alexander-eagles-draft-picks-2025",
+      "Title": "Ravens Trade Jaire Alexander to Eagles",
+      "Sha256": "450acda4d9dcf4d45820aabd85077abb3cd12d722c92fa5ceec95c9bbf9256e5"
+    },
+    {
+      "Id": "44",
+      "Url": "https://www.detroitlions.com/news/lions-trade-rb-david-montgomery-to-houston-texans",
+      "Title": "Lions trade RB David Montgomery to Houston Texans",
+      "Sha256": "3217ba9d38e254ef304c589cee52127064fa47b6be4311b01f3d83c71c9a9a1a"
+    },
+    {
+      "Id": "45",
+      "Url": "https://www.philadelphiaeagles.com/news/eagles-acquire-qb-andy-dalton-in-trade-with-panthers",
+      "Title": "Eagles acquire QB Andy Dalton in trade with Panthers",
+      "Sha256": "504645ee2ad4f365aee210c5ba6be3538444e47870d01c11638df001f4b14a93"
+    },
+    {
+      "Id": "46",
+      "Url": "https://www.philadelphiaeagles.com/news/eagles-makai-lemon-2026-nfl-draft-wide-receiver-usc",
+      "Title": "Eagles select Makai Lemon at No. 20 overall",
+      "Sha256": "5f0920046b1f6c62790d0b4de9ecab0a239eaafb9c4eb54cd7841ea6225e29be"
+    },
+    {
+      "Id": "47",
+      "Url": "https://www.raiders.com/news/raiders-trade-up-to-no-101-overall-pick-nfl-draft-2026-buffalo-bills",
+      "Title": "Raiders trade up to No. 101 overall",
+      "Sha256": "d3d9feb5adab7765096c2a459ca01e92af38016391c1e70dc6f3af7890619e1d"
+    },
+    {
+      "Id": "48",
+      "Url": "https://www.49ers.com/news/49ers-announce-trade-for-ol-jarrett-patterson-x1875",
+      "Title": "49ers Announce Trade for OL Jarrett Patterson",
+      "Sha256": "722bd2f6747a646bd1f9d31dbb942094f322c311f7117db942d23ba9bf087469"
+    },
+    {
+      "Id": "49",
+      "Url": "https://www.nfl.com/news/minneapolis-selected-to-host-2028-nfl-draft",
+      "Title": "Minneapolis selected to host 2028 NFL Draft",
+      "Sha256": "4a6926748d2bb34b10d0fafb5544cb7debd2e3566318fd7b25d14a4152b854fb"
+    },
+    {
+      "Id": "50",
+      "Url": "https://www.vikings.com/news/nfl-draft-2028-host-minnesota-bid-submission",
+      "Title": "Minnesota Selected to Host 2028 NFL Draft",
+      "Sha256": "7367215971c1b3829b05458e263a399b5fce10cf66dcc4e013529094f1e69d51"
+    },
+    {
+      "Id": "51",
+      "Url": "https://www.dallascowboys.com/news/cowboys-finalizing-asim-richards-trade-to-saints",
+      "Title": "Cowboys trade Asim Richards to Saints",
+      "Sha256": "09b419c83b9d7e32b8cd4b71b31212b1f096ea8f1774966f470d7892336865bb"
+    },
+    {
+      "Id": "52",
+      "Url": "https://www.miamidolphins.com/news/dolphins-make-trade-with-jacksonville",
+      "Title": "Dolphins make trade with Jacksonville",
+      "Sha256": "b00d5f30980b2beceb86bdc48dffc57c4c11dcfe3b8a3831ded85ff36284b523"
+    },
+    {
+      "Id": "53",
+      "Url": "https://www.therams.com/news/rams-trade-ol-kt-leveston-to-browns-for-2028-7th-round-pick",
+      "Title": "Rams trade OL KT Leveston to Browns for 2028 7th round pick",
+      "Sha256": "d60ddf6c14409b89f4c280d5dd07a176e9994952158bc418da089cb868b476d5"
+    },
+    {
+      "Id": "54",
+      "Url": "https://www.newyorkjets.com/news/jets-chargers-trade-cornerback-jasir-taylor-11-04-2025",
+      "Title": "Jets-Chargers Trade | Green & White Acquire CB Ja'Sir Taylor",
+      "Sha256": "d03ffb74dcac5c7d6c07b3ce24e1652447bc7cb30822fdf96002cc671d1414ff"
+    },
+    {
+      "Id": "55",
+      "Url": "https://www.seahawks.com/news/seahawks-acquire-wr-irvin-charles-in-trade-with-jets",
+      "Title": "Seahawks Acquire WR Irvin Charles In Trade With Jets",
+      "Sha256": "39f24e4a712ac11fc054f8b52579a6c7ee97cde5f61e3e94b81045984d7552f6"
+    },
+    {
+      "Id": "56",
+      "Url": "https://www.patriots.com/news/patriots-trade-wr-kayshon-boutte-to-the-texans",
+      "Title": "Patriots Trade WR Kayshon Boutte to the Texans",
+      "Sha256": "9b956fcdb88a4bd214f6557d5942cfeb2c9780f9e88593185d31a9a497661fe6"
+    },
+    {
+      "Id": "49ers.com",
+      "Url": "https://www.49ers.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "04ab220824154953e32c0cd330c7f756a454b0fdff1a884c3309f5d316989574"
+    },
+    {
+      "Id": "atlantafalcons.com",
+      "Url": "https://www.atlantafalcons.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "5cf59baa8b8703ad158cef301ad6727816e71f413f7d3fd6eaf46a812d996a29"
+    },
+    {
+      "Id": "azcardinals.com",
+      "Url": "https://www.azcardinals.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "cc61fe6a47fdc81da318dd433be71e83ec33edddeabc328b4d2cc0d124b66c45"
+    },
+    {
+      "Id": "baltimoreravens.com",
+      "Url": "https://www.baltimoreravens.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "6d07b12daec2f90f9459f7fbac8589a4d5ea892ee7a254562378c992244e6513"
+    },
+    {
+      "Id": "bengals.com",
+      "Url": "https://www.bengals.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "a8bb73a9f8d832455cd97feedce416d81a9b693b528adc5a846406e78e31bec9"
+    },
+    {
+      "Id": "buccaneers.com",
+      "Url": "https://www.buccaneers.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "7de386ffd592b116a39c14848f163779d16644e00454e67685358be4719fffd5"
+    },
+    {
+      "Id": "buffalobills.com",
+      "Url": "https://www.buffalobills.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "c04f5ae27c3326bd17cd4a754d0bed4f71739b5a7415ba978d0d113aed31fe78"
+    },
+    {
+      "Id": "chargers.com",
+      "Url": "https://www.chargers.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "f363c1bb0650246072ae8c8881a26d44fbd2064349a4f319a05c4abfa675e63d"
+    },
+    {
+      "Id": "chicagobears.com",
+      "Url": "https://www.chicagobears.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "3f1bf21e61b63edba4a9f78445e7a6cf1f81e68a8d04ef2ac031537cc676420e"
+    },
+    {
+      "Id": "chiefs.com",
+      "Url": "https://www.chiefs.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "23ef15817c5cb5308807b2b52119a39615b5c0c30cf2a73f76706ad84bdadd4b"
+    },
+    {
+      "Id": "clevelandbrowns.com",
+      "Url": "https://www.clevelandbrowns.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "0279ad790df9fcdb762df5bfeb62905b8f5ee131a3460b06029cd9252d7abef3"
+    },
+    {
+      "Id": "colts.com",
+      "Url": "https://www.colts.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "4aa883b3d0ffe6ccf7dcbdf3f8440da791a1715c971a80c0d123e54adc95a9e0"
+    },
+    {
+      "Id": "commanders.com",
+      "Url": "https://www.commanders.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "a9fd4f48867c5ddd9425a783f27ce252203332eb5b44a76a4350479427df10ad"
+    },
+    {
+      "Id": "denverbroncos.com",
+      "Url": "https://www.denverbroncos.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "4321019518577596e5c4f2a264b71511b95d1ee4c27c3057373c53f3124905ab"
+    },
+    {
+      "Id": "detroitlions.com",
+      "Url": "https://www.detroitlions.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "1d105abd9b79af8c655041500ff14523ef66d7d7a3806ea216e0b262a7b41fda"
+    },
+    {
+      "Id": "giants.com",
+      "Url": "https://www.giants.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "6af91ab636bd0ec5998a512ef54fcb8fc23a726b62a10bf18349d585b96dec52"
+    },
+    {
+      "Id": "houstontexans.com",
+      "Url": "https://www.houstontexans.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "8ed6173df6c41acabccfe3b6c93e81657f7190daa6227dbdf6a9b286d4196e24"
+    },
+    {
+      "Id": "jaguars.com",
+      "Url": "https://www.jaguars.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "b0b715cf64b0a7cd481f9b2e45af1fb2072a78f96bf65b7c9784a610eb348617"
+    },
+    {
+      "Id": "miamidolphins.com",
+      "Url": "https://www.miamidolphins.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "d5dd2d27f3baf4c449abd2389ee386f26277676f508b5b297319fa7fbb37cb61"
+    },
+    {
+      "Id": "neworleanssaints.com",
+      "Url": "https://www.neworleanssaints.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "fb08c582c6e57f87ac2dd8a6431b66fde82d53635e5f2d6dcaa54c407b03d452"
+    },
+    {
+      "Id": "newyorkjets.com",
+      "Url": "https://www.newyorkjets.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "0438b93d50f5468726b2ddcda33b6ee45091f6f3227b8cee2284496122c4869e"
+    },
+    {
+      "Id": "packers.com",
+      "Url": "https://www.packers.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "2a9a4fea4086297fdf6c3269800907e6a2811e524552d2449f9c6b4c37c1bc53"
+    },
+    {
+      "Id": "panthers.com",
+      "Url": "https://www.panthers.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "94cec489da895fb195cd638e2bcbdf272064cd8a4e8b6247e4b8e143a673b6db"
+    },
+    {
+      "Id": "patriots.com",
+      "Url": "https://www.patriots.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "7706a0b59f5b1c429f55b0426091fea106ad757969989440b0355f8dd8715a5e"
+    },
+    {
+      "Id": "philadelphiaeagles.com",
+      "Url": "https://www.philadelphiaeagles.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "d63df331492632fc432665f48963abe945874a7c2765b9124677a486b2436755"
+    },
+    {
+      "Id": "raiders.com",
+      "Url": "https://www.raiders.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "9af7afeda44c744b3f1c2867af206d5424dfefda433a0b408e1698b471217c4c"
+    },
+    {
+      "Id": "seahawks.com",
+      "Url": "https://www.seahawks.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "c85f55a827a18b1d5fc6479bbe3521fc65acf44ab40048eba67e7377e01b6cbf"
+    },
+    {
+      "Id": "steelers.com",
+      "Url": "https://www.steelers.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "9b5fbc3d74ce7a7870592cd74cb21ef13f446df3d8c416999d19fc697a3daa98"
+    },
+    {
+      "Id": "tennesseetitans.com",
+      "Url": "https://www.tennesseetitans.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "a80912dbe162a7582cb72b622271049d5ffcb234bbe6864ca8d51d5713fedcaa"
+    },
+    {
+      "Id": "therams.com",
+      "Url": "https://www.therams.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "3fdda1b82a5558fb80ef1d531539c53926b9bf1ead05de3ebf61205bc9425002"
+    },
+    {
+      "Id": "vikings.com",
+      "Url": "https://www.vikings.com/team/transactions/2026",
+      "Title": "Official team transactions, 2026",
+      "Sha256": "c5678ba51fbe675b16b0097b0bc5cefdab64d68462774b8a1ca6e97286eaa2c8"
+    }
+  ],
+  "CandidateTransfersNotImported": [
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "GB",
+      "Owner": "DAL",
+      "Source": "1"
+    },
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "IND",
+      "Owner": "NYJ",
+      "Source": "2"
+    },
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "LAR",
+      "Owner": "CLE",
+      "Source": "4"
+    },
+    {
+      "Year": 2027,
+      "Round": 2,
+      "OriginalTeam": "HOU",
+      "Owner": "ARI",
+      "Source": "5"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "LAR",
+      "Owner": "KC",
+      "Source": "6"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "PHI",
+      "Owner": "MIN",
+      "Source": "7"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "8"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "SEA",
+      "Owner": "IND",
+      "Source": "9"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "MIN",
+      "Owner": "CAR",
+      "Source": "10"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "DAL",
+      "Owner": "GB",
+      "Source": "11"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "NYG",
+      "Owner": "CLE",
+      "Source": "12"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "SEA",
+      "Owner": "CLE",
+      "Source": "13"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "PIT",
+      "Owner": "DAL",
+      "Source": "8"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "SF",
+      "Owner": "IND",
+      "Source": "14"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "HOU",
+      "Owner": "CLE",
+      "Source": "15"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "16"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "PIT",
+      "Owner": "MIA",
+      "Source": "17"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "CAR",
+      "Owner": "MIN",
+      "Source": "10"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "CHI",
+      "Owner": "NE",
+      "Source": "18"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "NE",
+      "Owner": "PHI",
+      "Source": "19"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "NYG",
+      "Owner": "MIN",
+      "Source": "20"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "BAL",
+      "Owner": "PHI",
+      "Source": "21"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "SF",
+      "Owner": "KC",
+      "Source": "22"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "NYJ",
+      "Owner": "MIN",
+      "Source": "23"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "NO",
+      "Owner": "NE",
+      "Source": "25"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "CLE",
+      "Owner": "HOU",
+      "Source": "26"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "LAC",
+      "Owner": "NO",
+      "Source": "28"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "KC",
+      "Owner": "LV",
+      "Source": "raiders.com"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "PHI",
+      "Owner": "GB",
+      "Source": "30"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "BAL",
+      "Owner": "SF",
+      "Source": "31"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "ATL",
+      "Owner": "KC",
+      "Source": "33"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "JAX",
+      "Owner": "NYG",
+      "Source": "34"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "35",
+      "Condition": "Conditional selection; reserved until draft allocation"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "LAR",
+      "Owner": "LAC",
+      "Source": "37"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "MIA",
+      "Owner": "PIT",
+      "Source": "17"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "NO",
+      "Owner": "DEN",
+      "Source": "38"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "KC",
+      "Owner": "ATL",
+      "Source": "33"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "MIN",
+      "Owner": "NYJ",
+      "Source": "23"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "PHI",
+      "Owner": "MIN",
+      "Source": "39"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "ATL",
+      "Owner": "SEA",
+      "Source": "41",
+      "Condition": "Conditional selection; reserved until draft allocation"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "NYG",
+      "Owner": "MIA",
+      "Source": "42",
+      "Condition": "Conditional selection; reserved until draft allocation"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "HOU",
+      "Owner": "CLE",
+      "Source": "26"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "LV",
+      "Owner": "BUF",
+      "Source": "47"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "SF",
+      "Owner": "ARI",
+      "Source": "5"
+    },
+    {
+      "Year": 2028,
+      "Round": 1,
+      "OriginalTeam": "NE",
+      "Owner": "PHI",
+      "Source": "19"
+    },
+    {
+      "Year": 2028,
+      "Round": 2,
+      "OriginalTeam": "LAR",
+      "Owner": "CLE",
+      "Source": "4"
+    },
+    {
+      "Year": 2028,
+      "Round": 2,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "35"
+    },
+    {
+      "Year": 2028,
+      "Round": 2,
+      "OriginalTeam": "BAL",
+      "Owner": "PHI",
+      "Source": "21"
+    },
+    {
+      "Year": 2028,
+      "Round": 5,
+      "OriginalTeam": "SEA",
+      "Owner": "IND",
+      "Source": "9"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "NO",
+      "Owner": "DAL",
+      "Source": "51"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "JAX",
+      "Owner": "MIA",
+      "Source": "52"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "CLE",
+      "Owner": "LAR",
+      "Source": "53"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "DAL",
+      "Owner": "NO",
+      "Source": "51"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "NYJ",
+      "Owner": "LAC",
+      "Source": "54",
+      "Condition": "Conditional selection; reserved until draft allocation"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "SEA",
+      "Owner": "NYJ",
+      "Source": "55",
+      "Condition": "Conditional selection; reserved until draft allocation"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "HOU",
+      "Owner": "NE",
+      "Source": "56"
+    },
+    {
+      "Year": 2029,
+      "Round": 3,
+      "OriginalTeam": "LAR",
+      "Owner": "CLE",
+      "Source": "4"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "IND",
+      "Owner": "BUF",
+      "Source": "buffalobills.com"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "BUF",
+      "Owner": "IND",
+      "Source": "buffalobills.com"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "SEA",
+      "Owner": "LAC",
+      "Source": "chargers.com"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "ATL",
+      "Owner": "CHI",
+      "Source": "chicagobears.com"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "GB",
+      "Owner": "PIT",
+      "Source": "steelers.com"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "GB",
+      "Owner": "LAR",
+      "Source": "packers.com"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "CAR",
+      "Owner": "LAC",
+      "Source": "panthers.com"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "HOU",
+      "Owner": "NO",
+      "Source": "neworleanssaints.com"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "NO",
+      "Owner": "HOU",
+      "Source": "neworleanssaints.com"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "ARI",
+      "Owner": "JAX",
+      "Source": "azcardinals.com"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "JAX",
+      "Owner": "ARI",
+      "Source": "azcardinals.com"
+    },
+    {
+      "Year": 2029,
+      "Round": 7,
+      "OriginalTeam": "LV",
+      "Owner": "NYJ",
+      "Source": "raiders.com"
+    },
+    {
+      "Year": 2029,
+      "Round": 7,
+      "OriginalTeam": "NE",
+      "Owner": "MIA",
+      "Source": "miamidolphins.com"
+    }
+  ],
+  "RosterTrades": [
+    {
+      "Player": "Quenton Nelson",
+      "From": "IND",
+      "To": "SEA",
+      "Source": "9"
+    },
+    {
+      "Player": "DeForest Buckner",
+      "From": "IND",
+      "To": "SF",
+      "Source": "14"
+    }
+  ],
+  "ReviewNotes": [
+    "Incomplete: unresolved multi-hop original-club identities remain in PendingReview and are not silently guessed.",
+    "2027 DAL/GB first-round earlier-of condition is modeled separately.",
+    "2028 Patriots seventh has conflicting published onward-trade descriptions; do not issue duplicate picks.",
+    "Additional Miami sixth-round, Giants seventh-round and Vikings/Philadelphia seventh-round re-trades require source-identity reconciliation.",
+    "All 32 clubs are covered by the standard inventory; verified transfers are an incremental audit, not a claim that every outstanding obligation is complete."
+  ],
+  "PendingReview": [
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "GB",
+      "Owner": "NYJ",
+      "Source": "27"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "LAC",
+      "Owner": "HOU",
+      "Source": "40",
+      "Condition": "Conditional selection; reserved until draft allocation"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "NYJ",
+      "Owner": "PHI",
+      "Source": "27"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "BAL",
+      "Owner": "PHI",
+      "Source": "43"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "CLE",
+      "Owner": "DET",
+      "Source": "44"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "DAL",
+      "Owner": "BAL",
+      "Source": "21"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "NE",
+      "Owner": "NO",
+      "Source": "25"
+    }
+  ]
+}

@@ -32,6 +32,7 @@ public static class ProPickProjection
     }
     public static double Slot(ProFranchise s,ProDraftPick p)
     {
+        if(p.Compensatory)return p.Slot;
         if(p.Year==s.Year&&s.Phase==ProPhase.Offseason&&s.OffseasonStep is OffseasonStep.Draft or OffseasonStep.RosterCuts)return p.Slot;
         var ranks=Cache.GetOrCreateValue(s).GetOrAdd(p.Year,y=>new Lazy<Dictionary<string,double>>(()=>Build(s,y))).Value;
         return ranks.GetValueOrDefault(p.OriginalTeam,16.5);

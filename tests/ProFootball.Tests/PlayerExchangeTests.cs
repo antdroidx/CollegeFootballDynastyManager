@@ -46,7 +46,7 @@ public class PlayerExchangeTests
     {
         var s=New();var file=File(s);s=ProDraftClassImport.Apply(s,file);var classIds=s.Prospects.Select(p=>p.Football.PlayerId).ToHashSet();
         s=ProDraft.AutoUntilUser(s with{OffseasonStep=OffseasonStep.Draft},true);
-        Assert.Null(ProDraft.Current(s));Assert.Equal(224,s.DraftHistory.Count(d=>d.Year==s.Year));Assert.Equal(96,s.Prospects.Count);
+        Assert.Null(ProDraft.Current(s));Assert.Equal(s.Picks.Count(p=>p.Year==s.Year),s.DraftHistory.Count(d=>d.Year==s.Year));Assert.Equal(320-s.DraftHistory.Count(d=>d.Year==s.Year),s.Prospects.Count);
         Assert.All(s.DraftHistory.Where(d=>d.Year==s.Year),d=>Assert.Contains(d.Player.Football.PlayerId,classIds));
         Assert.Equal(s.Players.Count,s.Players.Select(p=>p.Football.PlayerId).Distinct().Count());
         Assert.Equal(3,s.ImportedDraftClass!.Players);
@@ -57,7 +57,7 @@ public class PlayerExchangeTests
         var s=New();var samples=s.Prospects.ToArray();var file=new PlayerExport(1,"College Football Dynasty Manager",2027,Enumerable.Range(0,2500).Select(i=>samples[i%samples.Length].Football with{PlayerId=Guid.NewGuid(),FullName="College graduate "+i,TeamName="College "+(i%50),ClassYear=4}).ToList());
         var json=PlayerExportService.Serialize(file);Assert.True(System.Text.Encoding.UTF8.GetByteCount(json)<PlayerExportService.MaxBytes);
         s=ProDraftClassImport.Apply(s,PlayerExportService.Parse(json));Assert.Equal(2500,s.Prospects.Count);Assert.Equal(0,s.ImportedDraftClass!.Fillers);
-        s=ProDraft.AutoUntilUser(s with{OffseasonStep=OffseasonStep.Draft},true);Assert.Null(ProDraft.Current(s));Assert.Equal(224,s.DraftHistory.Count(d=>d.Year==s.Year));Assert.Equal(2276,s.Prospects.Count);
+        s=ProDraft.AutoUntilUser(s with{OffseasonStep=OffseasonStep.Draft},true);Assert.Null(ProDraft.Current(s));Assert.Equal(s.Picks.Count(p=>p.Year==s.Year),s.DraftHistory.Count(d=>d.Year==s.Year));Assert.Equal(2500-s.DraftHistory.Count(d=>d.Year==s.Year),s.Prospects.Count);
     }
 
 }

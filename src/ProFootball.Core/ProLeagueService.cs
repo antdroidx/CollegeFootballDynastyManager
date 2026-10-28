@@ -25,7 +25,7 @@ public static class ProLeagueService
             league.Teams.GroupBy(t => (t.Conference, t.Division)).Any(g => g.Count() != 4 || !g.Select(t => t.SeedRank).Order().SequenceEqual(new[] { 0, 1, 2, 3 })) || league.ActiveRosterLimit != 53 || league.PracticeSquadLimit != 16)
             throw new InvalidDataException("A league needs two conferences of four divisions, four unique teams per division, 53 active players and 16 practice players.");
     }
-    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false, StaffRole role = StaffRole.HeadCoach, bool firingEnabled = false, string? coachName = null)
+    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false, StaffRole role = StaffRole.HeadCoach, bool firingEnabled = false, string? coachName = null, bool applyOpeningTrades = true)
     {
         var league = Load();
         if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
@@ -43,7 +43,8 @@ public static class ProLeagueService
         }));
         franchise = ProCapInitialization.Initialize(franchise);
         franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
-        return ProMorale.NormalizeContracts(sourcedContracts ? ProReviewedOpeningRoster.InitializeNew(ProOpeningLedger.InitializeNew(ProContractData.Apply(franchise))) : ProContractData.CompleteRookieTerms(franchise));
+        var initialized = ProMorale.NormalizeContracts(sourcedContracts ? ProReviewedOpeningRoster.InitializeNew(ProOpeningLedger.InitializeNew(ProContractData.Apply(franchise))) : ProContractData.CompleteRookieTerms(franchise));
+        return ProCompensatoryDraft.InitializeNew(applyOpeningTrades ? ProOpeningTransactions.InitializeNew(initialized) : initialized);
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {

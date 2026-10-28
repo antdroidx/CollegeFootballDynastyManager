@@ -5,7 +5,7 @@ public sealed class OpeningLedgerTests
 {
     [Fact] public void SourcedOpeningDebtContainsAllObservedTeamsWithoutInventedCash()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
+        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true,applyOpeningTrades:false);
         Assert.Equal("2026-10-27",s.OpeningFinancialSnapshot);
         Assert.Equal(32,s.DeadCap.Select(d=>d.Team).Distinct().Count());
         Assert.Equal(735,s.DeadCap.Count);
@@ -16,11 +16,11 @@ public sealed class OpeningLedgerTests
         Assert.Equal(4_844_656,ProFinance.Budget(s,s.UserTeam).DeadMoney);
         Assert.Equal(0,ProFinance.Budget(s,s.UserTeam,2027).DeadMoney);
         Assert.Equal(ProFinance.Cash(s with{DeadCap=[]},s.UserTeam,2026),ProFinance.Cash(s,s.UserTeam,2026));
-        var generated=ProLeagueService.Create("Seattle Seahawks");Assert.Empty(generated.DeadCap);Assert.Null(generated.OpeningFinancialSnapshot);
+        var generated=ProLeagueService.Create("Seattle Seahawks",applyOpeningTrades:false);Assert.Empty(generated.DeadCap);Assert.Null(generated.OpeningFinancialSnapshot);
     }
     [Fact] public void ReleasingAnActivePlayerDoesNotEraseSourceAssessments()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
+        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true,applyOpeningTrades:false);
         var p=s.Players.Single(p=>p.Football.FullName=="Jaxon Smith-Njigba");
         var released=ProEconomy.Release(s,s.UserTeam,p.Football.PlayerId,false);
         Assert.Equal(s.DeadCap,released.DeadCap.Where(d=>d.SourceKey!=null).ToList());
@@ -32,7 +32,7 @@ public sealed class OpeningLedgerTests
         var directory=Path.Combine(Path.GetTempPath(),"pro-opening-"+Guid.NewGuid());
         try
         {
-            var store=new ProSaveStore(directory);var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true);
+            var store=new ProSaveStore(directory);var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true,applyOpeningTrades:false);
             await store.Save(s);var loaded=await store.Load(s.Id);
             Assert.Equal(s.OpeningFinancialSnapshot,loaded.OpeningFinancialSnapshot);Assert.Equal(s.DeadCap,loaded.DeadCap);
             var original=s with{OpeningFinancialSnapshot=null,DeadCap=[new(s.UserTeam,2026,Guid.Empty,123456){CashAmount=456}]};
@@ -43,7 +43,7 @@ public sealed class OpeningLedgerTests
     }
     [Fact] public void ReviewedSeattleMatchesDatedLiabilitiesWithoutAReportedRoomInput()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true) with{Phase=ProPhase.RegularSeason};
+        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true,applyOpeningTrades:false) with{Phase=ProPhase.RegularSeason};
         var b=ProFinance.Budget(s,s.UserTeam);
         Assert.Equal(300_971_343,b.TotalCommitments);Assert.Equal(315_053_262,b.AdjustedCap);Assert.Equal(14_081_919,b.Available);
         var foster=s.Players.Single(p=>p.Football.FullName.StartsWith("Montorie Foster"));
@@ -56,7 +56,7 @@ public sealed class OpeningLedgerTests
     }
     static (ProFranchise S,Guid Id) International()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam) with{PracticeSquad=true,Reserve=false,Retired=false};
+        var s=ProLeagueService.Create("Seattle Seahawks",applyOpeningTrades:false);var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam) with{PracticeSquad=true,Reserve=false,Retired=false};
         var id=p.Football.PlayerId;var c=new ProContract(id,s.UserTeam,2026,1,0,[new(2026,247_500,0)]){AccountingVersion=1,BonusCash=[],BonusPayments=[]};
         return(s with{Players=[p],Contracts=[c],Games=[],Phase=ProPhase.RegularSeason,Week=10,InternationalPracticeDesignations=[new(s.UserTeam,2026,id)]},id);
     }
