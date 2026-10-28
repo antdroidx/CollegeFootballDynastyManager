@@ -69,4 +69,17 @@ public class CompensatoryDraftTests
         var awards=ProCompensatoryDraft.Project(s,2028);Assert.Contains(awards,x=>x.Special&&x.Team==s.UserTeam);Assert.Contains(awards,x=>!x.Special&&x.Team=="Miami Dolphins");
     }
 
+    [Fact]public void TradingAQualifyingSigningAddsBuyerGainWithoutDuplicatingDeparture()
+    {
+        var s=Market() with{Year=2026,Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.Retention,Games=[]};
+        var p=s.Players.First(x=>x.Football.TeamName==s.UserTeam) with{Experience=6,CreditedSeasons=6,PracticeSquad=false,Reserve=false};
+        s=s with{Players=s.Players.Select(x=>x.Football.PlayerId==p.Football.PlayerId?p:x).ToList(),Contracts=s.Contracts.Append(new(p.Football.PlayerId,s.UserTeam,2024,1,0,[new(2026,2_000_000,0)])).ToList(),DeadCap=[]};
+        s=ProEconomy.Expire(s,s.UserTeam,p.Football.PlayerId) with{Year=2027,OffseasonStep=OffseasonStep.FreeAgency};
+        s=ProEconomy.Sign(s,new(p.Football.PlayerId,"Miami Dolphins",2,ProEconomy.MarketSalary(s,p)*2,0,0));Assert.Single(s.CompensatorySignings);
+        var payment=s.Picks.Where(p=>p.Owner=="Buffalo Bills"&&p.Year==2028&&ProTrade.Available(s,p)).Select(p=>p.Id).ToArray();
+        var traded=ProTrade.Propose(s,"Buffalo Bills","Miami Dolphins",[],[p.Football.PlayerId],payment,[]);
+        Assert.Equal(2,traded.CompensatorySignings.Count);Assert.Single(traded.CompensatorySignings,x=>x.CountsAsLoss);Assert.Contains(traded.CompensatorySignings,x=>x.NewTeam=="Buffalo Bills"&&!x.CountsAsLoss);
+        Assert.Single(ProCompensatoryDraft.Project(traded,2028),x=>x.Team==s.UserTeam);
+    }
+
 }

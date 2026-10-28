@@ -22,9 +22,13 @@ New franchises apply Nelson IND to SEA for SEA2027R3 and SEA2028R5; Buckner IND 
 
 Primary confirmations: [Colts/Nelson](https://www.colts.com/news/colts-trade-g-quenton-nelson-to-seattle-seahawks-for-2-future-nfl-draft-picks), [Colts/Buckner](https://www.colts.com/news/colts-acquire-2027-fourth-round-pick-in-exchange-for-dt-deforest-buckner-in-trade-with-san-francisco-49ers), [Seahawks](https://www.seahawks.com/news/seahawks-acquire-all-pro-guard-quenton-nelson-in-trade-with-colts-pending-physical).
 
-## Outstanding ownership audit
+## Opening future ownership ledger
 
-The broader real 2027-2029 pick ownership import is NOT complete. docs/data/pro-future-pick-audit-2026-10-28.json is developer research only and is not embedded or applied to franchises. It records 70 candidate transfer rows, primary references and explicitly unresolved multi-hop/conditional identities. Some team transaction descriptions conflict about years or omit which acquired pick was sent onward. Do not promote candidate rows as verified allocations, silently duplicate a pick, or claim all 32 real inventories are reconciled. Only the three picks in the two confirmed opening trades change ownership in this implementation batch. Remaining work: reconcile original identities/conditions and implement conditional-right reservation/resolution before importing the full ledger.
+The follow-up embeds pro-future-pick-ownership.json, observed October28,2026: all32 clubs and672 unique standard rights for2027–2029, including80 transfers. Four paired earlier/later allocations remain reserved until the actual draft order is known;11 other published conditional rights remain reserved until allocation. The known Porter two-appearance condition uses completed regular-season records. Undisclosed private thresholds use the publicly disclosed round as the game's allocation baseline; this is an approximation rather than a claim to reproduce private clauses. No projected compensation is counted as a tradable standard asset.
+
+Each transfer retains its source URL. Multi-hop acquired selections keep their original club identity. For example, the primary [Packers Kaleb Johnson announcement](https://www.packers.com/news/5-things-to-know-about-new-packers-rb-kaleb-johnson-aug-30-2026) establishes that the sixth sent to Pittsburgh was acquired from Miami earlier that day: the JAX2028sixth travels via MIA/GB to PIT, while GB retains its own sixth. The earlier70-row developer audit is superseded research, not runtime input. Opening initialization runs only for new franchises; saved trades, contracts and resolved rights remain intact.
+
+Qualifying free-agent trades preserve the original departure loss and account for the acquiring club's gain without creating a second departure. CPU planning previews real future release debt and protects rollover/rookie funding; minimum replacement contracts can use the exact statutory floor without an artificial quarter-million premium. No cap balances or liabilities are invented.
 
 ## Rule references
 

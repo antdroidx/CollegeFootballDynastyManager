@@ -75,6 +75,8 @@ public sealed record ProFranchise
     public int LastMoraleTick { get; init; } = -1;
     public List<ProDraftPick> Picks { get; init; } = [];
     public string? OpeningTransactionsSnapshot { get; init; }
+    public string? OpeningPickSnapshot {get;init;}
+    public List<ProPickAllocationCondition> PickAllocationConditions {get;init;}=[];
     public List<ProCompensatoryCandidate> CompensatoryCandidates {get;init;}=[];
     public List<ProCompensatorySigning> CompensatorySignings {get;init;}=[];
     public List<ProCompensatoryProjection> CompensatoryProjections {get;init;}=[];
@@ -110,7 +112,7 @@ public sealed record ProContract(Guid PlayerId, string Team, int SignedYear, int
 { public int? SalaryAssignmentYear {get;init;} public double SalaryAssignmentFraction {get;init;} public Guid? ReleaseId {get;init;} public List<ProBonusPayment>? BonusPayments {get;init;} public List<ProCashVesting>? CashVesting {get;init;} public int? OriginalRookieYear { get; init; } public int AccountingVersion { get; init; } public long? ReportedAnnualValue { get; init; } public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
 public sealed record DeadCapCharge(string Team, int Year, Guid PlayerId, long Amount) { public string? SourceKey {get;init;} public string? SourceName {get;init;} public string? SourceKind {get;init;} public string? SourceUrl {get;init;} public string? SourceSha256 {get;init;} public string? ObservedOn {get;init;} public long CashAmount {get;init;} public Guid? ReleaseId {get;init;} public bool June1Hold {get;init;} public bool RetainedContract {get;init;} public int? FundingYear {get;init;} public bool RetainedBonus {get;init;} }
 public sealed record FreeAgentBid(Guid PlayerId, string Team, int Years, long AnnualSalary, long Bonus, int Priority);
-public sealed record ProDraftPick(Guid Id, int Year, int Round, int Slot, string OriginalTeam, string Owner) {public bool Compensatory {get;init;} public bool SpecialCompensatory {get;init;} public string? CompensationFor {get;init;} }
+public sealed record ProDraftPick(Guid Id, int Year, int Round, int Slot, string OriginalTeam, string Owner) {public bool Compensatory {get;init;} public bool SpecialCompensatory {get;init;} public string? CompensationFor {get;init;} public bool AllocationPending {get;init;} public string? AllocationNote {get;init;} public string? AllocationSource {get;init;} public Guid? ConditionPlayerId {get;init;} public int MinimumGames {get;init;} public string? ConditionFallbackOwner {get;init;} }
 public sealed record DraftSelection(int Year, int Round, int Slot, string Team, ProPlayer Player);
 public sealed record ScoutReport(Guid PlayerId, string Team, int Year, int Grade, int Confidence);
 public sealed record WaiverEntry(Guid PlayerId, int ExpiresAfterWeek, List<string> Claims)

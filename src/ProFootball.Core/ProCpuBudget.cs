@@ -21,6 +21,33 @@ public static class ProCpuBudget
         }
         return Math.Max(0,needed);
     }
+    public static bool ReleaseKeepsFuturePlan(ProFranchise s,ProPlayer player,long plannedSpend=0)
+    {
+        var rows=ProContractInsights.Release(s,player.Football.PlayerId);
+        if(!rows.Any(r=>r.Year>s.Year&&r.DeadMoney>r.Before))return true;
+        var before=FutureRolloverNeed(s,player.Football.TeamName)-Math.Max(0,ProEconomy.Room(s,player.Football.TeamName)-plannedSpend);
+        var released=ProEconomy.Release(s,player.Football.TeamName,player.Football.PlayerId,false);
+        var after=FutureRolloverNeed(released,player.Football.TeamName)-Math.Max(0,ProEconomy.Room(released,player.Football.TeamName)-plannedSpend);
+        return after<=Math.Max(0,before);
+    }
+    public static ProFranchise PlanRollover(ProFranchise s,string team)
+    {
+        // Bank the known multi-year shortfall before spending on depth. Never cancel or shift already booked debt.
+        for(var attempt=0;attempt<8&&ProRoster.Active(s,team)>45;attempt++)
+        {
+            var needed=FutureRolloverNeed(s,team);var room=ProEconomy.Room(s,team);if(needed<=room)break;
+            ProFranchise? best=null;double bestScore=0;
+            foreach(var player in s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad&&!p.Reserve&&ProCpu.Need(s,team,p.Football.Position)==0))
+            {
+                var candidate=ProEconomy.Release(s,team,player.Football.PlayerId,false);var cashGain=ProEconomy.Room(candidate,team)-room;if(cashGain<=0)continue;
+                var improvement=cashGain+needed-FutureRolloverNeed(candidate,team);
+                var score=improvement/Math.Max(1,player.Football.OverallRating-45);
+                if(score>bestScore){best=candidate;bestScore=score;}
+            }
+            if(best is null)break;s=best;
+        }
+        return s;
+    }
     public static ProFranchise Relieve(ProFranchise s,string team,long targetRoom,Func<ProPlayer,bool>? eligible=null)
     {
         if(ProFinance.ContractChangeYear(s)!=s.Year||ProEconomy.Room(s,team)>=targetRoom)return s;

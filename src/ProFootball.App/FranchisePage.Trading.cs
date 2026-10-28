@@ -35,7 +35,7 @@ public sealed partial class FranchisePage
     Task Trade(string? partner=null,Guid? initialPlayer=null,bool giveInitial=false)
     {
         state=ProEconomy.EnsurePickInventory(state!);var s=state!;body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Trade center",25,true));
-        body.Add(Text($"Trade draft picks through {s.Year+3} · choose Draft picks under either team",12));
+        body.Add(Text($"Trade draft picks through {s.Year+3} · choose Draft picks under either team",12));body.Add(Action("All draft picks & conditional rights",DraftPicks));
         var clubs=s.League.Teams.Where(t=>t.Name!=s.UserTeam).OrderBy(t=>t.Name).ToArray();
         var other=new Picker { Title="Trade partner",ItemsSource=clubs.Select(t=>t.Name).ToArray(),SelectedIndex=Math.Max(0,Array.FindIndex(clubs,t=>t.Name==partner)) };body.Add(other);
         var givePlayers=new HashSet<Guid>();var getPlayers=new HashSet<Guid>();var givePicks=new HashSet<Guid>();var getPicks=new HashSet<Guid>();

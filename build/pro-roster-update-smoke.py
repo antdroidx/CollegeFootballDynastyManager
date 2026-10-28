@@ -15,6 +15,13 @@ def saved_slot(team):
 try:
     ready("fresh-library",s.library_loaded);click("new","New franchise");click("start","Start franchise");ready("real-seattle",s.pro_overview_loaded)
     saved=saved_slot("Seattle Seahawks")
+    assert saved["openingPickSnapshot"]=="2026-10-28"
+    standard=[p for p in saved["picks"] if not p.get("compensatory",False)]
+    assert len(standard)==672 and len({(p["year"],p["round"],p["originalTeam"]) for p in standard})==672
+    for y in [2027,2028,2029]:assert len([p for p in standard if p["year"]==y])==224
+    for y,r,original,owner in [(2027,1,"Indianapolis Colts","New York Jets"),(2029,3,"Los Angeles Rams","Cleveland Browns"),(2029,7,"Las Vegas Raiders","New York Jets")]:
+        assert next(p for p in standard if (p["year"],p["round"],p["originalTeam"])==(y,r,original))["owner"]==owner
+    assert any(p.get("allocationPending") for p in standard)
     for name,club in [("Quenton Nelson","Seattle Seahawks"),("DeForest Buckner","San Francisco 49ers")]:
         player=next(p for p in saved["players"] if p["football"]["fullName"]==name);assert player["football"]["teamName"]==club
         contracts=[c for c in saved["contracts"] if c["active"] and c["playerId"]==player["football"]["playerId"]];assert len(contracts)==1 and contracts[0]["team"]==club
@@ -22,9 +29,10 @@ try:
         pick=next(p for p in saved["picks"] if p["year"]==year and p["round"]==round_ and p["originalTeam"]==original);assert pick["owner"]=="Indianapolis Colts"
     navigate("Roster");root=s.scroll_to_text("nelson-search","Find a player",max_swipes=12,toward_start=True);s.tap_id(root,"pro-roster-search");s.adb("shell","input","text","Quenton");s.adb("shell","input","keyevent","4");ready("nelson-row",lambda r:"Quenton Nelson" in s.texts(r));s.capture("pro-roster-update-nelson")
     navigate("Front Office");click("picks","Draft picks");ready("projections",lambda r:"Projected compensatory picks" in s.texts(r));s.scroll_to_text("teasley-projection","Nolan Teasley",max_swipes=15);root=s.capture("pro-roster-update-projections");assert "Projected picks cannot be traded." in " ".join(s.texts(root))
+    root=s.scroll_to_text("reserved-rights","Reserved",max_swipes=15,toward_start=True);s.capture("pro-roster-update-reserved")
     fixture=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-compensatory-ui-fixture.json.gz")).read_bytes()));load(fixture)
-    navigate("Front Office");click("awarded-picks","Draft picks");root=ready("pick-year",lambda r:"Draft picks" in s.texts(r));s.tap_id(root,"pro-picks-year");click("2027-year","2027")
+    navigate("Front Office");click("awarded-picks","Draft picks");root=ready("pick-year",lambda r:"Draft picks" in s.texts(r));assert "2027" in s.texts(root)
     root=s.scroll_to_text("awards-summary","5 compensatory picks awarded. These selections are included in the draft and can be traded.",max_swipes=15);assert "5 compensatory picks awarded" in " ".join(s.texts(root));s.capture("pro-roster-update-awards")
     navigate("Overview");click("save-exit","‹ Exit");ready("reload-library",s.library_loaded)
-    Path("pro-roster-update-check.json").write_text(json.dumps({"actualNewSeattleFranchise":True,"nelsonAndBucknerOwnership":True,"buyerContractsAndSellerPickCompensation":True,"nelsonVisibleInRoster":True,"projectionsNotTradable":True,"synthetic2027AwardsVisible":True,"saveExit":True},indent=2),encoding="utf-8")
+    Path("pro-roster-update-check.json").write_text(json.dumps({"allFutureOwnershipRights":True,"reservedConditionalRightsVisible":True,"offseasonDraftYearDefault":True,"actualNewSeattleFranchise":True,"nelsonAndBucknerOwnership":True,"buyerContractsAndSellerPickCompensation":True,"nelsonVisibleInRoster":True,"projectionsNotTradable":True,"synthetic2027AwardsVisible":True,"saveExit":True},indent=2),encoding="utf-8")
 finally:Path("pro-roster-update-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1200"))

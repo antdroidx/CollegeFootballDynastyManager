@@ -8,14 +8,15 @@ public sealed partial class FranchisePage
         var s=state!;body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Draft picks",25,true));
         var clubs=s.League.Teams.OrderBy(t=>t.Name).ToArray();var team=new Picker{Title="Team",AutomationId="pro-picks-team",ItemsSource=clubs.Select(t=>t.Name).ToArray(),SelectedIndex=Array.FindIndex(clubs,t=>t.Name==s.UserTeam)};
         var years=s.Picks.Select(p=>p.Year).Concat(s.CompensatoryProjections.Select(p=>p.Year)).Where(y=>y>=s.Year).Append(s.Year+1).Distinct().Order().ToArray();
-        var year=new Picker{Title="Draft year",AutomationId="pro-picks-year",ItemsSource=years.Select(y=>y.ToString()).ToArray(),SelectedIndex=Math.Max(0,Array.IndexOf(years,s.Year+1))};
+        var year=new Picker{Title="Draft year",AutomationId="pro-picks-year",ItemsSource=years.Select(y=>y.ToString()).ToArray(),SelectedIndex=Math.Max(0,Array.IndexOf(years,s.Phase==ProPhase.Offseason&&s.OffseasonStep is OffseasonStep.FreeAgency or OffseasonStep.Draft?s.Year:s.Year+1))};
         body.Add(CompactFilters.Create((team,210),(year,120)));var list=new VerticalStackLayout{Spacing=10};body.Add(list);
         void Draw()
         {
             if(team.SelectedIndex<0||year.SelectedIndex<0)return;list.Clear();var club=clubs[team.SelectedIndex];var selected=years[year.SelectedIndex];
             var picks=s.Picks.Where(p=>p.Year==selected&&p.Owner==club.Name).OrderBy(p=>p.Round).ThenBy(p=>p.Slot).ToArray();
-            list.Add(Text($"{club.Name} · {selected} · {picks.Length} allocated picks",19,true));
-            list.Add(Table([("Round",60),("Original team",180),("Type",130),("Status",110)],picks.Select(p=>new View[]{Text(p.Round.ToString()),TeamCell(s.League.Teams.Single(t=>t.Name==p.OriginalTeam)),Text(p.SpecialCompensatory?"Staff compensation":p.Compensatory?"Compensatory":"Standard"),Text(ProTrade.Available(s,p)?"Available":"Selected")})));
+            list.Add(Text($"{club.Name} · {selected} · {picks.Count(p=>!p.AllocationPending)} allocated · {picks.Count(p=>p.AllocationPending)} conditional",19,true));
+            list.Add(Table([("Round",48),("Type",122),("Status",80),("Original team",180)],picks.Select(p=>new View[]{Text(p.Round.ToString()),Text(p.SpecialCompensatory?"Staff compensation":p.Compensatory?"Compensatory":"Standard"),Text(p.AllocationPending?"Reserved":ProTrade.Available(s,p)?"Available":"Selected"),TeamCell(s.League.Teams.Single(t=>t.Name==p.OriginalTeam))})));
+            if(picks.Any(p=>p.AllocationPending))list.Add(Text("Conditional selections are reserved until the draft order and allocation are final.",12));
             if(!s.CompensatoryAwardYears.Contains(selected))
             {
                 var projected=ProCompensatoryDraft.Project(s,selected).Where(p=>p.Team==club.Name).ToArray();

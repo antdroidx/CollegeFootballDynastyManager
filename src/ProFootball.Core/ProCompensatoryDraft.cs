@@ -4,7 +4,7 @@ using DynastyManager.Core.Models;
 namespace ProFootball.Core;
 
 public sealed record ProCompensatoryCandidate(int MarketYear,Guid PlayerId,string FormerTeam,int Seasons) {public bool Eligible {get;init;}=true;}
-public sealed record ProCompensatorySigning(int MarketYear,Guid PlayerId,string FormerTeam,string NewTeam,long AnnualValue,int Seasons,Position Position) {public bool Eligible {get;init;}=true;}
+public sealed record ProCompensatorySigning(int MarketYear,Guid PlayerId,string FormerTeam,string NewTeam,long AnnualValue,int Seasons,Position Position) {public bool Eligible {get;init;}=true;public bool CountsAsLoss {get;init;}=true;}
 public sealed record ProCompensatoryProjection(int Year,int Round,string Team,string Reason,bool Special,int Priority,string Source) {public Guid? PlayerId {get;init;} }
 
 /// <summary>Transparent game approximation of Appendix V; not the NFL Management Council's private calculation.</summary>
@@ -36,6 +36,13 @@ public static class ProCompensatoryDraft
         var annual=(c.Years.Where(y=>!y.IsVoid).Sum(y=>y.Salary)+c.SigningBonus)/Math.Max(1,c.Years.Count(y=>!y.IsVoid));
         return after with{CompensatorySignings=after.CompensatorySignings.Append(new(before.Year,c.PlayerId,candidate.FormerTeam,c.Team,annual,candidate.Seasons,player.Football.Position)).ToList()};
     }
+    internal static ProFranchise Traded(ProFranchise s,Guid playerId,string buyer)
+    {
+        var cfa=s.CompensatorySignings.FirstOrDefault(x=>x.MarketYear==s.Year&&x.PlayerId==playerId&&x.Eligible);
+        if(cfa is null||s.CompensatorySignings.Any(x=>x.MarketYear==s.Year&&x.PlayerId==playerId&&x.NewTeam==buyer))return s;
+        // Appendix V treats the acquiring club as gaining the CFA. The original departure remains one loss, not two.
+        return s with{CompensatorySignings=s.CompensatorySignings.Append(cfa with{NewTeam=buyer,CountsAsLoss=false}).ToList()};
+    }
     internal static ProFranchise Released(ProFranchise s,Guid playerId)
     {
         // A pre-midseason release does not remain a qualifying signed CFA. Later releases retain the earned credit.
@@ -60,7 +67,7 @@ public static class ProCompensatoryDraft
         var qualified=events.Select(e=>(Event:e,Round:Round(e))).Where(x=>x.Round>0).ToArray();var awards=new List<(ProCompensatoryProjection Award,long Annual)>();
         foreach(var club in s.League.Teams)
         {
-            var lost=qualified.Where(x=>x.Event.FormerTeam==club.Name).OrderBy(x=>x.Round).ThenByDescending(x=>x.Event.AnnualValue).ToList();
+            var lost=qualified.Where(x=>x.Event.FormerTeam==club.Name&&x.Event.CountsAsLoss).OrderBy(x=>x.Round).ThenByDescending(x=>x.Event.AnnualValue).ToList();
             foreach(var gain in qualified.Where(x=>x.Event.NewTeam==club.Name).OrderBy(x=>x.Round).ThenByDescending(x=>x.Event.AnnualValue))
             {
                 var index=lost.FindIndex(x=>x.Round==gain.Round);if(index<0)index=lost.FindIndex(x=>x.Round>gain.Round);if(index<0&&lost.Count>0)index=0;
