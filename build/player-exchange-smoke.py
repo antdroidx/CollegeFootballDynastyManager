@@ -101,6 +101,8 @@ try:
     target=next(n for n in root.iter("node") if n.get("content-desc")=="View team "+fixture["userTeam"])
     b=list(map(int,re.findall(r"\d+",target.get("bounds"))));s.adb("shell","input","tap",str((b[0]+b[2])//2),str((b[1]+b[3])//2))
     ready("contextual-team-page",lambda r:"Players" in s.texts(r));s.capture("exchange-pro-team-page");click("contextual-team-back","‹ Back",True)
+    navigate("Roster");ready("pro-compact-roster",lambda r:any(t and t.startswith("Active roster") for t in s.texts(r)));s.capture("exchange-pro-compact-roster")
+    navigate("Overview")
     navigate("Front Office");click("import","Import College draft class");pick_document(filename)
     root=ready("pro-preview",lambda r:"Import class for "+str(draft_year) in s.texts(r));s.capture("exchange-pro-preview")
     click("apply","Import class for "+str(draft_year));ready("class-loaded",lambda r:any("5 imported + 315 generated" in t for t in s.texts(r) if t));s.capture("exchange-pro-imported")
