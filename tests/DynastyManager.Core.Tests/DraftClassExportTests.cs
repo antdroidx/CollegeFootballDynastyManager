@@ -18,4 +18,12 @@ public class DraftClassExportTests
         var s=new DynastyState{DynastyName="Old",UserTeamName="College",SeasonYear=2026,Phase=SeasonPhase.Recruiting,RecentPlayerDepartures=[new(){FullName="Old graduate",TeamName="College",PlayerId=Guid.NewGuid(),SeasonYear=2026,Position=Position.QB,OverallRating=90}]};
         Assert.Throws<InvalidOperationException>(()=>PlayerExportService.Latest(s));
     }
+    [Fact] public async Task FullClassSurvivesTheExistingCollegeSaveRepository()
+    {
+        var s=new DynastyState{DynastyName="Export save",UserTeamName="College",SeasonYear=2026,Phase=SeasonPhase.TransferPortal,ActiveRoster=[Player("Graduate",4)]};
+        s=OffseasonPlayerLifecycleService.EnterTransferPortal(s);var path=Path.Combine(Path.GetTempPath(),Guid.NewGuid()+".db3");
+        try{await using var store=new DynastyManager.Data.Persistence.SqliteDynastySaveRepository(path);var id=await store.SaveAsync(s,DynastyManager.Data.Persistence.SaveKind.Manual);var loaded=await store.LoadAsync(id);Assert.NotNull(loaded);Assert.Equal(PlayerExportService.Serialize(s.LatestProDraftClass!),PlayerExportService.Serialize(loaded!.LatestProDraftClass!));Assert.Equal(s.SchemaVersion,loaded.SchemaVersion);}
+        finally{if(System.IO.File.Exists(path))System.IO.File.Delete(path);}
+    }
+
 }

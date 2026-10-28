@@ -15,10 +15,12 @@ public sealed partial class FoundationPage
                 foreach(var group in file.Players.GroupBy(p=>p.Position).OrderBy(g=>g.Key))body.Add(new Label{Text=$"{group.Key}: {group.Count()}",TextColor=DynastyTheme.Text});
                 var path=Path.Combine(FileSystem.CacheDirectory,"draft-classes",$"college-class-{file.Year}.json");
                 var prepare=new Button{Text="Prepare export file",AutomationId="college-prepare-export"};
+                var save=new Button{Text="Save JSON file",IsEnabled=false,AutomationId="college-save-class-file"};
                 var share=new Button{Text="Share / save draft class",IsEnabled=false};var status=new Label{TextColor=DynastyTheme.Text};
-                prepare.Clicked+=async(_,_)=>{try{Directory.CreateDirectory(Path.GetDirectoryName(path)!);await File.WriteAllTextAsync(path,PlayerExportService.Serialize(file));status.Text=$"Ready: college-class-{file.Year}.json";share.IsEnabled=true;}catch(Exception ex){await GameDialogs.AlertAsync(this,"Unable to export",ex.Message,"Close");}};
+                prepare.Clicked+=async(_,_)=>{try{Directory.CreateDirectory(Path.GetDirectoryName(path)!);await File.WriteAllTextAsync(path,PlayerExportService.Serialize(file));status.Text=$"Ready: college-class-{file.Year}.json";share.IsEnabled=save.IsEnabled=true;}catch(Exception ex){await GameDialogs.AlertAsync(this,"Unable to export",ex.Message,"Close");}};
+                save.Clicked+=async(_,_)=>{save.IsEnabled=false;try{var activity=Microsoft.Maui.ApplicationModel.Platform.CurrentActivity as MainActivity??throw new InvalidOperationException("Open this export in the Android app.");status.Text=await activity.SaveDraftClassAsync(path)?"Saved using Android file picker.":"Save canceled. The prepared export is still available.";}catch(Exception ex){await GameDialogs.AlertAsync(this,"Unable to save",ex.Message,"Close");}finally{save.IsEnabled=true;}};
                 share.Clicked+=async(_,_)=>{try{await Share.Default.RequestAsync(new ShareFileRequest{Title=$"College {file.Year} draft class",File=new ShareFile(path,"application/json")});}catch(Exception ex){await GameDialogs.AlertAsync(this,"Unable to share",ex.Message,"Close");}};
-                var close=new Button{Text="Close"};close.Clicked+=async(_,_)=>await Navigation.PopModalAsync();body.Add(prepare);body.Add(status);body.Add(share);body.Add(close);
+                var close=new Button{Text="Close"};close.Clicked+=async(_,_)=>await Navigation.PopModalAsync();body.Add(prepare);body.Add(status);body.Add(save);body.Add(share);body.Add(close);
                 await Navigation.PushModalAsync(new ContentPage{Title="Export draft class",BackgroundColor=DynastyTheme.Background,Content=new ScrollView{Content=body}});
             }
             catch(Exception ex){await GameDialogs.AlertAsync(this,"Draft-class export",ex.Message,"Close");}

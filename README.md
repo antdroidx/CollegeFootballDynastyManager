@@ -72,7 +72,7 @@ The college GameCast animation, playbook cards/diagrams, camera framing, broadca
 
 ## College draft classes in Pro
 
-After College postseason departures are processed, open **Season → Export College draft class** (also available under Player departures). Preview the latest class, prepare its JSON file and use **Share / save draft class** to save or transfer it.
+After College postseason departures are processed, open **Season → Export College draft class** (also available under Player departures). Preview the latest class, prepare its JSON file and use **Save JSON file** to choose a folder through Android, or **Share / save draft class** to transfer it.
 
 In Pro offseason free agency, before the first draft selection, choose **Front Office → Import College draft class**. Select the JSON, review translated ratings, source/target years and any generated filler, then apply. Small classes are completed to320 prospects; larger classes retain all imported prospects. This replaces only the unstarted class and its scouting/shortlist, preserving team rosters, signed contracts and pick ownership. Players retain identities and illustrated appearances while professional attributes/overall are recalculated. Drafted imports receive normal rookie contracts through the existing draft system.
 

@@ -42,4 +42,14 @@ public class PlayerExchangeTests
         finally{if(Directory.Exists(dir))Directory.Delete(dir,true);}
     }
 
+    [Fact] public void SmallImportedClassCanCompleteSevenRoundsWithNormalUndraftedRemainder()
+    {
+        var s=New();var file=File(s);s=ProDraftClassImport.Apply(s,file);var classIds=s.Prospects.Select(p=>p.Football.PlayerId).ToHashSet();
+        s=ProDraft.AutoUntilUser(s with{OffseasonStep=OffseasonStep.Draft},true);
+        Assert.Null(ProDraft.Current(s));Assert.Equal(224,s.DraftHistory.Count(d=>d.Year==s.Year));Assert.Equal(96,s.Prospects.Count);
+        Assert.All(s.DraftHistory.Where(d=>d.Year==s.Year),d=>Assert.Contains(d.Player.Football.PlayerId,classIds));
+        Assert.Equal(s.Players.Count,s.Players.Select(p=>p.Football.PlayerId).Distinct().Count());
+        Assert.Equal(3,s.ImportedDraftClass!.Players);
+    }
+
 }

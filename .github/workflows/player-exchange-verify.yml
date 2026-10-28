@@ -29,11 +29,13 @@ jobs:
           COLLEGE_RUN: ${{ inputs.college_run }}
           PRO_RUN: ${{ inputs.pro_run }}
         run: |
-          for run in "$COLLEGE_RUN" "$PRO_RUN"; do
-            [[ "$run" =~ ^[0-9]+$ ]] || exit 1
+          [[ "$COLLEGE_RUN" =~ ^[0-9]+$ && "$PRO_RUN" =~ ^[0-9]+$ ]] || exit 1
+          for app in college pro; do
+            run="$COLLEGE_RUN"; paths="src/DynastyManager.App src/DynastyManager.Data"
+            if [ "$app" = pro ]; then run="$PRO_RUN"; paths="src/ProFootball.App src/ProFootball.Core"; fi
             sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq '.head_sha')
             git fetch --no-tags origin "$sha" --depth=1
-            git diff --exit-code "$sha" HEAD -- src Directory.Build.props Directory.Build.targets Directory.Packages.props global.json NuGet.Config build/keys
+            git diff --exit-code "$sha" HEAD -- $paths src/Football.Engine src/Football.Presentation Directory.Build.props Directory.Build.targets Directory.Packages.props global.json NuGet.Config build/keys
           done
       - uses: actions/download-artifact@v4
         with:

@@ -60,8 +60,16 @@ try:
     ready("export-preview",lambda r:"Prepare export file" in s.texts(r));s.capture("exchange-college-preview");click("prepare-export","Prepare export file")
     filename=f"college-class-{draft_year}.json";ready("prepared",lambda r:"Ready: "+filename in s.texts(r))
     content=s.adb("exec-out","run-as",college,"cat","cache/draft-classes/"+filename);exported=json.loads(content);assert exported==file
+    click("save-json","Save JSON file")
+    save_root=ready("native-save-picker",lambda r:any("documentsui" in n.get("package","") for n in r.iter("node")))
+    drawer=next((n for n in save_root.iter("node") if n.get("content-desc") in {"Show roots","Open navigation drawer"}),None)
+    if drawer is not None:
+        b=list(map(int,re.findall(r"\d+",drawer.get("bounds"))));s.adb("shell","input","tap",str((b[0]+b[2])//2),str((b[1]+b[3])//2));click("save-downloads","Downloads")
+    save_root=s.capture("exchange-native-save-location");save_label=next(t for t in s.texts(save_root) if t in {"Save","SAVE"});s.tap(save_root,save_label)
+    ready("native-saved",lambda r:"Saved using Android file picker." in s.texts(r));s.capture("exchange-college-saved")
+    assert json.loads(s.adb("exec-out","cat","/sdcard/Download/"+filename))==exported
     click("share","Share / save draft class");ready("share-sheet",lambda r:r.find("node").get("package")!=college);s.capture("exchange-share-sheet");s.adb("shell","input","keyevent","4")
-    path=Path(filename);path.write_bytes(content);s.adb("push",str(path),"/sdcard/Download/"+filename)
+    path=Path(filename);path.write_bytes(content)
     fixture=json.loads(gzip.decompress(next(Path("pro-apk").glob("**/pro-staff-exchange-ui-fixture.json.gz")).read_bytes()));assert fixture["year"]==draft_year
     fp=Path("exchange-pro.json");fp.write_text(json.dumps(fixture),encoding="utf-8")
     s.adb("shell","monkey","-p",pro,"-c","android.intent.category.LAUNCHER","1");ready("pro-initial",s.library_loaded);s.adb("shell","am","force-stop",pro)
@@ -82,6 +90,6 @@ try:
     invalid=dict(exported,formatVersion=999);bad=Path("unsupported-class.json");bad.write_text(json.dumps(invalid),encoding="utf-8");s.adb("push",str(bad),"/sdcard/Download/unsupported-class.json")
     navigate("Front Office");click("invalid-import","Import College draft class");pick_document("unsupported-class.json")
     s.wait_for("exchange-rejected",lambda r:"Unable to continue" in s.texts(r));s.capture("exchange-unsupported-rejected");assert saved()["importedDraftClass"]==checked["importedDraftClass"]
-    Path("player-exchange-check.json").write_text(json.dumps({"syntheticCollegeSnapshot":True,"realCollegeExport":True,"nativeShareSheet":True,"androidDocumentPicker":True,"fiveImported":True,"generatedFiller":315,"identityAppearance":True,"financialRosterCareerPreserved":True,"reload":True,"unsupportedRejected":True},indent=2),encoding="utf-8")
+    Path("player-exchange-check.json").write_text(json.dumps({"syntheticCollegeSnapshot":True,"realCollegeExport":True,"nativeShareSheet":True,"nativeDocumentSave":True,"androidDocumentPicker":True,"fiveImported":True,"generatedFiller":315,"identityAppearance":True,"financialRosterCareerPreserved":True,"reload":True,"unsupportedRejected":True},indent=2),encoding="utf-8")
     print("PASS: College export/share, Android picker preview/import, translated prospects, preserved franchise and reload/invalid rejection.")
 finally:Path("player-exchange-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1200"))
