@@ -1,6 +1,6 @@
-## Future ownership follow-up scope
+## Accepted Pro93 future ownership scope
 
-Run full Pro suite once because opening pick ownership changes CPU draft/financial decisions. Device roster-update adds672-right opening inventory, selected multi-hop ownership, visible conditional reservations and current offseason year default. Reuse unchanged College399/398 and Pro44 GameCast evidence. No new device season is claimed.
+Full315 local Pro cases passed7m35; scoped CI313 passed1m47. Build40780183506 packaged APK12857186828 with0 warnings/errors, device evidence12857057721 passes all ten flags; reserved/awarded screenshots reviewed. Opening pick ownership changes CPU draft/financial decisions, so the two long annual cases were run once locally. Device roster-update adds672-right opening inventory, selected multi-hop ownership, visible conditional reservations and current offseason year default. Reuse unchanged College399/398 and Pro44 GameCast evidence. No new device season is claimed.
 
 ## Roster-update / compensatory scope — October28
 
