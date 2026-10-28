@@ -218,6 +218,7 @@ public sealed partial class FoundationPage
             open.Clicked += async (_, _) => await ShowCollegeCenterAsync(item.Item2); careers.Children.Add(open);
         }
         _seasonHub.Children.Add(careers);
+        _seasonHub.Children.Add(DraftClassExportButton());
     }
 
     private View BuildMatchupHub() => _matchupHub;

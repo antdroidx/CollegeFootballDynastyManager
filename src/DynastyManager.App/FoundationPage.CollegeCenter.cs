@@ -144,6 +144,7 @@ public sealed partial class FoundationPage
     {
         var state = _currentDynasty!;
         body.Children.Add(SectionTitle("Player departures", "Graduations, early pro declarations and portal entries · retained across seasons"));
+        body.Children.Add(DraftClassExportButton());
         var records = state.PlayerDepartureHistory.Concat(state.RecentPlayerDepartures).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray();
         var teams = new[] { "All teams" }.Concat(state.LeagueTeams.Select(t => t.Name).Order()).ToArray();
         var team = new Picker { Title = "Team", ItemsSource = teams, SelectedIndex = Math.Max(0, Array.IndexOf(teams, state.UserTeamName)) };

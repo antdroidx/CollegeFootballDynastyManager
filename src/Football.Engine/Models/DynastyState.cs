@@ -4,6 +4,7 @@ public sealed record DynastyState
 {
     public IReadOnlyList<DynastyManager.Core.Simulation.CoachTalkRecord> CoachTalks { get; init; } = [];
     public const int CurrentSchemaVersion = 26;
+    public PlayerExport? LatestProDraftClass { get; init; }
     public int OverallCalibrationVersion { get; init; }
     public IReadOnlyList<DepthChartAssignment> DepthChartAssignments { get; init; } = [];
     public IReadOnlyList<PlayerGameAward> PlayerGameAwardHistory { get; init; } = [];

@@ -115,6 +115,7 @@ public static class OffseasonPlayerLifecycleService
             .ToArray();
 
         var retirees = departures.ToArray();
+        var draftIds = retirees.Select(p => p.PlayerId).ToHashSet();
         departures.AddRange(portalPlayers.Select(p => ToDeparture(state.SeasonYear, p, PlayerDepartureReason.TransferPortal)));
         state = HallOfFameService.Induct(state, retirees);
         var newPortalEntries = portalPlayers
@@ -147,6 +148,7 @@ public static class OffseasonPlayerLifecycleService
                 HighSchoolRecruitingPool = state.HighSchoolRecruitingPool
                     .Where(recruit => recruit.SeasonYear == state.SeasonYear)
                     .ToArray(),
+                LatestProDraftClass = new PlayerExport(1, "College Football Dynasty Manager", state.SeasonYear + 1, uniqueRoster.Where(p => draftIds.Contains(p.PlayerId)).ToList()),
                 RecentPlayerDepartures = departures,
                 PlayerDepartureHistory = state.PlayerDepartureHistory.Concat(departures).DistinctBy(p => (p.SeasonYear, p.PlayerId, p.Reason)).ToArray()
             });

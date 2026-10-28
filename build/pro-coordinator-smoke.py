@@ -60,6 +60,7 @@ def run(s):
         if kind=="draft":
             click("staff-office","Front Office");click("staff-draft","Draft & scouting")
             s.scroll_to_text("pro-coordinator-staff-draft-top","Draft & scouting",max_swipes=20,toward_start=True)
+            if fixture["draftIndex"]==0:click("staff-start-draft","Start draft / advance to your pick")
             ready("staff-draft-ready",lambda r:contains(r,"R1 #2") and contains(r,"The GM selects for the other unit automatically"))
         else:
             click("staff-advance","Advance week")

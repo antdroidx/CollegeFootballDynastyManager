@@ -1,5 +1,9 @@
 # Pro completion checklist
 
+## Active exchange batch
+
+User reactivated #3. College latest full departure-class snapshot/export and Pro validated pre-draft picker/preview/apply are implemented but not yet APK/device accepted. Current-work.md records actual tests, save safeguards and two-app acceptance plan. Previous #3 deferred markers below are historical.
+
 ## Current requested batch - accepted Pro73
 
 - [x] #1 UI finishing batch: phone-visible primary actions/numbers, focused analytics, camp and portrait/landscape/Fold/theme checks.

@@ -2,6 +2,12 @@
 
 Updated October27,2026. Canonical workspace D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve main fdd3d4898b5bd07eeec8dba346024d61f5289474, both app identities, College saves and negotiated Pro contracts. No subagents or continuation automation. Working batch is complete; no active build/test remains.
 
+## Active - College draft-class export / Pro import
+
+User now authorized previously deferred #3. Candidate captures only the latest full graduated/early-declaration class before College roster removal, adding an optional save field with unchanged schema/identity. Season center/departures export preview prepares JSON and opens native share/save. Existing summary-only departed cohorts are not fabricated; future processed classes capture full attributes. Pro file picker validates bounded format1 files, previews translated ratings/year mapping/fillers and applies only before the first pick. Full class is replaced with generated filler up to320 for small leagues; roster/contracts/debt/pick ownership/career are preserved. IDs/appearance/size survive, all14 skills translate deterministically and canonical overall is recomputed. Invalid/duplicate/started-draft imports are rejected. Roles can set global league class without changing career authority. New drafts explicitly start before CPU advancement, leaving an import window.
+
+Seven Pro exchange cases and six affected Core/College cases initially passed. Broad Pro278 passed/one fixture structural-equality assertion failed; fixture now compares serialized nested contracts, not List reference equality. Final fixture validation/build/device acceptance pending. Dedicated two-app workflow reuses independently versioned College/Pro APKs and tests College export/native sharing → Android document picker → Pro preview/apply/reload/unsupported rejection. No finances reopened or main changes. See current accepted73 below until exchange acceptance passes.
+
 ## Latest accepted - Pro73
 
 Final application source a04ee62, financial/management core43635c0. All-green run40628330665:
@@ -25,7 +31,7 @@ Local271 fast Pro cases pass1m27 (.artifacts/roadmap-fast-tests-final.txt). Both
 
 ## Deferred / next roadmap
 
-#3 College-to-Pro draft-class export/import UI is explicitly deferred by the user; existing shared format is retained. Later work remains the audited Core/College/Pro test split, release validation and eventual Java archival/repository rename/branch-artifact cleanup. Do not merge unfinished work into main or perform cleanup ahead of the agreed release review. Further career/scouting/analytics enhancements can build on this accepted batch; source-perfect finance remains closed under the practical-estimate policy.
+The user reactivated #3; it is now the active exchange batch above. Later work remains the audited Core/College/Pro test split, release validation and eventual Java archival/repository rename/branch-artifact cleanup. Do not merge unfinished work into main or perform cleanup ahead of the agreed release review. Further career/scouting/analytics enhancements can build on this accepted batch; source-perfect finance remains closed under the practical-estimate policy.
 
 ## Financial phase complete - practical model
 

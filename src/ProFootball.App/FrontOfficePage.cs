@@ -47,7 +47,7 @@ public sealed partial class FranchisePage
     {
         var s = state!; body.Add(CapSummary(s));
         if(ProCapInitialization.CanCorrectOpeningBudgets(s))body.Add(Action("Update 2026 cap budgets",CorrectOpeningBudgets));
-        var row = new ActionRow(); row.Add(Action("Financial overview",FinanceHub)); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", () => Trade())); row.Add(Action("Trading block", TradingBlock)); row.Add(Action($"Trade offers ({ProTradeAi.OpenOffers(s).Count})", TradeOffers)); row.Add(Action("Trade history", TradeHistory)); row.Add(Action("Draft & scouting", Draft)); row.Add(Action("Training camp", Camp)); row.Add(Action("Expiring contracts", Retention)); row.Add(Action("Rookie options", RookieOptions)); body.Add(row);
+        var row = new ActionRow(); row.Add(Action("Financial overview",FinanceHub)); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", () => Trade())); row.Add(Action("Trading block", TradingBlock)); row.Add(Action($"Trade offers ({ProTradeAi.OpenOffers(s).Count})", TradeOffers)); row.Add(Action("Trade history", TradeHistory)); row.Add(Action("Draft & scouting", Draft)); row.Add(CollegeClassImportButton()); row.Add(Action("Training camp", Camp)); row.Add(Action("Expiring contracts", Retention)); row.Add(Action("Rookie options", RookieOptions)); body.Add(row);
         var rosterTools = new ActionRow(); rosterTools.Add(Action("Ask GM to fill roster", () => Update(x => ProCpu.Manage(x, true)))); rosterTools.Add(Action("Ask GM to trim to 53", () => Update(x => ProCpu.Trim(x, x.UserTeam)))); body.Add(rosterTools);
         body.Add(Text("Contracts · select a player", 21, true)); body.Add(Table([("Player", 170), ("Ends", 55), ("Salary",100), ("Bonus / season",110), ("Cap hit", 100)], s.Contracts.Where(c => c.Active && c.Team == s.UserTeam).OrderByDescending(c => ProEconomy.CapHit(c, s.Year)).Select(c => { var p = s.Players.Single(p => p.Football.PlayerId == c.PlayerId); return new View[] { Link(p.Football.FullName, () => Player(p)), Text(ProContractInsights.PlayingEnd(c).ToString()), Text(Money(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0)), Text(Money(ProEconomy.BonusCharge(c,s.Year))),Text(Money(ProEconomy.CapHit(c, s.Year))) }; })));
         body.Add(Panel("Dead money", Text(string.Join("\n", s.DeadCap.Where(d => d.Team == s.UserTeam && d.Year == s.Year).Select(d => $"{d.SourceName ?? s.Players.FirstOrDefault(p => p.Football.PlayerId == d.PlayerId)?.Football.FullName ?? "Prior contract"}: {Money(d.Amount)}")), 12)));
@@ -111,7 +111,7 @@ public sealed partial class FranchisePage
     string draftPosition="All positions",draftSearch="";
     async Task Draft()
     {
-        if(state!.Phase==ProPhase.Offseason&&state.OffseasonStep==OffseasonStep.Draft)
+        if(state!.Phase==ProPhase.Offseason&&state.OffseasonStep==OffseasonStep.Draft&&state.DraftIndex>0)
         {
             var currentIndex=state.DraftIndex;state=await Task.Run(()=>ProDraft.AutoUntilUser(state));
             if(state.DraftIndex!=currentIndex)await Save();
@@ -123,6 +123,9 @@ public sealed partial class FranchisePage
         body.Add(Text("Staff ability shapes report confidence. Combine evaluations update automatically when the draft opens.",12));
         if(s.Career?.Unemployed!=true&&ProCareer.Role(s)!=StaffRole.HeadCoach)body.Add(Text("Recommend prospects for your unit. The GM selects for the other unit automatically, using team needs and available talent. Staff also fill the other unit in free agency."));
         if(s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft)body.Add(Action("Auto draft remaining picks",async()=>{state=await Task.Run(()=>ProDraft.AutoUntilUser(state!,true));await Save();await Draft();}));
+        body.Add(CollegeClassImportButton());
+        if(s.ImportedDraftClass is {} imported&&imported.Year==s.Year)body.Add(Text($"College {imported.SourceYear} class · {imported.Players} imported + {imported.Fillers} generated",13,true));
+        if(s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft&&s.DraftIndex==0)body.Add(Action("Start draft / advance to your pick",async()=>{state=ProDraft.AutoUntilUser(state!);await Save();await Draft();},"pro-start-draft"));
         var search=new Entry{Placeholder="Find a prospect",Text=draftSearch};var choices=new[]{"All positions"}.Concat(Enum.GetNames<Position>()).ToArray();var position=new Picker{Title="Position",ItemsSource=choices,SelectedIndex=Array.IndexOf(choices,draftPosition)};
         var filters=new Grid{ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Auto)},ColumnSpacing=8};filters.Add(search,0,0);filters.Add(position,1,0);body.Add(filters);var rows=new VerticalStackLayout();body.Add(rows);
         void Draw()
