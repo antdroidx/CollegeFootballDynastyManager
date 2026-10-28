@@ -1,5 +1,5 @@
 """Focused management acceptance on synthetic, real-loader-validated saves; no full GameCast replay."""
-import gzip,importlib.util,json,re
+import gzip,importlib.util,json,re,sys
 from pathlib import Path
 spec=importlib.util.spec_from_file_location("shared_smoke",Path(__file__).with_name("android-ui-smoke.py"))
 s=importlib.util.module_from_spec(spec);spec.loader.exec_module(s)
@@ -50,11 +50,20 @@ def action_visible(root,label):
     left,top,right,bottom=map(int,re.findall(r"\d+",node.get("bounds")))
     bounds=tuple(map(int,re.findall(r"\d+",root.find("node").get("bounds"))))
     assert 0<=left<right<=bounds[2] and 0<=top<bottom<=bounds[3],label+" is clipped"
+def presentation():
+    s.adb("shell","wm","size","1768x2208");s.adb("shell","wm","density","320")
+    navigate("Analytics");ready("fold-analytics",lambda r:"Franchise analytics" in s.texts(r));category("Draft outcomes");s.capture("pro-roadmap-fold-draft-outcomes")
+    click("theme-options","Options");click("appearance","Appearance");click("dark","Dark")
+    navigate("Analytics");ready("dark-analytics",lambda r:"Franchise analytics" in s.texts(r));s.capture("pro-roadmap-fold-dark-analytics")
+    s.adb("shell","wm","size","reset");s.adb("shell","wm","density","reset")
+    Path("pro-presentation-check.json").write_text(json.dumps({"samePackagedAPK":True,"foldLayout":True,"darkTheme":True},indent=2),encoding="utf-8")
 try:
     data=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-roadmap-ui-fixture.json.gz")).read_bytes()))
     s.adb("shell","settings","put","system","accelerometer_rotation","0")
     s.adb("shell","settings","put","system","user_rotation","0")
     load(data["regular"])
+    if "--presentation-only" in sys.argv:
+        presentation();sys.exit(0)
     navigate("Analytics");ready("analytics",lambda r:"Franchise analytics" in s.texts(r))
     for label in ["Player development","Draft outcomes","Career records"]:
         category(label);s.capture("pro-roadmap-portrait-"+label.replace(" ","-"))
@@ -71,7 +80,8 @@ try:
         s.adb("shell","settings","put","system","user_rotation","1")
         root=ready("landscape-"+key,lambda r:target in s.texts(r) and (lambda b:b[2]>b[3])(tuple(map(int,re.findall(r"\d+",r.find("node").get("bounds"))))));action_visible(root,target);s.capture("pro-roadmap-landscape-"+key)
         s.adb("shell","settings","put","system","user_rotation","0")
-    Path("pro-roadmap-check.json").write_text(json.dumps({"syntheticFixtures":True,"analyticsCategories":3,"weeklyNews":True,"careerExpectations":True,"camp":True,"standings":True,"portraitLandscapeActions":True},indent=2),encoding="utf-8")
+    presentation()
+    Path("pro-roadmap-check.json").write_text(json.dumps({"syntheticFixtures":True,"analyticsCategories":3,"weeklyNews":True,"careerExpectations":True,"camp":True,"standings":True,"portraitLandscapeActions":True,"foldLayout":True,"darkTheme":True},indent=2),encoding="utf-8")
     print("PASS: analytics categories, factual weekly news, career context, standings and visible portrait/landscape draft/retention actions.")
 finally:
     Path("pro-roadmap-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1000"))

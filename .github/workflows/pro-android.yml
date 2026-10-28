@@ -8,7 +8,7 @@ on:
       validation_scope:
         description: Finance checks financial management; termination checks release/waiver/accrual; live checks GameCast; other scopes cover their management flows
         type: choice
-        options: [roadmap, full, finance, opening, live, trade, retention, reserve, termination]
+        options: [presentation, roadmap, full, finance, opening, live, trade, retention, reserve, termination]
         default: full
       reuse_apk_run_id:
         description: Optional prior run ID for test-only retries; app-source differences reject reuse
@@ -106,11 +106,11 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.reuse_apk_run_id || github.run_id }}
       - uses: actions/setup-dotnet@v4
-        if: inputs.reuse_apk_run_id != '' && (inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
+        if: inputs.reuse_apk_run_id != '' && (inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
         with:
           dotnet-version: '10.0.x'
       - name: Regenerate scoped management fixtures for exact-APK retries
-        if: inputs.reuse_apk_run_id != '' && (inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
+        if: inputs.reuse_apk_run_id != '' && (inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
         env:
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}/apk
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~CoordinatorRosterTests|FullyQualifiedName~ReserveActivationTests|FullyQualifiedName~TerminationDeviceFixtures'
@@ -128,7 +128,7 @@ jobs:
           script: |
             adb install -r $(find apk -name '*-Signed.apk' -print -quit)
             adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
-            PRO_FINANCE_OPENING_ONLY=${{ inputs.validation_scope == 'opening' && '1' || '0' }} python3 -u build/${{ inputs.validation_scope == 'roadmap' && 'pro-roadmap-smoke.py' || inputs.validation_scope == 'termination' && 'pro-termination-smoke.py' || inputs.validation_scope == 'reserve' && 'pro-reserve-smoke.py' || (inputs.validation_scope == 'finance' || inputs.validation_scope == 'opening') && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || (inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve') && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }}
+            PRO_FINANCE_OPENING_ONLY=${{ inputs.validation_scope == 'opening' && '1' || '0' }} python3 -u build/${{ (inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'presentation') && 'pro-roadmap-smoke.py' || inputs.validation_scope == 'termination' && 'pro-termination-smoke.py' || inputs.validation_scope == 'reserve' && 'pro-reserve-smoke.py' || (inputs.validation_scope == 'finance' || inputs.validation_scope == 'opening') && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || (inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve') && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }} ${{ inputs.validation_scope == 'presentation' && '--presentation-only' || '' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -148,5 +148,6 @@ jobs:
             pro-termination-logcat.txt
             pro-termination-check.json
             pro-roadmap-check.json
+            pro-presentation-check.json
             pro-roadmap-logcat.txt
           retention-days: 3
