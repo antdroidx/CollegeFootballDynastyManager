@@ -43,7 +43,7 @@ try:
     s.adb("shell","settings","put","system","accelerometer_rotation","0");s.adb("shell","wm","user-rotation","lock","0")
     s.adb("shell","monkey","-p",college,"-c","android.intent.category.LAUNCHER","1")
     ready("college-library",lambda r:"Your dynasties" in s.texts(r) and "New dynasty" in s.texts(r))
-    click("new","New dynasty");click("start-college","Start dynasty")
+    click("new","New dynasty");click("school-picker","Choose your team");click("school","Air Force");click("start-college","Start dynasty")
     ready("college-overview",lambda r:"Overview" in s.texts(r) and "Season" in s.texts(r))
     s.adb("shell","am","force-stop",college)
     db=Path("exchange-college.db3");db.write_bytes(s.adb("exec-out","run-as",college,"cat","files/dynasties.db3"))
