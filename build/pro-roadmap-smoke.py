@@ -45,6 +45,15 @@ def category(label):
     root=s.scroll_to_text("pro-roadmap-category","Franchise analytics",max_swipes=20,toward_start=True)
     s.tap_id(root,"pro-analytics-category");click("category-select",label)
     ready("category-"+label,lambda r:label in s.texts(r))
+def rotate(value):
+    s.adb("shell","wm","fixed-to-user-rotation","enabled")
+    s.adb("shell","wm","user-rotation","lock",str(value))
+    s.adb("shell","settings","put","system","user_rotation",str(value))
+    def oriented(root):
+        b=tuple(map(int,re.findall(r"\d+",root.find("node").get("bounds"))))
+        return (b[2]>b[3]) if value else (b[3]>b[2])
+    return ready("rotation-"+str(value),oriented)
+
 def action_visible(root,label):
     node=next(n for n in root.iter("node") if n.get("text")==label and n.get("class","").endswith("Button"))
     left,top,right,bottom=map(int,re.findall(r"\d+",node.get("bounds")))
@@ -77,9 +86,10 @@ try:
         target="Draft" if key=="draft" else "Negotiate"
         root=s.scroll_to_text("pro-roadmap-portrait-"+key,target,max_swipes=20)
         action_visible(root,target);s.capture("pro-roadmap-portrait-"+key)
-        s.adb("shell","settings","put","system","user_rotation","1")
-        root=ready("landscape-"+key,lambda r:target in s.texts(r) and (lambda b:b[2]>b[3])(tuple(map(int,re.findall(r"\d+",r.find("node").get("bounds"))))));action_visible(root,target);s.capture("pro-roadmap-landscape-"+key)
-        s.adb("shell","settings","put","system","user_rotation","0")
+        rotate(1)
+        root=s.scroll_to_text("pro-roadmap-landscape-"+key,target,max_swipes=20)
+        action_visible(root,target);s.capture("pro-roadmap-landscape-"+key)
+        rotate(0)
     presentation()
     Path("pro-roadmap-check.json").write_text(json.dumps({"syntheticFixtures":True,"analyticsCategories":3,"weeklyNews":True,"careerExpectations":True,"camp":True,"standings":True,"portraitLandscapeActions":True,"foldLayout":True,"darkTheme":True},indent=2),encoding="utf-8")
     print("PASS: analytics categories, factual weekly news, career context, standings and visible portrait/landscape draft/retention actions.")
