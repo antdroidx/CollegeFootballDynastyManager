@@ -1,3 +1,7 @@
+# Current scope update
+
+October27 user direction supersedes the source-perfect promotion gate in the historical plan below. Finish a practical finance system using best available real contracts and reasonable estimates, default that mode in the app, and keep detailed accounting optional. Preserve saves and coherent cap/transaction rules. See pro-practical-finance-policy.md. Do not keep auditing private guarantees or per-team website room before closing this phase.
+
 # Real-contract reconciliation phase
 
 Authorized October 26, 2026. Implementation is in progress; The first accounting/UI batch is verified in Pro Build 36; broader source reconciliation, option rules and the sourced default remain open.

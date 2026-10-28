@@ -28,6 +28,10 @@ def contains(root,value):return any(value in (t or "") for t in s.texts(root))
 
 def cap_view(name):
 
+    root=ready(name+"-summary",lambda r:"Show cap breakdown" in s.texts(r) or contains(r,"Adjusted team cap $315,053,262"))
+    if "Show cap breakdown" in s.texts(root):
+        if name=="opening-budget":s.capture("pro-finance-compact-cap")
+        s.tap(root,"Show cap breakdown")
     root=ready(name,lambda r:contains(r,"Adjusted team cap $315,053,262"))
 
     assert contains(root,"Rollover $15,029,706")
@@ -48,8 +52,8 @@ try:
 
     s.adb("shell","input","keyevent","123");s.adb("shell","input","keyevent",*(["67"]*32));s.adb("shell","input","text",franchise_name.replace(" ","%s"));s.adb("shell","input","keyevent","4")
 
-    click("contract-mode","Game contracts")
-    modes=ready("contract-mode-options",lambda r:"Imported contracts" in s.texts(r));s.tap(modes,"Imported contracts")
+    # The real-roster option is the normal new-franchise default.
+    s.scroll_to_text("pro-finance-contract-default","Real roster contracts",max_swipes=10)
 
     click("start","Start franchise");ready("overview",lambda r:"Advance week" in s.texts(r));click("office","Front Office");cap_view("opening-budget")
 
@@ -96,6 +100,13 @@ try:
     assert saved["capRulesVersion"]==3,"New franchises must persist seasonal cap counting"
 
     assert saved["openingFinancialSnapshot"]=="2026-10-27"
+    for rookie_name,value in (("Kenyon Sadiq",22_344_304),("Omar Cooper Jr.",17_474_196),("Rueben Bain Jr.",23_760_242)):
+        rookie=next(p for p in saved["players"] if p["football"]["fullName"]==rookie_name)
+        deal=next(c for c in saved["contracts"] if c["active"] and c["playerId"]==rookie["football"]["playerId"])
+        assert not deal["estimated"] and deal["originalRookieYear"]==2026
+        assert [y["year"] for y in deal["years"]]==[2026,2027,2028,2029]
+        assert sum(y["salary"]+y["otherCash"] for y in deal["years"])+deal["bonusCash"]["2026"]==value
+
     observed=json.loads(Path("src/ProFootball.Core/pro-opening-ledger.json").read_text(encoding="utf-8"))["Entries"]
     debt=saved["deadCap"]
     assert len(debt)==len(observed)==735 and len({d["team"] for d in debt})==32

@@ -1,0 +1,164 @@
+{
+  "scope": "Staged review only. Three strict-identity fully guaranteed original first-round contracts. Annual published cash, cap and full contract value reconcile exactly. Four playing seasons; fifth-year decision is separate. One explicitly identified346-dollar source-cell inconsistency is retained in evidence. No generic rounding/balancing or app/save update.",
+  "contracts": [
+    {
+      "player": "Kenyon Sadiq",
+      "playerId": "766dc4ee-1b29-5f8f-a1fb-a6995690ad14",
+      "draftOverall": 16,
+      "team": "NYJ",
+      "sourceUrl": "https://overthecap.com/player/kenyon-sadiq/13160/",
+      "sourceSha256": "4f2b1f7817fab0406ff123c9f4fdb32ce93ab18a77e3f67093cb877236998365",
+      "reportedValue": 22344304,
+      "reportedFullyGuaranteed": 22344304,
+      "signingCash": 12710404,
+      "annualProof": [
+        {
+          "year": 2026,
+          "cash": 13595404,
+          "playingPay": 885000,
+          "baseSalary": 885000,
+          "otherCash": 0,
+          "allocatedBonus": 3177601,
+          "cap": 4062601,
+          "normalization": "published separate salary/other pay"
+        },
+        {
+          "year": 2027,
+          "cash": 1900650,
+          "playingPay": 1900650,
+          "baseSalary": 1050000,
+          "otherCash": 850650,
+          "allocatedBonus": 3177601,
+          "cap": 5078251,
+          "normalization": "published salary cell includes separately shown roster pay; annual cash and cap confirm single inclusion"
+        },
+        {
+          "year": 2028,
+          "cash": 2916300,
+          "playingPay": 2916300,
+          "baseSalary": 1165000,
+          "otherCash": 1751300,
+          "allocatedBonus": 3177601,
+          "cap": 6093901,
+          "normalization": "published salary cell includes separately shown roster pay; annual cash and cap confirm single inclusion"
+        },
+        {
+          "year": 2029,
+          "cash": 3931950,
+          "playingPay": 3931950,
+          "baseSalary": 1280000,
+          "otherCash": 2651950,
+          "allocatedBonus": 3177601,
+          "cap": 7109551,
+          "normalization": "published salary cell includes separately shown roster pay; annual cash and cap confirm single inclusion"
+        }
+      ]
+    },
+    {
+      "player": "Omar Cooper Jr.",
+      "playerId": "80546e6d-fa04-5f8c-b7fd-89ade01ab5ef",
+      "draftOverall": 30,
+      "team": "NYJ",
+      "sourceUrl": "https://overthecap.com/player/omar-cooper/13174/",
+      "sourceSha256": "50637117233ccaf0780b51b9c7b21a370a020a6c3c906779dac9d4c8fcb3ca64",
+      "reportedValue": 17474196,
+      "reportedFullyGuaranteed": 17474196,
+      "signingCash": 9168504,
+      "annualProof": [
+        {
+          "year": 2026,
+          "cash": 10053504,
+          "playingPay": 885000,
+          "baseSalary": 885000,
+          "otherCash": 0,
+          "allocatedBonus": 2292126,
+          "cap": 3177126,
+          "normalization": "published separate salary/other pay"
+        },
+        {
+          "year": 2027,
+          "cash": 1679282,
+          "playingPay": 1679282,
+          "baseSalary": 1050000,
+          "otherCash": 629282,
+          "allocatedBonus": 2292126,
+          "cap": 3971408,
+          "normalization": "explicit346-dollar roster-cell discrepancy; annual cash, full guarantee and cap independently agree"
+        },
+        {
+          "year": 2028,
+          "cash": 2473564,
+          "playingPay": 2473564,
+          "baseSalary": 1165000,
+          "otherCash": 1308564,
+          "allocatedBonus": 2292126,
+          "cap": 4765690,
+          "normalization": "published separate salary/other pay"
+        },
+        {
+          "year": 2029,
+          "cash": 3267846,
+          "playingPay": 3267846,
+          "baseSalary": 2467846,
+          "otherCash": 800000,
+          "allocatedBonus": 2292126,
+          "cap": 5559972,
+          "normalization": "published separate salary/other pay"
+        }
+      ]
+    },
+    {
+      "player": "Rueben Bain Jr.",
+      "playerId": "9a90302c-a0f8-5dff-b49c-e59d2fe6782f",
+      "draftOverall": 15,
+      "team": "TB",
+      "sourceUrl": "https://overthecap.com/player/rueben-bain/13159/",
+      "sourceSha256": "4d3b5a77a49ddfbe11b13e4ac3e4d3980cd9ba29b99b4b76dd1ba9254e7d4e03",
+      "reportedValue": 23760242,
+      "reportedFullyGuaranteed": 23760242,
+      "signingCash": 13740176,
+      "annualProof": [
+        {
+          "year": 2026,
+          "cash": 14625176,
+          "playingPay": 885000,
+          "baseSalary": 885000,
+          "otherCash": 0,
+          "allocatedBonus": 3435044,
+          "cap": 4320044,
+          "normalization": "published separate salary/other pay"
+        },
+        {
+          "year": 2027,
+          "cash": 1965011,
+          "playingPay": 1965011,
+          "baseSalary": 1050000,
+          "otherCash": 915011,
+          "allocatedBonus": 3435044,
+          "cap": 5400055,
+          "normalization": "published salary cell includes separately shown roster pay; annual cash and cap confirm single inclusion"
+        },
+        {
+          "year": 2028,
+          "cash": 3045022,
+          "playingPay": 3045022,
+          "baseSalary": 1165000,
+          "otherCash": 1880022,
+          "allocatedBonus": 3435044,
+          "cap": 6480066,
+          "normalization": "published salary cell includes separately shown roster pay; annual cash and cap confirm single inclusion"
+        },
+        {
+          "year": 2029,
+          "cash": 4125033,
+          "playingPay": 4125033,
+          "baseSalary": 1280000,
+          "otherCash": 2845033,
+          "allocatedBonus": 3435044,
+          "cap": 7560077,
+          "normalization": "published salary cell includes separately shown roster pay; annual cash and cap confirm single inclusion"
+        }
+      ]
+    }
+  ]
+}

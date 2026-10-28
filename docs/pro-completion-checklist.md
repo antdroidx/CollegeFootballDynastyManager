@@ -1,5 +1,13 @@
 # Pro completion checklist
 
+## User scope update - practical financial completion
+
+October27: stop detailed source-perfect accounting work, make reasonable estimates and wrap finance promptly. Historical strict source/default gates below are superseded by docs/pro-practical-finance-policy.md. Current finish: real-roster default, compact cap summary with optional details, already-reviewed three rookie imports.257 relevant local cases passed including five sourced seasons; final APK/device verification pending. No additional private-guarantee/source-room audit gate. Preserve saves/main/College.
+
+## Latest accepted - Pro69
+
+App/core d71782a, successful run40590454472, APK12774172307/evidence12773632366.253 fast CI/16 helpers/source validation/packaging and expanded opening device checks passed. Original-source migration/negotiated deal/debt/career preservation verified.254 final local cases excluding unchanged generated20 passed1m52. APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40590454472/artifacts/12774172307
+
 ## Latest accepted - Pro68
 
 App/core afe8b73, successful run40587763626, APK12772514300/evidence12773465745.249 fast CI Pro/16 helpers/source validator/packaging and focused opening device flow passed. All735 dated opening assessments/32 clubs/no invented historical cash/source keys/exact Seattle liabilities/contract display/themes/reinstall/save verified; screenshot reviewed. Final250 local cases (including five sourced/three imported-cap seasons) passed1m55; unchanged generated20/College390/GameCast44 evidence reused. APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40587763626/artifacts/12772514300

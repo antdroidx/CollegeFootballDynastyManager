@@ -84,7 +84,7 @@ public sealed partial class FranchisePage : ContentPage
         body.Add(Text("Coordinators manage their unit; the GM approves shared cap and draft-pick decisions.", 12));
         var preview = new ContentView(); void Preview() { var t = league.Teams[picker.SelectedIndex]; preview.Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(t, 70), Text(t.Name, 21, true) } }; }
         picker.SelectedIndexChanged += (_, _) => Preview(); Preview(); body.Add(preview);
-        var finances = new Picker { Title = "Starting contract data", ItemsSource = new[] { "Game contracts", "Imported contracts" }, SelectedIndex = 0 }; body.Add(finances);
+        var finances = new Picker { Title = "Starting contract data", ItemsSource = new[] { "Generated contracts", "Real roster contracts" }, SelectedIndex = 1 }; body.Add(finances);
         body.Add(Text("Build your 2026 franchise. Regular-season rosters allow 53 active players and a 16-player practice squad."));
         body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text, finances.SelectedIndex == 1, role.SelectedIndex == 1 ? StaffRole.OffensiveCoordinator : role.SelectedIndex == 2 ? StaffRole.DefensiveCoordinator : StaffRole.HeadCoach, firing.IsToggled, coachName.Text)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
     }

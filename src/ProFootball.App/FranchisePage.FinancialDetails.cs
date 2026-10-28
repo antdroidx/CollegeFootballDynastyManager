@@ -7,13 +7,22 @@ public sealed partial class FranchisePage
     View CapSummary(ProFranchise s)
     {
         var b=ProFinance.Budget(s,s.UserTeam);
-        return Panel("Salary cap",Text("≈ "+Money(ProCapInitialization.RoundForDisplay(b.Available))+" available",25,true),
-            Text("Adjusted team cap "+Dollars(b.AdjustedCap),16,true),
-            Text("Base league cap "+Dollars(b.BaseCap)+" · Rollover "+Dollars(b.Rollover)),Text("Other adjustments "+Dollars(b.OtherAdjustments)),
-            Text("Player commitments "+Dollars(b.PlayerCommitments)+" · Other cap charges "+Dollars(b.OtherCapCharges)),Text("Dead money "+Dollars(b.DeadMoney)+" · Rollover reserved "+Dollars(b.RolloverReserved)),
-            Text(b.InternationalPracticeSalaryExcluded>0?"International practice salary excluded "+Dollars(b.InternationalPracticeSalaryExcluded):"Roster salary "+Dollars(b.RosterSalary),12),
-            Text("Available cap "+Dollars(b.Available)+" · Pending bids "+Dollars(ProEconomy.Pending(s,s.UserTeam)),12),
-            Text(b.OffseasonSalaryExcluded>0?"Offseason salary excluded "+Dollars(b.OffseasonSalaryExcluded)+" · Season-start room "+Dollars(ProFinance.Budget(s with{Phase=ProPhase.RegularSeason},s.UserTeam).Available):"Season-start available cap "+Dollars(ProFinance.Budget(s with{Phase=ProPhase.RegularSeason},s.UserTeam).Available),12));
+        var details=new VerticalStackLayout{Spacing=6,IsVisible=false};
+        details.Children.Add(Text("Adjusted team cap "+Dollars(b.AdjustedCap),16,true));
+        details.Children.Add(Text("Base league cap "+Dollars(b.BaseCap)+" / Rollover "+Dollars(b.Rollover),12));
+        details.Children.Add(Text("Other adjustments "+Dollars(b.OtherAdjustments),12));
+        details.Children.Add(Text("Player commitments "+Dollars(b.PlayerCommitments),12));
+        details.Children.Add(Text("Other cap charges "+Dollars(b.OtherCapCharges)+" / Dead money "+Dollars(b.DeadMoney),12));
+        details.Children.Add(Text("Rollover reserved "+Dollars(b.RolloverReserved)+" / Offseason salary excluded "+Dollars(b.OffseasonSalaryExcluded),12));
+        details.Children.Add(Text("International practice salary excluded "+Dollars(b.InternationalPracticeSalaryExcluded),12));
+        details.Children.Add(Text("Available cap "+Dollars(b.Available)+" / Pending bids "+Dollars(ProEconomy.Pending(s,s.UserTeam)),12));
+        var toggle=new Button{Text="Show cap breakdown",AutomationId="pro-cap-breakdown",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};
+        toggle.Clicked+=(_,_)=>{details.IsVisible=!details.IsVisible;toggle.Text=details.IsVisible?"Hide cap breakdown":"Show cap breakdown";};
+        var seasonRoom=ProFinance.Budget(s with{Phase=ProPhase.RegularSeason},s.UserTeam).Available;
+        return Panel("Salary cap",Text(Money(ProCapInitialization.RoundForDisplay(b.Available))+" available",25,true),
+            Text(s.Year+" budget "+Money(b.AdjustedCap)+" / Dead money "+Money(b.DeadMoney),14),
+            Text("Used "+Money(b.TotalCommitments)+" / Pending offers "+Money(ProEconomy.Pending(s,s.UserTeam)),12),
+            Text(b.OffseasonSalaryExcluded>0?"Season-start room "+Money(seasonRoom):"Available for roster moves",12),toggle,details);
     }
     View AnnualContractTable(ProContract c)=>Table([("Year",110),("Base salary",120),("Bonus / year",120),("Other cap",115),("Cap hit",125),("Guaranteed base",135)],ProContractInsights.Seasons(c).Select(y=>new View[]{Text(y.Year+(c.Years.Single(row=>row.Year==y.Year).IsVoid?" · Void":"")),Text(Dollars(y.Salary)),Text(Dollars(y.Bonus)),Text(Dollars(y.Other)),Text(Dollars(y.CapHit),14,true),Text(Dollars(y.Guaranteed))}));
     View ContractDetails(ProPlayer p,ProContract? c)
