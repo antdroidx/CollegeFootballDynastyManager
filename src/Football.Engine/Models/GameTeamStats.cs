@@ -2,6 +2,7 @@ namespace DynastyManager.Core.Models;
 
 public sealed record GameTeamStats
 {
+    public PlayEfficiency? Efficiency { get; init; }
     public int Possessions { get; init; }
     public int PassAttempts { get; init; }
     public int PassCompletions { get; init; }

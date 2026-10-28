@@ -19,8 +19,9 @@ public sealed partial class FranchisePage
             var row=new Grid {ColumnSpacing=12,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Auto)}};row.Add(value,0,0);row.Add(step,1,0);
             return new VerticalStackLayout {Spacing=4,Children={Text(title),row}};
         }
-        var annualPreview=new ContentView();
-        var response=Text("",14,true);var preview=Text("",12);var submit=new Button {Text=extension?"Agree extension":"Submit offer",AutomationId="contract-submit"};
+        var annualPreview=new ContentView{IsVisible=false};
+        var details=new Button{Text="Show yearly cap breakdown",AutomationId="contract-yearly-details"};details.Clicked+=(_,_)=>{annualPreview.IsVisible=!annualPreview.IsVisible;details.Text=annualPreview.IsVisible?"Hide yearly cap breakdown":"Show yearly cap breakdown";};
+        var response=Text("",14,true);var preview=Text("",12);var submit=new Button {Text=extension?"Agree extension":"Submit offer",AutomationId="contract-submit",BackgroundColor=DynastyTheme.Accent,TextColor=DynastyTheme.Background};
         var counter=new Button {Text="Use player's counter",AutomationId="contract-counter"};var cancel=new Button {Text="Cancel"};
         bool Terms(out int y,out long a,out long b) {y=(int)years.Value;a=(long)salary.Value;b=(long)bonus.Value;return y is >=1 and <=5&&a is >=500_000 and <=500_000_000&&b>=0&&b<=a*y;}
         void Refresh()
@@ -37,7 +38,13 @@ public sealed partial class FranchisePage
         cancel.Clicked+=async(_,_)=>{if(closing)return;closing=true;await Navigation.PopModalAsync();completion.TrySetResult(null);};
         submit.Clicked+=async(_,_)=>{if(closing)return;if(!Terms(out var y,out var a,out var b))return;closing=true;await Navigation.PopModalAsync();completion.TrySetResult((y,a,b));};
         page.Disappearing+=(_,_)=>page.Dispatcher.Dispatch(()=>{if(!closing&&!Navigation.ModalStack.Contains(page))completion.TrySetResult(null);});
-        var offer=new VerticalStackLayout {Spacing=10,Children={Text("Agent opening demand · age, comparable contracts and competing bids",12),Text("Salary and bonus adjust in $250K steps",12),Control("Years",years,false),Control("Annual base salary",salary,true),Control("Signing bonus",bonus,true),preview,annualPreview,response,counter,submit}};
+        var presets=new ActionRow();
+        foreach(var (label,factor) in new[]{("Low offer",.85),("Agent demand",1d),("Strong offer",1.15)})
+        {var pick=new Button{Text=label};pick.Clicked+=(_,_)=>{years.Value=demand.Years;salary.Value=Math.Clamp(ProOfferTerms.RoundUp((long)(demand.Salary*factor)),(long)salary.Minimum,(long)salary.Maximum);bonus.Value=Math.Min(ProOfferTerms.RoundUp((long)(demand.Bonus*factor)),(long)salary.Value*(int)years.Value);Refresh();};presets.Add(pick);}
+        var current=state!.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==player.Football.PlayerId);
+        var currentSummary=current is null?"Current deal: free agent":$"Current deal: {Money(ProContractInsights.AverageCash(current))}/year · through {ProContractInsights.PlayingEnd(current)} · {state.Year} cap {Money(ProEconomy.CapHit(current,state.Year))}";
+        var offer=new VerticalStackLayout {Spacing=10,Children={Text(currentSummary,13,true),Text($"Agent asks {Money(demand.Salary)}/year + {Money(demand.Bonus)} signing bonus · {demand.Years} years",13,true),presets,Control("Years",years,false),Control("Annual base salary · $250K steps",salary,true),Control("Signing bonus · $250K steps",bonus,true),preview,response,submit,counter,details,annualPreview}};
+
         var tab=new Picker {Title="Contract view",ItemsSource=new[]{"Offer","Current deal","Position market"},SelectedIndex=0,AutomationId="contract-view"};
         var body=new ContentView {Content=offer};tab.SelectedIndexChanged+=(_,_)=>body.Content=tab.SelectedIndex switch {1=>ContractDetails(player,state!.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==player.Football.PlayerId)),2=>ContractComparisons(player),_=>offer};
         var stack=new VerticalStackLayout {Padding=16,Spacing=10,Children={Text("Contract negotiation",25,true),new HorizontalStackLayout {Spacing=10,Children={Portrait(player,48),Text(player.Football.FullName,20,true)}},Text(extension?"Extension · one completed contract change per season":"Free agent · offers compete when the week advances",12),tab,body,cancel}};

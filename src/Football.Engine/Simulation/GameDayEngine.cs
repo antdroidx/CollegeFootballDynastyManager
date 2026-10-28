@@ -507,6 +507,7 @@ public static partial class GameDayEngine
         var runs = scrimmage.Except(passes).Concat(passes.Where(item => item.Outcome == SnapOutcome.Sack)).ToArray();
         return new GameTeamStats
         {
+            Efficiency = FootballEfficiency.Capture(scrimmage),
             Possessions = scrimmage.Select(item => item.PossessionNumber).Distinct().Count(),
             YardsAfterCatch = passes.Sum(item => item.YardsAfterCatch),
             PassAttempts = passes.Count(item => item.Outcome != SnapOutcome.Sack),

@@ -12,7 +12,7 @@ public sealed partial class FranchisePage
         var metric = player.Football.Position == DynastyManager.Core.Models.Position.QB ? "Passing yards" : player.Football.Position is DynastyManager.Core.Models.Position.RB ? "Rushing yards" : player.Football.Position is DynastyManager.Core.Models.Position.WR or DynastyManager.Core.Models.Position.TE ? "Receiving yards" : "Tackles";
         double Value(DynastyManager.Core.Models.PlayerSeasonStatLine x) => metric == "Passing yards" ? x.PassYards : metric == "Rushing yards" ? x.RushYards : metric == "Receiving yards" ? x.ReceivingYards : x.Tackles;
         var peers = s.Players.Where(p => !p.Retired && p.Football.Position == player.Football.Position).ToArray();
-        return Panel("Player analytics", Text(metric + " · game log", 15, true), FootballBarChart.Create(current.Select(x => ($"Week {x.Game.Week}", Value(x.Line!)))),
+        return Panel("Player analytics", PlayerEfficiencyView.Create(games.Where(g=>g.SeasonYear==s.Year).SelectMany(g=>g.PlayerStats),id), Text(metric + " · game log", 15, true), FootballBarChart.Create(current.Select(x => ($"Week {x.Game.Week}", Value(x.Line!)))),
             Text(metric + " · career by season", 15, true), FootballBarChart.Create(career.Select(g => (g.Key.ToString(), g.Sum(Value)))),
             Text("Position comparison · overall", 15, true), FootballBarChart.Create(new[] { (player.Football.FullName, (double)player.Football.OverallRating), ("League position average", peers.Select(p => (double)p.Football.OverallRating).DefaultIfEmpty(0).Average()), ("League position best", peers.Select(p => (double)p.Football.OverallRating).DefaultIfEmpty(0).Max()) }, "0.0"));
     }
@@ -20,12 +20,13 @@ public sealed partial class FranchisePage
     void Analytics()
     {
         var s=state!;body.Add(Text("Franchise analytics",23,true));
-        var sections=new[]{"Team performance","Roster quality","Cap & draft","Player development","Draft outcomes","Career records"};
+        var sections=new[]{"Team performance","Roster quality","Cap & draft","Player development","Draft outcomes","Career records","Advanced efficiency"};
         var picker=new Picker{Title="Analytics category",AutomationId="pro-analytics-category",ItemsSource=sections,SelectedIndex=analyticsSection};body.Add(picker);
         var content=new VerticalStackLayout{Spacing=10};body.Add(content);
         void Draw()
         {
             content.Clear();analyticsSection=Math.Max(0,picker.SelectedIndex);
+            if(analyticsSection==6) { content.Add(FootballEfficiencyView.Create(s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.SeasonYear==s.Year).Select(g=>g.Football),s.UserTeam));return; }
             if(analyticsSection==3)
             {
                 var players=s.Players.Where(p=>!p.Retired&&!p.PracticeSquad&&!p.Reserve&&ProDevelopment.Delta(p).HasValue).ToArray();

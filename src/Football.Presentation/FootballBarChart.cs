@@ -14,7 +14,7 @@ public static class FootballBarChart
             var track = new Grid { HeightRequest = 10, BackgroundColor = DynastyTheme.Panel };
             track.ColumnDefinitions.Add(new(new GridLength(Math.Max(.001, Math.Abs(item.Value) / max), GridUnitType.Star)));
             track.ColumnDefinitions.Add(new(new GridLength(Math.Max(.001, 1 - Math.Abs(item.Value) / max), GridUnitType.Star)));
-            track.Add(new BoxView { Color = item.Value < 0 ? Colors.IndianRed : DynastyTheme.Accent });
+            track.Add(new BoxView { Color = item.Value < 0 ? (DynastyTheme.IsLight?Color.FromArgb("#AA3443"):Color.FromArgb("#F18A91")) : DynastyTheme.Accent });
             SemanticProperties.SetDescription(track, label.Text); rows.Add(label); rows.Add(track);
         }
         return rows;

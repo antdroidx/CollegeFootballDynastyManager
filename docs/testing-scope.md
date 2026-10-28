@@ -1,3 +1,7 @@
+## Active October28 UI/efficiency scope
+
+Shared theme/contrast, optional full-play context and analytics touch both hosts. New contrast/efficiency/save tests plus existing GameDay mode consistency:36 cases pass locally. Pro fast281 pass1m21;16 UI helper cases pass. First local Pro Android build passed0 warnings/errors before the final player-rate addition; College build is in progress. No new APK is accepted yet. Do not repeat unrelated annual/cap audits; reuse accepted Pro73 generated20/sourced5 evidence. Shared full-play telemetry requires combined Core/College regression and both Android packages. Device presentation scope now checks light/dark, advanced efficiency, trade selection/removal, landscape workspace and contract presets/detail toggle; exchange checks direct save/share and College light-theme efficiency with explicitly synthetic display box scores.
+
 ## Latest acceptance - cross-app player exchange
 
 College392 source0215ad4/run40640733536/APK12795552207:693 legacy combined Core/College cases and Android build pass0 warnings/errors. Pro74 source0b60dbe/run40640142353/APK12795895212:279 fast Pro cases,16 helpers, source validator/build pass0 warnings/errors. Extra full-seven-round small and2500-player cases pass locally on unchanged runtime; current-work.md records the individual logs/counts. Shared optional College class snapshot is covered by real lifecycle/SQLite tests; no simulation RNG or College/NFL rules changed.

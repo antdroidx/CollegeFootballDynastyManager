@@ -1,6 +1,6 @@
 # Current work - Football Sim Engine
 
-Updated October27,2026. Canonical workspace D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve main fdd3d4898b5bd07eeec8dba346024d61f5289474, both app identities, College saves and negotiated Pro contracts. No subagents or continuation automation. Exchange and management batches are accepted; no active build/test remains.
+Updated October27,2026. Canonical workspace D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve main fdd3d4898b5bd07eeec8dba346024d61f5289474, both app identities, College saves and negotiated Pro contracts. No subagents or continuation automation. Exchange and management batches are accepted. New UI/efficiency batch is in implementation; see ui-efficiency-plan.md. No new APK is accepted yet.
 
 ## Latest accepted - College392 / Pro74 draft-class exchange
 

@@ -6,6 +6,7 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         AndroidSearchAppearance.Configure();
+        DynastyTheme.ConfigureContrast();
         var builder = MauiApp.CreateBuilder().UseMauiApp<App>();
 #if ANDROID
         Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("ThemedChoices", (handler, view) => { if (view is Picker picker) handler.PlatformView.SetOnClickListener(new ThemedPickerClick(picker)); });

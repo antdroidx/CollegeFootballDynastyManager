@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\src\Football.Presentation\ColorContrast.cs" Link="SharedPresentation\ColorContrast.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="TestData\ratingdrops.csv" CopyToOutputDirectory="PreserveNewest" />
     <None Update="TestData\NCAA06_POCI.csv" CopyToOutputDirectory="PreserveNewest" />
     <None Update="TestData\NEXT26_calibration_curve_v1.csv" CopyToOutputDirectory="PreserveNewest" />

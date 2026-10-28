@@ -35,9 +35,9 @@ public sealed partial class FranchisePage : ContentPage
     {
         sidebar.Clear(); bottom.Clear(); var club = state!.League.Teams.Single(t => t.Name == state.UserTeam);
         sidebar.Add(new Border { BackgroundColor = Color.FromArgb(club.Primary), Padding = 12, Content = new VerticalStackLayout { Spacing = 6, Children = { new TeamBadgeView(club, 58), new Label { Text = club.Abbreviation + " · " + state.Year, TextColor = TeamBadgeView.Ink(club), FontAttributes = FontAttributes.Bold } } } });
-        foreach (var name in Sections) { var target = name; var b = Action(name, () => Open(target)); b.HorizontalOptions = LayoutOptions.Fill; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; sidebar.Add(b); }
+        foreach (var name in Sections) { var target = name; var b = Action(name, () => Open(target)); b.HorizontalOptions = LayoutOptions.Fill; b.BorderWidth=0; b.FontAttributes=section==name?FontAttributes.Bold:FontAttributes.None; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; sidebar.Add(b); }
         foreach (var (name, index) in new[] { ("Overview", 0), ("Roster", 1), ("Staff", 2), ("Front Office", 3), ("League", 4) })
-        { bottom.ColumnDefinitions.Add(new(GridLength.Star)); var target = name; var b = Action(name, () => target == "League" ? LeagueMenu() : Open(target)); b.FontSize = 10; b.Padding = 4; b.HorizontalOptions = LayoutOptions.Fill; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; bottom.Add(b, index, 0); }
+        { bottom.ColumnDefinitions.Add(new(GridLength.Star)); var target = name; var b = Action(name, () => target == "League" ? LeagueMenu() : Open(target)); b.FontSize = 10; b.Padding = 4; b.BorderWidth=0; b.HorizontalOptions = LayoutOptions.Fill; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; bottom.Add(b, index, 0); }
         LayoutShell();
     }
     async Task LeagueMenu() { var pick = await GameDialogs.ActionSheetAsync(this, "League", "Cancel", null, "Schedule", "Standings", "Playoffs", "Statistics", "Analytics", "Inbox", "Transactions", "News", "Honors", "Career", "History"); if (pick is "Schedule" or "Standings" or "Playoffs" or "Statistics" or "Analytics" or "Inbox" or "Transactions" or "News" or "Honors" or "Career" or "History") await Open(pick); }

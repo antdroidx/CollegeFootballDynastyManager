@@ -1,5 +1,15 @@
 # Pro completion checklist
 
+## Active October28 UI/efficiency batch
+
+- [ ] Shared light/dark contrast and new Pro navy/teal palette.
+- [ ] Table/navigation/disabled-state polish; direct export; simpler trades/contracts.
+- [ ] Shared documented game-derived efficiency and league comparisons in both apps.
+- [ ] Scoped tests, both Android packages and affected device acceptance.
+
+See ui-efficiency-plan.md. Prior College392/Pro74 remain latest accepted.
+
+
 ## Draft-class exchange - accepted College392 / Pro74
 
 - [x] #3 latest full College departure snapshot, versioned JSON export/preview and native document save/sharing.

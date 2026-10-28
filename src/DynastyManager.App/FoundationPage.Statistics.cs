@@ -28,6 +28,7 @@ public sealed partial class FoundationPage
         {
             ResponsiveTableHeader(SectionTitle("Player statistics", "Season/career totals · tap a column heading to sort ↑↓"),
                 new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _statisticsSeason, _statisticsScope, _statisticsCategory } }),
+            new Button { Text="Advanced team efficiency", AutomationId="college-efficiency", Command=new Command(async()=> {if(_currentDynasty is null)return;var close=new Button{Text="Close"};close.Clicked+=async(_,_)=>await Navigation.PopModalAsync();await Navigation.PushModalAsync(new ContentPage{BackgroundColor=DynastyTheme.Background,Content=new ScrollView{Content=new VerticalStackLayout{Padding=16,Spacing=10,Children={close,FootballEfficiencyView.Create(_currentDynasty.Schedule.Where(g=>g.SeasonYear==_currentDynasty.SeasonYear&&g.GameType is ScheduledGameType.Conference or ScheduledGameType.NonConference),_currentDynasty.UserTeamName)}}}});}) },
             _statisticsRows
         } };
     }
@@ -156,6 +157,7 @@ public sealed partial class FoundationPage
             close, SchoolBanner(player.TeamName, $"{player.Position} {player.FullName} · {FormatOriginalRecruitingStars(player)}"),
             SectionTitle("Career statistics", $"{lines.Length} recorded seasons · {lines.Sum(s => s.PassYards + s.RushYards):N0} yards · {lines.Sum(s => s.Touchdowns)} TD")
         } };
+        content.Children.Add(PlayerEfficiencyView.Create(VisiblePlayerStatistics(),player.PlayerId));
         if (lines.Length == 0) content.Children.Add(new Label { Text = "No statistics recorded yet. Current-season totals appear after the player's team completes a game." });
         else
         {

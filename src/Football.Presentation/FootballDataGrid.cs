@@ -38,7 +38,7 @@ public static class FootballDataGrid
             grid.Clear(); grid.RowDefinitions.Clear(); grid.RowDefinitions.Add(new(GridLength.Auto));
             for (var c = 0; c < columns.Length; c++)
             {
-                var index = c; var header = new Button { Text = columns[c].Name + (selected == c ? descending ? " ↓" : " ↑" : ""), FontSize = 11, FontAttributes = FontAttributes.Bold, CornerRadius = 0, Padding = new Thickness(7,4), MinimumHeightRequest = 36, HorizontalOptions = LayoutOptions.Fill, BackgroundColor = selected == c ? DynastyTheme.Selected : DynastyTheme.Panel, TextColor = DynastyTheme.Text };
+                var index = c; var header = new Button { Text = columns[c].Name + (selected == c ? descending ? " ↓" : " ↑" : ""), FontSize = 11, FontAttributes = FontAttributes.Bold, CornerRadius = 0, BorderWidth = 0, Padding = new Thickness(7,4), MinimumHeightRequest = 44, HorizontalOptions = LayoutOptions.Fill, BackgroundColor = selected == c ? DynastyTheme.Selected : DynastyTheme.Panel, TextColor = DynastyTheme.Text };
                 SemanticProperties.SetDescription(header, "Sort " + columns[c].Name);
                 header.Clicked += (_,_) => { descending = selected == index && !descending; selected = index; page = 0; Draw(); };
                 grid.Add(header,c,0);

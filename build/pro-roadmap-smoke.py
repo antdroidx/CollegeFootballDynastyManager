@@ -64,6 +64,38 @@ def cell_visible(root,label):
     b=tuple(map(int,re.findall(r"\d+",node.get("bounds"))))
     screen=tuple(map(int,re.findall(r"\d+",root.find("node").get("bounds"))))
     assert 0<=b[0]<b[2]<=screen[2] and 0<=b[1]<b[3]<=screen[3],label+" is clipped or requires horizontal scrolling"
+def ui_polish():
+    # Isolated display fixture: full synthetic box scores, not claims about actual NFL results.
+    regular=json.loads(json.dumps(data["regular"]))
+    for game in regular["games"]:
+        f=game["football"]
+        if not f["hasPlayed"]:continue
+        for key in ["homeStats","awayStats"]:
+            f[key]={"passAttempts":30,"rushAttempts":30,"passYards":210,"rushYards":100,"passingTouchdowns":2,"rushingTouchdowns":1,"turnovers":1,"sacksAllowed":3,"explosivePasses20":3,"explosiveRuns20":1,"efficiency":{"plays":60,"yards":310,"successful":27,"thirdDowns":12,"thirdDownConversions":5,"sackYardsLost":18}}
+    load(regular);navigate("Overview");click("polish-options","Options");click("polish-appearance","Appearance");click("polish-light","Light")
+    navigate("Analytics");category("Advanced efficiency")
+    root=s.scroll_to_text("pro-polish-efficiency","Adjusted net efficiency",max_swipes=20)
+    s.capture("pro-presentation-light-efficiency")
+    root=s.scroll_to_text("pro-polish-method","How these stats work",max_swipes=20);s.tap(root,"How these stats work")
+    ready("efficiency-definition",lambda r:"Hide metric definitions" in s.texts(r))
+    navigate("Front Office");click("polish-trade","Trade center")
+    root=s.scroll_to_text("pro-polish-search","Find player",max_swipes=20)
+    checks=[n for n in root.iter("node") if "CheckBox" in n.get("class","")]
+    if not checks:
+        root=s.scroll_to_text("pro-polish-select","Select",max_swipes=20);checks=[n for n in root.iter("node") if "CheckBox" in n.get("class","")]
+    assert checks,"Trade selection checkbox missing"
+    b=list(map(int,re.findall(r"\d+",checks[0].get("bounds"))));s.adb("shell","input","tap",str((b[0]+b[2])//2),str((b[1]+b[3])//2))
+    root=s.scroll_to_text("pro-polish-selected","You send",max_swipes=20,toward_start=True);s.capture("pro-presentation-light-trade-selected")
+    remove=next(n for n in root.iter("node") if n.get("text","").endswith(" ×"));s.tap(root,remove.get("text"))
+    rotate(1);navigate("Front Office");click("polish-landscape-trade","Trade center");s.capture("pro-presentation-landscape-trade");rotate(0)
+    load(data["retention"]);navigate("Front Office");click("polish-retention","Expiring contracts");click("polish-negotiate","Negotiate")
+    ready("contract-modal",lambda r:"Low offer" in s.texts(r))
+    for label in ["Low offer","Agent demand","Strong offer"]:click("polish-preset-"+label,label)
+    s.capture("pro-presentation-light-contract-presets")
+    click("polish-yearly","Show yearly cap breakdown");ready("contract-breakdown",lambda r:"Hide yearly cap breakdown" in s.texts(r));s.capture("pro-presentation-light-contract-breakdown");click("polish-cancel","Cancel")
+    navigate("Overview");click("polish-dark-options","Options");click("polish-dark-appearance","Appearance");click("polish-dark","Dark");s.capture("pro-presentation-dark-overview")
+    Path("pro-polish-check.json").write_text(json.dumps({"syntheticContext":True,"lightEfficiency":True,"metricDefinitions":True,"tradeSelectionRemoval":True,"landscapeTrade":True,"contractPresets":True,"optionalYearlyDetails":True,"darkTheme":True},indent=2),encoding="utf-8")
+
 def presentation():
     rotate(0)
     navigate("Analytics");ready("mobile-analytics",lambda r:"Franchise analytics" in s.texts(r))
@@ -90,7 +122,7 @@ try:
     s.adb("shell","settings","put","system","user_rotation","0")
     load(data["regular"])
     if "--presentation-only" in sys.argv:
-        presentation();sys.exit(0)
+        ui_polish();presentation();sys.exit(0)
     navigate("Analytics");ready("analytics",lambda r:"Franchise analytics" in s.texts(r))
     for label in ["Player development","Draft outcomes","Career records"]:
         category(label);s.capture("pro-roadmap-portrait-"+label.replace(" ","-"))

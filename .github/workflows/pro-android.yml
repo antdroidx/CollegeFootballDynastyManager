@@ -175,6 +175,7 @@ jobs:
             pro-termination-check.json
             pro-roadmap-check.json
             pro-presentation-check.json
+            pro-polish-check.json
             android-exchange-*.png
             android-exchange-*.xml
             player-exchange-check.json

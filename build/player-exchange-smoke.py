@@ -55,22 +55,30 @@ try:
     file={"formatVersion":1,"source":"College Football Dynasty Manager","year":draft_year,"players":players}
     # A deliberate isolated snapshot represents the newly captured completed class; engine departure rules have separate regressions.
     snapshot["latestProDraftClass"]=file
+    # Deliberate analytics display sample; simulation capture is covered separately by Core cases.
+    game=next(g for g in snapshot["schedule"] if g["homeTeamName"]==snapshot["userTeamName"] or g["awayTeamName"]==snapshot["userTeamName"])
+    game.update(hasPlayed=True,homeScore=21,awayScore=14)
+    for key in ["homeStats","awayStats"]:game[key]={"passAttempts":30,"rushAttempts":30,"passYards":210,"rushYards":100,"passingTouchdowns":2,"rushingTouchdowns":1,"turnovers":1,"sacksAllowed":3,"efficiency":{"plays":60,"yards":310,"successful":27,"thirdDowns":12,"thirdDownConversions":5,"sackYardsLost":18}}
+
     conn.execute("update dynasty_saves set snapshot_json=? where save_id=?",(json.dumps(snapshot),row[0]));conn.commit();conn.close()
     s.adb("push",str(db),"/data/local/tmp/exchange-college.db3");s.adb("shell","run-as",college,"cp","/data/local/tmp/exchange-college.db3","files/dynasties.db3")
     s.adb("shell","monkey","-p",college,"-c","android.intent.category.LAUNCHER","1");ready("college-reload",lambda r:"Load" in s.texts(r));click("load-college","Load")
-    ready("college-loaded",lambda r:"Season" in s.texts(r));click("season","Season");click("export","Export College draft class")
-    ready("export-preview",lambda r:"Prepare export file" in s.texts(r));s.capture("exchange-college-preview");click("prepare-export","Prepare export file")
-    filename=f"college-class-{draft_year}.json";ready("prepared",lambda r:"Ready: "+filename in s.texts(r))
-    content=s.adb("exec-out","run-as",college,"cat","cache/draft-classes/"+filename);exported=json.loads(content);assert exported==file
+    ready("college-loaded",lambda r:"Season" in s.texts(r))
+    click("college-settings","Settings");root=s.scroll_to_text("exchange-college-theme","Appearance",max_swipes=20);s.tap_id(root,"theme-picker");click("college-light","Light");ready("college-light-theme",lambda r:"Preferences" in s.texts(r));s.capture("exchange-college-light-settings")
+    click("college-season-stats","Season");click("college-statistics","Statistics");click("college-efficiency","Advanced team efficiency");ready("college-efficiency-view",lambda r:"Advanced efficiency" in s.texts(r));s.capture("exchange-college-light-efficiency");click("college-efficiency-close","Close",True)
+    click("season","Season");click("export","Export College draft class")
+    ready("export-preview",lambda r:"Save JSON file" in s.texts(r));s.capture("exchange-college-preview")
+    filename=f"college-class-{draft_year}.json"
     click("save-json","Save JSON file")
     save_root=ready("native-save-picker",lambda r:any("documentsui" in n.get("package","") for n in r.iter("node")))
+    content=s.adb("exec-out","run-as",college,"cat","cache/draft-classes/"+filename);exported=json.loads(content);assert exported==file
     drawer=next((n for n in save_root.iter("node") if n.get("content-desc") in {"Show roots","Open navigation drawer"}),None)
     if drawer is not None:
         b=list(map(int,re.findall(r"\d+",drawer.get("bounds"))));s.adb("shell","input","tap",str((b[0]+b[2])//2),str((b[1]+b[3])//2));click("save-downloads","Downloads")
     save_root=s.capture("exchange-native-save-location");save_label=next(t for t in s.texts(save_root) if t in {"Save","SAVE"});s.tap(save_root,save_label)
     ready("native-saved",lambda r:"Saved using Android file picker." in s.texts(r));s.capture("exchange-college-saved")
     assert json.loads(s.adb("exec-out","cat","/sdcard/Download/"+filename))==exported
-    click("share","Share / save draft class");ready("share-sheet",lambda r:r.find("node").get("package")!=college);s.capture("exchange-share-sheet");s.adb("shell","input","keyevent","4")
+    click("share","Share draft class");ready("share-sheet",lambda r:r.find("node").get("package")!=college);s.capture("exchange-share-sheet");s.adb("shell","input","keyevent","4")
     path=Path(filename);path.write_bytes(content)
     fixture=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-exchange-ui-fixture.json.gz")).read_bytes()));assert fixture["year"]==draft_year
     fp=Path("exchange-pro.json");fp.write_text(json.dumps(fixture),encoding="utf-8")
