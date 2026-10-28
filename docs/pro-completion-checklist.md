@@ -1,8 +1,13 @@
 # Pro completion checklist
 
-## Active exchange batch
+## Draft-class exchange - accepted College392 / Pro74
 
-User reactivated #3. College latest full departure-class snapshot/export and Pro validated pre-draft picker/preview/apply are implemented but not yet APK/device accepted. Current-work.md records actual tests, save safeguards and two-app acceptance plan. Previous #3 deferred markers below are historical.
+- [x] #3 latest full College departure snapshot, versioned JSON export/preview and native document save/sharing.
+- [x] Pro file picker/preview/apply, deterministic full-attribute translation, appearances/IDs, source-year mapping and small-class filler.
+- [x] Started/duplicate/malformed imports rejected; roster/contracts/debt/picks/career and saves preserved.
+- [x] Normal rookie signing and complete small/2500-player seven-round drafts verified.
+
+College392 APK12795552207/run40640733536 (source0215ad4),693 combined Core/College tests. Pro74 APK12795895212/run40640142353 (source0b60dbe),279 scoped Pro cases. Both package with0 warnings/errors. Two-app exact verification40642639385 at harness9b56110/evidence12796481744 passes every native save/share/picker/import/reload/identity/conservation/unsupported-rejection flag; screenshots reviewed in .artifacts/exchange77-ui. Additional test-only full-draft cases pass locally without runtime changes. Current-work.md has exact links and actual synthetic-fixture scope. No active work/build remains; main unchanged. Earlier #3 deferral and setup-failure records are superseded.
 
 ## Current requested batch - accepted Pro73
 
@@ -10,7 +15,7 @@ User reactivated #3. College latest full departure-class snapshot/export and Pro
 - [x] #2 NFL postseason division/wild-card chains, reductions/restarts and correct archived-season draft lookup.
 - [x] #4 Staff/combine scouting, measured annual staff development, camp/depth battles and career/ownership/job-market improvements.
 - [x] #5 Development/draft comparisons, recorded career leaders, completed weekly reviews and projected late-season playoff news.
-- [ ] #3 College-to-Pro draft-class exchange screens: deliberately deferred by user.
+- [x] #3 College-to-Pro draft-class exchange screens: reactivated and accepted in College392/Pro74 above.
 
 Final appa04ee62/core43635c0. All-green run40628330665; exact tested APK12789619809:
 https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40628330665/artifacts/12789619809

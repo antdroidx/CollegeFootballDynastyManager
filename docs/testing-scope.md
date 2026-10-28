@@ -1,3 +1,11 @@
+## Latest acceptance - cross-app player exchange
+
+College392 source0215ad4/run40640733536/APK12795552207:693 legacy combined Core/College cases and Android build pass0 warnings/errors. Pro74 source0b60dbe/run40640142353/APK12795895212:279 fast Pro cases,16 helpers, source validator/build pass0 warnings/errors. Extra full-seven-round small and2500-player cases pass locally on unchanged runtime; current-work.md records the individual logs/counts. Shared optional College class snapshot is covered by real lifecycle/SQLite tests; no simulation RNG or College/NFL rules changed.
+
+Registered Pro workflow scope=exchange with reuse_apk_run_id/pro artifact plus college_run/college_artifact verifies each app's own runtime and all shared/global/signing inputs, then reuses both APKs. It does not rebuild Pro when only College-native save UI changes. Verification40642639385 at harness9b56110 passed native College document save/share, Android Pro file picker/preview/apply, retained IDs/faces,320-prospect pool, preserved roster/contracts/picks/debt/career, reload and unsupported-file rejection. Evidence12796481744/.artifacts/exchange77-ui; screenshots reviewed. The College test snapshot is explicitly synthetic; it is not a season simulated on-device. Setup-only failed runs75/76 are superseded. Do not duplicate annual/GameCast/unchanged management acceptance.
+
+No active build/test remains. Test-category audit is still future work;693 are combined Core/College, not exclusively one category.
+
 ## Latest acceptance - Pro73 management/presentation
 
 Final appa04ee62, unchanged core43635c0. Run40628330665 passed271 fast Pro cases,16 helpers, source validator, packaging and focused presentation flow. APK12789619809: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40628330665/artifacts/12789619809 . Device evidence12790617877/.artifacts/pro73-ui verifies actual phone bounds for primary analytics totals/comparisons, draft grades/actions, retention demand/actions and camp ratings, plus Fold/light/dark layouts. Screenshots reviewed.
