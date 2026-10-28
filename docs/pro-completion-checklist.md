@@ -1,5 +1,9 @@
 # Pro completion checklist
 
+## Accepted Pro71 and final presentation polish
+
+Pro71 app/core43635c0, APK12789078287/run40625932825; exact-APK verification40627341025/evidence12789613796 at harnessf4c1f61 passes all management/portrait/landscape/Fold/dark checks.271 fast Pro cases,16 helpers and both long cases (20 generated/five sourced seasons) pass. Final UI-only first-column number/comparison refinement is in progress; no core change or repeated long/College/GameCast test needed. See current-work.md for exact acceptance and pending final APK.
+
 ## Active priorities after Pro70
 
 - College-to-Pro draft-class exchange UI is deferred at user request.

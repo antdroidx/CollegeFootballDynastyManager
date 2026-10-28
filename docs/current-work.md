@@ -2,6 +2,12 @@
 
 Updated October27,2026. Work only in D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve stable main fdd3d4898b5bd07eeec8dba346024d61f5289474, College identity/saves and Pro update signing. The user removed automatic continuation; do not recreate it. No subagents authorized.
 
+## Accepted management foundation - Pro71; final mobile-number refinement pending
+
+App/core43635c0 packaged in run40625932825, APK12789078287. Exact-APK verification40627341025 at harnessf4c1f61 passed all management flows, portrait/landscape draft and retention actions, Fold layout and dark theme. Device evidence12789613796 is downloaded in .artifacts/pro71-accepted-ui; landscape retention and Fold analytics screenshots reviewed. The original rotation-settings harness failure is superseded.271 fast Pro/16 helpers/source validator/packaging and both long cases (20 generated/five sourced seasons,6m7) passed.
+
+A final UI-only refinement now moves career totals, development comparisons, draft growth/league values, scouting grades and retention demand into the first visible columns; camp widths are tightened. New presentation-only device scope checks those phone columns/actions plus Fold/light/dark without replaying news/career/standings or long simulations. Packaging/acceptance of this UI-only refinement is pending. Do not rerun unchanged long/College/GameCast evidence. Draft-class exchange UI remains deferred.
+
 ## Active user priorities - UI, rules, franchise depth, analytics/news
 
 User deferred College-to-Pro draft-class exchange UI (#3). Work on #1 UI/UX, #2 NFL tiebreaks, #4 career/offseason and #5 analytics/news now. No subagents or continuation automation. Finance remains closed. Candidate adds primary first-column draft/retention actions, category-based analytics/development/draft outcomes/career records, automatic staff/combine scouting, once-per-year measured staff development, less-secure-club career prioritization, weekly summaries and late-season projected races. NFL postseason tiebreaks use official division/wild-card chains, restart after reductions, preserve division order between wild cards, aggregate opponent records and seeded final coin toss. Source: https://www.nfl.com/standings/tie-breaking-procedures .

@@ -129,12 +129,12 @@ public sealed partial class FranchisePage
         {
             rows.Clear();var prospects=state!.Prospects.Where(p=>(draftPosition=="All positions"||p.Football.Position.ToString()==draftPosition)&&p.Football.FullName.Contains(draftSearch.Trim(),StringComparison.OrdinalIgnoreCase)).OrderByDescending(p=>state.DraftBoard.Contains(p.Football.PlayerId)).ThenByDescending(ProDraft.PublicGrade).ToArray();
             rows.Add(Text($"{prospects.Length} prospects · tap a heading to sort",12));
-            rows.Add(Table([("Prospect / actions",220),("Pos",48),("Age",45),("Projected",70),("Scouted",70),("Confidence",80)],prospects.Select(p=>{
+            rows.Add(Table([("Prospect / actions",220),("Scouted",65),("Projected",65),("Pos",48),("Age",45),("Confidence",80)],prospects.Select(p=>{
                 var report=state.Scouting.FirstOrDefault(r=>r.Team==state.UserTeam&&r.Year==state.Year&&r.PlayerId==p.Football.PlayerId);
                 var choose=Action("Draft",async()=>{state=ProDraft.AutoUntilUser(ProManagement.Submit(state!,"Draft recommendation",[p.Football.PlayerId],0,x=>ProDraft.Pick(x,p.Football.PlayerId),true));await Save();await Draft();});choose.IsEnabled=state.Phase==ProPhase.Offseason&&state.OffseasonStep==OffseasonStep.Draft&&current?.Owner==state.UserTeam&&ProCareer.Controls(state,p.Football.Position);
                 var board=Action(state.DraftBoard.Contains(p.Football.PlayerId)?"On board":"Shortlist",async()=>{state=state! with{DraftBoard=state.DraftBoard.Contains(p.Football.PlayerId)?state.DraftBoard.Where(id=>id!=p.Football.PlayerId).ToList():state.DraftBoard.Append(p.Football.PlayerId).ToList()};await Save();Draw();});
                 var actions=new ActionRow();actions.Add(choose);actions.Add(board);
-                return new View[]{new VerticalStackLayout{Spacing=3,Children={Text(p.Football.FullName,14,true),actions}},Text(p.Football.Position.ToString()),Text(p.Age.ToString()),Text(ProDraft.PublicGrade(p).ToString()),Text(report?.Grade.ToString()??"—"),Text(report is null?"Pending":report.Confidence+"%")};
+                return new View[]{new VerticalStackLayout{Spacing=3,Children={Text(p.Football.FullName,14,true),actions}},Text(report?.Grade.ToString()??"—"),Text(ProDraft.PublicGrade(p).ToString()),Text(p.Football.Position.ToString()),Text(p.Age.ToString()),Text(report is null?"Pending":report.Confidence+"%")};
             })));
         }
         search.TextChanged+=(_,e)=>{draftSearch=e.NewTextValue??"";Draw();};position.SelectedIndexChanged+=(_,_)=>{if(position.SelectedIndex>=0){draftPosition=choices[position.SelectedIndex];Draw();}};Draw();

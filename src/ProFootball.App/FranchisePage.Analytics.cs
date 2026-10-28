@@ -33,7 +33,7 @@ public sealed partial class FranchisePage
                 content.Add(Text("Player development",20,true));content.Add(Text("Season rating changes compared with league players at the same position.",12));
                 if(own.Length==0){content.Add(Text("Development comparisons appear once a season-start rating is available."));return;}
                 content.Add(FootballBarChart.Create(own.Take(10).Select(p=>(p.Football.FullName,(double)ProDevelopment.Delta(p)!.Value)),"+0;-0;0"));
-                content.Add(Table([("Player",180),("Pos",45),("OVR",50),("Change",65),("Position avg",95),("Upside",75)],own.Select(p=>new View[]{Link(p.Football.FullName,()=>Player(p)),Text(p.Football.Position.ToString()),Text(p.Football.OverallRating.ToString()),Text(ProDevelopment.Delta(p)!.Value.ToString("+0;-0;0")),Text(players.Where(x=>x.Football.Position==p.Football.Position).Average(x=>ProDevelopment.Delta(x)!.Value).ToString("+0.0;-0.0;0.0")),Text(ProDevelopment.Headroom(p)+" OVR")})));
+                content.Add(Table([("Player",150),("Change",60),("Pos avg Δ",85),("Pos",45),("OVR",50),("Upside",75)],own.Select(p=>new View[]{Link(p.Football.FullName,()=>Player(p)),Text(ProDevelopment.Delta(p)!.Value.ToString("+0;-0;0")),Text(players.Where(x=>x.Football.Position==p.Football.Position).Average(x=>ProDevelopment.Delta(x)!.Value).ToString("+0.0;-0.0;0.0")),Text(p.Football.Position.ToString()),Text(p.Football.OverallRating.ToString()),Text(ProDevelopment.Headroom(p)+" OVR")})));
                 return;
             }
             if(analyticsSection==4)
@@ -41,13 +41,13 @@ public sealed partial class FranchisePage
                 content.Add(Text("Draft outcomes",20,true));var cohorts=ProAnalytics.DraftOutcomes(s,s.UserTeam);
                 if(cohorts.Count==0){content.Add(Text("Your drafted classes appear here after your first selection."));return;}
                 content.Add(FootballBarChart.Create(cohorts.Select(c=>($"{c.Year} R{c.Round}",c.TeamGrowth)),"+0.0;-0.0;0.0"));
-                content.Add(Table([("Class / round",105),("Picks",45),("Draft OVR",75),("Now OVR",75),("Growth",65),("League round",100)],cohorts.Select(c=>new View[]{Text($"{c.Year} R{c.Round}"),Text(c.Count.ToString()),Text(c.DraftOverall.ToString("0.0")),Text(c.CurrentOverall.ToString("0.0")),Text(c.TeamGrowth.ToString("+0.0;-0.0;0.0")),Text(c.LeagueGrowth.ToString("+0.0;-0.0;0.0"))})));
+                content.Add(Table([("Class / round",90),("Team Δ",70),("League Δ",85),("Picks",45),("Draft OVR",75),("Now OVR",75)],cohorts.Select(c=>new View[]{Text($"{c.Year} R{c.Round}"),Text(c.TeamGrowth.ToString("+0.0;-0.0;0.0")),Text(c.LeagueGrowth.ToString("+0.0;-0.0;0.0")),Text(c.Count.ToString()),Text(c.DraftOverall.ToString("0.0")),Text(c.CurrentOverall.ToString("0.0"))})));
                 content.Add(Text("League comparison uses the same draft class and round. Players no longer present in the save are excluded.",12));return;
             }
             if(analyticsSection==5)
             {
                 content.Add(Text("Career records",20,true));var scope=new Picker{ItemsSource=new[]{"Your franchise","League"},SelectedIndex=0};var records=new ContentView();content.Add(scope);content.Add(records);
-                void Records(){var rows=ProAnalytics.CareerRecords(s,scope.SelectedIndex==0?s.UserTeam:null);records.Content=rows.Count==0?Text("Records appear after regular-season games."):Table([("Record",140),("Player",180),("Team",170),("Total",85)],rows.Select(r=>new View[]{Text(r.Category),Text(r.Name),Text(r.Team),Text(r.Total.ToString("N0"))}));}
+                void Records(){var rows=ProAnalytics.CareerRecords(s,scope.SelectedIndex==0?s.UserTeam:null);records.Content=rows.Count==0?Text("Records appear after regular-season games."):Table([("Record",100),("Player",150),("Total",75),("Team",170)],rows.Select(r=>new View[]{Text(r.Category),Text(r.Name),Text(r.Total.ToString("N0")),Text(r.Team)}));}
                 scope.SelectedIndexChanged+=(_,_)=>Records();Records();return;
             }
             var selected=ProLeagueComparisons.Build(s).Where(c=>analyticsSection==0?c.Unit is "pts/g" or "yd/g" or "TO/g":analyticsSection==1?c.Unit is "OVR" or "years":c.Unit is "$m" or "picks").ToArray();

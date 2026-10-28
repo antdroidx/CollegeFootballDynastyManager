@@ -15,7 +15,7 @@ public sealed partial class FranchisePage
         foreach(var group in players.Where(p=>!p.PracticeSquad&&!p.Reserve&&ProCareer.Controls(s,p.Football.Position)).GroupBy(p=>OffensiveLineService.Label(p.Football)).OrderBy(g=>g.Key))
         {
             var ranked=group.OrderBy(p=>p.Football.DepthChartOrder).ThenByDescending(p=>p.Football.OverallRating).ToArray();var leader=ranked[0];
-            body.Add(Panel(group.Key+" · "+ranked.Length+" players",Table([("Player / action",220),("OVR",50),("Change",65),("Upside",65),("Availability",130)],ranked.Take(3).Select(p=>{
+            body.Add(Panel(group.Key+" · "+ranked.Length+" players",Table([("Player / action",185),("OVR",45),("Change",55),("Upside",60),("Availability",130)],ranked.Take(3).Select(p=>{
                 var starter=p.Football.PlayerId==leader.Football.PlayerId;var injured=p.Football.CurrentInjury is {WeeksRemaining:>0};
                 var choose=Action(starter?"First in depth":"Make starter",async()=>{await Update(x=>{ProCareer.RequirePlayer(x,p.Football.PlayerId);return ProDepthChart.MakeStarter(x,x.UserTeam,p.Football.PlayerId);});await Camp();});choose.IsEnabled=!starter&&!injured;
                 return new View[]{new VerticalStackLayout{Spacing=3,Children={Link(p.Football.FullName,()=>Player(p)),choose}},Text(p.Football.OverallRating.ToString()),Text(ProDevelopment.Delta(p)?.ToString("+0;-0;0")??"—"),Text(ProDevelopment.Headroom(p)+" OVR"),Text(injured?"Injured":"Available")};

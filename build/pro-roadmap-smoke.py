@@ -59,13 +59,31 @@ def action_visible(root,label):
     left,top,right,bottom=map(int,re.findall(r"\d+",node.get("bounds")))
     bounds=tuple(map(int,re.findall(r"\d+",root.find("node").get("bounds"))))
     assert 0<=left<right<=bounds[2] and 0<=top<bottom<=bounds[3],label+" is clipped"
+def cell_visible(root,label):
+    node=next(n for n in root.iter("node") if n.get("text")==label)
+    b=tuple(map(int,re.findall(r"\d+",node.get("bounds"))))
+    screen=tuple(map(int,re.findall(r"\d+",root.find("node").get("bounds"))))
+    assert 0<=b[0]<b[2]<=screen[2] and 0<=b[1]<b[3]<=screen[3],label+" is clipped or requires horizontal scrolling"
 def presentation():
+    rotate(0)
+    navigate("Analytics");ready("mobile-analytics",lambda r:"Franchise analytics" in s.texts(r))
+    for label,header in [("Player development","Pos avg Δ"),("Draft outcomes","League Δ"),("Career records","Total")]:
+        category(label);root=s.scroll_to_text("pro-presentation-"+label,header,max_swipes=20)
+        cell_visible(root,header);s.capture("pro-presentation-portrait-"+label.replace(" ","-"))
+    for key,label,header,target in [("draft","Draft & scouting","Scouted","Draft"),("retention","Expiring contracts","Demand / yr","Negotiate")]:
+        load(data[key]);navigate("Front Office");click("presentation-"+key,label)
+        root=s.scroll_to_text("pro-presentation-"+key,header,max_swipes=20)
+        cell_visible(root,header);action_visible(root,target);s.capture("pro-presentation-portrait-"+key)
+    navigate("Front Office");click("presentation-camp","Training camp")
+    root=s.scroll_to_text("pro-presentation-camp","Change",max_swipes=20);cell_visible(root,"Change");s.capture("pro-presentation-portrait-camp")
     s.adb("shell","wm","size","1768x2208");s.adb("shell","wm","density","320")
     navigate("Analytics");ready("fold-analytics",lambda r:"Franchise analytics" in s.texts(r));category("Draft outcomes");s.capture("pro-roadmap-fold-draft-outcomes")
-    click("theme-options","Options");click("appearance","Appearance");click("dark","Dark")
-    navigate("Analytics");ready("dark-analytics",lambda r:"Franchise analytics" in s.texts(r));s.capture("pro-roadmap-fold-dark-analytics")
+    for theme in ["Light","Dark"]:
+        click("theme-options","Options");click("appearance","Appearance");click(theme.lower(),theme)
+        navigate("Analytics");ready(theme.lower()+"-analytics",lambda r:"Franchise analytics" in s.texts(r));s.capture("pro-roadmap-fold-"+theme.lower()+"-analytics")
     s.adb("shell","wm","size","reset");s.adb("shell","wm","density","reset")
-    Path("pro-presentation-check.json").write_text(json.dumps({"samePackagedAPK":True,"foldLayout":True,"darkTheme":True},indent=2),encoding="utf-8")
+    Path("pro-presentation-check.json").write_text(json.dumps({"samePackagedAPK":True,"portraitPrimaryNumbers":True,"draftGradeAndAction":True,"retentionDemandAndAction":True,"campRatings":True,"foldLayout":True,"lightTheme":True,"darkTheme":True},indent=2),encoding="utf-8")
+
 try:
     data=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-roadmap-ui-fixture.json.gz")).read_bytes()))
     s.adb("shell","settings","put","system","accelerometer_rotation","0")
