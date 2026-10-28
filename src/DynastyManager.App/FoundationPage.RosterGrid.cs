@@ -13,9 +13,9 @@ public sealed partial class FoundationPage
     private string? _rosterTeamName;
     private readonly Picker _rosterTeamPicker=new(){Title="Team",AutomationId="college-roster-team"};
     private bool _syncRosterTeam;
-    private readonly Entry _rosterSearch = new() { Placeholder = "Find a player" };
-    private readonly Picker _rosterPosition = new() { Title = "Position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).Concat(new[] { "OT", "OG", "OC" }).ToArray(), SelectedIndex = 0 };
-    private readonly Picker _rosterStatus = new() { Title = "Role", ItemsSource = new[] { "All players", "Starters", "Second team", "Depth", "Redshirts", "Injured", "Walk-ons" }, SelectedIndex = 0 };
+    private readonly Entry _rosterSearch = new() { Placeholder = "Find a player", AutomationId="college-roster-search" };
+    private readonly Picker _rosterPosition = new() { Title = "Position", AutomationId="college-roster-position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).Concat(new[] { "OT", "OG", "OC" }).ToArray(), SelectedIndex = 0 };
+    private readonly Picker _rosterStatus = new() { Title = "Role", AutomationId="college-roster-status", ItemsSource = new[] { "All players", "Starters", "Second team", "Depth", "Redshirts", "Injured", "Walk-ons" }, SelectedIndex = 0 };
     private readonly Picker _rosterSort = new() { Title = "Sort roster", ItemsSource = new[] { "Depth chart", "Overall rating", "Potential", "Player name" }, SelectedIndex = 0 };
     private readonly Button _depthChartOrganizerButton = new() { Text = "Organize depth chart", AutomationId = "depth-chart-open", BackgroundColor = DynastyTheme.Palette("#315D59") };
     private readonly VerticalStackLayout _depthChartOrganizer = new() { Spacing = 10, IsVisible = false };

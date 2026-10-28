@@ -1,20 +1,18 @@
 namespace DynastyManager.App;
-/// <summary>One compact row when space permits; bounded controls wrap without horizontal scrolling on phones.</summary>
+/// <summary>Explicit grid columns avoid platform flex rounding that wraps the final filter.</summary>
 public static class CompactFilters
 {
     public static View Create(params (View Control,double Width)[] controls)
     {
-        var row=new FlexLayout{Direction=Microsoft.Maui.Layouts.FlexDirection.Row,Wrap=Microsoft.Maui.Layouts.FlexWrap.Wrap,AlignItems=Microsoft.Maui.Layouts.FlexAlignItems.Center};
-        foreach(var (control,width) in controls){control.WidthRequest=width;control.MinimumWidthRequest=0;control.Margin=new Thickness(0,0,8,6);if(control is Picker p)p.FontSize=12;if(control is InputView input)input.FontSize=12;row.Add(control);}
-        row.SizeChanged+=(_,_)=>
+        var grid=new Grid{ColumnSpacing=8,RowSpacing=6};var previous=0;
+        foreach(var (control,_) in controls){control.WidthRequest=-1;control.MinimumWidthRequest=0;control.HorizontalOptions=LayoutOptions.Fill;control.Margin=0;if(control is Picker p)p.FontSize=12;if(control is InputView input)input.FontSize=12;grid.Add(control);}
+        void Arrange()
         {
-            if(row.Width<=0)return;
-            var minimum=controls.Length*108d;var extra=Math.Max(0,row.Width-minimum);var weights=controls.Sum(c=>Math.Max(0,c.Width-100));
-            foreach(var (control,width) in controls)
-            {
-                var target=row.Width>=minimum?Math.Min(width,100+(weights==0?0:extra*Math.Max(0,width-100)/weights)):Math.Min(width,Math.Max(100,(row.Width-16)/2));
-                if(Math.Abs(control.WidthRequest-target)>1)control.WidthRequest=target;
-            }
-        };return row;
+            var columns=grid.Width>=controls.Length*108-8?controls.Length:grid.Width>=280?Math.Min(2,controls.Length):1;
+            if(columns==previous)return;previous=columns;grid.ColumnDefinitions.Clear();grid.RowDefinitions.Clear();
+            for(var c=0;c<columns;c++)grid.ColumnDefinitions.Add(new(new GridLength(columns==controls.Length?controls[c].Width:1,GridUnitType.Star)));
+            for(var i=0;i<controls.Length;i++){if(i%columns==0)grid.RowDefinitions.Add(new(GridLength.Auto));Grid.SetColumn(controls[i].Control,i%columns);Grid.SetRow(controls[i].Control,i/columns);}
+        }
+        grid.SizeChanged+=(_,_)=>Arrange();Arrange();return grid;
     }
 }

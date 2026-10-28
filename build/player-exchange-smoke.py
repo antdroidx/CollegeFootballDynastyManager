@@ -72,6 +72,11 @@ try:
     assert "Organize depth chart" not in s.texts(root) and "Player profile" not in s.texts(root)
     s.capture("exchange-college-opponent-roster")
     s.adb("shell","wm","size","1768x2208");s.adb("shell","wm","density","320");s.capture("exchange-college-wide-roster")
+    root=s.capture("exchange-college-wide-filter-bounds")
+    tops=[]
+    for control in ["college-roster-team","college-roster-search","college-roster-position","college-roster-status"]:
+        node=next(n for n in root.iter("node") if n.get("resource-id","").endswith(control));bounds=list(map(int,re.findall(r"\d+",node.get("bounds"))));assert bounds[2]>bounds[0] and bounds[3]>bounds[1];tops.append(bounds[1])
+    assert max(tops)-min(tops)<=4,"Wide roster filters wrapped: "+str(tops)
     root=s.capture("exchange-college-roster-select-own");s.tap_id(root,"college-roster-team");click("college-own-team",snapshot["userTeamName"])
     ready("college-own-controls",lambda r:"Organize depth chart" in s.texts(r));s.adb("shell","wm","size","reset");s.adb("shell","wm","density","reset")
     click("college-season-stats","Season");click("college-statistics","Statistics");click("college-efficiency","Advanced team efficiency");ready("college-efficiency-view",lambda r:"Advanced efficiency" in s.texts(r));s.capture("exchange-college-light-efficiency");click("college-efficiency-close","Close",True)
