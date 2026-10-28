@@ -3,6 +3,7 @@ namespace ProFootball.Core;
 public sealed record ProTransactionEntry(Guid Id,int Year,int Week,ProPhase? Phase,string Activity);
 public static class ProTransactions
 {
+    public static string Period(ProPhase? phase,int week)=>phase switch{ProPhase.Preseason=>"P"+week,ProPhase.Playoffs=>"PO"+week,ProPhase.Offseason=>"Offseason "+week,null=>"Week "+week+" (stage unknown)",_=>"W"+week};
     public static ProFranchise Migrate(ProFranchise s)
     {
         if(s.TransactionLog.Count>0||s.Transactions.Count==0)return s;

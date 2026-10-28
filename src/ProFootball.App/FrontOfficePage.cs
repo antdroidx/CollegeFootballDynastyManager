@@ -7,7 +7,7 @@ public sealed partial class FranchisePage
 {
     static string RoleName(StaffRole role) => role switch { StaffRole.HeadCoach => "Head coach", StaffRole.OffensiveCoordinator => "Offensive coordinator", StaffRole.DefensiveCoordinator => "Defensive coordinator", StaffRole.SpecialTeamsCoordinator => "Special teams coordinator", _ => role.ToString() };
     static string Money(long value) => "$" + (value / 1_000_000d).ToString("0.00") + "m";
-    View Link(string text, Func<Task> action) { var b = Action(text, action); b.BackgroundColor = Colors.Transparent; b.FontSize = 12; b.Padding = 4; return b; }
+    View Link(string text, Func<Task> action) { var b = Action(text, action); b.BackgroundColor = Colors.Transparent; b.BorderWidth=0; b.TextColor=DynastyTheme.Accent; b.FontSize = 12; b.Padding = 4; return b; }
     View Table((string Name, int Width)[] columns, IEnumerable<View[]> rows) => FootballDataGrid.Create(columns, rows);
     async Task Update(Func<ProFranchise, ProFranchise> mutation)
     {

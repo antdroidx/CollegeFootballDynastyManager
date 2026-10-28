@@ -1,3 +1,7 @@
+# Active October28 contextual UI correction
+
+User requests unboxed names/headers/sidebar, more team links, actual Pro overview headlines, and P1 preseason transaction labels. Implementation started on feature/pro-franchise-foundation; prior College393/Pro78 remain accepted. Changes are not yet built/device accepted. Global button outline removed to restore prior appearance while retaining contrast colors. College school banners and Pro team cells gain navigation; Pro team page provides linked roster/schedule. Structured transaction phase is used; unknown legacy stages are not invented. Finish compile/tests, contextual-link and overview/device checks, then package both apps before claiming acceptance.
+
 # Current work - Football Sim Engine
 
 Updated October28,2026. Canonical workspace D:/AppProjects/Codex/Football Simulation Engine, feature/pro-franchise-foundation. Preserve main fdd3d4898b5bd07eeec8dba346024d61f5289474, both app identities, College saves and negotiated Pro contracts. No subagents or continuation automation. Exchange and management batches are accepted. New UI/efficiency batch is in implementation; see ui-efficiency-plan.md. No new APK is accepted yet.

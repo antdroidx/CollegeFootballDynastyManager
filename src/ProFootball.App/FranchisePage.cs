@@ -95,6 +95,7 @@ public sealed partial class FranchisePage : ContentPage
         var header = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
         header.Add(Action("‹ Exit", async () => { await Save(); await Library(); }), 0, 0); header.Add(new VerticalStackLayout { Children = { Text(section == "Staff" ? "Coaching Hub" : section, 25, true), Text($"{state.UserTeam} · {state.Year} · {state.Phase} · Week {state.Week}", 12) } }, 1, 0); header.Add(Action("Options", Options), 2, 0); body.Add(header);
         var team = state.League.Teams.Single(t => t.Name == state.UserTeam); body.Add(new Border { Padding = 14, BackgroundColor = Color.FromArgb(team.Primary), Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(team, 56), new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { new Label { Text = team.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = TeamBadgeView.Ink(team) }, new Label { Text = state.Name + " · " + state.Year, TextColor = TeamBadgeView.Ink(team) } } } } } });
+        if(body.Children.LastOrDefault() is View banner){var openTeam=new TapGestureRecognizer();openTeam.Tapped+=async(_,_)=>await TeamPage(team);banner.GestureRecognizers.Add(openTeam);SemanticProperties.SetDescription(banner,"View team "+team.Name);}
         switch (section) { case "Overview": Overview(); break; case "Roster": Roster(); break; case "Staff": Staff(); break; case "Front Office": FrontOffice(); break; case "Schedule": Schedule(); break; case "Standings": Standings(); break; case "Playoffs": PlayoffTree(); break; case "History": History(); break; case "Career": Career(); break; case "Transactions": Transactions(); break; case "Inbox": Inbox(); break; case "News": News(); break; case "Statistics": Statistics(); break; case "Analytics": Analytics(); break; case "Honors": Honors(); break; }
         var actions = new ActionRow(); actions.Add(Action("Save franchise", async () => { await Save(); await GameDialogs.AlertAsync(this, "Saved", "Franchise and rolling backups saved.", "OK"); })); actions.Add(Action("Save & exit", async () => { await Save(); await Library(); })); body.Add(actions);
     }
@@ -118,8 +119,12 @@ public sealed partial class FranchisePage : ContentPage
         else { var game = s.Games.FirstOrDefault(g => g.Phase == s.Phase && g.Football.Week == s.Week && g.Football.InvolvesTeam(s.UserTeam)); if (game is not null) body.Add(GameCard(game)); else body.Add(Text("Your team has a bye this week.")); }
         body.Add(Panel("Your coaching career", Text($"{s.Career?.Name} · {RoleName(ProCareer.Role(s))}", 17, true), Text(s.Career?.Unemployed == true ? "Seeking employment · Open your job offers" : $"Job security {s.Career?.Security ?? 65}/100 · Reputation {s.Career?.Reputation ?? 50}/100"), Action("Career & job offers ›", () => Open("Career"))));
         var owner = s.Owners.FirstOrDefault(o => o.Team == s.UserTeam); body.Add(Cards(Panel("Season overview", Text($"{r.Wins}–{r.Losses}–{r.Ties}", 28, true), Text(r.Team.Conference + " · " + r.Team.Division), Action("Open standings ›", () => Open("Standings"))), Panel("Front Office", Text($"{Money(ProEconomy.Room(s, s.UserTeam))} cap room", 24, true), Text($"Roster {ProRoster.CountForLimit(s, s.UserTeam)}/{ProRoster.Limit(s)} · Owner security {owner?.Security ?? 65}/100"), Action("Contracts & salary cap ›", () => Open("Front Office")))));
-        body.Add(Panel("League news", Action("Headlines & results ›", () => Open("News")), Action("Statistics & leaders ›", () => Open("Statistics"))));
-        body.Add(Panel("Latest transactions", Text(string.Join("\n", s.Transactions.TakeLast(4).Reverse()), 12),Action("View all transactions ›",()=>Open("Transactions"))));
+        state=ProNews.Refresh(state!);s=state;
+        var news=new List<View>();
+        foreach(var story in s.News.Take(3)){var n=story;news.Add(new HorizontalStackLayout{Spacing=8,Children={NewsThumbnail(n),Link(n.Headline,()=>ShowPage(n.Headline,Text(n.Body),n.Team is null?Text("League news"):TeamCell(s.League.Teams.FirstOrDefault(t=>t.Name==n.Team)??r.Team)))}});news.Add(Text(n.Body,12));}
+        if(news.Count==0)news.Add(Text("Results, injuries and league activity will appear here as your franchise advances.",12));
+        news.Add(Action("Headlines & results ›",()=>Open("News")));news.Add(Action("Statistics & leaders ›",()=>Open("Statistics")));body.Add(Panel("League news",news.ToArray()));
+        body.Add(Panel("Latest transactions", Text(string.Join("\n", ProTransactions.Migrate(s).TransactionLog.TakeLast(4).Reverse().Select(t=>$"{t.Year} {ProTransactions.Period(t.Phase,t.Week)} · {t.Activity}")), 12),Action("View all transactions ›",()=>Open("Transactions"))));
     }
     async Task Advance()
     {
@@ -129,7 +134,7 @@ public sealed partial class FranchisePage : ContentPage
     }
     View GameCard(ProGame game)
     {
-        var g = game.Football; var stack = new VerticalStackLayout { Spacing = 8 }; stack.Add(Text(g.AwayTeamName + " at " + g.HomeTeamName, 17, true));
+        var g = game.Football; var stack = new VerticalStackLayout { Spacing = 8 }; stack.Add(TeamCell(state!.League.Teams.Single(t=>t.Name==g.AwayTeamName)));stack.Add(Text("at",12));stack.Add(TeamCell(state.League.Teams.Single(t=>t.Name==g.HomeTeamName)));
         if (g.HasPlayed) { stack.Add(Text($"Final · {g.AwayScore}–{g.HomeScore}")); stack.Add(Action("Box score", () => BoxScore(g))); }
         else if (game.Phase == state!.Phase && g.Week == state.Week)
         { var row = new ActionRow(); row.Add(Action("Watch", () => Live(game, GameDayMode.Watch), "pro-watch")); row.Add(Action("Play", () => Live(game, GameDayMode.Play), "pro-play")); row.Add(Action("Simulate", async () => { var session = ProLeagueService.Start(state!, game, GameDayMode.Simulate); await Task.Run(() => GameDayEngine.SimulateToEnd(session)); state = ProLeagueService.Finish(state!, session); await Save(); Render(); }, "pro-sim")); stack.Add(row); }
@@ -144,7 +149,18 @@ public sealed partial class FranchisePage : ContentPage
         { body.Add(Text(group.Key, 19, true)); body.Add(Table([("Team", 210), ("W", 40), ("L", 40), ("T", 40), ("Pct", 65), ("Diff", 65)], group.Select(r => new View[] { TeamCell(r.Team), Text(r.Wins.ToString()), Text(r.Losses.ToString()), Text(r.Ties.ToString()), Text(r.Percentage.ToString(".000")), Text(r.Differential.ToString()) }))); }
         body.Add(Text("Ties use head-to-head, division/common/conference records, opponent strength and scoring tiebreakers.", 12));
     }
-    View TeamCell(ProTeam team) => new HorizontalStackLayout { Spacing = 8, Children = { new TeamBadgeView(team, 28), Text(team.Name, 12) } };
+    View TeamCell(ProTeam team)
+    {
+        var row=new HorizontalStackLayout{Spacing=8,Children={new TeamBadgeView(team,28),Text(team.Name,12)}};
+        var open=new TapGestureRecognizer();open.Tapped+=async(_,_)=>await TeamPage(team);row.GestureRecognizers.Add(open);SemanticProperties.SetDescription(row,"View team "+team.Name);return row;
+    }
+    Task TeamPage(ProTeam team)
+    {
+        var s=state!;var standing=ProStandings.Build(s).Single(x=>x.Team.Name==team.Name);
+        return ShowPage(team.Name,new TeamBadgeView(team,56),Text(team.Conference+" · "+team.Division),Text($"{standing.Wins}–{standing.Losses}–{standing.Ties} · {Money(ProEconomy.Room(s,team.Name))} cap room"),
+            Panel("Players",Table([("Player",190),("Pos",50),("OVR",55)],s.Players.Where(p=>p.Football.TeamName==team.Name&&!p.Retired).OrderBy(p=>p.Football.Position).ThenByDescending(p=>p.Football.OverallRating).Select(p=>new View[]{PlayerCell(p),Text(p.Football.Position.ToString()),Text(p.Football.OverallRating.ToString())}))),
+            Panel("Schedule",Table([("Week",60),("Opponent",210),("Result",90)],s.Games.Where(g=>g.Football.InvolvesTeam(team.Name)).Select(g=>{var f=g.Football;var opponent=s.League.Teams.Single(t=>t.Name==(f.HomeTeamName==team.Name?f.AwayTeamName:f.HomeTeamName));return new View[]{Text(ProTransactions.Period(g.Phase,f.Week)),TeamCell(opponent),f.HasPlayed?Link($"{f.AwayScore}–{f.HomeScore}",()=>BoxScore(f)):Text("Upcoming")};}))));
+    }
     void Roster()
     {
         var s = state!; var teams = s.League.Teams.OrderBy(t => t.Name).ToArray();

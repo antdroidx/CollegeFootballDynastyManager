@@ -77,7 +77,8 @@ public sealed partial class FoundationPage
             new Label {Text=_currentDynasty is null?name:CollegePollService.RankedName(name,BuildCurrentNationalRankings()),
                 FontSize=15,FontAttributes=FontAttributes.Bold,TextColor=ink},
             new Label {Text=subtitle,FontSize=11,TextColor=ink} } },1,0);
-        return new Border {BackgroundColor=primary,Padding=new Thickness(12,10),Content=identity};
+        var banner=new Border {BackgroundColor=primary,Padding=new Thickness(12,10),Content=identity};
+        var open=new TapGestureRecognizer();open.Tapped+=(_,_)=>OpenSchool(name);banner.GestureRecognizers.Add(open);SemanticProperties.SetDescription(banner,"View "+name);return banner;
     }
 
     private static View RatingCell(int rating)

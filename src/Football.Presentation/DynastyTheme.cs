@@ -93,7 +93,7 @@ public static class DynastyTheme
             new Setter { Property = View.HorizontalOptionsProperty, Value = LayoutOptions.Start },
             new Setter { Property = Button.CornerRadiusProperty, Value = 8 },
             new Setter { Property = Button.BorderColorProperty, Value = ControlEdge },
-            new Setter { Property = Button.BorderWidthProperty, Value = 1.0 },
+            new Setter { Property = Button.BorderWidthProperty, Value = 0.0 },
             new Setter { Property = VisualStateManager.VisualStateGroupsProperty, Value = ButtonStates() },
             new Setter { Property = Button.FontSizeProperty, Value = 12.0 },
             new Setter { Property = Button.PaddingProperty, Value = new Thickness(10, 5) },
