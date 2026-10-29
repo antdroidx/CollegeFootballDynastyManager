@@ -17,7 +17,7 @@ on:
       management_scope:
         description: Focus device and engine checks on the changed management flow
         type: choice
-        options: [full, fast-forward]
+        options: [full, fast-forward, generated-roster]
         default: full
       run_emulator:
         description: Run Android launch validation after uploading the APK
@@ -206,7 +206,7 @@ jobs:
             sleep 8
             adb logcat -d > android-logcat.txt
             adb shell pidof antdroid.cfbcoach.dev
-            python3 -u build/${{ inputs.management_scope == 'fast-forward' && 'college-phase-smoke.py' || 'android-ui-smoke.py' }} || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
+            python3 -u build/${{ inputs.management_scope == 'generated-roster' && 'college-generated-roster-smoke.py' || inputs.management_scope == 'fast-forward' && 'college-phase-smoke.py' || 'android-ui-smoke.py' }} || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
 
       - name: Upload launch UI evidence
         if: always()
@@ -214,6 +214,8 @@ jobs:
         with:
           name: android-launch-ui-${{ github.run_number }}
           path: |
+            college-generated-roster-check.json
+            college-generated-roster-logcat.txt
             college-phase-check.json
             college-phase-logcat.txt
             android-*.png
@@ -227,6 +229,8 @@ jobs:
         with:
           name: android-launch-log
           path: |
+            college-generated-roster-check.json
+            college-generated-roster-logcat.txt
             college-phase-check.json
             college-phase-logcat.txt
             android-logcat.txt
@@ -236,7 +240,7 @@ jobs:
 
   android-career-options:
     needs: build-test-android
-    if: inputs.management_scope != 'fast-forward' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator))
+    if: inputs.management_scope != 'generated-roster' && inputs.management_scope != 'fast-forward' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -295,6 +299,8 @@ jobs:
         with:
           name: android-career-options-log-${{ github.run_number }}
           path: |
+            college-generated-roster-check.json
+            college-generated-roster-logcat.txt
             college-phase-check.json
             college-phase-logcat.txt
             android-logcat.txt

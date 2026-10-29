@@ -45,6 +45,7 @@ public sealed partial class FoundationPage
             new Label { Text = "Dynasty name", FontSize = 12, FontAttributes = FontAttributes.Bold }, _dynastyNameEntry,
             new Label { Text = "League structure", FontSize = 12, FontAttributes = FontAttributes.Bold }, _leaguePicker,
             new Label { Text = "Starting roster", FontSize = 12, FontAttributes = FontAttributes.Bold }, _startingRosterPicker,
+            new HorizontalStackLayout {Spacing=8,Children={_generatePlayers,new Label{Text="Generate new players · keep program strengths",FontSize=12,VerticalTextAlignment=TextAlignment.Center}}},
             new Label { Text = "Import and manage reusable rosters and league setups from the main screen.", FontSize = 11, TextColor = DynastyTheme.Muted },
             new Label { Text = "Your school", FontSize = 12, FontAttributes = FontAttributes.Bold }, _teamPicker,
             new Label { Text = "Staff and recruiting preferences can be changed after starting.", FontSize = 11, TextColor = DynastyTheme.Muted },

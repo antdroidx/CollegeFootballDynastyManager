@@ -26,6 +26,7 @@ public sealed record ProGame(ScheduledGame Football, ProPhase Phase, int Round =
 public sealed record SeasonArchive(int Year, string Champion, List<ProGame> Games);
 public sealed record ProFranchise
 {
+    public bool FictionalPlayers {get;init;}
     public List<DepthChartAssignment> DepthChartAssignments { get; init; } = [];
     public ProImportedClass? ImportedDraftClass {get;init;}
     public int ReservePolicyVersion {get;init;}

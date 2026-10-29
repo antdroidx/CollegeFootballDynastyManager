@@ -32,7 +32,7 @@ public static class ProEconomy
             foreach (var p in players)
             {
                 var salary = p.PracticeSquad ? Math.Max(300_000,ProFinance.Minimum(s,p)) : (long)Math.Max(ProFinance.Minimum(s,p), MarketSalary(p) * scale);
-                var years = p.PracticeSquad ? 1 : sourceTerms.TryGetValue(p.Football.PlayerId,out var term)&&term.Team==team.Name?Math.Max(1,ProContractInsights.PlayingEnd(term)-s.Year+1):p.RookieYear is int rookieYear && s.Year>=rookieYear && s.Year<rookieYear+(p.DraftOverall is >0?4:3) ? rookieYear+(p.DraftOverall is >0?4:3)-s.Year : p.Age>=33?1:2; var bonus = p.PracticeSquad ? 0 : salary / 2;
+                var years = p.PracticeSquad ? 1 : sourceTerms.TryGetValue(p.Football.PlayerId,out var term)&&term.Team==team.Name?Math.Max(1,ProContractInsights.PlayingEnd(term)-s.Year+1):p.RookieYear is int rookieYear && s.Year>=rookieYear && s.Year<rookieYear+(p.DraftOverall is >0?4:3) ? rookieYear+(p.DraftOverall is >0?4:3)-s.Year : p.Age>=33?1:s.FictionalPlayers?1+(int)(BitConverter.ToUInt32(p.Football.PlayerId.ToByteArray(),0)%(uint)(p.Age>=30?3:4)):2; var bonus = p.PracticeSquad ? 0 : salary / 2;
                 contracts.Add(new(p.Football.PlayerId, team.Name, s.Year, years, bonus, Enumerable.Range(0, years).Select(i => new ContractYear(s.Year + i, Math.Max(salary,ProFinance.Minimum(s,p,s.Year+i)), i == 0 ? salary / 3 : 0)).ToList()){OriginalRookieYear=p.RookieYear is int r&&p.DraftOverall is >0&&s.Year<=r+3&&(!sourceTerms.TryGetValue(p.Football.PlayerId,out var original)||original.SignedYear==r)?r:null});
             }
         }

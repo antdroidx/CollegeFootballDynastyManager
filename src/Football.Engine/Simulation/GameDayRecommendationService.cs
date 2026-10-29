@@ -57,7 +57,7 @@ public static class GameDayRecommendationService
             .TakeLast(4).Select(e => e.OffensivePlayId).ToArray();
         var hurryUp = late && margin < 0;
         var play = GamePlanService.RecommendOffensivePlay(plan, session.Down, session.Distance, session.YardLine,
-            session.Events.Count, recent, session.Game.SimulationSeed, hurryUp, PassingUrgency(session));
+            session.Events.Count, recent, session.Game.SimulationSeed, hurryUp, PassingUrgency(session)*session.Rules.BasePassingBias);
         var reason = needTouchdown ? "A field goal is not enough; keep the drive alive."
             : session.Down == 4 ? "Short fourth down in opponent territory; consider going for the first down."
             : hurryUp ? "Trailing late; favor the passing game."

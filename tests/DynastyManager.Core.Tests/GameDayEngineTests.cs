@@ -345,8 +345,10 @@ public class GameDayEngineTests
         Assert.Equal(2, session.HomeTimeouts);
         Assert.False(GameDayEngine.TryCallTimeout(session, "Home"));
         var priorClock = session.ClockSeconds;
-        GameDayEngine.Step(session, "off-spread-zone");
-        Assert.InRange(priorClock - session.ClockSeconds, 4, 8);
+        var afterTimeout=GameDayEngine.Step(session, "off-spread-zone");
+        Assert.Equal(0,afterTimeout.PreSnapSeconds);
+        Assert.Equal(afterTimeout.LiveBallSeconds,priorClock-session.ClockSeconds);
+        Assert.InRange(afterTimeout.LiveBallSeconds,4,17);
         session.Quarter = 2; session.ClockSeconds = 1; session.TwoMinuteTimeoutHalf = 1;
         session.HomeTimeouts = 0; session.AwayTimeouts = 1;
         GameDayEngine.Step(session, "off-spread-zone");

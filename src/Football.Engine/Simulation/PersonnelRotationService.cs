@@ -86,19 +86,36 @@ public static class PersonnelRotationService
             {
                 var starter = pool[Math.Min(slot, pool.Count - 1)];
                 var choice = starter;
-                var nextIndex = slot + count;
-                if (nextIndex < pool.Count && ShouldRotate(starter, fatigue.Energy(starter.PlayerId), random))
-                    choice = pool[nextIndex];
+                var backups = pool.Skip(count).Where(p => !selected.Contains(p.PlayerId)).ToArray();
+                if (backups.Length > 0 && ShouldRotate(starter, fatigue.Energy(starter.PlayerId), random, backups.Max(p => p.OverallRating)))
+                {
+                    // Rotate the whole reserve group, favoring quality/depth and rested players.
+                    var weighted = backups.Take(4).Select((p,index)=>(Player:p,Weight:Math.Max(.05,fatigue.Energy(p.PlayerId)/100d)/(1+index*.85)/(1+Math.Max(0,starter.OverallRating-p.OverallRating)/15d))).ToArray();
+                    var roll=random.NextDouble()*weighted.Sum(x=>x.Weight);
+                    choice=weighted[^1].Player;
+                    foreach(var entry in weighted){roll-=entry.Weight;if(roll<=0){choice=entry.Player;break;}}
+                }
                 selected.Add(choice.PlayerId);
                 if (choice.PlayerId != starter.PlayerId) substitutes.Add(choice.PlayerId);
             }
         }
+        // Thin/injured depth must change the package, never put only nine or ten on the field.
+        var offense=needs.Any(n=>n.Position==Position.QB);
+        var unit=depthChart.Values.SelectMany(p=>p).Where(p=>offense
+            ? p.Position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL
+            : p.Position is Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS);
+        foreach(var player in unit.Where(p=>!selected.Contains(p.PlayerId)).OrderBy(p=>p.Position==Position.QB?1:0).ThenByDescending(p=>p.OverallRating+fatigue.Energy(p.PlayerId)*.05))
+        {
+            if(selected.Count>=11)break;
+            selected.Add(player.PlayerId);substitutes.Add(player.PlayerId);
+        }
         return new SnapPersonnel { TeamName = teamName, PlayerIds = selected, SubstitutedPlayerIds = substitutes };
     }
 
-    private static bool ShouldRotate(DynastyPlayer player, double energy, Random random)
+    private static bool ShouldRotate(DynastyPlayer player, double energy, Random random, int? backupOverall = null)
     {
         if (energy < EmergencyThreshold(player.Position)) return true;
+        if(player.Position is Position.QB or Position.OL)return false;
         var baseChance = player.Position switch
         {
             Position.RB => .34, Position.WR => .22, Position.TE => .15,
@@ -108,6 +125,7 @@ public static class PersonnelRotationService
             Position.QB => .01, Position.OL => 0, _ => .02
         };
         var fatigueChance = Math.Max(0, 75 - energy) / 90;
+        if(backupOverall is int backup && player.Position is Position.RB or Position.WR or Position.TE)baseChance=Math.Max(.08,baseChance-Math.Max(0,player.OverallRating-backup-3)*.008);
         return random.NextDouble() < Math.Clamp(baseChance + fatigueChance, 0, .9);
     }
 

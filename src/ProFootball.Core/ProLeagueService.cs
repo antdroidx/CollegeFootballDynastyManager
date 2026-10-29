@@ -25,25 +25,28 @@ public static class ProLeagueService
             league.Teams.GroupBy(t => (t.Conference, t.Division)).Any(g => g.Count() != 4 || !g.Select(t => t.SeedRank).Order().SequenceEqual(new[] { 0, 1, 2, 3 })) || league.ActiveRosterLimit != 53 || league.PracticeSquadLimit != 16)
             throw new InvalidDataException("A league needs two conferences of four divisions, four unique teams per division, 53 active players and 16 practice players.");
     }
-    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false, StaffRole role = StaffRole.HeadCoach, bool firingEnabled = false, string? coachName = null, bool applyOpeningTrades = true)
+    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false, StaffRole role = StaffRole.HeadCoach, bool firingEnabled = false, string? coachName = null, bool applyOpeningTrades = true, bool generatedPlayers = false)
     {
         var league = Load();
         if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
         var snapshot = Snapshot();
+        if(generatedPlayers){sourcedContracts=false;applyOpeningTrades=false;}
         var franchise = ProEconomy.Initialize(ProPlayerRatingService.Migrate(new()
         {
             League = league,
             UserTeam = userTeam,
             Name = string.IsNullOrWhiteSpace(name) ? "My franchise" : name.Trim(),
-            Players = snapshot.Players.ToList(),
+            Players = generatedPlayers ? ProGeneratedRoster.Create(league) : snapshot.Players.ToList(),
             Coaches = snapshot.Coaches.ToList(),
             CoachCandidates = snapshot.Candidates.ToList(),
             Games = ProSchedule.Build(league, 2026),
-            DataSnapshot = $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
+            FictionalPlayers = generatedPlayers,
+            DataSnapshot = generatedPlayers ? "Generated players · balanced pro league" : $"NFL 2026 Week {snapshot.Week} · Madden 27 Week 6 / launch · {snapshot.MaddenMatched} matched, {snapshot.Estimated} estimated"
         }));
         franchise = ProCapInitialization.Initialize(franchise);
         franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
         var initialized = ProMorale.NormalizeContracts(sourcedContracts ? ProReviewedOpeningRoster.InitializeNew(ProOpeningLedger.InitializeNew(ProContractData.Apply(franchise))) : ProContractData.CompleteRookieTerms(franchise));
+        if(generatedPlayers)return ProRoster.TrimOversizedPractice(ProReserve.InitializeOpening(initialized));
         initialized = ProCompensatoryDraft.InitializeNew(applyOpeningTrades ? ProOpeningTransactions.InitializeNew(initialized) : initialized);
         return applyOpeningTrades ? ProRoster.TrimOversizedPractice(ProReserve.InitializeOpening(ProFutureDraftOwnership.InitializeNew(initialized))) : initialized;
     }

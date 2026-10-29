@@ -38,6 +38,31 @@ public class PersonnelRotationTests
         Assert.Contains(ol1.PlayerId, personnel.PlayerIds);
     }
 
+    [Fact] public void ThreeBacksShareWorkWhileHealthyQuarterbackAndLineStayStable()
+    {
+        var roster=Offense();var fatigue=new GameFatigueState();var random=new Random(712);var counts=new Dictionary<Guid,int>();var qb=roster.First(p=>p.Position==Position.QB);
+        for(var i=0;i<1000;i++)
+        {
+            var unit=PersonnelRotationService.SelectOffense(roster,"Test",OffensivePersonnel.Eleven,fatigue,random);
+            Assert.Equal(11,unit.PlayerIds.Count);Assert.Equal(11,unit.PlayerIds.Distinct().Count());Assert.Contains(qb.PlayerId,unit.PlayerIds);
+            foreach(var id in unit.PlayerIds)counts[id]=counts.GetValueOrDefault(id)+1;
+        }
+        Assert.True(roster.Count(p=>p.Position==Position.RB&&counts.GetValueOrDefault(p.PlayerId)>15)>=3);
+        Assert.All(roster.Where(p=>p.Position==Position.OL&&p.DepthChartOrder<=5),p=>Assert.Equal(1000,counts[p.PlayerId]));
+    }
+    [Fact] public void ThinPackageUsesHealthySameUnitAlternativesToFieldEleven()
+    {
+        var roster=Offense().Where(p=>p.Position!=Position.TE).ToArray();var unit=PersonnelRotationService.SelectOffense(roster,"Test",OffensivePersonnel.Twelve,new(),new Random(2));
+        Assert.Equal(11,unit.PlayerIds.Count);Assert.Equal(11,unit.PlayerIds.Distinct().Count());Assert.All(unit.PlayerIds,id=>Assert.Contains(roster,p=>p.PlayerId==id));
+    }
+    [Fact] public void DefensiveFrontRotatesBeyondTheFirstBackupPair()
+    {
+        var offense=Offense();var roster=offense.Where(p=>p.Position!=Position.QB).Take(30).Select((p,i)=>p with{Position=i<6?Position.DE:i<12?Position.DT:i<16?Position.OLB:i<20?Position.MLB:i<26?Position.CB:i<28?Position.FS:Position.SS,DepthChartOrder=i%6+1}).ToArray();
+        var used=new HashSet<Guid>();var fatigue=new GameFatigueState();var random=new Random(42);
+        for(var i=0;i<400;i++){var unit=PersonnelRotationService.SelectDefense(roster,"Test",DefensivePersonnel.BaseFourThree,fatigue,random);Assert.Equal(11,unit.PlayerIds.Distinct().Count());used.UnionWith(unit.PlayerIds);}
+        Assert.True(roster.Count(p=>p.Position==Position.DE&&used.Contains(p.PlayerId))>=4);Assert.True(roster.Count(p=>p.Position==Position.DT&&used.Contains(p.PlayerId))>=4);
+    }
+
     private static DynastyPlayer[] Offense()
     {
         var players = new List<DynastyPlayer>();

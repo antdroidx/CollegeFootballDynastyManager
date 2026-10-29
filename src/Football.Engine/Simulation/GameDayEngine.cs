@@ -209,7 +209,7 @@ public static partial class GameDayEngine
         }
         var yards = turnover ? 0 : sack ? -session.Random.Next(3, 11) : scramble
             ? Math.Max(-3, RoundYards(session.Random.Next(-1, 10) + (mobility - 65) * .10))
-            : isPass ? 0 : Math.Max(-4, RoundYards(session.Random.Next(-2, 11) + advantage * .09));
+            : isPass ? 0 : Math.Max(-4, RoundYards(session.Random.Next(-2, 11) + advantage * .09 + session.Rules.RunGainOffset));
 
         var carrier = isPass ? null : scramble || designedKeep ? qb : Pick(offensePlayers.Where(player => player.Position == Position.RB).ToArray(), session.Random) ?? qb;
         var target = isPass ? read.Target : null;
@@ -347,9 +347,9 @@ public static partial class GameDayEngine
                 IsOvertime = first.Quarter > 4, Concept = concept, OffensivePlayId = first.OffensivePlayId, DefensivePlayId = first.DefensivePlayId,
                 PlayCallSource = first.CallSource,
                 PassAttempts = scrimmage.Count(item => IsPass(item) && item.Outcome != SnapOutcome.Sack),
-                RushAttempts = scrimmage.Count(item => !IsPass(item) || item.Outcome == SnapOutcome.Sack),
+                RushAttempts = scrimmage.Count(item => !IsPass(item) || item.Outcome == SnapOutcome.Sack && session.Rules.SacksCountAsRushing),
                 PassYards = scrimmage.Where(item => IsPass(item) && item.Outcome is SnapOutcome.Completion or SnapOutcome.Touchdown).Sum(item => item.Yards),
-                RushYards = scrimmage.Where(item => !IsPass(item) || item.Outcome == SnapOutcome.Sack).Sum(item => item.Yards),
+                RushYards = scrimmage.Where(item => !IsPass(item) || item.Outcome == SnapOutcome.Sack && session.Rules.SacksCountAsRushing).Sum(item => item.Yards),
                 Outcome = touchdown ? DriveOutcome.Touchdown : turnover ? DriveOutcome.Turnover : fieldGoal ? DriveOutcome.FieldGoal : DriveOutcome.Punt,
                 Points = points
             };
@@ -413,7 +413,7 @@ public static partial class GameDayEngine
                 };
                 Save(qb);
             }
-            if ((!pass || snap.Outcome == SnapOutcome.Sack) && (snap.Outcome == SnapOutcome.Sack ? snap.QuarterbackId : snap.BallCarrierId) is Guid carrierId)
+            if ((!pass || snap.Outcome == SnapOutcome.Sack && session.Rules.SacksCountAsRushing) && (snap.Outcome == SnapOutcome.Sack ? snap.QuarterbackId : snap.BallCarrierId) is Guid carrierId)
             {
                 var carrier = Line(carrierId) with
                 {
@@ -504,7 +504,7 @@ public static partial class GameDayEngine
         var passes = scrimmage.Where(item => !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
             ConceptOf(session, item) is
             OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass).ToArray();
-        var runs = scrimmage.Except(passes).Concat(passes.Where(item => item.Outcome == SnapOutcome.Sack)).ToArray();
+        var runs = scrimmage.Except(passes).Concat(passes.Where(item => item.Outcome == SnapOutcome.Sack && session.Rules.SacksCountAsRushing)).ToArray();
         return new GameTeamStats
         {
             Efficiency = FootballEfficiency.Capture(scrimmage),
@@ -522,6 +522,7 @@ public static partial class GameDayEngine
             ExplosivePasses20 = passes.Count(item => item.Yards >= 20),
             ExplosiveRuns20 = runs.Count(item => item.Yards >= 20),
             SacksAllowed = passes.Count(item => item.Outcome == SnapOutcome.Sack),
+            SackYardsLost = session.Rules.SacksCountAsRushing ? 0 : -passes.Where(item=>item.Outcome==SnapOutcome.Sack).Sum(item=>item.Yards),
             FieldGoalsMade = snaps.Count(item => item.Outcome == SnapOutcome.FieldGoal),
             FieldGoalsAttempted = snaps.Count(item => item.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal),
             ExtraPointsMade = snaps.Count(item => item.Outcome == SnapOutcome.ExtraPoint),

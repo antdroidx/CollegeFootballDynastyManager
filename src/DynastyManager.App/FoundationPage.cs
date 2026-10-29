@@ -1091,13 +1091,14 @@ public sealed partial class FoundationPage : ContentPage
                 startingYear);
 
             activeRoster = StartingLibraryService.CreateRoster(startingSetup, startingRoster, activeRoster);
+            if(_generatePlayers.IsToggled)activeRoster=FictionalRosterService.College(activeRoster,_newDynastyTeams.ToArray());
             _currentDynasty = new DynastyState
             {
                 DynastyId = dynastyId,
                 DynastyName = dynastyName,
                 LeagueTeams = _newDynastyTeams.ToArray(),
                 LeagueName = startingSetup.Name, LeagueRules = startingSetup.Rules with { },
-                StartingRosterName = startingRoster?.Name ?? "Default roster",
+                StartingRosterName = _generatePlayers.IsToggled?"Generated players · program strengths":startingRoster?.Name ?? "Default roster",
                 UserTeamName = teamName,
                 UserCoachRole = (StaffRole)Math.Max(0, _newCoachRole.SelectedIndex),
                 UserCoachFiringEnabled = _newCoachFiring.IsToggled,
@@ -5309,6 +5310,7 @@ public sealed partial class FoundationPage : ContentPage
         _teamPicker.IsEnabled = enabled;
         _leaguePicker.IsEnabled = enabled;
         _startingRosterPicker.IsEnabled = enabled;
+        _generatePlayers.IsEnabled = enabled;
     }
 
     private void SetDynastyControlsEnabled(bool enabled)

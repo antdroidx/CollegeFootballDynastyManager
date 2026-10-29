@@ -79,7 +79,9 @@ public static partial class GameDayEngine
     {
         if (session.OvertimeRound > 0 && !session.Rules.TimedOvertime) throw new InvalidOperationException("Clock plays are unavailable in untimed overtime.");
         var home = session.PossessionTeamName == session.Game.HomeTeamName;
-        var qb = (home ? session.HomeRoster : session.AwayRoster).FirstOrDefault(p => p.Position == Position.QB);
+        var offense=GameDayCoachingService.ApplySubstitutions(session,PersonnelRotationService.SelectOffense(home?session.HomeDepthChart:session.AwayDepthChart,session.PossessionTeamName,OffensivePersonnel.Twelve,home?session.HomeFatigue:session.AwayFatigue,session.Random));
+        var defense=GameDayCoachingService.ApplySubstitutions(session,PersonnelRotationService.SelectDefense(home?session.AwayDepthChart:session.HomeDepthChart,home?session.Game.AwayTeamName:session.Game.HomeTeamName,DefensivePersonnel.BaseFourThree,home?session.AwayFatigue:session.HomeFatigue,session.Random));
+        var qb = offense.PlayerIds.Select(id=>session.PlayersById[id]).FirstOrDefault(p=>p.Position==Position.QB);
         var snap = new GameSnapEvent
         {
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber, Quarter = session.Quarter,
@@ -90,6 +92,7 @@ public static partial class GameDayEngine
             BallEndYardLine = session.YardLine - (spike ? 0 : 1), Yards = spike ? 0 : -1,
             QuarterbackId = qb?.PlayerId, BallCarrierId = spike ? null : qb?.PlayerId,
             PreSnapSeconds = session.LastPreSnapSeconds, LiveBallSeconds = spike ? 2 : 4,
+            OffensePersonnel=offense.PlayerIds,DefensePersonnel=defense.PlayerIds,
             Outcome = spike ? SnapOutcome.Spike : SnapOutcome.Kneel
         };
         session.Events.Add(snap);

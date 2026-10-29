@@ -17,6 +17,8 @@ public sealed record GameTeamStats
     public int ExplosiveRuns20 { get; init; }
     public int Drops { get; init; }
     public int YardsAfterCatch { get; init; }
+    public int SackYardsLost { get; init; }
+    public int NetPassYards => PassYards - SackYardsLost;
     public int SacksAllowed { get; init; }
     public int FieldGoalsMade { get; init; }
     public int FieldGoalsAttempted { get; init; }
@@ -35,5 +37,5 @@ public sealed record GameTeamStats
     public int PuntReturnTouchdowns { get; init; }
     public int Turnovers { get; init; }
 
-    public int TotalYards => PassYards + RushYards;
+    public int TotalYards => NetPassYards + RushYards;
 }
