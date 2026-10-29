@@ -87,6 +87,9 @@ public sealed partial class FoundationPage : ContentPage
     private readonly Button _newDynastyButton;
     private readonly Label _currentDynastyLabel;
     private readonly Button _advanceWeekButton;
+    private readonly Button _simulatePhaseButton = new() { Text="Simulate phase", AutomationId="simulate-phase" };
+    private readonly Button _stopPhaseSimulation = new() { Text="Stop after this week", IsVisible=false };
+    private bool _isBatchSimulating, _batchStopRequested, _advanceFailed;
     private readonly Button _manualSaveButton;
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
@@ -214,6 +217,8 @@ public sealed partial class FoundationPage : ContentPage
             IsEnabled = false
         };
         _advanceWeekButton.Clicked += AdvanceWeek;
+        _simulatePhaseButton.Clicked += async (_,_) => await SimulateCurrentPhaseAsync();
+        _stopPhaseSimulation.Clicked += (_,_) => { _batchStopRequested=true; _stopPhaseSimulation.IsEnabled=false; };
 
         _manualSaveButton = new Button
         {
@@ -565,7 +570,8 @@ public sealed partial class FoundationPage : ContentPage
                     Children =
                     {
                         _advanceOverlayStatus,
-                        _advanceOverlayProgress
+                        _advanceOverlayProgress,
+                        _stopPhaseSimulation
                     }
                 }
             }
@@ -1153,7 +1159,8 @@ public sealed partial class FoundationPage : ContentPage
         }
     }
 
-    private async void AdvanceWeek(object? sender, EventArgs e)
+    private async void AdvanceWeek(object? sender, EventArgs e) => await AdvanceOneWeekAsync();
+    private async Task AdvanceOneWeekAsync()
     {
         if (_currentDynasty is null || _isAdvancing)
             return;
@@ -1168,6 +1175,7 @@ public sealed partial class FoundationPage : ContentPage
             return;
         }
 
+        _advanceFailed = false;
         _isAdvancing = true;
         SetDynastyControlsEnabled(false);
         await ShowAdvanceProgressAsync("Preparing weekly advance...", 0.04);
@@ -1609,6 +1617,7 @@ public sealed partial class FoundationPage : ContentPage
         catch (Exception ex)
         {
             SetDynastyControlsEnabled(true);
+            _advanceFailed = true;
             _rollingAutosaveStatus.Text =
                 $"Advance failed at {phaseAtStart} Week {weekAtStart}: {ex.Message}";
             RenderCurrentDynasty();
@@ -1616,7 +1625,7 @@ public sealed partial class FoundationPage : ContentPage
         finally
         {
             _isAdvancing = false;
-            _advanceOverlay.IsVisible = false;
+            _advanceOverlay.IsVisible = _isBatchSimulating;
             SetDynastyControlsEnabled(_currentDynasty is not null);
         }
     }
@@ -5304,7 +5313,8 @@ public sealed partial class FoundationPage : ContentPage
 
     private void SetDynastyControlsEnabled(bool enabled)
     {
-        var controlsEnabled = enabled && !_isAdvancing;
+        var controlsEnabled = enabled && !_isAdvancing && !_isBatchSimulating;
+        _simulatePhaseButton.IsEnabled = controlsEnabled;
         _advanceWeekButton.IsEnabled = controlsEnabled;
         _manualSaveButton.IsEnabled = controlsEnabled;
         _autosaveButton.IsEnabled = controlsEnabled;

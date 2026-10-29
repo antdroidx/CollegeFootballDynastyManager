@@ -114,6 +114,7 @@ public static class ProEconomy
         if (years is < 1 or > 5) throw new InvalidOperationException("Extension must be one to five years.");
         var p = s.Players.Single(p => p.Football.PlayerId == id); var c = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == id && c.Team == team) ?? throw new InvalidOperationException("No active contract.");
         if (c.LastChangedYear >= s.Year) throw new InvalidOperationException("This player already completed a contract change this season.");
+        if (ProRetention.ExtensionIssue(s,p) is {} eligibility) throw new InvalidOperationException(eligibility);
         if (p.Football.TeamName != team || !ProNegotiation.Evaluate(p,years,annual,bonus,Math.Max(ProFinance.Minimum(s,p,practice:false),MarketSalary(s,p))).Accepted) throw new InvalidOperationException("Extension rejected. Increase the annual salary.");
         var first = ProContractInsights.PlayingEnd(c) + 1;
         if(annual<ProFinance.Minimum(s,p,first,practice:false))throw new InvalidOperationException("Offer must meet the player’s league minimum salary.");

@@ -8,7 +8,7 @@ on:
       validation_scope:
         description: Finance checks financial management; termination checks release/waiver/accrual; live checks GameCast; other scopes cover their management flows
         type: choice
-        options: [depth-editor, cap-display, roster-update, staff-calendar, exchange, presentation, roadmap, full, finance, opening, live, trade, retention, reserve, termination]
+        options: [inseason-phase, depth-editor, cap-display, roster-update, staff-calendar, exchange, presentation, roadmap, full, finance, opening, live, trade, retention, reserve, termination]
         default: full
       reuse_apk_run_id:
         description: Optional prior run ID for test-only retries; app-source differences reject reuse
@@ -60,13 +60,13 @@ jobs:
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
-        if: inputs.validation_scope != 'depth-editor' && inputs.validation_scope != 'cap-display' && inputs.validation_scope != 'roster-update' && inputs.validation_scope != 'staff-calendar' && inputs.validation_scope != 'exchange' && inputs.validation_scope != 'presentation' && inputs.validation_scope != 'roadmap' && inputs.validation_scope != 'finance' && inputs.validation_scope != 'opening' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade' && inputs.validation_scope != 'retention' && inputs.validation_scope != 'reserve' && inputs.validation_scope != 'termination'
+        if: inputs.validation_scope != 'inseason-phase' && inputs.validation_scope != 'depth-editor' && inputs.validation_scope != 'cap-display' && inputs.validation_scope != 'roster-update' && inputs.validation_scope != 'staff-calendar' && inputs.validation_scope != 'exchange' && inputs.validation_scope != 'presentation' && inputs.validation_scope != 'roadmap' && inputs.validation_scope != 'finance' && inputs.validation_scope != 'opening' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade' && inputs.validation_scope != 'retention' && inputs.validation_scope != 'reserve' && inputs.validation_scope != 'termination'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
       - name: Pro scoped regressions
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
-        if: (inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'termination' || inputs.validation_scope == 'opening' || inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve'
+        if: (inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'termination' || inputs.validation_scope == 'opening' || inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
       - name: Build independent pro APK
         run: >
@@ -131,14 +131,14 @@ jobs:
           run-id: ${{ inputs.college_run }}
           github-token: ${{ github.token }}
       - uses: actions/setup-dotnet@v4
-        if: inputs.reuse_apk_run_id != '' && ((inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
+        if: inputs.reuse_apk_run_id != '' && ((inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
         with:
           dotnet-version: '10.0.x'
       - name: Regenerate scoped management fixtures for exact-APK retries
-        if: inputs.reuse_apk_run_id != '' && ((inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
+        if: inputs.reuse_apk_run_id != '' && ((inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
         env:
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}/apk
-        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~DepthChartTests|FullyQualifiedName~CapDisplayTests|FullyQualifiedName~PlayerExchangeTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~CoordinatorRosterTests|FullyQualifiedName~ReserveActivationTests|FullyQualifiedName~TerminationDeviceFixtures|FullyQualifiedName~CompensatoryDraftTests'
+        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~InSeasonRetentionTests|FullyQualifiedName~PhaseSimulationTests|FullyQualifiedName~DepthChartTests|FullyQualifiedName~CapDisplayTests|FullyQualifiedName~PlayerExchangeTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~CoordinatorRosterTests|FullyQualifiedName~ReserveActivationTests|FullyQualifiedName~TerminationDeviceFixtures|FullyQualifiedName~CompensatoryDraftTests'
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -154,7 +154,7 @@ jobs:
             adb install -r $(find apk -name '*-Signed.apk' -print -quit)
             if [ '${{ inputs.validation_scope }}' = exchange ]; then adb install -r $(find college-apk -name '*.apk' -print -quit); fi
             adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
-            PRO_FINANCE_OPENING_ONLY=${{ inputs.validation_scope == 'opening' && '1' || '0' }} python3 -u build/${{ inputs.validation_scope == 'depth-editor' && 'pro-depth-editor-smoke.py' || inputs.validation_scope == 'cap-display' && 'pro-cap-display-smoke.py' || inputs.validation_scope == 'roster-update' && 'pro-roster-update-smoke.py' || inputs.validation_scope == 'staff-calendar' && 'pro-staff-calendar-smoke.py' || inputs.validation_scope == 'exchange' && 'player-exchange-smoke.py' || (inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'presentation') && 'pro-roadmap-smoke.py' || inputs.validation_scope == 'termination' && 'pro-termination-smoke.py' || inputs.validation_scope == 'reserve' && 'pro-reserve-smoke.py' || (inputs.validation_scope == 'finance' || inputs.validation_scope == 'opening') && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || (inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve') && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }} ${{ inputs.validation_scope == 'presentation' && '--presentation-only' || '' }}
+            PRO_FINANCE_OPENING_ONLY=${{ inputs.validation_scope == 'opening' && '1' || '0' }} python3 -u build/${{ inputs.validation_scope == 'inseason-phase' && 'pro-inseason-phase-smoke.py' || inputs.validation_scope == 'depth-editor' && 'pro-depth-editor-smoke.py' || inputs.validation_scope == 'cap-display' && 'pro-cap-display-smoke.py' || inputs.validation_scope == 'roster-update' && 'pro-roster-update-smoke.py' || inputs.validation_scope == 'staff-calendar' && 'pro-staff-calendar-smoke.py' || inputs.validation_scope == 'exchange' && 'player-exchange-smoke.py' || (inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'presentation') && 'pro-roadmap-smoke.py' || inputs.validation_scope == 'termination' && 'pro-termination-smoke.py' || inputs.validation_scope == 'reserve' && 'pro-reserve-smoke.py' || (inputs.validation_scope == 'finance' || inputs.validation_scope == 'opening') && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || (inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve') && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }} ${{ inputs.validation_scope == 'presentation' && '--presentation-only' || '' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -171,6 +171,8 @@ jobs:
             pro-guarantee-migration-check.json
             pro-reserve-logcat.txt
             pro-reserve-check.json
+            pro-inseason-phase-check.json
+            pro-inseason-phase-logcat.txt
             pro-depth-editor-check.json
             pro-depth-editor-logcat.txt
             pro-cap-display-check.json

@@ -14,6 +14,11 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      management_scope:
+        description: Focus device and engine checks on the changed management flow
+        type: choice
+        options: [full, fast-forward]
+        default: full
       run_emulator:
         description: Run Android launch validation after uploading the APK
         type: boolean
@@ -79,9 +84,12 @@ jobs:
         env:
           SKIP_CAREER_HEALTH: ${{ (github.event_name == 'workflow_dispatch' && !inputs.run_career_health) || (github.ref_name == 'feature/gamecast-visual-polish' || github.ref_name == 'feature/pro-franchise-foundation') }}
           RUN_RATING_CALIBRATION: ${{ github.event_name == 'workflow_dispatch' && inputs.run_rating_calibration }}
+          MANAGEMENT_SCOPE: ${{ inputs.management_scope }}
           CFDM_CALIBRATION_REPORT_DIR: ${{ github.workspace }}/artifacts/calibration
         run: |
-          if [ "$RUN_RATING_CALIBRATION" = "true" ]; then
+          if [ "$MANAGEMENT_SCOPE" = "fast-forward" ]; then
+            dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter 'FullyQualifiedName~SeasonProgressionTests|FullyQualifiedName~DynastySaveRepositoryTests|FullyQualifiedName~CollegeSeasonFeatureTests'
+          elif [ "$RUN_RATING_CALIBRATION" = "true" ]; then
             dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter '(FullyQualifiedName!~DynastyHealthTests|DisplayName~teamCount: 12)'
           elif [ "$SKIP_CAREER_HEALTH" = "true" ]; then
             dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter 'FullyQualifiedName!~DynastyHealthTests&FullyQualifiedName!~OvrCalibrationDynastyTests'
@@ -198,7 +206,7 @@ jobs:
             sleep 8
             adb logcat -d > android-logcat.txt
             adb shell pidof antdroid.cfbcoach.dev
-            python3 -u build/android-ui-smoke.py || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
+            python3 -u build/${{ inputs.management_scope == 'fast-forward' && 'college-phase-smoke.py' || 'android-ui-smoke.py' }} || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
 
       - name: Upload launch UI evidence
         if: always()
@@ -217,6 +225,8 @@ jobs:
         with:
           name: android-launch-log
           path: |
+            college-phase-check.json
+            college-phase-logcat.txt
             android-logcat.txt
             android-last-anr.txt
           if-no-files-found: ignore
@@ -224,7 +234,7 @@ jobs:
 
   android-career-options:
     needs: build-test-android
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
+    if: inputs.management_scope != 'fast-forward' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator))
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -283,6 +293,8 @@ jobs:
         with:
           name: android-career-options-log-${{ github.run_number }}
           path: |
+            college-phase-check.json
+            college-phase-logcat.txt
             android-logcat.txt
             android-last-anr.txt
           if-no-files-found: ignore

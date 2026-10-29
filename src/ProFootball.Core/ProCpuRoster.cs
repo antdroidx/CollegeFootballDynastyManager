@@ -8,6 +8,7 @@ public static class ProCpuRoster
     public static ProFranchise Manage(ProFranchise s,string team,Func<ProPlayer,bool>? eligible=null)
     {
         bool Allowed(ProPlayer p)=>eligible is null||eligible(p);
+        if(!ProRoster.IsCamp(s))s=ProCpu.Trim(s,team,eligible);
         var candidates=s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&Healthy(s,p)&&Allowed(p)&&(p.PracticeSquad||p.Reserve))
             .OrderByDescending(p=>p.Football.OverallRating).ThenBy(p=>p.Football.PlayerId).Select(p=>p.Football.PlayerId).ToArray();
         foreach(var id in candidates)

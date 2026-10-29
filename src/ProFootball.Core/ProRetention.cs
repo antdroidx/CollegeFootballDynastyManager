@@ -3,14 +3,31 @@ namespace ProFootball.Core;
 public static class ProRetention
 {
     public static IReadOnlyList<ProPlayer> Expiring(ProFranchise s,string team) => s.Players.Where(p=>!p.Retired&&p.Football.TeamName==team&&s.Contracts.Any(c=>c.Active&&c.PlayerId==p.Football.PlayerId&&c.Team==team&&ProContractInsights.PlayingEnd(c)<=s.Year)).OrderByDescending(p=>p.Football.OverallRating).ToArray();
+    public static string? ExtensionIssue(ProFranchise s, ProPlayer p)
+    {
+        var c=s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==p.Football.PlayerId&&c.Team==p.Football.TeamName);
+        if(c is null||p.Retired)return "No active playing contract.";
+        if(c.LastChangedYear>=s.Year)return "Already changed this contract this season.";
+        if(ProContractInsights.PlayingEnd(c)+1+1-s.Year>6)return "Too many contract years remain to extend.";
+        var rookie=c.OriginalRookieYear??p.RookieYear;
+        if(rookie is int r && ProContractInsights.RookieDeal(s,p,c))
+        {
+            var drafted=p.DraftOverall is >0||s.DraftHistory.Any(d=>d.Player.Football.PlayerId==p.Football.PlayerId);
+            var last=r+(drafted?2:1);
+            var regularComplete=s.Phase is ProPhase.Playoffs or ProPhase.Offseason || s.Phase==ProPhase.RegularSeason&&s.Week==18&&s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.InvolvesTeam(p.Football.TeamName)).All(g=>g.Football.HasPlayed);
+            if(s.Year<last||s.Year==last&&!regularComplete)return $"Rookie deal: negotiations open after the {last} regular season.";
+        }
+        return null;
+    }
     public static ProFranchise Negotiate(ProFranchise s,string team)=>Negotiate(s,team,false);
     public static ProFranchise NegotiateStaffUnit(ProFranchise s)=>s.Career?.Unemployed==true?Negotiate(s,s.UserTeam,false)
         :ProCareer.Role(s)==StaffRole.HeadCoach?s:Negotiate(s,s.UserTeam,true);
     static ProFranchise Negotiate(ProFranchise s,string team,bool staffUnit)
     {
-        if(s.Phase!=ProPhase.Offseason||s.OffseasonStep!=OffseasonStep.Retention)throw new InvalidOperationException("Retention negotiations open at the end of the season.");
+        if(s.Phase==ProPhase.Offseason&&s.OffseasonStep!=OffseasonStep.Retention)throw new InvalidOperationException("Use the retention stage for offseason negotiations.");
         foreach(var p in Expiring(s,team).Where(p=>!s.LetExpire.Contains(p.Football.PlayerId)&&(team!=s.UserTeam||s.Career?.Unemployed==true||(ProCareer.Controls(s,p.Football.Position)!=staffUnit))))
         {
+            if(ExtensionIssue(s,p) is not null)continue;
             var terms=ProOfferTerms.AgentDemand(s,p,true);var c=s.Contracts.Last(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
             if(c.LastChangedYear>=s.Year)continue;
             var first=ProContractInsights.PlayingEnd(c)+1;

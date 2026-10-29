@@ -3,11 +3,12 @@ namespace ProFootball.Core;
 /// <summary>Confirmed opening roster transactions. Factory only: never replay real trades over a played save.</summary>
 public static class ProOpeningTransactions
 {
-    public const string ObservedOn = "2026-10-28";
-    public sealed record OpeningTrade(string Player, string From, string To, IReadOnlyList<(int Year,int Round)> Picks, string Source);
+    public const string ObservedOn = "2026-10-29";
+    public sealed record OpeningTrade(string Player, string From, string To, IReadOnlyList<(int Year,int Round)> Picks, string Source) { public IReadOnlyList<(int Year,int Round)> ReturnPicks {get;init;}=[]; }
     public static IReadOnlyList<OpeningTrade> Trades { get; } = [
         new("Quenton Nelson","IND","SEA",[(2027,3),(2028,5)],"https://www.colts.com/news/colts-trade-g-quenton-nelson-to-seattle-seahawks-for-2-future-nfl-draft-picks"),
-        new("DeForest Buckner","IND","SF",[(2027,4)],"https://www.colts.com/news/colts-acquire-2027-fourth-round-pick-in-exchange-for-dt-deforest-buckner-in-trade-with-san-francisco-49ers")
+        new("DeForest Buckner","IND","SF",[(2027,4)],"https://www.colts.com/news/colts-acquire-2027-fourth-round-pick-in-exchange-for-dt-deforest-buckner-in-trade-with-san-francisco-49ers"),
+        new("Jeffery Simmons","TEN","CHI",[(2027,1),(2028,1),(2027,4)],"https://www.nfl.com/news/jeffery-simmons-bears-titans-trade") {ReturnPicks=[(2028,5)]}
     ];
     internal static ProFranchise InitializeNew(ProFranchise s)
     {
@@ -22,10 +23,11 @@ public static class ProOpeningTransactions
             var player=s.Players.Single(p=>p.Football.FullName.Equals(trade.Player,StringComparison.OrdinalIgnoreCase));
             if(player.Football.TeamName!=from)throw new InvalidDataException("Opening trade roster baseline differs: "+trade.Player);
             var picks=trade.Picks.Select(item=>s.Picks.Single(p=>p.Year==item.Year&&p.Round==item.Round&&p.OriginalTeam==to&&p.Owner==to)).ToArray();
+            var returns=trade.ReturnPicks.Select(item=>s.Picks.Single(p=>p.Year==item.Year&&p.Round==item.Round&&p.OriginalTeam==from&&p.Owner==from)).ToArray();
             // Use the existing assignment accounting: seller retains paid bonus obligations;
             // buyer assumes remaining playing salaries. Do not ask trade AI to approve an already confirmed trade.
             s=ProTrade.Move(s,player,to);
-            s=s with{Picks=s.Picks.Select(p=>picks.Any(x=>x.Id==p.Id)?p with{Owner=from}:p).ToList()};
+            s=s with{Picks=s.Picks.Select(p=>picks.Any(x=>x.Id==p.Id)?p with{Owner=from}:returns.Any(x=>x.Id==p.Id)?p with{Owner=to}:p).ToList()};
         }
         return s with{OpeningTransactionsSnapshot=ObservedOn};
     }

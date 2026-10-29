@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "ObservedOn": "2026-10-28",
+  "ObservedOn": "2026-10-29",
   "Teams": [
     "ARI",
     "ATL",
@@ -614,6 +614,34 @@
       "OriginalTeam": "NE",
       "Owner": "MIA",
       "Source": "https://www.miamidolphins.com/news/dolphins-make-trade-with-new-england"
+    },
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "CHI",
+      "Owner": "TEN",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
+    },
+    {
+      "Year": 2028,
+      "Round": 1,
+      "OriginalTeam": "CHI",
+      "Owner": "TEN",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "CHI",
+      "Owner": "TEN",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
+    },
+    {
+      "Year": 2028,
+      "Round": 5,
+      "OriginalTeam": "TEN",
+      "Owner": "CHI",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
     }
   ],
   "Conditions": [

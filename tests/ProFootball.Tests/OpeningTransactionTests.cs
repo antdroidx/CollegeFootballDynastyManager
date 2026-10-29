@@ -17,6 +17,7 @@ public class OpeningTransactionTests
             Assert.Single(s.Contracts,c=>c.Active&&c.PlayerId==p.Football.PlayerId&&c.Team==to);
             Assert.DoesNotContain(s.Contracts,c=>c.Active&&c.PlayerId==p.Football.PlayerId&&c.Team==from);
             foreach(var pick in trade.Picks)Assert.Equal(from,Assert.Single(s.Picks,p=>p.Year==pick.Year&&p.Round==pick.Round&&p.OriginalTeam==to).Owner);
+            foreach(var pick in trade.ReturnPicks)Assert.Equal(to,Assert.Single(s.Picks,p=>p.Year==pick.Year&&p.Round==pick.Round&&p.OriginalTeam==from).Owner);
             Assert.Contains(s.Contracts,c=>!c.Active&&c.PlayerId==p.Football.PlayerId&&c.Team==from);
             Assert.True(ProFinance.Budget(s,to).TotalCommitments>=0);
         }

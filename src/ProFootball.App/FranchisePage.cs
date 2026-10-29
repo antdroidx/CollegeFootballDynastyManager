@@ -102,7 +102,7 @@ public sealed partial class FranchisePage : ContentPage
     void Overview()
     {
         var s = state!; var r = ProStandings.Build(s).Single(r => r.Team.Name == s.UserTeam);
-        var actions = new ActionRow(); actions.Add(Action(s.Phase == ProPhase.Offseason ? "Advance offseason" : "Advance week", Advance, "pro-advance")); actions.Add(Action("This week's league games", () => OpenLeagueGames(), "pro-week-games")); body.Add(actions);
+        var actions = new ActionRow(); actions.Add(Action(s.Phase == ProPhase.Offseason ? "Advance offseason" : "Advance week", Advance, "pro-advance")); actions.Add(Action("This week's league games", () => OpenLeagueGames(), "pro-week-games")); if(s.Phase!=ProPhase.Offseason)actions.Add(Action(s.Phase==ProPhase.Preseason?"Simulate preseason":s.Phase==ProPhase.RegularSeason?"Simulate regular season":"Simulate playoffs",SimulatePhase,"pro-simulate-phase")); body.Add(actions);
         body.Add(Action("My team’s season schedule", () => OpenTeamSchedule()));
         if(s.Phase==ProPhase.Playoffs||s.Phase==ProPhase.RegularSeason&&s.Week>=14||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
         if(s.Phase==ProPhase.Preseason||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.RosterCuts)body.Add(Action("Training camp & roster battles",Camp));

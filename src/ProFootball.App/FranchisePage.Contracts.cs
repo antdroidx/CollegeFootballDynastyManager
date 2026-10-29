@@ -5,6 +5,7 @@ public sealed partial class FranchisePage
 {
     async Task<(int Years,long Salary,long Bonus)?> ContractTerms(ProPlayer player,bool extension=false)
     {
+        if(extension&&ProRetention.ExtensionIssue(state!,player) is {} issue){await GameDialogs.AlertAsync(this,"Contract unavailable",issue,"OK");return null;}
         var completion=new TaskCompletionSource<(int Years,long Salary,long Bonus)?>(TaskCreationOptions.RunContinuationsAsynchronously);var closing=false;
         var page=new ContentPage {Title="Contract negotiation",BackgroundColor=DynastyTheme.Background};
         var demand=ProOfferTerms.AgentDemand(state!,player,extension);

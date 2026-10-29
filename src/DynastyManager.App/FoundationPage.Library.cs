@@ -64,11 +64,13 @@ public sealed partial class FoundationPage
             _headerContext.Text = $"{_currentDynasty.UserTeamName} · {_currentDynasty.SeasonYear} · {SeasonProgression.PeriodLabel(_currentDynasty.Phase, _currentDynasty.Week)}";
         if (_currentDynasty is not null)
             _advanceWeekButton.Text = SeasonProgression.AdvanceLabel(_currentDynasty.Phase, _currentDynasty.Week);
+        _simulatePhaseButton.IsVisible=_currentDynasty?.Phase is SeasonPhase.Preseason or SeasonPhase.RegularSeason or SeasonPhase.ConferenceChampionship or SeasonPhase.Postseason;
+        _simulatePhaseButton.Text=_currentDynasty?.Phase==SeasonPhase.Preseason?"Simulate preseason":_currentDynasty?.Phase==SeasonPhase.RegularSeason?"Simulate regular season":"Simulate postseason";
     }
 
     private async Task ReturnToLibraryAsync()
     {
-        if (_isAdvancing || _advanceOverlay.IsVisible) return;
+        if (_isAdvancing || _isBatchSimulating || _advanceOverlay.IsVisible) return;
         try
         {
             if (_activeSection != AppSection.NewDynasty && _currentDynasty is not null)

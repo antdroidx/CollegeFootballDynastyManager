@@ -24,7 +24,7 @@ public class FoundationTests
     }
     [Fact]
     public void RosterLimitsAndIdentitiesAreIndependent()
-    { var s = New(); Assert.Equal(32, s.League.Teams.Count); Assert.Equal(2593, s.Players.Count); Assert.Equal(128,s.Coaches.Count); Assert.Equal(2255,s.Players.Count(p=>p.RatingSource.StartsWith("Madden"))); Assert.Equal(s.Players.Count, s.Players.Select(p => p.Football.PlayerId).Distinct().Count()); foreach (var t in s.League.Teams) { Assert.InRange(ProRoster.Active(s,t.Name),45,53); Assert.InRange(s.Players.Count(p => p.Football.TeamName == t.Name && p.PracticeSquad),0,16); } }
+    { var s = New(); Assert.Equal(32, s.League.Teams.Count); Assert.Equal(2593, s.Players.Count); Assert.Equal(128,s.Coaches.Count); Assert.Equal(2255,s.Players.Count(p=>p.RatingSource.StartsWith("Madden"))); Assert.Equal(s.Players.Count, s.Players.Select(p => p.Football.PlayerId).Distinct().Count()); foreach (var t in s.League.Teams) { Assert.InRange(ProRoster.Active(s,t.Name),45,ProRoster.Limit(s)); Assert.InRange(s.Players.Count(p => p.Football.TeamName == t.Name && p.PracticeSquad),0,16); } }
     [Fact]
     public async Task MultipleSlotsAndCorruptPrimaryRecoverFromRollingBackup()
     { var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()); try { var store = new ProSaveStore(dir); var s = New(); await store.Save(s); await store.Save(s with { Week = 2 }); var other = New(); await store.Save(other); Assert.Equal(2, store.Slots().Count()); Assert.Equal(2, (await store.Load(s.Id)).Week); await File.WriteAllTextAsync(Path.Combine(dir, s.Id + ".json"), "broken"); Assert.Equal(1, (await store.Load(s.Id)).Week); } finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); } }

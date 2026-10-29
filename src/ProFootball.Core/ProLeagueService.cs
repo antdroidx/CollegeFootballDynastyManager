@@ -145,6 +145,7 @@ public static class ProLeagueService
         }
         state = ProMorale.Advance(ProRoster.ResolveWaivers(state with { TransactionTick = state.TransactionTick + 1 }));
         if (state.Phase == ProPhase.Offseason) return ProOffseason.Advance(state);
+        if(state.AutoNegotiateExpiring && state.Career?.Unemployed!=true) state=ProRetention.Negotiate(state,state.UserTeam);
         state = ProCpu.Manage(state);
         foreach (var game in state.Games.Where(g => g.Phase == state.Phase && g.Football.Week == state.Week && !g.Football.HasPlayed).ToArray())
         { var session = Start(state, game, GameDayMode.Simulate); GameDayEngine.SimulateToEnd(session); state = Finish(state, session); }

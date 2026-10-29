@@ -8,7 +8,7 @@ public class FuturePickOwnershipTests
     static ProDraftPick Pick(ProFranchise s,int year,int round,string original)=>s.Picks.Single(p=>p.Year==year&&p.Round==round&&!p.Compensatory&&p.OriginalTeam==original);
     [Fact]public void DatedLedgerCoversAllStandardPicksAndDoesNotDuplicateAcquiredRights()
     {
-        var s=New();Assert.Equal("2026-10-28",s.OpeningPickSnapshot);Assert.Equal(672,s.Picks.Count);Assert.Equal(672,s.Picks.Select(p=>p.Id).Distinct().Count());
+        var s=New();Assert.Equal("2026-10-29",s.OpeningPickSnapshot);Assert.Equal(672,s.Picks.Count);Assert.Equal(672,s.Picks.Select(p=>p.Id).Distinct().Count());
         foreach(var year in new[]{2027,2028,2029})foreach(var team in s.League.Teams)Assert.Equal(7,s.Picks.Count(p=>p.Year==year&&p.OriginalTeam==team.Name&&!p.Compensatory));
         Assert.Equal("New York Jets",Pick(s,2027,1,"Indianapolis Colts").Owner);Assert.Equal("Cleveland Browns",Pick(s,2029,3,"Los Angeles Rams").Owner);
         Assert.Equal("New York Jets",Pick(s,2029,7,"Las Vegas Raiders").Owner);Assert.Equal("Miami Dolphins",Pick(s,2029,7,"New England Patriots").Owner);
