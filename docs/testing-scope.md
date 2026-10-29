@@ -1,3 +1,7 @@
+## CPU roster audit scope
+
+Run focused movement/reserve/camp/coordinator/save guards and one final full Pro run, including annual cases, because CPU roster/cap decisions changed. Stop known-failing annual candidates when a fast guard has already failed. Final Android scope=reserve validates installation, available/blocked manual reserve activation and persisted contracts/reload; whole-league CPU execution is Core test evidence, not claimed as on-device seasons. Reuse unchanged College and GameCast checks. See pro-cpu-roster-audit.md for supported vs simplified roster rules.
+
 ## Accepted Pro93 future ownership scope
 
 Full315 local Pro cases passed7m35; scoped CI313 passed1m47. Build40780183506 packaged APK12857186828 with0 warnings/errors, device evidence12857057721 passes all ten flags; reserved/awarded screenshots reviewed. Opening pick ownership changes CPU draft/financial decisions, so the two long annual cases were run once locally. Device roster-update adds672-right opening inventory, selected multi-hop ownership, visible conditional reservations and current offseason year default. Reuse unchanged College399/398 and Pro44 GameCast evidence. No new device season is claimed.

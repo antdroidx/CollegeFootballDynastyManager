@@ -17,7 +17,7 @@ public static class ProRookieOptions
         return new(s.Year,s.SalaryCap,rows.Where(r=>r.Pay>0).GroupBy(r=>r.Item1).ToDictionary(g=>g.Key,g=>g.Select(r=>r.Pay).OrderDescending().ToList()));
     }
     public static ProFranchise CaptureYear(ProFranchise s) => s with { SalarySamples=s.SalarySamples.Where(h=>h.Year!=s.Year).Append(Sample(s)).OrderBy(h=>h.Year).ToList() };
-    public static int? Origin(ProPlayer p,ProContract c) => c.OriginalRookieYear ??
+    public static int? Origin(ProPlayer p,ProContract c) => c.PracticeOrigin?null:c.OriginalRookieYear ??
         (p.RookieYear is int r && c.SignedYear==r && ProContractInsights.PlayingEnd(c)<=r+4 ? r : null);
     public static bool InWindow(ProFranchise s,int rookie) => s.Year==rookie+2 && (s.Phase==ProPhase.Playoffs || s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)
         || s.Year==rookie+3 && s.Phase==ProPhase.Offseason && s.OffseasonStep is OffseasonStep.FreeAgency or OffseasonStep.Draft;

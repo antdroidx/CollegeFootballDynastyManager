@@ -52,7 +52,7 @@ public static class ProContractData
         var byId=players.ToDictionary(p=>p.Football.PlayerId);
         var contracts=state.Contracts.Select(c=>{
             var p=byId.GetValueOrDefault(c.PlayerId);
-            if(p?.PracticeSquad==true||!c.Active||c.LastChangedYear!=0||(!c.Estimated&&c.Source?.StartsWith("OverTheCap")!=true)||p?.RookieYear is not int rookie||state.Year<rookie)return c;
+            if(c.PracticeOrigin||p?.PracticeSquad==true||!c.Active||c.LastChangedYear!=0||(!c.Estimated&&c.Source?.StartsWith("OverTheCap")!=true)||p?.RookieYear is not int rookie||state.Year<rookie)return c;
             if(c.AccountingVersion>0&&!c.Estimated&&c.SignedYear!=rookie)return c; // A later deal may follow a real release or extension.
             var end=rookie+(p.DraftOverall is >0?4:3)-1;
             if(end<state.Year||ProContractInsights.PlayingEnd(c)>=end)return c;
@@ -60,6 +60,6 @@ public static class ProContractData
             var years=c.Years.Select(y=>y with{ProratedBonus=ProEconomy.BonusCharge(c,y.Year)}).Concat(Enumerable.Range(state.Year+1,end-state.Year).Where(year=>!c.Years.Any(y=>y.Year==year)).Select(year=>new ContractYear(year,current.Salary,0){ProratedBonus=c.Estimated?0:current.ProratedBonus??0})).OrderBy(y=>y.Year).ToList();
             return c with{Years=years,BonusYears=Math.Max(c.BonusYears,end-c.SignedYear+1),SigningBonus=c.AccountingVersion>0?c.SigningBonus:years.Sum(y=>y.ProratedBonus??0),FutureTermsEstimated=true};
         }).ToList();
-        return state with{Players=players,Contracts=contracts.Select(c=>byId.TryGetValue(c.PlayerId,out var p)&&p.RookieYear is int r&&p.DraftOverall is >0&&c.SignedYear==r&&ProContractInsights.PlayingEnd(c)<=r+4?c with{OriginalRookieYear=c.OriginalRookieYear??r}:c).ToList()};
+        return state with{Players=players,Contracts=contracts.Select(c=>!c.PracticeOrigin&&byId.TryGetValue(c.PlayerId,out var p)&&p.RookieYear is int r&&p.DraftOverall is >0&&c.SignedYear==r&&ProContractInsights.PlayingEnd(c)<=r+4?c with{OriginalRookieYear=c.OriginalRookieYear??r}:c).ToList()};
     }
 }

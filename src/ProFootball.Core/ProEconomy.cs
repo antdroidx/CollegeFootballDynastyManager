@@ -163,16 +163,33 @@ public static class ProRoster
     {
         var p = s.Players.Single(p => p.Football.PlayerId == id);
         if (p.Football.TeamName != team || p.Reserve || p.Retired) throw new InvalidOperationException("Unavailable player.");
+        if(p.PracticeSquad==practice)return s;
+        if(!practice&&p.Football.CurrentInjury is {WeeksRemaining:>0})throw new InvalidOperationException("Injured players cannot be promoted.");
         if (practice && !p.PracticeSquad && ProInternationalPractice.OrdinaryPlayers(s,team) >= 16) throw new InvalidOperationException("Practice squad is full.");
         if (!practice && !IsCamp(s) && Active(s, team) >= Limit(s)) throw new InvalidOperationException("Active roster is full.");
         if (practice && p.Experience > 2 && s.Players.Count(x => x.Football.TeamName == team && x.PracticeSquad && x.Experience > 2) >= 6) throw new InvalidOperationException("Six veteran practice-squad slots are already occupied.");
         if(!practice)
         {
             s=ProInternationalPractice.End(s,id);
-            var c=s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==id);var minimum=c is null?ProFinance.Minimum(s,p,practice:false):ProFinance.ContractMinimum(s,p,c,s.Year);
-            if(c is not null){var extra=Math.Max(0,minimum-(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0));if(ProEconomy.Room(s,team)-ProEconomy.Pending(s,team)<extra)throw new InvalidOperationException("Promotion requires cap space for the active-roster minimum salary.");s=s with{Contracts=s.Contracts.Select(x=>x==c?c with{Years=c.Years.Select(y=>y with{Salary=Math.Max(y.Salary,ProFinance.ContractMinimum(s,p,c,y.Year))}).ToList()}:x).ToList()};}
+            var c=s.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==id&&c.Team==team);
+            if(c is null||!c.Years.Any(y=>y.Year==s.Year&&!y.IsVoid))throw new InvalidOperationException("A signed playing contract is required for promotion.");
+            var minimum=c is null?ProFinance.Minimum(s,p,practice:false):ProFinance.ContractMinimum(s,p,c,s.Year);
+            if(c is not null){var extra=Math.Max(0,minimum-(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0));if(ProEconomy.Room(s,team)-ProEconomy.Pending(s,team)<extra)throw new InvalidOperationException("Promotion requires cap space for the active-roster minimum salary.");s=s with{Contracts=s.Contracts.Select(x=>x==c?c with{PracticeOrigin=c.PracticeOrigin||c.BonusYears==1&&ProContractInsights.PlayingEnd(c)<=s.Year,Years=c.Years.Select(y=>y with{Salary=Math.Max(y.Salary,ProFinance.ContractMinimum(s,p,c,y.Year))}).ToList()}:x).ToList()};}
         }
-        return ProEconomy.Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { PracticeSquad = practice } : x).ToList() }, $"{p.Football.FullName} moved to {(practice ? "practice squad" : "active roster")}.");
+        return ProEconomy.Log(s with { Players = s.Players.Select(x => x.Football.PlayerId == id ? x with { PracticeSquad = practice, RosterStatus=practice?"PS":"ACT", Football=x.Football with{DepthChartOrder=99} } : x).ToList() }, $"{p.Football.FullName} moved to {(practice ? "practice squad" : "active roster")}.");
+    }
+    public static ProFranchise SignPractice(ProFranchise s,string team,Guid id)
+    {
+        var p=s.Players.Single(p=>p.Football.PlayerId==id);
+        if(!s.League.Teams.Any(t=>t.Name==team)||p.Football.TeamName!="Free agent"||p.Retired||p.Football.CurrentInjury is {WeeksRemaining:>0}
+            ||s.Waivers.Any(w=>w.PlayerId==id)||s.Bids.Any(b=>b.PlayerId==id)||s.Contracts.Any(c=>c.Active&&c.PlayerId==id))throw new InvalidOperationException("Player is unavailable for a practice contract.");
+        if(ProInternationalPractice.OrdinaryPlayers(s,team)>=16||IsCamp(s)&&CountForLimit(s,team)>=90)throw new InvalidOperationException("Practice/camp roster is full.");
+        if(p.Experience>2&&s.Players.Count(x=>x.Football.TeamName==team&&x.PracticeSquad&&x.Experience>2)>=6)throw new InvalidOperationException("Veteran practice slots are full.");
+        var salary=ProFinance.Minimum(s,p,practice:true);
+        var c=new ProContract(id,team,s.Year,1,0,[new(s.Year,salary,0)]){Estimated=false,PracticeOrigin=true};
+        var next=s with{Contracts=s.Contracts.Append(c).ToList(),Players=s.Players.Select(x=>x.Football.PlayerId==id?x with{Reserve=false,PracticeSquad=true,RosterStatus="PS",Football=x.Football with{TeamName=team,DepthChartOrder=99}}:x).ToList()};
+        if(ProEconomy.Room(next,team)-ProEconomy.Pending(next,team)<0)throw new InvalidOperationException("Insufficient practice-squad cap space.");
+        return ProEconomy.Log(next,$"{team} signed {p.Football.FullName} to the practice squad.");
     }
     public static ProFranchise Claim(ProFranchise s, string team, Guid id)
     {

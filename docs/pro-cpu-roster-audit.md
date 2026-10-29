@@ -1,0 +1,15 @@
+# CPU roster audit — October28,2026
+
+Audit found CPU Manage did not invoke practice promotion or eligible reserve activation. Trim released all surplus active players, and empty practice squads were never replenished. Imported squads also sometimes exceeded the game's six-veteran practice limit. These are actual behavior gaps, not merely display issues.
+
+The repair prioritizes signed internal depth before free-agent bids. Available practice players and reserves can fill vacancies or upgrade a full roster using an immutable practice swap. Injured players and restricted imported reserve codes remain blocked. Transactions respect current roster capacity, existing contract obligations, pending offers, and coordinator unit/GM review. Final cuts try an available practice slot before release; released contracts retain normal debt accounting. CPU practice recruitment uses low-rated, low-market healthy free agents who are not on waivers or under another active contract, limits ordinary squads to16 and veterans to6, balances positional depth and protects the future cap buffer. Legacy excess practice players are released through normal accounting. Manual head-coach teams are not auto-managed.
+
+Promotion records ACT/PS status and minimum salary. A short practice-origin contract receives an explicit optional PracticeOrigin flag so save-load rookie completion cannot turn a promoted one-year practice deal into a new rookie contract. Genuine multi-year drafted rookie protections remain intact. Old saves default the new field false; signed deals are not globally rewritten.
+
+## Scope and limitations
+
+This is the game's existing simplified permanent roster-assignment system. Moving an already signed active player to practice retains the contract and does not introduce the NFL's full release/waiver/re-sign cycle. No temporary game-day elevation/automatic reversion is claimed. Imported IR/PUP/suspension statuses without return eligibility remain unavailable; this batch does not invent source medical clearance, implement a complete IR designation/return-window calendar or generate new injury reserve placements. It therefore verifies supported reserve activation, not every NFL reserve-list rule.
+
+Official reference: https://operations.nfl.com/calendar-events/nfl-free-agency/contract-language (practice size/eligibility) and https://operations.nfl.com/calendar-events/nfl-important-dates (reserve return procedures). The game keeps the existing16 ordinary plus explicit international-exemption model.
+
+Validation: focused movement, whole32-team CPU/user exclusion, real save-loader, reserve activation, camp limits, coordinator budgeting and rookie protection. Full Pro/annual and scoped Android results are recorded in current-work.md. Unchanged College and full GameCast evidence is reused.

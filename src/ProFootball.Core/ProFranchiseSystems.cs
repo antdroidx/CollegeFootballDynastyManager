@@ -228,6 +228,11 @@ public static class ProCpu
         int UnitCount(string team)=>s.Players.Count(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad&&!p.Reserve&&Eligible(team,p));
         ProFranchise Repair(ProFranchise state,string team,long room)=>Staff(team)?RepairStaff(state,room):MakeRoom(state,team,room);
         var teams = s.League.Teams.Where(t => includeUser || t.Name != s.UserTeam || s.Career?.Unemployed == true||Staff(t.Name)).ToArray();
+        foreach(var team in teams)
+        {
+            var moved=ProCpuRoster.Manage(s,team.Name,p=>Eligible(team.Name,p));
+            s=Staff(team.Name)?ReviewStaffRoster(s,moved,"Staff roster activation/promotion"):moved;
+        }
         if (s.Phase is ProPhase.Preseason or ProPhase.Offseason)
             foreach (var team in teams)
             {
@@ -274,12 +279,17 @@ public static class ProCpu
             }
             s = ProEconomy.ResolveBids(s); if (offers == 0&&!repairedBudget) break;
         }
+        foreach(var team in teams)
+        {
+            var filled=ProCpuRoster.FillPractice(s,team.Name,p=>Eligible(team.Name,p));
+            s=Staff(team.Name)?ReviewStaffRoster(s,filled,"Staff practice-squad recruitment"):filled;
+        }
         return ProTradeAi.Process(s with{CapRulesVersion=actualCapRules});
     }
     public static ProFranchise Trim(ProFranchise s, string team,Func<ProPlayer,bool>? eligible=null)
     {
         while (ProRoster.Active(s, team) > 53)
-        { var p = s.Players.Where(p => p.Football.TeamName == team && !p.Reserve && !p.PracticeSquad && !p.Retired&&(eligible is null||eligible(p)&&StaffDepthSurvives(s,p))).OrderBy(p => ProCpuBudget.ReleaseKeepsFuturePlan(s,p)?0:1).ThenBy(p => Need(s, team, p.Football.Position) > 0 ? 1 : 0).ThenBy(p => p.Football.OverallRating).FirstOrDefault(); if(p is null)break; s = ProEconomy.Release(s, team, p.Football.PlayerId, false); }
+        { var p = s.Players.Where(p => p.Football.TeamName == team && !p.Reserve && !p.PracticeSquad && !p.Retired&&(eligible is null||eligible(p)&&StaffDepthSurvives(s,p))).OrderBy(p => ProCpuBudget.ReleaseKeepsFuturePlan(s,p)?0:1).ThenBy(p => Need(s, team, p.Football.Position) > 0 ? 1 : 0).ThenBy(p => p.Football.OverallRating).FirstOrDefault(); if(p is null)break; s = ProCpuRoster.RetainCut(s, team, p.Football.PlayerId); }
         return s;
     }
 }

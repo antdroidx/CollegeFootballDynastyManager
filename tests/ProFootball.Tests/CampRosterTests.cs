@@ -19,7 +19,7 @@ public class CampRosterTests
         s=s with{Players=players.Append(free).ToList(),Contracts=[],Waivers=[],Bids=[]};
         Assert.Equal(74,ProRoster.Active(s,s.UserTeam));Assert.Equal(90,ProRoster.CountForLimit(s,s.UserTeam));
         Assert.Throws<InvalidOperationException>(()=>ProEconomy.Offer(s,s.UserTeam,free.Football.PlayerId,1,Math.Max(1_000_000,ProEconomy.MarketSalary(free)),0));
-        var practice=players.First(p=>p.PracticeSquad);var promoted=ProRoster.Practice(s,s.UserTeam,practice.Football.PlayerId,false);Assert.Equal(90,ProRoster.CountForLimit(promoted,s.UserTeam));
+        var practice=players.First(p=>p.PracticeSquad);s=s with{Contracts=[new(practice.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,1_500_000,0)])]};var promoted=ProRoster.Practice(s,s.UserTeam,practice.Football.PlayerId,false);Assert.Equal(90,ProRoster.CountForLimit(promoted,s.UserTeam));
         Assert.Equal(75,ProRoster.Active(promoted,promoted.UserTeam));
     }
 

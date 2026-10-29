@@ -62,8 +62,12 @@ public sealed class OffseasonCapCountingTests
         var s=Camp();var template=s.Players.First();
         var extra=Enumerable.Range(100,3).Select(i=>template with{Football=template.Football with{PlayerId=Guid.Parse($"00000000-0000-0000-0000-{i:000000000000}")}}).ToArray();
         s=s with{Week=3,Games=[],Career=s.Career! with{Unemployed=true},Players=s.Players.Concat(extra).ToList(),Contracts=s.Contracts.Select(c=>c with{Years=c.Years.Select(y=>y with{OtherCompensation=0}).ToList()}).Concat(extra.Select(p=>new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,1_000_000,0)]))).ToList()};
+        // Force real cuts (rather than retained practice depth), to test preseason termination cash.
+        var practice=Enumerable.Range(200,16).Select(i=>template with{PracticeSquad=true,Football=template.Football with{PlayerId=Guid.Parse($"00000000-0000-0000-0000-{i:000000000000}")}}).ToArray();
+        s=s with{Players=s.Players.Concat(practice).ToList(),Contracts=s.Contracts.Concat(practice.Select(p=>new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,300_000,0)]))).ToList()};
         var advanced=ProLeagueService.Advance(s);
         Assert.Equal(ProPhase.RegularSeason,advanced.Phase);Assert.Equal(1,advanced.Week);
+        Assert.True(ProRoster.Active(advanced,s.UserTeam)<=53);
         Assert.Contains(advanced.Contracts,c=>!c.Active);
         Assert.All(advanced.Contracts.Where(c=>!c.Active),c=>Assert.Equal(0,c.EarnedCash));
     }

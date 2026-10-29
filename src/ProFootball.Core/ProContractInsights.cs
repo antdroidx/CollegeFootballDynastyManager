@@ -6,6 +6,7 @@ public static class ProContractInsights
 {
     public static bool RookieDeal(ProFranchise s,ProPlayer p,ProContract c)
     {
+        if(c.PracticeOrigin)return false;
         var rookie=p.RookieYear??s.DraftHistory.FirstOrDefault(d=>d.Player.Football.PlayerId==p.Football.PlayerId)?.Year;
         if(rookie is int r && c.OriginalRookieYear==r && s.Year<=r+4 && PlayingEnd(c)==r+4)return true;
         if(rookie is int year)return s.Year<year+(p.DraftOverall is >0||s.DraftHistory.Any(d=>d.Player.Football.PlayerId==p.Football.PlayerId)?4:3);

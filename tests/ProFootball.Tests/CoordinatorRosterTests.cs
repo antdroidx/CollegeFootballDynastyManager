@@ -20,6 +20,10 @@ public class CoordinatorRosterTests
                 var reserve=s.Players.First(p=>p.Football.TeamName==team.Name&&p.PracticeSquad&&!p.Reserve&&!p.Retired);
                 s=ProRoster.Practice(s,team.Name,reserve.Football.PlayerId,false);
             }
+        // Isolate bidding from legacy veteran-squad corrections that would add other free agents.
+        s=s with{Players=s.Players.Select(p=>p.PracticeSquad&&p.Football.TeamName!=s.UserTeam?p with{Experience=0,CreditedSeasons=0}:p).ToList()};
+        // This fixture isolates market bidding. Healthy internal depth now correctly takes priority over free agents.
+        s=s with{Players=s.Players.Select(p=>p.Football.TeamName==s.UserTeam&&!ProCareer.Controls(s,p.Football.Position)&&(p.Reserve||p.PracticeSquad)?p with{Football=p.Football with{CurrentInjury=new(){WeeksRemaining=2}}}:p).ToList()};
         return(s,candidate);
     }
     static void Fixture(ProFranchise s,ProPlayer p,StaffRole role,string kind)
