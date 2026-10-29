@@ -20,6 +20,8 @@ public class CoordinatorRosterTests
                 var reserve=s.Players.First(p=>p.Football.TeamName==team.Name&&p.PracticeSquad&&!p.Reserve&&!p.Retired);
                 s=ProRoster.Practice(s,team.Name,reserve.Football.PlayerId,false);
             }
+        // Isolate this one-player market from unrelated CPU reserve-return waivers.
+        s=s with{Players=s.Players.Select(p=>p.Reserve&&p.Football.TeamName!=s.UserTeam?p with{RosterStatus="PUP"}:p).ToList()};
         // Isolate bidding from legacy veteran-squad corrections that would add other free agents.
         s=s with{Players=s.Players.Select(p=>p.PracticeSquad&&p.Football.TeamName!=s.UserTeam?p with{Experience=0,CreditedSeasons=0}:p).ToList()};
         // This fixture isolates market bidding. Healthy internal depth now correctly takes priority over free agents.
@@ -100,7 +102,7 @@ public class CoordinatorRosterTests
     public void WaiverClaimsAndSigningRespectOtherUnitAuthorityAndRecheckBudget(StaffRole role)
     {
         var(s,p)=Setup(role);s=s with{Players=s.Players.Where(x=>x.Football.TeamName!=s.UserTeam||x.Football.Position!=p.Football.Position).ToList(),Waivers=[new(p.Football.PlayerId,0,[])]};
-        var claimed=ProCpu.Manage(s);Assert.Contains(s.UserTeam,Assert.Single(claimed.Waivers).Claims);
+        var claimed=ProCpu.Manage(s);Assert.Contains(s.UserTeam,claimed.Waivers.Single(w=>w.PlayerId==p.Football.PlayerId).Claims);
         var signed=ProRoster.ResolveWaivers(claimed);Assert.Equal(s.UserTeam,signed.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId).Football.TeamName);
         var other=s.Players.First(x=>x.Football.TeamName==s.UserTeam&&!ProCareer.Controls(s,x.Football.Position));
         var ceiling=(long)(ProFinance.Limit(s,s.UserTeam,s.Year)*.55);

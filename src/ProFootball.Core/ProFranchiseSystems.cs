@@ -245,8 +245,12 @@ public static class ProCpu
 
         foreach (var team in teams)
         {
-            var claim = s.Waivers.Select(w => s.Players.Single(p => p.Football.PlayerId == w.PlayerId)).Where(p => Eligible(team.Name,p) && (!Staff(team.Name)||UnitCount(team.Name)<Target(team.Name)) && Need(s, team.Name, p.Football.Position) > 0 && ProRoster.CountForLimit(s, team.Name) < ProRoster.Limit(s) && ProEconomy.Room(s, team.Name) >= Math.Max(ProFinance.Minimum(s,p,practice:false), ProEconomy.MarketSalary(s,p))).OrderByDescending(p => p.Football.OverallRating).FirstOrDefault();
-            if (claim is not null) s = Staff(team.Name)?ProRoster.ClaimStaff(s,team.Name,claim.Football.PlayerId):ProRoster.Claim(s, team.Name, claim.Football.PlayerId);
+            var claims = s.Waivers.Select(w => s.Players.Single(p => p.Football.PlayerId == w.PlayerId)).Where(p => !s.Waivers.Any(w=>w.PlayerId==p.Football.PlayerId&&w.OriginalContracts?.Any(c=>c.Team==team.Name)==true)&&Eligible(team.Name,p) && (!Staff(team.Name)||UnitCount(team.Name)<Target(team.Name)) && Need(s, team.Name, p.Football.Position) > 0 && ProRoster.CountForLimit(s, team.Name) < ProRoster.Limit(s) && ProEconomy.Room(s, team.Name) >= Math.Max(ProFinance.Minimum(s,p,practice:false), ProEconomy.MarketSalary(s,p))).OrderByDescending(p => p.Football.OverallRating).ToArray();
+            foreach(var claim in claims)
+            {
+                try{s=Staff(team.Name)?ProRoster.ClaimStaff(s,team.Name,claim.Football.PlayerId):ProRoster.Claim(s,team.Name,claim.Football.PlayerId);break;}
+                catch(InvalidOperationException){ /* Another candidate may have an assignable contract within current/future budgets. */ }
+            }
         }
         var rounds = s.Phase == ProPhase.Offseason || s.Phase == ProPhase.Preseason ? 256 : 4;
         for (var round = 0; round < rounds; round++)
