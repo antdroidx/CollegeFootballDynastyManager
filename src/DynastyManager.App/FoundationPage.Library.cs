@@ -1,3 +1,4 @@
+using DynastyManager.Core.Models;
 using DynastyManager.Data.Persistence;
 using DynastyManager.Core.Seasons;
 using Microsoft.Maui.Controls;
@@ -44,6 +45,7 @@ public sealed partial class FoundationPage
             new Label { Text = "Dynasty name", FontSize = 12, FontAttributes = FontAttributes.Bold }, _dynastyNameEntry,
             new Label { Text = "League structure", FontSize = 12, FontAttributes = FontAttributes.Bold }, _leaguePicker,
             new Label { Text = "Starting roster", FontSize = 12, FontAttributes = FontAttributes.Bold }, _startingRosterPicker,
+            new HorizontalStackLayout {Spacing=8,Children={_generatePlayers,new Label{Text="Generate new players · keep program strengths",FontSize=12,VerticalTextAlignment=TextAlignment.Center}}},
             new Label { Text = "Import and manage reusable rosters and league setups from the main screen.", FontSize = 11, TextColor = DynastyTheme.Muted },
             new Label { Text = "Your school", FontSize = 12, FontAttributes = FontAttributes.Bold }, _teamPicker,
             new Label { Text = "Staff and recruiting preferences can be changed after starting.", FontSize = 11, TextColor = DynastyTheme.Muted },
@@ -64,11 +66,13 @@ public sealed partial class FoundationPage
             _headerContext.Text = $"{_currentDynasty.UserTeamName} · {_currentDynasty.SeasonYear} · {SeasonProgression.PeriodLabel(_currentDynasty.Phase, _currentDynasty.Week)}";
         if (_currentDynasty is not null)
             _advanceWeekButton.Text = SeasonProgression.AdvanceLabel(_currentDynasty.Phase, _currentDynasty.Week);
+        _simulatePhaseButton.IsVisible=_currentDynasty?.Phase is SeasonPhase.Preseason or SeasonPhase.RegularSeason or SeasonPhase.ConferenceChampionship or SeasonPhase.Postseason;
+        _simulatePhaseButton.Text=_currentDynasty?.Phase==SeasonPhase.Preseason?"Simulate preseason":_currentDynasty?.Phase==SeasonPhase.RegularSeason?"Simulate regular season":"Simulate postseason";
     }
 
     private async Task ReturnToLibraryAsync()
     {
-        if (_isAdvancing || _advanceOverlay.IsVisible) return;
+        if (_isAdvancing || _isBatchSimulating || _advanceOverlay.IsVisible) return;
         try
         {
             if (_activeSection != AppSection.NewDynasty && _currentDynasty is not null)

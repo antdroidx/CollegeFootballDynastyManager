@@ -1,0 +1,217 @@
+name: Pro Football Android
+run-name: ${{ inputs.reuse_apk_run_id && format('Pro verify {0} · {1}', inputs.reuse_apk_artifact, github.ref_name) || format('Pro build {0} · {1} · {2}', github.run_number, inputs.validation_scope || 'full', github.ref_name) }}
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/Football.Engine/**'
+      - 'src/Football.Presentation/**'
+      - 'src/ProFootball.Core/**'
+      - 'src/ProFootball.App/**'
+      - 'tests/ProFootball.Tests/**'
+      - 'build/pro-*.py'
+      - 'global.json'
+      - '.github/workflows/pro-android.yml'
+  workflow_dispatch:
+    inputs:
+      validation_scope:
+        description: Finance checks financial management; termination checks release/waiver/accrual; live checks GameCast; other scopes cover their management flows
+        type: choice
+        options: [fast, generated-roster, retention-table, inseason-phase, depth-editor, cap-display, roster-update, staff-calendar, exchange, presentation, roadmap, full, finance, opening, live, trade, retention, reserve, termination]
+        default: fast
+      reuse_apk_run_id:
+        description: Optional prior run ID for test-only retries; app-source differences reject reuse
+        type: string
+        default: ''
+      reuse_apk_artifact:
+        description: Original APK artifact name when reusing a prior build
+        type: string
+        default: ''
+      college_run:
+        description: College APK run for two-app exchange verification
+        type: string
+        default: ''
+      college_artifact:
+        description: College APK artifact for two-app exchange verification
+        type: string
+        default: ''
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: pro-android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pro-build:
+    if: inputs.reuse_apk_run_id == ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: pro-nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','global.json') }}
+          restore-keys: pro-nuget-${{ runner.os }}-
+      - run: dotnet workload install maui-android --version 10.0.301.1
+      - name: Test UI synchronization helpers
+        run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
+      - name: Verify NFLPA cap data normalization
+        run: python3 build/verify-nflpa-cap-data.py
+      - name: Full Pro tests
+        env:
+          PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
+          PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
+        if: github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'full'
+        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
+      - name: Pro scoped regressions
+        env:
+          PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
+          PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
+        if: github.event_name == 'push' || inputs.validation_scope == 'fast' || inputs.validation_scope != 'retention-table' && (inputs.validation_scope == 'generated-roster' || inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'termination' || inputs.validation_scope == 'opening' || inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve'
+        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
+      - name: Retention presentation regressions
+        if: inputs.validation_scope == 'retention-table'
+        env:
+          PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
+        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~InSeasonRetentionTests'
+      - name: Build independent pro APK
+        run: >
+          dotnet build src/ProFootball.App/ProFootball.App.csproj -c Debug -f net10.0-android
+          -p:AndroidPackageFormats=apk -p:ApplicationVersion=${{ github.run_number }}
+          -p:ApplicationDisplayVersion=0.1.${{ github.run_number }}
+      - name: Stage isolated management UI fixtures
+        run: |
+          if [ '${{ inputs.validation_scope }}' = retention-table ]; then
+            cp pro-staff-inseason-ui-fixture.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
+          else
+            cp pro-trade-ui-fixture.json.gz pro-coordinator-ui-*.json.gz pro-staff-*-ui-*.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pro-football-apk-${{ github.run_number }}
+          path: |
+            src/ProFootball.App/bin/Debug/net10.0-android/*-Signed.apk
+            src/ProFootball.App/bin/Debug/net10.0-android/pro-trade-ui-fixture.json.gz
+            src/ProFootball.App/bin/Debug/net10.0-android/pro-coordinator-ui-*.json.gz
+            src/ProFootball.App/bin/Debug/net10.0-android/pro-staff-*-ui-*.json.gz
+          compression-level: 0
+          retention-days: 7
+  pro-device:
+    needs: pro-build
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_scope != 'fast' && (inputs.validation_scope != 'exchange' || inputs.college_run != '') && always() && !cancelled() && (needs.pro-build.result == 'success' || inputs.reuse_apk_run_id != '')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify reused APK matches current application inputs
+        if: inputs.reuse_apk_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_RUN_ID: ${{ inputs.reuse_apk_run_id }}
+          APK_ARTIFACT: ${{ inputs.reuse_apk_artifact }}
+        run: |
+          [[ "$APK_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          [[ "$APK_ARTIFACT" =~ ^pro-football-apk-[0-9]+$ ]] || exit 1
+          source_sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$APK_RUN_ID" --jq '.head_sha')
+          git fetch --no-tags origin "$source_sha" --depth=1
+          git diff --exit-code "$source_sha" HEAD -- src/ProFootball.App src/ProFootball.Core src/Football.Engine src/Football.Presentation Directory.Build.props Directory.Build.targets Directory.Packages.props global.json NuGet.Config build/keys
+      - name: Test changed UI synchronization helpers
+        if: inputs.reuse_apk_run_id != ''
+        run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.reuse_apk_artifact || format('pro-football-apk-{0}', github.run_number) }}
+          path: apk
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.reuse_apk_run_id || github.run_id }}
+      - name: Verify College APK inputs for exchange
+        if: inputs.validation_scope == 'exchange'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COLLEGE_RUN: ${{ inputs.college_run }}
+        run: |
+          [[ "$COLLEGE_RUN" =~ ^[0-9]+$ ]] || exit 1
+          college_sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$COLLEGE_RUN" --jq '.head_sha')
+          git fetch --no-tags origin "$college_sha" --depth=1
+          git diff --exit-code "$college_sha" HEAD -- src/DynastyManager.App src/DynastyManager.Data src/Football.Engine src/Football.Presentation Directory.Build.props Directory.Build.targets Directory.Packages.props global.json NuGet.Config build/keys
+      - uses: actions/download-artifact@v4
+        if: inputs.validation_scope == 'exchange'
+        with:
+          name: ${{ inputs.college_artifact }}
+          path: college-apk
+          run-id: ${{ inputs.college_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/setup-dotnet@v4
+        if: inputs.reuse_apk_run_id != '' && ((inputs.validation_scope == 'generated-roster' || inputs.validation_scope == 'retention-table' || inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
+        with:
+          dotnet-version: '10.0.x'
+      - name: Regenerate scoped management fixtures for exact-APK retries
+        if: inputs.reuse_apk_run_id != '' && ((inputs.validation_scope == 'generated-roster' || inputs.validation_scope == 'retention-table' || inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
+        env:
+          PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}/apk
+        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~InSeasonRetentionTests|FullyQualifiedName~PhaseSimulationTests|FullyQualifiedName~DepthChartTests|FullyQualifiedName~CapDisplayTests|FullyQualifiedName~PlayerExchangeTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~CoordinatorRosterTests|FullyQualifiedName~ReserveActivationTests|FullyQualifiedName~TerminationDeviceFixtures|FullyQualifiedName~CompensatoryDraftTests'
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: |
+            adb install -r $(find apk -name '*-Signed.apk' -print -quit)
+            if [ '${{ inputs.validation_scope }}' = exchange ]; then adb install -r $(find college-apk -name '*.apk' -print -quit); fi
+            adb shell monkey -p antdroid.profootball.franchise -c android.intent.category.LAUNCHER 1
+            PRO_FINANCE_OPENING_ONLY=${{ inputs.validation_scope == 'opening' && '1' || '0' }} python3 -u build/${{ inputs.validation_scope == 'generated-roster' && 'pro-generated-roster-smoke.py' || inputs.validation_scope == 'retention-table' && 'pro-retention-table-smoke.py' || inputs.validation_scope == 'inseason-phase' && 'pro-inseason-phase-smoke.py' || inputs.validation_scope == 'depth-editor' && 'pro-depth-editor-smoke.py' || inputs.validation_scope == 'cap-display' && 'pro-cap-display-smoke.py' || inputs.validation_scope == 'roster-update' && 'pro-roster-update-smoke.py' || inputs.validation_scope == 'staff-calendar' && 'pro-staff-calendar-smoke.py' || inputs.validation_scope == 'exchange' && 'player-exchange-smoke.py' || (inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'presentation') && 'pro-roadmap-smoke.py' || inputs.validation_scope == 'termination' && 'pro-termination-smoke.py' || inputs.validation_scope == 'reserve' && 'pro-reserve-smoke.py' || (inputs.validation_scope == 'finance' || inputs.validation_scope == 'opening') && 'pro-finance-smoke.py' || inputs.validation_scope == 'trade' && 'pro-trade-smoke.py' || (inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve') && 'pro-coordinator-smoke.py' || 'pro-android-smoke.py' }} ${{ inputs.validation_scope == 'presentation' && '--presentation-only' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pro-ui-evidence-${{ github.run_number }}
+          path: |
+            android-pro-*.png
+            android-pro-*.xml
+            pro-logcat.txt
+            pro-finance-logcat.txt
+            pro-trade-logcat.txt
+            pro-coordinator-logcat.txt
+            pro-finance-ledger-check.json
+            pro-opening-ledger-check.json
+            pro-guarantee-migration-check.json
+            pro-reserve-logcat.txt
+            pro-reserve-check.json
+            pro-generated-roster-check.json
+            pro-generated-roster-logcat.txt
+            pro-retention-table-check.json
+            pro-retention-table-logcat.txt
+            pro-inseason-phase-check.json
+            pro-inseason-phase-logcat.txt
+            pro-depth-editor-check.json
+            pro-depth-editor-logcat.txt
+            pro-cap-display-check.json
+            pro-cap-display-logcat.txt
+            pro-termination-logcat.txt
+            pro-termination-check.json
+            pro-roadmap-check.json
+            pro-presentation-check.json
+            pro-roster-update-check.json
+            pro-roster-update-logcat.txt
+            pro-staff-calendar-check.json
+            pro-staff-calendar-logcat.txt
+            pro-polish-check.json
+            android-exchange-*.png
+            android-exchange-*.xml
+            player-exchange-check.json
+            player-exchange-logcat.txt
+            pro-roadmap-logcat.txt
+          retention-days: 3

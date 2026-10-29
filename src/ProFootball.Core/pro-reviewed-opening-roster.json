@@ -1,0 +1,109 @@
+{
+  "Version": 1,
+  "ObservedOn": "2026-10-27",
+  "ReleasedPlayers": [
+    {
+      "PlayerId": "1819fa24-b5a6-5674-af5d-72a6084cd99b",
+      "Team": "Seattle Seahawks",
+      "SourceUrl": "https://www.seahawks.com/news/seahawks-activate-guard-anthony-bradford-off-injured-reserve-elevate-two-from-practice-squad"
+    }
+  ],
+  "InternationalPracticePlayers": [
+    {
+      "PlayerId": "916caac0-07fe-5154-bab4-0a348857a9c2",
+      "Team": "Seattle Seahawks",
+      "Year": 2026,
+      "SourceUrl": "https://www.seahawks.com/news/seahawks-sign-17-to-practice-squad-including-veterans-trevon-diggs-aj-finley-velus-jones-jr-rodney-thomas-ii"
+    }
+  ],
+  "Contracts": [
+    {
+      "Contract": {
+        "PlayerId": "bbd36525-b598-50ea-8377-21f6742a3d09",
+        "Team": "Seattle Seahawks",
+        "SignedYear": 2026,
+        "BonusYears": 3,
+        "SigningBonus": 0,
+        "Years": [
+          {
+            "Year": 2026,
+            "Salary": 885000,
+            "Guaranteed": 247500,
+            "ProratedBonus": 0,
+            "OtherCompensation": 0,
+            "OtherCash": 0,
+            "SourceGuaranteed": 247500
+          },
+          {
+            "Year": 2027,
+            "Salary": 1050000,
+            "Guaranteed": 0,
+            "ProratedBonus": 0,
+            "OtherCompensation": 0,
+            "OtherCash": 0,
+            "SourceGuaranteed": 0
+          },
+          {
+            "Year": 2028,
+            "Salary": 1165000,
+            "Guaranteed": 0,
+            "ProratedBonus": 0,
+            "OtherCompensation": 0,
+            "OtherCash": 0,
+            "SourceGuaranteed": 0
+          }
+        ],
+        "AccountingVersion": 1,
+        "BonusCash": {
+          "2026": 0,
+          "2027": 0,
+          "2028": 0
+        },
+        "BonusPayments": [],
+        "Estimated": false,
+        "Source": "OverTheCap current-club reviewed \u00b7 2026-10-27",
+        "Active": true
+      },
+      "PracticeSquad": false,
+      "SourceUrl": "https://overthecap.com/player/avery-smith/13599/",
+      "SourceSha256": "13c870924f1d0eb81baa5731cf11f1abba3594196869f940858cfa3823a95bd0",
+      "ExpectedCap": 885000,
+      "ExpectedRosterTeam": "Seattle Seahawks",
+      "OwnershipSourceUrl": null
+    },
+    {
+      "Contract": {
+        "PlayerId": "fb057ef4-d233-51dc-bb00-a59112b84d53",
+        "Team": "Seattle Seahawks",
+        "SignedYear": 2026,
+        "BonusYears": 1,
+        "SigningBonus": 0,
+        "Years": [
+          {
+            "Year": 2026,
+            "Salary": 330300,
+            "Guaranteed": 0,
+            "ProratedBonus": 0,
+            "OtherCompensation": -110100,
+            "OtherCash": 0,
+            "SourceGuaranteed": null
+          }
+        ],
+        "AccountingVersion": 1,
+        "BonusCash": {
+          "2026": 0
+        },
+        "BonusPayments": [],
+        "Estimated": false,
+        "Source": "OverTheCap current-club reviewed \u00b7 2026-10-27",
+        "Active": true
+      },
+      "PracticeSquad": true,
+      "SourceUrl": "https://overthecap.com/player/trevon-diggs/8791/",
+      "SourceSha256": "283d42b591b8b97544d7e916233b18b2aafa1b5e2cc2b97abb5464b4d8c9f9e2",
+      "ExpectedCap": 220200,
+      "ExpectedRosterTeam": "Free agent",
+      "OwnershipSourceUrl": "https://www.seahawks.com/news/seahawks-activate-guard-anthony-bradford-off-injured-reserve-elevate-two-from-practice-squad"
+    }
+  ]
+}

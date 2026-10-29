@@ -6,7 +6,7 @@ var root = Directory.GetCurrentDirectory();
 var count = args.Length > 0 ? int.Parse(args[0]) : 272;
 var seed = args.Length > 1 ? int.Parse(args[1]) : 2025;
 if (count < 1) throw new ArgumentOutOfRangeException(nameof(count), "Supply a positive game count.");
-var teams = ModernFbsUniverseFactory.Create(LegacyUniverseCsvImporter.Import(File.ReadAllText(Path.Combine(root,"src/main/assets/universe.csv"))).Teams).ToArray();
+var teams = ModernFbsUniverseFactory.Create(LegacyUniverseCsvImporter.Import(File.ReadAllText(Path.Combine(root,"src/DynastyManager.Data/Resources/Legacy/universe.csv"))).Teams).ToArray();
 using var reader = File.OpenText(Path.Combine(root,"src/DynastyManager.App/Resources/Raw/next26-aug26-2025.csv"));
 var pack = Next26RosterCsvImporter.LoadPack(reader, teams.Select(t=>t.Name));
 var state = new DynastyState { DynastyName="Audit", UserTeamName="Washington", SeasonYear=2025, ActiveRoster=pack.Players };

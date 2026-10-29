@@ -16,8 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DynastyManager.Core\DynastyManager.Core.csproj" />
+    <ProjectReference Include="..\..\src\Football.Engine\Football.Engine.csproj" />
     <ProjectReference Include="..\..\src\DynastyManager.Data\DynastyManager.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Football.Presentation\ColorContrast.cs" Link="SharedPresentation\ColorContrast.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,8 +29,8 @@
     <None Update="TestData\NCAA06_POCI.csv" CopyToOutputDirectory="PreserveNewest" />
     <None Update="TestData\NEXT26_calibration_curve_v1.csv" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\DynastyManager.App\Resources\Raw\next26-aug26-2025.csv" Link="TestData\next26-roster.csv" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\src\main\assets\universe.csv" Link="TestData\universe.csv" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\src\main\assets\roster.csv" Link="TestData\roster.csv" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\src\main\assets\coach.csv" Link="TestData\coach.csv" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\DynastyManager.Data\Resources\Legacy\universe.csv" Link="TestData\universe.csv" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\DynastyManager.Data\Resources\Legacy\roster.csv" Link="TestData\roster.csv" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\DynastyManager.Data\Resources\Legacy\coach.csv" Link="TestData\coach.csv" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

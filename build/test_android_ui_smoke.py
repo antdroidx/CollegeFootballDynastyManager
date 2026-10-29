@@ -24,6 +24,38 @@ def overview(week=0, phase="Regular season", busy=False, enabled=True):
 
 
 class SmokeSynchronizationTests(unittest.TestCase):
+    def test_pro_overview_can_finish_loading_below_the_fold(self):
+        root=ET.Element("hierarchy")
+        for value in ("Overview","Your coaching career","Front Office"):
+            ET.SubElement(root,"node",text=value)
+        self.assertTrue(smoke.pro_overview_loaded(root))
+        loading=ET.SubElement(root,"node",attrib={"class":"android.widget.ProgressBar"})
+        self.assertFalse(smoke.pro_overview_loaded(root));root.remove(loading)
+        library=ET.Element("hierarchy");ET.SubElement(library,"node",text="New franchise")
+        self.assertFalse(smoke.pro_overview_loaded(library))
+
+    def test_loaded_library_can_reach_a_slot_below_the_fold(self):
+        root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]")
+        scroll=ET.SubElement(viewport,"node",attrib={"class":"android.widget.ScrollView","scrollable":"true","bounds":"[0,0][1080,2400]"})
+        ET.SubElement(scroll,"node",text="New franchise",enabled="true")
+        ET.SubElement(scroll,"node",text="Earlier save",bounds="[42,1800][882,1916]")
+        self.assertTrue(smoke.library_loaded(root));self.assertFalse(smoke.library_entry_ready(root,"Fourth save"))
+        shown=ET.fromstring(ET.tostring(root));ET.SubElement(shown.find("node/node"),"node",text="Fourth save",bounds="[42,1600][882,1716]")
+        with patch.object(smoke,"capture",side_effect=[root,shown]),patch.object(smoke,"adb") as command:
+            self.assertIs(shown,smoke.scroll_to_text("late-save","Fourth save"));command.assert_called_once()
+
+    def test_library_slot_waits_for_loading_completion_before_tap(self):
+        root=ET.Element("hierarchy")
+        create=ET.SubElement(root,"node",text="New franchise",enabled="false")
+        ET.SubElement(root,"node",text="Synthetic option QA exercise · Seattle Seahawks")
+        loading=ET.SubElement(root,"node",text="Loading franchises…",attrib={"class":"android.widget.ProgressBar"})
+        self.assertFalse(smoke.library_entry_ready(root,"Synthetic option QA"))
+        create.set("enabled","true")
+        self.assertFalse(smoke.library_entry_ready(root,"Synthetic option QA"))
+        root.remove(loading)
+        self.assertTrue(smoke.library_entry_ready(root,"Synthetic option QA"))
+        self.assertFalse(smoke.library_entry_ready(root,"Another save"))
+
     def test_enabled_button_does_not_imply_an_advance_finished(self):
         old = overview()
         self.assertFalse(smoke.overview_ready(overview(), smoke.calendar(old)))
@@ -59,6 +91,33 @@ class SmokeSynchronizationTests(unittest.TestCase):
         with patch.object(smoke, "capture", side_effect=[first, second]), patch.object(smoke, "adb") as command:
             self.assertIs(second, smoke.scroll_to_text("picker", "Returns"))
             command.assert_called_once_with("shell", "input", "swipe", "300", "500", "300", "300", "350")
+
+    def test_clipped_button_near_system_navigation_is_scrolled_before_tapping(self):
+        def screen(button_bounds):
+            root=ET.Element("hierarchy")
+            viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]")
+            scroll=ET.SubElement(viewport,"node",attrib={"class":"android.widget.ScrollView","scrollable":"true","bounds":"[0,0][1080,2400]"})
+            ET.SubElement(scroll,"node",text="Edit appearance",bounds=button_bounds)
+            return root
+        clipped=screen("[42,2269][318,2385]");visible=screen("[42,1900][318,2016]")
+        with patch.object(smoke,"capture",side_effect=[clipped,visible]),patch.object(smoke,"adb") as command:
+            self.assertIs(visible,smoke.scroll_to_text("appearance","Edit appearance"))
+            command.assert_called_once_with("shell","input","swipe","540","1800","540","600","350")
+
+    def test_clipped_back_button_under_status_bar_is_scrolled_fully_into_view(self):
+        def screen(button_bounds):
+            root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]")
+            scroll=ET.SubElement(viewport,"node",attrib={"class":"android.widget.ScrollView","scrollable":"true","bounds":"[0,0][1080,2400]"})
+            ET.SubElement(scroll,"node",text="‹ Back",bounds=button_bounds)
+            return root
+        first=screen("[42,50][181,166]");second=screen("[42,170][181,286]")
+        with patch.object(smoke,"capture",side_effect=[first,second]),patch.object(smoke,"adb") as command:
+            self.assertIs(second,smoke.scroll_to_text("profile","‹ Back",toward_start=True));command.assert_called_once()
+
+    def test_fixed_footer_above_navigation_remains_tappable(self):
+        root=ET.Element("hierarchy");viewport=ET.SubElement(root,"node",bounds="[0,0][1080,2400]");ET.SubElement(viewport,"node",text="Overview",bounds="[16,2205][220,2321]")
+        with patch.object(smoke,"capture",return_value=root),patch.object(smoke,"adb") as command:
+            self.assertIs(root,smoke.scroll_to_text("footer","Overview"));command.assert_not_called()
 
     def test_retained_scroll_position_can_return_to_tabs_above(self):
         first = ET.Element("hierarchy")

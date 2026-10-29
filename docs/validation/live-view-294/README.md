@@ -15,9 +15,9 @@ Source: 8f5c1a5 on game-day-2-test. Main stays unmerged. Sources/ untouched.
 
 Local: 619 regular core tests, three complete five-season 12-team dynasty careers, nine Python helpers, resource checks and Android compile passed (six existing warnings). New core coverage includes repeatable tosses, random-stream isolation, halftime receivers, variable returns, defensive TD/PAT scoring, touchbacks, overtime, return ability, serialization and ball ownership/commentary. Existing assertions that assumed Home always received first now select the appropriate team.
 
-GitHub run: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39904787868
+GitHub run: https://github.com/antdroidx/Football-Sim-Engine/actions/runs/39904787868
 GitHub APK packaging and the complete Android emulator run passed. Smoke handles coin-toss choices and asserts that controls are below the field in landscape; existing live play/watch/replay/box scores, week advancement, recruiting, depth chart/Auto Set, careers and light/dark theme flows also pass.
 
-[Download Build 294 APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39904787868/artifacts/12480970226). Evidence artifact: android-launch-ui-294. Portrait/landscape viewer, coin-result and expanded play-picker screenshots were reviewed. The recorded live game was clear weather; rain/snow graphics were implemented but not demonstrated by that emulator game. Light-theme smoke covers general theme/profile flows; live popup contrast fixes are explicit surfaces/text choices, not a separate captured light-game run.
+[Download Build 294 APK](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/39904787868/artifacts/12480970226). Evidence artifact: android-launch-ui-294. Portrait/landscape viewer, coin-result and expanded play-picker screenshots were reviewed. The recorded live game was clear weather; rain/snow graphics were implemented but not demonstrated by that emulator game. Light-theme smoke covers general theme/profile flows; live popup contrast fixes are explicit surfaces/text choices, not a separate captured light-game run.
 
 The long-term rating calibration parameters are unchanged; this update does not claim a new full-FBS statistical calibration of defensive return frequency. Sprite return choreography remains an abstract visual presentation of the engine result.

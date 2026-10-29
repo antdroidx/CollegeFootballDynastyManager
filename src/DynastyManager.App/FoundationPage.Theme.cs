@@ -63,11 +63,13 @@ public sealed partial class FoundationPage
             };
             foreach (var item in _managementTabs) next._managementTabs[item.Key] = item.Value;
             next.RefreshStartingChoices(SelectedStartingSetup?.Id, SelectedStartingRoster?.Id);
+            next._generatePlayers.IsToggled=_generatePlayers.IsToggled;
             next.ConfigureLeague(_teamsByName.Values.ToArray());
             next._importStatus.Text = _importStatus.Text;
             next._homeStatus.Text = _homeStatus.Text;
             next._newDynastyButton.IsEnabled = _newDynastyButton.IsEnabled;
             foreach(var order in _tableOrders) next._tableOrders[order.Key]=order.Value;
+            next._rosterTeamName=_rosterTeamName;
             next._rosterSearch.Text=_rosterSearch.Text;
             next._rosterPosition.SelectedIndex=_rosterPosition.SelectedIndex;
             next._rosterStatus.SelectedIndex=_rosterStatus.SelectedIndex;

@@ -1,0 +1,1067 @@
+{
+  "scope": "Actual new sourced2026 runtime regular-season counting with observed opening debt and reviewed roster/exemption changes. Reported liabilities are comparison evidence only, never a budget or balancing input. Different source allowance bases remain separate. Unresolved contract/status/guarantee review prevents default promotion.",
+  "teams": 32,
+  "exactTeams": 6,
+  "rows": [
+    {
+      "team": "BUF",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 1190988,
+        "otherAdjustments": -810076,
+        "adjustedCap": 301580912,
+        "committedSalary": 109237751,
+        "allocatedBonus": 128646177,
+        "otherCapCharges": 9551965,
+        "deadMoney": 49002570,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 109237751,
+        "playerCommitments": 237883928,
+        "totalCommitments": 296438463,
+        "available": 5142449
+      },
+      "reportedLiabilities": 297194774,
+      "difference": -756311,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "d0c322af-6ed1-5e3e-99c2-172f673c0bc6",
+          "name": "A.J. Woods",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "299fd9bb0cf10ed983ea7e0eeeca76002c41fdab6d2a49f8b9e457bbade87277"
+    },
+    {
+      "team": "MIA",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 1221006,
+        "otherAdjustments": 6457437,
+        "adjustedCap": 308878443,
+        "committedSalary": 68446961,
+        "allocatedBonus": 50369695,
+        "otherCapCharges": -1838388,
+        "deadMoney": 186861179,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 68446961,
+        "playerCommitments": 118816656,
+        "totalCommitments": 303839447,
+        "available": 5038996
+      },
+      "reportedLiabilities": 301306348,
+      "difference": 2533099,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "cf0874a9-16ab-5df5-bfd3-96d9fd9b1cb6",
+          "name": "Justin Joly",
+          "cap": 1904864
+        },
+        {
+          "id": "706018b1-b1a2-5423-be95-d156c70c0517",
+          "name": "Kaytron Allen",
+          "cap": 2215984
+        },
+        {
+          "id": "cb97e99c-61d4-5050-a3d3-6c8f79d23fc1",
+          "name": "Rene Konga",
+          "cap": 1032500
+        }
+      ],
+      "observedSourceSha256": "dcdb8b39b2fc11b0f213849cc3c8850ea9e95afe53770a2cc07c27adbbfd9135"
+    },
+    {
+      "team": "NE",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 47274868,
+        "otherAdjustments": 4504386,
+        "adjustedCap": 352979254,
+        "committedSalary": 172009758,
+        "allocatedBonus": 99207091,
+        "otherCapCharges": 32064354,
+        "deadMoney": 44410060,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 172009758,
+        "playerCommitments": 271216849,
+        "totalCommitments": 347691263,
+        "available": 5287991
+      },
+      "reportedLiabilities": 349801485,
+      "difference": -2110222,
+      "exact": false,
+      "generatedFallbacks": [],
+      "observedSourceSha256": "99b1bf4f41e9256483da0adb74b368cbc7df2191f9025475b7812c2ea31ebe7e"
+    },
+    {
+      "team": "NYJ",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 13557153,
+        "otherAdjustments": 9106647,
+        "adjustedCap": 323863800,
+        "committedSalary": 129078561,
+        "allocatedBonus": 55995471,
+        "otherCapCharges": 11080553,
+        "deadMoney": 116607472,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 129078561,
+        "playerCommitments": 185074032,
+        "totalCommitments": 312762057,
+        "available": 11101743
+      },
+      "reportedLiabilities": 312122811,
+      "difference": 639246,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "766dc4ee-1b29-5f8f-a1fb-a6995690ad14",
+          "name": "Kenyon Sadiq",
+          "cap": 3842069
+        },
+        {
+          "id": "80546e6d-fa04-5f8c-b7fd-89ade01ab5ef",
+          "name": "Omar Cooper Jr.",
+          "cap": 2926070
+        },
+        {
+          "id": "ed569fca-ee4c-5515-b6e7-b57949368ee8",
+          "name": "Al-Jay Henderson",
+          "cap": 300000
+        },
+        {
+          "id": "db362508-c510-5dba-a386-b12bc12314d7",
+          "name": "Paschal Ekeji",
+          "cap": 300000
+        },
+        {
+          "id": "c022d223-c4ab-5c6b-95aa-5526ae70f850",
+          "name": "Chip Trayanum",
+          "cap": 1032500
+        }
+      ],
+      "observedSourceSha256": "174d74385a3ff9b726ea0c107738eff6cf5836f71d5d3759ae09977694449996"
+    },
+    {
+      "team": "BAL",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 10238789,
+        "otherAdjustments": 3287353,
+        "adjustedCap": 314726142,
+        "committedSalary": 143825658,
+        "allocatedBonus": 137314480,
+        "otherCapCharges": 10898778,
+        "deadMoney": 19710734,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 143825658,
+        "playerCommitments": 281140138,
+        "totalCommitments": 311749650,
+        "available": 2976492
+      },
+      "reportedLiabilities": 311449650,
+      "difference": 300000,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "80ac6784-83e5-5c89-a873-b224943aa429",
+          "name": "David Olajiga",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "e9313d5961702ed5a915f61c9d49a4c7e73220770f85bef4750bb4dd85b0b4e8"
+    },
+    {
+      "team": "CIN",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 9677662,
+        "otherAdjustments": 7081251,
+        "adjustedCap": 317958913,
+        "committedSalary": 169195963,
+        "allocatedBonus": 90401330,
+        "otherCapCharges": 37067547,
+        "deadMoney": 12410742,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 169195963,
+        "playerCommitments": 259597293,
+        "totalCommitments": 309075582,
+        "available": 8883331
+      },
+      "reportedLiabilities": 309075582,
+      "difference": 0,
+      "exact": true,
+      "generatedFallbacks": [],
+      "observedSourceSha256": "3b691d29dd90c3f3e2a1742c6c16cf114b00f84985dd139e96272c0953b3a92a"
+    },
+    {
+      "team": "CLE",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 20141188,
+        "otherAdjustments": 17813014,
+        "adjustedCap": 339154202,
+        "committedSalary": 83314986,
+        "allocatedBonus": 121186883,
+        "otherCapCharges": 830173,
+        "deadMoney": 119895849,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 83314986,
+        "playerCommitments": 204501869,
+        "totalCommitments": 325227891,
+        "available": 13926311
+      },
+      "reportedLiabilities": 325306016,
+      "difference": -78125,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "fc09760c-92e4-5520-af45-de66cf81d40c",
+          "name": "Toriano Pride Jr.",
+          "cap": 995625
+        },
+        {
+          "id": "4685b35b-3910-577b-9771-7942b6380736",
+          "name": "Vershon Lee",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "18caedf32af6ac98a32445ebb3e33697fd65912f83056497515867df7f0de518"
+    },
+    {
+      "team": "PIT",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 16907294,
+        "otherAdjustments": 3652778,
+        "adjustedCap": 321760072,
+        "committedSalary": 175940882,
+        "allocatedBonus": 108366566,
+        "otherCapCharges": 2732280,
+        "deadMoney": 22674952,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 175940882,
+        "playerCommitments": 284307448,
+        "totalCommitments": 309714680,
+        "available": 12045392
+      },
+      "reportedLiabilities": 310265180,
+      "difference": -550500,
+      "exact": false,
+      "generatedFallbacks": [],
+      "observedSourceSha256": "d540a634e0950fa8af19f7cd20a8f975e39d3304733843e66824d2ff3ad41d0a"
+    },
+    {
+      "team": "HOU",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 4000083,
+        "otherAdjustments": 5544276,
+        "adjustedCap": 310744359,
+        "committedSalary": 101909468,
+        "allocatedBonus": 113753324,
+        "otherCapCharges": 12942413,
+        "deadMoney": 73637890,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 101909468,
+        "playerCommitments": 215662792,
+        "totalCommitments": 302243095,
+        "available": 8501264
+      },
+      "reportedLiabilities": 300798090,
+      "difference": 1445005,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "149075fd-bc70-5186-a000-a5e891116512",
+          "name": "Max Pircher",
+          "cap": 1518750
+        }
+      ],
+      "observedSourceSha256": "540460056450628efd272e0a61b5084a8e12635e44e2950d8efdfefdc2b47da9"
+    },
+    {
+      "team": "IND",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 1940630,
+        "otherAdjustments": 625000,
+        "adjustedCap": 303765630,
+        "committedSalary": 155225962,
+        "allocatedBonus": 82267192,
+        "otherCapCharges": 25857433,
+        "deadMoney": 20750873,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 155225962,
+        "playerCommitments": 237493154,
+        "totalCommitments": 284101460,
+        "available": 19664170
+      },
+      "reportedLiabilities": 283298365,
+      "difference": 803095,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "a153dacf-96ae-5697-a5b2-ca27a9c81fed",
+          "name": "Thomas Morstead",
+          "cap": 330300
+        },
+        {
+          "id": "7f84eca4-bcb3-5537-a70d-928f14ef7f52",
+          "name": "Carson Towt",
+          "cap": 1032500
+        }
+      ],
+      "observedSourceSha256": "51aa60e0dd28bab0bb6aacce5541f455a73e91e5a2054ab325eba92e791ac854"
+    },
+    {
+      "team": "JAX",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 5981077,
+        "otherAdjustments": 3532713,
+        "adjustedCap": 310713790,
+        "committedSalary": 123342857,
+        "allocatedBonus": 108657715,
+        "otherCapCharges": 12732482,
+        "deadMoney": 61438356,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 123342857,
+        "playerCommitments": 232000572,
+        "totalCommitments": 306171410,
+        "available": 4542380
+      },
+      "reportedLiabilities": 305488610,
+      "difference": 682800,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "fd2e9af0-5540-5808-a43c-6dd0020fca8e",
+          "name": "Austin Trammell",
+          "cap": 330300
+        },
+        {
+          "id": "b389ce13-b11a-5858-aede-77eb3eb48694",
+          "name": "Garrett DiGiorgio",
+          "cap": 1032500
+        }
+      ],
+      "observedSourceSha256": "d18eabdf0e67b2b93581ba188b389d99ba14aab529f8134f716c62adbbb54796"
+    },
+    {
+      "team": "TEN",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 18195607,
+        "otherAdjustments": 24322371,
+        "adjustedCap": 343717978,
+        "committedSalary": 174328715,
+        "allocatedBonus": 83352584,
+        "otherCapCharges": 16204433,
+        "deadMoney": 39758895,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 174328715,
+        "playerCommitments": 257681299,
+        "totalCommitments": 313644627,
+        "available": 30073351
+      },
+      "reportedLiabilities": 313754019,
+      "difference": -109392,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "63ad60b2-4079-5d62-9834-cd7ccfa94ff1",
+          "name": "Laki Tasi",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "d457c044afc85ea86d256dc0d806680b861317669d0fbaae8bbaab03a37612ce"
+    },
+    {
+      "team": "DEN",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 634400,
+        "otherAdjustments": 2387500,
+        "adjustedCap": 304221900,
+        "committedSalary": 184425335,
+        "allocatedBonus": 100989195,
+        "otherCapCharges": 6441420,
+        "deadMoney": 7594288,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 184425335,
+        "playerCommitments": 285414530,
+        "totalCommitments": 299450238,
+        "available": 4771662
+      },
+      "reportedLiabilities": 299119938,
+      "difference": 330300,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "860ef92f-7430-5695-93d5-5302acb12dd5",
+          "name": "David Agoha",
+          "cap": 330300
+        }
+      ],
+      "observedSourceSha256": "0cabc4f724211d4deaaafccd7b6380eda4404eca57f6c797b1f50ab5c76deb32"
+    },
+    {
+      "team": "KC",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 335710,
+        "otherAdjustments": 575039,
+        "adjustedCap": 302110749,
+        "committedSalary": 154736471,
+        "allocatedBonus": 112083262,
+        "otherCapCharges": 16977900,
+        "deadMoney": 15841480,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 154736471,
+        "playerCommitments": 266819733,
+        "totalCommitments": 299639113,
+        "available": 2471636
+      },
+      "reportedLiabilities": 299571613,
+      "difference": 67500,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "deedceeb-5c48-5c2d-b85a-443dc1a6d857",
+          "name": "Bryson Eason",
+          "cap": 1032500
+        },
+        {
+          "id": "0e5a492b-244d-56a4-b2b3-3b332cfb75d9",
+          "name": "Jack Pyburn",
+          "cap": 1032500
+        }
+      ],
+      "observedSourceSha256": "69dd0b08a4c686ea4f061495e65298c00428a7c3fa69c1c83881e14faa98f05e"
+    },
+    {
+      "team": "LAC",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 3501779,
+        "otherAdjustments": 1192706,
+        "adjustedCap": 305894485,
+        "committedSalary": 158446006,
+        "allocatedBonus": 93619922,
+        "otherCapCharges": 18102396,
+        "deadMoney": 9147982,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 158446006,
+        "playerCommitments": 252065928,
+        "totalCommitments": 279316306,
+        "available": 26578179
+      },
+      "reportedLiabilities": 279170472,
+      "difference": 145834,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "0d3aa934-26b3-55e1-9a99-2173b7fce01f",
+          "name": "Rodney Shelley",
+          "cap": 1032500
+        }
+      ],
+      "observedSourceSha256": "531a1ce777de1a381b73ae39da84dd2b320e6c648b02d5978236ac48a796dd44"
+    },
+    {
+      "team": "LV",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 10028989,
+        "otherAdjustments": 3973056,
+        "adjustedCap": 315202045,
+        "committedSalary": 177179356,
+        "allocatedBonus": 64652303,
+        "otherCapCharges": 5495831,
+        "deadMoney": 58960639,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 177179356,
+        "playerCommitments": 241831659,
+        "totalCommitments": 306288129,
+        "available": 8913916
+      },
+      "reportedLiabilities": 306288129,
+      "difference": 0,
+      "exact": true,
+      "generatedFallbacks": [],
+      "observedSourceSha256": "99e03999fe457749ad389c22cfa8f28c54f59ed5298973b4dfe66d82830d8759"
+    },
+    {
+      "team": "DAL",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 22863378,
+        "otherAdjustments": 8002193,
+        "adjustedCap": 332065571,
+        "committedSalary": 126643604,
+        "allocatedBonus": 128874592,
+        "otherCapCharges": 11907993,
+        "deadMoney": 47870236,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 126643604,
+        "playerCommitments": 255518196,
+        "totalCommitments": 315296425,
+        "available": 16769146
+      },
+      "reportedLiabilities": 315296425,
+      "difference": 0,
+      "exact": true,
+      "generatedFallbacks": [],
+      "observedSourceSha256": "916338ef9c73c5e83f6d4b036cc48030d31990739479b868b413ec9b3bf66288"
+    },
+    {
+      "team": "NYG",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 1347529,
+        "otherAdjustments": -1731353,
+        "adjustedCap": 300816176,
+        "committedSalary": 119144029,
+        "allocatedBonus": 117052999,
+        "otherCapCharges": 10558429,
+        "deadMoney": 46085181,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 119144029,
+        "playerCommitments": 236197028,
+        "totalCommitments": 292840638,
+        "available": 7975538
+      },
+      "reportedLiabilities": 292788138,
+      "difference": 52500,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "fa659610-57cd-531c-9f5c-c2903eca63a6",
+          "name": "Grant Finley",
+          "cap": 300000
+        },
+        {
+          "id": "30e574b1-7fca-57ce-8f5e-5bb51a2bb244",
+          "name": "PJ Mustipher",
+          "cap": 330300
+        }
+      ],
+      "observedSourceSha256": "49f665fa6f61285b9c33693945ba5df878820b2af71a65f04ae08f62c7359449"
+    },
+    {
+      "team": "PHI",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 10542180,
+        "otherAdjustments": 4881278,
+        "adjustedCap": 316623458,
+        "committedSalary": 86082645,
+        "allocatedBonus": 143882142,
+        "otherCapCharges": -5706342,
+        "deadMoney": 82565726,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 86082645,
+        "playerCommitments": 229964787,
+        "totalCommitments": 306824171,
+        "available": 9799287
+      },
+      "reportedLiabilities": 306824171,
+      "difference": 0,
+      "exact": true,
+      "generatedFallbacks": [],
+      "observedSourceSha256": "2d5af6ea34895e98ffc4fa3c4ac3a2ce7b0bed8dadee4e73060abaa3fdda23fc"
+    },
+    {
+      "team": "WSH",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 23870119,
+        "otherAdjustments": 3560507,
+        "adjustedCap": 328630626,
+        "committedSalary": 151091802,
+        "allocatedBonus": 109808075,
+        "otherCapCharges": 14894979,
+        "deadMoney": 26960009,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 151091802,
+        "playerCommitments": 260899877,
+        "totalCommitments": 302754865,
+        "available": 25875761
+      },
+      "reportedLiabilities": 302649565,
+      "difference": 105300,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "fe64cfb0-6cb1-5d77-9332-a1e100fc8770",
+          "name": "Darren Hall",
+          "cap": 330300
+        },
+        {
+          "id": "deddf866-cb0b-5f2f-bb36-9470e70dd5b2",
+          "name": "Fred Davis",
+          "cap": 300000
+        },
+        {
+          "id": "e4ecbf3e-af98-5f5b-9d71-00ec64e6c735",
+          "name": "Jaden Bradley",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "4b89b88b396ec06cabfec22ab40302011e1a4baa6cc5e02d1f9390ac6941b499"
+    },
+    {
+      "team": "CHI",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 4382708,
+        "otherAdjustments": 4332000,
+        "adjustedCap": 309914708,
+        "committedSalary": 149634385,
+        "allocatedBonus": 113052552,
+        "otherCapCharges": 12203377,
+        "deadMoney": 25271861,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 149634385,
+        "playerCommitments": 262686937,
+        "totalCommitments": 300162175,
+        "available": 9752533
+      },
+      "reportedLiabilities": 300162175,
+      "difference": 0,
+      "exact": true,
+      "generatedFallbacks": [],
+      "observedSourceSha256": "d968a55c027525d66efa02e15479040f4587ac95fbda91e568806ddd0b177742"
+    },
+    {
+      "team": "DET",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 19212256,
+        "otherAdjustments": 2619843,
+        "adjustedCap": 323032099,
+        "committedSalary": 150330156,
+        "allocatedBonus": 92508514,
+        "otherCapCharges": 10946986,
+        "deadMoney": 34135034,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 150330156,
+        "playerCommitments": 242838670,
+        "totalCommitments": 287920690,
+        "available": 35111409
+      },
+      "reportedLiabilities": 288104862,
+      "difference": -184172,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "fedc1676-2358-5b06-a12c-35b2d3c5830c",
+          "name": "Ahmed Hassanein",
+          "cap": 1172500
+        }
+      ],
+      "observedSourceSha256": "0c62f7b98d2a1e08e04b0aabd1eb1fa13ddb665b319bf0c055f11efc10e949f9"
+    },
+    {
+      "team": "GB",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 8071478,
+        "otherAdjustments": 5632453,
+        "adjustedCap": 314903931,
+        "committedSalary": 113249028,
+        "allocatedBonus": 126720129,
+        "otherCapCharges": 19197716,
+        "deadMoney": 48635956,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 113249028,
+        "playerCommitments": 239969157,
+        "totalCommitments": 307802829,
+        "available": 7101102
+      },
+      "reportedLiabilities": 306954079,
+      "difference": 848750,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "4388569d-95e8-5f1f-9f41-427c2056a878",
+          "name": "Elijah Culp",
+          "cap": 300000
+        },
+        {
+          "id": "01e2c133-1926-51fa-a180-f4ebe805c3e4",
+          "name": "Thomas Yassmin",
+          "cap": 1612500
+        }
+      ],
+      "observedSourceSha256": "37891b36c6e0accd8444bc2d2748fe938b4b339400073ac81d446d601a343bc5"
+    },
+    {
+      "team": "MIN",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 12889038,
+        "otherAdjustments": 841259,
+        "adjustedCap": 314930297,
+        "committedSalary": 135285464,
+        "allocatedBonus": 102716526,
+        "otherCapCharges": 14622327,
+        "deadMoney": 55558056,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 135285464,
+        "playerCommitments": 238001990,
+        "totalCommitments": 308182373,
+        "available": 6747924
+      },
+      "reportedLiabilities": 308102573,
+      "difference": 79800,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "0fa6330d-5ca2-5191-b583-494340ce8842",
+          "name": "Maceo Beard",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "373127df65a5e6505c68d80f6de74d27b2af66af6519f2d6ac8aa0fa70bf9b54"
+    },
+    {
+      "team": "ATL",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 1369295,
+        "otherAdjustments": 3043222,
+        "adjustedCap": 305612517,
+        "committedSalary": 111783903,
+        "allocatedBonus": 103452961,
+        "otherCapCharges": 11575047,
+        "deadMoney": 48980129,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 111783903,
+        "playerCommitments": 215236864,
+        "totalCommitments": 275792040,
+        "available": 29820477
+      },
+      "reportedLiabilities": 276328407,
+      "difference": -536367,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "1d902a4b-f808-562d-885a-b097dbb1b78f",
+          "name": "Colby Sorsdal",
+          "cap": 330300
+        }
+      ],
+      "observedSourceSha256": "53edd721b1ed465f8fe44aa95ea5be8caf1dc73ff8dd235cbd8693a651525b35"
+    },
+    {
+      "team": "CAR",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 13807671,
+        "otherAdjustments": -2443000,
+        "adjustedCap": 312564671,
+        "committedSalary": 167818205,
+        "allocatedBonus": 101356368,
+        "otherCapCharges": 13895817,
+        "deadMoney": 27147508,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 167818205,
+        "playerCommitments": 269174573,
+        "totalCommitments": 310217898,
+        "available": 2346773
+      },
+      "reportedLiabilities": 311203153,
+      "difference": -985255,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "16b88a60-33a9-5d4c-bd67-35bf4b1aa1a1",
+          "name": "Mapalo Mwansa",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "ea8383ace8344385a51af98efaaeae477f2c0eb113133a3761f66e5c726fd133"
+    },
+    {
+      "team": "NO",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 10199986,
+        "otherAdjustments": 6372206,
+        "adjustedCap": 317772192,
+        "committedSalary": 87313399,
+        "allocatedBonus": 105086004,
+        "otherCapCharges": 42888,
+        "deadMoney": 117641980,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 87313399,
+        "playerCommitments": 192399403,
+        "totalCommitments": 310084271,
+        "available": 7687921
+      },
+      "reportedLiabilities": 309636771,
+      "difference": 447500,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "01185500-6e9b-5da7-a1bf-77f6e7cf18ad",
+          "name": "Mason Murphy",
+          "cap": 1032500
+        },
+        {
+          "id": "0cafec08-5434-5827-acb7-03f7fc433cda",
+          "name": "Jackson Sirmon",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "7e5b726514db35a62d19011d78c663af24868cbf67b93875a0f8087638b124aa"
+    },
+    {
+      "team": "TB",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 14789874,
+        "otherAdjustments": 1526500,
+        "adjustedCap": 317516374,
+        "committedSalary": 163644495,
+        "allocatedBonus": 81016000,
+        "otherCapCharges": 43559283,
+        "deadMoney": 16624483,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 163644495,
+        "playerCommitments": 244660495,
+        "totalCommitments": 304844261,
+        "available": 12672113
+      },
+      "reportedLiabilities": 301535082,
+      "difference": 3309179,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "9a90302c-a0f8-5dff-b49c-e59d2fe6782f",
+          "name": "Rueben Bain Jr.",
+          "cap": 7851139
+        },
+        {
+          "id": "2f032666-02c4-597e-8d90-d31928eb44c5",
+          "name": "Brandon Johnson",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "4aecfe54b7a3d29fc6231a38818cb2438c03b731966591547589622de5db2295"
+    },
+    {
+      "team": "ARI",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 12864463,
+        "otherAdjustments": 14043369,
+        "adjustedCap": 328107832,
+        "committedSalary": 145726926,
+        "allocatedBonus": 81151553,
+        "otherCapCharges": 5735660,
+        "deadMoney": 92136019,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 145726926,
+        "playerCommitments": 226878479,
+        "totalCommitments": 324750158,
+        "available": 3357674
+      },
+      "reportedLiabilities": 315280312,
+      "difference": 9469846,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "605e83ee-1470-5053-b627-8bf40f7cfadb",
+          "name": "Albert Reese",
+          "cap": 1032500
+        },
+        {
+          "id": "0e3c55d0-7762-5aa0-b119-3696e71603ac",
+          "name": "Jedrick Wills",
+          "cap": 5812879
+        },
+        {
+          "id": "b7ebe196-4d39-5839-a25f-a5b2d9bfb9d5",
+          "name": "Wydett Williams Jr.",
+          "cap": 1032500
+        },
+        {
+          "id": "f42c88a3-ef0d-509f-928b-16f66b5cb50a",
+          "name": "Jerrick Reed II",
+          "cap": 330300
+        },
+        {
+          "id": "35a2c9f5-aaa8-5934-b6fb-7e5acbf83e45",
+          "name": "Riley Wilson",
+          "cap": 300000
+        },
+        {
+          "id": "513558b9-407e-50bd-99ca-a161b267e6f9",
+          "name": "Valentin Senn",
+          "cap": 1256250
+        }
+      ],
+      "observedSourceSha256": "af6b398b56ca50e3dde0f5a2942c658a0ab4a57ff53f14dca4ad3f816363d3db"
+    },
+    {
+      "team": "LAR",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 5635258,
+        "otherAdjustments": 7487865,
+        "adjustedCap": 314323123,
+        "committedSalary": 181193599,
+        "allocatedBonus": 83515312,
+        "otherCapCharges": 35310209,
+        "deadMoney": 13916887,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 181193599,
+        "playerCommitments": 264708911,
+        "totalCommitments": 313936007,
+        "available": 387116
+      },
+      "reportedLiabilities": 313401424,
+      "difference": 534583,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "359819b1-2321-506c-af97-20a0f17cb393",
+          "name": "Jack Bouwmeester",
+          "cap": 300000
+        },
+        {
+          "id": "baf2f79f-a215-52c3-979a-8895cecb7262",
+          "name": "Daniel Rickert",
+          "cap": 1032500
+        }
+      ],
+      "observedSourceSha256": "9e12f0595b166b014ca31f3873b4378170cf5d9f8e726f2d1ab587ce5cdb98dd"
+    },
+    {
+      "team": "SEA",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 15029706,
+        "otherAdjustments": -1176444,
+        "adjustedCap": 315053262,
+        "committedSalary": 154065109,
+        "allocatedBonus": 107595944,
+        "otherCapCharges": 34465634,
+        "deadMoney": 4844656,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 300000,
+        "rosterSalary": 154365109,
+        "playerCommitments": 261661053,
+        "totalCommitments": 300971343,
+        "available": 14081919
+      },
+      "reportedLiabilities": 300971343,
+      "difference": 0,
+      "exact": true,
+      "generatedFallbacks": [
+        {
+          "id": "916caac0-07fe-5154-bab4-0a348857a9c2",
+          "name": "Federico Maranges",
+          "cap": 300000
+        }
+      ],
+      "observedSourceSha256": "1b8203af9973e4e379cf7ec12b43dce7367b76b1b12124f648cb5e4b4d346e63"
+    },
+    {
+      "team": "SF",
+      "budget": {
+        "baseCap": 301200000,
+        "rollover": 19313885,
+        "otherAdjustments": 20656639,
+        "adjustedCap": 341170524,
+        "committedSalary": 103919872,
+        "allocatedBonus": 131963232,
+        "otherCapCharges": 8835793,
+        "deadMoney": 44583033,
+        "rolloverReserved": 0,
+        "offseasonSalaryExcluded": 0,
+        "internationalPracticeSalaryExcluded": 0,
+        "rosterSalary": 103919872,
+        "playerCommitments": 235883104,
+        "totalCommitments": 289301930,
+        "available": 51868594
+      },
+      "reportedLiabilities": 297959986,
+      "difference": -8658056,
+      "exact": false,
+      "generatedFallbacks": [
+        {
+          "id": "4caef533-9b11-5484-896a-c4d2d79587af",
+          "name": "Romello Height",
+          "cap": 5338444
+        }
+      ],
+      "observedSourceSha256": "7f7dc4ac98698e2a5ad951879d3bf9416cb962670c21e52f8353274ef6451088"
+    }
+  ]
+}

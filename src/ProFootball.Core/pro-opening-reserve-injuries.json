@@ -1,0 +1,63 @@
+{
+  "Version": 1,
+  "Year": 2026,
+  "ObservedOn": "2026-10-28",
+  "Players": [
+    {
+      "Name": "Jake Bobo",
+      "Team": "Seattle Seahawks",
+      "ReportedOn": "2026-08-23",
+      "Description": "Knee injury",
+      "Source": "https://www.seahawks.com/news/rookie-safety-bud-clark-suffers-broken-ankle-in-seahawks-preseason-loss-to-titans"
+    },
+    {
+      "Name": "Matt Hennessy",
+      "Team": "Dallas Cowboys",
+      "ReportedOn": "2026-06-18",
+      "Description": "Neck surgery",
+      "Source": "https://www.dallascowboys.com/news/cowboys-moving-matt-hennessy-to-season-ending-ir"
+    },
+    {
+      "Name": "Jayden Reed",
+      "Team": "Green Bay Packers",
+      "ReportedOn": "2026-10-02",
+      "Description": "Neck surgery",
+      "Source": "https://www.packers.com/news/packers-ready-to-pull-together-to-fill-jayden-reed-s-void-oct-2-2026"
+    },
+    {
+      "Name": "Jaxson Dart",
+      "Team": "New York Giants",
+      "ReportedOn": "2026-09-23",
+      "Description": "Knee surgery",
+      "Source": "https://www.nfl.com/news/giants-qb-jaxson-dart-season-ending-knee-surgery"
+    },
+    {
+      "Name": "De'Von Achane",
+      "Team": "Miami Dolphins",
+      "ReportedOn": "2026-09-28",
+      "Description": "ACL injury",
+      "Source": "https://www.nfl.com/news/dolphins-rb-devon-achane-miss-2026-season-acl-tear"
+    },
+    {
+      "Name": "Brian Burns",
+      "Team": "New York Giants",
+      "ReportedOn": "2026-09-28",
+      "Description": "ACL injury",
+      "Source": "https://www.ksl.com/article/51629515/giants-olb-brian-burns-acl-to-miss-rest-of-season"
+    },
+    {
+      "Name": "Javon Hargrave",
+      "Team": "Green Bay Packers",
+      "ReportedOn": "2026-10-12",
+      "Description": "Achilles injury",
+      "Source": "https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/tests-confirm-packers-dl-javon-hargrave-tore-his-achilles"
+    },
+    {
+      "Name": "Tom Kennedy",
+      "Team": "Detroit Lions",
+      "ReportedOn": "2026-10-12",
+      "Description": "Knee surgery",
+      "Source": "https://www.cbssports.com/fantasy/football/news/lions-tom-kennedy-done-for-2026/"
+    }
+  ]
+}

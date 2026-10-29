@@ -1,0 +1,27 @@
+{
+  "source_url": "https://nflpa.com/reports/public-salary-cap-report",
+  "observed_local_date": "2026-10-26",
+  "time_zone": "America/Los_Angeles",
+  "report_year": 2026,
+  "base_cap": 301200000,
+  "report_labels": [
+    "Team",
+    "Current Contracts",
+    "Previous Year Carryover",
+    "Team Cap",
+    "Cap Room"
+  ],
+  "observation": "Browser-rendered public report. Each club appears twice. Both reported Team Cap + Cap Room series independently yield the same inferred team allowance. Neither room series is imported as game available room. Dataset effective timestamp is not printed; this records observation date.",
+  "report_totals": {
+    "carryover": 722032094,
+    "team_cap": 19127480915,
+    "room": 1213139155
+  },
+  "row_totals": {
+    "carryover": 722032094,
+    "team_cap": 19127480913,
+    "room": 1213139157
+  },
+  "rounding_note": "Displayed row Team Cap totals are $2 below header and room totals $2 above; combined totals agree exactly. Do not add artificial balancing charges.",
+  "original_user_csv_sha256": "fa83ced04c16e36415ab69c78a666b92bd062c40ff283e9880e16a35aa4e6c52"
+}

@@ -2,10 +2,10 @@
 
 Validated 2026-10-23. Application source: `d41060a`, branch `feature/management-ui-overhaul`. Later commits contain documentation only.
 
-- [Download test APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39996702027/artifacts/12521215150)
-- [Passing build and device checks](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39996702027)
-- [Complete screenshot/XML evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/39996702027/artifacts/12519904680)
-- [Review PR 20](https://github.com/antdroidx/CollegeFootballDynastyManager/pull/20) — no merge performed.
+- [Download test APK](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/39996702027/artifacts/12521215150)
+- [Passing build and device checks](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/39996702027)
+- [Complete screenshot/XML evidence](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/39996702027/artifacts/12519904680)
+- [Review PR 20](https://github.com/antdroidx/Football-Sim-Engine/pull/20) — no merge performed.
 
 ## Delivered
 

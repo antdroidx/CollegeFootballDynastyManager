@@ -1,0 +1,53 @@
+{
+  "observedOn": "2026-10-27",
+  "scope": "Developer review only; no source-contract or save mutation.",
+  "player": "Jaxon Smith-Njigba",
+  "team": "SEA",
+  "sources": [
+    {
+      "url": "https://www.seahawks.com/news/seahawks-sign-jaxon-smith-njigba-to-multi-year-extension",
+      "kind": "club announcement",
+      "supports": "Extension confirmed; announcement alone does not establish annual guarantee triggers."
+    },
+    {
+      "url": "https://overthecap.com/player/jaxon-smith-njigba/10844",
+      "kind": "reported contract detail",
+      "supports": "Separates signing cash, later options and future guarantee triggers; void structure explicitly estimated."
+    }
+  ],
+  "reportedEvents": [
+    {
+      "year": 2026,
+      "cash": 35000000,
+      "type": "signing bonus",
+      "reportedFullyGuaranteedAtSigning": true
+    },
+    {
+      "year": 2027,
+      "cash": 30000000,
+      "type": "option bonus",
+      "reportedFullyGuaranteedAtSigning": true,
+      "reportedDue": "March 20"
+    },
+    {
+      "year": 2028,
+      "type": "guarantee vesting",
+      "reportedTrigger": "Five days after Super Bowl: 2028 compensation and part of 2029 compensation vest."
+    },
+    {
+      "year": 2029,
+      "cash": 10000000,
+      "type": "scheduled option cash in source pack",
+      "reportedDue": "March 20",
+      "guaranteeStatus": "requires reconciliation with vesting and source salary terminology"
+    }
+  ],
+  "implementationConstraints": [
+    "Scheduled future bonus cash is not already-paid proration.",
+    "Guaranteed unpaid bonuses cannot simply be discarded when excluding unpaid proration.",
+    "Preserve independently paid residual proration and all historical booked debt.",
+    "Source headline guarantees, annual guaranteed cash and guaranteed base are different measures.",
+    "Annual source zero does not establish unconditional release rights before later vesting.",
+    "Do not overwrite negotiated contracts or promote sourced default from this single-player review."
+  ]
+}

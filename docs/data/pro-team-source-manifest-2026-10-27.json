@@ -1,0 +1,176 @@
+{
+  "observedOn": "2026-10-27",
+  "scope": "32 complete OTC team snapshots with internally reconciled annual liabilities. Observation date is not a published effective date. No reported room or balancing liabilities imported into game budgets.",
+  "files": [
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/ARI.html",
+      "sha256": "af6b398b56ca50e3dde0f5a2942c658a0ab4a57ff53f14dca4ad3f816363d3db",
+      "bytes": 232271
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/ATL.html",
+      "sha256": "53edd721b1ed465f8fe44aa95ea5be8caf1dc73ff8dd235cbd8693a651525b35",
+      "bytes": 299730
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/BAL.html",
+      "sha256": "e9313d5961702ed5a915f61c9d49a4c7e73220770f85bef4750bb4dd85b0b4e8",
+      "bytes": 297058
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/BUF.html",
+      "sha256": "299fd9bb0cf10ed983ea7e0eeeca76002c41fdab6d2a49f8b9e457bbade87277",
+      "bytes": 316985
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/CAR.html",
+      "sha256": "ea8383ace8344385a51af98efaaeae477f2c0eb113133a3761f66e5c726fd133",
+      "bytes": 251009
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/CHI.html",
+      "sha256": "d968a55c027525d66efa02e15479040f4587ac95fbda91e568806ddd0b177742",
+      "bytes": 248091
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/CIN.html",
+      "sha256": "3b691d29dd90c3f3e2a1742c6c16cf114b00f84985dd139e96272c0953b3a92a",
+      "bytes": 239167
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/CLE.html",
+      "sha256": "18caedf32af6ac98a32445ebb3e33697fd65912f83056497515867df7f0de518",
+      "bytes": 323494
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/DAL.html",
+      "sha256": "916338ef9c73c5e83f6d4b036cc48030d31990739479b868b413ec9b3bf66288",
+      "bytes": 325323
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/DEN.html",
+      "sha256": "0cabc4f724211d4deaaafccd7b6380eda4404eca57f6c797b1f50ab5c76deb32",
+      "bytes": 363560
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/DET.html",
+      "sha256": "0c62f7b98d2a1e08e04b0aabd1eb1fa13ddb665b319bf0c055f11efc10e949f9",
+      "bytes": 299272
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/GB.html",
+      "sha256": "37891b36c6e0accd8444bc2d2748fe938b4b339400073ac81d446d601a343bc5",
+      "bytes": 273508
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/HOU.html",
+      "sha256": "540460056450628efd272e0a61b5084a8e12635e44e2950d8efdfefdc2b47da9",
+      "bytes": 290489
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/identity-audit.json",
+      "sha256": "54efa0388d20641ab4a0520d3ac86101e4c507a62022e60353f8135489b537a5",
+      "bytes": 2134065
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/IND.html",
+      "sha256": "51aa60e0dd28bab0bb6aacce5541f455a73e91e5a2054ab325eba92e791ac854",
+      "bytes": 252706
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/JAX.html",
+      "sha256": "d18eabdf0e67b2b93581ba188b389d99ba14aab529f8134f716c62adbbb54796",
+      "bytes": 339605
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/KC.html",
+      "sha256": "69dd0b08a4c686ea4f061495e65298c00428a7c3fa69c1c83881e14faa98f05e",
+      "bytes": 276539
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/LAC.html",
+      "sha256": "531a1ce777de1a381b73ae39da84dd2b320e6c648b02d5978236ac48a796dd44",
+      "bytes": 236880
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/LAR.html",
+      "sha256": "9e12f0595b166b014ca31f3873b4378170cf5d9f8e726f2d1ab587ce5cdb98dd",
+      "bytes": 273415
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/LV.html",
+      "sha256": "99e03999fe457749ad389c22cfa8f28c54f59ed5298973b4dfe66d82830d8759",
+      "bytes": 273670
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/MIA.html",
+      "sha256": "dcdb8b39b2fc11b0f213849cc3c8850ea9e95afe53770a2cc07c27adbbfd9135",
+      "bytes": 282348
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/MIN.html",
+      "sha256": "373127df65a5e6505c68d80f6de74d27b2af66af6519f2d6ac8aa0fa70bf9b54",
+      "bytes": 275458
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/NE.html",
+      "sha256": "99b1bf4f41e9256483da0adb74b368cbc7df2191f9025475b7812c2ea31ebe7e",
+      "bytes": 284373
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/NO.html",
+      "sha256": "7e5b726514db35a62d19011d78c663af24868cbf67b93875a0f8087638b124aa",
+      "bytes": 298744
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/NYG.html",
+      "sha256": "49f665fa6f61285b9c33693945ba5df878820b2af71a65f04ae08f62c7359449",
+      "bytes": 236402
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/NYJ.html",
+      "sha256": "174d74385a3ff9b726ea0c107738eff6cf5836f71d5d3759ae09977694449996",
+      "bytes": 288453
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/obligations-audit.json",
+      "sha256": "14fe3b780ed4a7a090cef687ec1417fc8cffb7ed84919c74100e56c2b0d6f1ee",
+      "bytes": 790623
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/PHI.html",
+      "sha256": "2d5af6ea34895e98ffc4fa3c4ac3a2ce7b0bed8dadee4e73060abaa3fdda23fc",
+      "bytes": 386667
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/PIT.html",
+      "sha256": "d540a634e0950fa8af19f7cd20a8f975e39d3304733843e66824d2ff3ad41d0a",
+      "bytes": 265402
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/SEA.html",
+      "sha256": "1b8203af9973e4e379cf7ec12b43dce7367b76b1b12124f648cb5e4b4d346e63",
+      "bytes": 272339
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/SF.html",
+      "sha256": "7f7dc4ac98698e2a5ad951879d3bf9416cb962670c21e52f8353274ef6451088",
+      "bytes": 374897
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/TB.html",
+      "sha256": "4aecfe54b7a3d29fc6231a38818cb2438c03b731966591547589622de5db2295",
+      "bytes": 248299
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/TEN.html",
+      "sha256": "d457c044afc85ea86d256dc0d806680b861317669d0fbaae8bbaab03a37612ce",
+      "bytes": 253045
+    },
+    {
+      "file": "data/pro/source-snapshots/2026-10-27/teams/WSH.html",
+      "sha256": "4b89b88b396ec06cabfec22ab40302011e1a4baa6cc5e02d1f9390ac6941b499",
+      "bytes": 240844
+    }
+  ]
+}

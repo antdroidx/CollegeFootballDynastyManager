@@ -10,23 +10,10 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        AndroidSearchAppearance.Configure();
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
-        Microsoft.Maui.Handlers.LabelHandler.Mapper.AppendToMapping("ThemeContrast", (_, view) =>
-        {
-            if (view is Microsoft.Maui.Controls.Label label)
-                label.Loaded += (_, _) => label.TextColor = DynastyTheme.ReadableInk(label.TextColor, label);
-        });
-        Microsoft.Maui.Handlers.ButtonHandler.Mapper.AppendToMapping("ThemeContrast", (_, view) =>
-        {
-            if (view is Microsoft.Maui.Controls.Button button)
-                button.Loaded += (_, _) => button.TextColor = DynastyTheme.ReadableInk(button.TextColor, button);
-        });
-        Microsoft.Maui.Handlers.SearchBarHandler.Mapper.AppendToMapping("ThemeContrast", (_, view) =>
-        {
-            if (view is Microsoft.Maui.Controls.SearchBar search)
-                search.Loaded += (_, _) => search.TextColor = DynastyTheme.ReadableInk(search.TextColor, search);
-        });
+        DynastyTheme.ConfigureContrast();
 #if ANDROID
         ButtonHandler.Mapper.AppendToMapping("FlatButtons", (handler, _) =>
         {
@@ -37,7 +24,7 @@ public static class MauiProgram
         static void ApplyButtonAvailability(IButtonHandler handler, Microsoft.Maui.IButton view)
         {
             if (view is Microsoft.Maui.Controls.Button button)
-                handler.PlatformView.Alpha = (float)(button.IsEnabled ? button.Opacity : Math.Min(.45, button.Opacity));
+                handler.PlatformView.Alpha = (float)(button.IsEnabled ? button.Opacity : button.Opacity);
         }
         ButtonHandler.Mapper.AppendToMapping(nameof(Microsoft.Maui.IView.IsEnabled), ApplyButtonAvailability);
         ButtonHandler.Mapper.AppendToMapping(nameof(Microsoft.Maui.IView.Opacity), ApplyButtonAvailability);

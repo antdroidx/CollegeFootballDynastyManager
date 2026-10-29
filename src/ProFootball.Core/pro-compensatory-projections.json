@@ -1,0 +1,312 @@
+{
+  "Version": 1,
+  "ObservedOn": "2026-10-28",
+  "Projections": [
+    {
+      "Year": 2027,
+      "Round": 3,
+      "Team": "PHI",
+      "Reason": "Jaelan Phillips",
+      "Special": false,
+      "Priority": 0,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "Team": "GB",
+      "Reason": "Malik Willis",
+      "Special": false,
+      "Priority": 1,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "Team": "CIN",
+      "Reason": "Trey Hendrickson",
+      "Special": false,
+      "Priority": 2,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "Team": "LAC",
+      "Reason": "Odafe Oweh",
+      "Special": false,
+      "Priority": 3,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "Team": "SEA",
+      "Reason": "Nolan Teasley",
+      "Special": true,
+      "Priority": 4,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "Team": "SEA",
+      "Reason": "Boye Mafe",
+      "Special": false,
+      "Priority": 5,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "Team": "DEN",
+      "Reason": "John Franklin-Myers",
+      "Special": false,
+      "Priority": 6,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "Team": "BUF",
+      "Reason": "David Edwards",
+      "Special": false,
+      "Priority": 7,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "Team": "KC",
+      "Reason": "Jaylen Watson",
+      "Special": false,
+      "Priority": 8,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "Team": "NYG",
+      "Reason": "Wan'Dale Robinson",
+      "Special": false,
+      "Priority": 9,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "GB",
+      "Reason": "Romeo Doubs",
+      "Special": false,
+      "Priority": 10,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "GB",
+      "Reason": "Quay Walker",
+      "Special": false,
+      "Priority": 11,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "IND",
+      "Reason": "Kwity Paye",
+      "Special": false,
+      "Priority": 12,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "JAX",
+      "Reason": "Devin Lloyd",
+      "Special": false,
+      "Priority": 13,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "SEA",
+      "Reason": "Kenneth Walker III",
+      "Special": false,
+      "Priority": 14,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "BAL",
+      "Reason": "Isaiah Likely",
+      "Special": false,
+      "Priority": 15,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "SEA",
+      "Reason": "Tariq Woolen",
+      "Special": false,
+      "Priority": 16,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "Team": "BAL",
+      "Reason": "Dre'Mont Jones",
+      "Special": false,
+      "Priority": 17,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "MIN",
+      "Reason": "Jalen Nailor",
+      "Special": false,
+      "Priority": 18,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "SEA",
+      "Reason": "Coby Bryant",
+      "Special": false,
+      "Priority": 19,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "JAX",
+      "Reason": "Travis Etienne",
+      "Special": false,
+      "Priority": 20,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "GB",
+      "Reason": "Kingsley Enagbare",
+      "Special": false,
+      "Priority": 21,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "DET",
+      "Reason": "Amik Robertson",
+      "Special": false,
+      "Priority": 22,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "JAX",
+      "Reason": "Greg Newsome II",
+      "Special": false,
+      "Priority": 23,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "ATL",
+      "Reason": "David Onyemata",
+      "Special": false,
+      "Priority": 24,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "BAL",
+      "Reason": "Charlie Kolar",
+      "Special": false,
+      "Priority": 25,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "IND",
+      "Reason": "Nick Cross",
+      "Special": false,
+      "Priority": 26,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "Team": "ATL",
+      "Reason": "Tyler Allgeier",
+      "Special": false,
+      "Priority": 27,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "Team": "DET",
+      "Reason": "Al-Quadin Muhammad",
+      "Special": false,
+      "Priority": 28,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "Team": "MIA",
+      "Reason": "Larry Borom",
+      "Special": false,
+      "Priority": 29,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "Team": "KC",
+      "Reason": "Marquise Brown",
+      "Special": false,
+      "Priority": 30,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "Team": "NE",
+      "Reason": "Vederian Lowe",
+      "Special": false,
+      "Priority": 31,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "Team": "KC",
+      "Reason": "Joshua Williams",
+      "Special": false,
+      "Priority": 32,
+      "Source": "https://overthecap.com/compensatory-picks#y2027"
+    },
+    {
+      "Year": 2028,
+      "Round": 3,
+      "Team": "SEA",
+      "Reason": "Nolan Teasley",
+      "Special": true,
+      "Priority": 0,
+      "Source": "https://www.seahawks.com/news/seahawks-acquire-all-pro-guard-quenton-nelson-in-trade-with-colts-pending-physical"
+    }
+  ]
+}

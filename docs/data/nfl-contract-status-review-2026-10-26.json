@@ -1,0 +1,86 @@
+{
+  "observed_local": "2026-10-26",
+  "scope": "Developer-only review of the ten strict identity team conflicts. Primary roster/event evidence is distinct from contract/debt evidence; no game assets, save states, salaries or guarantees are changed. A page observation is not a uniform effective date or a complete signing history.",
+  "reviews": [
+    {
+      "financial_table_team": "BUF",
+      "player": "Jedrick Wills",
+      "primary_team": "Arizona Cardinals",
+      "primary_status": "Active",
+      "source_url": "https://www.azcardinals.com/team/players-roster/jedrick-wills/",
+      "interpretation": "Official biography dates the move from Buffalo practice squad to Arizona active roster to October 6. Buffalo ledger presence is historical spending, not authority to move the player back."
+    },
+    {
+      "financial_table_team": "CAR",
+      "player": "Malcolm DeWalt IV",
+      "primary_team": "Carolina Panthers",
+      "primary_status": "Practice squad",
+      "source_url": "https://www.panthers.com/team/players-roster/",
+      "interpretation": "Current official roster lists him on the practice squad. Snapshot free agency needs dated reconciliation, not a guessed active contract."
+    },
+    {
+      "financial_table_team": "JAX",
+      "player": "Jamal Hill",
+      "primary_team": "Jacksonville Jaguars",
+      "primary_status": "Practice squad",
+      "source_url": "https://www.jaguars.com/news/roster-moves-jaguars-sign-lb-jamal-hill-to-the-practice-squad",
+      "interpretation": "Official October 22 announcement identifies a practice-squad signing; preserve prior Texans obligations separately."
+    },
+    {
+      "financial_table_team": "MIN",
+      "player": "DeeJay Dallas",
+      "primary_team": "Minnesota Vikings",
+      "primary_status": "Practice squad with temporary elevation",
+      "source_url": "https://www.vikings.com/team/app-links/transactions",
+      "interpretation": "Official October 24 transactions record release, practice-squad signing and elevation. Multiple prior/current ledger rows can be legitimate; do not collapse them into one active deal."
+    },
+    {
+      "financial_table_team": "NYG",
+      "player": "Darian Kinnard",
+      "primary_team": "Las Vegas Raiders",
+      "primary_status": "Practice squad",
+      "source_url": "https://www.raiders.com/team/rosters",
+      "interpretation": "Current official Raiders roster lists practice squad; Giants October 2 release is separately documented at https://www.giants.com/news/week-4-tracker-latest-news-notes-roster-moves . Giants spending is not current roster ownership."
+    },
+    {
+      "financial_table_team": "PIT",
+      "player": "Colby Sorsdal",
+      "primary_team": "Atlanta Falcons",
+      "primary_status": "Practice squad",
+      "source_url": "https://www.atlantafalcons.com/team/players-roster/",
+      "interpretation": "Official current practice-squad listing and September 22 signing report support the game team, not a move to the old Pittsburgh financial table. Signing report: https://www.atlantafalcons.com/news/falcons-place-aj-terrell-jr-on-injured-reserve ."
+    },
+    {
+      "financial_table_team": "SEA",
+      "player": "Trevon Diggs",
+      "primary_team": "Seattle Seahawks",
+      "primary_status": "Practice squad",
+      "source_url": "https://www.seahawks.com/team/players-roster/",
+      "interpretation": "Official current practice-squad listing supports a roster-pack free-agent discrepancy; it does not establish future salary/guarantees."
+    },
+    {
+      "financial_table_team": "SF",
+      "player": "Ogbonnia Okoronkwo",
+      "primary_team": "San Francisco 49ers",
+      "primary_status": "Practice squad",
+      "source_url": "https://www.49ers.com/team/players-roster/",
+      "interpretation": "Official roster lists Ogbo Okoronkwo on practice squad; transaction history includes repeated releases/promotions/elevations. Preserve each financial event separately."
+    },
+    {
+      "financial_table_team": "TEN",
+      "player": "Jerrick Reed",
+      "primary_team": "Arizona Cardinals",
+      "primary_status": "Practice squad",
+      "source_url": "https://www.azcardinals.com/team/players-roster/jerrick-reed-ii/",
+      "interpretation": "Official biography dates Titans practice-squad release September 7 and Cardinals signing September 16. Tennessee ledger costs are not present roster ownership."
+    },
+    {
+      "financial_table_team": "WSH",
+      "player": "Austin Keys",
+      "primary_team": null,
+      "primary_status": "Released at last checked primary event",
+      "source_url": "https://www.commanders.com/news/commanders-activate-amos-magee-mcnichols-croskey-merritt-jean-baptiste",
+      "interpretation": "Official October 19 release supports keeping historical Washington obligations separate. Do not infer a current Washington deal from the ledger; no new contract is established here."
+    }
+  ]
+}

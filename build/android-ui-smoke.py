@@ -48,7 +48,8 @@ def texts(root):
 
 
 def tap(root, text):
-    node = next(node for node in root.iter("node") if node.get("text") == text)
+    matches = [node for node in root.iter("node") if node.get("text") == text]
+    node = next((n for n in matches if "Button" in n.get("class", "")), next((n for n in matches if n.get("clickable") == "true" and "EditText" not in n.get("class", "")), matches[0]))
     left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
     assert right > left and bottom > top, f"Target is not visible: {text}"
     adb("shell", "input", "tap", str((left + right) // 2), str((top + bottom) // 2))
@@ -61,7 +62,16 @@ def scroll_to_text(name, text, max_swipes=6, toward_start=False):
         for node in root.iter("node"):
             if node.get("text") == text:
                 left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
-                if right > left and bottom > top:
+                viewport=root.find("node")
+                bounds=re.findall(r"\d+",viewport.get("bounds", "")) if viewport is not None else []
+                safe=True
+                if len(bounds)==4:
+                    vx,vy,vr,vb=map(int,bounds)
+                    # Android can report a clipped app button under its navigation bar.
+                    # Scroll again rather than sending a tap to the system Back control.
+                    # Edge-to-edge pages can expose a partially scrolled button beneath the status bar too.
+                    safe=vx<(left+right)/2<vr and vy+(vb-vy)*.06<(top+bottom)/2<vb-(vb-vy)*.045
+                if right > left and bottom > top and safe:
                     return root
         scrollables = [node for node in root.iter("node") if node.get("scrollable") == "true"]
         if not scrollables or attempt == max_swipes:
@@ -83,6 +93,23 @@ def wait_for(name, predicate, timeout=120):
             return root
         time.sleep(2)
     raise AssertionError(f"Timed out waiting for {name}: {sorted(texts(root))}")
+
+
+def library_loaded(root, create_label="New franchise"):
+    # Completion is independent of whether a desired slot is currently above the fold.
+    return (enabled(root, create_label)
+            and not any(n.get("class") == "android.widget.ProgressBar" for n in root.iter("node"))
+            and not any((value or "").startswith("Loading ") for value in texts(root)))
+
+
+def pro_overview_loaded(root):
+    values=texts(root)
+    return ("Overview" in values and any(label in values for label in ("Advance week","Advance offseason","Your coaching career","Season overview"))
+            and not any(n.get("class")=="android.widget.ProgressBar" for n in root.iter("node")))
+
+
+def library_entry_ready(root, prefix, create_label="New franchise"):
+    return library_loaded(root, create_label) and any((value or "").startswith(prefix) for value in texts(root))
 
 
 def enabled(root, text):
@@ -285,7 +312,7 @@ def main():
     tap(watch_box, "Return to game")
     ready = capture("takeover-ready")
     tap(ready, "Take over")
-    controlled = wait_for("takeover-controlled", lambda r: "Call play" in texts(r) or "Call defense" in texts(r))
+    controlled = wait_for("takeover-controlled", lambda r: "Watch CPU" in texts(r) and "Options" in texts(r))
     assert "Watch CPU" in texts(controlled), "Take over did not leave Watch mode"
     tap(controlled, "More")
     tap(scroll_to_text("skip-ready", "Skip to end"), "Skip to end")
@@ -455,12 +482,15 @@ def check_remaining_management():
     tap(capture("management-before-schedule"),"Overview")
     home = scroll_to_text("overview-week-links", next(t for t in texts(capture("overview-week-links-ready")) if (t or "").startswith("This week's games")))
     current_link = next(t for t in texts(home) if (t or "").startswith("This week's games"))
-    previous_link = next(t for t in texts(home) if (t or "").startswith("Last week's results"))
-    tap(home, previous_link)
-    previous = wait_for("overview-last-week-schedule", lambda r: "Season schedule" in texts(r))
-    assert "All teams" in texts(previous)
-    tap(previous,"Overview")
-    home = capture("overview-return-week-links")
+    previous_link = next((t for t in texts(home) if (t or "").startswith("Last week's results")), None)
+    if previous_link is not None:
+        tap(home, previous_link)
+        previous = wait_for("overview-last-week-schedule", lambda r: "Season schedule" in texts(r))
+        assert "All teams" in texts(previous)
+        tap(previous,"Overview")
+        home = capture("overview-return-week-links")
+    else:
+        assert int(re.search(r"Week (\d+)", current_link).group(1)) <= 1, "Missing previous-week access later in the season"
     tap(home, current_link)
 
     schedule=wait_for("management-schedule",lambda r:"Season schedule" in texts(r))
@@ -652,7 +682,12 @@ def check_career_options():
         form = scroll_to_text("career-form-"+scope, "Start dynasty")
         assert role in texts(form)
         assert node_with_id(form, "new-coach-firing").get("checked") == "false"
-        tap(form, "Start dynasty")
+        name_form=scroll_to_text("career-name-"+scope,"Your coaching career",toward_start=True)
+        tap_id(name_form,"new-coach-name")
+        adb("shell","input","keyevent","123","67","67","67","67","67")
+        adb("shell","input","text","Alex%s"+scope)
+        adb("shell","input","keyevent","4")
+        tap(scroll_to_text("career-named-start-"+scope,"Start dynasty"),"Start dynasty")
         overview = wait_for("career-overview-"+scope, overview_ready, timeout=300)
         tap(overview, "Coach")
         plan = wait_for("career-plan-"+scope, lambda r: "Development" in texts(r) and "Game plan" in texts(r))
@@ -667,12 +702,15 @@ def check_career_options():
         tap_id(settings, "coach-firing-setting")
         tap(capture("career-before-save"), "‹ Exit Dynasty")
         library = wait_for("career-library-"+scope, lambda r: "Your dynasties" in texts(r))
+        assert "Delete dynasty" in texts(library)
         tap(scroll_to_text("career-load-"+scope, "Load"), "Load")
         restored = wait_for("career-restored-"+scope, overview_ready, timeout=300)
         tap(restored, "Settings")
         settings = scroll_to_text("career-firing-restored-"+scope, "Coach can be fired")
         assert node_with_id(settings, "coach-firing-setting").get("checked") == "true"
-        tap(settings, "Coach")
+        named=scroll_to_text("career-name-restored-"+scope,"Alex "+scope,toward_start=True)
+        assert node_with_id(named,"coach-name-setting").get("text")=="Alex "+scope
+        tap(named, "Coach")
         wait_for("career-restored-coach-"+scope, lambda r: "Coaching Hub" in texts(r))
         tap(scroll_to_text("career-development-tab-"+scope, "Development", toward_start=True), "Development")
         development = wait_for("career-development-"+scope, lambda r: scope+" talk · morale" in texts(r))

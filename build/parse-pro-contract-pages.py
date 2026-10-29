@@ -1,0 +1,101 @@
+"""Parse dated cached contract tables into integer-dollar evidence. Does not update game contracts."""
+import argparse,json,re
+from pathlib import Path
+from bs4 import BeautifulSoup
+
+def dollars(text):
+    text=text.strip()
+    if text in ["","Void","N/A","--","-"]:return None
+    if not re.fullmatch(r"\(?-?\$[0-9,]+\)?",text):raise ValueError("Unrecognized money value "+text)
+    return int(re.sub(r"[^0-9]","",text))*(-1 if "(" in text or "-" in text else 1)
+
+def table_rows(table):
+    if table is None:return []
+    head=table.select_one("thead tr");headers=head.find_all(["th","td"],recursive=False)
+    indices={}
+    offset=0
+    for h in headers:
+        label=re.sub(r"[^a-z]","",h.get_text(" ",strip=True).lower())
+        span=int(h.get("colspan",1))
+        # OTC reuses prorated-bonus CSS for both bonus groups. Header meaning,
+        # including grouped subcolumns, determines the financial field.
+        labels={"year":"year","team":"team","basesalary":"salary","proratedsigningbonus":"signingProration","proratedoptionbonus":"optionProration","signingbonus":"signingProration","optionbonus":"optionProration","rosterbonus":"rosterCash","pergamerosterbonus":"perGameCash","workoutbonus":"workoutCash","otherbonus":"otherCash","guaranteedsalary":"reportedGuaranteedCash","salaryguarantees":"reportedGuaranteedCash","capnumber":"cap","cashpaid":"cashPaid"}
+        if label=="proratedbonus":
+            indices["signingProration"]=offset
+            if span==2:indices["optionProration"]=offset+1
+        elif label=="rosterbonus" and span==2:
+            indices["rosterCash"]=offset;indices["perGameCash"]=offset+1
+        elif label in labels:indices[labels[label]]=offset
+        offset+=span
+    rows=[]
+    for tr in table.select("tbody tr"):
+        cells=tr.find_all(["td","th"],recursive=False)
+        if not cells:continue
+        year_cell=cells[indices.get("year",0)]
+        year=" ".join(str(t) for t in year_cell.find_all(string=True,recursive=False)).strip()
+        if not re.fullmatch(r"\d{4}",year):continue
+        row={"year":int(year)}
+        annotation=year_cell.select_one(".info-inner")
+        if annotation is not None:row["datedNotes"]=annotation.get_text(" ",strip=True)
+        for key,index in indices.items():
+            if key=="year":continue
+            value=cells[index].get_text(" ",strip=True)
+            row[key]=value if key=="team" else dollars(value)
+        for cell in tr.select("td.player-dead-money"):
+            for css,key in {"cut":"preJune1CutDead","june_1_cut":"postJune1CutDead","trade":"preJune1TradeDead","june_1_trade":"postJune1TradeDead"}.items():
+                value=cell.select_one("div."+css)
+                if value is not None:row[key]=dollars(value.get_text(" ",strip=True))
+        row["void"]=any(c.get_text(" ",strip=True)=="Void" for c in cells)
+        rows.append(row)
+    return rows
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument("cache",type=Path);p.add_argument("output",type=Path);p.add_argument("--ledger",type=Path);a=p.parse_args()
+    result=[];failures=[]
+    for path in sorted(a.cache.glob("*.html")):
+        try:
+            soup=BeautifulSoup(path.read_bytes(),"html.parser");meta=json.loads(path.with_suffix(".observation.json").read_text(encoding="utf-8"))
+            import hashlib
+            if hashlib.sha256(path.read_bytes()).hexdigest()!=meta["sha256"]:raise ValueError("Raw page hash mismatch")
+            current=table_rows(soup.select_one("table.current-contract"));history=table_rows(soup.select_one("table.salary-cap-history"))
+            if not current and not history:raise ValueError("No annual contract rows")
+            facts={}
+            for li in soup.find_all("li"):
+                value=li.get_text(" ",strip=True)
+                if value.startswith("Contract Value:"):
+                    money=re.findall(r"\$[0-9,]+",value)
+                    if money:facts["reportedValue"]=dollars(money[0])
+                    if len(money)>1:facts["reportedApy"]=dollars(money[1])
+                if value.startswith("Fully Guaranteed Money:"):
+                    money=re.search(r"\$[0-9,]+",value)
+                    if money:facts["reportedFullyGuaranteed"]=dollars(money.group())
+            heading=soup.find(lambda t:t.name=="h4" and t.get_text(" ",strip=True)=="Current Contract")
+            if heading is not None:
+                detail=heading.find_next("h5")
+                if detail is not None:
+                    facts["kind"]=detail.get_text(" ",strip=True)
+                    signed=re.search(r"signed (\d{4})",facts["kind"])
+                    if signed:facts["signedYear"]=int(signed.group(1))
+            cashflow={}
+            cash_table=soup.select_one("table.cash-flow-table")
+            if cash_table is not None:
+                cash_headers=cash_table.select("thead tr th")
+                cash_row=cash_table.select_one("tbody tr.annual-cash")
+                if cash_row is not None:
+                    cash_cells=cash_row.find_all("td",recursive=False)
+                    if len(cash_headers)!=len(cash_cells):raise ValueError("Cash-flow year/value column mismatch")
+                    for h,cell in zip(cash_headers,cash_cells):
+                        if re.fullmatch(r"\d{4}",h.get_text(strip=True)):cashflow[h.get_text(strip=True)]=dollars(cell.get_text(" ",strip=True))
+            result.append({"otcId":int(path.stem),**meta,**facts,"annualCash":cashflow,"current":current,"history":history})
+        except Exception as e:failures.append({"file":path.name,"error":str(e)})
+    comparisons=[]
+    if a.ledger:
+        by_id={r["otcId"]:r for r in result};ledger=json.loads(a.ledger.read_text(encoding="utf-8"))
+        for team in ledger["teams"]:
+            for row in team["currentRows"]:
+                if row["classification"] not in ["missing_source_contract","cap_difference"]:continue
+                page=by_id.get(row["otcId"]);annual=[] if page is None else [r for r in page["current"] if r["year"]==2026]
+                comparisons.append({"team":team["team"],"playerId":row["playerId"],"otcId":row["otcId"],"name":row["name"],"recordedTeamCap":row["reportedCap"],"currentPageCap":annual[0].get("cap") if len(annual)==1 else None,"sameCap":len(annual)==1 and annual[0].get("cap")==row["reportedCap"]})
+    output={"formatVersion":1,"scope":"Offline annual source evidence only; absent cash/guarantee values remain null. No game data, roster ownership or opening room is changed.","pages":result,"errors":failures,"currentComparisons":comparisons,"summary":{"pages":len(result),"errors":len(failures),"sameCap":sum(r["sameCap"] for r in comparisons),"differentOrMissingCap":sum(not r["sameCap"] for r in comparisons)}}
+    a.output.write_text(json.dumps(output,indent=2)+"\n",encoding="utf-8");print(json.dumps(output["summary"]))
+if __name__=="__main__":main()

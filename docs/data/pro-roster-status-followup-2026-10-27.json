@@ -1,0 +1,49 @@
+{
+  "scope": "Primary source review only; no app/source/save changes yet. Known practice designations do not establish undisclosed actual pay or historic cash.",
+  "reviews": [
+    {
+      "player": "David Olajiga",
+      "playerId": "80ac6784-83e5-5c89-a873-b224943aa429",
+      "snapshotTeam": "Baltimore Ravens",
+      "snapshotStatus": "DEV",
+      "verifiedEvent": "Named international practice player on the2026 initial practice squad.",
+      "sourceUrl": "https://www.baltimoreravens.com/news/ravens-practice-squad-initial-2026-jake-moody-adisa-isaac",
+      "observedOn": "2026-10-27",
+      "retrievedAt": "2026-10-27T21:55:54.476843+00:00",
+      "sha256": "96f73da533a6b546a156faed6a4d4f7bcad4f8840352f566b3d52f3c0bb3ffe7"
+    },
+    {
+      "player": "David Agoha",
+      "playerId": "860ef92f-7430-5695-93d5-5302acb12dd5",
+      "snapshotTeam": "Denver Broncos",
+      "snapshotStatus": "DEV",
+      "verifiedEvent": "Explicit international practice-player designation on August31,2026.",
+      "sourceUrl": "https://www.denverbroncos.com/news/broncos-sign-17-players-to-practice-squad",
+      "observedOn": "2026-10-27",
+      "retrievedAt": "2026-10-27T21:52:34.890976+00:00",
+      "sha256": "a11d32933248aba826964073247275a25b958637266249f4bb4c4e6cb06d82c7"
+    },
+    {
+      "player": "Valentin Senn",
+      "playerId": "513558b9-407e-50bd-99ca-a161b267e6f9",
+      "snapshotTeam": "Arizona Cardinals",
+      "snapshotStatus": "DEV",
+      "verifiedEvent": "Granted the17th international practice-squad exemption on August31,2026; generic reserve/active-contract fallback is inappropriate.",
+      "sourceUrl": "https://www.azcardinals.com/news/cardinals-re-sign-starling-thomas-13-others-to-practice-squad",
+      "observedOn": "2026-10-27",
+      "retrievedAt": "2026-10-27T21:52:35.454704+00:00",
+      "sha256": "e6a4f99f9c4b4715f3d36855a876881bbfcb4cf18b7e09c58cbc3b08e60cb7ed"
+    },
+    {
+      "player": "Wydett Williams Jr.",
+      "playerId": "b7ebe196-4d39-5839-a25f-a5b2d9bfb9d5",
+      "snapshotTeam": "Arizona Cardinals",
+      "snapshotStatus": "ACT",
+      "verifiedEvent": "Released from Arizona active roster on October24,2026; official NFL waivers also record clearance October26. Do not create a new generated active commitment.",
+      "sourceUrl": "https://www.azcardinals.com/news/as-jeremiyah-love-heals-cardinals-promote-evan-hull-to-roster",
+      "observedOn": "2026-10-27",
+      "retrievedAt": "2026-10-27T21:55:55.039122+00:00",
+      "sha256": "5064b920b0995f1c1e214e126744512742b65b2c68bd9a1f8841de57354068b6"
+    }
+  ]
+}

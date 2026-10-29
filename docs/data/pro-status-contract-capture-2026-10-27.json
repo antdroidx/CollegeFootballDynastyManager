@@ -1,0 +1,132 @@
+{
+  "observedOn": "2026-10-27",
+  "scope": "Offline reported contract notes for review only. No guarantee, vesting or source-data update is inferred.",
+  "summary": {
+    "cohort": 10,
+    "captured": 10,
+    "withNotes": 7,
+    "failures": 0
+  },
+  "contracts": [
+    {
+      "playerId": "090d9a65-87b4-52ce-a271-55edecb78d3c",
+      "player": "Austin Keys",
+      "otcId": 12767,
+      "sourceUrl": "https://overthecap.com/player/austin-keys/12767/",
+      "retrievedAt": "2026-10-27T20:29:35.703265+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "26a4007b75b16214acf35a8361e99dbd12b394a0103c0cb6a7ec5626b50d59c5",
+      "rawFile": "12767.html",
+      "notesAvailable": false,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "0e3c55d0-7762-5aa0-b119-3696e71603ac",
+      "player": "Jedrick Wills",
+      "otcId": 8750,
+      "sourceUrl": "https://overthecap.com/player/jedrick-wills/8750/",
+      "retrievedAt": "2026-10-27T20:29:03.231074+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "878f655ef80f5d7e7e47b4f9496196f8a01d83c039123b132723502eb946cd3b",
+      "rawFile": "8750.html",
+      "notesAvailable": false,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "0f4fd16b-dcb1-54e7-8e19-3c3e284be5d8",
+      "player": "Jamal Hill",
+      "otcId": 11796,
+      "sourceUrl": "https://overthecap.com/player/jamal-hill/11796/",
+      "retrievedAt": "2026-10-27T20:29:03.805802+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "4e8dd22f3a2b2c194aa943421ef2cd51ee7d3c22f18a625a16a938d4e31f22a3",
+      "rawFile": "11796.html",
+      "notesAvailable": true,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "13763e16-827f-53d5-999a-8611b466be67",
+      "player": "DeeJay Dallas",
+      "otcId": 8884,
+      "sourceUrl": "https://overthecap.com/player/deejay-dallas/8884/",
+      "retrievedAt": "2026-10-27T20:29:03.776392+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "79d1c5f3942552284cccd450b45e710dee98b5d8d173f8060168af1398f97503",
+      "rawFile": "8884.html",
+      "notesAvailable": false,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "1d902a4b-f808-562d-885a-b097dbb1b78f",
+      "player": "Colby Sorsdal",
+      "otcId": 10976,
+      "sourceUrl": "https://overthecap.com/player/colby-sorsdal/10976/",
+      "retrievedAt": "2026-10-27T20:29:19.415816+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "914552da75d47067fdb799f7b78069b09b18aec64c8347bdb66a2399b3eee869",
+      "rawFile": "10976.html",
+      "notesAvailable": true,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "48b9db8e-713d-5ec1-9729-f3e8a5ae328b",
+      "player": "Ogbo Okoronkwo",
+      "otcId": 7045,
+      "sourceUrl": "https://overthecap.com/player/ogbonnia-okoronkwo/7045/",
+      "retrievedAt": "2026-10-27T20:29:20.084719+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "f8e2576292337e569c58233ebcf6e5a75246098a6021b52335f9a272fb02efe1",
+      "rawFile": "7045.html",
+      "notesAvailable": true,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "5197f87d-381d-5f70-9366-72dc60b2f0c0",
+      "player": "Darian Kinnard",
+      "otcId": 10190,
+      "sourceUrl": "https://overthecap.com/player/darian-kinnard/10190/",
+      "retrievedAt": "2026-10-27T20:29:19.415816+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "00abd914806c19b7faf2226a0308c30a907a6115c9857e9861698de84d806dbc",
+      "rawFile": "10190.html",
+      "notesAvailable": true,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "6bcc657f-a0f4-55fa-9e5e-986da984a52c",
+      "player": "Malcolm DeWalt IV",
+      "otcId": 13734,
+      "sourceUrl": "https://overthecap.com/player/malcolm-dewalt-iv/13734/",
+      "retrievedAt": "2026-10-27T20:29:03.231074+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "5e5d2c7b61f6cc8a6439f697ce13bd532160a3b6f40638752dafe89fcc0ea010",
+      "rawFile": "13734.html",
+      "notesAvailable": true,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "f42c88a3-ef0d-509f-928b-16f66b5cb50a",
+      "player": "Jerrick Reed II",
+      "otcId": 11022,
+      "sourceUrl": "https://overthecap.com/player/jerrick-reed/11022/",
+      "retrievedAt": "2026-10-27T20:29:35.704265+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "6ae797a81fdfa91c097417398653805b4c80e91d27cfd927b0894eace107c2c2",
+      "rawFile": "11022.html",
+      "notesAvailable": true,
+      "reviewStatus": "unreviewed; not financial instructions"
+    },
+    {
+      "playerId": "fb057ef4-d233-51dc-bb00-a59112b84d53",
+      "player": "Trevon Diggs",
+      "otcId": 8791,
+      "sourceUrl": "https://overthecap.com/player/trevon-diggs/8791/",
+      "retrievedAt": "2026-10-27T20:29:20.084719+00:00",
+      "observedOn": "2026-10-27",
+      "sha256": "283d42b591b8b97544d7e916233b18b2aafa1b5e2cc2b97abb5464b4d8c9f9e2",
+      "rawFile": "8791.html",
+      "notesAvailable": true,
+      "reviewStatus": "unreviewed; not financial instructions"
+    }
+  ]
+}

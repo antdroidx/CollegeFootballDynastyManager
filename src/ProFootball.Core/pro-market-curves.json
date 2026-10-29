@@ -1,0 +1,592 @@
+{
+  "version": 1,
+  "baseCap": 301200000,
+  "contractPackSha256": "1ecf6508aa31e6e62e1391d5e6e1251eb670ef6a049f3b421e9cc469380e4bc6",
+  "rosterPackSha256": "d693aca2de7bd9e34bfe971fd14a7e861cba4a7b8d345abe7755e2bfd956b05b",
+  "minimumSamples": 16,
+  "method": "Within-position rating/pay quantile rank mapping (.05,.25,.5,.75,.90,.95), monotone log-dollar interpolation;300K lower-tail anchor, upper tail bounded by lesser of observed maximum and125% of95th percentile. Signed source APY distributions are2026 benchmarks, not guaranteed obligations. Sparse specialist groups fall back to broad K. No historical signing-cap normalization.",
+  "sparseGroups": [],
+  "curves": [
+    {
+      "position": "CB",
+      "samples": 108,
+      "ceiling": 33750000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 64.0,
+          "annual": 1005000
+        },
+        {
+          "overall": 70.75,
+          "annual": 1215000
+        },
+        {
+          "overall": 77.0,
+          "annual": 3100000
+        },
+        {
+          "overall": 82.0,
+          "annual": 12000000
+        },
+        {
+          "overall": 87.0,
+          "annual": 19187500
+        },
+        {
+          "overall": 89.29999999999998,
+          "annual": 28250000
+        },
+        {
+          "overall": 99.0,
+          "annual": 33750000
+        }
+      ]
+    },
+    {
+      "position": "DE",
+      "samples": 98,
+      "ceiling": 50000000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 67.7,
+          "annual": 989458
+        },
+        {
+          "overall": 76.25,
+          "annual": 1402500
+        },
+        {
+          "overall": 81.0,
+          "annual": 7000000
+        },
+        {
+          "overall": 88.0,
+          "annual": 17000000
+        },
+        {
+          "overall": 92.0,
+          "annual": 28775000
+        },
+        {
+          "overall": 94.0,
+          "annual": 40015000
+        },
+        {
+          "overall": 99.0,
+          "annual": 50000000
+        }
+      ]
+    },
+    {
+      "position": "DT",
+      "samples": 112,
+      "ceiling": 36125000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 66.0,
+          "annual": 1011875
+        },
+        {
+          "overall": 74.0,
+          "annual": 1485625
+        },
+        {
+          "overall": 80.0,
+          "annual": 5500000
+        },
+        {
+          "overall": 85.0,
+          "annual": 15004167
+        },
+        {
+          "overall": 92.0,
+          "annual": 24225000
+        },
+        {
+          "overall": 93.0,
+          "annual": 28900000
+        },
+        {
+          "overall": 99.0,
+          "annual": 36125000
+        }
+      ]
+    },
+    {
+      "position": "FS",
+      "samples": 56,
+      "ceiling": 22507812,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 64.5,
+          "annual": 407379
+        },
+        {
+          "overall": 69.0,
+          "annual": 1197500
+        },
+        {
+          "overall": 77.0,
+          "annual": 2241666
+        },
+        {
+          "overall": 83.25,
+          "annual": 6750000
+        },
+        {
+          "overall": 88.5,
+          "annual": 15050000
+        },
+        {
+          "overall": 91.5,
+          "annual": 18006250
+        },
+        {
+          "overall": 99.0,
+          "annual": 22507812
+        }
+      ]
+    },
+    {
+      "position": "K",
+      "samples": 48,
+      "ceiling": 7000000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 76.0,
+          "annual": 1033250
+        },
+        {
+          "overall": 79.75,
+          "annual": 1440625
+        },
+        {
+          "overall": 81.0,
+          "annual": 3018750
+        },
+        {
+          "overall": 84.25,
+          "annual": 4100000
+        },
+        {
+          "overall": 86.30000000000001,
+          "annual": 5550700
+        },
+        {
+          "overall": 88.65,
+          "annual": 6556000
+        },
+        {
+          "overall": 99.0,
+          "annual": 7000000
+        }
+      ]
+    },
+    {
+      "position": "K/19",
+      "samples": 23,
+      "ceiling": 7000000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 77.2,
+          "annual": 1082000
+        },
+        {
+          "overall": 81.0,
+          "annual": 1543750
+        },
+        {
+          "overall": 83.0,
+          "annual": 4100000
+        },
+        {
+          "overall": 85.5,
+          "annual": 5500500
+        },
+        {
+          "overall": 87.8,
+          "annual": 6592000
+        },
+        {
+          "overall": 89.8,
+          "annual": 6964000
+        },
+        {
+          "overall": 99.0,
+          "annual": 7000000
+        }
+      ]
+    },
+    {
+      "position": "K/20",
+      "samples": 25,
+      "ceiling": 4100000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 75.2,
+          "annual": 1026500
+        },
+        {
+          "overall": 79.0,
+          "annual": 1300000
+        },
+        {
+          "overall": 80.0,
+          "annual": 2500000
+        },
+        {
+          "overall": 81.0,
+          "annual": 3500000
+        },
+        {
+          "overall": 84.2,
+          "annual": 3980000
+        },
+        {
+          "overall": 85.0,
+          "annual": 4040000
+        },
+        {
+          "overall": 99.0,
+          "annual": 4100000
+        }
+      ]
+    },
+    {
+      "position": "MLB",
+      "samples": 53,
+      "ceiling": 25125000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 63.4,
+          "annual": 967500
+        },
+        {
+          "overall": 72.0,
+          "annual": 1215000
+        },
+        {
+          "overall": 79.0,
+          "annual": 3520000
+        },
+        {
+          "overall": 85.0,
+          "annual": 10000000
+        },
+        {
+          "overall": 90.60000000000001,
+          "annual": 14733333
+        },
+        {
+          "overall": 91.4,
+          "annual": 20100000
+        },
+        {
+          "overall": 99.0,
+          "annual": 25125000
+        }
+      ]
+    },
+    {
+      "position": "OL",
+      "samples": 185,
+      "ceiling": 30100000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 63.2,
+          "annual": 922500
+        },
+        {
+          "overall": 71.0,
+          "annual": 1402500
+        },
+        {
+          "overall": 76.0,
+          "annual": 4750000
+        },
+        {
+          "overall": 85.0,
+          "annual": 16000000
+        },
+        {
+          "overall": 92.0,
+          "annual": 22500000
+        },
+        {
+          "overall": 93.0,
+          "annual": 25000000
+        },
+        {
+          "overall": 99.0,
+          "annual": 30100000
+        }
+      ]
+    },
+    {
+      "position": "OLB",
+      "samples": 54,
+      "ceiling": 17000000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 58.85,
+          "annual": 1005000
+        },
+        {
+          "overall": 72.0,
+          "annual": 1221250
+        },
+        {
+          "overall": 77.0,
+          "annual": 2500000
+        },
+        {
+          "overall": 82.75,
+          "annual": 6690500
+        },
+        {
+          "overall": 87.7,
+          "annual": 12050000
+        },
+        {
+          "overall": 91.0,
+          "annual": 15000000
+        },
+        {
+          "overall": 99.0,
+          "annual": 17000000
+        }
+      ]
+    },
+    {
+      "position": "QB",
+      "samples": 54,
+      "ceiling": 64000000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 67.65,
+          "annual": 1000375
+        },
+        {
+          "overall": 74.0,
+          "annual": 2087500
+        },
+        {
+          "overall": 76.0,
+          "annual": 5125000
+        },
+        {
+          "overall": 82.0,
+          "annual": 41375000
+        },
+        {
+          "overall": 92.7,
+          "annual": 55000000
+        },
+        {
+          "overall": 94.35,
+          "annual": 55000000
+        },
+        {
+          "overall": 99.0,
+          "annual": 64000000
+        }
+      ]
+    },
+    {
+      "position": "RB",
+      "samples": 84,
+      "ceiling": 22500000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 66.0,
+          "annual": 1005000
+        },
+        {
+          "overall": 79.0,
+          "annual": 1215000
+        },
+        {
+          "overall": 84.0,
+          "annual": 2325000
+        },
+        {
+          "overall": 89.0,
+          "annual": 6343750
+        },
+        {
+          "overall": 93.0,
+          "annual": 18550000
+        },
+        {
+          "overall": 99.0,
+          "annual": 22500000
+        }
+      ]
+    },
+    {
+      "position": "SS",
+      "samples": 41,
+      "ceiling": 22500000,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 69.0,
+          "annual": 1145000
+        },
+        {
+          "overall": 72.0,
+          "annual": 1550000
+        },
+        {
+          "overall": 79.0,
+          "annual": 3000000
+        },
+        {
+          "overall": 86.0,
+          "annual": 12000000
+        },
+        {
+          "overall": 89.0,
+          "annual": 15000000
+        },
+        {
+          "overall": 92.0,
+          "annual": 18000000
+        },
+        {
+          "overall": 99.0,
+          "annual": 22500000
+        }
+      ]
+    },
+    {
+      "position": "TE",
+      "samples": 112,
+      "ceiling": 16498687,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 52.0,
+          "annual": 947250
+        },
+        {
+          "overall": 53.0,
+          "annual": 1300000
+        },
+        {
+          "overall": 71.5,
+          "annual": 1770000
+        },
+        {
+          "overall": 78.0,
+          "annual": 6166667
+        },
+        {
+          "overall": 83.0,
+          "annual": 12000000
+        },
+        {
+          "overall": 91.0,
+          "annual": 13198950
+        },
+        {
+          "overall": 99.0,
+          "annual": 16498687
+        }
+      ]
+    },
+    {
+      "position": "WR",
+      "samples": 108,
+      "ceiling": 41031154,
+      "anchors": [
+        {
+          "overall": 40.0,
+          "annual": 300000
+        },
+        {
+          "overall": 67.0,
+          "annual": 927000
+        },
+        {
+          "overall": 72.0,
+          "annual": 1215000
+        },
+        {
+          "overall": 78.0,
+          "annual": 3125000
+        },
+        {
+          "overall": 86.0,
+          "annual": 17500000
+        },
+        {
+          "overall": 91.0,
+          "annual": 29300000
+        },
+        {
+          "overall": 93.0,
+          "annual": 32824923
+        },
+        {
+          "overall": 99.0,
+          "annual": 41031154
+        }
+      ]
+    }
+  ]
+}

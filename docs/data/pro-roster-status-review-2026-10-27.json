@@ -1,0 +1,31 @@
+{
+  "observedOn": "2026-10-27",
+  "scope": "Primary-source review only; no game roster, contract, cap credit or saved state changed. Financial dates remain separate from roster-event dates.",
+  "ruleSource": "https://overthecap.com/collective-bargaining-agreement/article/33",
+  "reviews": [
+    {
+      "playerId": "1819fa24-b5a6-5674-af5d-72a6084cd99b",
+      "player": "Montorie Foster Jr",
+      "snapshotTeam": "Seattle Seahawks",
+      "snapshotStatus": "ACT",
+      "snapshotPracticeSquad": false,
+      "sourceUrl": "https://www.seahawks.com/news/seahawks-activate-guard-anthony-bradford-off-injured-reserve-elevate-two-from-practice-squad",
+      "publishedDate": "2026-10-24",
+      "verifiedEvent": "Waived by Seattle on October24; stale active status must not produce a new current-team commitment.",
+      "recommendedStatus": "Free agent, subject to later dated transaction check",
+      "financialPolicy": "No generated release debt or historical cash inferred. Reconcile prior obligations against the separately preserved source debt ledger."
+    },
+    {
+      "playerId": "916caac0-07fe-5154-bab4-0a348857a9c2",
+      "player": "Federico Maranges",
+      "snapshotTeam": "Seattle Seahawks",
+      "snapshotStatus": "DEV",
+      "snapshotPracticeSquad": true,
+      "sourceUrl": "https://www.seahawks.com/news/seahawks-sign-17-to-practice-squad-including-veterans-trevon-diggs-aj-finley-velus-jones-jr-rodney-thomas-ii",
+      "publishedDate": "2026-08-31",
+      "verifiedEvent": "Designated international practice-squad player, supporting the17th practice slot. Article33.1(b) exempts weekly salary from Team Salary. Do not infer unspecified additional compensation.",
+      "recommendedStatus": "International practice-squad exemption; active promotion must end the cap/roster exemption",
+      "financialPolicy": "No generated release debt or historical cash inferred. Reconcile prior obligations against the separately preserved source debt ledger."
+    }
+  ]
+}

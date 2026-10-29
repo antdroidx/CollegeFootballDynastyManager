@@ -87,6 +87,9 @@ public sealed partial class FoundationPage : ContentPage
     private readonly Button _newDynastyButton;
     private readonly Label _currentDynastyLabel;
     private readonly Button _advanceWeekButton;
+    private readonly Button _simulatePhaseButton = new() { Text="Simulate phase", AutomationId="simulate-phase" };
+    private readonly Button _stopPhaseSimulation = new() { Text="Stop after this week", IsVisible=false };
+    private bool _isBatchSimulating, _batchStopRequested, _advanceFailed;
     private readonly Button _manualSaveButton;
     private readonly Button _autosaveButton;
     private readonly Switch _rollingAutosaveSwitch;
@@ -214,6 +217,8 @@ public sealed partial class FoundationPage : ContentPage
             IsEnabled = false
         };
         _advanceWeekButton.Clicked += AdvanceWeek;
+        _simulatePhaseButton.Clicked += async (_,_) => await SimulateCurrentPhaseAsync();
+        _stopPhaseSimulation.Clicked += (_,_) => { _batchStopRequested=true; _stopPhaseSimulation.IsEnabled=false; };
 
         _manualSaveButton = new Button
         {
@@ -565,7 +570,8 @@ public sealed partial class FoundationPage : ContentPage
                     Children =
                     {
                         _advanceOverlayStatus,
-                        _advanceOverlayProgress
+                        _advanceOverlayProgress,
+                        _stopPhaseSimulation
                     }
                 }
             }
@@ -732,6 +738,7 @@ public sealed partial class FoundationPage : ContentPage
 
     private void ShowSection(AppSection section)
     {
+        if(section==AppSection.Teams)section=AppSection.Roster;
         if (_currentDynasty is null && section is not (AppSection.Home or AppSection.NewDynasty)) section = AppSection.Home;
         RememberSection(section);
         _activeSection = section;
@@ -1084,13 +1091,14 @@ public sealed partial class FoundationPage : ContentPage
                 startingYear);
 
             activeRoster = StartingLibraryService.CreateRoster(startingSetup, startingRoster, activeRoster);
+            if(_generatePlayers.IsToggled)activeRoster=FictionalRosterService.College(activeRoster,_newDynastyTeams.ToArray());
             _currentDynasty = new DynastyState
             {
                 DynastyId = dynastyId,
                 DynastyName = dynastyName,
                 LeagueTeams = _newDynastyTeams.ToArray(),
                 LeagueName = startingSetup.Name, LeagueRules = startingSetup.Rules with { },
-                StartingRosterName = startingRoster?.Name ?? "Default roster",
+                StartingRosterName = _generatePlayers.IsToggled?"Generated players · program strengths":startingRoster?.Name ?? "Default roster",
                 UserTeamName = teamName,
                 UserCoachRole = (StaffRole)Math.Max(0, _newCoachRole.SelectedIndex),
                 UserCoachFiringEnabled = _newCoachFiring.IsToggled,
@@ -1126,6 +1134,7 @@ public sealed partial class FoundationPage : ContentPage
             _currentDynasty = StaffManagementService.EnsureLeagueStaff(
                 _currentDynasty, _teamsByName.Values);
             _currentDynasty = RealCoachCsvImporter.ApplyToNewDynasty(_currentDynasty, _realCoachSeeds);
+            _currentDynasty = UserCoachCareerService.Rename(_currentDynasty, string.IsNullOrWhiteSpace(_newCoachName.Text) ? "Coach" : _newCoachName.Text);
             await ShowAdvanceProgressAsync("Hiring scouting department...", 0.88);
             _currentDynasty = ScoutingDepartmentService.EnsureDepartment(
                 _currentDynasty, _teamsByName[teamName]);
@@ -1151,7 +1160,8 @@ public sealed partial class FoundationPage : ContentPage
         }
     }
 
-    private async void AdvanceWeek(object? sender, EventArgs e)
+    private async void AdvanceWeek(object? sender, EventArgs e) => await AdvanceOneWeekAsync();
+    private async Task AdvanceOneWeekAsync()
     {
         if (_currentDynasty is null || _isAdvancing)
             return;
@@ -1166,6 +1176,7 @@ public sealed partial class FoundationPage : ContentPage
             return;
         }
 
+        _advanceFailed = false;
         _isAdvancing = true;
         SetDynastyControlsEnabled(false);
         await ShowAdvanceProgressAsync("Preparing weekly advance...", 0.04);
@@ -1607,6 +1618,7 @@ public sealed partial class FoundationPage : ContentPage
         catch (Exception ex)
         {
             SetDynastyControlsEnabled(true);
+            _advanceFailed = true;
             _rollingAutosaveStatus.Text =
                 $"Advance failed at {phaseAtStart} Week {weekAtStart}: {ex.Message}";
             RenderCurrentDynasty();
@@ -1614,7 +1626,7 @@ public sealed partial class FoundationPage : ContentPage
         finally
         {
             _isAdvancing = false;
-            _advanceOverlay.IsVisible = false;
+            _advanceOverlay.IsVisible = _isBatchSimulating;
             SetDynastyControlsEnabled(_currentDynasty is not null);
         }
     }
@@ -1725,13 +1737,20 @@ public sealed partial class FoundationPage : ContentPage
             var manage = new Button { Text = "Versions", FontSize = 12, BackgroundColor = Colors.Transparent,
                 TextColor = DynastyTheme.Muted, Padding = new Thickness(8, 5) };
             manage.Clicked += async (_, _) => await OpenSaveVersionsAsync(versions);
+            var delete = new Button { Text = "Delete dynasty", FontSize = 12, AutomationId = "delete-dynasty" };
+            delete.Clicked += async (_, _) =>
+            {
+                if (!await GameDialogs.AlertAsync(this, "Delete dynasty?", $"Delete {latest.DynastyName} ({latest.UserTeamName}) and all {versions.Length} saved versions? This cannot be undone.", "Delete", "Cancel")) return;
+                foreach (var version in versions) await _saveRepository.DeleteAsync(version.SaveId);
+                await RefreshSaveSlotsAsync();
+            };
             var info = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center, Children =
             {
                 new Label { Text = latest.DynastyName, FontSize = 14, FontAttributes = FontAttributes.Bold },
                 new Label { Text = $"{latest.UserTeamName} · {latest.SeasonYear} · {FormatWeek(latest)}", FontSize = 12 },
                 new Label { Text = $"Last saved {latest.UpdatedUtc.ToLocalTime():g}", FontSize = 11, TextColor = DynastyTheme.Muted }
             } };
-            var actions = new HorizontalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center, Children = { load, manage } };
+            var actions = new HorizontalStackLayout { Spacing = 8, VerticalOptions = LayoutOptions.Center, Children = { load, manage, delete } };
             var row = new Grid { ColumnSpacing = 10,
                 ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
             row.Add(info, 0, 0); row.Add(actions, 1, 0);
@@ -1881,7 +1900,7 @@ public sealed partial class FoundationPage : ContentPage
 
         RenderRosterManagement(userRoster);
 
-        var activeInjuries = userRoster
+        var activeInjuries = _currentDynasty.ActiveRoster.Where(p=>p.TeamName==(_rosterTeamName??_currentDynasty.UserTeamName))
             .Where(player => player.CurrentInjury is not null)
             .OrderByDescending(player => player.CurrentInjury!.Severity)
             .ThenByDescending(player => player.CurrentInjury!.WeeksRemaining)
@@ -4656,15 +4675,7 @@ public sealed partial class FoundationPage : ContentPage
         }
     }
 
-    private static string FormatPotentialStars(int potential) =>
-        potential switch
-        {
-            >= 92 => "5★",
-            >= 84 => "4★",
-            >= 76 => "3★",
-            >= 68 => "2★",
-            _ => "1★"
-        };
+    private static string FormatPotentialStars(int potential) => PlayerAttributeCatalog.PotentialStars(potential);
 
     private static Color GetChangeColor(int value) =>
         value > 0
@@ -5299,11 +5310,13 @@ public sealed partial class FoundationPage : ContentPage
         _teamPicker.IsEnabled = enabled;
         _leaguePicker.IsEnabled = enabled;
         _startingRosterPicker.IsEnabled = enabled;
+        _generatePlayers.IsEnabled = enabled;
     }
 
     private void SetDynastyControlsEnabled(bool enabled)
     {
-        var controlsEnabled = enabled && !_isAdvancing;
+        var controlsEnabled = enabled && !_isAdvancing && !_isBatchSimulating;
+        _simulatePhaseButton.IsEnabled = controlsEnabled;
         _advanceWeekButton.IsEnabled = controlsEnabled;
         _manualSaveButton.IsEnabled = controlsEnabled;
         _autosaveButton.IsEnabled = controlsEnabled;

@@ -1,0 +1,78 @@
+using System.Security.Cryptography;
+using System.Text;
+namespace ProFootball.Core;
+
+/// <summary>Offline stories from completed results and actual transactions, with stable source identities.</summary>
+public static class ProNews
+{
+    static string Key(string source) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)))[..24];
+    public static ProFranchise Refresh(ProFranchise s)
+    {
+        var stories = s.News.ToDictionary(n => n.Id);
+        void Add(ProNewsStory story) => stories.TryAdd(story.Id, story);
+        foreach (var g in s.Games.Where(g => g.Football.HasPlayed))
+        {
+            var f = g.Football; var margin = Math.Abs((f.HomeScore ?? 0) - (f.AwayScore ?? 0));
+            Add(new("game-" + f.GameId, f.SeasonYear, f.Week, g.Phase == ProPhase.Playoffs ? "Playoffs" : "Results",
+                f.HomeScore == f.AwayScore ? "All square: " + f.AwayTeamName + " and " + f.HomeTeamName : f.WinnerTeamName + (margin >= 21 ? " rolls to a convincing win" : margin <= 3 ? " survives a close finish" : " takes the win"),
+                $"{g.Phase} · {f.AwayTeamName} {f.AwayScore} – {f.HomeScore} {f.HomeTeamName}", f.WinnerTeamName, f.GameId));
+        }
+        foreach (var player in s.Players.Where(p => p.Football.CurrentInjury is { WeeksRemaining: > 0 }))
+        {
+            var f = player.Football; var injury = f.CurrentInjury!;
+            Add(new("injury-" + injury.InjuryId, injury.SeasonYear, injury.StartWeek, "Injuries", f.FullName + " sidelined",
+                $"{f.TeamName} · {injury.BodyArea} · initial recovery estimate {injury.InitialWeeks} weeks.", f.TeamName));
+        }
+        foreach (var group in s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).GroupBy(g => g.Football.Week))
+        {
+            foreach (var team in s.League.Teams)
+            {
+                var run = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed && g.Football.Week <= group.Key && g.Football.InvolvesTeam(team.Name)).OrderByDescending(g => g.Football.Week).TakeWhile(g => g.Football.HomeScore != g.Football.AwayScore && g.Football.WinnerTeamName == team.Name).ToArray();
+                if (run.Length < 3) continue;
+                Add(new($"streak-{s.Year}-{group.Key}-{team.Id}", s.Year, group.Key, "Form", team.Name + $" wins {run.Length} straight", "Consecutive regular-season wins keep the momentum building.", team.Name));
+            }
+        }
+        foreach(var week in s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.SeasonYear==s.Year).GroupBy(g=>g.Football.Week))
+        {
+            if(week.Any(g=>!g.Football.HasPlayed))continue;
+            var id=$"weekly-{s.Year}-{week.Key}";
+            if(!stories.ContainsKey(id))
+            {
+                var biggest=week.OrderByDescending(g=>Math.Abs(g.Football.HomeScore!.Value-g.Football.AwayScore!.Value)).First().Football;
+                var leader=week.SelectMany(g=>g.Football.PlayerStats).GroupBy(p=>p.PlayerId).Select(g=>new{Name=g.First().PlayerName,Yards=g.Sum(p=>p.PassYards)}).OrderByDescending(p=>p.Yards).FirstOrDefault();
+                var detail=$"{week.Count()} games completed. Largest margin: {biggest.AwayTeamName} {biggest.AwayScore} – {biggest.HomeScore} {biggest.HomeTeamName}.";
+                if(leader is {Yards:>0})detail+=$" Passing leader: {leader.Name}, {leader.Yards:N0} yards.";
+                Add(new(id,s.Year,week.Key,"Weekly review",$"Week {week.Key} around the league",detail));
+            }
+            if(week.Key<14)continue;
+            var snapshot=s with{Games=s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.Week<=week.Key).ToList()};
+            foreach(var conference in s.League.Teams.Select(t=>t.Conference).Distinct())
+            {
+                var raceId=$"race-{s.Year}-{week.Key}-{conference}";if(stories.ContainsKey(raceId))continue;
+                var seeds=ProStandings.Seeds(snapshot,conference);
+                Add(new(raceId,s.Year,week.Key,"Playoff race",conference+" playoff picture · Week "+week.Key,
+                    "Current projected qualifiers: "+string.Join(", ",seeds.Select((r,i)=>$"{i+1}. {r.Team.Name} ({r.Wins}–{r.Losses}–{r.Ties})"))+". Projection from completed results, not a clinching announcement."));
+            }
+        }
+        foreach(var honors in s.Honors)
+        {
+            foreach(var award in honors.Awards)Add(new($"award-{honors.Year}-{award.Title}",honors.Year,18,"Awards",award.Name+" wins "+award.Title,$"{award.Team} · {honors.Year} regular-season award.",award.Team));
+            foreach(var conference in honors.Selections.GroupBy(p=>p.Conference))Add(new($"allstars-{honors.Year}-{conference.Key}",honors.Year,18,"Awards",conference.Key+" all-star selections announced",$"{conference.Count()} players selected for the {honors.Year} conference showcase."));
+            if(honors.Showcase is {HasPlayed:true} game)Add(new($"showcase-{honors.Year}",honors.Year,19,"Awards","All-star showcase final",$"{game.AwayTeamName} {game.AwayScore} – {game.HomeScore} {game.HomeTeamName}. Exhibition statistics are separate from league totals."));
+        }
+        foreach (var trade in s.TradeHistory)
+            Add(new("trade-" + trade.Id, trade.Year, trade.Week, "Trades", trade.From + " and " + trade.To + " complete deal",
+                $"{trade.GivenPlayers.Count + trade.ReceivedPlayers.Count} players and {trade.GivenPicks.Count + trade.ReceivedPicks.Count} draft picks changed hands.", trade.From));
+        foreach (var text in s.Transactions)
+        {
+            // Private GM decisions are stored separately and never published here.
+            var category = text.Contains("hired") || text.Contains("dismissed") || text.Contains("job") ? "Coaching" : text.Contains("draft", StringComparison.OrdinalIgnoreCase) ? "Draft" : "Transactions";
+            var stamp = System.Text.RegularExpressions.Regex.Match(text, @"^(\d{4}) W(\d+) · ");
+            var year = stamp.Success ? int.Parse(stamp.Groups[1].Value) : s.Year;
+            var week = stamp.Success ? int.Parse(stamp.Groups[2].Value) : s.Week;
+            Add(new(Key("transaction:" + text), year, week, category, text, "Confirmed league transaction."));
+        }
+        var news = stories.Values.OrderByDescending(n => n.Year).ThenByDescending(n => n.Week).Take(1000).ToList();
+        return s with { News = news, ReadNewsIds = s.ReadNewsIds.Where(id => news.Any(n => n.Id == id)).Distinct().ToList() };
+    }
+}

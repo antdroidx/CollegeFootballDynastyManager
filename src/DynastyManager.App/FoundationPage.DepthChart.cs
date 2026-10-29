@@ -53,7 +53,7 @@ public sealed partial class FoundationPage
         {
             new Label { Text = "DEPTH CHART", FontSize = 12, CharacterSpacing = 1.5, TextColor = DynastyTheme.Accent },
             new Label { Text = "Build your starting lineup", FontSize = 21, FontAttributes = FontAttributes.Bold },
-            new Label { Text = "Position OVR uses the calibrated POCI weights. Auto Set weighs scheme fit and staff expertise.", FontSize = 12, TextColor = DynastyTheme.Muted }
+            new Label { Text = "Auto Set considers position ratings, scheme fit and staff expertise.", FontSize = 12, TextColor = DynastyTheme.Muted }
         } }, 0);
         header.Add(auto, 1);
         _depthChartOrganizer.Children.Add(header);

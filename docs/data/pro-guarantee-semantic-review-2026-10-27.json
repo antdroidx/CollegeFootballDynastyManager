@@ -1,0 +1,62 @@
+{
+  "observedOn": "2026-10-27",
+  "scope": "Developer review findings only. No contract, guarantee, cash, player ownership or saved assessment is changed. Current-cut equality is insufficient proof of future payment semantics.",
+  "findings": [
+    {
+      "player": "Roquan Smith",
+      "category": "current_guarantee_classification",
+      "finding": "The published2026 guarantee equals the4m roster payment described as due in March. It must not become a second4m guaranteed base-salary obligation on an assignment. Preserve current cash/cap; explicitly review base versus paid-other classification before promotion.",
+      "sourceUrl": "https://overthecap.com/player/roquan-smith/6893/",
+      "sourceSha256": "4ea2fe9a5b62aef07ffeec4d3127a6e45a211b596cfaa4862da00bce6b289082"
+    },
+    {
+      "player": "Jake Tonges",
+      "category": "partial_future_payment_guarantee",
+      "finding": "The1.35m2027 guarantee exceeds published1.26m base pay. Allocating the90k excess to per-game pay merely because that column exists is not established by the notes. Partial option/other guarantees require explicit payment classification.",
+      "sourceUrl": "https://overthecap.com/player/jake-tonges/10357/",
+      "sourceSha256": "7dc6369de321acb2305a8df27bf0e0c021331730ea27ccbde45460b45dd1b3b6"
+    },
+    {
+      "player": "Charles Cross",
+      "category": "future_vesting",
+      "finding": "Notes describe2027 compensation vesting after the2027 Super Bowl and16.94m including an8m option in2028. Current cut matching alone does not establish these future obligations. Review against the current annual compensation structure and calendar.",
+      "sourceUrl": "https://overthecap.com/player/charles-cross/10054/",
+      "sourceSha256": "f43e9eb0712e3cd16247f3ff0cf26b92a1bee698b8a1f488694397c0ddd8bf9e"
+    },
+    {
+      "player": "Joe Burrow",
+      "category": "future_vesting_and_partial_guarantee",
+      "finding": "The2027 row already records18.3m while notes describe a later full-salary trigger. Keep existing signed obligations; distinguish the guaranteed amount already effective from later vesting and injury-only protection.",
+      "sourceUrl": "https://overthecap.com/player/joe-burrow/8741/",
+      "sourceSha256": "30688cc2ff43d1c022e6a3f077f23a68c72d00a0e10f3b75eac707d2c530ad1f"
+    },
+    {
+      "player": "Amon-Ra St. Brown",
+      "category": "source_typo_and_precision",
+      "finding": "Notes contain a2017 year typo and rounded7.4m while the annual row gives7417000. Do not silently rewrite exact amounts or infer a trigger year from the typo alone.",
+      "sourceUrl": "https://overthecap.com/player/amon-ra-st-brown/9576/",
+      "sourceSha256": "4ebee69d4e7be4e912f9659a199c3faa85f5939c2faf2c81bdf61f0f8182f1e2"
+    },
+    {
+      "player": "Terence Steele",
+      "category": "source_version_conflict",
+      "finding": "Notes describe an8.25m future option; annual cash-derived staged event is7.65m. Capture/source dates and revised payment terms need reconciliation before promoting that event.",
+      "sourceUrl": "https://overthecap.com/player/terence-steele/9345/",
+      "sourceSha256": "63244c3a59dda71f9d3e5fcfd0bf8a83369ce83a778f914624b14df35f1cd6d4"
+    },
+    {
+      "player": "Braden Mann",
+      "category": "source_year_typo",
+      "finding": "Notes repeat2027 for both fully guaranteed salary seasons. The structured rows and current quotes are evidence but do not establish what the duplicated year was intended to mean.",
+      "sourceUrl": "https://overthecap.com/player/braden-mann/8931/",
+      "sourceSha256": "ecbfb4497f3d07fa2d1252e7cc024548ef4e0641a11089d4049354d2545e6181"
+    },
+    {
+      "player": "Zach Allen",
+      "category": "guarantee_restructure_conflict",
+      "finding": "Notes describe15.75m of2027 compensation vesting in2026, but the current annual row reports no2027 guarantee after revised option structure. Do not discard the note or invent a guarantee allocation from the release difference.",
+      "sourceUrl": "https://overthecap.com/player/zach-allen/7856/",
+      "sourceSha256": "9c111109a26882eda0888c5519754ebaab322569a0ff0e446e644547ad57fee7"
+    }
+  ]
+}

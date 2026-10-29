@@ -12,6 +12,7 @@ public sealed partial class FoundationPage
     private StartingLibraryRepository? _startingLibraryRepository;
     private bool _startingLibrarySaving;
     private string? _startingLibraryError;
+    private readonly Switch _generatePlayers = new() {AutomationId="college-generate-players"};
     private readonly Picker _startingRosterPicker = new() { Title = "Starting roster" };
     private IReadOnlyList<StartingLeagueSetup> _startingSetups = [];
     private IReadOnlyList<StartingRosterPack> _compatibleStartingRosters = [];

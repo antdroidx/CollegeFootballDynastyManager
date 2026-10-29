@@ -24,3 +24,6 @@ __pycache__/
 # Local source/workbook analysis cache
 .artifacts/
 **/TestResults/
+
+# Raw dated NFL source evidence is local research data, not APK/build output.
+data/pro/source-snapshots/

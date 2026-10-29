@@ -1,0 +1,24 @@
+{
+  "scope": "Read-only in-memory classification proof, not app/source/save changes. Published roster due date identifies2026 guaranteed4m as other pay, not a second guaranteed P5 salary.2027 published cash remainder1m is unallocated non-prorated other pay, not a new signing/option allocation (published proration does not increase). Annual cash/cap are unchanged. Current source cut figures are validation, not inputs to invent guarantees.",
+  "sourceUrl": "https://overthecap.com/player/roquan-smith/6893/",
+  "pre": 29437500,
+  "post": 16718750,
+  "years": [
+    {
+      "year": 2026,
+      "oldCash": 20000000,
+      "assignedCash": 20000000,
+      "oldCap": 32718750,
+      "assignedCap": 32718750
+    },
+    {
+      "year": 2027,
+      "oldCash": 20000000,
+      "assignedCash": 20000000,
+      "oldCap": 32718750,
+      "assignedCap": 32718750
+    }
+  ],
+  "buyerGuaranteedBase": 0,
+  "buyerImmediateReleaseCash": 0
+}

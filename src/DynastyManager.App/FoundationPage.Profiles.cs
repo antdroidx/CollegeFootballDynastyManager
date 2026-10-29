@@ -103,22 +103,8 @@ public sealed partial class FoundationPage
             content.Children.Add(PlayerMoraleSummary(player));
             player = PlayerRatingService.EnsureInitialized(state, player);
             content.Children.Add(SectionTitle("Player attributes", $"OVR {player.OverallRating} · Potential {FormatPotentialStars(player.PotentialRating)} · Depth {player.DepthChartOrder}"));
-            content.Children.Add(AttributeGroup("Character traits", "Decision-making and team influence",
-                ("Awareness", player.AwarenessRating), ("Leadership", player.Skills!.Leadership),
-                ("Discipline", player.Skills.Discipline)));
-            content.Children.Add(AttributeGroup("Physical traits", "Athletic ability and availability",
-                ("Speed", player.SpeedRating), ("Acceleration", player.Skills.Acceleration),
-                ("Agility", player.AgilityRating), ("Strength", player.StrengthRating),
-                ("Jumping", player.Skills.Jumping),
-                ("Injury", player.InjuryRating)));
-            content.Children.Add(AttributeGroup("Skill traits", "Position technique and football execution",
-                ("Throw power", player.Skills.PassingPower),
-                ("Throw accuracy", player.Skills.PassingAccuracy), ("Catching", player.Skills.Catching),
-                ("Break tackle", player.Skills.BreakTackle), ("Ball carrying", player.Skills.BallCarrying),
-                ("Tackling", player.Skills.Tackling), ("Run blocking", player.Skills.RunBlocking),
-                ("Pass blocking", player.Skills.PassBlocking),
-                ("Kicking power", player.Skills.KickPower),
-                ("Kicking accuracy", player.Skills.KickAccuracy)));
+            foreach (var group in PlayerAttributeCatalog.Groups(player))
+                content.Children.Add(AttributeGroup(group.Title, group.Subtitle, group.Attributes));
             content.Children.Add(new Label { Text = "Higher ratings are better. Injury represents resistance to injury and wear.", FontSize = 11, TextColor = DynastyTheme.Muted });
             content.Children.Add(new Label { Text = player.CurrentInjury is null ? "Status: healthy" :
                 $"Status: {player.CurrentInjury.Severity} {player.CurrentInjury.BodyArea} injury · {player.CurrentInjury.WeeksRemaining} weeks remaining",
@@ -149,34 +135,8 @@ public sealed partial class FoundationPage
 
     }
 
-    private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes)
-    {
-        var tiles = new Grid { ColumnSpacing = 8, RowSpacing = 8 };
-        int previousColumns = 0;
-        void Arrange(int columns)
-        {
-            if (columns == previousColumns) return;
-            previousColumns = columns;
-            tiles.Children.Clear(); tiles.ColumnDefinitions.Clear(); tiles.RowDefinitions.Clear();
-            for (var i = 0; i < columns; i++) tiles.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            for (var i = 0; i < attributes.Length; i++)
-            {
-                if (i % columns == 0) tiles.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                var attribute = attributes[i];
-                var row = new Grid { ColumnSpacing = 6,
-                    ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-                row.Add(new Label { Text = attribute.Name, FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
-                row.Add(new Label { Text=attribute.Rating.ToString(), FontSize=12, FontAttributes=FontAttributes.Bold,
-                    TextColor=DynastyTheme.IsLight ? Color.FromArgb("#166841") : Color.FromArgb("#70D4AD"), VerticalTextAlignment=TextAlignment.Center },1,0);
-                tiles.Add(new VerticalStackLayout { Spacing=5, Padding=new Thickness(4,5), Children={row,
-                    new ProgressBar { Progress=Math.Clamp(attribute.Rating/99.0,0,1), HeightRequest=4,
-                        ProgressColor=attribute.Rating>=85 ? Color.FromArgb("#38B888") : attribute.Rating>=70 ? Color.FromArgb("#599BDB") : Color.FromArgb("#B49C61") } } },i%columns,i/columns);
-            }
-        }
-        Arrange(2);
-        tiles.SizeChanged += (_, _) => Arrange(tiles.Width >= 780 ? 4 : tiles.Width >= 540 ? 3 : tiles.Width < 300 ? 1 : 2);
-        return new VerticalStackLayout { Spacing = 8, Children = { SectionTitle(title, subtitle), tiles } };
-    }
+    private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes) =>
+        PlayerAttributeViews.Group(title, subtitle, attributes, SectionTitle);
 
     private async Task ShowCoachProfileAsync(StaffMember coach)
     {

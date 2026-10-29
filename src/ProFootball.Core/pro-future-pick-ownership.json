@@ -1,0 +1,697 @@
+{
+  "Version": 1,
+  "ObservedOn": "2026-10-29",
+  "Teams": [
+    "ARI",
+    "ATL",
+    "BAL",
+    "BUF",
+    "CAR",
+    "CHI",
+    "CIN",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GB",
+    "HOU",
+    "IND",
+    "JAX",
+    "KC",
+    "LAC",
+    "LAR",
+    "LV",
+    "MIA",
+    "MIN",
+    "NE",
+    "NO",
+    "NYG",
+    "NYJ",
+    "PHI",
+    "PIT",
+    "SEA",
+    "SF",
+    "TB",
+    "TEN",
+    "WSH"
+  ],
+  "Years": [
+    2027,
+    2028,
+    2029
+  ],
+  "Transfers": [
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "GB",
+      "Owner": "DAL",
+      "Source": "https://www.packers.com/news/packers-agree-to-terms-on-trade-with-cowboys-acquire-micah-parsons"
+    },
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "IND",
+      "Owner": "NYJ",
+      "Source": "https://www.colts.com/news/colts-acquire-cb-sauce-gardner-from-new-york-jets-in-exchange-for-2026-2027-first-round-picks-and-wr-adonai-mitchell"
+    },
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "LAR",
+      "Owner": "CLE",
+      "Source": "https://www.therams.com/news/rams-agree-to-terms-on-trade-myles-garrett-browns"
+    },
+    {
+      "Year": 2027,
+      "Round": 2,
+      "OriginalTeam": "HOU",
+      "Owner": "ARI",
+      "Source": "https://www.azcardinals.com/news/marvin-harrison-jr-trade-from-cardinals-to-texans-becomes-official"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "LAR",
+      "Owner": "KC",
+      "Source": "https://www.therams.com/news/rams-acquire-cb-trent-mcduffie-in-trade-with-chiefs-agree-to-terms-with-mcduffie-on-four-year-contract-extension-nfl-free-agency-2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "PHI",
+      "Owner": "MIN",
+      "Source": "https://www.vikings.com/news/jonathan-greenard-trade-eagles-nfl-draft-2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-ot-broderick-jones"
+    },
+    {
+      "Year": 2027,
+      "Round": 3,
+      "OriginalTeam": "SEA",
+      "Owner": "IND",
+      "Source": "https://www.seahawks.com/news/seahawks-acquire-all-pro-guard-quenton-nelson-in-trade-with-colts-pending-physical"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "MIN",
+      "Owner": "CAR",
+      "Source": "https://www.vikings.com/news/adam-thielen-acquired-trade-carolina-panthers-wide-receiver-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "DAL",
+      "Owner": "GB",
+      "Source": "https://www.packers.com/news/packers-announce-trade-with-cowboys-march-11-2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "NYG",
+      "Owner": "CLE",
+      "Source": "https://www.clevelandbrowns.com/news/browns-trade-no-74-pick-to-the-giants"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "SEA",
+      "Owner": "CLE",
+      "Source": "https://www.seahawks.com/news/seahawks-trade-up-to-no-148-in-fifth-round"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "PIT",
+      "Owner": "DAL",
+      "Source": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-ot-broderick-jones"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "SF",
+      "Owner": "IND",
+      "Source": "https://www.colts.com/news/colts-acquire-2027-fourth-round-pick-in-exchange-for-dt-deforest-buckner-in-trade-with-san-francisco-49ers"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "HOU",
+      "Owner": "CLE",
+      "Source": "https://www.houstontexans.com/news/draft-day-trade-texans-deal-pair-of-picks-get-back-3-from-cleveland-browns"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-wr-george-pickens"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "PIT",
+      "Owner": "MIA",
+      "Source": "https://www.steelers.com/news/steelers-agree-to-acquire-ramsey-smith"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "CAR",
+      "Owner": "MIN",
+      "Source": "https://www.vikings.com/news/adam-thielen-acquired-trade-carolina-panthers-wide-receiver-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "CHI",
+      "Owner": "NE",
+      "Source": "https://www.chicagobears.com/news/chicago-bears-acquire-ol-garrett-bradbury-and-second-round-pick-via-trades"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "NE",
+      "Owner": "PHI",
+      "Source": "https://www.philadelphiaeagles.com/news/eagles-trade-aj-brown-to-the-patriots"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "NYG",
+      "Owner": "MIN",
+      "Source": "https://www.vikings.com/news/jj-mccarthy-quarterback-trade-new-york-giants-2026-nfl-season"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "BAL",
+      "Owner": "PHI",
+      "Source": "https://www.philadelphiaeagles.com/news/eagles-agree-to-trade-cam-jurgens-to-the-ravens"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "OriginalTeam": "ATL",
+      "Owner": "CHI",
+      "Source": "https://www.chicagobears.com/team/transactions/2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "SF",
+      "Owner": "LV",
+      "Source": "https://www.newyorkjets.com/news/jets-trade-for-center-jordan-meredith-from-raiders-08-30-2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "NYJ",
+      "Owner": "MIN",
+      "Source": "https://www.newyorkjets.com/news/jets-trade-for-harrison-phillips-vikings-08-21-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "GB",
+      "Owner": "NYJ",
+      "Source": "https://www.newyorkjets.com/news/jets-acquire-john-metchie-iii-from-eagles-michael-carter-ii-sent-to-philly-trade-10-29-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "NO",
+      "Owner": "NE",
+      "Source": "https://www.nfl.com/news/patriots-trading-second-year-wr-ja-lynn-polk-to-saints-for-draft-picks"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "CLE",
+      "Owner": "HOU",
+      "Source": "https://www.clevelandbrowns.com/news/browns-and-texans-agree-to-trade-for-t-cam-robinson"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "LAC",
+      "Owner": "NO",
+      "Source": "https://www.chargers.com/news/acquire-trevor-penning-saints-conditional-pick-jets-jasir-taylor-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "KC",
+      "Owner": "NYJ",
+      "Source": "https://www.newyorkjets.com/news/jets-trade-derrick-nnadi-chiefs-nfl-draft-picks-08-25-2025",
+      "Reservation": "Nnadi conditional pick swap"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "PHI",
+      "Owner": "GB",
+      "Source": "https://www.philadelphiaeagles.com/news/eagles-agree-to-acquire-dontayvion-wicks-from-packers"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "BAL",
+      "Owner": "SF",
+      "Source": "https://www.49ers.com/news/trade-alert-49ers-add-5th-round-and-future-pick-in-day-3-trade-with-ravens"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "ATL",
+      "Owner": "KC",
+      "Source": "https://www.atlantafalcons.com/news/falcons-trade-chiefs-2027-nfl-draft-wanya-morris"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "JAX",
+      "Owner": "NYG",
+      "Source": "https://www.giants.com/news/giants-trade-daniel-faalele-to-jacksonville-jaguars-for-2027-nfl-draft-pick-details"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-steelers-cb-joey-porter-jr",
+      "Reservation": "Porter active for two regular-season games",
+      "MinimumGames": 2,
+      "Player": "Joey Porter Jr.",
+      "FallbackOwner": "DAL"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "IND",
+      "Owner": "BUF",
+      "Source": "https://www.buffalobills.com/team/transactions/2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "SEA",
+      "Owner": "LAC",
+      "Source": "https://www.chargers.com/team/transactions/2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "OriginalTeam": "HOU",
+      "Owner": "NE",
+      "Source": "https://www.patriots.com/news/patriots-trade-lb-marte-mapu-to-the-texans"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "LAR",
+      "Owner": "LAC",
+      "Source": "https://www.chargers.com/news/acquire-outside-linebacker-odafe-oweh-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "MIA",
+      "Owner": "PIT",
+      "Source": "https://www.steelers.com/news/steelers-agree-to-acquire-ramsey-smith"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "NO",
+      "Owner": "DEN",
+      "Source": "https://www.denverbroncos.com/news/broncos-agree-to-terms-on-trade-with-saints-to-acquire-fourth-seventh-round-picks-in-exchange-for-wr-devaughn-vele"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "KC",
+      "Owner": "SF",
+      "Source": "https://www.49ers.com/news/49ers-trade-for-wr-skyy-moore-sign-qb-tanner-mordecai-in-roster-moves"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "MIN",
+      "Owner": "PHI",
+      "Source": "https://www.newyorkjets.com/news/jets-acquire-john-metchie-iii-from-eagles-michael-carter-ii-sent-to-philly-trade-10-29-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "PHI",
+      "Owner": "NE",
+      "Source": "https://www.vikings.com/news/2027-draft-picks-selections-nfl-minnesota",
+      "Reservation": "Howell conditional selection, onward Rouse trade"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "LAC",
+      "Owner": "DET",
+      "Source": "https://www.detroitlions.com/news/lions-trade-rb-david-montgomery-to-houston-texans",
+      "Reservation": "Deculus conditional selection, onward Montgomery trade"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "ATL",
+      "Owner": "SEA",
+      "Source": "https://www.atlantafalcons.com/news/report-falcons-trade-for-seahawks-offensive-tackle",
+      "Reservation": "Jerrell conditional selection"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "NYG",
+      "Owner": "MIA",
+      "Source": "https://www.giants.com/news/darren-waller-trade-details-retirement-miami-dolphins-tight-end-draft-picks",
+      "Reservation": "Waller conditional selection"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "HOU",
+      "Owner": "CLE",
+      "Source": "https://www.clevelandbrowns.com/news/browns-and-texans-agree-to-trade-for-t-cam-robinson"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "NYJ",
+      "Owner": "ATL",
+      "Source": "https://www.atlantafalcons.com/news/falcons-trade-chiefs-2027-nfl-draft-wanya-morris",
+      "Reservation": "Nnadi conditional pick swap, onward Morris trade"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "BAL",
+      "Owner": "PHI",
+      "Source": "https://www.baltimoreravens.com/news/ravens-trade-jaire-alexander-eagles-draft-picks-2025"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "LV",
+      "Owner": "BUF",
+      "Source": "https://www.raiders.com/news/raiders-trade-up-to-no-101-overall-pick-nfl-draft-2026-buffalo-bills"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "SF",
+      "Owner": "ARI",
+      "Source": "https://www.azcardinals.com/news/marvin-harrison-jr-trade-from-cardinals-to-texans-becomes-official"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "DAL",
+      "Owner": "BAL",
+      "Source": "https://www.philadelphiaeagles.com/news/eagles-agree-to-trade-cam-jurgens-to-the-ravens",
+      "Reservation": "Jurgens conditional selection"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "BUF",
+      "Owner": "IND",
+      "Source": "https://www.buffalobills.com/team/transactions/2026"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "OriginalTeam": "NE",
+      "Owner": "DAL",
+      "Source": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-sending-ot-nate-thomas-to-texans"
+    },
+    {
+      "Year": 2028,
+      "Round": 1,
+      "OriginalTeam": "NE",
+      "Owner": "PHI",
+      "Source": "https://www.philadelphiaeagles.com/news/eagles-trade-aj-brown-to-the-patriots"
+    },
+    {
+      "Year": 2028,
+      "Round": 2,
+      "OriginalTeam": "LAR",
+      "Owner": "CLE",
+      "Source": "https://www.therams.com/news/rams-agree-to-terms-on-trade-myles-garrett-browns"
+    },
+    {
+      "Year": 2028,
+      "Round": 2,
+      "OriginalTeam": "DAL",
+      "Owner": "PIT",
+      "Source": "https://www.dallascowboys.com/news/cowboys-agree-to-terms-on-trade-for-steelers-cb-joey-porter-jr"
+    },
+    {
+      "Year": 2028,
+      "Round": 2,
+      "OriginalTeam": "BAL",
+      "Owner": "PHI",
+      "Source": "https://www.philadelphiaeagles.com/news/eagles-agree-to-trade-cam-jurgens-to-the-ravens"
+    },
+    {
+      "Year": 2028,
+      "Round": 5,
+      "OriginalTeam": "SEA",
+      "Owner": "IND",
+      "Source": "https://www.seahawks.com/news/seahawks-acquire-all-pro-guard-quenton-nelson-in-trade-with-colts-pending-physical"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "NO",
+      "Owner": "DAL",
+      "Source": "https://www.dallascowboys.com/news/cowboys-finalizing-asim-richards-trade-to-saints"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "JAX",
+      "Owner": "PIT",
+      "Source": "https://www.packers.com/news/5-things-to-know-about-new-packers-rb-kaleb-johnson-aug-30-2026"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "CAR",
+      "Owner": "LAC",
+      "Source": "https://www.panthers.com/team/transactions/2026"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "HOU",
+      "Owner": "NO",
+      "Source": "https://www.neworleanssaints.com/team/transactions/2026"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "ARI",
+      "Owner": "JAX",
+      "Source": "https://www.azcardinals.com/team/transactions/2026"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "MIA",
+      "Owner": "NE",
+      "Source": "https://www.miamidolphins.com/news/dolphins-make-trade-with-new-england"
+    },
+    {
+      "Year": 2028,
+      "Round": 6,
+      "OriginalTeam": "KC",
+      "Owner": "BAL",
+      "Source": "https://www.baltimoreravens.com/news/diego-pounds-traded-ravens-to-chiefs-53-man-roster-cut-deadline-deal-2026",
+      "Reservation": "Pounds conditional selection"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "NE",
+      "Owner": "NO",
+      "Source": "https://www.nfl.com/news/patriots-trading-second-year-wr-ja-lynn-polk-to-saints-for-draft-picks"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "CLE",
+      "Owner": "LAR",
+      "Source": "https://www.therams.com/news/rams-trade-ol-kt-leveston-to-browns-for-2028-7th-round-pick"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "DAL",
+      "Owner": "NO",
+      "Source": "https://www.dallascowboys.com/news/cowboys-finalizing-asim-richards-trade-to-saints"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "NYJ",
+      "Owner": "LAC",
+      "Source": "https://www.newyorkjets.com/news/jets-chargers-trade-cornerback-jasir-taylor-11-04-2025",
+      "Reservation": "Taylor conditional selection"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "SEA",
+      "Owner": "NYJ",
+      "Source": "https://www.seahawks.com/news/seahawks-acquire-wr-irvin-charles-in-trade-with-jets",
+      "Reservation": "Charles conditional selection"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "NO",
+      "Owner": "ARI",
+      "Source": "https://www.prosportstransactions.com/football/DraftTrades/Years/2028.htm"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "GB",
+      "Owner": "LAR",
+      "Source": "https://www.packers.com/team/transactions/2026"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "JAX",
+      "Owner": "ARI",
+      "Source": "https://www.azcardinals.com/team/transactions/2026"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "KC",
+      "Owner": "NYG",
+      "Source": "https://www.giants.com/team/transactions/2026"
+    },
+    {
+      "Year": 2028,
+      "Round": 7,
+      "OriginalTeam": "NYG",
+      "Owner": "BAL",
+      "Source": "https://www.giants.com/news/giants-trade-2028-draft-pick-for-defensive-lineman-c-j-okoye-baltimore-ravens-international-pathway-player-program"
+    },
+    {
+      "Year": 2029,
+      "Round": 3,
+      "OriginalTeam": "LAR",
+      "Owner": "CLE",
+      "Source": "https://www.therams.com/news/rams-agree-to-terms-on-trade-myles-garrett-browns"
+    },
+    {
+      "Year": 2029,
+      "Round": 7,
+      "OriginalTeam": "LV",
+      "Owner": "NYJ",
+      "Source": "https://www.newyorkjets.com/news/jets-trade-for-center-jordan-meredith-from-raiders-08-30-2026"
+    },
+    {
+      "Year": 2029,
+      "Round": 7,
+      "OriginalTeam": "NE",
+      "Owner": "MIA",
+      "Source": "https://www.miamidolphins.com/news/dolphins-make-trade-with-new-england"
+    },
+    {
+      "Year": 2027,
+      "Round": 1,
+      "OriginalTeam": "CHI",
+      "Owner": "TEN",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
+    },
+    {
+      "Year": 2028,
+      "Round": 1,
+      "OriginalTeam": "CHI",
+      "Owner": "TEN",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
+    },
+    {
+      "Year": 2027,
+      "Round": 4,
+      "OriginalTeam": "CHI",
+      "Owner": "TEN",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
+    },
+    {
+      "Year": 2028,
+      "Round": 5,
+      "OriginalTeam": "TEN",
+      "Owner": "CHI",
+      "Source": "https://www.nfl.com/news/jeffery-simmons-bears-titans-trade"
+    }
+  ],
+  "Conditions": [
+    {
+      "Year": 2027,
+      "Round": 1,
+      "FirstOriginal": "DAL",
+      "SecondOriginal": "GB",
+      "EarlierOwner": "NYJ",
+      "LaterOwner": "DAL",
+      "Source": "https://apnews.com/article/f888eb6f2e74aad7cfc27f914681e99f",
+      "Reason": "Earlier DAL/GB first to Jets; other first remains Dallas"
+    },
+    {
+      "Year": 2027,
+      "Round": 5,
+      "FirstOriginal": "NE",
+      "SecondOriginal": "CHI",
+      "EarlierOwner": "PHI",
+      "LaterOwner": "NE",
+      "Source": "https://www.bleedinggreennation.com/news/171464/a-j-brown-trade-official-eagles-send-wide-receiver-to-patriots-for-draft-picks",
+      "Reason": "Earlier NE/CHI fifth to Philadelphia"
+    },
+    {
+      "Year": 2027,
+      "Round": 6,
+      "FirstOriginal": "PHI",
+      "SecondOriginal": "GB",
+      "EarlierOwner": "NYJ",
+      "LaterOwner": "GB",
+      "Source": "https://www.phillyvoice.com/philadelphia-eagles-2027-draft-picks-future/",
+      "Reason": "Earlier PHI/GB sixth to Jets; other sixth to Green Bay"
+    },
+    {
+      "Year": 2027,
+      "Round": 7,
+      "FirstOriginal": "MIN",
+      "SecondOriginal": "BAL",
+      "EarlierOwner": "PHI",
+      "LaterOwner": "CAR",
+      "Source": "https://www.phillyvoice.com/philadelphia-eagles-2027-draft-picks-future/",
+      "Reason": "Later acquired seventh to Carolina for Dalton; earlier remains Philadelphia"
+    }
+  ],
+  "Policy": "Disclosed earlier/later clauses resolve by final draft order. Undisclosed clauses reserve the published round until draft allocation; the game uses that disclosed-round baseline rather than inventing a private performance threshold.",
+  "OriginalIdentityReview": [
+    "KC/SF/NYJ late-round chains reconciled through Skyy Moore, Nnadi, Fields, Morris and Meredith; MIN/PHI chain through Phillips, Howell and Rouse.",
+    "NO2028R7 travels through Kroeger/Boutte/Kiner; this original identity is corroborated by the specialist pick tracker and its primary underlying club transaction amounts.",
+    "CHI2027R5 and NE2027R5 are paired for the earlier-of Brown condition.",
+    "No trade or compensatory ownership is ever replayed over an existing save.",
+    "Packers primary August30 review explicitly sends the acquired Miami/Jacksonville 2028 sixth onward to Pittsburgh, so Green Bay retains its own sixth."
+  ]
+}
