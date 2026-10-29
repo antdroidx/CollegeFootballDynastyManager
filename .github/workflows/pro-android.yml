@@ -79,7 +79,12 @@ jobs:
           -p:AndroidPackageFormats=apk -p:ApplicationVersion=${{ github.run_number }}
           -p:ApplicationDisplayVersion=0.1.${{ github.run_number }}
       - name: Stage isolated management UI fixtures
-        run: cp pro-trade-ui-fixture.json.gz pro-coordinator-ui-*.json.gz pro-staff-*-ui-*.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
+        run: |
+          if [ '${{ inputs.validation_scope }}' = retention-table ]; then
+            cp pro-staff-inseason-ui-fixture.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
+          else
+            cp pro-trade-ui-fixture.json.gz pro-coordinator-ui-*.json.gz pro-staff-*-ui-*.json.gz src/ProFootball.App/bin/Debug/net10.0-android/
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: pro-football-apk-${{ github.run_number }}

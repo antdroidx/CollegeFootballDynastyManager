@@ -1,3 +1,7 @@
+## Retention presentation packaging repair
+
+Pro102/run40907056054 compiled with0 package warnings/errors and passed the five scoped retention guards, helpers and validator, but artifact staging expected unrelated trade/coordinator fixtures omitted by the deliberately narrow test filter. Workflow now stages only the required retention fixture for this scope. App sourcebdff738 is unchanged. New packaging/device run required because the first job failed before APK upload.
+
 ## UI density preference and retention table candidate
 
 User preference: use dense sortable tables for comparable lists in both games; reserve cards/large blocks for summaries and narrative content. Player names and headers remain plain contextual links, not outlined boxes. Restoring the expiring-contracts table with a single compact row per player, separate Actions column, filled primary action and contrasting surfaced/outlined secondary action on either stripe in light/dark. Eligibility explanations remain accessible by tapping the reason. Contract rules and simulation systems unchanged; reuse Pro101349-case and College402 evidence. New retention-table scope runs only five affected retention guards plus device light/dark density/actions; pending APK acceptance.
