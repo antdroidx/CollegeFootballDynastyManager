@@ -1,3 +1,4 @@
+using DynastyManager.Core.Models;
 using DynastyManager.Data.Persistence;
 using DynastyManager.Core.Seasons;
 using Microsoft.Maui.Controls;

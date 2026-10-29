@@ -1,3 +1,7 @@
+## College phase build repair
+
+College401/run40902699603 passed scoped engine/save checks but failed packaging on a missing Models namespace import in FoundationPage.Library.cs (six SeasonPhase references). Import added; no Pro source changes.349 final local fast Pro cases pass in1m44. Pro101/run40902693409 remains in progress. College rebuild required before accepting this batch.
+
 ## Candidate: retention layout, in-season extensions, phase simulation and Simmons trade
 
 Implementing clearer unstriped contract cards with high-contrast negotiation actions and explicit eligibility reasons. Eligible veterans can negotiate during playing phases, including delegated staff negotiation; drafted rookies wait through their third regular season, undrafted through their second. Pro and College fast-forward shortcuts reuse normal weekly advancement, save each completed week, expose a stop-after-week control and stop at phase boundaries (College postseason includes conference title games). Pro still enforces cap/roster entry requirements. New-franchise October29 roster rights include reported Jeffery Simmons TEN->CHI for CHI2027/2028 firsts and2027 fourth; TEN2028 fifth goes toCHI. NFL source: https://www.nfl.com/news/jeffery-simmons-bears-titans-trade . Existing saves are not overwritten. Chicago's camp roster may legally exceed53; CPU regular-season oversized-roster repair uses existing cut/PS accounting.39 focused cases pass; final fast Pro run and both APK/phase UI scopes pending. No new APK is accepted yet.
