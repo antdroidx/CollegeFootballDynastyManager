@@ -214,6 +214,8 @@ jobs:
         with:
           name: android-launch-ui-${{ github.run_number }}
           path: |
+            college-phase-check.json
+            college-phase-logcat.txt
             android-*.png
             android-*.xml
           if-no-files-found: ignore
