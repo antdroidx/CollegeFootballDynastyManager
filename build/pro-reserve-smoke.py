@@ -30,6 +30,14 @@ def run(s):
         click("player",name)
         return ready("profile",lambda r:"Activate to roster" in s.texts(r))
     open_slot()
+    root=profile("Reserve Four")
+    assert not s.enabled(root,"Activate to roster") and any("4 team games" in (t or "") for t in s.texts(root))
+    s.capture("pro-reserve-four-game-minimum")
+    s.adb("shell","am","force-stop",package);open_slot()
+    root=profile("Reserve Season")
+    assert not s.enabled(root,"Activate to roster") and any("Season-ending" in (t or "") for t in s.texts(root))
+    s.capture("pro-reserve-season-ending")
+    s.adb("shell","am","force-stop",package);open_slot()
     root=profile("Reserve Injured")
     assert not s.enabled(root,"Activate to roster")
     assert any("2 weeks" in (t or "") for t in s.texts(root))
@@ -46,7 +54,7 @@ def run(s):
     assert checked["contracts"]==fixture["contracts"],"Activation changed negotiated contracts"
     assert next(p for p in checked["players"] if p["football"]["playerId"]==data["blockedPlayer"])["reserve"]
     s.adb("shell","am","force-stop",package);open_slot();root=profile_after_activation(s,ready,click)
-    Path("pro-reserve-check.json").write_text(json.dumps({"activated":data["readyPlayer"],"injuredBlocked":True,"contractsPreserved":True,"reloadVerified":True},indent=2),encoding="utf-8")
+    Path("pro-reserve-check.json").write_text(json.dumps({"activated":data["readyPlayer"],"fourGameMinimumBlocked":True,"seasonEndingBlocked":True,"injuredBlocked":True,"contractsPreserved":True,"reloadVerified":True},indent=2),encoding="utf-8")
     print("PASS: available reserve activation, disabled injured action, persisted active status, unchanged contracts and reload.")
 
 def profile_after_activation(s,ready,click):

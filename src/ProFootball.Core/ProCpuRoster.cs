@@ -4,19 +4,19 @@ namespace ProFootball.Core;
 /// <summary>Use signed internal depth before buying replacements. Imported restricted reserves stay restricted.</summary>
 public static class ProCpuRoster
 {
-    static bool Healthy(ProPlayer p)=>p.Football.CurrentInjury is not {WeeksRemaining:>0};
+    static bool Healthy(ProFranchise s,ProPlayer p)=>ProReserve.MedicallyAvailable(s,p);
     public static ProFranchise Manage(ProFranchise s,string team,Func<ProPlayer,bool>? eligible=null)
     {
         bool Allowed(ProPlayer p)=>eligible is null||eligible(p);
-        var candidates=s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&Healthy(p)&&Allowed(p)&&(p.PracticeSquad||p.Reserve))
+        var candidates=s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&Healthy(s,p)&&Allowed(p)&&(p.PracticeSquad||p.Reserve))
             .OrderByDescending(p=>p.Football.OverallRating).ThenBy(p=>p.Football.PlayerId).Select(p=>p.Football.PlayerId).ToArray();
         foreach(var id in candidates)
         {
             var p=s.Players.Single(p=>p.Football.PlayerId==id);
             var active=s.Players.Where(x=>x.Football.TeamName==team&&!x.Retired&&!x.Reserve&&!x.PracticeSquad).ToArray();
             var same=active.Where(x=>x.Football.Position==p.Football.Position).ToArray();
-            var needed=ProCpu.Need(s,team,p.Football.Position)>0||same.Any(x=>!Healthy(x));
-            var weakest=same.Where(x=>Allowed(x)&&Healthy(x)).OrderBy(x=>Healthy(x)?x.Football.OverallRating:-1).ThenBy(x=>x.Football.PlayerId).FirstOrDefault();
+            var needed=ProCpu.Need(s,team,p.Football.Position)>0||same.Any(x=>!Healthy(s,x));
+            var weakest=same.Where(x=>Allowed(x)&&Healthy(s,x)).OrderBy(x=>Healthy(s,x)?x.Football.OverallRating:-1).ThenBy(x=>x.Football.PlayerId).FirstOrDefault();
             if(!needed&&(weakest is null||p.Football.OverallRating<weakest.Football.OverallRating+3))continue;
             var proposal=s;
             if(ProRoster.Active(s,team)>=53)
@@ -54,7 +54,7 @@ public static class ProCpuRoster
         if(ProRoster.IsCamp(s))return s;
         for(var i=ProInternationalPractice.OrdinaryPlayers(s,team);i<16;i++)
         {
-            var candidate=s.Players.Where(p=>p.Football.TeamName=="Free agent"&&!p.Retired&&Healthy(p)&&(eligible is null||eligible(p))
+            var candidate=s.Players.Where(p=>p.Football.TeamName=="Free agent"&&!p.Retired&&Healthy(s,p)&&(eligible is null||eligible(p))
                 &&p.Football.OverallRating<=65&&ProEconomy.MarketSalary(s,p)<=2_000_000
                 &&!s.Contracts.Any(c=>c.Active&&c.PlayerId==p.Football.PlayerId)&&!s.Waivers.Any(w=>w.PlayerId==p.Football.PlayerId)&&!s.Bids.Any(b=>b.PlayerId==p.Football.PlayerId)
                 &&(p.Experience<=2||s.Players.Count(x=>x.Football.TeamName==team&&x.PracticeSquad&&x.Experience>2)<6))

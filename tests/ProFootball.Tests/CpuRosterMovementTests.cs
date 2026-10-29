@@ -8,7 +8,7 @@ public class CpuRosterMovementTests
     static ProFranchise Setup(int active=52)
     {
         var source=Template.Players.First();var team=Template.UserTeam;
-        var players=Enumerable.Range(0,active+2).Select(i=>source with{Age=23,Experience=1,CreditedSeasons=1,Reserve=i==active+1,PracticeSquad=i==active,RosterStatus=i==active+1?"RES":i==active?"PS":"ACT",Football=source.Football with{PlayerId=Guid.NewGuid(),TeamName=team,Position=Position.QB,OverallRating=i>=active?90:65,CurrentInjury=null}}).ToList();
+        var players=Enumerable.Range(0,active+2).Select(i=>source with{Age=23,Experience=1,CreditedSeasons=1,Reserve=i==active+1,PracticeSquad=i==active,ReserveInjury=null,RosterStatus=i==active+1?"RES":i==active?"PS":"ACT",Football=source.Football with{PlayerId=Guid.NewGuid(),TeamName=team,Position=Position.QB,OverallRating=i>=active?90:65,CurrentInjury=null}}).ToList();
         var contracts=players.Select(p=>new ProContract(p.Football.PlayerId,team,2026,2,0,[new(2026,p.PracticeSquad?400_000:1_500_000,0),new(2027,1_500_000,0)])).ToList();
         return Template with{Phase=ProPhase.RegularSeason,Week=6,Players=players,Contracts=contracts,TeamCapAllocations=[],DeadCap=[],SalaryCap=900_000_000,Bids=[],Waivers=[]};
     }
@@ -68,10 +68,10 @@ public class CpuRosterMovementTests
     [Fact]public async Task WholeLeagueCpuUsesInternalDepthWithoutChangingUserTeamAndSurvivesSave()
     {
         var s=Template with{Phase=ProPhase.RegularSeason,Week=12,SalaryCap=900_000_000,TeamCapAllocations=[]};
-        var team=s.League.Teams.First(t=>t.Name!=s.UserTeam&&s.Players.Any(p=>p.Football.TeamName==t.Name&&p.Reserve&&p.RosterStatus=="RES")).Name;
-        var ps=s.Players.First(p=>p.Football.TeamName==team&&p.PracticeSquad);var reserve=s.Players.First(p=>p.Football.TeamName==team&&p.Reserve&&p.RosterStatus=="RES");
+        var team=s.League.Teams.First(t=>t.Name!=s.UserTeam&&s.Players.Any(p=>p.Football.TeamName==t.Name&&p.Reserve&&p.ReserveInjury is {SeasonEnding:false})).Name;
+        var ps=s.Players.First(p=>p.Football.TeamName==team&&p.PracticeSquad);var reserve=s.Players.First(p=>p.Football.TeamName==team&&p.Reserve&&p.ReserveInjury is {SeasonEnding:false});
         foreach(var p in s.Players.Where(p=>p.Football.TeamName==team&&!p.Reserve&&!p.PracticeSquad).Take(4).ToArray())s=ProEconomy.Release(s,team,p.Football.PlayerId,false);
-        s=s with{Players=s.Players.Select(p=>p==ps||p==reserve?p with{Football=p.Football with{OverallRating=99,CurrentInjury=null}}:p).ToList()};
+        s=s with{Players=s.Players.Select(p=>p==ps||p==reserve?p with{ReserveInjury=null,RosterStatus=p.Reserve?"RES":p.RosterStatus,Football=p.Football with{OverallRating=99,CurrentInjury=null}}:p).ToList()};
         var user=s.Players.Where(p=>p.Football.TeamName==s.UserTeam).ToArray();var contracts=s.Contracts.Where(c=>c.Team==s.UserTeam).ToArray();
         var next=ProCpu.Manage(s);Assert.All(new[]{ps,reserve},p=>{var moved=next.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId);Assert.False(moved.PracticeSquad);Assert.False(moved.Reserve);});
         Assert.Equal(user,next.Players.Where(p=>p.Football.TeamName==s.UserTeam));Assert.Equal(contracts,next.Contracts.Where(c=>c.Team==s.UserTeam));

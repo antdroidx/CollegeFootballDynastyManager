@@ -11,6 +11,7 @@ public sealed record ProPlayer(DynastyPlayer Football, int Age, int Experience, 
     public int? CreditedSeasons {get;init;}
     public int? RookieYear { get; init; }
     public int? DraftOverall { get; init; }
+    public ProReserveInjury? ReserveInjury {get;init;}
     public bool Reserve { get; init; }
     public bool Retired { get; init; }
     public string? AppearanceOrigin {get;init;}
@@ -26,6 +27,7 @@ public sealed record SeasonArchive(int Year, string Champion, List<ProGame> Game
 public sealed record ProFranchise
 {
     public ProImportedClass? ImportedDraftClass {get;init;}
+    public int ReservePolicyVersion {get;init;}
     public int SchemaVersion { get; init; } = 2;
     public string? OpeningFinancialSnapshot {get;init;}
     public List<ProInternationalPracticeDesignation> InternationalPracticeDesignations {get;init;}=[];

@@ -1,3 +1,7 @@
+## Opening IR policy scope
+
+Six focused policy cases plus existing reserve/CPU/inbox checks verify saved regular-game eligibility, preseason/byes, season-ending overrides, migration/no relock, CPU return and lowest-OVR practice cuts retaining debt. Local328 fast pre-final cases pass; final20 policy/reserve/inbox checks pass. Final CI runs329 exact-source fast cases, including both existing three-season scenarios. Expanded reserve device scope verifies four-game and season-ending disabled actions, explicit injured block, cleared activation, contract persistence and reload. Fixtures remain synthetic32-team scenarios; no device seasons or repeat College/GameCast claims. The new medical initialization does not reopen the financial accounting audit; reuse existing long-run evidence where unchanged.
+
 ## CPU roster audit scope
 
 Run focused movement/reserve/camp/coordinator/save guards and one final full Pro run, including annual cases, because CPU roster/cap decisions changed. Stop known-failing annual candidates when a fast guard has already failed. Final Android scope=reserve validates installation, available/blocked manual reserve activation and persisted contracts/reload; whole-league CPU execution is Core test evidence, not claimed as on-device seasons. Reuse unchanged College and GameCast checks. See pro-cpu-roster-audit.md for supported vs simplified roster rules.

@@ -267,7 +267,7 @@ public static class ProCpu
                 var target=room<(53-count)*minimum?Math.Max(45,count+1):53;var remaining=Math.Max(1,Staff(team.Name)?Math.Min(target-count,Target(team.Name)-UnitCount(team.Name)):target-count);
                 var budget = Math.Min(room - ProEconomy.Pending(s, team.Name), Math.Min(room / remaining * 2, room - (remaining - 1) * minimum));
                 var needs = Enum.GetValues<Position>().ToDictionary(p => p, p => Need(s, team.Name, p));
-                var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && Eligible(team.Name,p) && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && SigningSalary(s,p) <= budget)
+                var candidate = s.Players.Where(p => p.Football.TeamName == "Free agent" && !p.Retired && ProReserve.MedicallyAvailable(s,p) && Eligible(team.Name,p) && !s.Waivers.Any(w => w.PlayerId == p.Football.PlayerId) && !s.Bids.Any(b => b.Team == team.Name && b.PlayerId == p.Football.PlayerId) && SigningSalary(s,p) <= budget)
                     .OrderByDescending(p => needs[p.Football.Position] * 20 + p.Football.OverallRating + (p.Football.PlayerId.ToByteArray()[0] * (team.Id.Sum(c => (int)c)) + s.Year) % 11).FirstOrDefault();
                 if (candidate is null)
                 {
@@ -325,7 +325,7 @@ public static class ProOffseason
                 var aged = ProDevelopment.AgeOneYear(p, random);
                 var age = aged.Age;
                 var retirement = p.Retired || age >= (p.Football.Position is Position.QB or Position.K ? 40 : 36) || age > 32 && aged.Football.OverallRating < 65 && random.NextDouble() < .3;
-                return aged with { Experience = p.Experience + 1, CreditedSeasons=(p.CreditedSeasons??p.Experience)+(!p.PracticeSquad&&!p.Reserve&&credited.Contains(p.Football.PlayerId)?1:0), Retired = retirement, Reserve = s.UnsignedRookies.Any(r=>r.PlayerId==p.Football.PlayerId), Morale = Math.Clamp(p.Morale + (60 - p.Morale) / 3, 20, 90) };
+                return aged with { Experience = p.Experience + 1, CreditedSeasons=(p.CreditedSeasons??p.Experience)+(!p.PracticeSquad&&!p.Reserve&&credited.Contains(p.Football.PlayerId)?1:0), Retired = retirement, ReserveInjury=null, RosterStatus=p.ReserveInjury is not null?"ACT":p.RosterStatus, Reserve = s.UnsignedRookies.Any(r=>r.PlayerId==p.Football.PlayerId), Morale = Math.Clamp(p.Morale + (60 - p.Morale) / 3, 20, 90) };
             }).ToList();
             foreach (var p in players.Where(p => p.Retired && s.Contracts.Any(c => c.PlayerId == p.Football.PlayerId && c.Active)).ToArray()) s = ProEconomy.Release(s with { Year = year, Games = [] }, p.Football.TeamName, p.Football.PlayerId, false);
             var retired = players.Where(p => p.Retired).Select(p => p.Football.PlayerId).ToHashSet();

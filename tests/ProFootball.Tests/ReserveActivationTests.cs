@@ -9,8 +9,8 @@ public sealed class ReserveActivationTests
     static (ProFranchise State,ProPlayer Player,ProContract Contract) Setup()
     {
         var s=Template with{Phase=ProPhase.RegularSeason,Week=6,SalaryCap=900_000_000,TeamCapAllocations=[]};
-        var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Reserve&&p.RosterStatus=="RES");
-        p=p with{Football=p.Football with{CurrentInjury=null}};
+        var p=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Reserve&&p.ReserveInjury is {SeasonEnding:false});
+        p=p with{ReserveInjury=null,RosterStatus="RES",Football=p.Football with{CurrentInjury=null}};
         var c=s.Contracts.Last(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
         c=c with{LastChangedYear=s.Year,Years=c.Years.Select(y=>y.Year==s.Year?y with{Salary=Math.Max(y.Salary,ProFinance.Minimum(s,p,y.Year,practice:false))}:y).ToList()};
         var players=s.Players.Select(x=>x.Football.PlayerId==p.Football.PlayerId?p:x).ToList();
@@ -91,8 +91,11 @@ public sealed class ReserveActivationTests
     {
         var(s,p,_)=Setup();p=p with{Football=p.Football with{FullName="Reserve Ready"}};
         var blocked=s.Players.First(x=>x.Football.TeamName==s.UserTeam&&x.Reserve&&x.Football.PlayerId!=p.Football.PlayerId);
-        blocked=blocked with{Football=blocked.Football with{FullName="Reserve Injured",CurrentInjury=new PlayerInjury{WeeksRemaining=2}}};
+        blocked=blocked with{ReserveInjury=null,RosterStatus="RES",Football=blocked.Football with{FullName="Reserve Injured",CurrentInjury=new PlayerInjury{WeeksRemaining=2}}};
         var fixture=s with{Id=Guid.NewGuid(),Name="Synthetic reserve QA",Games=[],Players=s.Players.Select(x=>x.Football.PlayerId==p.Football.PlayerId?p:x.Football.PlayerId==blocked.Football.PlayerId?blocked:x).ToList()};
+        var four=fixture.Players.First(x=>x.Football.TeamName==s.UserTeam&&x.ReserveInjury is {Estimated:true}&&x.Football.PlayerId!=p.Football.PlayerId&&x.Football.PlayerId!=blocked.Football.PlayerId);
+        var ending=fixture.Players.Single(x=>x.Football.FullName=="Jake Bobo");
+        fixture=fixture with{Players=fixture.Players.Select(x=>x==four?x with{Football=x.Football with{FullName="Reserve Four"}}:x==ending?x with{Football=x.Football with{FullName="Reserve Season"}}:x).ToList()};
         var directory=Path.Combine(Path.GetTempPath(),"pro-reserve-fixture-"+Guid.NewGuid());
         try{var store=new ProSaveStore(directory);await store.Save(fixture);var loaded=await store.Load(fixture.Id);Assert.Equal(JsonSerializer.Serialize(fixture.Contracts),JsonSerializer.Serialize(loaded.Contracts));Assert.Null(ProReserve.ActivationReason(loaded,loaded.UserTeam,p.Football.PlayerId));Assert.Contains("2 weeks",ProReserve.ActivationReason(loaded,loaded.UserTeam,blocked.Football.PlayerId));}
         finally{if(Directory.Exists(directory))Directory.Delete(directory,true);}

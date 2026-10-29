@@ -14,7 +14,12 @@ public static class ProInbox
             var id=p.Football.PlayerId;
             if(p.TradeRequested)list.Add(new($"trade-{s.Year}-{id}",p.Football.FullName+" requests a trade","Sustained dissatisfaction has led to a trade request.","Front office",0,id));
             else if(p.ContractConcernWeeks>0)list.Add(new($"contract-{s.Year}-{id}",p.Football.FullName+" wants a new contract","The player is unhappy with contract value. Review the deal and morale.","Front office",1,id));
-            if(p.Football.CurrentInjury is {WeeksRemaining:>0} injury)list.Add(new($"injury-{s.Year}-{id}-{injury.BodyArea}",p.Football.FullName+" unavailable",$"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining","Roster",1,id));
+            if(p.Reserve&&p.ReserveInjury is { } ir&&ir.Year==s.Year)
+            {
+                var reason=ProReserve.InjuryReason(s,p);
+                list.Add(new($"ir-{(reason is null?"ready":"blocked")}-{s.Year}-{id}",p.Football.FullName+(reason is null?" ready to return":" on injured reserve"),reason??"The minimum IR absence is complete. Open the player to activate when cap and roster space permit.","Roster",1,id));
+            }
+            else if(p.Football.CurrentInjury is {WeeksRemaining:>0} injury)list.Add(new($"injury-{s.Year}-{id}-{injury.BodyArea}",p.Football.FullName+" unavailable",$"{injury.BodyArea} · {injury.WeeksRemaining} weeks remaining","Roster",1,id));
         }
         if(s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)
         {

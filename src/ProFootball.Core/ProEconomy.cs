@@ -159,12 +159,23 @@ public static class ProRoster
     public static int Limit(ProFranchise s) => IsCamp(s) ? 90 : 53;
     public static int CountForLimit(ProFranchise s,string team) => IsCamp(s) ? s.Players.Count(p=>p.Football.TeamName==team&&!p.Reserve&&!p.Retired) : Active(s,team);
     public static int Active(ProFranchise s, string team) => s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired);
+    public static ProFranchise TrimOversizedPractice(ProFranchise s)
+    {
+        foreach(var team in s.League.Teams)
+            while(ProInternationalPractice.OrdinaryPlayers(s,team.Name)>16)
+            {
+                var lowest=s.Players.Where(p=>p.Football.TeamName==team.Name&&p.PracticeSquad&&!p.Retired&&!ProInternationalPractice.Exempt(s,team.Name,p.Football.PlayerId,s.Year))
+                    .OrderBy(p=>p.Football.OverallRating).ThenByDescending(p=>p.Age).ThenBy(p=>p.Football.PlayerId).First();
+                s=ProEconomy.Release(s,team.Name,lowest.Football.PlayerId,false);
+            }
+        return s;
+    }
     public static ProFranchise Practice(ProFranchise s, string team, Guid id, bool practice)
     {
         var p = s.Players.Single(p => p.Football.PlayerId == id);
         if (p.Football.TeamName != team || p.Reserve || p.Retired) throw new InvalidOperationException("Unavailable player.");
         if(p.PracticeSquad==practice)return s;
-        if(!practice&&p.Football.CurrentInjury is {WeeksRemaining:>0})throw new InvalidOperationException("Injured players cannot be promoted.");
+        if(!practice&&!ProReserve.MedicallyAvailable(s,p))throw new InvalidOperationException("Injured players cannot be promoted.");
         if (practice && !p.PracticeSquad && ProInternationalPractice.OrdinaryPlayers(s,team) >= 16) throw new InvalidOperationException("Practice squad is full.");
         if (!practice && !IsCamp(s) && Active(s, team) >= Limit(s)) throw new InvalidOperationException("Active roster is full.");
         if (practice && p.Experience > 2 && s.Players.Count(x => x.Football.TeamName == team && x.PracticeSquad && x.Experience > 2) >= 6) throw new InvalidOperationException("Six veteran practice-squad slots are already occupied.");
