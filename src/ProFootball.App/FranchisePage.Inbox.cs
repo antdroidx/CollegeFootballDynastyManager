@@ -30,19 +30,22 @@ public sealed partial class FranchisePage
         auto.Toggled+=async(_,e)=>{state=state! with{AutoNegotiateExpiring=e.Value};await Save();};
         var staff=Action("Ask staff to negotiate now",async()=>{state=await Task.Run(()=>ProRetention.Negotiate(state!,state!.UserTeam));await Save();await Retention();});staff.IsEnabled=available&&s.Career?.Unemployed!=true;body.Add(staff);
         var expiring=ProRetention.Expiring(s,s.UserTeam);body.Add(Text($"{expiring.Count} expiring contracts",18,true));
-        foreach(var p in expiring)
+        body.Add(Table([("Player",140),("Actions",180),("Demand / yr",95),("OVR",45),("Pos",40),("Age",40),("Ends",55),("Decision / eligibility",210)],expiring.Select(p=>
         {
             var letGo=s.LetExpire.Contains(p.Football.PlayerId);var issue=ProRetention.ExtensionIssue(s,p);
             var negotiate=Action("Negotiate",async()=>{var terms=await ContractTerms(p,true);if(terms is {} o)await Manage("Retention extension",p.Football.PlayerId,0,x=>ProEconomy.Extend(x,x.UserTeam,p.Football.PlayerId,o.Years,o.Salary,o.Bonus));await Retention();},"pro-retention-negotiate-"+p.Football.PlayerId);
             negotiate.IsEnabled=available&&issue is null&&ProCareer.Controls(s,p.Football.Position);
             negotiate.BackgroundColor=DynastyTheme.Accent;negotiate.TextColor=DynastyTheme.IsLight?Colors.White:Color.FromArgb("#0B1726");
             var expire=Action(letGo?"Keep option":"Let expire",async()=>{state=state! with{LetExpire=letGo?state.LetExpire.Where(id=>id!=p.Football.PlayerId).ToList():state.LetExpire.Append(p.Football.PlayerId).Distinct().ToList()};await Save();await Retention();});expire.IsEnabled=ProCareer.Controls(s,p.Football.Position);expire.BorderWidth=1;expire.BorderColor=DynastyTheme.ControlEdge;
-            var actions=new ActionRow();actions.Add(negotiate);actions.Add(expire);
+            foreach(var button in new[]{negotiate,expire}){button.FontSize=11;button.Padding=new Thickness(6,4);button.WidthRequest=80;button.MinimumHeightRequest=44;button.BorderWidth=1;button.BorderColor=DynastyTheme.ControlEdge;}
+            // A distinct surface plus a visible edge keeps the secondary action visible on either stripe.
+            expire.BackgroundColor=DynastyTheme.Surface;expire.TextColor=DynastyTheme.Text;
+            var actions=new HorizontalStackLayout{Spacing=6,Children={negotiate,expire}};
             var contract=s.Contracts.Last(c=>c.Active&&c.PlayerId==p.Football.PlayerId);
-            var card=new VerticalStackLayout{Spacing=8,Children={Link(p.Football.FullName,()=>Player(p)),Text($"{p.Football.Position} · OVR {p.Football.OverallRating} · Age {p.Age} · Ends {ProContractInsights.PlayingEnd(contract)}",12),Text($"Demand {Money(ProOfferTerms.AgentDemand(s,p,true).Salary)}/year · "+(letGo?"Will leave":"Undecided"),13,true),actions}};
-            if(issue is not null)card.Add(Text(issue,12));
-            body.Add(Panel("",card));
-        }
+            var decision=Text(issue??(letGo?"Will leave":"Undecided"),12);
+            if(issue is not null){var explain=new TapGestureRecognizer();explain.Tapped+=async(_,_)=>await GameDialogs.AlertAsync(this,p.Football.FullName,issue,"OK");decision.GestureRecognizers.Add(explain);SemanticProperties.SetDescription(decision,issue);}
+            return new View[]{Link(p.Football.FullName,()=>Player(p)),actions,Text(Money(ProOfferTerms.AgentDemand(s,p,true).Salary)),Text(p.Football.OverallRating.ToString()),Text(p.Football.Position.ToString()),Text(p.Age.ToString()),Text(ProContractInsights.PlayingEnd(contract).ToString()),decision};
+        })));
         body.Add(Text("Franchise tags and restructures are available from each player’s contract actions. Staff respect cap limits and your coaching authority; some players may remain unresolved.",12));return Task.CompletedTask;
     }
 }
