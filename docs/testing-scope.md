@@ -1,3 +1,7 @@
+## Season-cap-only presentation scope
+
+Presentation/read-only budget helper and inbox wording only: six new cases plus existing offseason-counting cases pass14 focused checks. No transaction accounting, save schema or simulation behavior changes. Dedicated cap-display device scope uses a synthetic valid32-team save where temporary camp room is positive but full-season room is negative. It checks Front Office, exact breakdown, financial hub, Overview, inbox, light/dark, positive balance resolving the alert and saved contracts/counting unchanged. Run fast Pro CI and helpers; reuse unchanged annual/College/GameCast evidence.
+
 ## Accepted Pro96 opening IR policy scope
 
 Source6741d4c/run40830670108 passes329 scoped Pro cases,16 helpers,source validator and package0 warnings/errors. Exact APK12879200586, evidence12878214098 (.artifacts/pro-ir-policy96). Four-game minimum and season-ending disabled actions, explicit injury block, cleared activation, contract preservation and reload all pass; new screenshots reviewed. Six policy tests plus existing reserve/CPU/inbox checks cover game-based clock, preseason/byes, sourced overrides, migration, lowest-rated cuts retaining debt, CPU return and one-time Finish recovery. Local328 pre-final cases and20 final affected cases passed. Reuse College/GameCast/prior long finance evidence; synthetic fixture does not claim device seasons or a new20-season IR run. Full NFL practice-designation windows/temporary elevations remain outside this simplified policy.

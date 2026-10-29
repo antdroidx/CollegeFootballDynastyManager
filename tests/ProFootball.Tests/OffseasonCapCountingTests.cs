@@ -31,7 +31,7 @@ public sealed class OffseasonCapCountingTests
         var s=Camp();var camp=ProEconomy.Used(s,s.UserTeam);s=s with{SalaryCap=camp};
         Assert.Equal(0,ProEconomy.Room(s,s.UserTeam));
         Assert.Contains("over the salary cap",ProSeasonEligibility.Issue(s,s.UserTeam));
-        Assert.Contains(ProInbox.Build(s),n=>n.Id.StartsWith("opening-cap-"));
+        Assert.Contains(ProInbox.Build(s),n=>n.Id.StartsWith("cap-"));
         Assert.Equal(0,ProFinance.Budget(s with{Phase=ProPhase.RegularSeason},s.UserTeam).OffseasonSalaryExcluded);
     }
     [Fact] public void LegacySavesAndFuturePlanningKeepTheirOriginalFullSalaryBasis()

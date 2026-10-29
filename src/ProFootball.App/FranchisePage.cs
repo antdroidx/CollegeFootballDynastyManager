@@ -111,14 +111,12 @@ public sealed partial class FranchisePage : ContentPage
         body.Add(Panel($"Franchise inbox · {unread} unread",Text(notices.Count==0?"No current action items.":string.Join("\n",notices.Take(3).Select(n=>n.Title)),12),Action("Open inbox",()=>Open("Inbox"))));
         if(s.UnsignedRookies.Any(r=>r.Team==s.UserTeam))
             body.Add(Panel("Unsigned draft picks",Text("Selected rookies remain unavailable until their four-year contracts fit the cap and roster."),Action("Sign rookie contracts",async()=>{state=ProDraft.SignRookies(state!,state!.UserTeam);await Save();Render();})));
-        if(ProEconomy.Room(s,s.UserTeam)<0)
-            body.Add(Panel("Salary cap action required",Text($"{Money(-ProEconomy.Room(s,s.UserTeam))} over the cap · Regular-season entry and play are blocked until compliant."),Action("Manage contracts & cap",()=>Open("Front Office"))));
         if (s.Phase == ProPhase.Preseason && s.Week == 3 && s.Games.Where(g => g.Phase == ProPhase.Preseason && g.Football.Week == 3).All(g => g.Football.HasPlayed) && ProRoster.Active(s, s.UserTeam) > 53)
             body.Add(Panel("Final roster cutdown", Text($"{ProRoster.Active(s, s.UserTeam)} active players · reduce to 53, then advance to the regular season."), Action("Manage roster", () => Open("Roster"))));
         if (s.Phase == ProPhase.Offseason) { body.Add(Panel("Offseason · " + s.OffseasonStep, Text(s.Champion is null ? "Build next season's roster." : "Champions · " + s.Champion), Action("Open front office", () => Open("Front Office")))); }
         else { var game = s.Games.FirstOrDefault(g => g.Phase == s.Phase && g.Football.Week == s.Week && g.Football.InvolvesTeam(s.UserTeam)); if (game is not null) body.Add(GameCard(game)); else body.Add(Text("Your team has a bye this week.")); }
         body.Add(Panel("Your coaching career", Text($"{s.Career?.Name} · {RoleName(ProCareer.Role(s))}", 17, true), Text(s.Career?.Unemployed == true ? "Seeking employment · Open your job offers" : $"Job security {s.Career?.Security ?? 65}/100 · Reputation {s.Career?.Reputation ?? 50}/100"), Action("Career & job offers ›", () => Open("Career"))));
-        var owner = s.Owners.FirstOrDefault(o => o.Team == s.UserTeam); body.Add(Cards(Panel("Season overview", Text($"{r.Wins}–{r.Losses}–{r.Ties}", 28, true), Text(r.Team.Conference + " · " + r.Team.Division), Action("Open standings ›", () => Open("Standings"))), Panel("Front Office", Text($"{Money(ProEconomy.Room(s, s.UserTeam))} cap room", 24, true), Text($"Roster {ProRoster.CountForLimit(s, s.UserTeam)}/{ProRoster.Limit(s)} · Owner security {owner?.Security ?? 65}/100"), Action("Contracts & salary cap ›", () => Open("Front Office")))));
+        var owner = s.Owners.FirstOrDefault(o => o.Team == s.UserTeam); body.Add(Cards(Panel("Season overview", Text($"{r.Wins}–{r.Losses}–{r.Ties}", 28, true), Text(r.Team.Conference + " · " + r.Team.Division), Action("Open standings ›", () => Open("Standings"))), Panel("Front Office", Text(SeasonCapLabel(s,s.UserTeam),24,true), Text($"Roster {ProRoster.CountForLimit(s, s.UserTeam)}/{ProRoster.Limit(s)} · Owner security {owner?.Security ?? 65}/100"), Action("Contracts & salary cap ›", () => Open("Front Office")))));
         state=ProNews.Refresh(state!);s=state;
         var news=new List<View>();var newsCards=new List<View>();
         foreach(var story in s.News.Take(3))
@@ -162,7 +160,7 @@ public sealed partial class FranchisePage : ContentPage
     Task TeamPage(ProTeam team)
     {
         var s=state!;var standing=ProStandings.Build(s).Single(x=>x.Team.Name==team.Name);
-        return ShowPage(team.Name,new TeamBadgeView(team,56),Text(team.Conference+" · "+team.Division),Text($"{standing.Wins}–{standing.Losses}–{standing.Ties} · {Money(ProEconomy.Room(s,team.Name))} cap room"),
+        return ShowPage(team.Name,new TeamBadgeView(team,56),Text(team.Conference+" · "+team.Division),Text($"{standing.Wins}–{standing.Losses}–{standing.Ties} · {SeasonCapLabel(s,team.Name)}"),
             Panel("Players",Table([("Player",190),("Pos",50),("OVR",55)],s.Players.Where(p=>p.Football.TeamName==team.Name&&!p.Retired).OrderBy(p=>p.Football.Position).ThenByDescending(p=>p.Football.OverallRating).Select(p=>new View[]{PlayerCell(p),Text(p.Football.Position.ToString()),Text(p.Football.OverallRating.ToString())}))),
             Panel("Schedule",Table([("Week",60),("Opponent",210),("Result",90)],s.Games.Where(g=>g.Football.InvolvesTeam(team.Name)).Select(g=>{var f=g.Football;var opponent=s.League.Teams.Single(t=>t.Name==(f.HomeTeamName==team.Name?f.AwayTeamName:f.HomeTeamName));return new View[]{Text(ProTransactions.Period(g.Phase,f.Week)),TeamCell(opponent),f.HasPlayed?Link($"{f.AwayScore}–{f.HomeScore}",()=>BoxScore(f)):Text("Upcoming")};}))));
     }

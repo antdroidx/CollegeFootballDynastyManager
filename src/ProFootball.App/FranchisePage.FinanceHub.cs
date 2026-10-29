@@ -8,12 +8,11 @@ public sealed partial class FranchisePage
         body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));var s=state!;var team=s.UserTeam;body.Add(Text("Financial overview",25,true));
         var limit=ProFinance.Limit(s,team);var floor=ProFinance.Floor(s,team);
         body.Add(Cards(CapSummary(s),Panel("Projected cash spending",Text(Dollars(floor.Paid),24,true),Text("Minimum over tracked spending window "+Dollars(floor.Required)),Text("Window ends "+floor.End+" · Cash spending and cap charges are separate."))));
-        var budget=ProFinance.Budget(s,team);
-        body.Add(Table([("Cap component",210),("Exact dollars",155)],new (string,long)[]{("Base league cap",budget.BaseCap),("Prior-year rollover",budget.Rollover),("Other adjustments",budget.OtherAdjustments),("Adjusted team cap",budget.AdjustedCap),("Salary counted",budget.CommittedSalary),("Allocated bonus",budget.AllocatedBonus),("Other cap charges",budget.OtherCapCharges),("Dead money",budget.DeadMoney),("Rollover reserved",budget.RolloverReserved),("Available cap",budget.Available)}.Select(x=>new View[]{Text(x.Item1),Text(Dollars(x.Item2))})));
+        var budget=ProCapDisplay.Budget(s,team);
+        body.Add(Table([("Cap component",210),("Exact dollars",155)],new (string,long)[]{("Base league cap",budget.BaseCap),("Prior-year rollover",budget.Rollover),("Other adjustments",budget.OtherAdjustments),("Adjusted team cap",budget.AdjustedCap),("Salary counted",budget.CommittedSalary),("Allocated bonus",budget.AllocatedBonus),("Other cap charges",budget.OtherCapCharges),("Dead money",budget.DeadMoney),("Rollover reserved",budget.RolloverReserved),("Season cap space",budget.Available)}.Select(x=>new View[]{Text(x.Item1),Text(Dollars(x.Item2))})));
 
-        if(budget.OffseasonSalaryExcluded>0)body.Add(Text("Offseason salary exclusion: "+Dollars(budget.OffseasonSalaryExcluded)+". Bonuses and other cap charges still count. Opening-season eligibility uses full roster salaries.",12));
         body.Add(Text("Future cap plan",20,true));
-        var forecasts=Enumerable.Range(s.Year,4).Select(year=>(Year:year,Cap:ProFinance.Limit(s,team,year),Used:ProFinance.Budget(s,team,year).TotalCommitments)).ToArray();
+        var forecasts=Enumerable.Range(s.Year,4).Select(year=>(Year:year,Cap:ProFinance.Limit(s,team,year),Used:ProCapDisplay.Budget(s,team,year).TotalCommitments)).ToArray();
         body.Add(Table([("Year",60),("Cap / projected",145),("Committed",135),("Available",135)],forecasts.Select(x=>new View[]{Text(x.Year.ToString()),Text(Dollars(x.Cap)),Text(Dollars(x.Used)),Text(Dollars(x.Cap-x.Used))})));
         body.Add(FootballBarChart.Create(forecasts.Select(x=>(x.Year.ToString(),x.Used/1_000_000d)),"0.0"));
         body.Add(Panel("How cap and cash work",Text("A signing bonus is paid up front but its cap charge is spread across contract years. The spending floor uses cash paid over a multi-year window, not annual cap usage. Cash-floor settlements do not create cap charges. Unused cap can carry into the next year.",12)));

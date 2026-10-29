@@ -5,9 +5,8 @@ public static class ProInbox
     public static IReadOnlyList<ProNotification> Build(ProFranchise s)
     {
         var list=new List<ProNotification>();var team=s.UserTeam;
-        if(ProEconomy.Room(s,team)<0)list.Add(new($"cap-{s.Year}-{team}","Salary cap action required",$"${-ProEconomy.Room(s,team):N0} over the cap. Regular-season entry is blocked.","Front office",0));
-        if(ProCapCounting.Offseason(s,s.Year)&&ProEconomy.Room(s,team)>=0&&ProEconomy.Room(s with{Phase=ProPhase.RegularSeason},team)<0)
-            list.Add(new($"opening-cap-{s.Year}-{team}","Opening-season cap action needed",$"${-ProEconomy.Room(s with{Phase=ProPhase.RegularSeason},team):N0} over the full-roster budget. Offseason exclusions end before regular-season entry.","Front office",1));
+        if(ProCapDisplay.ActionNeeded(s,team) is {} capAction)
+            list.Add(new($"cap-{s.Year}-{team}","Over season salary cap",capAction,"Front Office",0));
         if(s.UnsignedRookies.Any(r=>r.Team==team))list.Add(new($"rookies-{s.Year}-{team}","Unsigned draft picks","Clear cap/roster room, then sign your rookie class from Overview.","Overview",0));
         foreach(var p in s.Players.Where(p=>p.Football.TeamName==team&&!p.Retired&&ProCareer.Controls(s,p.Football.Position)))
         {

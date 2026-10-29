@@ -29,7 +29,7 @@ public sealed partial class FranchisePage
                 Table([("Year",55),("Round",55),("Original team",160)],picks.Select(x=>new View[]{Text(x.Year.ToString()),Text(x.Round.ToString()),Text(x.OriginalTeam,12)}))};
             if(preview is not null)
             {
-                views.Add(Text($"Your available cap: {Money(ProEconomy.Room(s,s.UserTeam))} → {Money(ProEconomy.Room(preview,s.UserTeam))}",12));
+                views.Add(Text($"Your season cap space: {Money(ProCapDisplay.Room(s,s.UserTeam))} → {Money(ProCapDisplay.Room(preview,s.UserTeam))}",12));
                 var added=preview.DeadCap.Where(d=>d.Team==s.UserTeam&&d.Year==s.Year).Sum(d=>d.Amount)-s.DeadCap.Where(d=>d.Team==s.UserTeam&&d.Year==s.Year).Sum(d=>d.Amount);
                 views.Add(Text($"Current-year retained salary / bonus cap charges: {Dollars(added)}",12));
             }
