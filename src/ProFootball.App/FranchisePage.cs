@@ -196,24 +196,6 @@ public sealed partial class FranchisePage : ContentPage
         }
         team.SelectedIndexChanged += (_, _) => Draw(); positions.SelectedIndexChanged += (_, _) => Draw(); search.TextChanged += (_, _) => Draw(); Draw();
     }
-    Task DepthChart()
-    {
-        var s = state!; var picker = new Picker { Title = "Position", AutomationId="pro-depth-position", ItemsSource = ProDepthPositions.Sort(s.Players.Where(p => p.Football.TeamName == s.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired).Select(p => OffensiveLineService.Label(p.Football))).ToArray() };
-        var list = new VerticalStackLayout { Spacing = 10 };
-        void Draw()
-        {
-            list.Clear(); if (picker.SelectedItem is not string label) return;
-            var players = state!.Players.Where(p => p.Football.TeamName == state.UserTeam && !p.PracticeSquad && !p.Reserve && !p.Retired && OffensiveLineService.Label(p.Football) == label).OrderBy(p => p.Football.DepthChartOrder).ThenByDescending(p => p.Football.OverallRating).ToArray();
-            for (var index = 0; index < players.Length; index++)
-            {
-                var p = players[index]; var starter = index == 0; var button = new Button { Text = starter ? "First choice" : "Move to first", IsEnabled = !starter && ProCareer.Controls(state!, p.Football.Position) && p.Football.CurrentInjury is not { WeeksRemaining: > 0 } };
-                button.Clicked += async (_, _) => { ProCareer.RequirePlayer(state!, p.Football.PlayerId); state = ProDepthChart.MakeStarter(state!, state!.UserTeam, p.Football.PlayerId); await Save(); Draw(); Render(); };
-                list.Add(Panel($"{index + 1} · {p.Football.FullName}", PlayerCell(p), Text($"OVR {p.Football.OverallRating} · Morale {p.Morale}"), button));
-            }
-        }
-        picker.SelectedIndexChanged += (_, _) => Draw(); picker.SelectedIndex = 0;
-        return ShowPage("Depth chart", Text("Select a position to reorder your active roster. Changes apply to the next game; use the live depth chart for substitutions during a game."), picker, list);
-    }
     void History()
     { body.Add(Text("Franchise history", 22, true)); foreach (var season in state!.History) body.Add(Panel(season.Year + " champions", Text(season.Champion, 21, true))); body.Add(Text("Draft history", 21, true)); foreach (var pick in state.DraftHistory.Where(p => p.Team == state.UserTeam).TakeLast(21).Reverse()) body.Add(Text($"{pick.Year} R{pick.Round} #{pick.Slot} · {pick.Player.Football.FullName}", 13)); }
     Task BoxScore(ScheduledGame game) => ShowBoxScore(game);

@@ -74,7 +74,7 @@ public static class ProTradeAi
         }
         var next=ProTrade.Propose(prepared,buyer,seller,[],[playerId],picks,[]);
         FutureBudget(s,next,buyer);FutureBudget(s,next,seller);
-        return ProDepthChart.MakeStarter(next,buyer,playerId);
+        return ProDepthChart.MakeCpuStarter(next,buyer,playerId);
     }
     static bool CanExecute(ProFranchise s,string buyer,ProPlayer p,IReadOnlyList<Guid> picks)
     {

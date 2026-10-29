@@ -90,7 +90,7 @@ public static class ProLeagueService
     }
     public static TeamSimulationProfile Profile(ProFranchise state, string team)
     {
-        var players = state.Players.Where(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && ProReserve.MedicallyAvailable(state,p)).Select(p => p.Football).ToArray();
+        var players = DepthChartService.ProjectRoster(state.Players.Where(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && ProReserve.MedicallyAvailable(state,p)).Select(p => p.Football).ToArray(), state.DepthChartAssignments);
         double Rating(params Position[] positions) => players.Where(p => positions.Contains(p.Position)).OrderBy(p => p.DepthChartOrder).Take(8).Select(p => (double)p.OverallRating).DefaultIfEmpty(45).Average();
         int Coach(StaffRole role) => state.Coaches.FirstOrDefault(c => c.TeamId == state.League.Teams.Single(t => t.Name == team).Id && c.Role == role && !c.Vacant)?.Rating ?? (role == StaffRole.DefensiveCoordinator ? state.Coaches.FirstOrDefault(c => c.TeamId == state.League.Teams.Single(t => t.Name == team).Id && c.Role == StaffRole.HeadCoach && !c.Vacant)?.Rating ?? 55 : 55);
         return new()
@@ -115,7 +115,7 @@ public static class ProLeagueService
         if (mode == GameDayMode.Play && game.Football.InvolvesTeam(state.UserTeam) && state.Career?.Unemployed == true) throw new InvalidOperationException("Accept a coaching job before controlling this team.");
         if (game.Football.HasPlayed || game.Phase != state.Phase || game.Football.Week != state.Week) throw new InvalidOperationException("Game is not available this week.");
         if(state.Phase is ProPhase.RegularSeason or ProPhase.Playoffs && game.Football.InvolvesTeam(state.UserTeam)) ProSeasonEligibility.Require(state,state.UserTeam);
-        var session = GameDayEngine.Start(game.Football, Profile(state, game.Football.HomeTeamName), Profile(state, game.Football.AwayTeamName), state.Players.Where(p => !p.PracticeSquad && !p.Reserve && !p.Retired && ProReserve.MedicallyAvailable(state,p)).Select(p => p.Football).ToArray(), mode, rules: FootballRules.Professional with { Postseason = state.Phase == ProPhase.Playoffs });
+        var session = GameDayEngine.Start(game.Football, Profile(state, game.Football.HomeTeamName), Profile(state, game.Football.AwayTeamName), state.Players.Where(p => !p.PracticeSquad && !p.Reserve && !p.Retired && ProReserve.MedicallyAvailable(state,p)).Select(p => p.Football).ToArray(), mode, assignments: state.DepthChartAssignments, rules: FootballRules.Professional with { Postseason = state.Phase == ProPhase.Playoffs });
         controlled ??= game.Football.InvolvesTeam(state.UserTeam) ? state.UserTeam : game.Football.HomeTeamName;
         if (!game.Football.InvolvesTeam(controlled)) throw new ArgumentException("Controlled team must be in this matchup.");
         session.ControlledTeamName = controlled;
