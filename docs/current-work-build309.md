@@ -2,7 +2,7 @@
 
 Branch `feature/management-ui-overhaul`; PR20 targets `game-day-2-test` and remains unmerged. Application source `6a0540e9444b2b2e908da6b064596878f510e1d5`; later commits contain documentation only.
 
-[APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40027935772/artifacts/12532894496) · [Passing Actions run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40027935772) · [Validation/screenshots](validation/management-ui-phase-3-5/README.md) · [PR20](https://github.com/antdroidx/CollegeFootballDynastyManager/pull/20)
+[APK](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/40027935772/artifacts/12532894496) · [Passing Actions run](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/40027935772) · [Validation/screenshots](validation/management-ui-phase-3-5/README.md) · [PR20](https://github.com/antdroidx/Football-Sim-Engine/pull/20)
 
 Completed the authorized remaining management UI pass: initial/year-only sidebar branding; compact overlay drawer preserving full page/header width; aligned text-only roster/recruit/person tables; illustrated news with team/player icons and contextual fictional articles; program career/staff/history/development tabs; searchable staff candidate comparison with existing confirmed hiring; tabbed coach profiles; team roster/staff tabs; commitments/class/national tables preserving own class rank; responsive schedule/poll filters; season-history table; panel-based settings and management-action theme deferral.
 

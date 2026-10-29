@@ -2,7 +2,7 @@
 
 Application source `6a0540e`, branch `feature/management-ui-overhaul`, PR20 targeting `game-day-2-test`. No merge performed.
 
-[Download test APK](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40027935772/artifacts/12532894496) · [Passing Actions run](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40027935772) · [Full screenshot/XML evidence](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40027935772/artifacts/12534078761) · [PR20](https://github.com/antdroidx/CollegeFootballDynastyManager/pull/20)
+[Download test APK](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/40027935772/artifacts/12532894496) · [Passing Actions run](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/40027935772) · [Full screenshot/XML evidence](https://github.com/antdroidx/Football-Sim-Engine/actions/runs/40027935772/artifacts/12534078761) · [PR20](https://github.com/antdroidx/Football-Sim-Engine/pull/20)
 
 ## Changes
 

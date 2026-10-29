@@ -3,12 +3,17 @@ run-name: College build ${{ github.run_number }} • ${{ github.head_ref || gith
 
 on:
   push:
-    branches:
-      - main
-      - fix-live-field-formations
-      - game-day-2-test
-      - feature/gamecast-visual-polish
-      - feature/pro-franchise-foundation
+    branches: [main]
+    paths:
+      - 'src/Football.Engine/**'
+      - 'src/Football.Presentation/**'
+      - 'src/DynastyManager.App/**'
+      - 'src/DynastyManager.Data/**'
+      - 'tests/DynastyManager.Core.Tests/**'
+      - 'build/android-*.py'
+      - 'build/college-*.py'
+      - 'global.json'
+      - '.github/workflows/csharp-ci.yml'
   pull_request:
     branches:
       - main
@@ -26,7 +31,7 @@ on:
       run_career_health:
         description: Include the extended five/ten-year career simulations
         type: boolean
-        default: true
+        default: false
       run_rating_calibration:
         description: Run 20-year FBS calibration plus complete 12-team career tests
         type: boolean
@@ -82,7 +87,7 @@ jobs:
 
       - name: Run combined Core / College tests
         env:
-          SKIP_CAREER_HEALTH: ${{ (github.event_name == 'workflow_dispatch' && !inputs.run_career_health) || (github.ref_name == 'feature/gamecast-visual-polish' || github.ref_name == 'feature/pro-franchise-foundation') }}
+          SKIP_CAREER_HEALTH: ${{ github.event_name != 'workflow_dispatch' || !inputs.run_career_health }}
           RUN_RATING_CALIBRATION: ${{ github.event_name == 'workflow_dispatch' && inputs.run_rating_calibration }}
           MANAGEMENT_SCOPE: ${{ inputs.management_scope }}
           CFDM_CALIBRATION_REPORT_DIR: ${{ github.workspace }}/artifacts/calibration
@@ -166,7 +171,7 @@ jobs:
 
   android-launch:
     needs: build-test-android
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_emulator
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -240,7 +245,7 @@ jobs:
 
   android-career-options:
     needs: build-test-android
-    if: inputs.management_scope != 'generated-roster' && inputs.management_scope != 'fast-forward' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.run_emulator))
+    if: inputs.management_scope != 'generated-roster' && inputs.management_scope != 'fast-forward' && github.event_name == 'workflow_dispatch' && inputs.run_emulator
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:

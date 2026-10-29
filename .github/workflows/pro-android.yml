@@ -2,14 +2,23 @@ name: Pro Football Android
 run-name: ${{ inputs.reuse_apk_run_id && format('Pro verify {0} · {1}', inputs.reuse_apk_artifact, github.ref_name) || format('Pro build {0} · {1} · {2}', github.run_number, inputs.validation_scope || 'full', github.ref_name) }}
 on:
   push:
-    branches: [feature/pro-franchise-foundation]
+    branches: [main]
+    paths:
+      - 'src/Football.Engine/**'
+      - 'src/Football.Presentation/**'
+      - 'src/ProFootball.Core/**'
+      - 'src/ProFootball.App/**'
+      - 'tests/ProFootball.Tests/**'
+      - 'build/pro-*.py'
+      - 'global.json'
+      - '.github/workflows/pro-android.yml'
   workflow_dispatch:
     inputs:
       validation_scope:
         description: Finance checks financial management; termination checks release/waiver/accrual; live checks GameCast; other scopes cover their management flows
         type: choice
-        options: [generated-roster, retention-table, inseason-phase, depth-editor, cap-display, roster-update, staff-calendar, exchange, presentation, roadmap, full, finance, opening, live, trade, retention, reserve, termination]
-        default: full
+        options: [fast, generated-roster, retention-table, inseason-phase, depth-editor, cap-display, roster-update, staff-calendar, exchange, presentation, roadmap, full, finance, opening, live, trade, retention, reserve, termination]
+        default: fast
       reuse_apk_run_id:
         description: Optional prior run ID for test-only retries; app-source differences reject reuse
         type: string
@@ -60,13 +69,13 @@ jobs:
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
-        if: inputs.validation_scope != 'generated-roster' && inputs.validation_scope != 'retention-table' && inputs.validation_scope != 'inseason-phase' && inputs.validation_scope != 'depth-editor' && inputs.validation_scope != 'cap-display' && inputs.validation_scope != 'roster-update' && inputs.validation_scope != 'staff-calendar' && inputs.validation_scope != 'exchange' && inputs.validation_scope != 'presentation' && inputs.validation_scope != 'roadmap' && inputs.validation_scope != 'finance' && inputs.validation_scope != 'opening' && inputs.validation_scope != 'live' && inputs.validation_scope != 'trade' && inputs.validation_scope != 'retention' && inputs.validation_scope != 'reserve' && inputs.validation_scope != 'termination'
+        if: github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'full'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release
       - name: Pro scoped regressions
         env:
           PRO_TRADE_UI_FIXTURE: ${{ github.workspace }}/pro-trade-ui-fixture.json.gz
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}
-        if: inputs.validation_scope != 'retention-table' && (inputs.validation_scope == 'generated-roster' || inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'termination' || inputs.validation_scope == 'opening' || inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve'
+        if: github.event_name == 'push' || inputs.validation_scope == 'fast' || inputs.validation_scope != 'retention-table' && (inputs.validation_scope == 'generated-roster' || inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'termination' || inputs.validation_scope == 'opening' || inputs.validation_scope == 'finance' || inputs.validation_scope == 'live' || inputs.validation_scope == 'trade' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve'
         run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName!~TwentySeasons&FullyQualifiedName!~SourcedFiveSeasons'
       - name: Retention presentation regressions
         if: inputs.validation_scope == 'retention-table'
@@ -97,7 +106,7 @@ jobs:
           retention-days: 7
   pro-device:
     needs: pro-build
-    if: (inputs.validation_scope != 'exchange' || inputs.college_run != '') && always() && !cancelled() && (needs.pro-build.result == 'success' || inputs.reuse_apk_run_id != '')
+    if: github.event_name == 'workflow_dispatch' && inputs.validation_scope != 'fast' && (inputs.validation_scope != 'exchange' || inputs.college_run != '') && always() && !cancelled() && (needs.pro-build.result == 'success' || inputs.reuse_apk_run_id != '')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:

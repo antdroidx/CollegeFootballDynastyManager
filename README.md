@@ -1,15 +1,17 @@
-# College Football Dynasty Manager & Pro Football Franchise Manager
+# Football Sim Engine
 
 Two independently installable Android football management games, built with C# and .NET MAUI in one repository. They reuse the football engine and presentation components while keeping separate application identities and saves.
 
+[Latest dual-app prerelease](https://github.com/antdroidx/Football-Sim-Engine/releases/tag/preview-2026-10-29) · [Validation and cleanup](docs/current-work.md)
+
 ## Applications
 
-- **College Football Dynasty Manager** — college recruiting, roster and coaching management, seasons, statistics, and live GameCast. The current college release line is pre-release **0.20**; APKs also display their build number. Its Android package remains `antdroid.cfbcoach`.
+- **College Football Dynasty Manager** — college recruiting, roster and coaching management, seasons, statistics, and live GameCast. The current college release line is pre-release **0.20**; APKs also display their build number. Its current development APK package is `antdroid.cfbcoach.dev`; the retained release identity is `antdroid.cfbcoach`.
 - **Pro Football Franchise Manager** — a development preview with 32 NFL teams, roster and coaching data, a professional season structure, franchise management foundations, and the shared GameCast engine. Its Android package is `antdroid.profootball.franchise`. Contracts, free agency, trades, scouting, draft, and CPU management are still being refined; this is not a completed feature release.
 
 Pro management includes automatic staff/combine scouting, annual staff development, camp depth battles, NFL division/wild-card tiebreakers, development and draft-outcome comparisons, career records, weekly league reviews and late-season playoff projections. Analytics is split into focused category views. College-to-Pro draft-class exchange uses a shared versioned JSON format. See [current work and exact accepted APKs](docs/current-work.md) for verified scope; historical parity notes are not a current completion checklist.
 
-Both applications use responsive layouts, light/dark themes, team colors, and separate save storage. Pro development is isolated on `feature/pro-franchise-foundation`; unfinished pro features are not merged into stable `main`.
+Both applications use responsive layouts, light/dark themes, team colors, and separate save storage. Both games now share the main development line. Prereleases remain previews; see the accepted build scope before upgrading.
 
 ## Repository layout
 
@@ -22,11 +24,12 @@ Both applications use responsive layouts, light/dark themes, team colors, and se
 | `src/ProFootball.Core` | Pro league configuration, franchise rules, data, and persistence |
 | `src/ProFootball.App` | Pro Android application |
 | `tests` | College and pro regression suites |
-| `tools/SimAudit` | Simulation audit utility |
+| `tools/SimAudit`, `tools/FootballBalanceAudit` | Simulation and multi-season balance audits |
 | `build` | Current build, data import, and Android validation tools |
+| `Archive/Java-game` | Original Java source and historical data, reference only |
 | `docs` | Architecture, data sources, validation evidence, and historical documentation |
 
-The original Java Android project and Gradle files remain in the repository pending archival. They do not build the current C# applications. The historical `Universe/` collection is distinct from the current baseline data. See [original documentation and attribution](docs/legacy-college-football-coach.md).
+The original Java/Gradle game and historical Universe packs are retained under [Archive/Java-game](Archive/Java-game). They do not build the current C# applications and are distinct from current baseline data. See [original documentation and attribution](docs/legacy-college-football-coach.md).
 
 ## Baseline data
 
@@ -48,9 +51,9 @@ The college suite includes long-running dynasty and calibration tests. CI workfl
 
 ## Android downloads and workflows
 
-- [College CI and APK builds](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/workflows/csharp-ci.yml)
-- [Pro Android CI and APK builds](https://github.com/antdroidx/CollegeFootballDynastyManager/actions/workflows/pro-android.yml)
-- [Published releases](https://github.com/antdroidx/CollegeFootballDynastyManager/releases)
+- [College CI and APK builds](https://github.com/antdroidx/Football-Sim-Engine/actions/workflows/csharp-ci.yml)
+- [Pro Android CI and APK builds](https://github.com/antdroidx/Football-Sim-Engine/actions/workflows/pro-android.yml)
+- [Published releases](https://github.com/antdroidx/Football-Sim-Engine/releases)
 
 Open a successful run and download its APK artifact. Each application has independent Android version codes and uses consistent signing for update installations; college and pro can coexist. Artifact downloads may require GitHub sign-in and expire according to retention settings.
 
@@ -77,3 +80,5 @@ After College postseason departures are processed, open **Season → Export Coll
 In Pro offseason free agency, before the first draft selection, choose **Front Office → Import College draft class**. Select the JSON, review translated ratings, source/target years and any generated filler, then apply. Small classes are completed to320 prospects; larger classes retain all imported prospects. This replaces only the unstarted class and its scouting/shortlist, preserving team rosters, signed contracts and pick ownership. Players retain identities and illustrated appearances while professional attributes/overall are recalculated. Drafted imports receive normal rookie contracts through the existing draft system.
 
 Only the latest full College class is retained in the save; export files preserve older classes independently. Old saves with summary-only departed players cannot recover missing attributes; future departures capture full classes automatically. Import must precede the first selection; opening a new draft now exposes an explicit Start draft action.
+
+Automatic main builds are path-filtered and run fast checks. Use manual workflow options for full career/calibration or emulator verification; archived Java and documentation-only edits do not trigger Android builds.
