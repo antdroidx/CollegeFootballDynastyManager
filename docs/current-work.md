@@ -1,3 +1,9 @@
+## Accepted Pro103 — dense retention table and contrasting actions
+
+App sourcebdff738, workflow fixture repair7b7f03d, run40907837678. Exact tested APK: https://github.com/antdroidx/CollegeFootballDynastyManager/actions/runs/40907837678/artifacts/12910789994 . Five scoped retention guards pass (CI4s/local1s),16 helpers and32-pair validator pass; Android packaging0 warnings/errors. Device evidence12912083142 is downloaded in.artifacts/pro-retention103. All six presentation flags pass: dense table, multiple visible rows, compact action heights, light/dark alternating stripes and opening negotiation. Reviewed both theme screenshots: eight actionable rows visible, filled primary/outlined secondary controls legible on both stripes, plain linked names/headers. Synthetic $2B-cap fixture isolates presentation; its inflated demands are not production market evidence. Failed102 fixture staging is superseded; no app bug was found there.
+
+User UI direction supersedes the Pro101 retention card design: prefer dense sortable tables for comparable lists throughout both games, reserve larger cards for summaries/narrative content. Retention now uses one row per player with adjacent actions and aligned sortable statistics; eligibility reasons can be tapped for details. No Core/College behavior changed. Reuse Pro101349-case financial/phase evidence and College40241-case/device evidence; no extra College APK or annual run for this presentation-only batch.
+
 ## Retention presentation packaging repair
 
 Pro102/run40907056054 compiled with0 package warnings/errors and passed the five scoped retention guards, helpers and validator, but artifact staging expected unrelated trade/coordinator fixtures omitted by the deliberately narrow test filter. Workflow now stages only the required retention fixture for this scope. App sourcebdff738 is unchanged. New packaging/device run required because the first job failed before APK upload.
