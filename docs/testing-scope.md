@@ -1,6 +1,6 @@
-## Season-cap-only presentation scope
+## Accepted Pro97 season-cap presentation scope
 
-Presentation/read-only budget helper and inbox wording only: six new cases plus existing offseason-counting cases pass14 focused checks. No transaction accounting, save schema or simulation behavior changes. Dedicated cap-display device scope uses a synthetic valid32-team save where temporary camp room is positive but full-season room is negative. It checks Front Office, exact breakdown, financial hub, Overview, inbox, light/dark, positive balance resolving the alert and saved contracts/counting unchanged. Run fast Pro CI and helpers; reuse unchanged annual/College/GameCast evidence.
+Sourceab0e53b packaged APK12880312505/run40835230475 passes335 Pro cases,16 helpers,source validator and0 package warnings/errors. Harness-onlyc214496 exact-APK verification40836275698/evidence12880703404 passes all seven cap-display flags: negative/positive, Front Office/hub/Overview/inbox agreement, no temporary balance, light/dark, unchanged saved contracts/counting and resolved alert. First partial-label harness failure is superseded. Local14 display/counting cases pass. Reviewed light card/dark inbox images; fixture is synthetic32-team, not device-season evidence. Reuse unchanged annual/College/GameCast checks. Banner child rendering after repeated navigation is outside this cap scope and noted in current-work.md.
 
 ## Accepted Pro96 opening IR policy scope
 
