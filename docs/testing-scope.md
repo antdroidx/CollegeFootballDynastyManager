@@ -1,6 +1,6 @@
-## Opening IR policy scope
+## Accepted Pro96 opening IR policy scope
 
-Six focused policy cases plus existing reserve/CPU/inbox checks verify saved regular-game eligibility, preseason/byes, season-ending overrides, migration/no relock, CPU return and lowest-OVR practice cuts retaining debt. Local328 fast pre-final cases pass; final20 policy/reserve/inbox checks pass. Final CI runs329 exact-source fast cases, including both existing three-season scenarios. Expanded reserve device scope verifies four-game and season-ending disabled actions, explicit injured block, cleared activation, contract persistence and reload. Fixtures remain synthetic32-team scenarios; no device seasons or repeat College/GameCast claims. The new medical initialization does not reopen the financial accounting audit; reuse existing long-run evidence where unchanged.
+Source6741d4c/run40830670108 passes329 scoped Pro cases,16 helpers,source validator and package0 warnings/errors. Exact APK12879200586, evidence12878214098 (.artifacts/pro-ir-policy96). Four-game minimum and season-ending disabled actions, explicit injury block, cleared activation, contract preservation and reload all pass; new screenshots reviewed. Six policy tests plus existing reserve/CPU/inbox checks cover game-based clock, preseason/byes, sourced overrides, migration, lowest-rated cuts retaining debt, CPU return and one-time Finish recovery. Local328 pre-final cases and20 final affected cases passed. Reuse College/GameCast/prior long finance evidence; synthetic fixture does not claim device seasons or a new20-season IR run. Full NFL practice-designation windows/temporary elevations remain outside this simplified policy.
 
 ## CPU roster audit scope
 
