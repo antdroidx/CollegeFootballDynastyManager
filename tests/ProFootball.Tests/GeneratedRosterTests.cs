@@ -6,6 +6,16 @@ using Xunit;
 namespace ProFootball.Tests;
 public class GeneratedRosterTests
 {
+    [Fact] public void FictionalOpeningBudgetIncludesWorstCaseOneYearSigningBonuses()
+    {
+        var league=ProLeagueService.Load();
+        var players=ProGeneratedRoster.Create(league,new Random(20261030))
+            .Select(p=>p with {Age=34, Experience=12, RookieYear=2014}).ToList();
+        var s=ProCapInitialization.Initialize(ProEconomy.Initialize(new ProFranchise {
+            UserTeam="Seattle Seahawks", FictionalPlayers=true, League=league, Players=players }));
+        Assert.All(league.Teams,t=>Assert.True(ProEconomy.Room(s,t.Name)>0,t.Name));
+        Assert.All(s.Contracts,c=>Assert.Equal(1,c.BonusYears));
+    }
     [Fact]public async Task FictionalStartsAreUniqueBalancedAndPersistWithoutRealContractOrTradeImports()
     {
         var a=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true,generatedPlayers:true);var b=ProLeagueService.Create("Seattle Seahawks",generatedPlayers:true);

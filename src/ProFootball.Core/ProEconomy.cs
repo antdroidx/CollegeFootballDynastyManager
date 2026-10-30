@@ -28,7 +28,9 @@ public static class ProEconomy
         {
             var players = s.Players.Where(p => p.Football.TeamName == team.Name && !p.Retired).ToArray();
             var desired = players.Sum(p => Math.Max(1_000_000, MarketSalary(p)));
-            var scale = Math.Min(1, s.SalaryCap * .78 / Math.Max(1, desired));
+            // Fresh fictional worlds must also afford the half-salary bonus, even on one-year deals.
+            // Existing saves and real-roster contract initialization keep their financial basis.
+            var scale = Math.Min(1, s.SalaryCap * (s.FictionalPlayers ? .62 : .78) / Math.Max(1, desired));
             foreach (var p in players)
             {
                 var salary = p.PracticeSquad ? Math.Max(300_000,ProFinance.Minimum(s,p)) : (long)Math.Max(ProFinance.Minimum(s,p), MarketSalary(p) * scale);
