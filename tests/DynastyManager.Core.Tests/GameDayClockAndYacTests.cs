@@ -15,6 +15,45 @@ public class GameDayClockAndYacTests
         s.PossessionTeamName="Away";
         Assert.Equal(expected.Replace("Home","TEMP").Replace("Away","Home").Replace("TEMP","Away"),GameDayEngine.BallOn(s));
     }
+    [Theory]
+    [InlineData(false, 31, 37)]
+    [InlineData(true, 36, 39)]
+    public void NormalPacingUsesLeagueRulesAndRespectsStoppedClock(bool pro, int minimum, int maximum)
+    {
+        var source = GameDayEngineTests.Session(GameDayMode.Play);
+        var plan = source.HomeProfile.GamePlan! with { Tempo = OffensiveTempo.Normal };
+        foreach (var stopped in new[] { false, true })
+        {
+            var s = GameDayEngine.Start(source.Game, source.HomeProfile with { GamePlan = plan },
+                source.AwayProfile, source.Roster, GameDayMode.Play,
+                rules: pro ? FootballRules.Professional : FootballRules.College);
+            s.KickoffPending = false; s.PlayClockSeconds = 40; s.ClockStopped = stopped;
+            var snap = GameDayEngine.Step(s, "off-spread-zone");
+            Assert.InRange(s.LastPreSnapSeconds, stopped ? 0 : minimum, stopped ? 0 : maximum);
+            Assert.Equal(900 - snap.PreSnapSeconds - snap.LiveBallSeconds, s.ClockSeconds);
+        }
+    }
+
+    [Theory]
+    [InlineData(false, OffensiveTempo.UpTempo, 12, 20)]
+    [InlineData(true, OffensiveTempo.UpTempo, 12, 20)]
+    [InlineData(false, OffensiveTempo.ChewClock, 37, 39)]
+    [InlineData(true, OffensiveTempo.ChewClock, 37, 39)]
+    [InlineData(true, OffensiveTempo.Normal, 24, 24)]
+    public void LeaguePacingKeepsExplicitTemposAndAdministrativePlayClock(
+        bool pro, OffensiveTempo tempo, int minimum, int maximum)
+    {
+        var source = GameDayEngineTests.Session(GameDayMode.Play);
+        var plan = source.HomeProfile.GamePlan! with { Tempo = tempo };
+        var s = GameDayEngine.Start(source.Game, source.HomeProfile with { GamePlan = plan },
+            source.AwayProfile, source.Roster, GameDayMode.Play,
+            rules: pro ? FootballRules.Professional : FootballRules.College);
+        s.KickoffPending = false; s.ClockStopped = false;
+        s.PlayClockSeconds = tempo == OffensiveTempo.Normal ? 25 : 40;
+        GameDayEngine.Step(s, "off-spread-zone");
+        Assert.InRange(s.LastPreSnapSeconds, minimum, maximum);
+    }
+
     [Fact]
     public void IncompletionConsumesPriorRunoffButNextSnapStartsStopped()
     {

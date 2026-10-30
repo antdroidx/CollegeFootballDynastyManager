@@ -42,7 +42,8 @@ public static partial class GameDayEngine
         {
             OffensiveTempo.UpTempo => session.Random.Next(12, 21),
             OffensiveTempo.ChewClock => session.Random.Next(37, 40),
-            _ => session.Random.Next(31, 38)
+            // Pro uses more of the same legal 40-second clock; College retains its pacing.
+            _ => session.Random.Next(session.Rules.NormalPreSnapMinimumSeconds, session.Rules.NormalPreSnapMaximumSeconds + 1)
         };
         seconds = Math.Min(seconds, session.PlayClockSeconds - 1);
         // A first down inside two minutes pauses only until the ball is ready, unlike an incompletion.

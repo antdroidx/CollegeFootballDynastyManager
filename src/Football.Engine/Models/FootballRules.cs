@@ -3,7 +3,9 @@ namespace DynastyManager.Core.Models;
 public sealed record FootballRules
 {
     public static FootballRules College { get; } = new();
-    public static FootballRules Professional { get; } = new() { RunGainOffset = -.9, SacksCountAsRushing = false, BasePassingBias = 1.45, TimedOvertime = true, HashMarkFraction = 70.75 / 160, StopClockOnFirstDown = false, ExtraPointDistance = 33, KickoffTouchbackYardLine = 35 };
+    public static FootballRules Professional { get; } = new() { NormalPreSnapMinimumSeconds = 36, NormalPreSnapMaximumSeconds = 39, RunGainOffset = -.9, SacksCountAsRushing = false, BasePassingBias = 1.45, TimedOvertime = true, HashMarkFraction = 70.75 / 160, StopClockOnFirstDown = false, ExtraPointDistance = 33, KickoffTouchbackYardLine = 35 };
+    public int NormalPreSnapMinimumSeconds { get; init; } = 31;
+    public int NormalPreSnapMaximumSeconds { get; init; } = 37;
     public double RunGainOffset {get;init;}
     public bool SacksCountAsRushing { get; init; } = true;
     public double BasePassingBias { get; init; } = 1;

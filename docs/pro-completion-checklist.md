@@ -1,3 +1,7 @@
+## Pro pacing reduction — candidate
+
+Pro normal pre-snap wait is 36–39 seconds; College remains 31–37, with explicit tempo/stopped-clock/25-second limits preserved. 256-game real/generated samples each against the old-pacing control fall from 66.32/66.96 to 63.16/62.82 offensive plays per team. Updated points 22.59/21.27 and yards 339.46/326.55; 160 focused combined Core/College cases pass. Method and raw reports: docs/pro-pacing-audit.md. No new multi-season or device acceptance claimed. Android packaging/regressions pending; published Pro104/College403 remain the prior accepted builds.
+
 ## Main integration and prerelease complete — 2026-10-29
 
 Merged PR #23 into main at 482cbac7b2963ffa2186191f89978c1d4be13779. Repository is now antdroidx/Football-Sim-Engine; local origin updated. Only main remains locally and remotely. Legacy Java source, Gradle files and historical packs are preserved in Archive/Java-game; tracked caches and the obsolete Java APK are removed. Both current Android workflows remain, with relevant-path main triggers and manual expensive simulation/device scopes.
