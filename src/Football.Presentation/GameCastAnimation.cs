@@ -128,8 +128,7 @@ public static class GameCastAnimation
         View? terminalCarrierView = null, primaryTacklerView = null, specialReturnerView = null;
         for (var index = 0; index < offense.Length; index++)
         {
-            var player = offense[index];
-            if(player?.PlayerId == snap.FullbackId) player = player with { Position = Position.FB };
+            var player = BackfieldRoles.MarkerRole(offense[index], snap.FullbackId);
             double x, y;
             if (player?.PlayerId == snap.KickerId && snap.Outcome is
                 SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint)

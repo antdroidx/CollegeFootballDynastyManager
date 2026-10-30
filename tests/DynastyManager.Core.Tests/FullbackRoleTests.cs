@@ -4,6 +4,14 @@ using Xunit;
 namespace DynastyManager.Core.Tests;
 public class FullbackRoleTests
 {
+    [Fact] public void MarkerRoleSupportsOldMissingPersonnelAndDoesNotChangeNaturalPosition()
+    {
+        Assert.Null(BackfieldRoles.MarkerRole(null,null));
+        var player=GameDayEngineTests.Session(GameDayMode.Play).Roster.First(p=>p.Position==Position.TE);
+        Assert.Same(player,BackfieldRoles.MarkerRole(player,null));
+        Assert.Equal(Position.FB,BackfieldRoles.MarkerRole(player,player.PlayerId)!.Position);
+        Assert.Equal(Position.TE,player.Position);
+    }
     [Fact] public void LeadBlockerQualityAffectsTheRunMatchup()
     {
         var source=GameDayEngineTests.Session(GameDayMode.Play);var template=source.HomeRoster.First(p=>p.Position==Position.RB);
