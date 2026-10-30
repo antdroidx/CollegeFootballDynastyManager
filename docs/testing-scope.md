@@ -2,7 +2,7 @@
 
 Adds separate regular-season/playoff selectors for Pro league statistics and player statistics, each with current season/career scopes. Shared Pro query deduplicates current/archive games by year+ID, excludes preseason/unplayed games, and preserves aggregate maxima. Profile now has Overview, Attributes, Contract, Statistics and Analytics tabs with a fixed compact header/tab bar and independently scrolled section; statistics displays one category at a time. No shared simulation, College, contracts or save schema changes.
 
-Focused2 Pro cases (pure selection/aggregation + production-game save/fixture) and16 helpers pass. Scope profile-tabs only runs those cases and native five-tab/phase/career checks. Reuse Pro112355-case, Core/College726-case,512-game and prior long-season/GameCast evidence. No College rebuild or long simulations needed. Pro APK/native acceptance pending.
+Focused2 Pro cases (pure selection/aggregation + production-game save/fixture) and16 helpers pass. Scope profile-tabs only runs those cases and native five-tab/phase/career checks. Reuse Pro112355-case, Core/College726-case,512-game and prior long-season/GameCast evidence. No College rebuild or long simulations needed. Pro114 sourcee34056d is building/native testing in41020845808. Earlier113 was canceled for the final narrow-screen header constraint and is not accepted. App-input diff confirms unchanged shared engine/presentation and College, so College407 evidence is reused. APK/native acceptance pending.
 
 ## Accepted expanded player statistics — Pro112 / College407
 
