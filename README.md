@@ -2,7 +2,7 @@
 
 Two independently installable Android football management games, built with C# and .NET MAUI in one repository. They reuse the football engine and presentation components while keeping separate application identities and saves.
 
-[Latest dual-app prerelease](https://github.com/antdroidx/Football-Sim-Engine/releases/tag/preview-2026-10-29) · [Validation and cleanup](docs/current-work.md)
+[Latest dual-app prerelease](https://github.com/antdroidx/Football-Sim-Engine/releases/tag/preview-2026-10-29-backfield) · [Validation and cleanup](docs/current-work.md)
 
 ## Applications
 
