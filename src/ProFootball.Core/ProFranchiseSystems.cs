@@ -70,30 +70,15 @@ public static class ProDraft
         return AutoScout(ProEconomy.EnsurePickInventory(s with { Picks = existing, Prospects = prospects, DraftIndex = 0, Scouting = [], DraftBoard = [], ImportedDraftClass=s.ImportedDraftClass?.Year==s.Year?s.ImportedDraftClass:null }));
     }
     public static int PublicGrade(ProPlayer p) => Math.Clamp(p.Football.OverallRating+(p.Football.PlayerId.ToByteArray()[1]%21)-10,40,95);
-    public static ProFranchise AutoScout(ProFranchise s)
-    {
-        if(s.Phase!=ProPhase.Offseason || s.OffseasonStep is not (OffseasonStep.FreeAgency or OffseasonStep.Draft))return s;
-        s=ProScouting.UpdateReports(s);
-        foreach(var team in s.League.Teams)
-        {
-            var seen=s.Scouting.Where(r=>r.Team==team.Name&&r.Year==s.Year).Select(r=>r.PlayerId).ToHashSet();
-            var candidates=s.Prospects.Where(p=>!seen.Contains(p.Football.PlayerId)&&(team.Name!=s.UserTeam||ProCareer.Controls(s,p.Football.Position)))
-                .OrderByDescending(p=>team.Name==s.UserTeam&&s.DraftBoard.Contains(p.Football.PlayerId)).ThenByDescending(p=>PublicGrade(p)+ProCpu.Need(s,team.Name,p.Football.Position)*2).ThenBy(p=>p.Football.PlayerId).Take(Math.Max(0,40-seen.Count)).ToArray();
-            foreach(var player in candidates)s=Scout(s,team.Name,player.Football.PlayerId);
-        }
-        return s;
-    }
-    static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ProFranchise,Dictionary<(int Year,int Round),int>> CompensationCounts=new();
+    public static ProFranchise AutoScout(ProFranchise s)=>ProScouting.Auto(s);
+        static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ProFranchise,Dictionary<(int Year,int Round),int>> CompensationCounts=new();
     public static int CompensatoryBefore(ProFranchise s,int year,int round)=>CompensationCounts.GetValue(s,state=>state.Picks.Where(p=>p.Compensatory).GroupBy(p=>p.Year).SelectMany(g=>Enumerable.Range(1,7).Select(r=>(Key:(g.Key,r),Count:g.Count(p=>p.Round<r)))).ToDictionary(x=>x.Key,x=>x.Count)).GetValueOrDefault((year,round));
     public static int Overall(ProFranchise s,ProDraftPick pick)=>(pick.Round-1)*32+CompensatoryBefore(s,pick.Year,pick.Round)+pick.Slot;
     public static ProDraftPick? Current(ProFranchise s) => s.Picks.Where(p => p.Year == s.Year).OrderBy(p => p.Round).ThenBy(p => p.Slot).ElementAtOrDefault(s.DraftIndex);
     public static ProFranchise Scout(ProFranchise s, string team, Guid id)
     {
         if (s.Phase != ProPhase.Offseason || s.OffseasonStep is not (OffseasonStep.FreeAgency or OffseasonStep.Draft)) throw new InvalidOperationException("Scouting opens during the offseason.");
-        if (s.Scouting.Any(r => r.PlayerId == id && r.Team == team && r.Year == s.Year)) return s;
-        if (s.Scouting.Count(r => r.Team == team && r.Year == s.Year) >= 40) throw new InvalidOperationException("Your 40-player scouting budget is exhausted.");
-        var p = s.Prospects.Single(p => p.Football.PlayerId == id);
-        return s with { Scouting = s.Scouting.Append(ProScouting.Evaluate(s,team,p)).ToList() };
+        return AutoScout(ProScouting.SetTarget(s,team,id,ScoutDepth.Priority));
     }
     public static long RookieSalary(ProFranchise s,int round)
     {
@@ -333,7 +318,7 @@ public static class ProOffseason
             var next = s with { Year = year, Week = 1, Players = merged, SalaryCap = nextCap, Owners = owners, Coaches = s.Coaches, Games = [], OffseasonStep = OffseasonStep.FreeAgency, LetExpire = [], Bids = [], Waivers = [], Champion = null };
             return ProDraft.Generate(ProStaff.ManageCpu(next));
         }
-        if (s.OffseasonStep == OffseasonStep.FreeAgency) return ProDraft.AutoUntilUser(ProCpu.Manage(s.AutoManageFreeAgency?ProFreeAgencyAssistance.Propose(s):s) with { OffseasonStep = OffseasonStep.Draft });
+        if (s.OffseasonStep == OffseasonStep.FreeAgency) return ProDraft.AutoScout(ProDraft.AutoUntilUser(ProCpu.Manage(s.AutoManageFreeAgency?ProFreeAgencyAssistance.Propose(s):s) with { OffseasonStep = OffseasonStep.Draft }));
         if (s.OffseasonStep == OffseasonStep.Draft)
         {
             if (ProDraft.Current(s) is not null) throw new InvalidOperationException("Finish all seven draft rounds first.");

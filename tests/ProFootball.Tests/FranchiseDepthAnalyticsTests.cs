@@ -9,7 +9,7 @@ public class FranchiseDepthAnalyticsTests
     {
         var s=ProDraft.Generate(New() with {Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.FreeAgency});
         var old=s.Scouting.ToArray();var combine=ProDraft.AutoScout(s with{OffseasonStep=OffseasonStep.Draft});
-        Assert.Equal(old.Length,combine.Scouting.Count);Assert.All(combine.Scouting,r=>Assert.InRange(r.Confidence,60,95));
+        Assert.Equal(old.Length,combine.Scouting.Count);Assert.All(combine.Scouting,r=>Assert.InRange(r.Confidence,r.Depth switch{ScoutDepth.Basic=>1,ScoutDepth.Priority=>50,_=>75},r.Depth switch{ScoutDepth.Basic=>49,ScoutDepth.Priority=>75,_=>95}));
         Assert.Contains(combine.Scouting,r=>r.Confidence>old.Single(o=>o.PlayerId==r.PlayerId&&o.Team==r.Team).Confidence);
         Assert.Equal(combine.Scouting,ProDraft.AutoScout(combine).Scouting);Assert.Equal(old,s.Scouting);
     }
@@ -18,8 +18,8 @@ public class FranchiseDepthAnalyticsTests
         var s=ProDraft.Generate(New() with{Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.Draft});var player=s.Prospects[0];var id=s.League.Teams.Single(t=>t.Name==s.UserTeam).Id;
         var weak=s with{Coaches=s.Coaches.Select(c=>c.TeamId==id?c with{Development=40}:c).ToList()};
         var strong=s with{Coaches=s.Coaches.Select(c=>c.TeamId==id?c with{Development=95}:c).ToList()};
-        Assert.True(ProScouting.Evaluate(strong,s.UserTeam,player).Confidence>ProScouting.Evaluate(weak,s.UserTeam,player).Confidence);
-        Assert.Equal(ProScouting.Evaluate(strong,s.UserTeam,player),ProScouting.Evaluate(strong,s.UserTeam,player));
+        Assert.True(ProScouting.Evaluate(strong,s.UserTeam,player,ScoutDepth.Priority,ScoutSource.User).Confidence>ProScouting.Evaluate(weak,s.UserTeam,player,ScoutDepth.Priority,ScoutSource.User).Confidence);
+        Assert.Equal(ProScouting.Evaluate(strong,s.UserTeam,player,ScoutDepth.Priority,ScoutSource.User),ProScouting.Evaluate(strong,s.UserTeam,player,ScoutDepth.Priority,ScoutSource.User));
     }
     [Fact] public void StaffDevelopmentIsOncePerPlayedSeasonAndLeavesContractsAlone()
     {

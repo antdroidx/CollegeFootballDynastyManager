@@ -11,11 +11,16 @@ public class ManagementRefinementTests
         Assert.All(tree.Where(x=>x.Round==1),x=>{Assert.NotEqual(1,x.HomeSeed);Assert.Equal(9,x.HomeSeed+x.AwaySeed);});
         Assert.Equal(2,tree.Count(x=>x.Round==2&&x.HomeSeed==1));Assert.All(tree.Where(x=>x.Round>=2),x=>Assert.Null(x.Away));
     }
-    [Fact] public void AutomaticScoutingIsBudgetedAndIdempotent()
+    [Fact] public void AutomaticScoutingUsesTieredDepthAndIsIdempotent()
     {
         var s=ProLeagueService.Create("Seattle Seahawks") with{Phase=ProPhase.Offseason,OffseasonStep=OffseasonStep.FreeAgency};s=ProDraft.Generate(s);
-        Assert.Equal(40,s.Scouting.Count(r=>r.Team==s.UserTeam));var next=ProDraft.AutoScout(s);Assert.Equal(s.Scouting,next.Scouting);
-        Assert.All(s.Scouting,r=>Assert.InRange(r.Confidence,60,95));
+        var reports=s.Scouting.Where(r=>r.Team==s.UserTeam&&r.Year==s.Year).ToList();
+        Assert.Equal(s.Prospects.Count,reports.Select(r=>r.PlayerId).Distinct().Count());
+        var basic=reports.Where(r=>r.Depth==ScoutDepth.Basic).ToList();
+        var deep=reports.Where(r=>r.Depth!=ScoutDepth.Basic).ToList();
+        Assert.All(basic,r=>Assert.InRange(r.Confidence,1,49));
+        Assert.All(deep,r=>Assert.InRange(r.Confidence,50,95));
+        var next=ProDraft.AutoScout(s);Assert.Equal(s.Scouting,next.Scouting);Assert.Equal(s.ScoutTargets,next.ScoutTargets);
     }
     [Fact] public void RookieSourceCoverageKeepsCurrentCapAndMarksEstimatedFuture()
     {
