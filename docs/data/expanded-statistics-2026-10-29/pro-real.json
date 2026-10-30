@@ -1,5 +1,12 @@
 {
   "Mode": "pro-real",
+  "RosterBackedTeams": 32,
+  "PassBlockWinPct": 91.25750941859282,
+  "RunBlockWinPct": 60.68202764976959,
+  "PressureDropbackPct": 26.300784034212402,
+  "TrackedOL": 160,
+  "Targets": 8292,
+  "CoverageTargets": 8292,
   "BaselinePacing": false,
   "Games": 128,
   "TeamGames": 256,
