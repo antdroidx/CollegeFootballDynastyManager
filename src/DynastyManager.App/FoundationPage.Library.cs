@@ -13,7 +13,7 @@ public sealed partial class FoundationPage
 
     private View BuildLibrarySection()
     {
-        var options = new Button { Text = "Options", AutomationId = "startup-options" };
+        var options = new Button { Text = "Settings", AutomationId = "startup-options" };
         options.Clicked += async (_, _) => await ShowStartupOptionsAsync();
         var create = new Button { Text = "New dynasty", BackgroundColor = DynastyTheme.Accent,
             TextColor = DynastyTheme.Background, HorizontalOptions = LayoutOptions.End };
