@@ -136,6 +136,7 @@ public static partial class GameDayEngine
                 : null;
             var kick = new GameSnapEvent
             {
+                StatsVersion = 1,
                 Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
                 Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
                 OffenseTeamName = offense.TeamName, DefenseTeamName = defense.TeamName,
@@ -194,10 +195,11 @@ public static partial class GameDayEngine
         advantage += GameDayMatchupService.PersonnelAdvantage(offensePlayers, defensePlayers, isPass);
         if (!session.Game.IsNeutralSite)
             advantage += homeOnOffense ? HomeFieldRatingBonus : -HomeFieldRatingBonus;
-        var read = isPass ? PassingReadService.Read(call.Offense, call.Defense, offensePlayers, defensePlayers, qb,
+        var dropback = calledPass && !designedKeep;
+        var read = dropback ? PassingReadService.Read(call.Offense, call.Defense, offensePlayers, defensePlayers, qb,
             offense.OffensiveCoordinatorGameManagement, session.Random) : new PassingRead(null, null, 0, 0, 2, 0, 0);
         var turnover = session.Random.NextDouble() < (isPass ? read.InterceptionChance : Math.Clamp(.025 - advantage * .0008 + GameWeatherService.FumblePenalty(session.Weather), .008, .075));
-        var sack = isPass && read.RusherCount > 0 && !turnover && session.Random.NextDouble() < Math.Clamp(.065 - read.Protection * .0018 + (read.ReleaseSeconds - 2) * .015, .015, .18);
+        var sack = isPass && read.Blocking.PressureRushers.Count > 0 && !turnover && session.Random.NextDouble() < .24;
         var hailMary = call.Offense.Name == "Hail Mary";
         var complete = isPass && read.Target is not null && !turnover && !sack && session.Random.NextDouble() <
             Math.Clamp(read.CatchChance - .055 + advantage * .0015 - (hailMary ? read.Separation < 2 ? .18 : .05 : 0) -
@@ -207,11 +209,15 @@ public static partial class GameDayEngine
             var floor = Math.Floor(expected);
             return (int)floor + (session.Random.NextDouble() < expected - floor ? 1 : 0);
         }
+        var runner = isPass ? null : scramble || designedKeep ? qb : BackfieldRoles.Runner(call.Offense,offensePlayers,session.Random) ?? qb;
+        var runBlocking = !dropback ? BlockMatchupService.Resolve(offensePlayers.Where(p=>p.PlayerId!=runner?.PlayerId && p.Position is Position.OL or Position.TE or Position.FB).ToArray(),
+            defensePlayers.Where(p=>p.Position is Position.DE or Position.DT or Position.MLB or Position.OLB).ToArray(),0,false,session.Random) : new BlockingResolution([],[],null,null);
+        if(!dropback && runBlocking.Blocks.Count>0) advantage += (runBlocking.Blocks.Count(b=>b.Won)/(double)runBlocking.Blocks.Count-.64)*5;
         var yards = turnover ? 0 : sack ? -session.Random.Next(3, 11) : scramble
             ? Math.Max(-3, RoundYards(session.Random.Next(-1, 10) + (mobility - 65) * .10))
             : isPass ? 0 : Math.Max(-4, RoundYards(session.Random.Next(-2, 11) + advantage * .09 + session.Rules.RunGainOffset));
 
-        var carrier = isPass ? null : scramble || designedKeep ? qb : BackfieldRoles.Runner(call.Offense, offensePlayers, session.Random) ?? qb;
+        var carrier = runner;
         var target = isPass ? read.Target : null;
         var gain = complete ? ReceivingGainService.Resolve(call.Offense, target!, read.Defender,
             read.Separation, advantage, session.YardLine, session.Random) : new ReceivingGain(0, 0);
@@ -244,7 +250,7 @@ public static partial class GameDayEngine
         else if (designedKeep && call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase)) carrierLane = .25;
         var pursuit = DefensivePursuitService.Select(defensePlayers, call.Defense, yards, carrierLane,
             isPass, sack, gain.AirYards, read.ReleaseSeconds, read.Defender?.PlayerId, read.Separation, session.Random);
-        var defender = isPass && (turnover || !complete && !sack) ? read.Defender : pursuit.Tackler;
+        var defender = sack && read.Blocking.LeadingRusherId is Guid rusher ? session.PlayersById[rusher] : isPass && (turnover || !complete && !sack) ? read.Defender : pursuit.Tackler;
         var start = session.YardLine;
         var touchdown = !turnover && start + yards >= 100;
         var outcome = turnover ? isPass ? SnapOutcome.Interception : SnapOutcome.Fumble :
@@ -259,13 +265,15 @@ public static partial class GameDayEngine
             DefensiveCallSource = string.IsNullOrWhiteSpace(userDefensivePlayId) ? PlayCallSource.Cpu : PlayCallSource.User,
             Down = session.Down, Distance = session.Distance, StartYardLine = start,
             BallEndYardLine = Math.Clamp(start + yards, 0, 100), Yards = yards, Outcome = outcome,
-            CarrierLane = carrierLane, TackleAttemptIds = pursuit.AttemptIds,
+            CarrierLane = carrierLane, TackleAttemptIds = sack && defender is not null ? [defender.PlayerId] : pursuit.AttemptIds,
             AirYards = complete ? gain.AirYards : 0, YardsAfterCatch = complete ? gain.YardsAfterCatch : 0,
             PreSnapSeconds = session.LastPreSnapSeconds, LiveBallSeconds = liveSeconds,
             PassReleaseProgress = Math.Clamp(read.ReleaseSeconds / 5, .3, .75), TargetSeparation = read.Separation,
             IsDrop = isPass && !complete && !turnover && !sack && read.Separation >= 2 && session.Random.NextDouble() < .18,
             BrokeTackle = brokeTackle || complete && gain.BrokeTackle, IsQuarterbackScramble = scramble, IsQuarterbackKeep = designedKeep,
             IsBootleg = call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase),
+            StatsVersion = 1, Blocks = dropback ? read.Blocking.Blocks : runBlocking.Blocks, PressureRushers = dropback ? read.Blocking.PressureRushers : [],
+            IsDropback = dropback, SackBlockerId = sack ? read.Blocking.SackBlockerId : null, CoverageDefenderId = isPass ? read.Defender?.PlayerId : null,
             FullbackId = offensePlayers.FirstOrDefault(p=>p.Position==Position.FB)?.PlayerId,
             QuarterbackId = qb?.PlayerId, BallCarrierId = carrier?.PlayerId, TargetId = target?.PlayerId,
             PrimaryDefenderId = defender?.PlayerId, OffensePersonnel = offensePersonnel.PlayerIds,
@@ -338,7 +346,7 @@ public static partial class GameDayEngine
             var touchdown = group.Any(item => item.Outcome == SnapOutcome.Touchdown);
             var fieldGoal = group.Any(item => item.Outcome == SnapOutcome.FieldGoal);
             var scrimmage = group.Where(IsScrimmage).ToArray();
-            bool IsPass(GameSnapEvent item) => !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
+            bool IsPass(GameSnapEvent item) => item.Outcome==SnapOutcome.Spike || !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
                 ConceptOf(session, item) is
                     OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
             var points = group.Where(item => !item.DefensiveScore).Sum(item => item.Outcome == SnapOutcome.Touchdown ? 6 : item.Outcome == SnapOutcome.FieldGoal ? 3 : item.Points);
@@ -365,6 +373,7 @@ public static partial class GameDayEngine
             var player = session.Roster.First(item => item.PlayerId == id);
             return new PlayerSeasonStatLine { SeasonYear = session.Game.SeasonYear, PlayerId = id,
                 PlayerName = player.FullName, TeamName = player.TeamName, Position = player.Position,
+                TrackedGames = session.Events.Any(e=>e.StatsVersion>0)?1:0,
                 OriginalRecruitingStars = player.OriginalRecruitingStars, RecruitingStarsEstimated = player.RecruitingStarsEstimated, HeightInches = player.HeightInches, WeightPounds = player.WeightPounds, Appearance = player.Appearance, JerseyNumber = player.JerseyNumber, Games = 1 };
         }
         void Save(PlayerSeasonStatLine line) => lines[line.PlayerId] = line;
@@ -372,6 +381,7 @@ public static partial class GameDayEngine
         {
             foreach (var id in snap.OffensePersonnel.Concat(snap.DefensePersonnel).Distinct())
                 if (session.PlayersById.ContainsKey(id)) Save(Line(id));
+            DetailedPlayerStatistics.Record(snap,session,Line,Save);
             if (snap.Outcome == SnapOutcome.Kickoff)
             {
                 if (snap.ReturnerId is Guid kickoffReturnerId)
@@ -387,7 +397,7 @@ public static partial class GameDayEngine
             }
             if (snap.Outcome == SnapOutcome.Punt)
             {
-                if (snap.ReturnerId is Guid puntReturnerId && snap.ReturnYards > 0)
+                if (snap.ReturnerId is Guid puntReturnerId && !snap.IsFairCatch && !snap.IsTouchback)
                 {
                     var returner = Line(puntReturnerId);
                     Save(returner with { PuntReturns = returner.PuntReturns + 1,
@@ -398,7 +408,7 @@ public static partial class GameDayEngine
             }
             if (!IsScrimmage(snap)) continue;
             var concept = ConceptOf(session, snap);
-            var pass = !snap.IsQuarterbackKeep && !snap.IsQuarterbackScramble && snap.Outcome != SnapOutcome.Scramble &&
+            var pass = snap.Outcome==SnapOutcome.Spike || !snap.IsQuarterbackKeep && !snap.IsQuarterbackScramble && snap.Outcome != SnapOutcome.Scramble &&
                 concept is OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass;
             if (snap.QuarterbackId is Guid qbId)
             {
@@ -502,7 +512,7 @@ public static partial class GameDayEngine
         var puntReturns = session.Events.Where(item => item.Outcome == SnapOutcome.Punt &&
             item.DefenseTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) && item.ReturnYards > 0).ToArray();
         var scrimmage = snaps.Where(IsScrimmage).ToArray();
-        var passes = scrimmage.Where(item => !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
+        var passes = scrimmage.Where(item => item.Outcome==SnapOutcome.Spike || !item.IsQuarterbackKeep && !item.IsQuarterbackScramble && item.Outcome != SnapOutcome.Scramble &&
             ConceptOf(session, item) is
             OffensiveConcept.QuickPass or OffensiveConcept.PlayAction or OffensiveConcept.DeepPass).ToArray();
         var runs = scrimmage.Except(passes).Concat(passes.Where(item => item.Outcome == SnapOutcome.Sack && session.Rules.SacksCountAsRushing)).ToArray();
@@ -659,6 +669,7 @@ public static partial class GameDayEngine
         var coverageTackler = CoverageTackler(coverageUnit, kicker, kickoffRandom);
         var kickoff = new GameSnapEvent
         {
+            StatsVersion = 1,
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
             OffenseTeamName = session.PossessionTeamName, DefenseTeamName = session.KickoffTeamName,

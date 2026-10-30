@@ -14,6 +14,45 @@ public sealed record PlayerSeasonStatLine
     public NcaaPlayerAppearance? Appearance { get; init; }
     public Position Position { get; init; }
     public int Games { get; init; }
+    public int TrackedGames { get; init; }
+    public int OffensiveSnaps { get; init; }
+    public int DefensiveSnaps { get; init; }
+    public int SpecialTeamsSnaps { get; init; }
+    public int PassBlockSnaps { get; init; }
+    public int RunBlockSnaps { get; init; }
+    public int PassBlockWins { get; init; }
+    public int RunBlockWins { get; init; }
+    public int PressuresAllowed { get; init; }
+    public int SacksAllowed { get; init; }
+    public int Dropbacks { get; init; }
+    public int PressuredDropbacks { get; init; }
+    public int TimesSacked { get; init; }
+    public int SackYardsLost { get; init; }
+    public int Targets { get; init; }
+    public int TrackedReceptions { get; init; }
+    public int LongestPass { get; init; }
+    public int BrokenTackles { get; init; }
+    public int LongestRush { get; init; }
+    public int LongestReception { get; init; }
+    public int DefensivePressures { get; init; }
+    public int ForcedFumbles { get; init; }
+    public int CoverageTargets { get; init; }
+    public int CoverageReceptions { get; init; }
+    public int CoverageYards { get; init; }
+    public int Penalties { get; init; }
+    public int PenaltyYards { get; init; }
+    public int LongFieldGoal { get; init; }
+    public int FieldGoalsMadeUnder40 { get; init; }
+    public int FieldGoalsAttemptedUnder40 { get; init; }
+    public int FieldGoalsMade40To49 { get; init; }
+    public int FieldGoalsAttempted40To49 { get; init; }
+    public int FieldGoalsMade50Plus { get; init; }
+    public int FieldGoalsAttempted50Plus { get; init; }
+    public int PuntTouchbacks { get; init; }
+    public int TrackedPunts { get; init; }
+    public int NetPuntYards { get; init; }
+    public int FairCatches { get; init; }
+
     public int PassAttempts { get; init; }
     public int PassCompletions { get; init; }
     public int PassYards { get; init; }

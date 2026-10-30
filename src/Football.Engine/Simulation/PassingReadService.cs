@@ -5,6 +5,7 @@ namespace DynastyManager.Core.Simulation;
 public sealed record PassingRead(DynastyPlayer? Target, DynastyPlayer? Defender, double Separation,
     double Protection, double ReleaseSeconds, double CatchChance, double InterceptionChance)
 {
+    public BlockingResolution Blocking {get;init;} = new([],[],null,null);
     public int RusherCount { get; init; }
 }
 
@@ -61,7 +62,7 @@ public static class PassingReadService
             var separation = Math.Clamp(.9 + (routeAbility - defenderAbility) * .045 + leverage + spacing + random.NextDouble() * 1.4, .1, 4.5);
             return (Receiver: receiver, Defender: defender, Separation: separation, Role: role);
         }).OrderByDescending(r => r.Separation).ToArray();
-        if (reads.Length == 0) return new(null, coverage.FirstOrDefault(), 0, protection, 2.5, .3, .04) { RusherCount = rushers.Length };
+        if (reads.Length == 0) return new(null, coverage.FirstOrDefault(), 0, protection, 2.5, .3, .04) { RusherCount = rushers.Length, Blocking = BlockMatchupService.Resolve(blockers,rushers,2.5,true,random) };
         var awareness = quarterback?.AwarenessRating ?? 60;
         var readIndex = random.NextDouble() < Math.Clamp((awareness + coaching) / 220d, .35, .9) ? 0 : random.Next(reads.Length);
         var chosen = reads[readIndex];
@@ -72,6 +73,6 @@ public static class PassingReadService
         var catchChance = Math.Clamp(.36 + chosen.Separation * .10 + (accuracy - 60) * .004 + (hands - 60) * .002 + protection * .0015
             - (play.Concept == OffensiveConcept.DeepPass ? .17 : 0), .08, .88);
         return new(chosen.Receiver, chosen.Defender, chosen.Separation, protection, release, catchChance,
-            Math.Clamp(.045 - chosen.Separation * .009 + (65 - awareness) * .0004 - protection * .0002, .006, .09)) { RusherCount = rushers.Length };
+            Math.Clamp(.045 - chosen.Separation * .009 + (65 - awareness) * .0004 - protection * .0002, .006, .09)) { RusherCount = rushers.Length, Blocking = BlockMatchupService.Resolve(blockers,rushers,release,true,random) };
     }
 }

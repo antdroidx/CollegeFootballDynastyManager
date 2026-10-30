@@ -49,7 +49,7 @@ public sealed partial class FranchisePage
         var lines = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).SelectMany(g => g.Football.PlayerStats).Where(x => x.PlayerId == f.PlayerId).ToArray();
         await ShowPage("Player profile", identity, ReserveActivationControls(p), WaiverControls(p), Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Football.TeamName=="Free agent" ? "Free agent" : p.Reserve ? "Reserve" : "Active roster"), Text(ProReserve.Availability(state!,p)), Text($"Morale {p.Morale} · Playing {ProDepthChart.Label(ProDepthChart.AssignedCode(s,p))} · Depth {ProDepthChart.AtPosition(s,f.TeamName,ProDepthChart.AssignedCode(s,p)).ToList().FindIndex(x=>x.Football.PlayerId==f.PlayerId)+1} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
             ContractDetails(p,contract),
-            PlayerAnalytics(p), Panel("Regular season", Text($"Passing {lines.Sum(x => x.PassYards)} yd · {lines.Sum(x => x.PassingTouchdowns)} TD\nRushing {lines.Sum(x => x.RushYards)} yd · Receiving {lines.Sum(x => x.ReceivingYards)} yd\nTackles {lines.Sum(x => x.Tackles)} · Sacks {lines.Sum(x => x.Sacks)}")), actions);
+            PlayerAnalytics(p), DetailedStatsPanel(lines), actions);
     }
     View WaiverControls(ProPlayer p)
     {

@@ -10,6 +10,13 @@ public enum SnapOutcome
 
 public sealed record GameSnapEvent
 {
+    public int StatsVersion { get; init; }
+    public IReadOnlyList<BlockResult> Blocks { get; init; } = [];
+    public IReadOnlyList<Guid> PressureRushers { get; init; } = [];
+    public Guid? SackBlockerId { get; init; }
+    public Guid? CoverageDefenderId { get; init; }
+    public Guid? PenalizedPlayerId { get; init; }
+    public bool IsDropback { get; init; }
     public Guid? FullbackId { get; init; }
     public int? TurnoverYardLine { get; init; }
     public Guid? ReturnTacklerId { get; init; }

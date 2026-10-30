@@ -54,6 +54,7 @@ public static partial class GameDayEngine
         var defenseUnit = PlaceKickDefense(home ? session.AwayRoster : session.HomeRoster);
         var snap = new GameSnapEvent
         {
+            StatsVersion = 1,
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds,
             OffenseTeamName = session.PossessionTeamName, DefenseTeamName = home ? session.Game.AwayTeamName : session.Game.HomeTeamName,
@@ -84,6 +85,7 @@ public static partial class GameDayEngine
         var qb = offense.PlayerIds.Select(id=>session.PlayersById[id]).FirstOrDefault(p=>p.Position==Position.QB);
         var snap = new GameSnapEvent
         {
+            StatsVersion = 1,
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber, Quarter = session.Quarter,
             ClockSeconds = session.ClockSeconds, OffenseTeamName = session.PossessionTeamName,
             DefenseTeamName = home ? session.Game.AwayTeamName : session.Game.HomeTeamName,
@@ -108,6 +110,7 @@ public static partial class GameDayEngine
         var receiving = session.PossessionTeamName;
         var snap = new GameSnapEvent
         {
+            StatsVersion = 1,
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds, OffenseTeamName = receiving,
             DefenseTeamName = kicking, OffensivePlayId = "", DefensivePlayId = "", Outcome = SnapOutcome.Kickoff,
@@ -133,8 +136,12 @@ public static partial class GameDayEngine
         var defenseTeam = session.PossessionTeamName == session.Game.HomeTeamName ? session.Game.AwayTeamName : session.Game.HomeTeamName;
         var penalizedTeam = offense ? session.PossessionTeamName : defenseTeam;
         var foul = offense ? "False start" : "Offside";
+        var candidates=(offense ? session.PossessionTeamName==session.Game.HomeTeamName?session.HomeRoster:session.AwayRoster : defenseTeam==session.Game.HomeTeamName?session.HomeRoster:session.AwayRoster)
+            .Where(p=>p.CurrentInjury is null&&!p.IsRedshirted&&(offense?p.Position==Position.OL:p.Position is Position.DE or Position.DT)).OrderBy(p=>p.DepthChartOrder).Take(5).ToArray();
+        var culprit=candidates.Length>0?candidates.OrderBy(p=>(p.Skills?.Discipline??60)+random.Next(0,30)).First().PlayerId:(Guid?)null;
         var snap = new GameSnapEvent
         {
+            StatsVersion = 1, PenalizedPlayerId = culprit,
             Sequence = session.Events.Count + 1, PossessionNumber = session.PossessionNumber,
             Quarter = session.Quarter, ClockSeconds = session.ClockSeconds, OffenseTeamName = session.PossessionTeamName,
             DefenseTeamName = defenseTeam,

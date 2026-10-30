@@ -332,30 +332,7 @@ public static class DynastyHistoryService
         return result;
     }
 
-    private static PlayerSeasonStatLine Sum(PlayerSeasonStatLine a, PlayerSeasonStatLine b) => a with
-    {
-        Games = a.Games + b.Games, PassAttempts = a.PassAttempts + b.PassAttempts,
-        PassCompletions = a.PassCompletions + b.PassCompletions, PassYards = a.PassYards + b.PassYards,
-        PassingTouchdowns = a.PassingTouchdowns + b.PassingTouchdowns, InterceptionsThrown = a.InterceptionsThrown + b.InterceptionsThrown,
-        RushAttempts = a.RushAttempts + b.RushAttempts, RushYards = a.RushYards + b.RushYards,
-        RushingTouchdowns = a.RushingTouchdowns + b.RushingTouchdowns, RushingFumbles = a.RushingFumbles + b.RushingFumbles,
-        Rushing20Plus = a.Rushing20Plus + b.Rushing20Plus, Receptions = a.Receptions + b.Receptions,
-        ReceivingYards = a.ReceivingYards + b.ReceivingYards, ReceivingTouchdowns = a.ReceivingTouchdowns + b.ReceivingTouchdowns,
-        YardsAfterCatch = a.YardsAfterCatch + b.YardsAfterCatch, Drops = a.Drops + b.Drops,
-        ReceivingFumbles = a.ReceivingFumbles + b.ReceivingFumbles, Receiving20Plus = a.Receiving20Plus + b.Receiving20Plus,
-        Tackles = a.Tackles + b.Tackles, TacklesForLoss = a.TacklesForLoss + b.TacklesForLoss,
-        Sacks = a.Sacks + b.Sacks, PassesDefended = a.PassesDefended + b.PassesDefended,
-        DefensiveReturnYards = a.DefensiveReturnYards + b.DefensiveReturnYards, DefensiveTouchdowns = a.DefensiveTouchdowns + b.DefensiveTouchdowns,
-        Interceptions = a.Interceptions + b.Interceptions, FumbleRecoveries = a.FumbleRecoveries + b.FumbleRecoveries,
-        ExtraPointsMade = a.ExtraPointsMade + b.ExtraPointsMade, ExtraPointsAttempted = a.ExtraPointsAttempted + b.ExtraPointsAttempted,
-        FieldGoalsMade = a.FieldGoalsMade + b.FieldGoalsMade, FieldGoalsAttempted = a.FieldGoalsAttempted + b.FieldGoalsAttempted,
-        Punts = a.Punts + b.Punts, PuntYards = a.PuntYards + b.PuntYards, LongPunt = Math.Max(a.LongPunt, b.LongPunt),
-        PuntsInside20 = a.PuntsInside20 + b.PuntsInside20, PuntsInside10 = a.PuntsInside10 + b.PuntsInside10,
-        KickReturns = a.KickReturns + b.KickReturns, KickReturnYards = a.KickReturnYards + b.KickReturnYards,
-        KickReturnTouchdowns = a.KickReturnTouchdowns + b.KickReturnTouchdowns, PuntReturns = a.PuntReturns + b.PuntReturns,
-        PuntReturnYards = a.PuntReturnYards + b.PuntReturnYards, PuntReturnTouchdowns = a.PuntReturnTouchdowns + b.PuntReturnTouchdowns,
-        Touchdowns = a.Touchdowns + b.Touchdowns, Turnovers = a.Turnovers + b.Turnovers
-    };
+    private static PlayerSeasonStatLine Sum(PlayerSeasonStatLine a,PlayerSeasonStatLine b) => PlayerStatTotals.Add(a,b);
 
     private static GameTeamStats? GetOpponentStats(ScheduledGame game, string teamName) =>
         game.HomeTeamName.Equals(teamName, StringComparison.OrdinalIgnoreCase) ? game.AwayStats : game.HomeStats;

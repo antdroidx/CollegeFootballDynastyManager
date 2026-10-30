@@ -87,7 +87,7 @@ public static class GameCastBoxScore
         teamHost.Children.Add(SectionTitle("Team comparison","Recorded snaps in this game · sacks count toward rushing losses"));
         teamHost.Children.Add(DataTable([("Statistic",160),(box.AwayTeamName,98),(box.HomeTeamName,98)],totals));
         var team = new Picker {Title="Team",ItemsSource=new[]{"Both teams",box.AwayTeamName,box.HomeTeamName},SelectedIndex=0};
-        var category = new Picker {Title="Statistics",ItemsSource=new[]{"Passing","Rushing","Receiving","Defense","Kicking","Punting","Returns"},SelectedIndex=0};
+        var category = new Picker {Title="Statistics",ItemsSource=PlayerStatCatalog.Categories,SelectedIndex=0};
         var filters = new Grid {ColumnSpacing=10,ColumnDefinitions=new ColumnDefinitionCollection{new(GridLength.Star),new(GridLength.Star)}};
         filters.Add(team,0,0);filters.Add(category,1,0);
         var defenseLegend = new Label { Text = "PBU = passes broken up / defended · INT = interceptions · FR = fumble recoveries", FontSize = 11, TextColor = DynastyTheme.Muted, IsVisible = false };
@@ -109,7 +109,7 @@ public static class GameCastBoxScore
             defenseLegend.IsVisible = selected == "Defense";
             var lines=box.Players.Where(p=>(team.SelectedIndex==0||p.TeamName==team.SelectedItem?.ToString())&&CategoryEligible(p,selected)).ToArray();
             if(lines.Length==0) {players.Content=new Label {Text="No recorded statistics in this category yet.",TextColor=DynastyTheme.Muted};return;}
-            var columns=CategoryColumns(selected);var keep=Enumerable.Range(0,columns.Length).Where(i=>columns[i].Title is not ("GP" or "YPG")).ToArray();
+            var columns=CategoryColumns(selected);var keep=Enumerable.Range(0,columns.Length).Where(i=>columns[i].Title is not ("GP" or "Tracked GP" or "YPG")).ToArray();
             var rows=lines.Select(line=> {var cells=CategoryCells(line,selected);cells[0]=TableText(line.PlayerName);cells[1]=TableText(style.Abbreviation(line.TeamName));return keep.Select(i=>cells[i]).ToArray();}).ToArray();
             players.Content=DataTable(keep.Select(i=>columns[i].Title=="School"?("School",85d):columns[i]).ToArray(),rows);
         }
