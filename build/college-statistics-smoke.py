@@ -2,7 +2,10 @@
 from pathlib import Path
 exec(compile(Path(__file__).with_name("college-phase-smoke.py").read_text(encoding="utf-8").split("\ntry:\n")[0],"college-statistics-base","exec"),globals())
 def choose(control,label):
-    root=s.scroll_to_text("college-stat-picker","Player statistics",max_swipes=20,toward_start=True);s.tap_id(root,control);click("choice-"+label,label)
+    root=s.scroll_to_text("college-stat-picker","Player statistics",max_swipes=20,toward_start=True);s.tap_id(root,control)
+    try: root=s.scroll_to_text("college-stat-choice-"+label,label,max_swipes=12)
+    except AssertionError: root=s.scroll_to_text("college-stat-choice-up-"+label,label,max_swipes=20,toward_start=True)
+    s.tap(root,label)
     return ready(label,lambda r:label in s.texts(r))
 try:
     ready("library",lambda r:"New dynasty" in s.texts(r));click("new","New dynasty");root=s.scroll_to_text("college-stat-school-picker","Choose your team",max_swipes=20);s.tap(root,"Choose your team");click("school","Air Force");root=s.scroll_to_text("college-stat-start","Start dynasty",max_swipes=20);s.tap(root,"Start dynasty")
