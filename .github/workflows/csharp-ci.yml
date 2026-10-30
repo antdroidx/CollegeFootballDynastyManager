@@ -24,6 +24,14 @@ on:
         type: choice
         options: [statistics, full, fast-forward, generated-roster]
         default: full
+      reuse_apk_run_id:
+        description: Prior APK run for harness-only retries; application input differences reject reuse
+        type: string
+        default: ''
+      reuse_apk_artifact:
+        description: Exact prior dynasty-manager-build artifact name
+        type: string
+        default: ''
       run_emulator:
         description: Run Android launch validation after uploading the APK
         type: boolean
@@ -46,6 +54,7 @@ concurrency:
 
 jobs:
   build-test-android:
+    if: inputs.reuse_apk_run_id == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 60
 
@@ -171,18 +180,35 @@ jobs:
 
   android-launch:
     needs: build-test-android
-    if: github.event_name == 'workflow_dispatch' && inputs.run_emulator
+    if: github.event_name == 'workflow_dispatch' && inputs.run_emulator && always() && !cancelled() && (needs.build-test-android.result == 'success' || inputs.reuse_apk_run_id != '')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - name: Checkout UI smoke test
         uses: actions/checkout@v4
 
+      - name: Verify reused College APK application inputs
+        if: inputs.reuse_apk_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APK_RUN_ID: ${{ inputs.reuse_apk_run_id }}
+          APK_ARTIFACT: ${{ inputs.reuse_apk_artifact }}
+        run: |
+          [[ "$APK_RUN_ID" =~ ^[0-9]+$ ]] || exit 1
+          [[ "$APK_ARTIFACT" =~ ^dynasty-manager-build-[0-9]+$ ]] || exit 1
+          source_sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$APK_RUN_ID" --jq '.head_sha')
+          git fetch --no-tags origin "$source_sha" --depth=1
+          git diff --exit-code "$source_sha" HEAD -- src/DynastyManager.App src/DynastyManager.Data src/Football.Engine src/Football.Presentation Directory.Build.props Directory.Build.targets Directory.Packages.props global.json NuGet.Config build/keys
+      - name: Test changed synchronization helpers
+        if: inputs.reuse_apk_run_id != ''
+        run: python3 -m unittest discover -s build -p 'test_android_ui_smoke.py'
       - name: Download built APK
         uses: actions/download-artifact@v4
         with:
-          name: dynasty-manager-build-${{ github.run_number }}
+          name: ${{ inputs.reuse_apk_artifact || format('dynasty-manager-build-{0}', github.run_number) }}
           path: apk
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.reuse_apk_run_id || github.run_id }}
 
       - name: Select APK
         shell: bash
