@@ -6,7 +6,7 @@ College406 run40990391150 passes721 combined Core/College cases,16 helpers, pack
 
 HB/FB roles, optional TE/HB substitutes, lead blocking, intended handoffs/FB screens and safe numeric-ID/old-save identity migrations are implemented. Pro PS UI/actions/CPU fills retired; default new games and every normal load release legacy PS players through existing obligations accounting, preserve IR and active negotiated contracts, and clear stale squad labels. Historical source-accounting fixtures explicitly retain their legacy basis; new default-path tests and native migration verify the new model independently. Three-season real/generated Pro audits each816 regular games show zero PS throughout and zero invalid sampled units; source-cap-constrained active counts are reported honestly in docs/backfield-roster-update.md. Scoped sampling remains~63 plays/team. No stored roster seed added.
 
-Permanent prerelease publication target: https://github.com/antdroidx/Football-Sim-Engine/releases/tag/preview-2026-10-29-backfield . Exact signed APKs/checksums/manifest prepared; no private evidence archive will be published. Source, audit methods and actual scope: docs/backfield-roster-update.md.
+Published permanent prerelease: https://github.com/antdroidx/Football-Sim-Engine/releases/tag/preview-2026-10-29-backfield . Exact signed APKs, checksums and manifest are uploaded; GitHub SHA-256 asset digests match the downloaded/tested bytes. No private evidence archive was published. Source, audit methods and actual scope: docs/backfield-roster-update.md.
 
 ## Accepted Pro106 / College404 — Pro pacing reduction
 
