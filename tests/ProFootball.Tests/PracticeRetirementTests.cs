@@ -19,6 +19,7 @@ public class PracticeRetirementTests
             Assert.True(migrated.PracticeSquadRemoved);Assert.Equal(0,migrated.League.PracticeSquadLimit);
             Assert.DoesNotContain(migrated.Players,p=>p.PracticeSquad);
             Assert.All(s.Players.Where(p=>p.PracticeSquad&&!p.Reserve&&!p.Retired),p=>Assert.Equal("Free agent",migrated.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId).Football.TeamName));
+            Assert.Equal("FA",migrated.Players.Single(x=>x.Football.PlayerId==ps.Football.PlayerId).RosterStatus);
             Assert.Equal(reserves,migrated.Players.Where(p=>p.Reserve));
             Assert.All(active,c=>Assert.Equal(JsonSerializer.Serialize(c),JsonSerializer.Serialize(migrated.Contracts.Single(x=>x.PlayerId==c.PlayerId&&x.Team==c.Team&&x.Active==c.Active&&x.SignedYear==c.SignedYear))));Assert.All(before,d=>Assert.Contains(d,migrated.DeadCap));
             Assert.Contains(migrated.DeadCap,d=>d.PlayerId==ps.Football.PlayerId&&d.Amount>0);
