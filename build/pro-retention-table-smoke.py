@@ -2,7 +2,7 @@
 from pathlib import Path
 exec(compile(Path(__file__).with_name("pro-staff-calendar-smoke.py").read_text(encoding="utf-8").split("\ntry:\n")[0],"shared-management-helpers","exec"),globals())
 def theme(value):
-    navigate("Overview");root=s.scroll_to_text("pro-retention-theme","Options",max_swipes=20,toward_start=True);s.tap(root,"Options");click("appearance","Appearance");click("theme",value)
+    navigate("Overview");root=s.scroll_to_text("pro-retention-theme","Settings",max_swipes=20,toward_start=True);s.tap(root,"Settings");click("appearance","Appearance");click("theme",value)
 try:
     fixture=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-inseason-ui-fixture.json.gz")).read_bytes()));load(fixture)
     for mode in ["Light","Dark"]:

@@ -19,6 +19,8 @@ public static class ProPlayerRatingService
     }
     public static ProFranchise Migrate(ProFranchise state)
     {
+        if(state.Players.Any(p=>!ReferenceEquals(p,ProBackfieldPositions.Correct(p)))||state.Prospects.Any(p=>!ReferenceEquals(p,ProBackfieldPositions.Correct(p))))
+            state=state with{Players=state.Players.Select(ProBackfieldPositions.Correct).ToList(),Prospects=state.Prospects.Select(ProBackfieldPositions.Correct).ToList()};
         bool NeedsFullback(ProPlayer p) => p.Football.Position==Position.RB && (p.Football.NcaaPositionCode==2 || FullbackIds.Value.Contains(p.ExternalId));
         ProPlayer Restore(ProPlayer p) => NeedsFullback(p) ? Refresh(p with {Football=p.Football with {Position=Position.FB,NcaaPositionCode=2}},true) : p;
         if(state.Players.Any(NeedsFullback)||state.Prospects.Any(NeedsFullback))

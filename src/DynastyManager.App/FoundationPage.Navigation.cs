@@ -8,7 +8,7 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
-    private readonly Button _settingsButton = new() { Text = "Settings", FontSize = 11, BackgroundColor = Colors.Transparent, Padding = new Thickness(7, 5) };
+    private readonly Button _settingsButton = new() { Text = "Settings", AutomationId="college-settings", FontSize = 11, BackgroundColor = Colors.Transparent, Padding = new Thickness(7, 5) };
     private readonly ContentView _overviewBanner = new();
     private readonly ContentView _overviewGameActions = new();
     private readonly VerticalStackLayout _seasonHub = new() { Spacing = 12 };
@@ -162,9 +162,9 @@ public sealed partial class FoundationPage
         _homeHighlights.Children.Add(dashboard);
         if (state.UserCoachIsFired || state.UserCoachJobOffers.Any(o => o.Status == UserCoachJobOfferStatus.Pending))
             _homeHighlights.Children.Add(NavigationCard(state.UserCoachIsFired ? "ACTION REQUIRED" : "COACHING CAROUSEL", "Review coaching offers", "Open Program & staff ›", "#643238", () => ShowSection(AppSection.Program)));
-        else if (state.Phase is SeasonPhase.TransferPortal or SeasonPhase.Recruiting or SeasonPhase.RosterManagement)
-            _homeHighlights.Children.Add(NavigationCard("OFFSEASON", PhaseLabel(state.Phase), "Review your roster and recruiting ›", "#4C432A",
-                () => ShowSection(state.Phase == SeasonPhase.RosterManagement ? AppSection.Roster : AppSection.Recruiting)));
+        else if (state.Phase is SeasonPhase.TransferPortal or SeasonPhase.Recruiting or SeasonPhase.RosterManagement or SeasonPhase.Offseason)
+            _homeHighlights.Children.Insert(0,NavigationCard("OFFSEASON", PhaseLabel(state.Phase), "Review your roster and recruiting ›", "#4C432A",
+                () => ShowSection(state.Phase is SeasonPhase.RosterManagement or SeasonPhase.Offseason ? AppSection.Roster : AppSection.Recruiting)));
         var all = new Button { Text = "News & headlines ›", TextColor = DynastyTheme.Palette("#E8C979"), BackgroundColor = Colors.Transparent };
         all.Clicked += (_, _) => ShowSection(AppSection.News);
         _homeHighlights.Children.Add(all);

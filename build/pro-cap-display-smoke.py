@@ -9,7 +9,7 @@ def cap(name,expected):
     s.capture("pro-cap-"+name);return root
 
 def appearance(choice):
-    navigate("Overview");root=s.scroll_to_text("cap-options","Options",max_swipes=20,toward_start=True);s.tap(root,"Options");click("appearance","Appearance");click("theme",choice)
+    navigate("Overview");root=s.scroll_to_text("cap-options","Settings",max_swipes=20,toward_start=True);s.tap(root,"Settings");click("appearance","Appearance");click("theme",choice)
 
 try:
     fixture=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-cap-display-ui-fixture.json.gz")).read_bytes()));load(fixture)
@@ -19,7 +19,7 @@ try:
     navigate("Overview");cap("overview","$0.50m over season cap");root=s.scroll_to_text("pro-cap-open-inbox","Open inbox",max_swipes=20,toward_start=True);s.tap(root,"Open inbox")
     root=ready("cap-inbox",lambda r:any("Over season salary cap" in (t or "") for t in s.texts(r)));assert any("Clear $500,000" in (t or "") for t in s.texts(root));assert not any("Opening-season cap" in (t or "") for t in s.texts(root));s.capture("pro-cap-inbox")
     appearance("Light");navigate("Front Office");cap("deficit-light","$0.50m over season cap")
-    navigate("Overview");root=s.scroll_to_text("cap-save-exit","‹ Exit",max_swipes=20,toward_start=True);s.tap(root,"‹ Exit");ready("saved-library",s.library_loaded)
+    navigate("Overview");s.exit_via_settings("pro");ready("saved-library",s.library_loaded)
     saved=json.loads(s.adb("exec-out","run-as",package,"cat","files/pro-franchises-v1/"+fixture["id"]+".json"));assert saved["contracts"]==fixture["contracts"] and saved["capRulesVersion"]==2
     positive=dict(saved);positive["salaryCap"]=80_000_000;positive["name"]="Synthetic positive cap QA";load(positive)
     navigate("Front Office");cap("positive","$2.00m season cap space")

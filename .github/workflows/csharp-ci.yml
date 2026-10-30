@@ -22,7 +22,7 @@ on:
       management_scope:
         description: Focus device and engine checks on the changed management flow
         type: choice
-        options: [statistics, full, fast-forward, generated-roster]
+        options: [overview-roster, statistics, full, fast-forward, generated-roster]
         default: full
       reuse_apk_run_id:
         description: Prior APK run for harness-only retries; application input differences reject reuse
@@ -101,7 +101,9 @@ jobs:
           MANAGEMENT_SCOPE: ${{ inputs.management_scope }}
           CFDM_CALIBRATION_REPORT_DIR: ${{ github.workspace }}/artifacts/calibration
         run: |
-          if [ "$MANAGEMENT_SCOPE" = "fast-forward" ]; then
+          if [ "$MANAGEMENT_SCOPE" = "overview-roster" ]; then
+            dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter 'FullyQualifiedName~PositionTests|FullyQualifiedName~FullbackRoleTests'
+          elif [ "$MANAGEMENT_SCOPE" = "fast-forward" ]; then
             dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter 'FullyQualifiedName~SeasonProgressionTests|FullyQualifiedName~DynastySaveRepositoryTests|FullyQualifiedName~CollegeSeasonFeatureTests'
           elif [ "$RUN_RATING_CALIBRATION" = "true" ]; then
             dotnet test tests/DynastyManager.Core.Tests/DynastyManager.Core.Tests.csproj -c Release --no-restore --filter '(FullyQualifiedName!~DynastyHealthTests|DisplayName~teamCount: 12)'
@@ -237,7 +239,7 @@ jobs:
             sleep 8
             adb logcat -d > android-logcat.txt
             adb shell pidof antdroid.cfbcoach.dev
-            python3 -u build/${{ inputs.management_scope == 'statistics' && 'college-statistics-smoke.py' || inputs.management_scope == 'generated-roster' && 'college-generated-roster-smoke.py' || inputs.management_scope == 'fast-forward' && 'college-phase-smoke.py' || 'android-ui-smoke.py' }} || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
+            python3 -u build/${{ inputs.management_scope == 'overview-roster' && 'college-overview-roster-smoke.py' || inputs.management_scope == 'statistics' && 'college-statistics-smoke.py' || inputs.management_scope == 'generated-roster' && 'college-generated-roster-smoke.py' || inputs.management_scope == 'fast-forward' && 'college-phase-smoke.py' || 'android-ui-smoke.py' }} || { adb logcat -d > android-logcat.txt; adb shell dumpsys activity lastanr > android-last-anr.txt; exit 1; }
 
       - name: Upload launch UI evidence
         if: always()
@@ -245,6 +247,8 @@ jobs:
         with:
           name: android-launch-ui-${{ github.run_number }}
           path: |
+            college-overview-roster-check.json
+            college-overview-roster-logcat.txt
             college-statistics-check.json
             college-statistics-logcat.txt
             college-generated-roster-check.json
@@ -262,6 +266,8 @@ jobs:
         with:
           name: android-launch-log
           path: |
+            college-overview-roster-check.json
+            college-overview-roster-logcat.txt
             college-statistics-check.json
             college-statistics-logcat.txt
             college-generated-roster-check.json
@@ -275,7 +281,7 @@ jobs:
 
   android-career-options:
     needs: build-test-android
-    if: inputs.management_scope != 'statistics' && inputs.management_scope != 'generated-roster' && inputs.management_scope != 'fast-forward' && github.event_name == 'workflow_dispatch' && inputs.run_emulator
+    if: inputs.management_scope != 'overview-roster' && inputs.management_scope != 'statistics' && inputs.management_scope != 'generated-roster' && inputs.management_scope != 'fast-forward' && github.event_name == 'workflow_dispatch' && inputs.run_emulator
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -334,6 +340,8 @@ jobs:
         with:
           name: android-career-options-log-${{ github.run_number }}
           path: |
+            college-overview-roster-check.json
+            college-overview-roster-logcat.txt
             college-statistics-check.json
             college-statistics-logcat.txt
             college-generated-roster-check.json

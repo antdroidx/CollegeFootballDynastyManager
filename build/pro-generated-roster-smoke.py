@@ -11,7 +11,7 @@ def create(index):
     before=saves();click("start","Start franchise");ready("overview",s.pro_overview_loaded);after=saves();id=next(id for id in after if id not in before);return after[id]
 try:
     ready("library",s.library_loaded);a=create(1)
-    root=s.scroll_to_text("pro-generated-exit","‹ Exit",max_swipes=20,toward_start=True);s.tap(root,"‹ Exit");ready("library-return",s.library_loaded);b=create(2)
+    s.exit_via_settings("pro");ready("library-return",s.library_loaded);b=create(2)
     assert a["fictionalPlayers"] and b["fictionalPlayers"]
     assert not {p["football"]["playerId"] for p in a["players"]}&{p["football"]["playerId"] for p in b["players"]}
     assert [p["football"]["fullName"] for p in a["players"]]!=[p["football"]["fullName"] for p in b["players"]]

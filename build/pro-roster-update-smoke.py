@@ -33,6 +33,6 @@ try:
     fixture=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-compensatory-ui-fixture.json.gz")).read_bytes()));load(fixture)
     navigate("Front Office");click("awarded-picks","Draft picks");root=ready("pick-year",lambda r:"Draft picks" in s.texts(r));assert "2027" in s.texts(root)
     root=s.scroll_to_text("awards-summary","5 compensatory picks awarded. These selections are included in the draft and can be traded.",max_swipes=15);assert "5 compensatory picks awarded" in " ".join(s.texts(root));s.capture("pro-roster-update-awards")
-    navigate("Overview");click("save-exit","‹ Exit");ready("reload-library",s.library_loaded)
+    navigate("Overview");s.exit_via_settings("pro");ready("reload-library",s.library_loaded)
     Path("pro-roster-update-check.json").write_text(json.dumps({"allFutureOwnershipRights":True,"reservedConditionalRightsVisible":True,"offseasonDraftYearDefault":True,"actualNewSeattleFranchise":True,"nelsonAndBucknerOwnership":True,"buyerContractsAndSellerPickCompensation":True,"nelsonVisibleInRoster":True,"projectionsNotTradable":True,"synthetic2027AwardsVisible":True,"saveExit":True},indent=2),encoding="utf-8")
 finally:Path("pro-roster-update-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1200"))

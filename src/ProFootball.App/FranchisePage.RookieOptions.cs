@@ -7,7 +7,7 @@ public sealed partial class FranchisePage
     async Task RookieOptions()
     {
         state=ProRookieOptions.Prepare(state!);await Save();var s=state!;
-        body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Rookie fifth-year options",25,true));
+        body.Clear();body.Add(Action(state!.Phase==ProPhase.Offseason?"‹ Current offseason stage":"‹ Front Office",()=>Open(state!.Phase==ProPhase.Offseason?"Offseason":"Front Office")));body.Add(Text("Rookie fifth-year options",25,true));
         body.Add(Text("First-round deals last four seasons. Decide after season three, through the following draft. Exercising guarantees the fourth-year salary and the full fifth-year salary.",12));
         var auto=new Switch{IsToggled=s.AutoManageRookieOptions};
         auto.Toggled+=async(_,e)=>{state=state! with{AutoManageRookieOptions=e.Value};await Save();};

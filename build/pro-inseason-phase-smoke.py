@@ -3,7 +3,7 @@ from pathlib import Path
 exec(compile(Path(__file__).with_name("pro-staff-calendar-smoke.py").read_text(encoding="utf-8").split("\ntry:\n")[0],"shared-management-helpers","exec"),globals())
 def read(f):return json.loads(s.adb("exec-out","run-as",package,"cat","files/pro-franchises-v1/"+f["id"]+".json"))
 def theme(value):
-    navigate("Overview");root=s.scroll_to_text("pro-phase-options","Options",max_swipes=20,toward_start=True);s.tap(root,"Options");click("appearance","Appearance");click("theme",value)
+    navigate("Overview");root=s.scroll_to_text("pro-phase-options","Settings",max_swipes=20,toward_start=True);s.tap(root,"Settings");click("appearance","Appearance");click("theme",value)
 try:
     fixture=json.loads(gzip.decompress(next(Path("apk").glob("**/pro-staff-inseason-ui-fixture.json.gz")).read_bytes()));load(fixture)
     theme("Light");navigate("Front Office");click("expiring","Expiring contracts")

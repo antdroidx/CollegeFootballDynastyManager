@@ -72,7 +72,7 @@ def ui_polish():
         if not f["hasPlayed"]:continue
         for key in ["homeStats","awayStats"]:
             f[key]={"passAttempts":30,"rushAttempts":30,"passYards":210,"rushYards":100,"passingTouchdowns":2,"rushingTouchdowns":1,"turnovers":1,"sacksAllowed":3,"explosivePasses20":3,"explosiveRuns20":1,"efficiency":{"plays":60,"yards":310,"successful":27,"thirdDowns":12,"thirdDownConversions":5,"sackYardsLost":18}}
-    load(regular);navigate("Overview");click("polish-options","Options");click("polish-appearance","Appearance");click("polish-light","Light")
+    load(regular);navigate("Overview");click("polish-options","Settings");click("polish-appearance","Appearance");click("polish-light","Light")
     navigate("Roster");ready("compact-roster",lambda r:any(t and t.startswith("Active roster") for t in s.texts(r)));s.capture("pro-presentation-compact-roster-phone")
     rotate(1);navigate("Roster");s.capture("pro-presentation-compact-roster-landscape");rotate(0)
     navigate("Overview");root=s.scroll_to_text("pro-news-cards","League news",max_swipes=20);s.capture("pro-presentation-overview-news-cards")
@@ -96,7 +96,7 @@ def ui_polish():
     for label in ["Low offer","Agent demand","Strong offer"]:click("polish-preset-"+label,label)
     s.capture("pro-presentation-light-contract-presets")
     click("polish-yearly","Show yearly cap breakdown");ready("contract-breakdown",lambda r:"Hide yearly cap breakdown" in s.texts(r));s.capture("pro-presentation-light-contract-breakdown");click("polish-cancel","Cancel")
-    navigate("Overview");click("polish-dark-options","Options");click("polish-dark-appearance","Appearance");click("polish-dark","Dark");s.capture("pro-presentation-dark-overview")
+    navigate("Overview");click("polish-dark-options","Settings");click("polish-dark-appearance","Appearance");click("polish-dark","Dark");s.capture("pro-presentation-dark-overview")
     Path("pro-polish-check.json").write_text(json.dumps({"syntheticContext":True,"lightEfficiency":True,"metricDefinitions":True,"tradeSelectionRemoval":True,"landscapeTrade":True,"contractPresets":True,"optionalYearlyDetails":True,"darkTheme":True},indent=2),encoding="utf-8")
 
 def presentation():
@@ -114,7 +114,7 @@ def presentation():
     s.adb("shell","wm","size","1768x2208");s.adb("shell","wm","density","320")
     navigate("Analytics");ready("fold-analytics",lambda r:"Franchise analytics" in s.texts(r));category("Draft outcomes");s.capture("pro-roadmap-fold-draft-outcomes")
     for theme in ["Light","Dark"]:
-        click("theme-options","Options");click("appearance","Appearance");click(theme.lower(),theme)
+        click("theme-options","Settings");click("appearance","Appearance");click(theme.lower(),theme)
         navigate("Analytics");ready(theme.lower()+"-analytics",lambda r:"Franchise analytics" in s.texts(r));s.capture("pro-roadmap-fold-"+theme.lower()+"-analytics")
     s.adb("shell","wm","size","reset");s.adb("shell","wm","density","reset")
     Path("pro-presentation-check.json").write_text(json.dumps({"samePackagedAPK":True,"portraitPrimaryNumbers":True,"draftGradeAndAction":True,"retentionDemandAndAction":True,"campRatings":True,"foldLayout":True,"lightTheme":True,"darkTheme":True},indent=2),encoding="utf-8")

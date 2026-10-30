@@ -130,7 +130,8 @@ public static class ProEconomy
                 Years=extended.Years.Select(y=>y with {ProratedBonus=BonusCharge(c,y.Year)+(y.Year>=changeYear&&y.Year<changeYear+count?bonus/count+(y.Year-changeYear<bonus%count?1:0):0)}).ToList()};
         }
         extended=ProContractInsights.NormalizeVoidCharges(extended);
-        if(extended.Years.Where(y=>y.Year>=s.Year).Any(y=>{
+        var userPlanning=s.Phase==ProPhase.Offseason&&team==s.UserTeam&&s.Career?.Unemployed!=true&&ProCareer.Role(s)==StaffRole.HeadCoach;
+        if(!userPlanning&&extended.Years.Where(y=>y.Year>=s.Year).Any(y=>{
             var before=ProFinance.Budget(s,team,y.Year).TotalCommitments;
             var after=before-CapHit(c,y.Year)+CapHit(extended,y.Year);
             return after>Math.Max(ProFinance.Limit(s,team,y.Year),before);

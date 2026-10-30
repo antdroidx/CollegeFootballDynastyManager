@@ -99,6 +99,7 @@ public sealed record ProFranchise
     public List<OwnerExpectation> Owners { get; init; } = [];
     public OffseasonStep OffseasonStep { get; init; }
     public List<PendingRookie> UnsignedRookies { get; init; } = [];
+    public bool AutoManageFreeAgency {get;init;}
     public bool AutoNegotiateExpiring { get; init; }
     public List<Guid> LetExpire { get; init; } = [];
     public List<string> ReadNotificationIds { get; init; } = [];

@@ -88,7 +88,7 @@ public sealed partial class FoundationPage
             1 => players.OrderByDescending(p => p.OverallRating).ThenBy(p => p.FullName),
             2 => players.OrderByDescending(p => p.PotentialRating).ThenBy(p => p.FullName),
             3 => players.OrderBy(p => p.FullName),
-            _ => players.OrderBy(p => p.Position).ThenBy(p => p.IsRedshirted).ThenBy(p => p.DepthChartOrder).ThenByDescending(p => p.OverallRating)
+            _ => players.OrderBy(p => p.Position.RosterOrder()).ThenBy(p => p.IsRedshirted).ThenBy(p => p.DepthChartOrder).ThenByDescending(p => p.OverallRating)
         };
         var rows = new List<View[]>();
         foreach (var player in players)

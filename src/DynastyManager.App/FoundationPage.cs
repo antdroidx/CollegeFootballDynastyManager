@@ -142,7 +142,7 @@ public sealed partial class FoundationPage : ContentPage
     private readonly Dictionary<AppSection, Button> _navButtons = new();
     private readonly Dictionary<AppSection, BoxView> _navIndicators = new();
     private Border _navigationBar = null!;
-    private readonly Button _libraryButton = new() { Text = "‹ Exit Dynasty", FontSize = 12, Padding = new Thickness(0, 2, 12, 2), BackgroundColor = Colors.Transparent };
+    private readonly Button _libraryButton = new() { Text = "‹ Cancel", IsVisible=false, FontSize = 12, Padding = new Thickness(0, 2, 12, 2), BackgroundColor = Colors.Transparent };
     private readonly Label _headerContext = new() { FontSize = 11, TextColor = DynastyTheme.Muted };
     private readonly Dictionary<AppSection, View> _sectionViews = new();
     private readonly Grid _visibleSectionGrid = new();
@@ -943,8 +943,9 @@ public sealed partial class FoundationPage : ContentPage
                 new Label { Text = "3-slot rolling weekly autosave", FontSize = 12, VerticalTextAlignment = TextAlignment.Center } } },
             _rollingAutosaveStatus, _autosaveButton
         } };
+        var exit=new Button{Text="Save & exit",AutomationId="college-save-exit"};exit.Clicked+=async(_,_)=>{if(await GameDialogs.AlertAsync(this,"Save and exit?","Save this dynasty and return to your dynasty library?","Save & exit","Cancel"))await ReturnToLibraryAsync();};
         return new VerticalStackLayout { Spacing = 12, Children = {
-            SectionTitle("Preferences", "Appearance, delegation and dynasty rules"),
+            exit,SectionTitle("Preferences", "Appearance, delegation and dynasty rules"),
             ResponsivePanels(ManagementPanel("Display", BuildThemeSettings()), ManagementPanel("Recruiting assistance", delegation),
                 ManagementPanel("Save protection", save)),
             ManagementPanel("Career", _careerOptionsHost),

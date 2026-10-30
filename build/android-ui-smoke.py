@@ -651,6 +651,13 @@ def node_with_id(root, suffix):
     return next(n for n in root.iter("node") if (n.get("resource-id") or "").endswith(suffix))
 
 
+def exit_via_settings(kind):
+    root=scroll_to_text("exit-settings-"+kind,"Settings",max_swipes=20,toward_start=True);tap(root,"Settings")
+    root=wait_for("exit-choice-"+kind,lambda r:"Save & exit" in texts(r));tap(root,"Save & exit")
+    root=wait_for("exit-confirm-"+kind,lambda r:"Save and exit?" in texts(r));tap(root,"Save & exit")
+    return wait_for("exit-library-"+kind,lambda r:library_loaded(r) if kind=="pro" else "Your dynasties" in texts(r) and "New dynasty" in texts(r),timeout=180)
+
+
 def tap_id(root, suffix):
     node = node_with_id(root, suffix)
     left, top, right, bottom = map(int, re.findall(r"\d+", node.get("bounds")))
@@ -700,7 +707,7 @@ def check_career_options():
         settings = scroll_to_text("career-settings-"+scope, "Coach can be fired")
         assert node_with_id(settings, "coach-firing-setting").get("checked") == "false"
         tap_id(settings, "coach-firing-setting")
-        tap(capture("career-before-save"), "‹ Exit Dynasty")
+        exit_via_settings("college")
         library = wait_for("career-library-"+scope, lambda r: "Your dynasties" in texts(r))
         assert "Delete dynasty" in texts(library)
         tap(scroll_to_text("career-load-"+scope, "Load"), "Load")

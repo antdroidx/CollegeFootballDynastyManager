@@ -26,7 +26,7 @@ public class FullbackRoleTests
         var fields=Ncaa06RosterRatings.Export(player).ToDictionary(x=>x.Key,x=>x.Value);fields["PPOS"]=2;
         var fb=Ncaa06RosterRatings.Apply(player,fields);
         Assert.Equal(Position.FB,fb.Position);Assert.Equal(2,Ncaa06RatingService.PositionCode(fb));
-        Assert.Equal(1,(int)Position.RB);Assert.Equal(12,(int)Position.K);Assert.Equal("HB",Position.RB.DisplayName());
+        Assert.Equal(1,(int)Position.RB);Assert.Equal(12,(int)Position.K);Assert.Equal("HB",Position.RB.DisplayName());Assert.Equal(new[]{"QB","HB","FB","WR","TE"},PositionLabels.Names.Take(5));
         var state=new DynastyState{DynastyName="Old",UserTeamName=player.TeamName,OverallCalibrationVersion=1,ActiveRoster=[fb with {Position=Position.RB}]};
         Assert.Equal(Position.FB,PlayerRatingService.EnsureProfiles(state).ActiveRoster.Single().Position);
     }

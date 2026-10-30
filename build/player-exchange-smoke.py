@@ -45,7 +45,7 @@ try:
     ready("college-library",lambda r:"Your dynasties" in s.texts(r) and "New dynasty" in s.texts(r))
     click("new","New dynasty");click("school-picker","Choose your team");click("school","Air Force");click("start-college","Start dynasty")
     ready("college-overview",lambda r:"Overview" in s.texts(r) and "Season" in s.texts(r))
-    click("manual-save","Save");click("exit-college","‹ Exit Dynasty",toward_start=True)
+    click("manual-save","Save");s.exit_via_settings("college")
     ready("college-saved-library",lambda r:"Load" in s.texts(r) and "Your dynasties" in s.texts(r))
     s.adb("shell","am","force-stop",college)
     db=Path("exchange-college.db3");db.write_bytes(s.adb("exec-out","run-as",college,"cat","files/dynasties.db3"))

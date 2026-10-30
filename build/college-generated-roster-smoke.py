@@ -7,7 +7,7 @@ def ready(name,predicate):return s.wait_for("college-generated-"+name,predicate,
 def click(name,label):
     root=s.scroll_to_text("college-generated-"+name,label,max_swipes=20,toward_start=True);s.tap(root,label)
 def create():
-    click("new","New dynasty");root=s.scroll_to_text("college-generated-switch","Generate new players · keep program strengths",max_swipes=20);s.tap_id(root,"college-generate-players");s.capture("college-generated-enabled");click("picker","Choose your team");click("school","Air Force");click("start","Start dynasty");ready("overview",s.overview_ready);click("save","Save");click("exit","‹ Exit Dynasty");ready("library",lambda r:"Load" in s.texts(r))
+    click("new","New dynasty");root=s.scroll_to_text("college-generated-switch","Generate new players · keep program strengths",max_swipes=20);s.tap_id(root,"college-generate-players");s.capture("college-generated-enabled");click("picker","Choose your team");click("school","Air Force");click("start","Start dynasty");ready("overview",s.overview_ready);click("save","Save");s.exit_via_settings("college");ready("library",lambda r:"Load" in s.texts(r))
 def read():
     s.adb("shell","am","force-stop",package);db=Path("college-generated.db3");db.write_bytes(s.adb("exec-out","run-as",package,"cat","files/dynasties.db3"));conn=sqlite3.connect(db);rows=conn.execute("select snapshot_json from dynasty_saves order by updated_utc desc").fetchall();conn.close();return [json.loads(r[0]) for r in rows]
 try:

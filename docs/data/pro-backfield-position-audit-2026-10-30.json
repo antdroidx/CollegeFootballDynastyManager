@@ -1,0 +1,1789 @@
+{
+  "asOf": "2026-10-30",
+  "reviewed": 198,
+  "policy": "Review all snapshot HB/FB identities. Correct explicit club-role conflicts by stable ID; keep current club designation for hybrids. Position corrections only, not current roster ownership/status. Existing eight FBs retain their sourced identity.",
+  "players": [
+    {
+      "id": "00-0037157",
+      "name": "Bam Knight",
+      "team": "Arizona Cardinals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041027",
+      "name": "Jeremiyah Love",
+      "team": "Arizona Cardinals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037263",
+      "name": "Tyler Allgeier",
+      "team": "Arizona Cardinals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038397",
+      "name": "Evan Hull",
+      "team": "Arizona Cardinals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037267",
+      "name": "Jerome Ford",
+      "team": "Arizona Cardinals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033553",
+      "name": "James Conner",
+      "team": "Arizona Cardinals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039921",
+      "name": "Trey Benson",
+      "team": "Arizona Cardinals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038542",
+      "name": "Bijan Robinson",
+      "team": "Atlanta Falcons",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037746",
+      "name": "Brian Robinson",
+      "team": "Atlanta Falcons",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041129",
+      "name": "Jam Miller",
+      "team": "Atlanta Falcons",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036906",
+      "name": "Khalil Herbert",
+      "team": "Atlanta Falcons",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036984",
+      "name": "Trey Sermon",
+      "team": "Atlanta Falcons",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0032764",
+      "name": "Derrick Henry",
+      "team": "Baltimore Ravens",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0034975",
+      "name": "Justice Hill",
+      "team": "Baltimore Ravens",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039796",
+      "name": "Rasheen Ali",
+      "team": "Baltimore Ravens",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035924",
+      "name": "Jonathan Ward",
+      "team": "Baltimore Ravens",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040637",
+      "name": "Lucas Scott",
+      "team": "Baltimore Ravens",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.baltimoreravens.com/news/lucas-scott-patrick-ricard-ravens-fullback-todd-monken-army-position-change",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040888",
+      "name": "Adam Randall",
+      "team": "Baltimore Ravens",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037248",
+      "name": "James Cook",
+      "team": "Buffalo Bills",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039875",
+      "name": "Ray Davis",
+      "team": "Buffalo Bills",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035537",
+      "name": "Ty Johnson",
+      "team": "Buffalo Bills",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040567",
+      "name": "Brock Lampe",
+      "team": "Buffalo Bills",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.buffalobills.com/news/bills-sign-fb-brock-lampe-to-the-practice-squad",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039471",
+      "name": "Frank Gore Jr.",
+      "team": "Buffalo Bills",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036265",
+      "name": "AJ Dillon",
+      "team": "Carolina Panthers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040394",
+      "name": "Anthony Tyus III",
+      "team": "Carolina Panthers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036555",
+      "name": "Chuba Hubbard",
+      "team": "Carolina Panthers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040644",
+      "name": "Trevor Etienne",
+      "team": "Carolina Panthers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040260",
+      "name": "Ahmani Marshall",
+      "team": "Carolina Panthers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039344",
+      "name": "Jonathon Brooks",
+      "team": "Carolina Panthers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036275",
+      "name": "D'Andre Swift",
+      "team": "Chicago Bears",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039021",
+      "name": "Roschon Johnson",
+      "team": "Chicago Bears",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038440",
+      "name": "Zavier Scott",
+      "team": "Chicago Bears",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036020",
+      "name": "Salvon Ahmed",
+      "team": "Chicago Bears",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040236",
+      "name": "Kyle Monangai",
+      "team": "Chicago Bears",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037329",
+      "name": "Brittain Brown",
+      "team": "Chicago Bears",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038597",
+      "name": "Chase Brown",
+      "team": "Cincinnati Bengals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033526",
+      "name": "Samaje Perine",
+      "team": "Cincinnati Bengals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040208",
+      "name": "Tahj Brooks",
+      "team": "Cincinnati Bengals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039266",
+      "name": "Kendall Milton",
+      "team": "Cincinnati Bengals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041241",
+      "name": "Kentrel Bullock",
+      "team": "Cincinnati Bengals",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039373",
+      "name": "Audric Estimé",
+      "team": "Cleveland Browns",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038794",
+      "name": "Jaleel McLaughlin",
+      "team": "Cleveland Browns",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0031595",
+      "name": "Michael Burton",
+      "team": "Cleveland Browns",
+      "before": "FB",
+      "after": "FB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040784",
+      "name": "Quinshon Judkins",
+      "team": "Cleveland Browns",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036755",
+      "name": "Jaret Patterson",
+      "team": "Cleveland Browns",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040162",
+      "name": "Dylan Sampson",
+      "team": "Cleveland Browns",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040466",
+      "name": "Raheim Sanders",
+      "team": "Cleveland Browns",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038705",
+      "name": "Emari Demercado",
+      "team": "Dallas Cowboys",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038738",
+      "name": "Hunter Luepke",
+      "team": "Dallas Cowboys",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.dallascowboys.com/team/players-roster/hunter-luepke/",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036997",
+      "name": "Javonte Williams",
+      "team": "Dallas Cowboys",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037120",
+      "name": "Tyler Goodson",
+      "team": "Dallas Cowboys",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038389",
+      "name": "Israel Abanikanda",
+      "team": "Dallas Cowboys",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037563",
+      "name": "Malik Davis",
+      "team": "Dallas Cowboys",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036727",
+      "name": "Adam Prentice",
+      "team": "Denver Broncos",
+      "before": "FB",
+      "after": "FB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036158",
+      "name": "J.K. Dobbins",
+      "team": "Denver Broncos",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040730",
+      "name": "RJ Harvey",
+      "team": "Denver Broncos",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037085",
+      "name": "Tyler Badie",
+      "team": "Denver Broncos",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039703",
+      "name": "Cody Schrader",
+      "team": "Denver Broncos",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041496",
+      "name": "Jonah Coleman",
+      "team": "Denver Broncos",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038896",
+      "name": "Jacob Saylors",
+      "team": "Detroit Lions",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039139",
+      "name": "Jahmyr Gibbs",
+      "team": "Detroit Lions",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039364",
+      "name": "Sione Vaki",
+      "team": "Detroit Lions",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039652",
+      "name": "Jabari Small",
+      "team": "Detroit Lions",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037197",
+      "name": "Isiah Pacheco",
+      "team": "Detroit Lions",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040142",
+      "name": "Kaleb Johnson",
+      "team": "Green Bay Packers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039811",
+      "name": "MarShawn Lloyd",
+      "team": "Green Bay Packers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038098",
+      "name": "Pierre Strong",
+      "team": "Green Bay Packers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041139",
+      "name": "Damon Bankston",
+      "team": "Free agent",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035700",
+      "name": "Josh Jacobs",
+      "team": "Green Bay Packers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038685",
+      "name": "Chris Brooks",
+      "team": "Green Bay Packers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033854",
+      "name": "Dare Ogunbowale",
+      "team": "Houston Texans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035685",
+      "name": "David Montgomery",
+      "team": "Houston Texans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040583",
+      "name": "Woody Marks",
+      "team": "Houston Texans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038622",
+      "name": "Deuce Vaughn",
+      "team": "Houston Texans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039405",
+      "name": "Jawhar Jordan",
+      "team": "Houston Texans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041312",
+      "name": "Noah Whittington",
+      "team": "Houston Texans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039603",
+      "name": "British Brooks",
+      "team": "Houston Texans",
+      "before": "RB",
+      "after": "RB",
+      "source": "https://www.houstontexans.com/news/houston-texans-transactions-10-02-2026",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040179",
+      "name": "DJ Giddens",
+      "team": "Indianapolis Colts",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036223",
+      "name": "Jonathan Taylor",
+      "team": "Indianapolis Colts",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041125",
+      "name": "Seth McGowan",
+      "team": "Indianapolis Colts",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041277",
+      "name": "Davon Booth",
+      "team": "Indianapolis Colts",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0032104",
+      "name": "Ameer Abdullah",
+      "team": "Jacksonville Jaguars",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040719",
+      "name": "Bhayshul Tuten",
+      "team": "Jacksonville Jaguars",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038611",
+      "name": "Chris Rodriguez Jr.",
+      "team": "Jacksonville Jaguars",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040238",
+      "name": "LeQuint Allen Jr.",
+      "team": "Jacksonville Jaguars",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041217",
+      "name": "J'Mari Taylor",
+      "team": "Jacksonville Jaguars",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038489",
+      "name": "Ben VanSumeren",
+      "team": "Kansas City Chiefs",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.chiefs.com/team/depth-chart",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040078",
+      "name": "Brashard Smith",
+      "team": "Kansas City Chiefs",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041013",
+      "name": "Emmett Johnson",
+      "team": "Kansas City Chiefs",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038134",
+      "name": "Kenneth Walker III",
+      "team": "Kansas City Chiefs",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040959",
+      "name": "Jaydn Ott",
+      "team": "Kansas City Chiefs",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040547",
+      "name": "Nate Carter",
+      "team": "Kansas City Chiefs",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039738",
+      "name": "Blake Corum",
+      "team": "Los Angeles Rams",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041415",
+      "name": "Dean Connors",
+      "team": "Los Angeles Rams",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037840",
+      "name": "Kyren Williams",
+      "team": "Los Angeles Rams",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040601",
+      "name": "Jordan Waters",
+      "team": "Los Angeles Rams",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037557",
+      "name": "Ronnie Rivers",
+      "team": "Los Angeles Rams",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038454",
+      "name": "Keaton Mitchell",
+      "team": "Los Angeles Chargers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039391",
+      "name": "Kimani Vidal",
+      "team": "Los Angeles Chargers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040666",
+      "name": "Omarion Hampton",
+      "team": "Los Angeles Chargers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040039",
+      "name": "Amar Johnson",
+      "team": "Los Angeles Chargers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041376",
+      "name": "Gregory Desrosiers",
+      "team": "Los Angeles Chargers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035125",
+      "name": "Alec Ingold",
+      "team": "Los Angeles Chargers",
+      "before": "FB",
+      "after": "FB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040122",
+      "name": "Ashton Jeanty",
+      "team": "Las Vegas Raiders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037304",
+      "name": "Connor Heyward",
+      "team": "Las Vegas Raiders",
+      "before": "FB",
+      "after": "FB",
+      "source": "https://www.raiders.com/team/players-roster/connor-heyward/",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039407",
+      "name": "Dylan Laube",
+      "team": "Las Vegas Raiders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040878",
+      "name": "Mike Washington Jr.",
+      "team": "Las Vegas Raiders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038458",
+      "name": "Owen Wright",
+      "team": "Las Vegas Raiders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040998",
+      "name": "Roman Hemby",
+      "team": "Las Vegas Raiders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039244",
+      "name": "Chris Collier",
+      "team": "Las Vegas Raiders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041436",
+      "name": "DJ Herman",
+      "team": "Miami Dolphins",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.miamidolphins.com/team/depth-chart",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039874",
+      "name": "Jaylen Wright",
+      "team": "Miami Dolphins",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041096",
+      "name": "Kaytron Allen",
+      "team": "Miami Dolphins",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040198",
+      "name": "Ollie Gordon II",
+      "team": "Miami Dolphins",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038930",
+      "name": "Carlos Washington",
+      "team": "Miami Dolphins",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039040",
+      "name": "De'Von Achane",
+      "team": "Miami Dolphins",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041161",
+      "name": "Le'Veon Moss",
+      "team": "Free agent",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033293",
+      "name": "Aaron Jones",
+      "team": "Minnesota Vikings",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041104",
+      "name": "Demond Claiborne",
+      "team": "Minnesota Vikings",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041081",
+      "name": "Max Bredeson",
+      "team": "Minnesota Vikings",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.vikings.com/draft/2026/picks/max-bredeson",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036425",
+      "name": "DeeJay Dallas",
+      "team": "Free agent",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037525",
+      "name": "Jordan Mason",
+      "team": "Minnesota Vikings",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0032918",
+      "name": "C.J. Ham",
+      "team": "Free agent",
+      "before": "FB",
+      "after": "FB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040556",
+      "name": "Corey Kiner",
+      "team": "New England Patriots",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036875",
+      "name": "Rhamondre Stevenson",
+      "team": "New England Patriots",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040734",
+      "name": "TreVeyon Henderson",
+      "team": "New England Patriots",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040568",
+      "name": "Lan Larison",
+      "team": "New England Patriots",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041323",
+      "name": "Myles Montgomery",
+      "team": "New England Patriots",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036187",
+      "name": "Reggie Gilliam",
+      "team": "New England Patriots",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.patriots.com/news/james-develin-welcomes-reggie-gilliam-to-patriots-fullback-fraternity",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033906",
+      "name": "Alvin Kamara",
+      "team": "New Orleans Saints",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041326",
+      "name": "CJ Donaldson",
+      "team": "New Orleans Saints",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038551",
+      "name": "Kendre Miller",
+      "team": "New Orleans Saints",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040692",
+      "name": "Jarquez Hunter",
+      "team": "New Orleans Saints",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038040",
+      "name": "Zamir White",
+      "team": "New Orleans Saints",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036973",
+      "name": "Travis Etienne",
+      "team": "New Orleans Saints",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037276",
+      "name": "Ty Chandler",
+      "team": "New Orleans Saints",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040715",
+      "name": "Cam Skattebo",
+      "team": "New York Giants",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035250",
+      "name": "Devin Singletary",
+      "team": "New York Giants",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033376",
+      "name": "Patrick Ricard",
+      "team": "New York Giants",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.giants.com/news/roster-update-giants-announce-initial-53-man-roster-for-2026-nfl-season-week-1-john-harbaugh",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039384",
+      "name": "Tyrone Tracy Jr.",
+      "team": "New York Giants",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036893",
+      "name": "Najee Harris",
+      "team": "Free agent",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041585",
+      "name": "Grant Finley",
+      "team": "New York Giants",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.giants.com/news/giants-sign-fb-grant-finley-te-tyler-moore-waived",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040021",
+      "name": "Phil Mafah",
+      "team": "New York Giants",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0034959",
+      "name": "Andrew Beck",
+      "team": "New York Jets",
+      "before": "FB",
+      "after": "FB",
+      "source": "https://www.newyorkjets.com/news/jets-re-sign-fullback-andrew-beck-free-agency-03-12-2026",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039794",
+      "name": "Braelon Allen",
+      "team": "New York Jets",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038120",
+      "name": "Breece Hall",
+      "team": "New York Jets",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039798",
+      "name": "Isaiah Davis",
+      "team": "New York Jets",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036842",
+      "name": "Kene Nwangwu",
+      "team": "New York Jets",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "",
+      "name": "Al-Jay Henderson",
+      "team": "New York Jets",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041239",
+      "name": "Chip Trayanum",
+      "team": "New York Jets",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037258",
+      "name": "Dameon Pierce",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036501",
+      "name": "Michael Carter II",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0034844",
+      "name": "Saquon Barkley",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039466",
+      "name": "Ian Wheeler",
+      "team": "Free agent",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036567",
+      "name": "Elijah Mitchell",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040586",
+      "name": "Jaydon Blue",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039325",
+      "name": "Carson Steele",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "https://www.philadelphiaeagles.com/news/eagles-sign-jake-majors-and-carson-steele",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038555",
+      "name": "Tank Bigsby",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039746",
+      "name": "Will Shipley",
+      "team": "Philadelphia Eagles",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041490",
+      "name": "Eli Heidenreich",
+      "team": "Pittsburgh Steelers",
+      "before": "RB",
+      "after": "RB",
+      "source": "https://www.steelers.com/team/depth-chart/app",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037228",
+      "name": "Jaylen Warren",
+      "team": "Pittsburgh Steelers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038409",
+      "name": "Lew Nichols III",
+      "team": "Pittsburgh Steelers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036139",
+      "name": "Rico Dowdle",
+      "team": "Pittsburgh Steelers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041398",
+      "name": "Riley Nowakowski",
+      "team": "Pittsburgh Steelers",
+      "before": "FB",
+      "after": "FB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035594",
+      "name": "Travis Homer",
+      "team": "Pittsburgh Steelers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038488",
+      "name": "Brady Russell",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.seahawks.com/team/players-roster/",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038797",
+      "name": "Emanuel Wilson",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039299",
+      "name": "George Holani",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041178",
+      "name": "Robert Henry Jr.",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037745",
+      "name": "Velus Jones Jr.",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039165",
+      "name": "Zach Charbonnet",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040067",
+      "name": "Jacardia Wright",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041221",
+      "name": "Jackson Acker",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.seahawks.com/news/seahawks-sign-fb-jackson-acker-te-josiah-deguara-to-practice-squad",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041512",
+      "name": "Jadarian Price",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040649",
+      "name": "Robbie Ouzts",
+      "team": "Seattle Seahawks",
+      "before": "RB",
+      "after": "FB",
+      "source": "https://www.seahawks.com/team/players-roster/",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033280",
+      "name": "Christian McCaffrey",
+      "team": "San Francisco 49ers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040177",
+      "name": "Jordan James",
+      "team": "San Francisco 49ers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0041052",
+      "name": "Kaelon Black",
+      "team": "San Francisco 49ers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0029892",
+      "name": "Kyle Juszczyk",
+      "team": "San Francisco 49ers",
+      "before": "FB",
+      "after": "FB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037509",
+      "name": "Sincere McCormick",
+      "team": "San Francisco 49ers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039363",
+      "name": "Isaac Guerendo",
+      "team": "San Francisco 49ers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039361",
+      "name": "Bucky Irving",
+      "team": "Tampa Bay Buccaneers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036919",
+      "name": "Kenny Gainwell",
+      "team": "Tampa Bay Buccaneers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0038951",
+      "name": "Sean Tucker",
+      "team": "Tampa Bay Buccaneers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040429",
+      "name": "Josh Williams",
+      "team": "Tampa Bay Buccaneers",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037594",
+      "name": "Julius Chestnut",
+      "team": "Tennessee Titans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0036924",
+      "name": "Michael Carter",
+      "team": "Tennessee Titans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040886",
+      "name": "Nicholas Singleton",
+      "team": "Tennessee Titans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035261",
+      "name": "Tony Pollard",
+      "team": "Tennessee Titans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039032",
+      "name": "Tyjae Spears",
+      "team": "Tennessee Titans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040205",
+      "name": "Kalel Mullings",
+      "team": "Tennessee Titans",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033699",
+      "name": "Austin Ekeler",
+      "team": "Washington Commanders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0033955",
+      "name": "Jeremy McNichols",
+      "team": "Washington Commanders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0037256",
+      "name": "Rachaad White",
+      "team": "Washington Commanders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0035567",
+      "name": "Craig Reynolds",
+      "team": "Washington Commanders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040202",
+      "name": "Devin Neal",
+      "team": "Washington Commanders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0039305",
+      "name": "Jack Westover",
+      "team": "Washington Commanders",
+      "before": "RB",
+      "after": "TE",
+      "source": "https://www.commanders.com/team/players-roster/",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    },
+    {
+      "id": "00-0040242",
+      "name": "Jacory Croskey-Merritt",
+      "team": "Washington Commanders",
+      "before": "RB",
+      "after": "RB",
+      "source": "Existing offline GSIS/snapshot position; reviewed for FB conflicts",
+      "note": "Current official club labels retained for hybrid backs; no weight-based inference"
+    }
+  ]
+}

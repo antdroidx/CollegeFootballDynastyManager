@@ -47,6 +47,6 @@ public sealed partial class FranchisePage
             if(issue is not null){var explain=new TapGestureRecognizer();explain.Tapped+=async(_,_)=>await GameDialogs.AlertAsync(this,p.Football.FullName,issue,"OK");decision.GestureRecognizers.Add(explain);SemanticProperties.SetDescription(decision,issue);}
             return new View[]{Link(p.Football.FullName,()=>Player(p)),actions,Text(Money(ProOfferTerms.AgentDemand(s,p,true).Salary)),Text(p.Football.OverallRating.ToString()),Text(p.Football.Position.DisplayName()),Text(p.Age.ToString()),Text(ProContractInsights.PlayingEnd(contract).ToString()),decision};
         })));
-        body.Add(Text("Franchise tags and restructures are available from each player’s contract actions. Staff respect cap limits and your coaching authority; some players may remain unresolved.",12));return Task.CompletedTask;
+        body.Add(Text("Franchise tags and restructures are available from each player’s contract actions. Staff respect cap limits and your coaching authority; some players may remain unresolved.",12));OffseasonGuide();return Task.CompletedTask;
     }
 }

@@ -20,6 +20,7 @@ public sealed partial class FranchisePage
             var row=new Grid {ColumnSpacing=12,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Auto)}};row.Add(value,0,0);row.Add(step,1,0);
             return new VerticalStackLayout {Spacing=4,Children={Text(title),row}};
         }
+        var teamCap=new ContentView{AutomationId="contract-team-cap"};
         var annualPreview=new ContentView{IsVisible=false};
         var details=new Button{Text="Show yearly cap breakdown",AutomationId="contract-yearly-details"};details.Clicked+=(_,_)=>{annualPreview.IsVisible=!annualPreview.IsVisible;details.Text=annualPreview.IsVisible?"Hide yearly cap breakdown":"Show yearly cap breakdown";};
         var response=Text("",14,true);var preview=Text("",12);var submit=new Button {Text=extension?"Agree extension":"Submit offer",AutomationId="contract-submit",BackgroundColor=DynastyTheme.Accent,TextColor=DynastyTheme.Background};
@@ -30,6 +31,7 @@ public sealed partial class FranchisePage
             submit.IsEnabled=Terms(out var y,out var a,out var b)&&a>=ProFinance.Minimum(state!,player,practice:false);
             if(!submit.IsEnabled){response.Text="Bonus cannot exceed total base salary. Reduce the bonus or increase salary/years.";return;}
             var projection=ProContractInsights.ProjectOffer(state!,player,y,a,b,extension);annualPreview.Content=AnnualContractTable(projection);
+            teamCap.Content=Table([("Year",55),("Team cap",95),("Room before",105),("This deal",95),("Room after",105)],ProOfferCapProjection.Build(state!,player,projection,extension).Select(v=>new View[]{Text(v.Year.ToString()),Text(Money(v.Limit)),Text(Money(v.Before)),Text(Money(v.CapHit)),Text(Money(v.After),14,true)}));
             var first=extension?ProContractInsights.PlayingEnd(state!.Contracts.Last(c=>c.Active&&c.PlayerId==player.Football.PlayerId))+1:state!.Year;var total=projection.Years.Where(v=>v.Year>=first).Sum(v=>v.Salary);
             var result=ProNegotiation.Evaluate(player,y,a,b,Math.Max(ProFinance.Minimum(state!,player,practice:false),ProEconomy.MarketSalary(state!,player)));response.Text=result.Message+$" Counter salary: ${ProOfferTerms.RoundUp(result.CounterSalary):N0}/year.";
             preview.Text=$"New-term base salary ${total:N0} + bonus ${b:N0} · New cash ${total+b:N0}\n"+(extension?"Existing contract years remain. New bonus starts in the applicable league year and is prorated over up to five years.":$"First-year cap estimate ${a+(b+y-1)/y:N0} · Season cap space ${ProCapDisplay.Room(state!,state!.UserTeam):N0}");
@@ -44,7 +46,7 @@ public sealed partial class FranchisePage
         {var pick=new Button{Text=label};pick.Clicked+=(_,_)=>{years.Value=demand.Years;salary.Value=Math.Clamp(ProOfferTerms.RoundUp((long)(demand.Salary*factor)),(long)salary.Minimum,(long)salary.Maximum);bonus.Value=Math.Min(ProOfferTerms.RoundUp((long)(demand.Bonus*factor)),(long)salary.Value*(int)years.Value);Refresh();};presets.Add(pick);}
         var current=state!.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==player.Football.PlayerId);
         var currentSummary=current is null?"Current deal: free agent":$"Current deal: {Money(ProContractInsights.AverageCash(current))}/year · through {ProContractInsights.PlayingEnd(current)} · {state.Year} cap {Money(ProEconomy.CapHit(current,state.Year))}";
-        var offer=new VerticalStackLayout {Spacing=10,Children={Text(currentSummary,13,true),Text($"Agent asks {Money(demand.Salary)}/year + {Money(demand.Bonus)} signing bonus · {demand.Years} years",13,true),presets,Control("Years",years,false),Control("Annual base salary · $250K steps",salary,true),Control("Signing bonus · $250K steps",bonus,true),preview,response,submit,counter,details,annualPreview}};
+        var offer=new VerticalStackLayout {Spacing=10,Children={Text(currentSummary,13,true),Text($"Agent asks {Money(demand.Salary)}/year + {Money(demand.Bonus)} signing bonus · {demand.Years} years",13,true),presets,Control("Years",years,false),Control("Annual base salary · $250K steps",salary,true),Control("Signing bonus · $250K steps",bonus,true),preview,Text(extension&&state!.Phase==ProPhase.Offseason?"Extensions may put your plan over budget. Clear the season cap before regular-season play.":"Team room includes all roster salaries and pending offers.",12),teamCap,response,submit,counter,details,annualPreview}};
 
         var tab=new Picker {Title="Contract view",ItemsSource=new[]{"Offer","Current deal","Position market"},SelectedIndex=0,AutomationId="contract-view"};
         var body=new ContentView {Content=offer};tab.SelectedIndexChanged+=(_,_)=>body.Content=tab.SelectedIndex switch {1=>ContractDetails(player,state!.Contracts.LastOrDefault(c=>c.Active&&c.PlayerId==player.Football.PlayerId)),2=>ContractComparisons(player),_=>offer};

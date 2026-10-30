@@ -173,7 +173,7 @@ public sealed partial class FoundationPage
 
     private View CreateTeamRosterTable(IEnumerable<DynastyPlayer> roster) => DataTable(
         [("Pos", 45), ("Player", 172), ("OVR", 54), ("Δ", 45), ("Morale", 60), ("Year", 50), ("Potential", 75), ("HS", 45), ("Height", 64), ("Wt lb", 60)],
-        roster.OrderBy(p => p.Position).ThenBy(p => p.DepthChartOrder).Select(player => new View[]
+        roster.OrderBy(p => p.Position.RosterOrder()).ThenBy(p => p.DepthChartOrder).Select(player => new View[]
         {
             TableText(OffensiveLineService.Label(player)), PlayerLink(player), RatingCell(player.OverallRating),
             TableText(FormatSigned(GameMoraleService.SeasonDelta(_currentDynasty!, player))), MoraleIcon(player),
