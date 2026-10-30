@@ -82,7 +82,7 @@ public sealed class PlayArtDrawable(string id, string playName, bool offense, st
             if (custom?.Task == AssignmentTask.Block) continue;
             if (family == GameDayRouteFamily.Run)
             {
-                if (i == 0 && position == Position.RB)
+                if (roleIndex == 0 && position == (play.Name.StartsWith("FB ") ? Position.FB : Position.RB))
                 {
                     canvas.StrokeColor = DynastyTheme.Palette("#F4CC66"); canvas.StrokeSize = 2;
                     DrawRoute(canvas, width * (float)start.Y, height * startY,

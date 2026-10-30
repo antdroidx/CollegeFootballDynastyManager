@@ -1,0 +1,96 @@
+{
+  "Mode": "pro-real-seasons",
+  "Seasons": [
+    {
+      "Year": 2026,
+      "Games": 272,
+      "Points": 22.325367647058822,
+      "Yards": 335.3639705882353,
+      "Passing": 223.52941176470588,
+      "Rushing": 125.93933823529412,
+      "PassAttempts": 32.5625,
+      "RushAttempts": 27.74264705882353,
+      "CompletionPct": 63.063113921192276,
+      "YardsPerRush": 4.539557381394116,
+      "YardsPerPass": 6.8646268488201425,
+      "Sacks": 2.198529411764706,
+      "Turnovers": 1.369485294117647,
+      "PassLeader": 4665,
+      "RushLeader": 1519,
+      "GeneratedNewcomersPlaying": 0,
+      "RosterAverage": 78.5844776119403,
+      "TeamMeanStandardDeviation": 1.238735608412285
+    },
+    {
+      "Year": 2027,
+      "Games": 272,
+      "Points": 22.985294117647058,
+      "Yards": 344.5716911764706,
+      "Passing": 233.68014705882354,
+      "Rushing": 124.45404411764706,
+      "PassAttempts": 32.919117647058826,
+      "RushAttempts": 27.834558823529413,
+      "CompletionPct": 63.49676122403395,
+      "YardsPerRush": 4.471205917316074,
+      "YardsPerPass": 7.098615144069689,
+      "Sacks": 2.1011029411764706,
+      "Turnovers": 1.4503676470588236,
+      "PassLeader": 5205,
+      "RushLeader": 1418,
+      "GeneratedNewcomersPlaying": 155,
+      "RosterAverage": 76.82454060462359,
+      "TeamMeanStandardDeviation": 2.313398492732841
+    },
+    {
+      "Year": 2028,
+      "Games": 272,
+      "Points": 22.81985294117647,
+      "Yards": 340.90625,
+      "Passing": 230.88235294117646,
+      "Rushing": 124.35845588235294,
+      "PassAttempts": 32.61764705882353,
+      "RushAttempts": 28.147058823529413,
+      "CompletionPct": 63.11429215509468,
+      "YardsPerRush": 4.418168756530825,
+      "YardsPerPass": 7.078449053201082,
+      "Sacks": 2.213235294117647,
+      "Turnovers": 1.5128676470588236,
+      "PassLeader": 5408,
+      "RushLeader": 1675,
+      "GeneratedNewcomersPlaying": 324,
+      "RosterAverage": 75.87729697688204,
+      "TeamMeanStandardDeviation": 2.1684053789026643
+    }
+  ],
+  "ProRosterSeasons": [
+    {
+      "Year": 2026,
+      "PracticePlayers": 0,
+      "ActiveMinimum": 46,
+      "ActiveMaximum": 53,
+      "ReservePlayers": 182,
+      "Fullbacks": 7
+    },
+    {
+      "Year": 2027,
+      "PracticePlayers": 0,
+      "ActiveMinimum": 45,
+      "ActiveMaximum": 53,
+      "ReservePlayers": 0,
+      "Fullbacks": 4
+    },
+    {
+      "Year": 2028,
+      "PracticePlayers": 0,
+      "ActiveMinimum": 45,
+      "ActiveMaximum": 53,
+      "ReservePlayers": 0,
+      "Fullbacks": 5
+    }
+  ],
+  "PersonnelSampleGames": 54,
+  "PrimaryQBSnapShare": 1,
+  "ThirdAndLaterRBCarryShare": 0.1507214653585809,
+  "BackupDLSnapShare": 0.3551815773949336,
+  "InvalidPersonnelSnaps": 0
+}

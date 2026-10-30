@@ -15,7 +15,7 @@ public sealed partial class FranchisePage
         var content=new VerticalStackLayout{Spacing=10};content.Add(Text($"College {export.Year} → Pro {state!.Year}",22,true));
         content.Add(Text($"{preview.Imported.Count} imported players + {preview.Fillers.Count} generated prospects. This replaces the unstarted draft class and resets its scouting/shortlist; current players, contracts and draft-pick ownership stay intact."));
         content.Add(Text("Pro ratings are recalculated from translated football attributes. Potential and scouting uncertainty remain part of the draft.",12));
-        content.Add(Table([("Player",180),("Pos",45),("College OVR",90),("Pro OVR",70)],preview.Imported.OrderByDescending(p=>p.Football.OverallRating).Take(40).Select(p=>new View[]{Text(p.Football.FullName),Text(p.Football.Position.ToString()),Text(export.Players.Single(x=>x.PlayerId==p.Football.PlayerId).OverallRating.ToString()),Text(p.Football.OverallRating.ToString())})));
+        content.Add(Table([("Player",180),("Pos",45),("College OVR",90),("Pro OVR",70)],preview.Imported.OrderByDescending(p=>p.Football.OverallRating).Take(40).Select(p=>new View[]{Text(p.Football.FullName),Text(p.Football.Position.DisplayName()),Text(export.Players.Single(x=>x.PlayerId==p.Football.PlayerId).OverallRating.ToString()),Text(p.Football.OverallRating.ToString())})));
         content.Add(Action("Import class for "+state.Year,async()=>{await Update(s=>ProDraftClassImport.Apply(s,export));await Navigation.PopModalAsync();await Draft();},"pro-apply-college-class"));
         await ShowPage("Preview College draft class",content);
     }

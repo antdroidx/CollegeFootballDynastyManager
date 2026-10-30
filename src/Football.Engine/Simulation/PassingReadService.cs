@@ -23,7 +23,7 @@ public static class PassingReadService
         foreach (var p in defenders)
         { var role = slotCounts.GetValueOrDefault(p.Position); slotCounts[p.Position] = role + 1;
             defenseRoles[p.PlayerId] = defense.Assignments.FirstOrDefault(a => a.Position == p.Position && a.RoleIndex == role); }
-        var blockers = offense.Where(p => offenseRoles[p.PlayerId]?.Task == AssignmentTask.Block ||
+        var blockers = offense.Where(p => p.Position == Position.FB && !play.Name.StartsWith("FB ") && play.Assignments.Count == 0 || offenseRoles[p.PlayerId]?.Task == AssignmentTask.Block ||
             p.Position == Position.OL && offenseRoles[p.PlayerId]?.Task != AssignmentTask.Route).ToArray();
         var rushers = defenders.Where(p => defenseRoles[p.PlayerId] is { } assignment ? assignment.Task == AssignmentTask.Rush
             : p.Position is Position.DE or Position.DT || defense.Approach == DefensiveApproach.Pressure && p.Position is Position.MLB or Position.OLB).ToArray();
@@ -31,11 +31,11 @@ public static class PassingReadService
         var protection = Mean(blockers, p => ((p.Skills?.PassBlocking ?? p.OverallRating) + p.StrengthRating) / 2d) -
             Mean(rushers, p => (p.StrengthRating + p.AgilityRating) / 2d) - Math.Max(0, rushers.Length - blockers.Length) * 5;
         var coverage = defenders.Where(p => !rushers.Contains(p) && p.Position is Position.CB or Position.FS or Position.SS or Position.OLB or Position.MLB).ToArray();
-        var eligible = offense.Where(p => (p.Position is Position.WR or Position.TE or Position.RB) && offenseRoles[p.PlayerId]?.Task != AssignmentTask.Block).ToArray();
+        var eligible = offense.Where(p => (p.Position is Position.WR or Position.TE or Position.RB or Position.FB) && offenseRoles[p.PlayerId]?.Task != AssignmentTask.Block && !blockers.Contains(p)).ToArray();
         if (GameDayAnimationPlanner.RouteFamily(play) == GameDayRouteFamily.Screen)
         {
             var receiverScreen = play.Name.Contains("Bubble", StringComparison.OrdinalIgnoreCase) || play.Name.Contains("WR", StringComparison.OrdinalIgnoreCase);
-            var screens = eligible.Where(p => receiverScreen ? p.Position == Position.WR : p.Position == Position.RB).ToArray();
+            var screens = eligible.Where(p => receiverScreen ? p.Position == Position.WR : play.Name.StartsWith("FB ") ? p.Position == Position.FB : p.Position == Position.RB).ToArray();
             if (screens.Length > 0) eligible = screens;
         }
         var counts = new Dictionary<Position, int>();

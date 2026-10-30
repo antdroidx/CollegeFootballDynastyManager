@@ -6,7 +6,7 @@ namespace ProFootball.Tests;
 public sealed class CapInitializationTests
 {
     static string Csv(){using var stream=typeof(ProCapInitialization).Assembly.GetManifestResourceStream("ProFootball.Core.nfl_2026_salary_caps.csv")!;using var reader=new StreamReader(stream);return reader.ReadToEnd();}
-    static ProFranchise New()=>ProLeagueService.Create("Seattle Seahawks");
+    static ProFranchise New()=>ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);
     [Fact] public void AllThirtyTwoCapsReconcileAndWashingtonAliasMatches()
     {
         var s=New();var rows=ProCapInitialization.Load(s.League);Assert.Equal(32,rows.Count);Assert.Equal(32,rows.Select(r=>r.TeamAbbreviation).Distinct().Count());Assert.Equal(4,rows.Count(r=>r.OtherAdjustments<0));
@@ -99,7 +99,7 @@ public sealed class CapInitializationTests
     }
     [Fact] public void ThreeSeasonsPreserveImportedCapRolloverDraftAndCpuBudgets()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true) with{Id=Guid.Parse("53120000-0000-0000-0000-000000000001")};
+        var s=ProLeagueService.Create("Seattle Seahawks",sourcedContracts:true,preserveLegacyPracticeForAudit:true) with{Id=Guid.Parse("53120000-0000-0000-0000-000000000001")};
         s=s with{AutoManageRookieOptions=true};
         void Trace(string phase)
         {

@@ -383,7 +383,7 @@ public static class PlayerDevelopmentService
     {
         var coordinatorRole = player.Position switch
         {
-            Position.QB or Position.RB or Position.WR or Position.TE or Position.OL =>
+            Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL =>
                 StaffRole.OffensiveCoordinator,
             Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS =>
                 StaffRole.DefensiveCoordinator,

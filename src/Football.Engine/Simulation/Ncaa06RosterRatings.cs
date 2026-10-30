@@ -26,7 +26,7 @@ public static class Ncaa06RosterRatings
         var positionCode = fields.TryGetValue("PPOS", out var code) ? code : Ncaa06RatingService.PositionCode(player);
         var position = positionCode switch
         {
-            0 => Position.QB, 1 or 2 => Position.RB, 3 => Position.WR, 4 => Position.TE,
+            0 => Position.QB, 1 => Position.RB, 2 => Position.FB, 3 => Position.WR, 4 => Position.TE,
             >= 5 and <= 9 => Position.OL, 10 or 11 => Position.DE, 12 => Position.DT,
             13 or 15 => Position.OLB, 14 => Position.MLB, 16 => Position.CB,
             17 => Position.FS, 18 => Position.SS, 19 or 20 => Position.K,

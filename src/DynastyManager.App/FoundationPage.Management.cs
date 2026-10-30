@@ -237,7 +237,7 @@ public sealed partial class FoundationPage
             var interest=TableText(item.UserStatus);
             var percentage=System.Text.RegularExpressions.Regex.Match(item.UserStatus,@"\d+(?=%)").Value;
             interest.SetValue(TableValueProperty,percentage.Length>0?percentage:null);
-            rows.Add([TableText(prospect.Position.ToString()), name,
+            rows.Add([TableText(prospect.Position.DisplayName()), name,
                 starsCell, projection, scouting, interest, actions,
                 TableText("#"+item.NationalRank), TableText(item.Origin), TableText(item.MarketStatus)]);
             if (rows.Count % 12 == 0) await Task.Delay(1,cancellation);

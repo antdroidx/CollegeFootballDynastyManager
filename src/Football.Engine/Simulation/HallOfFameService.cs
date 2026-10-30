@@ -35,7 +35,7 @@ public static class HallOfFameService
     private static double Production(PlayerSeasonStatLine p) => p.Position switch
     {
         Position.QB => p.PassYards + p.PassingTouchdowns * 150 - p.InterceptionsThrown * 200 + p.RushYards * 3 + p.RushingTouchdowns * 150,
-        Position.RB or Position.WR or Position.TE => p.RushYards * 2.65 + p.ReceivingYards * 2.5 + p.Receptions * 2 +
+        Position.RB or Position.FB or Position.WR or Position.TE => p.RushYards * 2.65 + p.ReceivingYards * 2.5 + p.Receptions * 2 +
             (p.RushingTouchdowns + p.ReceivingTouchdowns + p.KickReturnTouchdowns + p.PuntReturnTouchdowns) * 150 +
             p.KickReturnYards + p.PuntReturnYards - (p.RushingFumbles + p.ReceivingFumbles) * 75,
         Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS =>

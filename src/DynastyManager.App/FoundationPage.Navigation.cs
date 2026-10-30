@@ -391,7 +391,7 @@ public sealed partial class FoundationPage
         _injuryRows.Children.Add(new Label { Text = $"{injuries.Length} active injuries", TextColor = DynastyTheme.Palette("#E2ABBC") });
         if (injuries.Length == 0) { _injuryRows.Children.Add(new Label { Text = "No current injuries in this selection." }); return; }
         _injuryRows.Children.Add(DataTable([("Player", 175), ("School", 195), ("Pos", 45), ("Severity", 85), ("Area", 90), ("Weeks", 60)],
-            injuries.Select(player => new View[] { PlayerLink(player), SchoolCell(player.TeamName), TableText(player.Position.ToString()),
+            injuries.Select(player => new View[] { PlayerLink(player), SchoolCell(player.TeamName), TableText(player.Position.DisplayName()),
                 TableText(player.CurrentInjury!.Severity.ToString(), color: DynastyTheme.Palette("#E5A1B7")), TableText(player.CurrentInjury.BodyArea.ToString()), TableText(player.CurrentInjury.WeeksRemaining.ToString()) })));
     }
 }

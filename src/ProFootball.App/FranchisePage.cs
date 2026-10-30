@@ -87,7 +87,7 @@ public sealed partial class FranchisePage : ContentPage
         var roster = new Picker {Title="Starting players",AutomationId="pro-starting-players",ItemsSource=new[]{"Real players","New generated players · balanced league"},SelectedIndex=0};body.Add(roster);
         var finances = new Picker { Title = "Starting contract data", ItemsSource = new[] { "Generated contracts", "Real roster contracts" }, SelectedIndex = 1 }; body.Add(finances);
         roster.SelectedIndexChanged+=(_,_)=>{finances.SelectedIndex=roster.SelectedIndex==1?0:1;finances.IsEnabled=roster.SelectedIndex==0;};
-        body.Add(Text("Build your 2026 franchise. Regular-season rosters allow 53 active players and a 16-player practice squad."));
+        body.Add(Text("Build your 2026 franchise. Regular-season rosters allow 53 active players, with separate injured reserves."));
         body.Add(Action("Start franchise", async () => { state = await Task.Run(() => ProLeagueService.Create((string)picker.SelectedItem, name.Text, finances.SelectedIndex == 1, role.SelectedIndex == 1 ? StaffRole.OffensiveCoordinator : role.SelectedIndex == 2 ? StaffRole.DefensiveCoordinator : StaffRole.HeadCoach, firing.IsToggled, coachName.Text, generatedPlayers:roster.SelectedIndex==1)); await Save(); section = "Overview"; Render(); }, "pro-start")); body.Add(Action("Cancel", Library)); return Task.CompletedTask;
     }
     async Task Save() { if (state is not null) { state = ProNews.Refresh(state); await store.Save(state); } }
@@ -163,14 +163,14 @@ public sealed partial class FranchisePage : ContentPage
     {
         var s=state!;var standing=ProStandings.Build(s).Single(x=>x.Team.Name==team.Name);
         return ShowPage(team.Name,new TeamBadgeView(team,56),Text(team.Conference+" · "+team.Division),Text($"{standing.Wins}–{standing.Losses}–{standing.Ties} · {SeasonCapLabel(s,team.Name)}"),
-            Panel("Players",Table([("Player",190),("Pos",50),("OVR",55)],s.Players.Where(p=>p.Football.TeamName==team.Name&&!p.Retired).OrderBy(p=>p.Football.Position).ThenByDescending(p=>p.Football.OverallRating).Select(p=>new View[]{PlayerCell(p),Text(p.Football.Position.ToString()),Text(p.Football.OverallRating.ToString())}))),
+            Panel("Players",Table([("Player",190),("Pos",50),("OVR",55)],s.Players.Where(p=>p.Football.TeamName==team.Name&&!p.Retired).OrderBy(p=>p.Football.Position).ThenByDescending(p=>p.Football.OverallRating).Select(p=>new View[]{PlayerCell(p),Text(p.Football.Position.DisplayName()),Text(p.Football.OverallRating.ToString())}))),
             Panel("Schedule",Table([("Week",60),("Opponent",210),("Result",90)],s.Games.Where(g=>g.Football.InvolvesTeam(team.Name)).Select(g=>{var f=g.Football;var opponent=s.League.Teams.Single(t=>t.Name==(f.HomeTeamName==team.Name?f.AwayTeamName:f.HomeTeamName));return new View[]{Text(ProTransactions.Period(g.Phase,f.Week)),TeamCell(opponent),f.HasPlayed?Link($"{f.AwayScore}–{f.HomeScore}",()=>BoxScore(f)):Text("Upcoming")};}))));
     }
     void Roster()
     {
         var s = state!; var teams = s.League.Teams.OrderBy(t => t.Name).ToArray();
         var team = new Picker { Title = "Team", AutomationId="pro-roster-team", ItemsSource = teams.Select(t => t.Name).ToArray(), SelectedIndex = Array.FindIndex(teams, t => t.Name == s.UserTeam) };
-        var search = new SearchBar { Placeholder = "Find a player", AutomationId = "pro-roster-search" }; var positions = new Picker { Title = "Position", AutomationId="pro-roster-position", ItemsSource = new[] { "All positions" }.Concat(Enum.GetNames<Position>()).ToArray(), SelectedIndex = 0 };
+        var search = new SearchBar { Placeholder = "Find a player", AutomationId = "pro-roster-search" }; var positions = new Picker { Title = "Position", AutomationId="pro-roster-position", ItemsSource = new[] { "All positions" }.Concat(PositionLabels.Names).ToArray(), SelectedIndex = 0 };
         var list = new VerticalStackLayout { Spacing = 12 };
         var showRatings = false;
         var tools = new ActionRow(); var organize=Action("Organize depth chart", DepthChart);tools.Add(organize); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(CompactFilters.Create((team,210),(search,210),(positions,130)));body.Add(tools);
@@ -180,8 +180,8 @@ public sealed partial class FranchisePage : ContentPage
         {
             list.Clear(); if (team.SelectedIndex < 0) return;
             var selectedTeam = teams[team.SelectedIndex].Name;organize.IsVisible=selectedTeam==s.UserTeam;
-            var players = s.Players.Where(p => p.Football.TeamName == selectedTeam && !p.Retired && (string.IsNullOrWhiteSpace(search.Text) || p.Football.FullName.Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)) && (positions.SelectedIndex <= 0 || p.Football.Position.ToString() == (string)positions.SelectedItem)).ToArray();
-            foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : p.PracticeSquad ? "Practice squad" : "Active roster"))
+            var players = s.Players.Where(p => p.Football.TeamName == selectedTeam && !p.Retired && (string.IsNullOrWhiteSpace(search.Text) || p.Football.FullName.Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)) && (positions.SelectedIndex <= 0 || p.Football.Position.DisplayName() == (string)positions.SelectedItem)).ToArray();
+            foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : "Active roster"))
             {
                 list.Add(Text(group.Key + " · " + group.Count(), 21, true));
                 var columns = new List<(string, int)> { ("Pos", 48), ("Player", 220), ("Age", 45), ("OVR", 50), ("Δ", 45), ("Growth", 100), ("Morale", 65), ("Cap hit", 90) };

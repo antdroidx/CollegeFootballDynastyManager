@@ -190,7 +190,7 @@ public sealed partial class ProLivePage : ContentPage
             for (var i = 0; i < unit.Length; i++)
             {
                 var p = unit[i]; var point = session.KickoffPending ? LiveFootballChoreography.Kickoff(attacking, attacking ? i == 0 : p.Position == Position.K, i, 2, 25, direction).From : GameDayLivePresentation.HuddlePoint(session.YardLine, direction, attacking, i);
-                var sprite = new FootballSpriteView(Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), !home, p.PlayerId.ToByteArray()[0] % 4, p.JerseyNumber?.ToString() ?? p.Position.ToString());
+                var sprite = new FootballSpriteView(Color.FromArgb(brand.Primary), Color.FromArgb(brand.Secondary), !home, p.PlayerId.ToByteArray()[0] % 4, p.JerseyNumber?.ToString() ?? p.Position.DisplayName());
                 sprite.HuddleFacing(.5 - point.X, .5 - point.Y);
                 AbsoluteLayout.SetLayoutFlags(sprite, Microsoft.Maui.Layouts.AbsoluteLayoutFlags.PositionProportional);
                 AbsoluteLayout.SetLayoutBounds(sprite, new Rect(point.X, point.Y, 28, 28)); players.Add(sprite);
@@ -199,10 +199,10 @@ public sealed partial class ProLivePage : ContentPage
     }
     Border Marker(DynastyPlayer? player, Color primary, Color secondary, bool away)
     {
-        var sprite = new FootballSpriteView(primary, secondary, away, PortraitAppearance.ForPlayer(player?.PlayerId ?? Guid.Empty, player?.Appearance).Skin, player?.JerseyNumber?.ToString() ?? player?.Position.ToString() ?? "",PortraitAppearance.ForPlayer(player?.PlayerId??Guid.Empty,player?.Appearance).SkinColorHex);
+        var sprite = new FootballSpriteView(primary, secondary, away, PortraitAppearance.ForPlayer(player?.PlayerId ?? Guid.Empty, player?.Appearance).Skin, player?.JerseyNumber?.ToString() ?? player?.Position.DisplayName() ?? "",PortraitAppearance.ForPlayer(player?.PlayerId??Guid.Empty,player?.Appearance).SkinColorHex);
         var host = new Border { WidthRequest = 28, HeightRequest = 28, Padding = 0, StrokeThickness = 0, BackgroundColor = Colors.Transparent, InputTransparent = true, Content = sprite };
         spritePlayers[sprite] = player; markerHosts[host] = (player, primary, secondary, away);
-        if (player is not null) SemanticProperties.SetDescription(host, $"{player.Position} {player.FullName}");
+        if (player is not null) SemanticProperties.SetDescription(host, $"{player.Position.DisplayName()} {player.FullName}");
         return host;
     }
     Task Animate(GameSnapEvent snap, bool replay) => GameCastAnimation.PlayAsync(new()

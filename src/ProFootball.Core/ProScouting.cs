@@ -6,7 +6,7 @@ public static class ProScouting
     public static ScoutReport Evaluate(ProFranchise s,string team,ProPlayer player)
     {
         var club=s.League.Teams.Single(t=>t.Name==team);
-        var role=player.Football.Position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL?StaffRole.OffensiveCoordinator:player.Football.Position==Position.K?StaffRole.SpecialTeamsCoordinator:StaffRole.DefensiveCoordinator;
+        var role=player.Football.Position is Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL?StaffRole.OffensiveCoordinator:player.Football.Position==Position.K?StaffRole.SpecialTeamsCoordinator:StaffRole.DefensiveCoordinator;
         var staff=s.Coaches.Where(c=>c.TeamId==club.Id&&!c.Vacant&&(c.Role==role||c.Role==StaffRole.HeadCoach)).Select(c=>c.Development).DefaultIfEmpty(65).Average();
         var combine=s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft;
         var confidence=Math.Clamp(65+(int)((staff-50)/2)+(combine?10:0),60,95);

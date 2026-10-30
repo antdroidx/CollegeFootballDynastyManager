@@ -245,11 +245,11 @@ public sealed partial class FoundationPage
         {
             foreach (var (label, player) in markerLabels)
             {
-                label.Text = showNumbers && player?.JerseyNumber is int number ? number.ToString() : player?.Position.ToString() ?? "•";
+                label.Text = showNumbers && player?.JerseyNumber is int number ? number.ToString() : player?.Position.DisplayName() ?? "•";
                 label.FontSize = showNumbers ? 8 : 6;
             }
             foreach (var (sprite, player) in spritePlayers)
-                sprite.SetLabel(showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "");
+                sprite.SetLabel(showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.DisplayName() ?? "");
             numbers.Text = showNumbers ? "Markers: Numbers" : "Markers: Positions";
         }
         numbers.Clicked += (_, _) => { showNumbers = !showNumbers; Microsoft.Maui.Storage.Preferences.Default.Set("live-jersey-numbers", showNumbers); UpdateMarkerLabels(); };
@@ -482,7 +482,7 @@ public sealed partial class FoundationPage
             if (useSprites)
             {
                 var sprite = new FootballSpriteView(color, secondary, awayTeam, PortraitAppearance.ForPlayer(player?.PlayerId ?? Guid.Empty, player?.Appearance).Skin,
-                    showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "",PortraitAppearance.ForPlayer(player?.PlayerId??Guid.Empty,player?.Appearance).SkinColorHex);
+                    showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.DisplayName() ?? "",PortraitAppearance.ForPlayer(player?.PlayerId??Guid.Empty,player?.Appearance).SkinColorHex);
                 spritePlayers[sprite] = player;
                 marker.Stroke = Colors.Transparent; marker.StrokeThickness = 0; marker.BackgroundColor = Colors.Transparent;
                 marker.StrokeShape = new RoundRectangle { CornerRadius = 0 };
@@ -491,7 +491,7 @@ public sealed partial class FoundationPage
             }
             else
             {
-                var label = new Label { Text = showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.ToString() ?? "•",
+                var label = new Label { Text = showNumbers && player?.JerseyNumber is int jersey ? jersey.ToString() : player?.Position.DisplayName() ?? "•",
                     FontSize = showNumbers ? 8 : 6, FontAttributes = FontAttributes.Bold, TextColor = awayTeam ? color : Colors.White,
                     HorizontalTextAlignment = TextAlignment.Center, VerticalTextAlignment = TextAlignment.Center };
                 markerLabels[label] = player;
@@ -509,7 +509,7 @@ public sealed partial class FoundationPage
                 StrokeShape = new RoundRectangle { CornerRadius = 14 }, Padding = 0, InputTransparent = true };
             markerHosts[marker] = (player, color, secondary, awayTeam);
             SetMarkerAppearance(marker, player, color, secondary, awayTeam);
-            if (player is not null) SemanticProperties.SetDescription(marker, $"{player.Position} {player.FullName}");
+            if (player is not null) SemanticProperties.SetDescription(marker, $"{player.Position.DisplayName()} {player.FullName}");
             return marker;
         }
         spriteMode.Clicked += (_, _) =>
@@ -939,7 +939,7 @@ public sealed partial class FoundationPage
             teamPage.BackHandler = () => { _ = Back(); return true; };
             var back = new Button { Text = "Return to game" }; back.Clicked += async (_, _) => await Back();
             var talkButton = new Button { Text = "Coach talk" };
-            var filter = new Picker { Title = "Position", ItemsSource = Enum.GetValues<Position>().Where(p => UserCoachControlService.ControlsPosition(session.UserCoachRole, p)).Select(p => p.ToString()).ToArray(), SelectedIndex = 0 };
+            var filter = new Picker { Title = "Position", ItemsSource = Enum.GetValues<Position>().Where(p => UserCoachControlService.ControlsPosition(session.UserCoachRole, p)).Select(p => p.DisplayName()).ToArray(), SelectedIndex = 0 };
             var rows = new VerticalStackLayout { Spacing = 3 };
             var availability = new Label { FontSize = 12, TextColor = DynastyTheme.Muted };
             var showAll = false;
@@ -955,7 +955,7 @@ public sealed partial class FoundationPage
                 var fatigue = controlledTeamName == game.HomeTeamName ? session.HomeFatigue : session.AwayFatigue;
                 var stats = GameDayEngine.BoxScore(session).Players.ToDictionary(p => p.PlayerId);
                 var starters = GameDayCoachingService.Starters(session, controlledTeamName);
-                var selectedPosition = Enum.Parse<Position>(filter.SelectedItem?.ToString() ?? "QB");
+                var selectedPosition = PositionLabels.Parse(filter.SelectedItem?.ToString() ?? "QB");
                 var pool = session.Roster.Where(p => p.TeamName == controlledTeamName && p.Position == selectedPosition)
                     .OrderByDescending(p => starters.Contains(p.PlayerId)).ThenBy(p => p.DepthChartOrder <= 0 ? int.MaxValue : p.DepthChartOrder).ThenByDescending(p => p.OverallRating).ToArray();
                 availability.Text = GameDayCoachingService.TalkAvailability(session, controlledTeamName);
@@ -980,7 +980,7 @@ public sealed partial class FoundationPage
                         BackgroundColor = starter || unavailable ? DynastyTheme.Panel : DynastyTheme.Accent, TextColor = starter || unavailable ? DynastyTheme.Muted : DynastyTheme.Background };
                     sub.Clicked += async (_, _) =>
                     {
-                        var scope = await GameDialogs.ActionSheetAsync(teamPage, $"Start {player.FullName} at {player.Position}", "Cancel", null, "This game only", "Also update season depth chart");
+                        var scope = await GameDialogs.ActionSheetAsync(teamPage, $"Start {player.FullName} at {player.Position.DisplayName()}", "Cancel", null, "This game only", "Also update season depth chart");
                         if (scope is not ("This game only" or "Also update season depth chart")) return;
                         if (!GameDayCoachingService.Substitute(session, controlledTeamName, player.PlayerId)) return;
                         if (scope == "Also update season depth chart")
@@ -1014,7 +1014,7 @@ public sealed partial class FoundationPage
                 GameDayCoachingService.UseSecondUnit(session, controlledTeamName, enabled); Draw();
             };
             expandRoster.Clicked += (_, _) => { showAll = !showAll; Draw(); };
-            automatic.Clicked += (_, _) => { var pos = Enum.Parse<Position>(filter.SelectedItem?.ToString() ?? "QB"); session.ManualStarters.Remove((controlledTeamName, pos)); Draw(); };
+            automatic.Clicked += (_, _) => { var pos = PositionLabels.Parse(filter.SelectedItem?.ToString() ?? "QB"); session.ManualStarters.Remove((controlledTeamName, pos)); Draw(); };
             teamPage.Content = new Grid { Padding = 12, RowSpacing = 8, RowDefinitions = new RowDefinitionCollection { new(GridLength.Auto), new(GridLength.Auto), new(GridLength.Star) } };
             var layout = (Grid)teamPage.Content;
             layout.Add(new HorizontalStackLayout { Spacing = 8, Children = { back, talkButton } }, 0, 0);

@@ -9,7 +9,7 @@ public static class PlayerPhysicalService
         var b = id.ToByteArray();
         var (height, weight, heightRange, weightRange) = position switch
         {
-            Position.QB => (75, 215, 3, 20), Position.RB => (71, 210, 3, 25),
+            Position.FB => (73, 240, 3, 20), Position.QB => (75, 215, 3, 20), Position.RB => (71, 210, 3, 25),
             Position.WR => (73, 195, 4, 20), Position.TE => (77, 245, 3, 25),
             Position.OL => (77, 305, 3, 30), Position.DE => (76, 260, 3, 25),
             Position.DT => (75, 305, 3, 30), Position.OLB or Position.MLB => (74, 235, 3, 20),

@@ -5,7 +5,7 @@ public class CashFloorWindowTests
 {
     static (ProFranchise State,string Team,ProContract Contract) Setup(int year,long priorCash=80_000_000)
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var team=s.League.Teams.First(t=>t.Name!=s.UserTeam).Name;
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);var team=s.League.Teams.First(t=>t.Name!=s.UserTeam).Name;
         var p=s.Players.First(p=>p.Football.TeamName==team&&!p.Retired&&!p.PracticeSquad);
         var c=new ProContract(p.Football.PlayerId,team,year,1,0,[new(year,10_000_000,0)]);
         s=s with{Year=year,SalaryCap=100_000_000,TeamCapAllocations=[],Contracts=[c],Games=[],

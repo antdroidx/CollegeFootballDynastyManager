@@ -1,3 +1,4 @@
+using DynastyManager.Core.Models;
 using DynastyManager.App;
 using ProFootball.Core;
 namespace ProFootball.App;
@@ -34,7 +35,7 @@ public sealed partial class FranchisePage
                 content.Add(Text("Player development",20,true));content.Add(Text("Season rating changes compared with league players at the same position.",12));
                 if(own.Length==0){content.Add(Text("Development comparisons appear once a season-start rating is available."));return;}
                 content.Add(FootballBarChart.Create(own.Take(10).Select(p=>(p.Football.FullName,(double)ProDevelopment.Delta(p)!.Value)),"+0;-0;0"));
-                content.Add(Table([("Player",150),("Change",60),("Pos avg Δ",85),("Pos",45),("OVR",50),("Upside",75)],own.Select(p=>new View[]{Link(p.Football.FullName,()=>Player(p)),Text(ProDevelopment.Delta(p)!.Value.ToString("+0;-0;0")),Text(players.Where(x=>x.Football.Position==p.Football.Position).Average(x=>ProDevelopment.Delta(x)!.Value).ToString("+0.0;-0.0;0.0")),Text(p.Football.Position.ToString()),Text(p.Football.OverallRating.ToString()),Text(ProDevelopment.Headroom(p)+" OVR")})));
+                content.Add(Table([("Player",150),("Change",60),("Pos avg Δ",85),("Pos",45),("OVR",50),("Upside",75)],own.Select(p=>new View[]{Link(p.Football.FullName,()=>Player(p)),Text(ProDevelopment.Delta(p)!.Value.ToString("+0;-0;0")),Text(players.Where(x=>x.Football.Position==p.Football.Position).Average(x=>ProDevelopment.Delta(x)!.Value).ToString("+0.0;-0.0;0.0")),Text(p.Football.Position.DisplayName()),Text(p.Football.OverallRating.ToString()),Text(ProDevelopment.Headroom(p)+" OVR")})));
                 return;
             }
             if(analyticsSection==4)

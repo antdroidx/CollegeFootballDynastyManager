@@ -1,3 +1,4 @@
+using DynastyManager.Core.Models;
 using DynastyManager.App;
 using ProFootball.Core;
 namespace ProFootball.App;
@@ -29,7 +30,7 @@ public sealed partial class FranchisePage
                 if(!await GameDialogs.AlertAsync(this,"Decline fifth-year option?",p.Football.FullName+" keeps the original four-year deal. This option decision is final; a separate extension remains possible.","Decline","Cancel"))return;
                 await Manage("Decline rookie option",p.Football.PlayerId,0,x=>ProRookieOptions.Decide(x,x.UserTeam,p.Football.PlayerId,false));await RookieOptions();});
             exercise.IsEnabled=decline.IsEnabled=controlled;actions.Add(exercise);actions.Add(decline);
-            body.Add(Panel(p.Football.FullName,PlayerCell(p),Text($"{p.Football.Position} · OVR {p.Football.OverallRating} · {q.Tier} price · "+(controlled?"Your decision":"Staff-managed unit")),
+            body.Add(Panel(p.Football.FullName,PlayerCell(p),Text($"{p.Football.Position.DisplayName()} · OVR {p.Football.OverallRating} · {q.Tier} price · "+(controlled?"Your decision":"Staff-managed unit")),
                 Table([("Season",45),("Salary",80),("Gtd now",80),("If exercised",85)],new[]{
                     new View[]{Text((r+3).ToString()),Text(Money(fourth.Salary)),Text(Money(fourth.Guaranteed)),Text(Money(fourth.Salary))},
                     new View[]{Text((r+4).ToString()),Text(Money(q.Salary)),Text("—"),Text(Money(q.Salary))}}),

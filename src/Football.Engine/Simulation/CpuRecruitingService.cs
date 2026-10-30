@@ -790,7 +790,7 @@ public static class CpuRecruitingService
         Position position) =>
         position switch
         {
-            Position.QB or Position.RB or
+            Position.QB or Position.RB or Position.FB or
             Position.WR or Position.TE or
             Position.OL =>
                 StaffRole.OffensiveCoordinator,

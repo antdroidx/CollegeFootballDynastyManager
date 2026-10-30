@@ -5,7 +5,7 @@ using Xunit;
 namespace ProFootball.Tests;
 public sealed class ReserveActivationTests
 {
-    static readonly ProFranchise Template=ProLeagueService.Create("Seattle Seahawks");
+    static readonly ProFranchise Template=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);
     static (ProFranchise State,ProPlayer Player,ProContract Contract) Setup()
     {
         var s=Template with{Phase=ProPhase.RegularSeason,Week=6,SalaryCap=900_000_000,TeamCapAllocations=[]};
@@ -97,6 +97,7 @@ public sealed class ReserveActivationTests
         var ending=fixture.Players.Single(x=>x.Football.FullName=="Jake Bobo");
         fixture=fixture with{Players=fixture.Players.Select(x=>x==four?x with{Football=x.Football with{FullName="Reserve Four"}}:x==ending?x with{Football=x.Football with{FullName="Reserve Season"}}:x).ToList()};
         var directory=Path.Combine(Path.GetTempPath(),"pro-reserve-fixture-"+Guid.NewGuid());
+        fixture=ProPracticeRetirement.Apply(fixture);
         try{var store=new ProSaveStore(directory);await store.Save(fixture);var loaded=await store.Load(fixture.Id);Assert.Equal(JsonSerializer.Serialize(fixture.Contracts),JsonSerializer.Serialize(loaded.Contracts));Assert.Null(ProReserve.ActivationReason(loaded,loaded.UserTeam,p.Football.PlayerId));Assert.Contains("2 weeks",ProReserve.ActivationReason(loaded,loaded.UserTeam,blocked.Football.PlayerId));}
         finally{if(Directory.Exists(directory))Directory.Delete(directory,true);}
         if(Environment.GetEnvironmentVariable("PRO_COORDINATOR_UI_FIXTURES") is string output)

@@ -1,0 +1,38 @@
+{
+  "source": "data\\pro\\source-snapshots\\2026-10-27\\player-identities.parquet",
+  "sha256": "44867006413eac856c5f4529e0d263ce44a6dbcfe6d8166e8e353bfb680bd630",
+  "players": [
+    {
+      "id": "00-0031595",
+      "name": "Michael Burton"
+    },
+    {
+      "id": "00-0036727",
+      "name": "Adam Prentice"
+    },
+    {
+      "id": "00-0035125",
+      "name": "Alec Ingold"
+    },
+    {
+      "id": "00-0037304",
+      "name": "Connor Heyward"
+    },
+    {
+      "id": "00-0032918",
+      "name": "C.J. Ham"
+    },
+    {
+      "id": "00-0034959",
+      "name": "Andrew Beck"
+    },
+    {
+      "id": "00-0041398",
+      "name": "Riley Nowakowski"
+    },
+    {
+      "id": "00-0029892",
+      "name": "Kyle Juszczyk"
+    }
+  ]
+}

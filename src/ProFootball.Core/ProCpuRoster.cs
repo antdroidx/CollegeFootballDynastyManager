@@ -52,7 +52,7 @@ public static class ProCpuRoster
     }
     public static ProFranchise FillPractice(ProFranchise s,string team,Func<ProPlayer,bool>? eligible=null)
     {
-        if(ProRoster.IsCamp(s))return s;
+        if(s.PracticeSquadRemoved||s.League.PracticeSquadLimit==0||ProRoster.IsCamp(s))return s;
         for(var i=ProInternationalPractice.OrdinaryPlayers(s,team);i<16;i++)
         {
             var candidate=s.Players.Where(p=>p.Football.TeamName=="Free agent"&&!p.Retired&&Healthy(s,p)&&(eligible is null||eligible(p))
@@ -69,6 +69,7 @@ public static class ProCpuRoster
     }
     public static ProFranchise RetainCut(ProFranchise s,string team,Guid id)
     {
+        if(s.PracticeSquadRemoved)return ProEconomy.Release(s,team,id);
         // Keep signed development depth when a squad slot is available; never discard existing salary/bonus obligations.
         try{return ProRoster.Practice(s,team,id,true);}catch(InvalidOperationException){return ProEconomy.Release(s,team,id,false);}
     }

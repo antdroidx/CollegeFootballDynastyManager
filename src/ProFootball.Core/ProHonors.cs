@@ -24,7 +24,7 @@ public static class ProHonors
         var top=ProStandings.Build(s).First();var coach=s.Coaches.FirstOrDefault(c=>c.TeamId==top.Team.Id&&c.Role==StaffRole.HeadCoach&&!c.Vacant);
         if(coach is not null)awards.Add(new("Coach of the Year",Guid.Empty,coach.Name,top.Team.Name,top.Wins));
         var selections=new List<ProAllStarSelection>();
-        var slots=new Dictionary<Position,int>{{Position.QB,3},{Position.RB,3},{Position.WR,4},{Position.TE,2},{Position.OL,9},{Position.DE,4},{Position.DT,4},{Position.MLB,3},{Position.OLB,4},{Position.CB,4},{Position.FS,2},{Position.SS,2},{Position.K,2}};
+        var slots=new Dictionary<Position,int>{{Position.QB,3},{Position.FB,1},{Position.RB,3},{Position.WR,4},{Position.TE,2},{Position.OL,9},{Position.DE,4},{Position.DT,4},{Position.MLB,3},{Position.OLB,4},{Position.CB,4},{Position.FS,2},{Position.SS,2},{Position.K,2}};
         foreach(var conference in s.League.Teams.Select(t=>t.Conference).Distinct())
         {
             var clubs=s.League.Teams.Where(t=>t.Conference==conference).Select(t=>t.Name).ToHashSet();

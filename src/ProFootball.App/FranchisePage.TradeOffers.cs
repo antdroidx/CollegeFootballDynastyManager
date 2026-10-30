@@ -1,3 +1,4 @@
+using DynastyManager.Core.Models;
 using DynastyManager.App;
 using ProFootball.Core;
 namespace ProFootball.App;
@@ -25,7 +26,7 @@ public sealed partial class FranchisePage
             });accept.IsEnabled=preview is not null;if(!accept.IsEnabled)accept.Opacity=.45;actions.Add(accept);
             var counter=Action(o.Counters>=2?"Counters exhausted":"Ask for more",async()=>{await Update(x=>ProTradeAi.Respond(x,o.Id,false,true));await TradeOffers();});counter.IsEnabled=o.Counters<2;if(!counter.IsEnabled)counter.Opacity=.45;actions.Add(counter);
             actions.Add(Action("Decline offer",async()=>{await Update(x=>ProTradeAi.Respond(x,o.Id,false));await TradeOffers();}));
-            var views=new List<View>{TeamCell(buyer),PlayerCell(p),Text($"You send {p.Football.FullName} · {p.Football.Position} · OVR {p.Football.OverallRating}"),Text("You receive",14,true),
+            var views=new List<View>{TeamCell(buyer),PlayerCell(p),Text($"You send {p.Football.FullName} · {p.Football.Position.DisplayName()} · OVR {p.Football.OverallRating}"),Text("You receive",14,true),
                 Table([("Year",55),("Round",55),("Original team",160)],picks.Select(x=>new View[]{Text(x.Year.ToString()),Text(x.Round.ToString()),Text(x.OriginalTeam,12)}))};
             if(preview is not null)
             {

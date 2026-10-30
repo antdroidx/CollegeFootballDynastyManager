@@ -32,7 +32,7 @@ public static class Ncaa06RatingService
     ];
     public static int PositionCode(DynastyPlayer player) => player.NcaaPositionCode ?? player.Position switch
     {
-        Position.QB => 0, Position.RB => 1, Position.WR => 3, Position.TE => 4, Position.OL => 7,
+        Position.QB => 0, Position.RB => 1, Position.FB => 2, Position.WR => 3, Position.TE => 4, Position.OL => 7,
         Position.DE => 10, Position.DT => 12, Position.OLB => 13, Position.MLB => 14,
         Position.CB => 16, Position.FS => 17, Position.SS => 18, Position.K => 19,
         _ => throw new ArgumentOutOfRangeException(nameof(player))

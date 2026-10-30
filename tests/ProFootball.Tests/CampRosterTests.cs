@@ -8,12 +8,12 @@ public class CampRosterTests
     [InlineData(ProPhase.Preseason,90)]
     [InlineData(ProPhase.RegularSeason,53)]
     [InlineData(ProPhase.Playoffs,53)]
-    public void RosterLimitMatchesCalendar(ProPhase phase, int expected) => Assert.Equal(expected, ProRoster.Limit(ProLeagueService.Create("Seattle Seahawks") with { Phase = phase }));
+    public void RosterLimitMatchesCalendar(ProPhase phase, int expected) => Assert.Equal(expected, ProRoster.Limit(ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true) with { Phase = phase }));
 
     [Fact]
     public void CampLimitIncludesRetainedPracticePlayers()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var template=s.Players.First();
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);var template=s.Players.First();
         var players=Enumerable.Range(0,90).Select(i=>template with{Football=template.Football with{PlayerId=Guid.NewGuid(),TeamName=s.UserTeam},PracticeSquad=i<16,Reserve=false,Retired=false}).ToList();
         var free=template with{Football=template.Football with{PlayerId=Guid.NewGuid(),TeamName="Free agent"},PracticeSquad=false,Reserve=false,Retired=false};
         s=s with{Players=players.Append(free).ToList(),Contracts=[],Waivers=[],Bids=[]};
@@ -26,7 +26,7 @@ public class CampRosterTests
     [Fact]
     public void CompletedPreseasonWaitsForUserCutdownAndTrimsCpu()
     {
-        var s = ProLeagueService.Create("Seattle Seahawks") with { Week = 3 };
+        var s = ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true) with { Week = 3 };
         s = s with { Games = s.Games.Select(g => g.Phase != ProPhase.Preseason ? g : g with { Football = g.Football with { HasPlayed = g.Football.Week < 3, HomeScore = g.Football.Week < 3 ? 14 : null, AwayScore = g.Football.Week < 3 ? 7 : null } }).ToList(),
             Players = s.Players.Select(p => p.Football.TeamName == s.UserTeam && p.PracticeSquad ? p with { PracticeSquad = false } : p).ToList() };
         Assert.True(ProRoster.Active(s,s.UserTeam)>53);

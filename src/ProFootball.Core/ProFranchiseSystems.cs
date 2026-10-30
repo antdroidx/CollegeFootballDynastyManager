@@ -163,7 +163,7 @@ public static class ProDraft
 
 public static class ProCpu
 {
-    public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
+    public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.FB => s.GamePlans.LastOrDefault(p=>p.TeamName==team)?.Offense is OffensivePlaybook.PowerRun or OffensivePlaybook.Flexbone ? 1 : 0, Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
     public static ProFranchise MakeRoom(ProFranchise s, string team, long room,bool reserveRosterSlot=true,Func<ProPlayer,bool>? eligible=null)
     {
         s=ProCpuBudget.Relieve(s,team,room,eligible);

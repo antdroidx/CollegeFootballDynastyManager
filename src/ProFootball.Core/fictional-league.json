@@ -2,7 +2,7 @@
   "Version": 1,
   "Name": "Professional Football League",
   "ActiveRosterLimit": 53,
-  "PracticeSquadLimit": 16,
+  "PracticeSquadLimit": 0,
   "Teams": [
     {
       "Id": "t00",

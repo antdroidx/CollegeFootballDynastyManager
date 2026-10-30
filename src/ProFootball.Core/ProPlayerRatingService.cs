@@ -6,6 +6,7 @@ namespace ProFootball.Core;
 public static class ProPlayerRatingService
 {
     public const int Version = 1;
+    static readonly Lazy<HashSet<string>> FullbackIds = new(() => ProLeagueService.Snapshot().Players.Where(p=>p.Football.Position==Position.FB).Select(p=>p.ExternalId).ToHashSet());
     public static ProPlayer Refresh(ProPlayer player, bool preserveHeadroom = false, bool resetBaseline = false)
     {
         var old = player.Football;
@@ -18,6 +19,10 @@ public static class ProPlayerRatingService
     }
     public static ProFranchise Migrate(ProFranchise state)
     {
+        bool NeedsFullback(ProPlayer p) => p.Football.Position==Position.RB && (p.Football.NcaaPositionCode==2 || FullbackIds.Value.Contains(p.ExternalId));
+        ProPlayer Restore(ProPlayer p) => NeedsFullback(p) ? Refresh(p with {Football=p.Football with {Position=Position.FB,NcaaPositionCode=2}},true) : p;
+        if(state.Players.Any(NeedsFullback)||state.Prospects.Any(NeedsFullback))
+            state=state with {Players=state.Players.Select(Restore).ToList(),Prospects=state.Prospects.Select(Restore).ToList()};
         if (state.RatingSystemVersion >= Version) return state;
         return state with { RatingSystemVersion = Version, Players = state.Players.Select(p => Refresh(p, true)).ToList(),
             Prospects = state.Prospects.Select(p => Refresh(p, true)).ToList(),

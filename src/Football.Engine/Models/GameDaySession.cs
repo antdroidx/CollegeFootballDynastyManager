@@ -10,6 +10,7 @@ public enum SnapOutcome
 
 public sealed record GameSnapEvent
 {
+    public Guid? FullbackId { get; init; }
     public int? TurnoverYardLine { get; init; }
     public Guid? ReturnTacklerId { get; init; }
     public bool DefensiveScore => TurnoverYardLine.HasValue && Points >= 6;

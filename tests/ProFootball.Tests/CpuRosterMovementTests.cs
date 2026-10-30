@@ -4,7 +4,7 @@ using Xunit;
 namespace ProFootball.Tests;
 public class CpuRosterMovementTests
 {
-    static readonly ProFranchise Template=ProLeagueService.Create("Seattle Seahawks");
+    static readonly ProFranchise Template=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);
     static ProFranchise Setup(int active=52)
     {
         var source=Template.Players.First();var team=Template.UserTeam;
@@ -77,6 +77,7 @@ public class CpuRosterMovementTests
         Assert.Equal(user,next.Players.Where(p=>p.Football.TeamName==s.UserTeam));Assert.Equal(contracts,next.Contracts.Where(c=>c.Team==s.UserTeam));
         Assert.All(next.League.Teams.Where(t=>t.Name!=s.UserTeam),t=>{Assert.InRange(ProRoster.Active(next,t.Name),0,53);Assert.InRange(ProInternationalPractice.OrdinaryPlayers(next,t.Name),0,16);Assert.InRange(next.Players.Count(p=>p.Football.TeamName==t.Name&&p.PracticeSquad&&p.Experience>2),0,6);});
         var dir=Path.Combine(Path.GetTempPath(),"cpu-roster-"+Guid.NewGuid());
+        next=ProPracticeRetirement.Apply(next);
         try{var store=new ProSaveStore(dir);await store.Save(next);var loaded=await store.Load(next.Id);Assert.Equal(next.Players,loaded.Players);Assert.Equal(System.Text.Json.JsonSerializer.Serialize(next.Contracts),System.Text.Json.JsonSerializer.Serialize(loaded.Contracts));}
         finally{if(Directory.Exists(dir))Directory.Delete(dir,true);}
     }

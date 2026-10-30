@@ -6,7 +6,7 @@ public sealed class DepthChartTests
 {
     [Fact] public void StarterChangeReordersOnlySelectedPositionAndPreservesContracts()
     {
-        var s = ProLeagueService.Create("Seattle Seahawks");
+        var s = ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);
         var qb = s.Players.Where(p => p.Football.TeamName == s.UserTeam && p.Football.Position == Position.QB && !p.Reserve && !p.PracticeSquad).OrderByDescending(p => p.Football.DepthChartOrder).First();
         var next = ProDepthChart.MakeStarter(s, s.UserTeam, qb.Football.PlayerId);
         Assert.Equal(qb.Football.PlayerId, ProDepthChart.AtPosition(next, s.UserTeam, 0)[0].Football.PlayerId);
@@ -18,7 +18,7 @@ public sealed class DepthChartTests
     }
     [Fact] public void PersistedGamePlanFeedsSharedSimulationProfile()
     {
-        var s = ProLeagueService.Create("Seattle Seahawks");
+        var s = ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);
         var plan = new TeamGamePlan { TeamName = s.UserTeam, Offense = OffensivePlaybook.PowerRun, Defense = DefensivePlaybook.ThreeFour, Tempo = OffensiveTempo.ChewClock };
         s = s with { GamePlans = [plan] };
         Assert.Equal(plan, ProLeagueService.Profile(s, s.UserTeam).GamePlan);
@@ -28,7 +28,7 @@ public sealed class DepthChartTests
     }
     [Fact] public void ReorderBothDirectionsIsContiguousAndPreservesNaturalPlayers()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var qbs=ProDepthChart.AtPosition(s,s.UserTeam,0);var id=qbs[0].Football.PlayerId;
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);var qbs=ProDepthChart.AtPosition(s,s.UserTeam,0);var id=qbs[0].Football.PlayerId;
         var next=ProDepthChart.Assign(s,s.UserTeam,id,0,qbs.Count);
         Assert.Equal(id,ProDepthChart.AtPosition(next,s.UserTeam,0)[^1].Football.PlayerId);
         next=ProDepthChart.Assign(next,s.UserTeam,id,0,1);
@@ -38,7 +38,7 @@ public sealed class DepthChartTests
     }
     [Fact] public void OutOfPositionPersistsAndFeedsGameRosterWithoutChangingNaturalPlayer()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var wr=ProDepthChart.AtPosition(s,s.UserTeam,3)[0];
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);var wr=ProDepthChart.AtPosition(s,s.UserTeam,3)[0];
         var next=ProDepthChart.Assign(s,s.UserTeam,wr.Football.PlayerId,4,1);
         Assert.DoesNotContain(ProDepthChart.AtPosition(next,s.UserTeam,3),p=>p.Football.PlayerId==wr.Football.PlayerId);
         Assert.Equal(wr,ProDepthChart.AtPosition(next,s.UserTeam,4)[0]);
@@ -53,7 +53,7 @@ public sealed class DepthChartTests
     }
     [Fact] public void AssignRejectsUnavailableOwnershipAndCoordinatorCrossUnit()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var wr=ProDepthChart.AtPosition(s,s.UserTeam,3)[0];
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);var wr=ProDepthChart.AtPosition(s,s.UserTeam,3)[0];
         var oc=s with{Career=s.Career! with{Role=StaffRole.OffensiveCoordinator}};
         Assert.Throws<InvalidOperationException>(()=>ProDepthChart.Assign(oc,s.UserTeam,wr.Football.PlayerId,16,1));
         Assert.Equal(4,ProDepthChart.AssignedCode(ProDepthChart.Assign(oc,s.UserTeam,wr.Football.PlayerId,4,1),wr));
@@ -63,7 +63,7 @@ public sealed class DepthChartTests
     }
     [Fact] public void OldSaveDefaultsToNaturalDepthAndInactiveAssignmentsDoNotEnterGame()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var wr=ProDepthChart.AtPosition(s,s.UserTeam,3)[0];
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);var wr=ProDepthChart.AtPosition(s,s.UserTeam,3)[0];
         var json=System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(s))!;json.AsObject().Remove("DepthChartAssignments");
         Assert.Empty(System.Text.Json.JsonSerializer.Deserialize<ProFranchise>(json.ToJsonString())!.DepthChartAssignments);
         s=ProDepthChart.Assign(s,s.UserTeam,wr.Football.PlayerId,4,1);
@@ -73,7 +73,7 @@ public sealed class DepthChartTests
     }
     [Fact] public async Task ExportDepthFixtureThroughProductionSaveLoader()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks") with{Name="Synthetic depth editor QA",Id=Guid.Parse("de980000-0000-0000-0000-000000000001")};
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true) with{Name="Synthetic depth editor QA",Id=Guid.Parse("de980000-0000-0000-0000-000000000001")};
         var dir=Path.Combine(Path.GetTempPath(),"depth-editor-"+Guid.NewGuid());
         try{var store=new ProSaveStore(dir);await store.Save(s);var restored=await store.Load(s.Id);Assert.Equal(32,restored.League.Teams.Count);Assert.True(ProDepthChart.AtPosition(restored,s.UserTeam,0).Count>=3);}
         finally{if(Directory.Exists(dir))Directory.Delete(dir,true);}

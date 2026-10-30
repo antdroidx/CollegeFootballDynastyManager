@@ -12,7 +12,7 @@ public static class ProDepthChart
         DepthChartAssignments = state.DepthChartAssignments
     };
     public static int AssignedCode(ProFranchise state, ProPlayer player) => DepthChartService.AssignedCode(Bridge(state), player.Football);
-    public static string Label(int code) => code == 1 ? "RB" : DepthChartService.PositionNames[code];
+    public static string Label(int code) => DepthChartService.PositionNames[code];
     public static IReadOnlyList<ProPlayer> AtPosition(ProFranchise state, string team, int code)
     {
         var players = state.Players.ToDictionary(p => p.Football.PlayerId);

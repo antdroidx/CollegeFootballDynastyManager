@@ -6,7 +6,7 @@ public class GmCommitmentTests
 {
     static (ProFranchise State,ProPlayer Qb,ProPlayer Receiver) Setup()
     {
-        var s=ProLeagueService.Create("Seattle Seahawks",role:StaffRole.OffensiveCoordinator);
+        var s=ProLeagueService.Create("Seattle Seahawks",role:StaffRole.OffensiveCoordinator,preserveLegacyPracticeForAudit:true);
         var qb=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Football.Position==Position.QB);
         var receiver=s.Players.First(p=>p.Football.TeamName==s.UserTeam&&p.Football.Position==Position.WR);
         s=s with{Contracts=[new(qb.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,1_000_000,0)]),new(receiver.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year+1,100_000_000,0)])]};

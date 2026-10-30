@@ -125,7 +125,7 @@ public sealed partial class FoundationPage
             foreach (var player in report.KeyPlayers)
             {
                 var row = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
-                row.Add(PlayerLink(player), 0, 0); row.Add(new Label { Text = $"{player.Position} · {player.OverallRating} OVR", VerticalOptions = LayoutOptions.Center, TextColor = DynastyTheme.Muted }, 1, 0);
+                row.Add(PlayerLink(player), 0, 0); row.Add(new Label { Text = $"{player.Position.DisplayName()} · {player.OverallRating} OVR", VerticalOptions = LayoutOptions.Center, TextColor = DynastyTheme.Muted }, 1, 0);
                 scouting.Children.Add(row);
             }
             scoutingHost.Content = CoachingCard("OPPONENT SCOUTING REPORT", scouting);

@@ -164,6 +164,7 @@ public static class ProRoster
     public static int Active(ProFranchise s, string team) => s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired);
     public static ProFranchise TrimOversizedPractice(ProFranchise s)
     {
+        if(s.PracticeSquadRemoved||s.League.PracticeSquadLimit==0) return ProPracticeRetirement.Apply(s);
         foreach(var team in s.League.Teams)
             while(ProInternationalPractice.OrdinaryPlayers(s,team.Name)>16)
             {
@@ -175,6 +176,7 @@ public static class ProRoster
     }
     public static ProFranchise Practice(ProFranchise s, string team, Guid id, bool practice)
     {
+        if(s.PracticeSquadRemoved||s.League.PracticeSquadLimit==0) throw new InvalidOperationException("Practice squads are no longer used. Sign free agents to the active roster.");
         var p = s.Players.Single(p => p.Football.PlayerId == id);
         if (p.Football.TeamName != team || p.Reserve || p.Retired) throw new InvalidOperationException("Unavailable player.");
         if(p.PracticeSquad==practice)return s;
@@ -194,6 +196,7 @@ public static class ProRoster
     }
     public static ProFranchise SignPractice(ProFranchise s,string team,Guid id)
     {
+        if(s.PracticeSquadRemoved||s.League.PracticeSquadLimit==0) throw new InvalidOperationException("Practice squads are no longer used.");
         var p=s.Players.Single(p=>p.Football.PlayerId==id);
         if(!s.League.Teams.Any(t=>t.Name==team)||p.Football.TeamName!="Free agent"||p.Retired||p.Football.CurrentInjury is {WeeksRemaining:>0}
             ||s.Waivers.Any(w=>w.PlayerId==id)||s.Bids.Any(b=>b.PlayerId==id)||s.Contracts.Any(c=>c.Active&&c.PlayerId==id))throw new InvalidOperationException("Player is unavailable for a practice contract.");

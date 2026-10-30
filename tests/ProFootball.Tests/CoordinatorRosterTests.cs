@@ -6,7 +6,7 @@ public class CoordinatorRosterTests
 {
     static (ProFranchise State,ProPlayer Candidate) Setup(StaffRole role)
     {
-        var s=ProLeagueService.Create("Seattle Seahawks",role:role);
+        var s=ProLeagueService.Create("Seattle Seahawks",role:role,preserveLegacyPracticeForAudit:true);
         var removed=s.Players.Where(p=>p.Football.TeamName==s.UserTeam&&!p.Retired&&!p.Reserve&&!p.PracticeSquad&&!ProCareer.Controls(s,p.Football.Position)).Take(3).Select(p=>p.Football.PlayerId).ToHashSet();
         var candidate=s.Players.First(p=>removed.Contains(p.Football.PlayerId));
         candidate=candidate with{Age=25,Experience=3,CreditedSeasons=3,Football=candidate.Football with{TeamName="Free agent",OverallRating=55,PotentialRating=55}};

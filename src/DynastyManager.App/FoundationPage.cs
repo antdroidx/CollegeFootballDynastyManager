@@ -433,7 +433,7 @@ public sealed partial class FoundationPage : ContentPage
                 "All Positions"
             }.Concat(
                 Enum.GetValues<Position>()
-                    .Select(position => position.ToString()))
+                    .Select(position => position.DisplayName()))
              .ToList(),
             SelectedIndex = 0
         };
@@ -1917,7 +1917,7 @@ public sealed partial class FoundationPage : ContentPage
                         string.Join(
                             " • ",
                             activeInjuries.Take(4).Select(player =>
-                                $"{player.Position} {player.FullName} " +
+                                $"{player.Position.DisplayName()} {player.FullName} " +
                                 $"({player.CurrentInjury!.Severity}, " +
                                 $"{player.CurrentInjury.WeeksRemaining} wk)")),
                     FontSize = 12
@@ -2114,7 +2114,7 @@ public sealed partial class FoundationPage : ContentPage
             var view = _recruitingView;
             var search = _recruitingSearch.Text?.Trim();
             Position? position = _recruitingPositionFilter.SelectedIndex > 0 &&
-                Enum.TryParse<Position>(_recruitingPositionFilter.SelectedItem?.ToString(), out var parsedPosition)
+                PositionLabels.TryParse(_recruitingPositionFilter.SelectedItem?.ToString(), out var parsedPosition)
                     ? parsedPosition : null;
             var stars = _recruitingStarFilter.SelectedIndex;
             var stateFilter = _recruitingStateFilter.SelectedIndex;
@@ -2598,7 +2598,7 @@ public sealed partial class FoundationPage : ContentPage
               (leadingOffer is null ? "" : $" · Leader: {leadingOffer.TeamName} ({leadingOffer.Interest}%)");
 
         return new(prospect, interaction,
-            $"{boardMarker}{prospect.Position} {prospect.FullName}",
+            $"{boardMarker}{prospect.Position.DisplayName()} {prospect.FullName}",
             $"#{nationalRank} nationally · {publicRatingText}", overallText,
             prospect.Subtitle, $"{interaction.ScoutingPercent}% complete", userStatus, marketStatus, recruitStars, nationalRank);
     }
@@ -3134,7 +3134,7 @@ public sealed partial class FoundationPage : ContentPage
                     Spacing = 9,
                     Children =
                     {
-                        RecruitIdentity(prospect.ProspectId, prospect.FullName, $"{prospect.Position} {prospect.FullName}",
+                        RecruitIdentity(prospect.ProspectId, prospect.FullName, $"{prospect.Position.DisplayName()} {prospect.FullName}",
                             prospect.Source == RecruitingSource.HighSchool ? "HIGH SCHOOL PROSPECT" : "TRANSFER PROSPECT"),
                         new Label
                         {
@@ -3183,7 +3183,7 @@ public sealed partial class FoundationPage : ContentPage
             "National", "Team Needs", "Offense", "Defense", "Special Teams"
         }.Concat(RecruitGeography.RegionNames.Select(name => $"Region: {name}"))
          .Concat(RecruitGeography.StateNames.Select(name => $"State: {name}"))
-         .Concat(Enum.GetValues<Position>().Select(position => $"Position: {position}"))
+         .Concat(Enum.GetValues<Position>().Select(position => $"Position: {position.DisplayName()}"))
          .ToList();
 
         foreach (var scout in _currentDynasty.ScoutingStaff)
@@ -3325,7 +3325,7 @@ public sealed partial class FoundationPage : ContentPage
                         {
                             new Label
                             {
-                                Text = $"{item.Position} {item.PlayerName}",
+                                Text = $"{item.Position.DisplayName()} {item.PlayerName}",
                                 FontAttributes = FontAttributes.Bold,
                                 FontSize = 13
                             },
@@ -3434,7 +3434,7 @@ public sealed partial class FoundationPage : ContentPage
             [("Player", 165), ("Pos", 45), ("School", 170), ("Stars", 65), ("Rating", 65), ("OVR", 50), ("Source", 100), ("Joins", 60), ("Assisted", 65)],
             records.Select(record => {
                 var rating = RecruitingRankingService.GetCommitmentRating(_currentDynasty, record);
-                return new View[] { TableText(record.PlayerName, true), TableText(record.Position.ToString()), SchoolCell(record.TeamName),
+                return new View[] { TableText(record.PlayerName, true), TableText(record.Position.DisplayName()), SchoolCell(record.TeamName),
                     TableText(new string('★', RecruitingRankingService.GetStars(rating))), TableText(rating.ToString("0.00")),
                     RatingCell(record.OverallRating), TableText(record.Source.ToString()), TableText(record.JoinSeasonYear.ToString()),
                     TableText(record.WasCpuAssisted ? "Yes" : "—") };
@@ -3477,7 +3477,7 @@ public sealed partial class FoundationPage : ContentPage
             Padding = new Thickness(10, 7),
             Content = new Label
             {
-                Text = $"{commitment.Position} {commitment.PlayerName} • " +
+                Text = $"{commitment.Position.DisplayName()} {commitment.PlayerName} • " +
                        $"{recruitStars}★ • 247-style {recruitRating:0.00} • " +
                        $"OVR {commitment.OverallRating} • {commitment.Source}" +
                        teamText + joinText +
@@ -4273,7 +4273,7 @@ public sealed partial class FoundationPage : ContentPage
                 _programList.Children.Add(new Label
                 {
                     Text =
-                        $"{stat.Position} {stat.PlayerName} ({stat.TeamName}) • " +
+                        $"{stat.Position.DisplayName()} {stat.PlayerName} ({stat.TeamName}) • " +
                         $"{stat.ScrimmageYards:N0} yds • {stat.Touchdowns} TD",
                     FontSize = 11
                 });
@@ -4301,7 +4301,7 @@ public sealed partial class FoundationPage : ContentPage
                 _programList.Children.Add(new Label
                 {
                     Text =
-                        $"{stat.Position} {stat.PlayerName} ({stat.TeamName}) • " +
+                        $"{stat.Position.DisplayName()} {stat.PlayerName} ({stat.TeamName}) • " +
                         $"{stat.ScrimmageYards:N0} yds • {stat.Touchdowns} TD",
                     FontSize = 11
                 });
@@ -4326,7 +4326,7 @@ public sealed partial class FoundationPage : ContentPage
                 _programList.Children.Add(new Label
                 {
                     Text =
-                        $"SCHOOL CAREER YARDS LEADER • {schoolCareerLeader.Position} " +
+                        $"SCHOOL CAREER YARDS LEADER • {schoolCareerLeader.Position.DisplayName()} " +
                         $"{schoolCareerLeader.PlayerName} • " +
                         $"{schoolCareerLeader.Yards:N0} yds • " +
                         $"{schoolCareerLeader.Touchdowns} TD",
@@ -4361,7 +4361,7 @@ public sealed partial class FoundationPage : ContentPage
                 _programList.Children.Add(new Label
                 {
                     Text =
-                        $"{award.AwardName} • {award.Position} {award.PlayerName} • " +
+                        $"{award.AwardName} • {award.Position.DisplayName()} {award.PlayerName} • " +
                         award.Summary,
                     FontSize = 11
                 });
@@ -4664,7 +4664,7 @@ public sealed partial class FoundationPage : ContentPage
             _transferPortalList.Children.Add(new Label
             {
                 Text =
-                    $"{record.Position} {record.PlayerName} • " +
+                    $"{record.Position.DisplayName()} {record.PlayerName} • " +
                     $"OVR {record.BeforeOverall}→{record.AfterOverall} " +
                     $"({FormatSigned(record.OverallChange)}) • " +
                     $"POT {FormatPotentialStars(record.BeforePotential)}→" +

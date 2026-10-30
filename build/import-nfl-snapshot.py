@@ -20,7 +20,7 @@ teams.sort(key=lambda t:(["AFC","NFC"].index(t["Conference"]),["East","North","S
 for conf in ["AFC","NFC"]:
  for division in ["East","North","South","West"]:
   for rank,t in enumerate(t for t in teams if t["Conference"]==conf and t["Division"]==division):t["SeedRank"]=rank
-league=dict(Version=1,Name="National Football League",ActiveRosterLimit=53,PracticeSquadLimit=16,Teams=teams)
+league=dict(Version=1,Name="National Football League",ActiveRosterLimit=53,PracticeSquadLimit=0,Teams=teams)
 rows=list(csv.DictReader((cache/"roster_weekly_2026.csv").open(encoding="utf-8-sig")));week=max(int(r["week"]) for r in rows)
 teamweeks={team:max(int(r["week"]) for r in rows if r["team"]==team and r["game_type"]=="REG") for team in {r["team"] for r in rows}}
 rows=[r for r in rows if int(r["week"])==teamweeks[r["team"]] and r["game_type"]=="REG"]
@@ -34,7 +34,7 @@ teammap={t["Id"]:t for t in teams};players=[];covered=0;estimated=0;counts=colle
 def number(value,default=0):
  try:return int(float(value))
  except (ValueError,TypeError):return default
-positions={"QB":"QB","RB":"RB","HB":"RB","FB":"RB","WR":"WR","TE":"TE","LS":"TE","OL":"OL","LT":"OL","LG":"OL","C":"OL","RG":"OL","RT":"OL","T":"OL","G":"OL","DE":"DE","LEDG":"DE","REDG":"DE","DT":"DT","DL":"DT","CB":"CB","FS":"FS","SS":"SS","S":"FS","DB":"CB","MLB":"MLB","ILB":"MLB","MIKE":"MLB","LB":"MLB","OLB":"OLB","LOLB":"OLB","ROLB":"OLB","SAM":"OLB","WILL":"OLB","K":"K","P":"K"}
+positions={"QB":"QB","RB":"RB","HB":"RB","FB":"FB","WR":"WR","TE":"TE","LS":"TE","OL":"OL","LT":"OL","LG":"OL","C":"OL","RG":"OL","RT":"OL","T":"OL","G":"OL","DE":"DE","LEDG":"DE","REDG":"DE","DT":"DT","DL":"DT","CB":"CB","FS":"FS","SS":"SS","S":"FS","DB":"CB","MLB":"MLB","ILB":"MLB","MIKE":"MLB","LB":"MLB","OLB":"OLB","LOLB":"OLB","ROLB":"OLB","SAM":"OLB","WILL":"OLB","K":"K","P":"K"}
 for r in sorted(latest.values(),key=lambda r:(r["team"],r["status"],r["full_name"])):
  code=r["team"];code={"LA":"LAR","WSH":"WAS"}.get(code,code)
  if code not in teammap:continue

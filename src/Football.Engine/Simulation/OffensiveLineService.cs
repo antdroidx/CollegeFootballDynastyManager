@@ -3,7 +3,7 @@ namespace DynastyManager.Core.Simulation;
 
 public static class OffensiveLineService
 {
-    public static string Label(DynastyPlayer p) => p.Position != Position.OL ? p.Position.ToString() : p.NcaaPositionCode switch
+    public static string Label(DynastyPlayer p) => p.Position != Position.OL ? p.Position == Position.RB ? "HB" : p.Position.ToString() : p.NcaaPositionCode switch
     { 5 or 9 => "OT", 6 or 8 => "OG", 7 => "OC", _ => "OL" };
 
     public static IReadOnlyList<DynastyPlayer> AssignMissingRoles(IEnumerable<DynastyPlayer> players)

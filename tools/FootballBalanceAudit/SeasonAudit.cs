@@ -8,7 +8,7 @@ static class SeasonAudit
 {
     public static async Task Run(string mode,int years,string output)
     {
-        var reports=new List<object>();var generated=mode.Contains("generated");var sampledQb=new List<double>();var sampledRb3=new List<double>();var sampledDl=new List<double>();var invalid=0;var sampledGames=0;
+        var reports=new List<object>();var rosterChecks=new List<object>();var generated=mode.Contains("generated");var sampledQb=new List<double>();var sampledRb3=new List<double>();var sampledDl=new List<double>();var invalid=0;var sampledGames=0;
         void Observe(GameDaySession session)
         {
             sampledGames++;
@@ -34,12 +34,14 @@ static class SeasonAudit
             {
                 while(s.Phase!=ProPhase.Offseason)
                 {
+                    if(s.Players.Any(p=>p.PracticeSquad))throw new Exception("Retired practice squad reappeared");
                     s=ProCpu.Manage(s,true);if(s.Phase==ProPhase.Preseason&&s.Week==3)s=ProCpu.Trim(s,s.UserTeam);
                     s=ProCpu.MakeRoom(s,s.UserTeam,0);
                     var game=s.Games.FirstOrDefault(g=>g.Phase==s.Phase&&g.Football.Week==s.Week&&!g.Football.HasPlayed);
                     if(game is not null){var session=ProLeagueService.Start(s,game,GameDayMode.Simulate);GameDayEngine.SimulateToEnd(session);if(s.Phase==ProPhase.RegularSeason)Observe(session);s=ProLeagueService.Finish(s,session);}
                     var before=(s.Phase,s.Week);s=ProLeagueService.Advance(s);if(before==(s.Phase,s.Week))throw new Exception("Blocked phase "+s.Year+" "+before+" "+ProSeasonEligibility.Issue(s,s.UserTeam));
                 }
+                rosterChecks.Add(new{Year=s.Year,PracticePlayers=s.Players.Count(p=>p.PracticeSquad),ActiveMinimum=s.League.Teams.Min(t=>ProRoster.Active(s,t.Name)),ActiveMaximum=s.League.Teams.Max(t=>ProRoster.Active(s,t.Name)),ReservePlayers=s.Players.Count(p=>p.Reserve),Fullbacks=s.Players.Count(p=>p.Football.Position==Position.FB&&p.Football.TeamName!="Free agent"&&!p.Retired)});
                 var report=Summary(s.Year,s.Games.Where(g=>g.Phase==ProPhase.RegularSeason).Select(g=>g.Football),s.Players.Where(p=>ProDepthChart.Active(p)&&p.Football.TeamName!="Free agent").Select(p=>p.Football),original);reports.Add(report);Console.WriteLine(JsonSerializer.Serialize(report));
                 if(cycle==years-1)break;
                 s=ProOffseason.Advance(s);s=ProOffseason.Advance(s);s=ProDraft.AutoUntilUser(s,true);s=ProOffseason.Advance(s);s=ProCpu.Trim(s,s.UserTeam);s=ProOffseason.Advance(s);s=ProCpu.Manage(s,true);
@@ -69,7 +71,7 @@ static class SeasonAudit
                 s=WalkOnRosterService.FillAllTeams(s,teams);s=RosterManagementService.NormalizeAllDepthCharts(s);s=SeasonProgression.Advance(s);s=PlayerDevelopmentService.ApplyOffseasonDevelopment(s);s=SeasonProgression.Advance(s);s=StaffManagementService.AdvanceSeason(s);s=SeasonProgression.Advance(s);
             }
         }
-        var final=new{Mode=mode,Seasons=reports,PersonnelSampleGames=sampledGames,PrimaryQBSnapShare=sampledQb.Average(),ThirdAndLaterRBCarryShare=sampledRb3.Average(),BackupDLSnapShare=sampledDl.Average(),InvalidPersonnelSnaps=invalid};Directory.CreateDirectory(Path.GetDirectoryName(output)!);await File.WriteAllTextAsync(output,JsonSerializer.Serialize(final,new JsonSerializerOptions{WriteIndented=true}));
+        var final=new{Mode=mode,Seasons=reports,ProRosterSeasons=rosterChecks,PersonnelSampleGames=sampledGames,PrimaryQBSnapShare=sampledQb.Average(),ThirdAndLaterRBCarryShare=sampledRb3.Average(),BackupDLSnapShare=sampledDl.Average(),InvalidPersonnelSnaps=invalid};Directory.CreateDirectory(Path.GetDirectoryName(output)!);await File.WriteAllTextAsync(output,JsonSerializer.Serialize(final,new JsonSerializerOptions{WriteIndented=true}));
         if(invalid!=0)throw new Exception("Invalid personnel detected: "+invalid);
     }
 }

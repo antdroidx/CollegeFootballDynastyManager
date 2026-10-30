@@ -170,7 +170,7 @@ public static partial class GameDayEngine
             call.Defense.Personnel, defenseFatigue, session.Random);
         offensePersonnel = GameDayCoachingService.ApplySubstitutions(session, offensePersonnel);
         defensePersonnel = GameDayCoachingService.ApplySubstitutions(session, defensePersonnel);
-        var offensePlayers = Players(session, offensePersonnel);
+        var offensePlayers = BackfieldRoles.Assign(call.Offense, Players(session, offensePersonnel));
         var defensePlayers = Players(session, defensePersonnel);
 
         var keepEligible = call.Offense.Name.Contains("Option", StringComparison.OrdinalIgnoreCase) ||
@@ -211,7 +211,7 @@ public static partial class GameDayEngine
             ? Math.Max(-3, RoundYards(session.Random.Next(-1, 10) + (mobility - 65) * .10))
             : isPass ? 0 : Math.Max(-4, RoundYards(session.Random.Next(-2, 11) + advantage * .09 + session.Rules.RunGainOffset));
 
-        var carrier = isPass ? null : scramble || designedKeep ? qb : Pick(offensePlayers.Where(player => player.Position == Position.RB).ToArray(), session.Random) ?? qb;
+        var carrier = isPass ? null : scramble || designedKeep ? qb : BackfieldRoles.Runner(call.Offense, offensePlayers, session.Random) ?? qb;
         var target = isPass ? read.Target : null;
         var gain = complete ? ReceivingGainService.Resolve(call.Offense, target!, read.Defender,
             read.Separation, advantage, session.YardLine, session.Random) : new ReceivingGain(0, 0);
@@ -236,7 +236,7 @@ public static partial class GameDayEngine
             var custom = call.Offense.Assignments.FirstOrDefault(a => a.Position == target.Position && a.RoleIndex == role);
             var alignment = GameDayAnimationPlanner.OffensiveAlignment(call.Offense, target.Position, role);
             var route = GameDayAnimationPlanner.AssignedRoute(call.Offense, target.Position, role);
-            var eligibleIndex = offensePlayers.TakeWhile(p => p.PlayerId != target.PlayerId).Count(p => p.Position is Position.WR or Position.TE or Position.RB);
+            var eligibleIndex = offensePlayers.TakeWhile(p => p.PlayerId != target.PlayerId).Count(p => p.Position is Position.WR or Position.TE or Position.RB or Position.FB);
             carrierLane = GameDayAnimationPlanner.RouteEndLane(route, target.Position, eligibleIndex, alignment.Y, true);
         }
         else if (sack) carrierLane = call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase) ? .25 : .50;
@@ -266,6 +266,7 @@ public static partial class GameDayEngine
             IsDrop = isPass && !complete && !turnover && !sack && read.Separation >= 2 && session.Random.NextDouble() < .18,
             BrokeTackle = brokeTackle || complete && gain.BrokeTackle, IsQuarterbackScramble = scramble, IsQuarterbackKeep = designedKeep,
             IsBootleg = call.Offense.Name.Contains("Boot", StringComparison.OrdinalIgnoreCase),
+            FullbackId = offensePlayers.FirstOrDefault(p=>p.Position==Position.FB)?.PlayerId,
             QuarterbackId = qb?.PlayerId, BallCarrierId = carrier?.PlayerId, TargetId = target?.PlayerId,
             PrimaryDefenderId = defender?.PlayerId, OffensePersonnel = offensePersonnel.PlayerIds,
             DefensePersonnel = defensePersonnel.PlayerIds
@@ -706,7 +707,7 @@ public static partial class GameDayEngine
 
     private static DynastyPlayer[] PassTargets(OffensivePlayDefinition play, IReadOnlyList<DynastyPlayer> personnel)
     {
-        var eligible = personnel.Where(player => player.Position is Position.WR or Position.TE or Position.RB).ToArray();
+        var eligible = personnel.Where(player => player.Position is Position.WR or Position.TE or Position.RB or Position.FB).ToArray();
         if (eligible.Length == 0) return [];
         var family = GameDayAnimationPlanner.RouteFamily(play);
         var preferred = family switch

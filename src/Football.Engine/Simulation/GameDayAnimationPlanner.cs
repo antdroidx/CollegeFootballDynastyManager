@@ -42,12 +42,12 @@ public static class GameDayAnimationPlanner
 
     public static GameDayRouteFamily AssignedRoute(OffensivePlayDefinition play, Position position, int roleIndex)
     {
-        if (play.Name == "Hail Mary" && position is Position.WR or Position.TE or Position.RB) return GameDayRouteFamily.Verticals;
+        if (play.Name == "Hail Mary" && position is Position.WR or Position.TE or Position.RB or Position.FB) return GameDayRouteFamily.Verticals;
         var custom = play.Assignments.FirstOrDefault(a => a.Position == position && a.RoleIndex == roleIndex);
         if (custom is not null && Enum.TryParse<GameDayRouteFamily>(custom.Route, out var route)) return route;
         var family = RouteFamily(play);
         if (family == GameDayRouteFamily.Run) return family;
-        if (position == Position.RB) return GameDayRouteFamily.Screen;
+        if (position is Position.RB or Position.FB) return GameDayRouteFamily.Screen;
         if (position == Position.TE) return family switch
         { GameDayRouteFamily.Mesh => GameDayRouteFamily.Mesh, GameDayRouteFamily.Verticals => GameDayRouteFamily.Corner, _ => GameDayRouteFamily.Outs };
         if (position != Position.WR) return family;
@@ -119,11 +119,11 @@ public static class GameDayAnimationPlanner
 
     public static IReadOnlyList<Position> EligiblePositions(OffensivePersonnel personnel) => personnel switch
     {
-        OffensivePersonnel.TripleBack => [Position.RB, Position.RB, Position.RB, Position.WR, Position.WR],
+        OffensivePersonnel.TripleBack => [Position.FB, Position.RB, Position.RB, Position.WR, Position.WR],
         OffensivePersonnel.Empty => [Position.WR, Position.WR, Position.WR, Position.WR, Position.WR],
         OffensivePersonnel.Ten => [Position.RB, Position.WR, Position.WR, Position.WR, Position.WR],
         OffensivePersonnel.Twelve => [Position.RB, Position.WR, Position.WR, Position.TE, Position.TE],
-        OffensivePersonnel.TwentyOne => [Position.RB, Position.RB, Position.WR, Position.WR, Position.TE],
+        OffensivePersonnel.TwentyOne => [Position.FB, Position.RB, Position.WR, Position.WR, Position.TE],
         _ => [Position.RB, Position.WR, Position.WR, Position.WR, Position.TE]
     };
 
@@ -133,11 +133,12 @@ public static class GameDayAnimationPlanner
         var lane = AlignmentLane(position, roleIndex);
         if (position == Position.QB)
             return new(formation switch { OffensiveFormation.Singleback or OffensiveFormation.IForm or OffensiveFormation.Flexbone => -1.5, OffensiveFormation.Pistol => -4, _ => -5 }, .50);
+        if (position == Position.FB) return new(-4, .50);
         if (position == Position.RB)
             return formation switch
             {
                 OffensiveFormation.Singleback => new(-7, .50),
-                OffensiveFormation.IForm => new(roleIndex == 0 ? -4 : -7, .50),
+                OffensiveFormation.IForm => new(-7, .50),
                 OffensiveFormation.Pistol => new(-7, .50),
                 OffensiveFormation.Flexbone => roleIndex == 0 ? new(-4, .50) : new(-2, roleIndex == 1 ? .27 : .73),
                 _ => new(-5, lane)
@@ -205,6 +206,7 @@ public static class GameDayAnimationPlanner
 
     public static double AlignmentLane(Position position, int roleIndex) => position switch
     {
+        Position.FB => .50,
         Position.RB => roleIndex % 2 == 0 ? .59 : .41,
         Position.TE => roleIndex % 2 == 0 ? .69 : .31,
         Position.WR => new[] { .10, .23, .77, .90, .84 }[Math.Clamp(roleIndex, 0, 4)],
@@ -238,7 +240,7 @@ public static class GameDayAnimationPlanner
     public static double RouteEndLane(GameDayRouteFamily family, Position position, int eligibleIndex,
         double startLane, bool isTarget)
     {
-        if (position is not (Position.WR or Position.TE or Position.RB)) return startLane;
+        if (position is not (Position.WR or Position.TE or Position.RB or Position.FB)) return startLane;
         return family switch
         {
             GameDayRouteFamily.Verticals => startLane,

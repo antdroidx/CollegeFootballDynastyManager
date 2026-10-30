@@ -5,7 +5,7 @@ public sealed class OffseasonCapCountingTests
 {
     static ProFranchise Camp(bool undrafted=false)
     {
-        var s=ProLeagueService.Create("Seattle Seahawks");var template=s.Players.First(p=>p.Football.TeamName==s.UserTeam);
+        var s=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);var template=s.Players.First(p=>p.Football.TeamName==s.UserTeam);
         var players=Enumerable.Range(0,52).Select(i=>template with{Football=template.Football with{PlayerId=Guid.Parse($"00000000-0000-0000-0000-{i+1:000000000000}"),TeamName=s.UserTeam},Experience=0,CreditedSeasons=0,RookieYear=s.Year,DraftOverall=undrafted?null:10,PracticeSquad=false,Reserve=false}).ToList();
         var contracts=players.Select((p,i)=>new ProContract(p.Football.PlayerId,s.UserTeam,s.Year,1,0,[new(s.Year,i<51?20_000_000:3_000_000,0){ProratedBonus=i<51?0:5_000_000,OtherCompensation=i<51?0:200_000}])).ToList();
         return s with{Players=players,Contracts=contracts,TeamCapAllocations=[],SalaryCap=2_000_000_000,Phase=ProPhase.Preseason,CapRulesVersion=2};

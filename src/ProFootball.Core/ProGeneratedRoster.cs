@@ -11,15 +11,15 @@ public static class ProGeneratedRoster
         (Position Position,int Count)[] structure=[(Position.QB,3),(Position.RB,4),(Position.WR,6),(Position.TE,3),(Position.OL,9),(Position.DE,4),(Position.DT,4),(Position.MLB,3),(Position.OLB,4),(Position.CB,5),(Position.FS,3),(Position.SS,3),(Position.K,2)];
         foreach(var team in league.Teams)
         {
-            var strength=random.Next(-3,4);
-            foreach(var (position,count) in structure)for(var depth=0;depth<count;depth++)Add(position,depth,false);
-            for(var i=0;i<16;i++)Add(structure[i%structure.Length].Position,10+i,true);
+            var strength=random.Next(-3,4); var usesFullback=random.Next(4)==0;
+            foreach(var (position,count) in structure)for(var depth=0;depth<count;depth++)Add(position==Position.RB&&depth==3&&usesFullback?Position.FB:position,position==Position.RB&&depth==3&&usesFullback?0:depth,false);
+
             void Add(Position pos,int depth,bool practice)
             {
                 var tier=pos==Position.OL?depth/5:pos is Position.DE or Position.DT or Position.OLB?depth/2:pos is Position.WR or Position.CB?depth/3:depth;
-                var target=Math.Clamp((practice?59:(int)Math.Round(baselines[pos])-tier*7)+strength+random.Next(-6,7),45,96);
+                var target=Math.Clamp((practice?59:(int)Math.Round(baselines.GetValueOrDefault(pos,baselines[Position.RB]))-tier*7)+strength+random.Next(-6,7),45,96);
                 var age=practice?random.Next(22,25):22+(random.Next(0,12)+random.Next(0,12))/2;var experience=Math.Max(0,age-22);var rookie=2026-experience;
-                var code=pos switch{Position.OL=>5+depth%5,Position.DE=>10+depth%2,Position.OLB=>depth%2==0?13:15,Position.K=>depth%2==0?19:20,_=>(int?)null};
+                var code=pos switch{Position.FB=>2,Position.OL=>5+depth%5,Position.DE=>10+depth%2,Position.OLB=>depth%2==0?13:15,Position.K=>depth%2==0?19:20,_=>(int?)null};
                 var template=new DynastyPlayer{FullName="Generated Player",TeamName=team.Name,Position=pos,NcaaPositionCode=code,DepthChartOrder=depth+1};
                 var pool=names.Where(p=>p.Position==pos&&(pos!=Position.K||p.NcaaPositionCode==code)).OrderBy(p=>Math.Abs(p.OverallRating-target)).Take(12).ToArray();
                 var archetype=pool[random.Next(pool.Length)];

@@ -22,12 +22,13 @@ public static class ProLeagueService
     {
         if (league.Version != 1 || league.Teams.Count != 32 || league.Teams.Select(t => t.Id).Distinct().Count() != 32 || league.Teams.Select(t => t.Name).Distinct().Count() != 32 ||
             league.Teams.GroupBy(t => t.Conference).Count() != 2 || league.Teams.GroupBy(t => (t.Conference, t.Division)).Count() != 8 ||
-            league.Teams.GroupBy(t => (t.Conference, t.Division)).Any(g => g.Count() != 4 || !g.Select(t => t.SeedRank).Order().SequenceEqual(new[] { 0, 1, 2, 3 })) || league.ActiveRosterLimit != 53 || league.PracticeSquadLimit != 16)
-            throw new InvalidDataException("A league needs two conferences of four divisions, four unique teams per division, 53 active players and 16 practice players.");
+            league.Teams.GroupBy(t => (t.Conference, t.Division)).Any(g => g.Count() != 4 || !g.Select(t => t.SeedRank).Order().SequenceEqual(new[] { 0, 1, 2, 3 })) || league.ActiveRosterLimit != 53 || league.PracticeSquadLimit is not (0 or 16))
+            throw new InvalidDataException("A league needs two conferences of four divisions, four unique teams per division, 53 active players.");
     }
-    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false, StaffRole role = StaffRole.HeadCoach, bool firingEnabled = false, string? coachName = null, bool applyOpeningTrades = true, bool generatedPlayers = false)
+    public static ProFranchise Create(string userTeam, string name = "My franchise", bool sourcedContracts = false, StaffRole role = StaffRole.HeadCoach, bool firingEnabled = false, string? coachName = null, bool applyOpeningTrades = true, bool generatedPlayers = false, bool preserveLegacyPracticeForAudit = false)
     {
         var league = Load();
+        if(preserveLegacyPracticeForAudit) league=league with {PracticeSquadLimit=16};
         if (!league.Teams.Any(t => t.Name == userTeam)) throw new ArgumentException("Unknown team");
         var snapshot = Snapshot();
         if(generatedPlayers){sourcedContracts=false;applyOpeningTrades=false;}
@@ -46,9 +47,10 @@ public static class ProLeagueService
         franchise = ProCapInitialization.Initialize(franchise);
         franchise = ProCareer.Initialize(franchise, role, firingEnabled, coachName);
         var initialized = ProMorale.NormalizeContracts(sourcedContracts ? ProReviewedOpeningRoster.InitializeNew(ProOpeningLedger.InitializeNew(ProContractData.Apply(franchise))) : ProContractData.CompleteRookieTerms(franchise));
-        if(generatedPlayers)return ProRoster.TrimOversizedPractice(ProReserve.InitializeOpening(initialized));
+        if(generatedPlayers)return ProPracticeRetirement.Apply(ProReserve.InitializeOpening(initialized));
         initialized = ProCompensatoryDraft.InitializeNew(applyOpeningTrades ? ProOpeningTransactions.InitializeNew(initialized) : initialized);
-        return applyOpeningTrades ? ProRoster.TrimOversizedPractice(ProReserve.InitializeOpening(ProFutureDraftOwnership.InitializeNew(initialized))) : initialized;
+        var opening = applyOpeningTrades ? ProRoster.TrimOversizedPractice(ProReserve.InitializeOpening(ProFutureDraftOwnership.InitializeNew(initialized))) : initialized;
+        return preserveLegacyPracticeForAudit ? opening : ProPracticeRetirement.Apply(opening);
     }
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {
@@ -59,7 +61,8 @@ public static class ProLeagueService
         foreach (var team in league.Teams)
         {
             foreach (var (position, count) in positions)
-                for (var depth = 1; depth <= count; depth++) Add(position, depth, false);
+                for (var depth = 1; depth <= count; depth++)
+                    Add(position==Position.RB&&depth==4&&team.Id.Sum(c=>(int)c)%4==0?Position.FB:position, depth, false);
             for (var i = 0; i < league.PracticeSquadLimit; i++) Add(positions[i % positions.Length].Item1, 20 + i, true);
             void Add(Position position, int depth, bool practice)
             {
@@ -71,7 +74,7 @@ public static class ProLeagueService
                     FullName = first[random.Next(first.Length)] + " " + last[random.Next(last.Length)],
                     TeamName = team.Name,
                     Position = position,
-                    NcaaPositionCode = position == Position.K ? (depth == 2 ? 20 : 19) : position==Position.OL?5+(depth-1)%5:null,
+                    NcaaPositionCode = position==Position.FB?2:position == Position.K ? (depth == 2 ? 20 : 19) : position==Position.OL?5+(depth-1)%5:null,
                     ClassYear = 4,
                     OverallRating = overall,
                     SeasonStartOverall = overall,

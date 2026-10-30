@@ -11,10 +11,10 @@ public sealed partial class FranchisePage
         body.Clear(); body.Add(Action("‹ Front Office",()=>Open("Front Office"))); body.Add(Text("Trading block",25,true));
         body.Add(Text("Browse available players or list your own from their contract & roster actions. Interest is preliminary; cap and roster checks apply to every deal.",12));
         if(!ProTradeMarket.IsOpen(s)) body.Add(Text("Trades are closed until the offseason.",16,true));
-        var list=new VerticalStackLayout(); var position=new Picker { ItemsSource=new[]{"All positions"}.Concat(Enum.GetNames<Position>()).ToArray(),SelectedIndex=0 };body.Add(position);body.Add(list);
+        var list=new VerticalStackLayout(); var position=new Picker { ItemsSource=new[]{"All positions"}.Concat(PositionLabels.Names).ToArray(),SelectedIndex=0 };body.Add(position);body.Add(list);
         void Draw()
         {
-            list.Clear();var players=s.Players.Where(p=>s.TradeBlock.Contains(p.Football.PlayerId)&&(position.SelectedIndex==0||p.Football.Position.ToString()==(string)position.SelectedItem)).OrderByDescending(p=>p.Football.OverallRating).ToArray();
+            list.Clear();var players=s.Players.Where(p=>s.TradeBlock.Contains(p.Football.PlayerId)&&(position.SelectedIndex==0||p.Football.Position.DisplayName()==(string)position.SelectedItem)).OrderByDescending(p=>p.Football.OverallRating).ToArray();
             list.Add(Table([("Pos",48),("Player",190),("Team",180),("OVR",48),("Age",48),("Interest / action",230)],players.Select(p=>
             {
                 var own=p.Football.TeamName==s.UserTeam;
@@ -26,7 +26,7 @@ public sealed partial class FranchisePage
                 }
                 else actions.Add(Action("Build offer",()=>Trade(p.Football.TeamName,p.Football.PlayerId,false)));
                 actions.IsEnabled=ProTradeMarket.IsOpen(s);
-                return new View[]{Text(p.Football.Position.ToString()),PlayerCell(p),TeamCell(s.League.Teams.Single(t=>t.Name==p.Football.TeamName)),Text(p.Football.OverallRating.ToString()),Text(p.Age.ToString()),actions};
+                return new View[]{Text(p.Football.Position.DisplayName()),PlayerCell(p),TeamCell(s.League.Teams.Single(t=>t.Name==p.Football.TeamName)),Text(p.Football.OverallRating.ToString()),Text(p.Age.ToString()),actions};
             })));
         }
         position.SelectedIndexChanged+=(_,_)=>Draw();Draw();return Task.CompletedTask;
@@ -78,9 +78,9 @@ public sealed partial class FranchisePage
             }
             var players=s.Players.Where(p=>p.Football.TeamName==club&&!p.Retired&&ProCareer.Controls(s,p.Football.Position)).OrderByDescending(p=>s.TradeBlock.Contains(p.Football.PlayerId)).ThenBy(p=>p.Football.Position).ThenByDescending(p=>p.Football.OverallRating);
             var search=new SearchBar{Placeholder="Find player",AutomationId=giving?"trade-your-search":"trade-their-search"};
-            var position=new Picker{Title="Position",ItemsSource=new[]{"All positions"}.Concat(Enum.GetNames<Position>()).ToArray(),SelectedIndex=0};
+            var position=new Picker{Title="Position",ItemsSource=new[]{"All positions"}.Concat(PositionLabels.Names).ToArray(),SelectedIndex=0};
             var playerList=new ContentView();
-            void PlayerTable(){var filtered=players.Where(p=>(position.SelectedIndex==0||p.Football.Position.ToString()==(string)position.SelectedItem)&&(string.IsNullOrWhiteSpace(search.Text)||p.Football.FullName.Contains(search.Text,StringComparison.OrdinalIgnoreCase))).ToArray();playerList.Content=filtered.Length==0?Text("No players match these filters."):Table([("Select",54),("Pos",45),("Player",165),("OVR",48),("Age",48),("Value",65)],filtered.Select(p=>new View[]{Select(p.Football.PlayerId,false),Text(p.Football.Position.ToString()),PlayerCell(p),Text(p.Football.OverallRating.ToString()),Text(p.Age.ToString()),Text(ProTrade.PlayerValue(s,p,giving?Recipient():s.UserTeam).ToString("0"))}));}
+            void PlayerTable(){var filtered=players.Where(p=>(position.SelectedIndex==0||p.Football.Position.DisplayName()==(string)position.SelectedItem)&&(string.IsNullOrWhiteSpace(search.Text)||p.Football.FullName.Contains(search.Text,StringComparison.OrdinalIgnoreCase))).ToArray();playerList.Content=filtered.Length==0?Text("No players match these filters."):Table([("Select",54),("Pos",45),("Player",165),("OVR",48),("Age",48),("Value",65)],filtered.Select(p=>new View[]{Select(p.Football.PlayerId,false),Text(p.Football.Position.DisplayName()),PlayerCell(p),Text(p.Football.OverallRating.ToString()),Text(p.Age.ToString()),Text(ProTrade.PlayerValue(s,p,giving?Recipient():s.UserTeam).ToString("0"))}));}
             search.TextChanged+=(_,_)=>PlayerTable();position.SelectedIndexChanged+=(_,_)=>PlayerTable();PlayerTable();
             var table=new VerticalStackLayout{Spacing=6,Children={search,position,playerList}};
 

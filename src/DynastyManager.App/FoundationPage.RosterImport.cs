@@ -71,7 +71,7 @@ public sealed partial class FoundationPage
                     string.Join("\n", preview.Errors.Take(12));
                 foreach (var team in preview.Players.GroupBy(p => p.TeamName).OrderBy(g => g.Key))
                     sample.Children.Add(new Label { Text = $"{team.Key}: {team.Count()} players" });
-                foreach (var p in preview.Players.Take(15)) sample.Children.Add(new Label { Text = $"{p.TeamName} · {p.FullName} · {p.Position} · OVR {p.OverallRating}" });
+                foreach (var p in preview.Players.Take(15)) sample.Children.Add(new Label { Text = $"{p.TeamName} · {p.FullName} · {p.Position.DisplayName()} · OVR {p.OverallRating}" });
                 apply.IsEnabled = preview.CanApply;
             }
             catch (Exception ex) { status.Text = ex.Message; }

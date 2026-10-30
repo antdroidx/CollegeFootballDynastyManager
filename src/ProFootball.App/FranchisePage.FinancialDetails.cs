@@ -19,7 +19,6 @@ public sealed partial class FranchisePage
         details.Children.Add(Text("Player commitments "+Dollars(b.PlayerCommitments),12));
         details.Children.Add(Text("Other cap charges "+Dollars(b.OtherCapCharges)+" / Dead money "+Dollars(b.DeadMoney),12));
         details.Children.Add(Text("Rollover reserved "+Dollars(b.RolloverReserved),12));
-        details.Children.Add(Text("International practice salary credit "+Dollars(b.InternationalPracticeSalaryExcluded),12));
         details.Children.Add(Text("Season cap space "+Dollars(b.Available)+" / Pending bids "+Dollars(ProEconomy.Pending(s,s.UserTeam)),12));
         var toggle=new Button{Text="Show cap breakdown",AutomationId="pro-cap-breakdown",BackgroundColor=DynastyTheme.Panel,TextColor=DynastyTheme.Text};
         toggle.Clicked+=(_,_)=>{details.IsVisible=!details.IsVisible;toggle.Text=details.IsVisible?"Hide cap breakdown":"Show cap breakdown";};

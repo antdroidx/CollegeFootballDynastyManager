@@ -129,6 +129,7 @@ public static class GameCastAnimation
         for (var index = 0; index < offense.Length; index++)
         {
             var player = offense[index];
+            if(player?.PlayerId == snap.FullbackId) player = player with { Position = Position.FB };
             double x, y;
             if (player?.PlayerId == snap.KickerId && snap.Outcome is
                 SnapOutcome.Kickoff or SnapOutcome.Punt or SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint)
@@ -170,6 +171,8 @@ public static class GameCastAnimation
                     x = line - direction * .065;
                     y = .50;
                     break;
+                case Position.FB:
+                    x = line - direction * .055; y = .50; break;
                 case Position.RB:
                     x = line - direction * (.095 + backIndex * .023);
                     y = GameDayAnimationPlanner.AlignmentLane(Position.RB, backIndex++);
@@ -194,7 +197,7 @@ public static class GameCastAnimation
                 roleCounts.TryGetValue(player.Position, out var roleIndex);
                 roleCounts[player.Position] = roleIndex + 1;
                 playerAssignment = calledPlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == roleIndex);
-                if (player.Position is Position.QB or Position.RB or Position.WR or Position.TE)
+                if (player.Position is Position.QB or Position.RB or Position.FB or Position.WR or Position.TE)
                 {
                     var custom = calledPlay.Assignments.FirstOrDefault(a => a.Position == player.Position && a.RoleIndex == roleIndex);
                     var alignment = GameDayAnimationPlanner.OffensiveAlignment(calledPlay, player.Position, roleIndex);
@@ -212,7 +215,7 @@ public static class GameCastAnimation
                 x = formation.From.X; y = formation.From.Y;
             }
             x = Math.Clamp(x, .025, .96);
-            var isEligible = playerAssignment?.Task != AssignmentTask.Block && player?.Position is Position.WR or Position.TE or Position.RB;
+            var isEligible = playerAssignment?.Task != AssignmentTask.Block && player?.Position is Position.WR or Position.TE or Position.RB or Position.FB;
             var assigned = player is null || calledPlay is null ? routeFamily :
                 GameDayAnimationPlanner.AssignedRoute(calledPlay, player.Position, Math.Max(0, roleCounts.GetValueOrDefault(player.Position) - 1));
             var eligibleIndex = isEligible ? routeEligibleIndex++ : index;

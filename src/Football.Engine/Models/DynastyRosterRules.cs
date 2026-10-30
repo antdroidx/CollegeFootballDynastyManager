@@ -10,6 +10,7 @@ public static class DynastyRosterRules
         new Dictionary<Position, int>
         {
             [Position.QB] = 1,
+            [Position.FB] = 0,
             [Position.RB] = 2,
             [Position.WR] = 3,
             [Position.TE] = 1,
@@ -30,6 +31,7 @@ public static class DynastyRosterRules
         new Dictionary<Position, int>
         {
             [Position.QB] = 3,
+            [Position.FB] = 0,
             [Position.RB] = 5,
             [Position.WR] = 8,
             [Position.TE] = 3,
@@ -48,6 +50,7 @@ public static class DynastyRosterRules
         new Dictionary<Position, int>
         {
             [Position.QB] = 4,
+            [Position.FB] = 0,
             [Position.RB] = 7,
             [Position.WR] = 11,
             [Position.TE] = 4,

@@ -31,7 +31,7 @@ public static class ProRookieOptions
         var bowls=s.Honors.Where(h=>h.Year>=rookie&&h.Year<=rookie+2&&h.Selections.Any(x=>x.Player.Football.PlayerId==p.Football.PlayerId)).Select(h=>h.Year).Distinct().Count();
         if(bowls>=2)return ProOptionTier.MultipleProBowls;
         if(bowls==1)return ProOptionTier.OneProBowl;
-        var offense=p.Football.Position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL;
+        var offense=p.Football.Position is Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL;
         return ProRookieParticipation.MeetsPlayingTimeTier(s.RookieParticipation,p.Football.PlayerId,rookie,offense)?ProOptionTier.PlayingTime:ProOptionTier.Base;
     }
     static ProOptionTender Calculate(ProFranchise s,int year,string group,ProOptionTier tier)

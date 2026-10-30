@@ -32,6 +32,7 @@ public sealed record ProFranchise
     public int ReservePolicyVersion {get;init;}
     public int SchemaVersion { get; init; } = 2;
     public string? OpeningFinancialSnapshot {get;init;}
+    public bool PracticeSquadRemoved {get;init;}
     public List<ProInternationalPracticeDesignation> InternationalPracticeDesignations {get;init;}=[];
     public List<ProJune1Designation> June1Designations {get;init;}=[];
     public int RatingSystemVersion { get; init; }

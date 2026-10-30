@@ -31,9 +31,9 @@ public static class GameDayMatchupService
             players.Select(rating).DefaultIfEmpty(75).Average();
         var qb = Average(offense.Where(p => p.Position == Position.QB), p =>
             ((p.Skills?.PassingAccuracy ?? p.AwarenessRating) * .65 + (p.Skills?.PassingPower ?? p.StrengthRating) * .20 + p.AwarenessRating * .15));
-        var blocking = Average(offense.Where(p => p.Position is Position.OL or Position.TE), p =>
+        var blocking = Average(offense.Where(p => p.Position is Position.OL or Position.TE or Position.FB), p =>
             pass ? p.Skills?.PassBlocking ?? p.StrengthRating : p.Skills?.RunBlocking ?? p.StrengthRating);
-        var ballSkills = Average(offense.Where(p => pass ? p.Position is Position.WR or Position.TE : p.Position == Position.RB), p =>
+        var ballSkills = Average(offense.Where(p => pass ? p.Position is Position.WR or Position.TE : p.Position is Position.RB or Position.FB), p =>
             pass ? (p.Skills?.Catching ?? p.AwarenessRating) * .6 + p.SpeedRating * .25 + p.AgilityRating * .15
                 : (p.Skills?.BreakTackle ?? p.StrengthRating) * .4 + (p.Skills?.BallCarrying ?? p.AwarenessRating) * .3 + p.SpeedRating * .3);
         var defending = Average(defense.Where(p => pass ? p.Position is Position.CB or Position.FS or Position.SS or Position.OLB

@@ -47,7 +47,7 @@ public static class PersonnelRotationService
 
             var load = player.Position switch
             {
-                Position.RB => 4.2, Position.WR or Position.TE => 3.5,
+                Position.RB or Position.FB => 4.2, Position.WR or Position.TE => 3.5,
                 Position.DE or Position.DT => 3.8, Position.OLB or Position.MLB => 2.7,
                 Position.CB or Position.FS or Position.SS => 2.4,
                 Position.OL => 1.25, Position.QB => 1.0, _ => 1.5
@@ -68,6 +68,10 @@ public static class PersonnelRotationService
         {
             var pool = depthChart.TryGetValue(position, out var players)
                 ? players : Array.Empty<DynastyPlayer>();
+            if (position == Position.FB && pool.Count == 0)
+                pool = depthChart.Values.SelectMany(p => p).Where(p => p.Position is Position.TE or Position.RB && !selected.Contains(p.PlayerId))
+                    .OrderBy(p => p.Position == Position.TE ? 0 : 1).ThenByDescending(p => DepthChartService.PositionalRating(p, 2)).ToArray();
+            pool = pool.Where(p => !selected.Contains(p.PlayerId)).ToArray();
             if (position == Position.OL)
             {
                 var starters = OffensiveLineService.Lineup(pool);
@@ -102,7 +106,7 @@ public static class PersonnelRotationService
         // Thin/injured depth must change the package, never put only nine or ten on the field.
         var offense=needs.Any(n=>n.Position==Position.QB);
         var unit=depthChart.Values.SelectMany(p=>p).Where(p=>offense
-            ? p.Position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL
+            ? p.Position is Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL
             : p.Position is Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS);
         foreach(var player in unit.Where(p=>!selected.Contains(p.PlayerId)).OrderBy(p=>p.Position==Position.QB?1:0).ThenByDescending(p=>p.OverallRating+fatigue.Energy(p.PlayerId)*.05))
         {
@@ -118,14 +122,14 @@ public static class PersonnelRotationService
         if(player.Position is Position.QB or Position.OL)return false;
         var baseChance = player.Position switch
         {
-            Position.RB => .34, Position.WR => .22, Position.TE => .15,
+            Position.FB => .15, Position.RB => .34, Position.WR => .22, Position.TE => .15,
             Position.DE or Position.DT => .32,
             Position.OLB or Position.MLB => .07,
             Position.CB or Position.FS or Position.SS => .05,
             Position.QB => .01, Position.OL => 0, _ => .02
         };
         var fatigueChance = Math.Max(0, 75 - energy) / 90;
-        if(backupOverall is int backup && player.Position is Position.RB or Position.WR or Position.TE)baseChance=Math.Max(.08,baseChance-Math.Max(0,player.OverallRating-backup-3)*.008);
+        if(backupOverall is int backup && player.Position is Position.RB or Position.FB or Position.WR or Position.TE)baseChance=Math.Max(.08,baseChance-Math.Max(0,player.OverallRating-backup-3)*.008);
         return random.NextDouble() < Math.Clamp(baseChance + fatigueChance, 0, .9);
     }
 
@@ -139,10 +143,10 @@ public static class PersonnelRotationService
 
     private static (Position, int)[] OffensiveNeeds(OffensivePersonnel package) => package switch
     {
-        OffensivePersonnel.TripleBack => [(Position.QB, 1), (Position.RB, 3), (Position.WR, 2), (Position.OL, 5)],
+        OffensivePersonnel.TripleBack => [(Position.QB, 1), (Position.FB, 1), (Position.RB, 2), (Position.WR, 2), (Position.OL, 5)],
         OffensivePersonnel.Ten => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 4), (Position.OL, 5)],
         OffensivePersonnel.Twelve => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 2), (Position.TE, 2), (Position.OL, 5)],
-        OffensivePersonnel.TwentyOne => [(Position.QB, 1), (Position.RB, 2), (Position.WR, 2), (Position.TE, 1), (Position.OL, 5)],
+        OffensivePersonnel.TwentyOne => [(Position.QB, 1), (Position.FB, 1), (Position.RB, 1), (Position.WR, 2), (Position.TE, 1), (Position.OL, 5)],
         OffensivePersonnel.Empty => [(Position.QB, 1), (Position.WR, 5), (Position.OL, 5)],
         _ => [(Position.QB, 1), (Position.RB, 1), (Position.WR, 3), (Position.TE, 1), (Position.OL, 5)]
     };

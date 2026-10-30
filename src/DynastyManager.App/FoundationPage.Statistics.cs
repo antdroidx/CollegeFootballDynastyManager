@@ -154,7 +154,7 @@ public sealed partial class FoundationPage
         close.Clicked += async (_, _) => await Navigation.PopModalAsync();
         var content = new VerticalStackLayout { Spacing = 12, Padding = 14, Children =
         {
-            close, SchoolBanner(player.TeamName, $"{player.Position} {player.FullName} · {FormatOriginalRecruitingStars(player)}"),
+            close, SchoolBanner(player.TeamName, $"{player.Position.DisplayName()} {player.FullName} · {FormatOriginalRecruitingStars(player)}"),
             SectionTitle("Career statistics", $"{lines.Length} recorded seasons · {lines.Sum(s => s.PassYards + s.RushYards):N0} yards · {lines.Sum(s => s.Touchdowns)} TD")
         } };
         content.Children.Add(PlayerEfficiencyView.Create(VisiblePlayerStatistics(),player.PlayerId));

@@ -52,6 +52,7 @@ public static class PlayerRatingService
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(player);
+        player = player.NcaaPositionCode == 2 && player.Position == Position.RB ? player with { Position = Position.FB } : player;
         player = PlayerPhysicalService.EnsureMeasurements(player);
 
         if (player.PotentialRating > 0 &&
@@ -70,7 +71,7 @@ public static class PlayerRatingService
             var role = Deterministic(state, player, "position-code");
             player = player with { NcaaPositionCode = player.Position switch
             {
-                Position.RB => role % 8 == 0 ? 2 : 1, Position.OL => 5 + role % 5,
+                Position.RB => 1, Position.FB => 2, Position.OL => 5 + role % 5,
                 Position.DE => 10 + role % 2, Position.OLB => role % 2 == 0 ? 13 : 15,
                 Position.K => 19 + role % 2, _ => Ncaa06RatingService.PositionCode(player)
             } };

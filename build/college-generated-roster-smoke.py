@@ -16,5 +16,8 @@ try:
     assert a["startingRosterName"].startswith("Generated players") and b["startingRosterName"].startswith("Generated players")
     assert not {p["playerId"] for p in a["activeRoster"]}&{p["playerId"] for p in b["activeRoster"]};assert [p["fullName"] for p in a["activeRoster"]]!=[p["fullName"] for p in b["activeRoster"]]
     s.adb("shell","monkey","-p",package,"-c","android.intent.category.LAUNCHER","1");ready("reload-library",lambda r:"Load" in s.texts(r));click("load","Load");ready("reloaded",s.overview_ready);s.capture("college-generated-reloaded");click("save-reloaded","Save");saved=read()[0];assert saved["activeRoster"]==b["activeRoster"]
-    Path("college-generated-roster-check.json").write_text(json.dumps({"twoRealNewDynasties":True,"freshIdentitiesAndNames":True,"generatedOption":True,"reloadPreservesPlayers":True,"rosterSize":len(b["activeRoster"])},indent=2),encoding="utf-8")
+    assert any(p["position"]==13 for p in b["activeRoster"]),"Imported/generated FB identities must be distinct"
+    s.adb("shell","monkey","-p",package,"-c","android.intent.category.LAUNCHER","1");ready("backfield-library",lambda r:"Load" in s.texts(r));click("backfield-load","Load");ready("backfield-overview",s.overview_ready);click("backfield-roster","Roster")
+    root=s.scroll_to_text("college-backfield-filter","All positions",max_swipes=20,toward_start=True);s.tap_id(root,"college-roster-position");click("backfield-fb","FB");s.capture("college-backfield-fullbacks")
+    Path("college-generated-roster-check.json").write_text(json.dumps({"twoRealNewDynasties":True,"freshIdentitiesAndNames":True,"generatedOption":True,"distinctFullbacks":True,"reloadPreservesPlayers":True,"rosterSize":len(b["activeRoster"])},indent=2),encoding="utf-8")
 finally:Path("college-generated-roster-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1000"))

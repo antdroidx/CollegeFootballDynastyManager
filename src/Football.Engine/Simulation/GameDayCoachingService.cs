@@ -37,7 +37,7 @@ public static class GameDayCoachingService
         return ApplySubstitutions(s, new SnapPersonnel { TeamName = team, PlayerIds = ids.ToArray() }).PlayerIds.ToHashSet();
     }
 
-    public static bool IsOffense(Position position) => position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL;
+    public static bool IsOffense(Position position) => position is Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL;
 
     public static string TalkAvailability(GameDaySession s, string team)
     {

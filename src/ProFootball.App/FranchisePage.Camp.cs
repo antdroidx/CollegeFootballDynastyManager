@@ -8,7 +8,7 @@ public sealed partial class FranchisePage
     {
         var s=state!;body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Training camp & roster battles",25,true));
         var players=s.Players.Where(p=>p.Football.TeamName==s.UserTeam&&!p.Retired).ToArray();
-        body.Add(Text($"Active {ProRoster.Active(s,s.UserTeam)} · Practice squad {players.Count(p=>p.PracticeSquad)} · Reserve {players.Count(p=>p.Reserve)}",14,true));
+        body.Add(Text($"Active {ProRoster.Active(s,s.UserTeam)} · Reserve {players.Count(p=>p.Reserve)}",14,true));
         body.Add(Text("Camp rosters allow 90 before final preseason cuts to 53. Compare your depth, promote eligible players and set starters before opening day.",12));
         var tools=new ActionRow();tools.Add(Action("Manage roster",()=>Open("Roster")));tools.Add(Action("Player development",()=>{analyticsSection=3;return Open("Analytics");}));body.Add(tools);
         body.Add(Text("Position battles",20,true));

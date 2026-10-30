@@ -538,7 +538,7 @@ public static class InteractiveRecruitingService
     {
         var coordinatorRole = position switch
         {
-            Position.QB or Position.RB or Position.WR or Position.TE or Position.OL =>
+            Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL =>
                 StaffRole.OffensiveCoordinator,
             Position.K => StaffRole.SpecialTeamsCoordinator,
             _ => StaffRole.DefensiveCoordinator

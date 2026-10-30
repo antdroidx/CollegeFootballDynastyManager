@@ -5,7 +5,7 @@ using Xunit;
 namespace ProFootball.Tests;
 public class ReservePolicyTests
 {
-    static readonly ProFranchise Template=ProLeagueService.Create("Seattle Seahawks");
+    static readonly ProFranchise Template=ProLeagueService.Create("Seattle Seahawks",preserveLegacyPracticeForAudit:true);
     static ProFranchise Games(ProFranchise s,int count,bool preseason=false)=>s with{Games=Enumerable.Range(1,count).Select(w=>new ProGame(new(){GameId="ir-"+w,SeasonYear=s.Year,Week=w,HomeTeamName=s.UserTeam,AwayTeamName="Arizona Cardinals",HasPlayed=true,HomeScore=7,AwayScore=0},preseason?ProPhase.Preseason:ProPhase.RegularSeason)).ToList()};
     [Fact]public void OpeningReservesHaveFourGameDefaultWithVerifiedSeasonEndingOverrides()
     {
@@ -32,6 +32,7 @@ public class ReservePolicyTests
         s=s with{UnsignedRookies=[new(p.Football.PlayerId,s.UserTeam,s.Year,1,1_000_000,0)]};var next=ProReserve.InitializeOpening(s);
         Assert.Null(next.Players.Single(x=>x.Football.PlayerId==p.Football.PlayerId).ReserveInjury);Assert.Equal(next,ProReserve.InitializeOpening(next));Assert.Equal(s.Contracts,next.Contracts);
         var dir=Path.Combine(Path.GetTempPath(),"ir-policy-"+Guid.NewGuid());
+        next=ProPracticeRetirement.Apply(next);
         try{var store=new ProSaveStore(dir);await store.Save(next);var loaded=await store.Load(next.Id);Assert.Equal(next.Players,loaded.Players);Assert.Equal(1,loaded.ReservePolicyVersion);}
         finally{if(Directory.Exists(dir))Directory.Delete(dir,true);}
     }

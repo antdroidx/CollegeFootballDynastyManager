@@ -161,7 +161,7 @@ public sealed partial class FoundationPage
             foreach (var p in selected)
             {
                 list.Children.Add(PlayerLink(p.PlayerId, p.FullName));
-                list.Children.Add(new Label { Text = $"{p.TeamName} · {p.Position} · OVR {p.OverallRating} · {p.Reason switch { PlayerDepartureReason.EarlyProDeclaration => "Declared for pro draft", PlayerDepartureReason.TransferPortal => "Entered transfer portal", PlayerDepartureReason.Released => "Released from roster", _ => "Graduated" }}", FontSize = 11, TextColor = DynastyTheme.Muted });
+                list.Children.Add(new Label { Text = $"{p.TeamName} · {p.Position.DisplayName()} · OVR {p.OverallRating} · {p.Reason switch { PlayerDepartureReason.EarlyProDeclaration => "Declared for pro draft", PlayerDepartureReason.TransferPortal => "Entered transfer portal", PlayerDepartureReason.Released => "Released from roster", _ => "Graduated" }}", FontSize = 11, TextColor = DynastyTheme.Muted });
             }
         }
         team.SelectedIndexChanged += (_, _) => Render(); year.SelectedIndexChanged += (_, _) => Render(); Render();
@@ -182,7 +182,7 @@ public sealed partial class FoundationPage
             foreach (var p in entries)
                 list.Children.Add(new Border { StrokeThickness = 0, Padding = 10, BackgroundColor = DynastyTheme.Palette("#203342"), Content =
                     new VerticalStackLayout { Spacing = 4, Children = { PlayerLink(p.PlayerId, p.PlayerName),
-                        new Label { Text = $"{p.InductionYear} · {p.TeamName} · {p.Position}", TextColor = DynastyTheme.Accent },
+                        new Label { Text = $"{p.InductionYear} · {p.TeamName} · {p.Position.DisplayName()}", TextColor = DynastyTheme.Accent },
                         new Label { Text = p.Citation, FontSize = 11, TextColor = DynastyTheme.Muted } } } });
         }
         scope.SelectedIndexChanged += (_, _) => Render(); Render();
@@ -214,7 +214,7 @@ public sealed partial class FoundationPage
             var conference = scope.SelectedIndex <= 0 ? null : (string?)scope.SelectedItem;
             foreach (var a in records.Where(a => a.ConferenceName == conference).OrderBy(a => a.IsAllAmerican).ThenBy(a => a.SelectionTeam).ThenBy(a => a.Position))
             {
-                var name = new Button { Text = $"{a.Position} {a.PlayerName} · {a.TeamName}", BackgroundColor = Colors.Transparent, FontSize = 12, HorizontalOptions = LayoutOptions.Start };
+                var name = new Button { Text = $"{a.Position.DisplayName()} {a.PlayerName} · {a.TeamName}", BackgroundColor = Colors.Transparent, FontSize = 12, HorizontalOptions = LayoutOptions.Start };
                 name.Clicked += async (_, _) => await ShowPlayerProfileAsync(a.PlayerId);
                 var details = new VerticalStackLayout { Spacing = 3, Children =
                 {

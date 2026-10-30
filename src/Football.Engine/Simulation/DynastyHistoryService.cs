@@ -162,7 +162,7 @@ public static class DynastyHistoryService
             var players = teamGroup.Where(player => !player.IsRedshirted).ToArray();
             var qbs = players.Where(player => player.Position == Position.QB)
                 .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).ToArray();
-            var runners = players.Where(player => player.Position is Position.RB or Position.QB)
+            var runners = players.Where(player => player.Position is Position.RB or Position.FB or Position.QB)
                 .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).ToArray();
             var receivers = players.Where(player => player.Position is Position.WR or Position.TE)
                 .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).Take(5).ToArray();

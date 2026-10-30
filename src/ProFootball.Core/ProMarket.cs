@@ -13,7 +13,7 @@ public static class ProMarket
         using var stream=typeof(ProMarket).Assembly.GetManifestResourceStream("ProFootball.Core.pro-market-curves.json")!;
         var pack=JsonSerializer.Deserialize<Pack>(stream,new JsonSerializerOptions{PropertyNameCaseInsensitive=true})??throw new InvalidDataException("Missing market calibration.");
         if(pack.Version!=1||pack.BaseCap!=ProFinance.Base2026||pack.Curves.Select(c=>c.Position).Distinct().Count()!=pack.Curves.Count||
-            Enum.GetNames<Position>().Any(p=>!pack.Curves.Any(c=>c.Position==p)))throw new InvalidDataException("Incomplete market calibration.");
+            Enum.GetNames<Position>().Where(p=>p!="FB").Any(p=>!pack.Curves.Any(c=>c.Position==p)))throw new InvalidDataException("Incomplete market calibration.");
         foreach(var c in pack.Curves)
             if(c.Samples<pack.MinimumSamples||c.Anchors.Count<2||c.Anchors[0].Overall!=40||c.Anchors[^1].Overall!=99||c.Anchors.Any(a=>a.Annual<=0||a.Annual>c.Ceiling)||
                 c.Anchors.Zip(c.Anchors.Skip(1)).Any(pair=>pair.First.Overall>=pair.Second.Overall||pair.First.Annual>pair.Second.Annual))throw new InvalidDataException("Invalid market curve.");
@@ -32,8 +32,8 @@ public static class ProMarket
     }
     public static long BaseSalary(ProPlayer player)
     {
-        var key=player.Football.Position.ToString();var prices=Prices.Value;
+        var key=player.Football.Position==Position.FB?"RB":player.Football.Position.ToString();var prices=Prices.Value;
         if(player.Football.Position==Position.K&&player.Football.NcaaPositionCode is int code&&prices.ContainsKey("K/"+code))key="K/"+code;
-        return prices[key][Math.Clamp(player.Football.OverallRating,1,99)];
+        return Math.Max(300_000,(long)(prices[key][Math.Clamp(player.Football.OverallRating,1,99)] * (player.Football.Position==Position.FB ? .4 : 1)));
     }
 }

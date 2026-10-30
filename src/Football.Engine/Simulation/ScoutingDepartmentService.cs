@@ -655,7 +655,7 @@ public static class ScoutingDepartmentService
     }
 
     private static bool IsOffense(Position position) =>
-        position is Position.QB or Position.RB or Position.WR or Position.TE or Position.OL;
+        position is Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL;
 
     private static bool IsDefense(Position position) =>
         position is Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS;
