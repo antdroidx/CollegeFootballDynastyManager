@@ -43,6 +43,7 @@ try:
     assert next(p for p in migrated["players"] if p["football"]["playerId"]==cut["football"]["playerId"])["football"]["teamName"]=="Free agent"
     unaffected=[c for c in changed["contracts"] if c["playerId"]!=cut["football"]["playerId"]]
     assert all(c in migrated["contracts"] for c in unaffected)
+    click("migration-confirmed","OK")
     navigate("Roster");s.capture("pro-backfield-migrated-no-practice")
     Path("pro-generated-roster-check.json").write_text(json.dumps({"twoRealNewFranchises":True,"freshIdentitiesNamesAndRatings":True,"fictionalMode":True,"noOpeningRealTrades":True,"reloadPreservesPlayersAndContracts":True,"activeRoster53":True,"noPracticeSquad":True,"hbFilter":True,"teAssignedAsFullback":True,"naturalPositionPreserved":True,"legacyPracticeMigration":True,"otherContractsPreserved":True},indent=2),encoding="utf-8")
 finally:Path("pro-generated-roster-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1000"))
