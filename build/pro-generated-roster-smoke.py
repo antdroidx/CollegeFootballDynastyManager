@@ -37,6 +37,8 @@ try:
     # Exercise the real app loader with one legacy PS flag, preserving the other contracts.
     legacy=json.loads(json.dumps(changed));cut=next(p for p in legacy["players"] if p["football"]["teamName"]==legacy["userTeam"] and p["football"]["position"]==1)
     cut["practiceSquad"]=True;cut["rosterStatus"]="PS";load(legacy)
+    click("migration-save","Save franchise")
+    ready("migration-saved",lambda r:not any(p.get("practiceSquad") for p in saves()[b["id"]]["players"]))
     migrated=saves()[b["id"]];assert not any(p.get("practiceSquad") for p in migrated["players"])
     assert next(p for p in migrated["players"] if p["football"]["playerId"]==cut["football"]["playerId"])["football"]["teamName"]=="Free agent"
     unaffected=[c for c in changed["contracts"] if c["playerId"]!=cut["football"]["playerId"]]
