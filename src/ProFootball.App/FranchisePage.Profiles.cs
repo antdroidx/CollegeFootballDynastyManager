@@ -39,18 +39,39 @@ public sealed partial class FranchisePage
     {
         var s = state!; var p = s.Players.FirstOrDefault(x => x.Football.PlayerId == original.Football.PlayerId) ?? original; var f = p.Football;
         var contract = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == f.PlayerId);
-        var identity = new HorizontalStackLayout { Spacing = 14, Children = { Portrait(p, 108), new VerticalStackLayout { Children = { Text(f.FullName, 23, true), Text($"#{f.JerseyNumber} · {OffensiveLineService.Label(f)} · {f.TeamName}"), Text($"Age {p.Age} · Experience {p.Experience} · {f.HeightInches / 12}′{f.HeightInches % 12}″ · {f.WeightPounds} lb") } } } };
+        var identity = new HorizontalStackLayout { Spacing = 14, Children = { Portrait(p, 64), new VerticalStackLayout { Children = { Text(f.FullName, 23, true), Text($"#{f.JerseyNumber} · {OffensiveLineService.Label(f)} · {f.TeamName}"), Text($"Age {p.Age} · Experience {p.Experience} · {f.HeightInches / 12}′{f.HeightInches % 12}″ · {f.WeightPounds} lb") } } } };
         var attributes = new List<View> { Text($"OVR {f.OverallRating} · Projected ceiling {ProDevelopment.Ceiling(p)}", 20, true), Text("Remaining growth · " + ProDevelopment.Growth(p)), new HorizontalStackLayout { Spacing = 8, Children = { Text(p.PreviousSeasonOverall is not null ? "Change since last offseason" : "Change since season start"), RatingDelta(p) } } };
         foreach (var group in PlayerAttributeCatalog.Groups(f))
             attributes.Add(PlayerAttributeViews.Group(group.Title, group.Subtitle, group.Attributes,
                 (title, subtitle) => new VerticalStackLayout { Spacing = 3, Children = { Text(title, 15, true), Text(subtitle, 11) } }));
         attributes.Add(Text("Higher ratings are better. Injury represents resistance to injury and wear.", 11));
         var actions = new ActionRow(); actions.Add(Action("Edit appearance",()=>EditPlayerAppearance(p))); if (f.TeamName == s.UserTeam) actions.Add(Action("Contract & roster actions", () => ManagePlayer(p)));
-        var lines = s.Games.Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).SelectMany(g => g.Football.PlayerStats).Where(x => x.PlayerId == f.PlayerId).ToArray();
-        await ShowPage("Player profile", identity, ReserveActivationControls(p), WaiverControls(p), Panel("Player attributes", attributes.ToArray()), Panel("Status", Text(p.Retired ? "Retired" : p.Football.TeamName=="Free agent" ? "Free agent" : p.Reserve ? "Reserve" : "Active roster"), Text(ProReserve.Availability(state!,p)), Text($"Morale {p.Morale} · Playing {ProDepthChart.Label(ProDepthChart.AssignedCode(s,p))} · Depth {ProDepthChart.AtPosition(s,f.TeamName,ProDepthChart.AssignedCode(s,p)).ToList().FindIndex(x=>x.Football.PlayerId==f.PlayerId)+1} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12)),
-            ContractDetails(p,contract),
-            PlayerAnalytics(p), DetailedStatsPanel(lines), actions);
+        var status=Panel("Status", Text(p.Retired ? "Retired" : p.Football.TeamName=="Free agent" ? "Free agent" : p.Reserve ? "Reserve" : "Active roster"), Text(ProReserve.Availability(state!,p)), Text($"Morale {p.Morale} · Playing {ProDepthChart.Label(ProDepthChart.AssignedCode(s,p))} · Depth {ProDepthChart.AtPosition(s,f.TeamName,ProDepthChart.AssignedCode(s,p)).ToList().FindIndex(x=>x.Football.PlayerId==f.PlayerId)+1} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12));
+        await ShowPlayerTabs(identity,
+            ("Overview",()=>new VerticalStackLayout{Spacing=10,Children={Text($"OVR {f.OverallRating} · Projected ceiling {ProDevelopment.Ceiling(p)}",20,true),ReserveActivationControls(p),WaiverControls(p),status,actions}}),
+            ("Attributes",()=>Panel("Player attributes",attributes.ToArray())),
+            ("Contract",()=>new VerticalStackLayout{Spacing=10,Children={ContractDetails(p,contract),f.TeamName==s.UserTeam?Action("Contract & roster actions",()=>ManagePlayer(p)):new VerticalStackLayout()}}),
+            ("Statistics",()=>PlayerStatisticsPanel(p)),
+            ("Analytics",()=>PlayerAnalytics(p)));
     }
+    async Task ShowPlayerTabs(View identity,params (string Name,Func<View> Build)[] tabs)
+    {
+        var page=new ContentPage{Title="Player profile",AutomationId="pro-player-profile",BackgroundColor=DynastyTheme.Background};
+        var close=new Button{Text="‹ Back",MinimumHeightRequest=44};close.Clicked+=async(_,_)=>await Navigation.PopModalAsync();
+        var heading=new Grid{ColumnDefinitions=new ColumnDefinitionCollection{new(GridLength.Auto),new(GridLength.Star)},ColumnSpacing=12,Padding=12};heading.Add(close,0,0);heading.Add(identity,1,0);
+        var bar=new HorizontalStackLayout{Spacing=4,Padding=new Thickness(12,0)};var scroll=new ScrollView();var cache=new Dictionary<int,View>();var buttons=new List<Button>();
+        void Select(int index)
+        {
+            if(!cache.TryGetValue(index,out var content)){content=tabs[index].Build();cache[index]=content;}
+            scroll.Content=content;
+            for(var i=0;i<buttons.Count;i++){buttons[i].BackgroundColor=i==index?DynastyTheme.Selected:Colors.Transparent;buttons[i].TextColor=i==index?DynastyTheme.Accent:DynastyTheme.Text;}
+            if(scroll.Handler is not null)_=scroll.ScrollToAsync(0,0,false);
+        }
+        for(var i=0;i<tabs.Length;i++){var index=i;var button=new Button{Text=tabs[i].Name,AutomationId="pro-profile-tab-"+tabs[i].Name.ToLowerInvariant(),MinimumHeightRequest=44,BorderWidth=0,CornerRadius=0};button.Clicked+=(_,_)=>Select(index);buttons.Add(button);bar.Add(button);}
+        var layout=new Grid{RowDefinitions=new RowDefinitionCollection{new(GridLength.Auto),new(GridLength.Auto),new(GridLength.Star)},Padding=new Thickness(0,0,0,12)};
+        layout.Add(heading,0,0);layout.Add(new ScrollView{Orientation=ScrollOrientation.Horizontal,Content=bar},0,1);scroll.Padding=new Thickness(12,10);layout.Add(scroll,0,2);page.Content=layout;Select(0);await Navigation.PushModalAsync(page);
+    }
+
     View WaiverControls(ProPlayer p)
     {
         var entry=state!.Waivers.FirstOrDefault(w=>w.PlayerId==p.Football.PlayerId);

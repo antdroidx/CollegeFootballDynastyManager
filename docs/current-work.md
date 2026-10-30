@@ -1,3 +1,9 @@
+## Candidate Pro playoff totals and tabbed player profiles
+
+Adds separate regular-season/playoff selectors for Pro league statistics and player statistics, each with current season/career scopes. Shared Pro query deduplicates current/archive games by year+ID, excludes preseason/unplayed games, and preserves aggregate maxima. Profile now has Overview, Attributes, Contract, Statistics and Analytics tabs with a fixed compact header/tab bar and independently scrolled section; statistics displays one category at a time. No shared simulation, College, contracts or save schema changes.
+
+Focused2 Pro cases (pure selection/aggregation + production-game save/fixture) and16 helpers pass. Scope profile-tabs only runs those cases and native five-tab/phase/career checks. Reuse Pro112355-case, Core/College726-case,512-game and prior long-season/GameCast evidence. No College rebuild or long simulations needed. Pro APK/native acceptance pending.
+
 ## Accepted expanded player statistics — Pro112 / College407
 
 Runtime/app source1c6291b. Pro112 run41015659149 passes355 fast Pro cases,16 helpers,32-team validator and Android packaging0 warnings/errors. Exact APK https://github.com/antdroidx/Football-Sim-Engine/actions/runs/41015659149/artifacts/12959152937 ; native evidence12959323015 verifies production-game fixture, blocking, horizontal scrolling, playing time, receiving and career totals. Screenshots reviewed in.artifacts/expanded-stats-pro112-ui.
