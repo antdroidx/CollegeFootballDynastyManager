@@ -25,5 +25,6 @@ try:
     pick("pro-profile-stat-competition","Playoffs");root=ready("playoff-profile",lambda r:str(expected) in s.texts(r));assert "Regular season" not in s.texts(root);s.capture("pro-profile-playoff-totals")
     pick("pro-profile-stat-period","Career");ready("career-profile",lambda r:"Playoffs · Career" in s.texts(r));s.capture("pro-profile-playoff-career")
     tab("Analytics");root=tab("Statistics");assert "Playoffs" in s.texts(root) and "Career" in s.texts(root);root=tab("Overview");assert "Player attributes" not in s.texts(root);s.capture("pro-profile-return-overview")
-    Path("pro-profile-tabs-check.json").write_text(json.dumps({"mainPlayoffFilter":True,"allFiveTabs":True,"separatePlayoffYards":True,"playoffCareer":True,"tabStateRetained":True,"returnOverview":True},indent=2),encoding="utf-8")
+    root=rotate(0);cell_visible(root,quarterback["playerName"]);s.capture("pro-profile-portrait-overview");rotate(1)
+    Path("pro-profile-tabs-check.json").write_text(json.dumps({"mainPlayoffFilter":True,"allFiveTabs":True,"separatePlayoffYards":True,"playoffCareer":True,"tabStateRetained":True,"returnOverview":True,"portraitIdentityFits":True},indent=2),encoding="utf-8")
 finally:Path("pro-profile-tabs-logcat.txt").write_bytes(s.adb("logcat","-d","-t","1000"))

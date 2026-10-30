@@ -39,7 +39,9 @@ public sealed partial class FranchisePage
     {
         var s = state!; var p = s.Players.FirstOrDefault(x => x.Football.PlayerId == original.Football.PlayerId) ?? original; var f = p.Football;
         var contract = s.Contracts.LastOrDefault(c => c.Active && c.PlayerId == f.PlayerId);
-        var identity = new HorizontalStackLayout { Spacing = 14, Children = { Portrait(p, 64), new VerticalStackLayout { Children = { Text(f.FullName, 23, true), Text($"#{f.JerseyNumber} · {OffensiveLineService.Label(f)} · {f.TeamName}"), Text($"Age {p.Age} · Experience {p.Experience} · {f.HeightInches / 12}′{f.HeightInches % 12}″ · {f.WeightPounds} lb") } } } };
+        var identity = new Grid{ColumnDefinitions=new ColumnDefinitionCollection{new(GridLength.Auto),new(GridLength.Star)},ColumnSpacing=12};
+        identity.Add(Portrait(p,64),0,0);
+        identity.Add(new VerticalStackLayout{Children={Text(f.FullName,23,true),Text($"#{f.JerseyNumber} · {OffensiveLineService.Label(f)} · {f.TeamName}"),Text($"Age {p.Age} · Experience {p.Experience} · {f.HeightInches / 12}′{f.HeightInches % 12}″ · {f.WeightPounds} lb")}},1,0);
         var attributes = new List<View> { Text($"OVR {f.OverallRating} · Projected ceiling {ProDevelopment.Ceiling(p)}", 20, true), Text("Remaining growth · " + ProDevelopment.Growth(p)), new HorizontalStackLayout { Spacing = 8, Children = { Text(p.PreviousSeasonOverall is not null ? "Change since last offseason" : "Change since season start"), RatingDelta(p) } } };
         foreach (var group in PlayerAttributeCatalog.Groups(f))
             attributes.Add(PlayerAttributeViews.Group(group.Title, group.Subtitle, group.Attributes,

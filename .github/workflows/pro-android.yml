@@ -164,7 +164,12 @@ jobs:
         if: inputs.reuse_apk_run_id != '' && ((inputs.validation_scope == 'profile-tabs' || inputs.validation_scope == 'statistics' || inputs.validation_scope == 'generated-roster' || inputs.validation_scope == 'retention-table' || inputs.validation_scope == 'inseason-phase' || inputs.validation_scope == 'depth-editor' || inputs.validation_scope == 'cap-display' || inputs.validation_scope == 'roster-update' || inputs.validation_scope == 'staff-calendar') || inputs.validation_scope == 'exchange' || inputs.validation_scope == 'presentation' || inputs.validation_scope == 'roadmap' || inputs.validation_scope == 'retention' || inputs.validation_scope == 'reserve' || inputs.validation_scope == 'termination')
         env:
           PRO_COORDINATOR_UI_FIXTURES: ${{ github.workspace }}/apk
-        run: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~PlayoffStatisticsTests|FullyQualifiedName~StatisticsPresentationTests|FullyQualifiedName~InSeasonRetentionTests|FullyQualifiedName~PhaseSimulationTests|FullyQualifiedName~DepthChartTests|FullyQualifiedName~CapDisplayTests|FullyQualifiedName~PlayerExchangeTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~CoordinatorRosterTests|FullyQualifiedName~ReserveActivationTests|FullyQualifiedName~TerminationDeviceFixtures|FullyQualifiedName~CompensatoryDraftTests'
+        run: |
+          if [ '${{ inputs.validation_scope }}' = profile-tabs ]; then
+            dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~PlayoffStatisticsTests|FullyQualifiedName~StatisticsPresentationTests'
+          else
+            dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj -c Release --filter 'FullyQualifiedName~PlayoffStatisticsTests|FullyQualifiedName~StatisticsPresentationTests|FullyQualifiedName~InSeasonRetentionTests|FullyQualifiedName~PhaseSimulationTests|FullyQualifiedName~DepthChartTests|FullyQualifiedName~CapDisplayTests|FullyQualifiedName~PlayerExchangeTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~CoordinatorRosterTests|FullyQualifiedName~ReserveActivationTests|FullyQualifiedName~TerminationDeviceFixtures|FullyQualifiedName~CompensatoryDraftTests'
+          fi
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
