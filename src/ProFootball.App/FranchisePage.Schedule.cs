@@ -11,7 +11,7 @@ public sealed partial class FranchisePage
         var s=state!;if(schedulePhase==ProPhase.Offseason){schedulePhase=null;scheduleWeek=null;scheduleWeekPhase=null;} body.Add(Text("Season schedule",23,true));
         var teams=new[] { "Your team","All teams" }.Concat(s.League.Teams.Select(t=>t.Name)).ToArray();
         var team=new Picker { Title="Team",ItemsSource=teams,SelectedIndex=Math.Max(0,Array.IndexOf(teams,scheduleTeam)) };
-        var phases=new[] { "All phases" }.Concat(Enum.GetNames<ProPhase>().Where(p=>p!="Offseason")).ToArray();
+        var phases=new[] { "All phases","Preseason","Season","Playoffs" };
         var phase=new Picker { Title="Phase",ItemsSource=phases,SelectedIndex=schedulePhase is null ? 0 : Array.IndexOf(phases,schedulePhase.ToString()) };
         IReadOnlyList<ProScheduleWeek> weeks=[];var syncingWeeks=false;
         var week=new Picker {Title="Week",AutomationId="pro-schedule-week"};phase.AutomationId="pro-schedule-phase";
@@ -34,9 +34,9 @@ public sealed partial class FranchisePage
                 else actions.Add(Text("Upcoming",12));
                 var home=s.League.Teams.Single(t=>t.Name==f.HomeTeamName);var away=s.League.Teams.Single(t=>t.Name==f.AwayTeamName);
                 var result=f.HasPlayed?$"{f.AwayScore}–{f.HomeScore}":"Upcoming";
-                return new View[] { Text(f.Week.ToString()+(g.Phase==s.Phase&&f.Week==s.Week?" •":"")),Text(g.Phase.ToString(),12),own?TeamCell(f.HomeTeamName==selected?away:home):TeamCell(away),own?Text(f.HomeTeamName==selected?"Home":"Away"):TeamCell(home),Text(result),actions };
+                return new View[] { Text(f.Week.ToString()+(g.Phase==s.Phase&&f.Week==s.Week?" •":"")),Text(g.Phase==ProPhase.RegularSeason?"Season":g.Phase.ToString(),12),own?TeamCell(f.HomeTeamName==selected?away:home):TeamCell(away),own?Text(f.HomeTeamName==selected?"Home":"Away"):TeamCell(home),Text(result),actions };
             }))));
         }
-        team.SelectedIndexChanged+=(_,_)=>{scheduleTeam=(string)team.SelectedItem;Draw();};phase.SelectedIndexChanged+=(_,_)=>{schedulePhase=phase.SelectedIndex==0?null:Enum.Parse<ProPhase>((string)phase.SelectedItem);scheduleWeek=null;scheduleWeekPhase=null;UpdateWeeks();Draw();};week.SelectedIndexChanged+=(_,_)=>{if(syncingWeeks||week.SelectedIndex<0)return;var choice=weeks[week.SelectedIndex];scheduleWeek=choice.Week;scheduleWeekPhase=choice.Phase;Draw();};Draw();
+        team.SelectedIndexChanged+=(_,_)=>{scheduleTeam=(string)team.SelectedItem;Draw();};phase.SelectedIndexChanged+=(_,_)=>{schedulePhase=phase.SelectedIndex==0?null:((string)phase.SelectedItem) switch {"Season"=>ProPhase.RegularSeason,_=>Enum.Parse<ProPhase>((string)phase.SelectedItem)};scheduleWeek=null;scheduleWeekPhase=null;UpdateWeeks();Draw();};week.SelectedIndexChanged+=(_,_)=>{if(syncingWeeks||week.SelectedIndex<0)return;var choice=weeks[week.SelectedIndex];scheduleWeek=choice.Week;scheduleWeekPhase=choice.Phase;Draw();};Draw();
     }
 }

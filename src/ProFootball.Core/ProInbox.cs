@@ -1,5 +1,6 @@
 namespace ProFootball.Core;
-public sealed record ProNotification(string Id,string Title,string Detail,string Section,int Priority,Guid? PlayerId=null);
+public sealed record ProNotification(string Id,string Title,string Detail,string Section,int Priority,Guid? PlayerId=null)
+{ public int Year { get; init; } public int Week { get; init; } }
 public static class ProInbox
 {
     public static IReadOnlyList<ProNotification> Build(ProFranchise s)
@@ -31,6 +32,6 @@ public static class ProInbox
             list.Add(new("trade-offer-"+offer.Id,"Trade offer from "+offer.Buyer,$"{offer.PickIds.Count} future picks offered for {s.Players.Single(p=>p.Football.PlayerId==offer.PlayerId).Football.FullName}. Review before the offer expires.","Front Office",1));
         foreach(var d in s.GmDecisions.TakeLast(30))list.Add(new("gm-"+d.Id,(d.Approved?"GM approved: ":"GM declined: ")+d.Action,d.Reason,"Career",2));
         if(s.JobOffers.Count>0)list.Add(new($"jobs-{s.Year}-{s.JobOffers.Count}","Coaching job offers",$"{s.JobOffers.Count} offers are available.","Career",1));
-        return list.OrderBy(n=>n.Priority).ThenBy(n=>n.Title).ToArray();
+        return list.Select(n=>n with{Year=s.Year,Week=s.Week}).OrderBy(n=>n.Priority).ThenBy(n=>n.Title).ToArray();
     }
 }

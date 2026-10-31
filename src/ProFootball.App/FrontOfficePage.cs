@@ -63,7 +63,7 @@ public sealed partial class FranchisePage
         var draft=new Grid{ColumnSpacing=10,RowSpacing=10,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};
         if(s.Phase==ProPhase.Offseason&&s.OffseasonStep is OffseasonStep.FreeAgency or OffseasonStep.Draft){draft.Add(TaskTile("Draft & scouting","Prospects and visit slots",Draft),0,0);}
         draft.Add(TaskTile("Draft picks","Owned and traded picks",DraftPicks,"pro-draft-picks"),1,0);
-        if(s.Phase==ProPhase.Offseason)draft.Add(TaskTile("Current offseason stage","Open guided stage",()=>Open("Offseason")),2,0);
+        if(s.Phase==ProPhase.Offseason)draft.Add(TaskTile("Draft class","View incoming class",Draft),2,0);
         body.Add(SectionCard("Draft",null,draft));
 
         var rosterTools=new Grid{ColumnSpacing=10,RowSpacing=10,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};

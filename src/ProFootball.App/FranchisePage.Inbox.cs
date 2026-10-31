@@ -12,15 +12,18 @@ public sealed partial class FranchisePage
         if(notices.Count==0)body.Add(Text("No current action items."));
         foreach(var notice in notices)
         {
-            var n=notice;body.Add(SectionCard((state!.ReadNotificationIds.Contains(n.Id)?"":"● ")+n.Title,null,Text(n.Detail),Action("Review",async()=>{
-                state=state! with{ReadNotificationIds=state.ReadNotificationIds.Append(n.Id).Distinct().ToList()};await Save();
-                if(n.Id.StartsWith("trade-offer-"))await TradeOffers();
-                else if(n.PlayerId is Guid id&&state.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player)await Player(player);
-                else if(n.Id.StartsWith("options-"))await RookieOptions();else if(n.Id.StartsWith("retention-"))await Retention();else await Open(n.Section);
-            })));
+            var n=notice;
+            var title=new Label{Text=(state!.ReadNotificationIds.Contains(n.Id)?"":"● ")+n.Title,FontSize=13,FontAttributes=FontAttributes.Bold,TextColor=DynastyTheme.Text,LineBreakMode=LineBreakMode.TailTruncation};
+            var when=new Label{Text=$"W{n.Week} · Y{n.Year}",FontSize=10,TextColor=DynastyTheme.Muted,VerticalTextAlignment=TextAlignment.Center};
+            var metaRow=new Grid{ColumnSpacing=8,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Auto)},RowDefinitions=new(){new(GridLength.Auto)}};metaRow.Add(title,0,0);metaRow.Add(when,1,0);
+            var detail=new Label{Text=n.Detail,FontSize=11,TextColor=DynastyTheme.Muted,LineBreakMode=LineBreakMode.TailTruncation};
+            var content=new VerticalStackLayout{Spacing=2,Children={metaRow,detail}};
+            var card=new Border{Padding=8,BackgroundColor=DynastyTheme.Panel,StrokeShape=new Microsoft.Maui.Controls.Shapes.RoundRectangle{CornerRadius=10},StrokeThickness=0,Content=content,MinimumHeightRequest=52};
+            var tap=new TapGestureRecognizer();tap.Tapped+=async(_,_)=>{state=state! with{ReadNotificationIds=state.ReadNotificationIds.Append(n.Id).Distinct().ToList()};await Save();if(n.Id.StartsWith("trade-offer-"))await TradeOffers();else if(n.PlayerId is Guid id&&state.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player)await Player(player);else if(n.Id.StartsWith("options-"))await RookieOptions();else if(n.Id.StartsWith("retention-"))await Retention();else await Open(n.Section);};
+            card.GestureRecognizers.Add(tap);SemanticProperties.SetDescription(card,n.Title+". "+n.Detail);
+            body.Add(card);
         }
-    }
-    Task Retention()
+    }    Task Retention()
     {
         body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text("Expiring contracts & retention",25,true));
         var s=state!;var available=s.Phase!=ProPhase.Offseason||s.OffseasonStep==OffseasonStep.Retention;

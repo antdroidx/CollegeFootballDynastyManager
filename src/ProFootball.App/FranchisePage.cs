@@ -13,7 +13,7 @@ public sealed partial class FranchisePage : ContentPage
     readonly VerticalStackLayout sidebar = new() { Padding = 12, Spacing = 6, BackgroundColor = DynastyTheme.Surface };
     readonly Grid bottom = new() { ColumnSpacing = 3, Padding = 6, BackgroundColor = DynastyTheme.Surface };
     readonly ScrollView scroll;
-    readonly Border loading = new() { IsVisible = false, InputTransparent = true, Padding = 12, VerticalOptions = LayoutOptions.Start, HorizontalOptions = LayoutOptions.End, BackgroundColor = DynastyTheme.Surface,
+    readonly Border loading = new() { IsVisible = false, InputTransparent = true, Padding = 12, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Center, BackgroundColor = DynastyTheme.Surface,
         Content = new HorizontalStackLayout { Spacing = 8, Children = { new ActivityIndicator { IsRunning = true, Color = DynastyTheme.Accent, WidthRequest = 24 }, new Label { Text = "Working…", TextColor = DynastyTheme.Text, VerticalTextAlignment = TextAlignment.Center } } } };
     ProFranchise? state; bool initialized, busy; string section = "Overview";
     static readonly string[] Sections = ["Overview", "Roster", "Staff", "Front Office", "Schedule", "Standings", "Playoffs", "Statistics", "Analytics", "Inbox", "Transactions", "News", "Honors", "Career", "History"];
@@ -110,6 +110,7 @@ public sealed partial class FranchisePage : ContentPage
         var s = state!; var r = ProStandings.Build(s).Single(x => x.Team.Name == s.UserTeam);
         var primary=new HorizontalStackLayout{Spacing=8};
         primary.Add(PrimaryAction(s.Phase==ProPhase.Offseason?"Continue offseason":"Advance week",s.Phase==ProPhase.Offseason?()=>Open("Offseason"):Advance,"pro-advance"));
+        if(s.Phase==ProPhase.Offseason)primary.Add(Action("Open stage",async()=>{await OpenOffseasonStage();}));
         if(s.Phase!=ProPhase.Offseason)primary.Add(Action(s.Phase==ProPhase.Preseason?"Simulate preseason":s.Phase==ProPhase.RegularSeason?"Simulate regular season":"Simulate playoffs",SimulatePhase,"pro-simulate-phase"));
         primary.Add(Action("Save",Save));
         body.Add(primary);
@@ -129,11 +130,13 @@ public sealed partial class FranchisePage : ContentPage
         tiles.Add(StatTile("Cap space",SeasonCapLabel(s,s.UserTeam)),0,0);
         tiles.Add(StatTile("Roster",$"{ProRoster.CountForLimit(s,s.UserTeam)}/{ProRoster.Limit(s)}"),1,0);
         tiles.Add(StatTile("Head coach",owner is null?"You":s.Career?.Name??"You",$"Security {s.Career?.Security??65}/100"),2,0);
-        var summaryCard=SectionCard("Season overview",null,recordColumn,tiles);
         var summaryButtons=new HorizontalStackLayout{Spacing=8};
         summaryButtons.Add(Action("Standings",()=>Open("Standings")));summaryButtons.Add(Action("Schedule",()=>OpenTeamSchedule()));summaryButtons.Add(Action("Career",()=>Open("Career")));
         if(s.Phase==ProPhase.Playoffs||s.Phase==ProPhase.RegularSeason&&s.Week>=14||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)summaryButtons.Add(Action("Playoff bracket",()=>Open("Playoffs")));
-        var summaryCardAll=new VerticalStackLayout{Spacing=10};summaryCardAll.Add(summaryCard);summaryCardAll.Add(summaryButtons);
+        // Keep navigation with the card rather than underneath it.
+        var summaryInner=new VerticalStackLayout{Spacing=10};summaryInner.Add(summaryButtons);
+        var summaryCard=SectionCard("Season overview",null,summaryInner,recordColumn,tiles);
+        var summaryCardAll=summaryCard;
 
         // Weekly tasks 2x2
         var notices=ProInbox.Build(s);var unread=notices.Count(n=>!s.ReadNotificationIds.Contains(n.Id));
@@ -143,13 +146,23 @@ public sealed partial class FranchisePage : ContentPage
         taskGrid.Add(TaskTile("Contracts & cap","Extensions, free agents, cap management",()=>Open("Front Office")),0,1);
         taskGrid.Add(TaskTile($"Inbox · {unread} unread","Messages, league updates",()=>Open("Inbox")),1,1);
         var taskColumn=new VerticalStackLayout{Spacing=8};taskColumn.Add(taskGrid);
-        for(var i=0;i<Math.Min(3,notices.Count);i++){var n=notices[i];taskColumn.Add(Link(n.Title,()=>n.Id.StartsWith("retention-")?Open("Offseason"):n.PlayerId is Guid id&&s.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player?Player(player):Open("Inbox")));}
+        var availability=notices.Where(n=>n.Id.StartsWith("ir-")||n.Id.StartsWith("injury-")).ToArray();
+        if(availability.Length>0)
+        {
+            var column=new VerticalStackLayout{Spacing=6};
+            foreach(var n in availability)
+            {
+                var item=n;
+                column.Add(new HorizontalStackLayout{Spacing=6,Children={Text(item.Title,12,true),new Label{Text=" · "+item.Detail,FontSize=11,TextColor=DynastyTheme.Muted,LineBreakMode=LineBreakMode.TailTruncation}}});
+            }
+            taskColumn.Add(SectionCard("Availability",null,column));
+        }
 
         // Dashboard layout in two columns on wide screens
         var dashboard=new Grid{ColumnSpacing=12,RowSpacing=12};
         int dashLayout=0;
         void LayoutDash(){var w=dashboard.Width>=640;var target=w?2:1;if(target==dashLayout)return;dashLayout=target;dashboard.ColumnDefinitions.Clear();dashboard.RowDefinitions.Clear();if(w){dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.RowDefinitions.Add(new(GridLength.Auto));dashboard.Children.Clear();dashboard.Add(summaryCardAll,0,0);dashboard.Add(taskColumn,1,0);}else{dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.RowDefinitions.Add(new(GridLength.Auto));dashboard.RowDefinitions.Add(new(GridLength.Auto));dashboard.Children.Clear();dashboard.Add(summaryCardAll,0,0);dashboard.Add(taskColumn,0,1);}}
-        dashboard.SizeChanged+=(_,_)=>LayoutDash();
+        dashboard.SizeChanged+=(_,_)=>LayoutDash();LayoutDash();
         dashboard.SizeChanged+=(_,_)=>LayoutDash();LayoutDash();
         body.Add(dashboard);
 
@@ -164,8 +177,7 @@ public sealed partial class FranchisePage : ContentPage
             newsChildren.Add(card);
         }
         if(newsChildren.Count==0)newsChildren.Add(Text("Results, injuries and league activity will appear here as your franchise advances.",12));
-        newsChildren.Add(Action("Headlines & results ›",()=>Open("News")));
-        newsChildren.Add(Action("Statistics & leaders ›",()=>Open("Statistics")));
+        newsChildren.Add(new HorizontalStackLayout{Spacing=8,Children={Action("Headlines & results ›",()=>Open("News")),Action("Statistics & leaders ›",()=>Open("Statistics"))}});
         body.Add(SectionCard("League news",null,newsChildren.ToArray()));
         body.Add(SectionCard("Latest transactions",null,Text(string.Join("\n",ProTransactions.Migrate(s).TransactionLog.TakeLast(4).Reverse().Select(t=>$"{t.Year} {ProTransactions.Period(t.Phase,t.Week)} · {t.Activity}")),12),Action("View all transactions ›",()=>Open("Transactions"))));
     }    async Task Advance()
@@ -212,8 +224,7 @@ public sealed partial class FranchisePage : ContentPage
         var team = new Picker { Title = "Team", AutomationId="pro-roster-team", ItemsSource = teams.Select(t => t.Name).ToArray(), SelectedIndex = Array.FindIndex(teams, t => t.Name == s.UserTeam) };
         var search = new SearchBar { Placeholder = "Find a player", AutomationId = "pro-roster-search" }; var positions = new Picker { Title = "Position", AutomationId="pro-roster-position", ItemsSource = new[] { "All positions" }.Concat(PositionLabels.Names).ToArray(), SelectedIndex = 0 };
         var list = new VerticalStackLayout { Spacing = 12 };
-        var showRatings = false;
-        var tools = new ActionRow(); var organize=Action("Organize depth chart", DepthChart);tools.Add(organize); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(CompactFilters.Create((team,210),(search,210),(positions,130)));body.Add(tools);
+        var tools = new ActionRow(); var organize=Action("Organize depth chart", DepthChart);tools.Add(organize); body.Add(CompactFilters.Create((team,210),(search,210),(positions,130)));body.Add(tools);
         body.Add(Text("Delta since last offseason (season start for new saves) · Growth is remaining upside · Swipe for more columns", 12));
         body.Add(list);
         void Draw()
