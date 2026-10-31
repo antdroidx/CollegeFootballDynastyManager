@@ -3,8 +3,8 @@ using DynastyManager.Core.Models;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Controls.Shapes;
 using Microsoft.Maui.Graphics;
+using ProFootball.Core;
 namespace ProFootball.App;
-
 public sealed partial class FranchisePage
 {
     // Shared FM-Touch-style primitives used across all Pro screens.
@@ -82,5 +82,12 @@ public sealed partial class FranchisePage
         };
         var tap = new TapGestureRecognizer(); tap.Tapped += async (_, _) => { if (!busy && !openingOffseason) { busy = true; loading.IsVisible = true; try { await Task.Delay(16); await action(); } catch (Exception e) { await GameDialogs.AlertAsync(this, "Unable to continue", e.Message, "OK"); } finally { busy = false; loading.IsVisible = openingOffseason; } } };
         border.GestureRecognizers.Add(tap); SemanticProperties.SetDescription(border, title + ". " + sub); return border;
+    }
+    // Space-aware team label: prefer the city name when it fits, else abbreviation.
+    internal static string CityLabel(ProTeam team,int maxChars=12)
+    {
+        if(team is null) return "";
+        var city=team.City??string.Empty;
+        return string.IsNullOrWhiteSpace(city)||city.Length>maxChars?team.Abbreviation:city;
     }
 }

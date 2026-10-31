@@ -34,7 +34,7 @@ public sealed partial class FranchisePage : ContentPage
     void RenderNavigation()
     {
         sidebar.Clear(); bottom.Clear(); var club = state!.League.Teams.Single(t => t.Name == state.UserTeam);
-        sidebar.Add(new Border { BackgroundColor = Color.FromArgb(club.Primary), Padding = 12, Content = new VerticalStackLayout { Spacing = 6, Children = { new TeamBadgeView(club, 58), new Label { Text = club.Abbreviation + " · " + state.Year, TextColor = TeamBadgeView.Ink(club), FontAttributes = FontAttributes.Bold } } } });
+        sidebar.Add(new Border { BackgroundColor = Color.FromArgb(club.Primary), Padding = 12, Content = new VerticalStackLayout { Spacing = 6, Children = { new TeamBadgeView(club, 58), new Label { Text = CityLabel(club) + " · " + state.Year, TextColor = TeamBadgeView.Ink(club), FontAttributes = FontAttributes.Bold } } } });
         foreach (var name in Sections) { var target = name; var b = Action(name, () => Open(target)); b.HorizontalOptions = LayoutOptions.Fill; b.BorderWidth=0; b.FontAttributes=section==name?FontAttributes.Bold:FontAttributes.None; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; sidebar.Add(b); }
         foreach (var (name, index) in new[] { ("Overview", 0), ("Roster", 1), ("Staff", 2), ("Front Office", 3), ("League", 4) })
         { bottom.ColumnDefinitions.Add(new(GridLength.Star)); var target = name; var b = Action(name, () => target == "League" ? LeagueMenu() : Open(target)); b.FontSize = 10; b.Padding = 4; b.BorderWidth=0; b.HorizontalOptions = LayoutOptions.Fill; b.BackgroundColor = section == name ? DynastyTheme.Selected : Colors.Transparent; bottom.Add(b, index, 0); }
@@ -147,9 +147,9 @@ public sealed partial class FranchisePage : ContentPage
 
         // Dashboard layout in two columns on wide screens
         var dashboard=new Grid{ColumnSpacing=12,RowSpacing=12};
-        bool? wide=null;
-        void LayoutDash(){var w=dashboard.Width>=640;if(w==wide)return;wide=w;dashboard.ColumnDefinitions.Clear();dashboard.RowDefinitions.Clear();dashboard.ColumnDefinitions.Add(new(GridLength.Star));if(w)dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.RowDefinitions.Add(new(GridLength.Auto));if(!w)dashboard.RowDefinitions.Add(new(GridLength.Auto));Grid.SetColumn(taskGrid,0);Grid.SetRow(taskGrid,0);if(w){Grid.SetColumn(summaryCard,0);Grid.SetRow(summaryCard,0);Grid.SetColumn(taskGrid,1);}else{Grid.SetRow(summaryCard,0);}}
-        dashboard.Add(summaryCardAll,0,0);dashboard.Add(taskColumn,0,0);
+        int dashLayout=0;
+        void LayoutDash(){var w=dashboard.Width>=640;var target=w?2:1;if(target==dashLayout)return;dashLayout=target;dashboard.ColumnDefinitions.Clear();dashboard.RowDefinitions.Clear();if(w){dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.RowDefinitions.Add(new(GridLength.Auto));dashboard.Children.Clear();dashboard.Add(summaryCardAll,0,0);dashboard.Add(taskColumn,1,0);}else{dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.RowDefinitions.Add(new(GridLength.Auto));dashboard.RowDefinitions.Add(new(GridLength.Auto));dashboard.Children.Clear();dashboard.Add(summaryCardAll,0,0);dashboard.Add(taskColumn,0,1);}}
+        dashboard.SizeChanged+=(_,_)=>LayoutDash();
         dashboard.SizeChanged+=(_,_)=>LayoutDash();LayoutDash();
         body.Add(dashboard);
 
@@ -178,7 +178,7 @@ public sealed partial class FranchisePage : ContentPage
     {
         var g = game.Football; var stack = new VerticalStackLayout { Spacing = 6 };
         stack.Add(Text(g.HasPlayed?"Latest result":"Upcoming game",19,true));
-        View MatchupTeam(ProTeam t){var cell=new HorizontalStackLayout{Spacing=6,Children={new TeamBadgeView(t,28),Text(t.Abbreviation,15,true)}};var open=new TapGestureRecognizer();open.Tapped+=async(_,_)=>await TeamPage(t);cell.GestureRecognizers.Add(open);return cell;}
+        View MatchupTeam(ProTeam t){var cell=new HorizontalStackLayout{Spacing=6,Children={new TeamBadgeView(t,28),Text(CityLabel(t),15,true)}};var open=new TapGestureRecognizer();open.Tapped+=async(_,_)=>await TeamPage(t);cell.GestureRecognizers.Add(open);return cell;}
         var teams=new Grid{ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Auto),new(GridLength.Star)},ColumnSpacing=8};
         teams.Add(MatchupTeam(state!.League.Teams.Single(t=>t.Name==g.AwayTeamName)),0,0);teams.Add(Text("at",12),1,0);teams.Add(MatchupTeam(state.League.Teams.Single(t=>t.Name==g.HomeTeamName)),2,0);stack.Add(teams);
         if (g.HasPlayed) { stack.Add(Text($"Final · {g.AwayScore}–{g.HomeScore}")); stack.Add(Action("Box score", () => BoxScore(g))); }
