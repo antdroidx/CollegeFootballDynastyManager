@@ -55,11 +55,25 @@ public sealed partial class FranchisePage
         return column;
     }
 
+    // Labelled 0-100 meter used on coach profile cards.
+    static View AbilityBar(string label, int value, Color? color = null)
+    {
+        var pct = Math.Clamp(value, 0, 100) / 100d;
+        var bar = new Grid { ColumnDefinitions = { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 8 };
+        bar.Add(new Label { Text = label, TextColor = DynastyTheme.Text, FontSize = 12, VerticalTextAlignment = TextAlignment.Center }, 0, 0);
+        bar.Add(new Label { Text = value.ToString(), TextColor = DynastyTheme.Text, FontSize = 12, FontAttributes = FontAttributes.Bold, VerticalTextAlignment = TextAlignment.Center }, 1, 0);
+        var track = new BoxView { Color = DynastyTheme.Panel, CornerRadius = 4, HeightRequest = 8, VerticalOptions = LayoutOptions.Center };
+        var fill = new BoxView { Color = color ?? DynastyTheme.Accent, CornerRadius = 4, HeightRequest = 8, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Start };
+        var meter = new Grid { HeightRequest = 8, Margin = new Thickness(0, 2, 0, 0) };
+        meter.Add(track); meter.Add(fill);
+        meter.SizeChanged += (_, _) => fill.WidthRequest = Math.Max(0, meter.Width * pct);
+        return new VerticalStackLayout { Spacing = 2, Children = { bar, meter } };
+    }
     // Divider-free small header card used to group content sections.
     View SectionCard(string title, string? subtitle, params View[] views)
     {
         var content = new VerticalStackLayout { Spacing = 10 };
-        content.Add(new Label { Text = title, TextColor = DynastyTheme.Text, FontSize = 17, FontAttributes = FontAttributes.Bold });
+        if (!string.IsNullOrWhiteSpace(title)) content.Add(new Label { Text = title, TextColor = DynastyTheme.Text, FontSize = 17, FontAttributes = FontAttributes.Bold });
         if (!string.IsNullOrWhiteSpace(subtitle)) content.Add(Text(subtitle, 12, false));
         foreach (var v in views) content.Add(v);
         return new Border { Padding = 14, BackgroundColor = DynastyTheme.Surface, StrokeShape = new RoundRectangle { CornerRadius = 14 }, StrokeThickness = 0, Content = content };
