@@ -307,7 +307,7 @@ public static class ProOffseason
             var credited=s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.HasPlayed).SelectMany(g=>g.Football.PlayerStats).GroupBy(l=>l.PlayerId).Where(g=>g.Count()>=3).Select(g=>g.Key).ToHashSet();
             var players = s.Players.Select(p =>
             {
-                var aged = ProDevelopment.AgeOneYear(p, random);
+                var aged = ProDevelopment.AgeOneYear(p, random, ProStaff.DevelopmentRating(s, p.Football.TeamName, p.Football.Position));
                 var age = aged.Age;
                 var retirement = p.Retired || age >= (p.Football.Position is Position.QB or Position.K ? 40 : 36) || age > 32 && aged.Football.OverallRating < 65 && random.NextDouble() < .3;
                 return aged with { Experience = p.Experience + 1, CreditedSeasons=(p.CreditedSeasons??p.Experience)+(!p.PracticeSquad&&!p.Reserve&&credited.Contains(p.Football.PlayerId)?1:0), Retired = retirement, ReserveInjury=null, RosterStatus=p.ReserveInjury is not null?"ACT":p.RosterStatus, Reserve = s.UnsignedRookies.Any(r=>r.PlayerId==p.Football.PlayerId), Morale = Math.Clamp(p.Morale + (60 - p.Morale) / 3, 20, 90) };

@@ -30,14 +30,14 @@ public static class ProDevelopment
         ? player.Football.OverallRating - previous
         : player.Football.SeasonStartOverall > 0 ? player.Football.OverallRating - player.Football.SeasonStartOverall : null;
 
-    public static ProPlayer AgeOneYear(ProPlayer player, Random random)
+    public static ProPlayer AgeOneYear(ProPlayer player, Random random, int coachDevelopment = 65)
     {
         var age = player.Age + 1;
         if (player.Retired) return player with { Age = age };
         var old = PlayerSkillService.EnsureInitialized(player.Football);
         var peak = PeakAge(old.Position);
         var pastPrime = Math.Max(0, age - peak);
-        var growth = age <= peak ? Math.Min(Headroom(player), random.Next(0, 3)) : 0;
+        var growth = age <= peak ? Math.Min(Headroom(player), random.Next(0, 3) + (coachDevelopment >= 80 && random.NextDouble() < .35 ? 1 : 0) + (coachDevelopment >= 90 && random.NextDouble() < .2 ? 1 : 0)) : 0;
         var physicalLoss = pastPrime == 0 ? 0 : random.Next(1, 3) + (pastPrime >= 4 ? 1 : 0);
         var techniqueLoss = pastPrime <= 2 ? 0 : random.Next(1, 3);
         var mentalLoss = pastPrime <= 5 ? 0 : 1;

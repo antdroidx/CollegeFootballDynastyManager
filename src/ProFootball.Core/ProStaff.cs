@@ -29,6 +29,21 @@ public static class ProStaff
         foreach (var ch in (name ?? string.Empty).ToUpperInvariant()) hash = (hash ^ ch) * 16777619;
         return hash;
     }
+    // Position-scoped staff development quality used by Pro player growth.
+    public static int DevelopmentRating(ProFranchise s, string team, Position position)
+    {
+        var club = s.League.Teams.FirstOrDefault(t => t.Name == team);
+        if (club is null) return 65;
+        var role = position switch
+        {
+            Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL => StaffRole.OffensiveCoordinator,
+            Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS => StaffRole.DefensiveCoordinator,
+            Position.K or Position.P => StaffRole.SpecialTeamsCoordinator,
+            _ => StaffRole.HeadCoach
+        };
+        var coaches = s.Coaches.Where(c => c.TeamId == club.Id && !c.Vacant && (c.Role == role || c.Role == StaffRole.HeadCoach)).ToList();
+        return coaches.Count == 0 ? 65 : (int)Math.Round(coaches.Average(c => c.Development), MidpointRounding.AwayFromZero);
+    }
     public static ProFranchise DevelopSeason(ProFranchise s)
     {
         var standings=ProStandings.Build(s).ToDictionary(r=>r.Team.Id);

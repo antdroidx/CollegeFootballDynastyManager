@@ -98,22 +98,27 @@ public static class ProLeagueService
     {
         var players = DepthChartService.ProjectRoster(state.Players.Where(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && ProReserve.MedicallyAvailable(state,p)).Select(p => p.Football).ToArray(), state.DepthChartAssignments);
         double Rating(params Position[] positions) => players.Where(p => positions.Contains(p.Position)).OrderBy(p => p.DepthChartOrder).Take(8).Select(p => (double)p.OverallRating).DefaultIfEmpty(45).Average();
-        int Coach(StaffRole role) => state.Coaches.FirstOrDefault(c => c.TeamId == state.League.Teams.Single(t => t.Name == team).Id && c.Role == role && !c.Vacant)?.Rating ?? (role == StaffRole.DefensiveCoordinator ? state.Coaches.FirstOrDefault(c => c.TeamId == state.League.Teams.Single(t => t.Name == team).Id && c.Role == StaffRole.HeadCoach && !c.Vacant)?.Rating ?? 55 : 55);
+        var clubId = state.League.Teams.Single(t => t.Name == team).Id;
+        ProCoach? Staff(StaffRole role) => state.Coaches.FirstOrDefault(c => c.TeamId == clubId && c.Role == role && !c.Vacant)
+            ?? (role == StaffRole.DefensiveCoordinator ? state.Coaches.FirstOrDefault(c => c.TeamId == clubId && c.Role == StaffRole.HeadCoach && !c.Vacant) : null);
+        int Coach(StaffRole role) => Staff(role)?.Rating ?? 55;
+        int Ability(StaffRole role, Func<ProStaff.CoachAbilities, int> select) { var c = Staff(role); return c is null ? 55 : select(ProStaff.Profile(c)); }
+        static double Blend(double roster, int ability) => Math.Clamp(roster + (ability - 65) * 0.15, 1, 99);
         return new()
         {
             TeamName = team,
-            PassOffenseRating = Rating(Position.QB, Position.WR, Position.TE),
-            RushOffenseRating = Rating(Position.RB, Position.OL),
-            PassDefenseRating = Rating(Position.CB, Position.FS, Position.SS),
-            RushDefenseRating = Rating(Position.DE, Position.DT, Position.MLB, Position.OLB),
-            SpecialTeamsRating = Rating(Position.K),
+            PassOffenseRating = Blend(Rating(Position.QB, Position.WR, Position.TE), Ability(StaffRole.OffensiveCoordinator, p => p.Offense)),
+            RushOffenseRating = Blend(Rating(Position.RB, Position.OL), Ability(StaffRole.OffensiveCoordinator, p => p.Offense)),
+            PassDefenseRating = Blend(Rating(Position.CB, Position.FS, Position.SS), Ability(StaffRole.DefensiveCoordinator, p => p.Defense)),
+            RushDefenseRating = Blend(Rating(Position.DE, Position.DT, Position.MLB, Position.OLB), Ability(StaffRole.DefensiveCoordinator, p => p.Defense)),
+            SpecialTeamsRating = Blend(Rating(Position.K, Position.P), Ability(StaffRole.SpecialTeamsCoordinator, p => p.SpecialTeams)),
             RosterSize = 53,
             GamePlan = state.GamePlans.FirstOrDefault(p => p.TeamName == team) ?? new() { TeamName = team },
             Morale = (int)state.Players.Where(p => p.Football.TeamName == team && !p.Retired).Select(p => (double)p.Morale).DefaultIfEmpty(60).Average(),
-            HeadCoachLeadership = Coach(StaffRole.HeadCoach),
+            HeadCoachLeadership = Ability(StaffRole.HeadCoach, p => p.Leadership),
             HeadCoachGameManagement = Coach(StaffRole.HeadCoach),
-            OffensiveCoordinatorScheme = Coach(StaffRole.OffensiveCoordinator),
-            DefensiveCoordinatorScheme = Coach(StaffRole.DefensiveCoordinator)
+            OffensiveCoordinatorScheme = Ability(StaffRole.OffensiveCoordinator, p => p.Offense),
+            DefensiveCoordinatorScheme = Ability(StaffRole.DefensiveCoordinator, p => p.Defense)
         };
     }
     public static GameDaySession Start(ProFranchise state, ProGame game, GameDayMode mode, string? controlled = null)

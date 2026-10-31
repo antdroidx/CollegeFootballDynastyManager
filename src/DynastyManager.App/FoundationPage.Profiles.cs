@@ -135,6 +135,31 @@ public sealed partial class FoundationPage
 
     }
 
+    private View CoachRatingGrid(StaffMember coach)
+    {
+        var tiles = new View[] {
+            CoachStatTile("Overall", coach.OverallRating, FormatStaffRole(coach.Role)),
+            CoachStatTile("Leadership", coach.Leadership, "Program culture"),
+            CoachStatTile("Development", coach.PlayerDevelopment, "Player growth"),
+            CoachStatTile("Recruiting", coach.Recruiting, "Talent acquisition") };
+        var grid = new Grid { ColumnSpacing = 10, RowSpacing = 10 };
+        var previous = 0;
+        void Arrange(int columns)
+        {
+            if (columns == previous) return;
+            previous = columns;
+            grid.Children.Clear(); grid.ColumnDefinitions.Clear(); grid.RowDefinitions.Clear();
+            for (var c = 0; c < columns; c++) grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            for (var i = 0; i < tiles.Length; i++)
+            {
+                if (i % columns == 0) grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                grid.Add(tiles[i], i % columns, i / columns);
+            }
+        }
+        Arrange(2);
+        grid.SizeChanged += (_, _) => Arrange(grid.Width >= 620 ? 4 : 2);
+        return grid;
+    }
     private static View CoachStatTile(string label, int value, string caption) => new VerticalStackLayout { Spacing = 2, Children = {
         new Label { Text = label, FontSize = 11, TextColor = DynastyTheme.Muted },
         new Label { Text = value.ToString(), FontSize = 20, FontAttributes = FontAttributes.Bold },
@@ -160,9 +185,7 @@ public sealed partial class FoundationPage
         var overview = new VerticalStackLayout { Spacing = 10, Children = {
             SectionTitle("Coach profile", $"Age {coach.Age} · OVR {coach.OverallRating} · {coach.CareerYears} career years · {coach.ContractYearsRemaining} contract years"),
             editPortrait,
-            CoachingCard("KEY RATINGS", new Grid { ColumnSpacing = 10,
-                ColumnDefinitions = new() { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) },
-                Children = { CoachStatTile("Overall", coach.OverallRating, FormatStaffRole(coach.Role)), CoachStatTile("Leadership", coach.Leadership, "Program culture"), CoachStatTile("Development", coach.PlayerDevelopment, "Player growth"), CoachStatTile("Recruiting", coach.Recruiting, "Talent acquisition") } })
+            CoachingCard("KEY RATINGS", CoachRatingGrid(coach))
         } };
         if (coach.FormerPlayerId is not null) overview.Add(new Label { Text = $"Former {coach.AlmaMater} player · Class of {coach.GraduationYear} · entered coaching after apprenticeship", TextColor = DynastyTheme.Accent });
         if (coach.SharedRoleCoaches.Count > 0) overview.Add(new Label { Text = "Shared coordinator role: " + string.Join(" · ", coach.SharedRoleCoaches.Select(c => $"{c.FullName} ({c.PublishedTitle})")), TextColor = DynastyTheme.Muted });
