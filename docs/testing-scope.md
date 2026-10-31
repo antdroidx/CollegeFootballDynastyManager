@@ -278,3 +278,8 @@ Focused suite for the Pro scouting depth update and draft UI: dotnet test tests/
 - APK produced: src/ProFootball.App/bin/Debug/net10.0-android/antdroid.profootball.franchise-Signed.apk.
 
 This environment requires escalated sandbox access for dotnet test (testhost IPC limitation; see docs/pro-local-validation-runbook.md).
+
+## Coach profile + FM Touch restoration scope
+
+Focused Pro checks for b543bb5: dotnet build src/ProFootball.App/ProFootball.App.csproj /p:TargetFramework=net10.0-android then dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj --filter "FullyQualifiedName~ScoutingDepthTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~ManagementRefinementTests|FullyQualifiedName~SharedRatingsTests|FullyQualifiedName~Staff".
+Result: 57 passed, 0 failed (47 s). CI run 41175520041 success, artifact pro-football-apk-121. College untouched.

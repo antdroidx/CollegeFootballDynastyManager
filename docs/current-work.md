@@ -347,3 +347,13 @@ Verification: 27/27 focused tests pass (ScoutingDepthTests | FranchiseDepthAnaly
 Verified the FM Touch-style Pro UI on a Pixel 9 API 36 emulator in both portrait and landscape (phone aspect): Overview dashboard collapses to stacked cards on narrow and switches to summary + task-grid side-by-side on wide; sidebar navigation appears in landscape; Front Office stretch table, Roster position pills and cards all render correctly. Tablet (tablet-size emulator) not yet verified in this batch.
 
 Front Office reorganized into FM-Touch-style card sections (Money / Trading / Draft / Roster tools) — flat 10-button wall replaced with grouped tile grids. Visual verification from emulator screenshot; build only (no test scope change).
+
+## FM Touch restoration + coach profiles (b543bb5)
+
+Cause of the missing UI: the FM Touch overhaul commits (acce54e, a10b47f, bfaa44e) were on codex/pro-scouting-depth, but the last APK artifact (pro-football-apk-118) was built at 5fd00c9, before them. Fresh artifact built here.
+
+Verified present at HEAD: shared UI primitives (PrimaryAction, PosPill, StatTile, SectionCard, TaskTile, CityLabel), Overview card dashboard with Advance/Open stage, Roster position cards with the Columns toggle removed, Schedule "Season" label, dense inbox with week/year stamp, centered loading overlay, Draft class tile in Front Office for the whole offseason, and Playoffs/Awards news stories in the All filter and Overview feed.
+
+New in b543bb5: ProStaff.Profile derives deterministic coaching abilities and preferred schemes (save-compatible, defaults untouched in the record), hires now store those abilities, coach profile rebuilt with hero header, six stat tiles, five ability meters, scheme pair, and role card. Offseason guide now has an "Open <stage>" shortcut next to Continue.
+
+Checks: Pro app MSBuild net10.0-android 0 errors; 57 focused tests passed; CI run 41175520041 completed success; artifact pro-football-apk-121 (13032906388).
