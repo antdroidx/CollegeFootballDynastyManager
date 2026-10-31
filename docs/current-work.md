@@ -357,3 +357,13 @@ Verified present at HEAD: shared UI primitives (PrimaryAction, PosPill, StatTile
 New in b543bb5: ProStaff.Profile derives deterministic coaching abilities and preferred schemes (save-compatible, defaults untouched in the record), hires now store those abilities, coach profile rebuilt with hero header, six stat tiles, five ability meters, scheme pair, and role card. Offseason guide now has an "Open <stage>" shortcut next to Continue.
 
 Checks: Pro app MSBuild net10.0-android 0 errors; 57 focused tests passed; CI run 41175520041 completed success; artifact pro-football-apk-121 (13032906388).
+
+## Pro FM Touch consistency, kicker/punter, and College coach polish (4df29b6..5dd1df3)
+
+Published the previously uncommitted kicker/punter split (Position.P, market/trade/depth integration) with the Reserve-roster compact table.
+
+Pro consistency pass: shared PageHeader and StatRow primitives; Player overview now opens with OVR / ceiling / growth / morale tiles; Staff renders each coordinator as a SectionCard with Overall/Offense/Defense/Leadership tiles and preferred schemes; page headers applied to Standings, Staff, Schedule, Statistics, Analytics, Inbox, Transactions, Honors, Career, Playoffs, Draft, News.
+
+College: coach profile gains a KEY RATINGS card (Overall, Leadership, Development, Recruiting) and the team staff table gains Lead and Scheme columns. College behavior otherwise unchanged.
+
+Checks: Pro app MSBuild 0 errors; 64 focused Pro tests passed; College app MSBuild 0 errors; 34 focused College coach tests passed.

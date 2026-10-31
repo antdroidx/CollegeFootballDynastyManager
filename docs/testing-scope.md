@@ -283,3 +283,8 @@ This environment requires escalated sandbox access for dotnet test (testhost IPC
 
 Focused Pro checks for b543bb5: dotnet build src/ProFootball.App/ProFootball.App.csproj /p:TargetFramework=net10.0-android then dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj --filter "FullyQualifiedName~ScoutingDepthTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~ManagementRefinementTests|FullyQualifiedName~SharedRatingsTests|FullyQualifiedName~Staff".
 Result: 57 passed, 0 failed (47 s). CI run 41175520041 success, artifact pro-football-apk-121. College untouched.
+
+## Pro consistency + College coach scope (5dd1df3)
+
+Pro: dotnet build src/ProFootball.App/ProFootball.App.csproj /p:TargetFramework=net10.0-android (0 errors); dotnet test tests/ProFootball.Tests --filter "...ScoutingDepth|FranchiseDepthAnalytics|ManagementRefinement|SharedRatings|Staff|DepthChart" (64 passed).
+College: dotnet build src/DynastyManager.App/DynastyManager.App.csproj /p:TargetFramework=net10.0-android (0 errors); dotnet test tests/DynastyManager.Core.Tests --filter "CoachCareer|CoachSuccession" (34 passed).
