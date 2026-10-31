@@ -12,7 +12,7 @@ public sealed partial class FranchisePage
         if(notices.Count==0)body.Add(Text("No current action items."));
         foreach(var notice in notices)
         {
-            var n=notice;body.Add(Panel((state!.ReadNotificationIds.Contains(n.Id)?"":"● ")+n.Title,Text(n.Detail),Action("Review",async()=>{
+            var n=notice;body.Add(SectionCard((state!.ReadNotificationIds.Contains(n.Id)?"":"● ")+n.Title,null,Text(n.Detail),Action("Review",async()=>{
                 state=state! with{ReadNotificationIds=state.ReadNotificationIds.Append(n.Id).Distinct().ToList()};await Save();
                 if(n.Id.StartsWith("trade-offer-"))await TradeOffers();
                 else if(n.PlayerId is Guid id&&state.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player)await Player(player);

@@ -17,7 +17,12 @@ public sealed partial class FranchisePage
         body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text($"{s.Year} Draft room",25,true));
         var headline=current is null?"Draft complete":active?$"On the clock · R{current.Round} · Pick {ProDraft.Overall(s,current)} · {current.Owner}":"Scouting & draft preparation";
         var next=s.Picks.Where(p=>p.Year==s.Year&&p.Owner==s.UserTeam).OrderBy(p=>p.Round).ThenBy(p=>p.Slot).FirstOrDefault(p=>!s.DraftHistory.Any(h=>h.Year==s.Year&&h.Round==p.Round&&h.Slot==p.Slot));
-        body.Add(Panel(headline,Text($"{s.DraftHistory.Count(h=>h.Year==s.Year)} selections made · {s.Prospects.Count} available · "+(next is null?"No team picks remaining":$"Your next pick: R{next.Round} · #{ProDraft.Overall(s,next)}"),13),Text($"Scout team · {ProScouting.DepthSummary(s)}",12)));
+                var chips=new HorizontalStackLayout{Spacing=8};
+        chips.Add(new Border{Padding=new Thickness(8,3),StrokeShape=new Microsoft.Maui.Controls.Shapes.RoundRectangle{CornerRadius=10},BackgroundColor=DynastyTheme.Panel,Content=new Label{Text=$"{s.Prospects.Count} prospects",FontSize=11,TextColor=DynastyTheme.Muted}});
+        chips.Add(new Border{Padding=new Thickness(8,3),StrokeShape=new Microsoft.Maui.Controls.Shapes.RoundRectangle{CornerRadius=10},BackgroundColor=DynastyTheme.Panel,Content=new Label{Text=$"{s.DraftHistory.Count(h2=>h2.Year==s.Year)} selections",FontSize=11,TextColor=DynastyTheme.Muted}});
+        chips.Add(new Border{Padding=new Thickness(8,3),StrokeShape=new Microsoft.Maui.Controls.Shapes.RoundRectangle{CornerRadius=10},BackgroundColor=DynastyTheme.Accent,Content=new Label{Text=ProScouting.DepthSummary(s),FontSize=11,TextColor=DynastyTheme.IsLight?Colors.White:Color.FromArgb("#0B1726")}});
+        body.Add(chips);
+        body.Add(Panel(headline,Text($"{s.DraftHistory.Count(h=>h.Year==s.Year)} selections made · {s.Prospects.Count} available · "+(next is null?"No team picks remaining":$"Your next pick: R{next.Round} · #{ProDraft.Overall(s,next)}"),13)));
         var tools=new ActionRow();if(active)tools.Add(Action("Delegate remaining picks",async()=>{state=await Task.Run(()=>ProDraft.AutoUntilUser(state!,true));await Save();await Draft();},"pro-draft-auto"));
         if(s.DraftIndex==0)tools.Add(CollegeClassImportButton());tools.Add(Action("Free agents",FreeAgents));body.Add(tools);
         var views=new ActionRow();foreach(var name in new[]{"Prospects","My board","Draft results","Order"}){var n=name;var button=Action(name,()=>{draftView=n;return Draft();},"pro-draft-view-"+name.Replace(" ","-").ToLowerInvariant());button.BackgroundColor=draftView==name?DynastyTheme.Selected:Colors.Transparent;views.Add(button);}body.Add(views);

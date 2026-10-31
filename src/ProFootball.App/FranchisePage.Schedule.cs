@@ -26,7 +26,7 @@ public sealed partial class FranchisePage
             list.Add(Text(games.Length+" games · "+(selected=="All teams"?"League":selected),12));
             var own=selected!="All teams";
             var columns=own?new (string,int)[] { ("Week",55),("Phase",95),("Opponent",200),("Venue",65),("Result",100),("Game center",230) }:new (string,int)[] { ("Week",55),("Phase",95),("Away",190),("Home",190),("Result",100),("Game center",230) };
-            list.Add(Table(columns,games.Select(g=>
+            list.Add(SectionCard(null,null,Table(columns,games.Select(g=>
             {
                 var f=g.Football;var actions=new ActionRow();
                 if(f.HasPlayed) actions.Add(Link("Box score",()=>BoxScore(f)));
@@ -35,7 +35,7 @@ public sealed partial class FranchisePage
                 var home=s.League.Teams.Single(t=>t.Name==f.HomeTeamName);var away=s.League.Teams.Single(t=>t.Name==f.AwayTeamName);
                 var result=f.HasPlayed?$"{f.AwayScore}–{f.HomeScore}":"Upcoming";
                 return new View[] { Text(f.Week.ToString()+(g.Phase==s.Phase&&f.Week==s.Week?" •":"")),Text(g.Phase.ToString(),12),own?TeamCell(f.HomeTeamName==selected?away:home):TeamCell(away),own?Text(f.HomeTeamName==selected?"Home":"Away"):TeamCell(home),Text(result),actions };
-            })));
+            }))));
         }
         team.SelectedIndexChanged+=(_,_)=>{scheduleTeam=(string)team.SelectedItem;Draw();};phase.SelectedIndexChanged+=(_,_)=>{schedulePhase=phase.SelectedIndex==0?null:Enum.Parse<ProPhase>((string)phase.SelectedItem);scheduleWeek=null;scheduleWeekPhase=null;UpdateWeeks();Draw();};week.SelectedIndexChanged+=(_,_)=>{if(syncingWeeks||week.SelectedIndex<0)return;var choice=weeks[week.SelectedIndex];scheduleWeek=choice.Week;scheduleWeekPhase=choice.Phase;Draw();};Draw();
     }

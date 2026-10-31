@@ -107,43 +107,68 @@ public sealed partial class FranchisePage : ContentPage
     }
     void Overview()
     {
-        var s = state!; var r = ProStandings.Build(s).Single(r => r.Team.Name == s.UserTeam);
-        if(s.Phase==ProPhase.Offseason)body.Add(Panel("Offseason · "+ProOffseasonFlow.Title(s.OffseasonStep),Text(ProOffseasonFlow.Blocker(s)??"Review this stage, then continue to the next step.",12),Action("Continue "+ProOffseasonFlow.Title(s.OffseasonStep),()=>Open("Offseason"))));
-        var actions=new ActionRow();actions.Add(Action(s.Phase==ProPhase.Offseason?"Continue offseason":"Advance week",s.Phase==ProPhase.Offseason?()=>Open("Offseason"):Advance,"pro-advance"));
-        if(s.Phase!=ProPhase.Offseason)actions.Add(Action(s.Phase==ProPhase.Preseason?"Simulate preseason":s.Phase==ProPhase.RegularSeason?"Simulate regular season":"Simulate playoffs",SimulatePhase,"pro-simulate-phase"));
-        actions.Add(Action("Save",Save));body.Add(actions);
+        var s = state!; var r = ProStandings.Build(s).Single(x => x.Team.Name == s.UserTeam);
+        var primary=new HorizontalStackLayout{Spacing=8};
+        primary.Add(PrimaryAction(s.Phase==ProPhase.Offseason?"Continue offseason":"Advance week",s.Phase==ProPhase.Offseason?()=>Open("Offseason"):Advance,"pro-advance"));
+        if(s.Phase!=ProPhase.Offseason)primary.Add(Action(s.Phase==ProPhase.Preseason?"Simulate preseason":s.Phase==ProPhase.RegularSeason?"Simulate regular season":"Simulate playoffs",SimulatePhase,"pro-simulate-phase"));
+        primary.Add(Action("Save",Save));
+        body.Add(primary);
+
         if(s.Phase!=ProPhase.Offseason)
         {
             var game=s.Games.FirstOrDefault(g=>g.Phase==s.Phase&&g.Football.Week==s.Week&&g.Football.InvolvesTeam(s.UserTeam));
             if(game is not null)body.Add(GameCard(game));else body.Add(Text("Your team has a bye this week."));
         }
+
+        // Season overview card
         var owner=s.Owners.FirstOrDefault(o=>o.Team==s.UserTeam);
-        var summaryActions=new ActionRow();summaryActions.Add(Action("Standings",()=>Open("Standings")));summaryActions.Add(Action("Schedule",()=>OpenTeamSchedule()));summaryActions.Add(Action("Career",()=>Open("Career")));
-        if(s.Phase==ProPhase.Playoffs||s.Phase==ProPhase.RegularSeason&&s.Week>=14||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)summaryActions.Add(Action("Playoff bracket",()=>Open("Playoffs")));
-        var summary=Panel("Season overview",Text($"{r.Wins}–{r.Losses}–{r.Ties} · {r.Team.Conference} · {r.Team.Division}",18,true),Text($"{SeasonCapLabel(s,s.UserTeam)} · Roster {ProRoster.CountForLimit(s,s.UserTeam)}/{ProRoster.Limit(s)}",13),Text(s.Career?.Unemployed==true?"Seeking employment · open Career for job offers":$"{s.Career?.Name} · {RoleName(ProCareer.Role(s))} · Security {s.Career?.Security??65}/100 · Reputation {s.Career?.Reputation??50}/100 · Owner {owner?.Security??65}/100",12),summaryActions);
-        var notices=ProInbox.Build(s);var unread=notices.Count(n=>!s.ReadNotificationIds.Contains(n.Id));var tasks=new Grid{ColumnSpacing=6,RowSpacing=6,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto),new(GridLength.Auto),new(GridLength.Auto)}};
-        View[] taskButtons=[Action("Roster & depth",()=>Open("Roster")),Action("Staff & game plan",()=>Open("Staff")),Action("Contracts & cap",()=>Open("Front Office")),Action($"Inbox · {unread} unread",()=>Open("Inbox")),Action("League games",()=>OpenLeagueGames(),"pro-week-games"),WeeklyTalkButton()];
-        for(var i=0;i<taskButtons.Length;i++)tasks.Add(taskButtons[i],i%2,i/2);
-        var taskViews=new List<View>{tasks};foreach(var notice in notices.Take(3)){var n=notice;taskViews.Add(Link(n.Title,()=>n.Id.StartsWith("retention-")?Open("Offseason"):n.PlayerId is Guid id&&s.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player?Player(player):Open("Inbox")));}
-        var taskPanel=Panel("Weekly tasks",taskViews.ToArray());var dashboard=new Grid{ColumnSpacing=10,RowSpacing=10};dashboard.Add(summary);dashboard.Add(taskPanel);
-        bool? dashboardWide=null;
-        void LayoutDashboard(){var wide=dashboard.Width>=600;if(dashboardWide==wide)return;dashboardWide=wide;dashboard.ColumnDefinitions.Clear();dashboard.RowDefinitions.Clear();dashboard.ColumnDefinitions.Add(new(GridLength.Star));if(wide)dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.RowDefinitions.Add(new(GridLength.Auto));if(!wide)dashboard.RowDefinitions.Add(new(GridLength.Auto));Grid.SetRow(taskPanel,wide?0:1);Grid.SetColumn(taskPanel,wide?1:0);}
-        dashboard.SizeChanged+=(_,_)=>LayoutDashboard();LayoutDashboard();body.Add(dashboard);
-        if(s.UnsignedRookies.Any(r=>r.Team==s.UserTeam))body.Add(Panel("Unsigned draft picks",Text("Clear cap/roster room to sign the remaining rookie contracts.",12),Action("Sign rookie contracts",async()=>{state=ProDraft.SignRookies(state!,state!.UserTeam);await Save();Render();})));
-        if(s.Phase==ProPhase.Preseason&&s.Week==3&&s.Games.Where(g=>g.Phase==ProPhase.Preseason&&g.Football.Week==3).All(g=>g.Football.HasPlayed)&&ProRoster.Active(s,s.UserTeam)>53)body.Add(Panel("Final roster cutdown",Text($"Reduce {ProRoster.Active(s,s.UserTeam)} active players to 53 before opening day."),Action("Manage roster",()=>Open("Roster"))));
+        var record=new Label{Text=$"{r.Wins}-{r.Losses}-{r.Ties}",TextColor=DynastyTheme.Text,FontSize=38,FontAttributes=FontAttributes.Bold};
+        var recordSub=new Label{Text=$"{r.Team.Conference} · {r.Team.Division}",TextColor=DynastyTheme.Muted,FontSize=12};
+        var recordColumn=new VerticalStackLayout{Spacing=2};recordColumn.Add(record);recordColumn.Add(recordSub);
+        var tiles=new Grid{ColumnSpacing=12,RowSpacing=8,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};
+        tiles.Add(StatTile("Cap space",SeasonCapLabel(s,s.UserTeam)),0,0);
+        tiles.Add(StatTile("Roster",$"{ProRoster.CountForLimit(s,s.UserTeam)}/{ProRoster.Limit(s)}"),1,0);
+        tiles.Add(StatTile("Head coach",owner is null?"You":s.Career?.Name??"You",$"Security {s.Career?.Security??65}/100"),2,0);
+        var summaryCard=SectionCard("Season overview",null,recordColumn,tiles);
+        var summaryButtons=new HorizontalStackLayout{Spacing=8};
+        summaryButtons.Add(Action("Standings",()=>Open("Standings")));summaryButtons.Add(Action("Schedule",()=>OpenTeamSchedule()));summaryButtons.Add(Action("Career",()=>Open("Career")));
+        if(s.Phase==ProPhase.Playoffs||s.Phase==ProPhase.RegularSeason&&s.Week>=14||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)summaryButtons.Add(Action("Playoff bracket",()=>Open("Playoffs")));
+        var summaryCardAll=new VerticalStackLayout{Spacing=10};summaryCardAll.Add(summaryCard);summaryCardAll.Add(summaryButtons);
+
+        // Weekly tasks 2x2
+        var notices=ProInbox.Build(s);var unread=notices.Count(n=>!s.ReadNotificationIds.Contains(n.Id));
+        var taskGrid=new Grid{ColumnSpacing=10,RowSpacing=10,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto),new(GridLength.Auto)}};
+        taskGrid.Add(TaskTile("Roster & depth","Lineup, depth chart, injuries",()=>Open("Roster")),0,0);
+        taskGrid.Add(TaskTile("Staff & game plan","Coaches, schemes, weekly prep",()=>Open("Staff")),1,0);
+        taskGrid.Add(TaskTile("Contracts & cap","Extensions, free agents, cap management",()=>Open("Front Office")),0,1);
+        taskGrid.Add(TaskTile($"Inbox · {unread} unread","Messages, league updates",()=>Open("Inbox")),1,1);
+        var taskColumn=new VerticalStackLayout{Spacing=8};taskColumn.Add(taskGrid);
+        for(var i=0;i<Math.Min(3,notices.Count);i++){var n=notices[i];taskColumn.Add(Link(n.Title,()=>n.Id.StartsWith("retention-")?Open("Offseason"):n.PlayerId is Guid id&&s.Players.FirstOrDefault(p=>p.Football.PlayerId==id) is {} player?Player(player):Open("Inbox")));}
+
+        // Dashboard layout in two columns on wide screens
+        var dashboard=new Grid{ColumnSpacing=12,RowSpacing=12};
+        bool? wide=null;
+        void LayoutDash(){var w=dashboard.Width>=640;if(w==wide)return;wide=w;dashboard.ColumnDefinitions.Clear();dashboard.RowDefinitions.Clear();dashboard.ColumnDefinitions.Add(new(GridLength.Star));if(w)dashboard.ColumnDefinitions.Add(new(GridLength.Star));dashboard.RowDefinitions.Add(new(GridLength.Auto));if(!w)dashboard.RowDefinitions.Add(new(GridLength.Auto));Grid.SetColumn(taskGrid,0);Grid.SetRow(taskGrid,0);if(w){Grid.SetColumn(summaryCard,0);Grid.SetRow(summaryCard,0);Grid.SetColumn(taskGrid,1);}else{Grid.SetRow(summaryCard,0);}}
+        dashboard.Add(summaryCardAll,0,0);dashboard.Add(taskColumn,0,0);
+        dashboard.SizeChanged+=(_,_)=>LayoutDash();LayoutDash();
+        body.Add(dashboard);
+
+        if(s.UnsignedRookies.Any(rx=>rx.Team==s.UserTeam))body.Add(SectionCard("Unsigned draft picks","Clear cap/roster room to sign the remaining rookie contracts.",Action("Sign rookie contracts",async()=>{state=ProDraft.SignRookies(state!,state!.UserTeam);await Save();Render();})));
+        if(s.Phase==ProPhase.Preseason&&s.Week==3&&s.Games.Where(x=>x.Phase==ProPhase.Preseason&&x.Football.Week==3).All(x=>x.Football.HasPlayed)&&ProRoster.Active(s,s.UserTeam)>53)body.Add(SectionCard("Final roster cutdown",$"Reduce {ProRoster.Active(s,s.UserTeam)} active players to 53 before opening day.",Action("Manage roster",()=>Open("Roster"))));
         state=ProNews.Refresh(state!);s=state;
-        var news=new List<View>();var newsCards=new List<View>();
-        foreach(var story in s.News.Take(3))
+        var newsChildren=new List<View>();
+        foreach(var story in s.News.Take(4))
         {
             var n=story;var card=FootballNewsCard.Create(NewsThumbnail(n),$"{n.Category.ToUpperInvariant()} · {n.Year} · Week {n.Week}",n.Headline,n.Body,DynastyTheme.Accent);
-            var tap=new TapGestureRecognizer();tap.Tapped+=async(_,_)=>await ShowPage(n.Headline,Text(n.Body),n.Team is null?Text("League news"):TeamCell(s.League.Teams.FirstOrDefault(t=>t.Name==n.Team)??r.Team));card.GestureRecognizers.Add(tap);SemanticProperties.SetDescription(card,n.Headline+". Open story.");newsCards.Add(card);
+            var tap=new TapGestureRecognizer();tap.Tapped+=async(_,_)=>await ShowPage(n.Headline,Text(n.Body),n.Team is null?Text("League news"):TeamCell(s.League.Teams.FirstOrDefault(t=>t.Name==n.Team)??r.Team));card.GestureRecognizers.Add(tap);SemanticProperties.SetDescription(card,n.Headline+". Open story.");
+            newsChildren.Add(card);
         }
-        if(newsCards.Count>0)news.Add(FootballNewsCard.Layout(newsCards));
-        if(newsCards.Count==0)news.Add(Text("Results, injuries and league activity will appear here as your franchise advances.",12));
-        news.Add(Action("Headlines & results ›",()=>Open("News")));news.Add(Action("Statistics & leaders ›",()=>Open("Statistics")));body.Add(Panel("League news",news.ToArray()));
-        body.Add(Panel("Latest transactions", Text(string.Join("\n", ProTransactions.Migrate(s).TransactionLog.TakeLast(4).Reverse().Select(t=>$"{t.Year} {ProTransactions.Period(t.Phase,t.Week)} · {t.Activity}")), 12),Action("View all transactions ›",()=>Open("Transactions"))));
-    }
-    async Task Advance()
+        if(newsChildren.Count==0)newsChildren.Add(Text("Results, injuries and league activity will appear here as your franchise advances.",12));
+        newsChildren.Add(Action("Headlines & results ›",()=>Open("News")));
+        newsChildren.Add(Action("Statistics & leaders ›",()=>Open("Statistics")));
+        body.Add(SectionCard("League news",null,newsChildren.ToArray()));
+        body.Add(SectionCard("Latest transactions",null,Text(string.Join("\n",ProTransactions.Migrate(s).TransactionLog.TakeLast(4).Reverse().Select(t=>$"{t.Year} {ProTransactions.Period(t.Phase,t.Week)} · {t.Activity}")),12),Action("View all transactions ›",()=>Open("Transactions"))));
+    }    async Task Advance()
     {
         var label = state!.Phase == ProPhase.Offseason ? "Complete "+ProOffseasonFlow.Title(state.OffseasonStep)+"?" : "Advance week?";
         if (!await GameDialogs.AlertAsync(this, label, state.Phase == ProPhase.Offseason ? "Process this offseason stage and CPU decisions?" : "Simulate remaining games, process bids/waivers and save?", "Advance", "Cancel")) return;
@@ -167,8 +192,7 @@ public sealed partial class FranchisePage : ContentPage
     {
         body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
         foreach (var group in ProStandings.Build(state!).GroupBy(r => r.Team.Conference + " · " + r.Team.Division))
-        { body.Add(Text(group.Key, 19, true)); body.Add(Table([("Team", 210), ("W", 40), ("L", 40), ("T", 40), ("Pct", 65), ("Diff", 65)], group.Select(r => new View[] { TeamCell(r.Team), Text(r.Wins.ToString()), Text(r.Losses.ToString()), Text(r.Ties.ToString()), Text(r.Percentage.ToString(".000")), Text(r.Differential.ToString()) }))); }
-        body.Add(Text("Ties use head-to-head, division/common/conference records, opponent strength and scoring tiebreakers.", 12));
+        { body.Add(SectionCard(group.Key,null,Table([("Team", 210), ("W", 40), ("L", 40), ("T", 40), ("Pct", 65), ("Diff", 65)], group.Select(r => new View[] { TeamCell(r.Team), Text(r.Wins.ToString()), Text(r.Losses.ToString()), Text(r.Ties.ToString()), Text(r.Percentage.ToString(".000")), Text(r.Differential.ToString()) })))); }
     }
     View TeamCell(ProTeam team)
     {
@@ -190,7 +214,7 @@ public sealed partial class FranchisePage : ContentPage
         var list = new VerticalStackLayout { Spacing = 12 };
         var showRatings = false;
         var tools = new ActionRow(); var organize=Action("Organize depth chart", DepthChart);tools.Add(organize); var columnsButton = new Button { Text = "Columns: Essential" }; columnsButton.Clicked += (_, _) => { showRatings = !showRatings; columnsButton.Text = showRatings ? "Columns: Ratings" : "Columns: Essential"; Draw(); }; tools.Add(columnsButton); body.Add(CompactFilters.Create((team,210),(search,210),(positions,130)));body.Add(tools);
-        body.Add(Text("Δ since last offseason (season start for new saves) · Growth is remaining upside · Swipe for more columns", 12));
+        body.Add(Text("Delta since last offseason (season start for new saves) · Growth is remaining upside · Swipe for more columns", 12));
         body.Add(list);
         void Draw()
         {
@@ -199,22 +223,22 @@ public sealed partial class FranchisePage : ContentPage
             var players = s.Players.Where(p => p.Football.TeamName == selectedTeam && !p.Retired && (string.IsNullOrWhiteSpace(search.Text) || p.Football.FullName.Contains(search.Text.Trim(), StringComparison.OrdinalIgnoreCase)) && (positions.SelectedIndex <= 0 || p.Football.Position.DisplayName() == (string)positions.SelectedItem)).ToArray();
             foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : "Active roster"))
             {
-                list.Add(Text(group.Key + " · " + group.Count(), 21, true));
-                var columns = new List<(string, int)> { ("Pos", 48), ("Player", 220), ("Age", 45), ("OVR", 50), ("Δ", 45), ("Growth", 100), ("Morale", 65), ("Cap hit", 90) };
-                if (showRatings) columns.AddRange(PlayerAttributeCatalog.Groups(players[0].Football).SelectMany(g => g.Attributes).Select(a => (a.Name, 95)));
-                list.Add(Table(columns.ToArray(), group.OrderBy(p => ProBackfieldPositions.Order(p.Football.Position)).ThenBy(p => p.Football.DepthChartOrder).Select(p =>
+                list.Add(Text(group.Key + " · " + group.Count(), 20, true));
+                // Group by position within each roster section.
+                foreach (var pg in group.OrderBy(x => x.Football.Position.RosterOrder()).GroupBy(p => p.Football.Position))
                 {
-                    var cells = new List<View> { Text(OffensiveLineService.Label(p.Football), 12), PlayerCell(p), Text(p.Age.ToString()), Text(p.Football.OverallRating.ToString(), 15, true), RatingDelta(p), Text(ProDevelopment.Growth(p)), Text(p.Morale.ToString()), Text(Money(s.Contracts.Where(c => c.PlayerId == p.Football.PlayerId).Sum(c => ProEconomy.CapHit(c, s.Year))), 12) };
-                    if (showRatings) cells.AddRange(PlayerAttributeCatalog.Groups(p.Football).SelectMany(g => g.Attributes).Select(a => Text(a.Rating.ToString())));
-                    return cells.ToArray();
-                })));
-
+                    var header=new HorizontalStackLayout{Spacing=8,Children={PosPill(pg.Key),Text(PositionGroupTitle(pg.Key),16,true),new Label{Text=$"· {pg.Count()}",FontSize=13,TextColor=DynastyTheme.Muted}}};
+                    var innerTable=Table(new[]{("Player",215),("Age",45),("OVR",50),("Delta",50),("Growth",90),("Morale",65),("Cap hit",90)},pg.OrderBy(x=>x.Football.DepthChartOrder).ThenByDescending(x=>x.Football.OverallRating).Select(p=>{
+                        var cells=new List<View>{PlayerCell(p),Text(p.Age.ToString()),Text(p.Football.OverallRating.ToString(),15,true),RatingDelta(p),Text(ProDevelopment.Growth(p)),Text(p.Morale.ToString()),Text(Money(s.Contracts.Where(cc=>cc.PlayerId==p.Football.PlayerId).Sum(cc=>ProEconomy.CapHit(cc,s.Year))),12)};
+                        return cells.ToArray();
+                    }));
+                    list.Add(SectionCard(null,null,header,innerTable));
+                }
             }
-            if (players.Length == 0) list.Add(Text("No players match these filters."));
+            if(players.Length==0)list.Add(Text("No players match these filters."));
         }
         team.SelectedIndexChanged += (_, _) => Draw(); positions.SelectedIndexChanged += (_, _) => Draw(); search.TextChanged += (_, _) => Draw(); Draw();
-    }
-    void History()
+    }    void History()
     { body.Add(Text("Franchise history", 22, true)); foreach (var season in state!.History) body.Add(Panel(season.Year + " champions", Text(season.Champion, 21, true))); body.Add(Text("Draft history", 21, true)); foreach (var pick in state.DraftHistory.Where(p => p.Team == state.UserTeam).TakeLast(21).Reverse()) body.Add(Text($"{pick.Year} R{pick.Round} #{pick.Slot} · {pick.Player.Football.FullName}", 13)); }
     Task BoxScore(ScheduledGame game) => ShowBoxScore(game);
     async Task Live(ProGame game, GameDayMode mode)
