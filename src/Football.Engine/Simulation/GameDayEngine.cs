@@ -706,7 +706,7 @@ public static partial class GameDayEngine
 
     private static DynastyPlayer? Kicker(IReadOnlyList<DynastyPlayer> roster, bool punting = false) => roster
         .Where(player => player.CurrentInjury is null && !player.IsRedshirted)
-        .OrderBy(player => player.Position == Position.K ? 0 : 1)
+        .OrderBy(player => player.Position == (punting ? Position.P : Position.K) ? 0 : player.Position is Position.K or Position.P ? 1 : 2)
         .ThenBy(player => player.NcaaPositionCode == (punting ? 20 : 19) ? 0 : 1)
         .ThenBy(player => player.DepthChartOrder > 0 ? player.DepthChartOrder : int.MaxValue)
         .ThenByDescending(player => player.OverallRating).FirstOrDefault();
