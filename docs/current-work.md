@@ -375,3 +375,14 @@ Pushed everything outstanding to codex/pro-scouting-depth, including the kicker/
 Two regressions from the kicker/punter split were found by College CI and fixed: College position-need lookup needed a Position.P entry (kept at 0 so College recruiting behavior is unchanged), and GameDayEngine now prefers P for punts and K for field goals.
 
 CI at the final commit: College Android 41178645152 success (artifact dynasty-manager-build-416); Pro Football Android 41178646670 success (artifact pro-football-apk-124).
+
+## Coach ratings wired to gameplay (44c9097)
+
+Audit found the Pro coach ability fields were display-only. Now wired:
+- ProLeagueService.Profile blends Pass/Rush offense with OC Offense ability and Pass/Rush defense with DC Defense ability; SpecialTeams blends roster K/P with ST coordinator; HeadCoachLeadership and coordinator scheme fields read the ability profile.
+- ProStaff.DevelopmentRating gives position-scoped staff development; ProDevelopment.AgeOneYear accepts it and adds growth chance above 80/90 development.
+- Pro scouting already used coach Development for report confidence.
+
+College: fixed KEY RATINGS tile overlap by assigning explicit grid columns (2x2 on phones, 4 across on wide screens). College coaching ratings already drove recruiting (CompetingRecruitingService uses head coach Recruiting) and scheme fit.
+
+Checks: Pro app MSBuild 0 errors; 46 focused Pro tests including new CoachAbilityImpactTests (2 passed); College app MSBuild 0 errors; CI runs 41180456977 (College success) and 41180458621 (Pro success, pro-football-apk-125).
