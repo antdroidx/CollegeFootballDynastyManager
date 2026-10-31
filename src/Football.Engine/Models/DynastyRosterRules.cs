@@ -56,6 +56,7 @@ public static class DynastyRosterRules
             [Position.TE] = 4,
             [Position.OL] = 16,
             [Position.K] = 3,
+            [Position.P] = 0,
             [Position.DE] = 7,
             [Position.DT] = 6,
             [Position.OLB] = 6,
