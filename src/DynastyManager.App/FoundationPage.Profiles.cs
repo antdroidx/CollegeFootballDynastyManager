@@ -135,6 +135,10 @@ public sealed partial class FoundationPage
 
     }
 
+    private static View CoachStatTile(string label, int value, string caption) => new VerticalStackLayout { Spacing = 2, Children = {
+        new Label { Text = label, FontSize = 11, TextColor = DynastyTheme.Muted },
+        new Label { Text = value.ToString(), FontSize = 20, FontAttributes = FontAttributes.Bold },
+        new Label { Text = caption, FontSize = 11, TextColor = DynastyTheme.Muted } } };
     private View AttributeGroup(string title, string subtitle, params (string Name, int Rating)[] attributes) =>
         PlayerAttributeViews.Group(title, subtitle, attributes, SectionTitle);
 
@@ -155,7 +159,10 @@ public sealed partial class FoundationPage
         };
         var overview = new VerticalStackLayout { Spacing = 10, Children = {
             SectionTitle("Coach profile", $"Age {coach.Age} · OVR {coach.OverallRating} · {coach.CareerYears} career years · {coach.ContractYearsRemaining} contract years"),
-            editPortrait
+            editPortrait,
+            CoachingCard("KEY RATINGS", new Grid { ColumnSpacing = 10,
+                ColumnDefinitions = new() { new(GridLength.Star), new(GridLength.Star), new(GridLength.Star), new(GridLength.Star) },
+                Children = { CoachStatTile("Overall", coach.OverallRating, FormatStaffRole(coach.Role)), CoachStatTile("Leadership", coach.Leadership, "Program culture"), CoachStatTile("Development", coach.PlayerDevelopment, "Player growth"), CoachStatTile("Recruiting", coach.Recruiting, "Talent acquisition") } })
         } };
         if (coach.FormerPlayerId is not null) overview.Add(new Label { Text = $"Former {coach.AlmaMater} player · Class of {coach.GraduationYear} · entered coaching after apprenticeship", TextColor = DynastyTheme.Accent });
         if (coach.SharedRoleCoaches.Count > 0) overview.Add(new Label { Text = "Shared coordinator role: " + string.Join(" · ", coach.SharedRoleCoaches.Select(c => $"{c.FullName} ({c.PublishedTitle})")), TextColor = DynastyTheme.Muted });
@@ -185,11 +192,11 @@ public sealed partial class FoundationPage
     }
 
     private View TeamStaffTable(string school) => DataTable(
-        [("Role", 160), ("Coach", 210), ("OVR", 55), ("Age", 45), ("Recruit", 65), ("Develop", 70)],
+        [("Role", 160), ("Coach", 210), ("OVR", 55), ("Age", 45), ("Recruit", 65), ("Develop", 70), ("Lead", 60), ("Scheme", 65)],
         (_currentDynasty is null ? Enumerable.Empty<StaffMember>() : Enum.GetValues<StaffRole>()
             .Select(role => StaffManagementService.GetStaff(_currentDynasty, school, role)).OfType<StaffMember>()).OrderBy(coach => coach.Role).Select(coach => new View[]
         {
             TableText(FormatStaffRole(coach.Role)), CoachLink(coach), RatingCell(coach.OverallRating), TableText(coach.DataSeason is null ? coach.Age.ToString() : $"~{coach.Age}"),
-            TableText(coach.Recruiting.ToString()), TableText(coach.PlayerDevelopment.ToString())
+            TableText(coach.Recruiting.ToString()), TableText(coach.PlayerDevelopment.ToString()), TableText(coach.Leadership.ToString()), TableText(coach.Scheme.ToString())
         }));
 }
