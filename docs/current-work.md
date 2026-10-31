@@ -337,3 +337,9 @@ Added ProPlayerRatingService.Migrate to the Pro save-load chain so legacy saves 
 Scoped verification: 27/27 passed across SharedRatingsTests + ScoutingDepthTests + FranchiseDepthAnalyticsTests + ManagementRefinementTests (~10 s). Pro app MSBuild net10.0-android: 0 errors.
 
 Accepted CI run 41150835916 on codex/pro-scouting-depth (commit 5fd00c9): pro-build passed 5m33s; artifact pro-football-apk-118 (id 13023655512, ~103.7 MB). Local focused run before push: 27/27 passed (SharedRatingsTests + ScoutingDepthTests + FranchiseDepthAnalyticsTests + ManagementRefinementTests, ~10 s); MSBuild Pro app (net10.0-android) 0 errors.
+
+## FM Touch-style Pro UI polish (codex branch)
+
+Shared UI primitives in src/ProFootball.App/FranchisePage.Ui.cs (PrimaryAction, PosPill, StatTile, SectionCard, TaskTile). Reworked screens: Overview (big record card, cap/roster/coach tiles, 2x2 task grid, news+transactions cards), Roster (position-group cards with colored pills, plain-text player names), Draft (prospect/selections/depth chip row), Inbox (SectionCard), Standings (per-division sections), Schedule (SectionCard). Draft results OVR column retained. Transparent player-name links in all data-grid tables no longer get the boxed button styling.
+
+Verification: 27/27 focused tests pass (ScoutingDepthTests | FranchiseDepthAnalyticsTests | ManagementRefinementTests | SharedRatingsTests); Pro app MSBuild net10.0-android 0 errors; APK built and installed on emulator; Overview and Roster screenshots in dark theme reviewed (visual only, no automated device checks).
