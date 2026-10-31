@@ -949,6 +949,7 @@ public sealed partial class FoundationPage : ContentPage
             ResponsivePanels(ManagementPanel("Display", BuildThemeSettings()), ManagementPanel("Recruiting assistance", delegation),
                 ManagementPanel("Save protection", save)),
             ManagementPanel("Career", _careerOptionsHost),
+            ManagementPanel("Editor", BuildEditorEntry()),
             ManagementPanel("League configuration", BuildLeagueFeatureSettings())
         } };
     }

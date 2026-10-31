@@ -7,6 +7,14 @@ namespace DynastyManager.App;
 
 public sealed partial class FoundationPage
 {
+    private View BuildEditorEntry()
+    {
+        var open = new Button { Text = "Open player & staff editor", FontSize = 12 };
+        open.Clicked += async (_, _) => await ShowEditorAsync();
+        return new VerticalStackLayout { Spacing = 6, Children = {
+            new Label { Text = "Adjust player attributes, change positions and edit staff ratings. Changes save immediately.", FontSize = 12, TextColor = DynastyTheme.Muted },
+            open } };
+    }
     private async Task ConvertPlayerPositionAsync(Guid playerId, Position target)
     {
         if (_currentDynasty is null) return;

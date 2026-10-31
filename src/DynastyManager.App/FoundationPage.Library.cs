@@ -22,13 +22,14 @@ public sealed partial class FoundationPage
             ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Star), new(GridLength.Auto) } };
         heading.Add(new Label { Text = "Your dynasties", FontSize = 16, FontAttributes = FontAttributes.Bold,
             VerticalOptions = LayoutOptions.Center }, 0, 0);
-        heading.Add(create, 1, 0);
-        return new VerticalStackLayout { Spacing = 12, MaximumWidthRequest = 1000, Children =
+        var topBar = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
+        topBar.Add(options, 0, 0); topBar.Add(create, 2, 0);
+        return new VerticalStackLayout { Spacing = 12, MaximumWidthRequest = 720, HorizontalOptions = LayoutOptions.Center, Children =
         {
             new Image { Source = "dynasty_logo.png", HeightRequest = 160, Aspect = Aspect.AspectFit, AutomationId = "opening-logo" },
             new Label { Text = "College Football Dynasty Manager", FontSize = 22, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center },
             new Label { Text = VersionCaption, FontSize = 12, HorizontalTextAlignment = TextAlignment.Center, TextColor = DynastyTheme.Muted },
-            options, heading,
+            topBar, heading,
             new Label { Text = "Load a saved career or start a new one.", FontSize = 12, TextColor = DynastyTheme.Muted },
             new ActionRow { Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap, Children = { StartingLibraryButton(), RosterImportButton() } },
             _saveList, _libraryStatus

@@ -406,3 +406,11 @@ Permanent conversion (PlayerPositionConversion) sets the new position/code, drop
 Editors added under Options in both games: player or staff selection, player name/position/overall/potential/morale, staff name/rating/development/offense/defense/special teams/leadership/schemes (College staff overall is derived and shown read-only).
 
 Checks: Pro app build 0 errors; focused Pro tests 30 passed including 3 new PositionFitTests; College depth/scouting tests 16 passed. CI: College 41230987566 success (dynasty-manager-build-420), Pro 41231232922 success (pro-football-apk-128).
+
+## Responsive shell and library layout (visual QA pass)
+
+Pro: single compact app header (crest + club + section/season + Settings) replaces the duplicated app header and team banner. Content is capped at 1100dp and centred. Shell now reacts to Window.SizeChanged and switches to a persistent sidebar at >=840dp. Sidebar rows are compact. Season summary switches to 2x2 tiles under 520dp and shows a short cap value. Coach profile renamed Overall tile to Coaching.
+
+College: library is capped at 720dp and centred, with Settings and New dynasty inside a shared top bar so landscape no longer detaches them to the screen corners. Settings section gains the Player & staff editor entry.
+
+Verified on emulator: Pro portrait Overview (single header, 2-column season tiles), Pro tablet (sidebar + all sections + two-column task grid), College landscape library (actions centred within column). Screenshots captured locally during the run.

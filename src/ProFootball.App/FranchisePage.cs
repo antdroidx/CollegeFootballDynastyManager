@@ -8,9 +8,9 @@ namespace ProFootball.App;
 public sealed partial class FranchisePage : ContentPage
 {
     readonly ProSaveStore store = new(System.IO.Path.Combine(FileSystem.AppDataDirectory, "pro-franchises-v1"));
-    readonly VerticalStackLayout body = new() { Padding = 16, Spacing = 12 };
+    readonly VerticalStackLayout body = new() { Padding = 16, Spacing = 12, MaximumWidthRequest = 1100, HorizontalOptions = LayoutOptions.Center };
     readonly Grid shell = new() { RowDefinitions = new() { new(GridLength.Star), new(GridLength.Auto) }, ColumnDefinitions = new() { new(0), new(GridLength.Star) } };
-    readonly VerticalStackLayout sidebar = new() { Padding = 12, Spacing = 6, BackgroundColor = DynastyTheme.Surface };
+    readonly VerticalStackLayout sidebar = new() { Padding = 10, Spacing = 2, BackgroundColor = DynastyTheme.Surface };
     readonly Grid bottom = new() { ColumnSpacing = 3, Padding = 6, BackgroundColor = DynastyTheme.Surface };
     readonly ScrollView scroll;
     readonly Border loading = new() { IsVisible = false, InputTransparent = true, Padding = 12, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Center, BackgroundColor = DynastyTheme.Surface,
@@ -21,7 +21,7 @@ public sealed partial class FranchisePage : ContentPage
     {
         Title = "Pro Football Franchise Manager"; NavigationPage.SetHasNavigationBar(this, false); BackgroundColor = DynastyTheme.Background;
         scroll = new() { Content = body }; shell.Add(new ScrollView { Content = sidebar }, 0, 0); Grid.SetRowSpan((View)shell.Children[0], 2); shell.Add(scroll, 1, 0); shell.Add(bottom, 1, 1); var root = new Grid(); root.Add(shell); root.Add(loading); Content = root;
-        SizeChanged += (_, _) => LayoutShell(); Loaded += async (_, _) => { if (initialized) return; initialized = true; await Library(); };
+        SizeChanged += (_, _) => LayoutShell(); Loaded += async (_, _) => { if (initialized) return; initialized = true; await Library(); if (Window is { } loadedWindow) loadedWindow.SizeChanged += (_, _) => LayoutShell(); };
     }
     static Label Text(string text, int size = 14, bool bold = false) => new() { Text = text, FontSize = size, FontAttributes = bold ? FontAttributes.Bold : FontAttributes.None, TextColor = DynastyTheme.Text };
     Button Action(string text, Func<Task> action, string? id = null)
@@ -29,7 +29,7 @@ public sealed partial class FranchisePage : ContentPage
         var b = new Button { Text = text, AutomationId = id, BackgroundColor = DynastyTheme.Panel, TextColor = DynastyTheme.Text };
         b.Clicked += async (_, _) => { if (busy||openingOffseason) return; busy = true; b.IsEnabled = false; loading.IsVisible = true; try { await Task.Delay(16); await action(); } catch (Exception e) { await GameDialogs.AlertAsync(this, "Unable to continue", e.Message, "OK"); } finally { busy = false; loading.IsVisible = openingOffseason; b.IsEnabled = true; } }; return b;
     }
-    void LayoutShell() { sidebar.BackgroundColor = bottom.BackgroundColor = DynastyTheme.Surface; var wide = state is not null && Width >= 650; ((View)shell.Children[0]).IsVisible = wide; sidebar.IsVisible = wide; bottom.IsVisible = state is not null && !wide; shell.ColumnDefinitions[0].Width = wide ? 180 : 0; }
+    void LayoutShell() { sidebar.BackgroundColor = bottom.BackgroundColor = DynastyTheme.Surface; var available = Window?.Width > 0 ? Window.Width : Width; var wide = state is not null && available >= 840; ((View)shell.Children[0]).IsVisible = wide; sidebar.IsVisible = wide; bottom.IsVisible = state is not null && !wide; shell.ColumnDefinitions[0].Width = wide ? 210 : 0; }
     Task Open(string target) { section = target; Render(); scroll.ScrollToAsync(0, 0, false); return Task.CompletedTask; }
     void RenderNavigation()
     {
@@ -99,10 +99,12 @@ public sealed partial class FranchisePage : ContentPage
         if (state is null) return;
         if(state.Phase==ProPhase.Offseason&&guidedOffseasonKey!=OffseasonKey()){guidedOffseasonKey=OffseasonKey();section="Offseason";}
         body.Clear(); bottom.ColumnDefinitions.Clear(); RenderNavigation();
-        var header = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(GridLength.Star), new(GridLength.Auto) } };
-        header.Add(new VerticalStackLayout { Children = { Text(section == "Staff" ? "Coaching Hub" : section, 25, true), Text($"{state.UserTeam} · {state.Year} · {state.Phase} · Week {state.Week}", 12) } }, 0, 0); header.Add(Action("Settings", Options,"pro-settings"), 1, 0); body.Add(header);
-        var team = state.League.Teams.Single(t => t.Name == state.UserTeam); body.Add(new Border { Padding = 14, BackgroundColor = Color.FromArgb(team.Primary), Content = new HorizontalStackLayout { Spacing = 12, Children = { new TeamBadgeView(team, 56), new VerticalStackLayout { VerticalOptions = LayoutOptions.Center, Children = { new Label { Text = team.Name, FontSize = 22, FontAttributes = FontAttributes.Bold, TextColor = TeamBadgeView.Ink(team) }, new Label { Text = state.Name + " · " + state.Year, TextColor = TeamBadgeView.Ink(team) } } } } } });
-        if(body.Children.LastOrDefault() is View banner){var openTeam=new TapGestureRecognizer();openTeam.Tapped+=async(_,_)=>await TeamPage(team);banner.GestureRecognizers.Add(openTeam);SemanticProperties.SetDescription(banner,"View team "+team.Name);}
+        var team = state.League.Teams.Single(t => t.Name == state.UserTeam);
+        var header = new Grid { ColumnSpacing = 10, ColumnDefinitions = new() { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) }, VerticalOptions = LayoutOptions.Center };
+        header.Add(new TeamBadgeView(team, 42), 0, 0);
+        header.Add(new VerticalStackLayout { Spacing = 1, VerticalOptions = LayoutOptions.Center, Children = { Text(team.Name, 20, true), Text($"{section} · {state.Year} · {state.Phase} · Week {state.Week}", 11) } }, 1, 0);
+        header.Add(Action("Settings", Options,"pro-settings"), 2, 0);
+        body.Add(header);
         switch (section) { case "Offseason": Dispatcher.Dispatch(async()=>await OpenOffseasonStage()); break; case "Overview": Overview(); break; case "Roster": Roster(); break; case "Staff": Staff(); break; case "Front Office": FrontOffice(); break; case "Schedule": Schedule(); break; case "Standings": Standings(); break; case "Playoffs": PlayoffTree(); break; case "History": History(); break; case "Career": Career(); break; case "Transactions": Transactions(); break; case "Inbox": Inbox(); break; case "News": News(); break; case "Statistics": Statistics(); break; case "Analytics": Analytics(); break; case "Honors": Honors(); break; }
         var actions = new ActionRow(); actions.Add(Action("Save franchise", async () => { await Save(); await GameDialogs.AlertAsync(this, "Saved", "Franchise and rolling backups saved.", "OK"); })); if(section!="Overview")body.Add(actions);
     }
@@ -127,10 +129,10 @@ public sealed partial class FranchisePage : ContentPage
         var record=new Label{Text=$"{r.Wins}-{r.Losses}-{r.Ties}",TextColor=DynastyTheme.Text,FontSize=38,FontAttributes=FontAttributes.Bold};
         var recordSub=new Label{Text=$"{r.Team.Conference} · {r.Team.Division}",TextColor=DynastyTheme.Muted,FontSize=12};
         var recordColumn=new VerticalStackLayout{Spacing=2};recordColumn.Add(record);recordColumn.Add(recordSub);
-        var tiles=new Grid{ColumnSpacing=12,RowSpacing=8,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};
-        tiles.Add(StatTile("Cap space",SeasonCapLabel(s,s.UserTeam)),0,0);
-        tiles.Add(StatTile("Roster",$"{ProRoster.CountForLimit(s,s.UserTeam)}/{ProRoster.Limit(s)}"),1,0);
-        tiles.Add(StatTile("Head coach",owner is null?"You":s.Career?.Name??"You",$"Security {s.Career?.Security??65}/100"),2,0);
+        var capRoom=ProCapDisplay.Room(s,s.UserTeam);var tileViews=new[]{StatTile("Season cap",Money(Math.Abs(capRoom))+(capRoom<0?" over":""),""),StatTile("Roster",$"{ProRoster.CountForLimit(s,s.UserTeam)}/{ProRoster.Limit(s)}"),StatTile("Coach",owner is null?"You":s.Career?.Name??"You",$"Security {s.Career?.Security??65}/100")};
+        var tiles=new Grid{ColumnSpacing=12,RowSpacing=8};
+        var tileColumns=0; void ArrangeTiles(){var cols=tiles.Width>=520?tileViews.Length:2;if(cols==tileColumns)return;tileColumns=cols;tiles.Children.Clear();tiles.ColumnDefinitions.Clear();tiles.RowDefinitions.Clear();for(var c=0;c<cols;c++)tiles.ColumnDefinitions.Add(new(GridLength.Star));for(var i=0;i<tileViews.Length;i++){if(i%cols==0)tiles.RowDefinitions.Add(new(GridLength.Auto));tiles.Add(tileViews[i],i%cols,i/cols);}}
+        tiles.SizeChanged+=(_,_)=>ArrangeTiles(); ArrangeTiles();
         var summaryButtons=new HorizontalStackLayout{Spacing=8};
         summaryButtons.Add(Action("Standings",()=>Open("Standings")));summaryButtons.Add(Action("Schedule",()=>OpenTeamSchedule()));summaryButtons.Add(Action("Career",()=>Open("Career")));
         if(s.Phase==ProPhase.Playoffs||s.Phase==ProPhase.RegularSeason&&s.Week>=14||s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Retention)summaryButtons.Add(Action("Playoff bracket",()=>Open("Playoffs")));

@@ -63,9 +63,21 @@ public sealed partial class FranchisePage
     // Even row of stat tiles inside one card.
     View StatRow(params View[] tiles)
     {
-        var grid = new Grid { ColumnSpacing = 8 };
-        foreach (var _ in tiles) grid.ColumnDefinitions.Add(new(GridLength.Star));
-        for (var i = 0; i < tiles.Length; i++) grid.Add(tiles[i], i, 0);
+        var grid = new Grid { ColumnSpacing = 8, RowSpacing = 8 };
+        var previous = 0;
+        void Arrange(int columns)
+        {
+            if (columns == previous) return; previous = columns;
+            grid.Children.Clear(); grid.ColumnDefinitions.Clear(); grid.RowDefinitions.Clear();
+            for (var c = 0; c < columns; c++) grid.ColumnDefinitions.Add(new(GridLength.Star));
+            for (var i = 0; i < tiles.Length; i++)
+            {
+                if (i % columns == 0) grid.RowDefinitions.Add(new(GridLength.Auto));
+                grid.Add(tiles[i], i % columns, i / columns);
+            }
+        }
+        Arrange(Math.Min(2, tiles.Length));
+        grid.SizeChanged += (_, _) => Arrange(grid.Width >= 520 ? tiles.Length : Math.Min(2, tiles.Length));
         return new Border { Padding = 12, BackgroundColor = DynastyTheme.Surface, StrokeThickness = 0,
             StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = grid };
     }
