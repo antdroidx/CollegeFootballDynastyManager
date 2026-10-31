@@ -386,3 +386,13 @@ Audit found the Pro coach ability fields were display-only. Now wired:
 College: fixed KEY RATINGS tile overlap by assigning explicit grid columns (2x2 on phones, 4 across on wide screens). College coaching ratings already drove recruiting (CompetingRecruitingService uses head coach Recruiting) and scheme fit.
 
 Checks: Pro app MSBuild 0 errors; 46 focused Pro tests including new CoachAbilityImpactTests (2 passed); College app MSBuild 0 errors; CI runs 41180456977 (College success) and 41180458621 (Pro success, pro-football-apk-125).
+
+## Pro specialist, news, and depth-chart fixes (17aa44e)
+
+- Coach profile preferred-schemes tile rebuilt with explicit responsive columns (was overlapping at narrow widths).
+- News ordering now ranks Awards then Playoffs above regular-season week numbers, so playoff/awards stories reach Overview and the All feed instead of sitting beyond the 60-story window.
+- Punter mapping: source kickers with NCAA code 20 migrate to Position.P (Michael Dickson verified by new test). Generated rosters now emit K and P separately.
+- Depth chart: per-slot caps (QB4, RB4, FB1, WR8, TE5, OL9, DE/DT/OLB6, MLB4, CB7, FS/SS4, K1, P1) and a CPU auto-assign action for the user team.
+- College to Pro draft import explicitly preserves FB (code 2) and P (code 20), including legacy K/code-20 punters.
+
+Checks: Pro app build 0 errors; 80 focused Pro tests passed (including 4 new specialist/depth/news tests); CI 41181925095 College success and 41181923538 Pro success (pro-football-apk-126, dynasty-manager-build-418).
