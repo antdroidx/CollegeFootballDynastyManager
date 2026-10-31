@@ -28,7 +28,7 @@ public sealed class ProSaveStore(string root)
             {
                 var state = JsonSerializer.Deserialize<ProFranchise>(await File.ReadAllTextAsync(FileFor(id, suffix)), Json) ?? throw new InvalidDataException("Empty save");
                 if (state.SchemaVersion is not (1 or 2)) throw new NotSupportedException("This save requires a newer app version.");
-                ProLeagueService.Validate(state.League); return ProPracticeRetirement.Apply(ProReserve.InitializeOpening(ProMorale.NormalizeContracts(ProContractData.CompleteRookieTerms(ProContractData.MigrateAccounting(ProEconomy.EnsurePickInventory(ProCareer.Initialize(ProScouting.Migrate(state.SchemaVersion == 1 ? ProEconomy.Initialize(state with { SchemaVersion = 2 }) : state))))))));
+                ProLeagueService.Validate(state.League); var migrated = ProPlayerRatingService.Migrate(state.SchemaVersion == 1 ? ProEconomy.Initialize(state with { SchemaVersion = 2 }) : state); return ProPracticeRetirement.Apply(ProReserve.InitializeOpening(ProMorale.NormalizeContracts(ProContractData.CompleteRookieTerms(ProContractData.MigrateAccounting(ProEconomy.EnsurePickInventory(ProCareer.Initialize(ProScouting.Migrate(migrated))))))));
             }
             catch (NotSupportedException) { throw; }
             catch (Exception e) when (e is IOException or JsonException or InvalidDataException) { error = e; }

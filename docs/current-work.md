@@ -329,3 +329,9 @@ Focused checks run locally:
 - APK produced: src/ProFootball.App/bin/Debug/net10.0-android/antdroid.profootball.franchise-Signed.apk (~87.6 MB; signed).
 
 dotnet test requires escalated sandbox access in this environment for testhost IPC (see docs/pro-local-validation-runbook.md).
+
+## ProSaveStore load-chain rating migration fix
+
+Added ProPlayerRatingService.Migrate to the Pro save-load chain so legacy saves with RatingSystemVersion=0 migrate to v1 and re-derive OverallRating from the shared rating system (SharedRatingsTests.OldSaveAdoptsSharedRatingsWithoutReplacingContracts now passes). Chain order: Pron.Migrate -> ProScouting.Migrate -> ProCareer -> ProEconomy -> ProContractData -> ProMorale -> ProReserve -> ProPracticeRetirement.
+
+Scoped verification: 27/27 passed across SharedRatingsTests + ScoutingDepthTests + FranchiseDepthAnalyticsTests + ManagementRefinementTests (~10 s). Pro app MSBuild net10.0-android: 0 errors.
