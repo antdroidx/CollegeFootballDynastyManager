@@ -420,3 +420,7 @@ Verified on emulator: Pro portrait Overview (single header, 2-column season tile
 Created a College dynasty on the emulator (Akron, 2026) and reviewed Overview, Roster, Coaching Hub, and Settings in phone portrait and landscape. Roster filters, depth chart table, coaching hub cards, and settings panels render correctly; the remaining duplicate team banner on Overview/Roster is a candidate for removal.
 
 College management shell now reacts to Window.SizeChanged and uses Window.Width, matching the Pro responsive fix, so tablet widths can switch to the sidebar rather than staying on bottom navigation.
+
+## College visual cleanup
+
+Removed the duplicated school banner from Overview and Roster; roster counts now sit in the status line. Styled roster filter pickers with a panel background and the columns toggle as a bordered button so they read as controls. Responsive shell now follows Window.Width/SizeChanged (matching Pro).

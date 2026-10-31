@@ -14,9 +14,9 @@ public sealed partial class FoundationPage
     private readonly Picker _rosterTeamPicker=new(){Title="Team",AutomationId="college-roster-team"};
     private bool _syncRosterTeam;
     private readonly Entry _rosterSearch = new() { Placeholder = "Find a player", AutomationId="college-roster-search" };
-    private readonly Picker _rosterPosition = new() { Title = "Position", AutomationId="college-roster-position", ItemsSource = new[] { "All positions" }.Concat(PositionLabels.Names).Concat(new[] { "OT", "OG", "OC" }).ToArray(), SelectedIndex = 0 };
-    private readonly Picker _rosterStatus = new() { Title = "Role", AutomationId="college-roster-status", ItemsSource = new[] { "All players", "Starters", "Second team", "Depth", "Redshirts", "Injured", "Walk-ons" }, SelectedIndex = 0 };
-    private readonly Picker _rosterSort = new() { Title = "Sort roster", ItemsSource = new[] { "Depth chart", "Overall rating", "Potential", "Player name" }, SelectedIndex = 0 };
+    private readonly Picker _rosterPosition = new() { Title = "Position", AutomationId="college-roster-position", ItemsSource = new[] { "All positions" }.Concat(PositionLabels.Names).Concat(new[] { "OT", "OG", "OC" }).ToArray(), SelectedIndex = 0, BackgroundColor = DynastyTheme.Panel, FontSize = 12 };
+    private readonly Picker _rosterStatus = new() { Title = "Role", AutomationId="college-roster-status", ItemsSource = new[] { "All players", "Starters", "Second team", "Depth", "Redshirts", "Injured", "Walk-ons" }, SelectedIndex = 0, BackgroundColor = DynastyTheme.Panel, FontSize = 12 };
+    private readonly Picker _rosterSort = new() { Title = "Sort roster", ItemsSource = new[] { "Depth chart", "Overall rating", "Potential", "Player name" }, SelectedIndex = 0, BackgroundColor = DynastyTheme.Panel, FontSize = 12 };
     private readonly Button _depthChartOrganizerButton = new() { Text = "Organize depth chart", AutomationId = "depth-chart-open", BackgroundColor = DynastyTheme.Palette("#315D59") };
     private readonly VerticalStackLayout _depthChartOrganizer = new() { Spacing = 10, IsVisible = false };
     private bool _showDepthChartOrganizer;
@@ -46,7 +46,7 @@ public sealed partial class FoundationPage
         };
         return new VerticalStackLayout { Spacing = 10, Children =
         {
-            _rosterBanner, filters,
+            filters,
             new ActionRow {Children={_rosterSort,_depthChartOrganizerButton,stats}}, _offseasonRosterStatus,
             _depthChartOrganizer, BuildRosterWorkspace()
         } };
@@ -67,8 +67,8 @@ public sealed partial class FoundationPage
         _rosterBanner.Content = SchoolBanner(selectedTeam,
             $"{_currentDynasty.SeasonYear} roster · {roster.Count}/{DynastyRosterRules.MaximumRosterSize} players · {roster.Count(p => p.IsRedshirted)} redshirts · {roster.Count(p => p.IsWalkOn)} walk-ons");
         var warnings = RosterManagementService.GetPositionWarnings(_currentDynasty, _currentDynasty.UserTeamName);
-        _offseasonRosterStatus.Text = warnings.Count == 0 ? "Depth chart ready. Open a player to manage depth, redshirts and career history."
-            : "Depth needs: " + string.Join(" · ", warnings);
+        _offseasonRosterStatus.Text = warnings.Count == 0 ? $"{roster.Count}/{DynastyRosterRules.MaximumRosterSize} players · {roster.Count(p => p.IsRedshirted)} redshirts · {roster.Count(p => p.IsWalkOn)} walk-ons · depth chart ready."
+            : $"{roster.Count}/{DynastyRosterRules.MaximumRosterSize} players · depth needs: " + string.Join(" · ", warnings);
         if(!own)_offseasonRosterStatus.Text="Browse this team’s roster · select a player name to open their profile.";
         if(own)RenderDepthChartOrganizer(roster);
         if (_showDepthChartOrganizer) { _rosterDetail.IsVisible = false; return; }

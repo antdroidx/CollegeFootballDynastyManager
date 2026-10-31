@@ -63,7 +63,7 @@ public sealed partial class FoundationPage
         _manualSaveButton.Text = "Save";
         return new VerticalStackLayout { Spacing = 12, Children =
         {
-            _overviewBanner, new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _advanceWeekButton, _simulatePhaseButton, _manualSaveButton } },
+            new ActionRow { Direction = FlexDirection.Row, Wrap = FlexWrap.Wrap, Children = { _advanceWeekButton, _simulatePhaseButton, _manualSaveButton } },
             _overviewGameActions, _homeHighlights
         } };
     }

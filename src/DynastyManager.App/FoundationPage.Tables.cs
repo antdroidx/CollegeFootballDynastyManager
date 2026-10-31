@@ -180,7 +180,8 @@ public sealed partial class FoundationPage
         };
         if (!configureColumns) return scroll;
         var columnsToggle = new Button { Text=allColumns ? "Columns: All" : "Columns: Essential", FontSize=11,
-            BackgroundColor=Colors.Transparent, TextColor=DynastyTheme.Accent };
+            BackgroundColor=DynastyTheme.Panel, BorderColor=DynastyTheme.ControlEdge, BorderWidth=1, CornerRadius=8,
+            Padding=new Thickness(10,4), TextColor=DynastyTheme.Text, HorizontalOptions=LayoutOptions.Start };
         columnsToggle.Clicked += (_,_) => { allColumns=!allColumns;
             Microsoft.Maui.Storage.Preferences.Default.Set("columns-" + string.Join("/", columns.Select(c=>c.Title)),allColumns);
             columnsToggle.Text=allColumns ? "Columns: All" : "Columns: Essential"; ApplyColumns(); };
