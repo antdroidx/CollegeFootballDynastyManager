@@ -33,7 +33,8 @@ public class DepthChartAssignmentTests
         for (var code = 0; code < 21; code++)
         {
             var role = player with { NcaaPositionCode = code, Position = DepthChartService.PositionForCode(code) };
-            Assert.Equal(PlayerRatingService.CalculateOverall(role), DepthChartService.PositionalRating(player, code));
+            var expected = PositionFit.Apply(PlayerRatingService.CalculateOverall(role), player.Position, role.Position);
+            Assert.Equal(expected, DepthChartService.PositionalRating(player, code));
         }
         Assert.Equal(3, player.NcaaPositionCode);
         Assert.Equal(Position.WR, player.Position);
@@ -155,4 +156,3 @@ public class DepthChartAssignmentTests
         Assert.Empty(RosterManagementService.NormalizeAllDepthCharts(state with { ActiveRoster = [] }).DepthChartAssignments);
     }
 }
-
