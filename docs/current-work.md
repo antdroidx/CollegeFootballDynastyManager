@@ -396,3 +396,13 @@ Checks: Pro app MSBuild 0 errors; 46 focused Pro tests including new CoachAbilit
 - College to Pro draft import explicitly preserves FB (code 2) and P (code 20), including legacy K/code-20 punters.
 
 Checks: Pro app build 0 errors; 80 focused Pro tests passed (including 4 new specialist/depth/news tests); CI 41181925095 College success and 41181923538 Pro success (pro-football-apk-126, dynasty-manager-build-418).
+
+## Position fit, permanent conversions, and editors (e25be3c..bf4b554)
+
+Shared PositionFit applies out-of-position knockdowns: Natural 100%, Close 87% (HB-FB, TE-FB, DT-DE, SS-FS, K-P, OLB-MLB), Medium 68% (OG-OT, SS-OLB, CB-FS, WR-CB, TE-OT, family adjacencies), Far 48%, Extreme 30% (line/front-seven to skill, QB or specialist projections). DepthChartService.PositionalRating now applies the multiplier, so an MLB no longer outranks a natural SS.
+
+Permanent conversion (PlayerPositionConversion) sets the new position/code, drops Awareness by fit tier (6/12/18/24) and scales overall. Pro exposes it through player actions and the editor; College through the player profile and editor. College to Pro draft import already maps FB/P.
+
+Editors added under Options in both games: player or staff selection, player name/position/overall/potential/morale, staff name/rating/development/offense/defense/special teams/leadership/schemes (College staff overall is derived and shown read-only).
+
+Checks: Pro app build 0 errors; focused Pro tests 30 passed including 3 new PositionFitTests; College depth/scouting tests 16 passed. CI: College 41230987566 success (dynasty-manager-build-420), Pro 41231232922 success (pro-football-apk-128).
