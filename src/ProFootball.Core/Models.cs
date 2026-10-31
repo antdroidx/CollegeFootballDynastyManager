@@ -1,7 +1,7 @@
 using DynastyManager.Core.Models;
 namespace ProFootball.Core;
 
-public sealed record ProTeam(string Id, string City, string Nickname, string Conference, string Division, int SeedRank, string Primary, string Secondary)
+public sealed record ProTeam(string Id, string City, string Nickname, string Abbreviation, string Conference, string Division, int SeedRank, string Primary, string Secondary)
 { public string Name => City + " " + Nickname; public string? LogoFile { get; init; } }
 public sealed record ProLeague(int Version, string Name, int ActiveRosterLimit, int PracticeSquadLimit, List<ProTeam> Teams);
 public enum ProPhase { Preseason, RegularSeason, Playoffs, Offseason }
@@ -87,7 +87,8 @@ public sealed record ProFranchise
     public List<ProCompensatoryProjection> CompensatoryProjections {get;init;}=[];
     public List<int> CompensatoryAwardYears {get;init;}=[];
     public List<ProPlayer> Prospects { get; init; } = [];
-    public List<DraftSelection> DraftHistory { get; init; } = []; public List<ScoutReport> Scouting { get; init; } = [];
+    public List<DraftSelection> DraftHistory { get; init; } = [];
+    public List<ScoutReport> Scouting { get; init; } = [];
 
     public List<ScoutTarget> ScoutTargets { get; init; } = [];
     public List<Guid> DraftBoard { get; init; } = [];
@@ -114,7 +115,7 @@ public sealed record ProCoach(string TeamId, StaffRole Role, string Name, string
 { public int LastDevelopmentYear {get;init;} public bool Vacant { get; init; } public int Rating { get; init; } = 70; public int Development { get; init; } = 65; }
 public sealed record NflSnapshot(int Version, int Season, int Week, string RetrievedUtc, int MaddenMatched, int Estimated, List<ProPlayer> Players, List<ProCoach> Coaches) { public List<CoachCandidate> Candidates { get; init; } = []; }
 public sealed record ContractYear(int Year, long Salary, long Guaranteed)
-{ public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } public bool IsVoid { get; init; } public long OtherCash {get;init;} }
+{ public long? ProratedBonus { get; init; } public long OtherCompensation { get; init; } public bool IsVoid { get; init; } public long? OtherCash { get; init; } public long? SourceGuaranteed { get; init; } public long GuaranteedOtherCash {get;init;} }
 public sealed record ProContract(Guid PlayerId, string Team, int SignedYear, int BonusYears, long SigningBonus, List<ContractYear> Years)
 { public bool PracticeOrigin {get;init;} public int? SalaryAssignmentYear {get;init;} public double SalaryAssignmentFraction {get;init;} public Guid? ReleaseId {get;init;} public List<ProBonusPayment>? BonusPayments {get;init;} public List<ProCashVesting>? CashVesting {get;init;} public int? OriginalRookieYear { get; init; } public int AccountingVersion { get; init; } public long? ReportedAnnualValue { get; init; } public Dictionary<int,long>? BonusCash {get;init;} public int? TerminatedYear { get; init; } public long EarnedCash { get; init; } public bool FutureTermsEstimated { get; init; } public int LastChangedYear { get; init; } public string? Source { get; init; } public bool Active { get; init; } = true; public bool Tagged { get; init; } public bool Estimated { get; init; } = true; }
 public sealed record DeadCapCharge(string Team, int Year, Guid PlayerId, long Amount) { public string? SourceKey {get;init;} public string? SourceName {get;init;} public string? SourceKind {get;init;} public string? SourceUrl {get;init;} public string? SourceSha256 {get;init;} public string? ObservedOn {get;init;} public long CashAmount {get;init;} public Guid? ReleaseId {get;init;} public bool June1Hold {get;init;} public bool RetainedContract {get;init;} public int? FundingYear {get;init;} public bool RetainedBonus {get;init;} }

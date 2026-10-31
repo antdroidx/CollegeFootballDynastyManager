@@ -318,3 +318,14 @@ Source dossiers/proofs are in docs/data, including opening debt, actual runtime 
 Remaining requested roadmap: deferred draft-class exchange UI, audited test-category split, final release validation and end-of-project archival/repository rename/release cleanup. Historical parity notes are not current completion status. No automatic continuation exists.
 
 CI Pro first attempt 40983806143: 350/351 passed; fresh random fictional team could exceed budget because salary-only scaling omitted its half-salary signing bonus on short deals. New fictional initialization now reserves that bonus headroom; existing saves and real contracts unchanged. Deterministic worst-case one-year veteran fixture plus two generated-world/save/accounting cases pass locally (3/3). Packaging retry pending.
+
+## Pro scouting depth + UI/UX improvements (codex branch)
+
+Implementation in codex/pro-scouting-depth branch: 3-tier scouting model (basic <50% / priority 50-75% / visit 75-95% confidence), 60-priority/30-visit nested limits, deterministic CPU fill, save-compatible migration, draft-results OVR column, table row/button contrast fixes, offseason stage timeline chips.
+
+Focused checks run locally:
+- Built ProFootball.Core+ProFootball.App with MSBuild (net10.0-android): 0 errors, 0 warnings.
+- dotnet test filter ScoutingDepthTests|FranchiseDepthAnalyticsTests|ManagementRefinementTests: 13/13 passed, 0 failed, ~5 s.
+- APK produced: src/ProFootball.App/bin/Debug/net10.0-android/antdroid.profootball.franchise-Signed.apk (~87.6 MB; signed).
+
+dotnet test requires escalated sandbox access in this environment for testhost IPC (see docs/pro-local-validation-runbook.md).

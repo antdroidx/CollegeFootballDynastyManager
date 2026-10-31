@@ -50,12 +50,20 @@ public static class FootballDataGrid
             for (var r = 0; r < visible.Length; r++)
             {
                 grid.RowDefinitions.Add(new(GridLength.Auto));
-                var background = new BoxView { Color = r % 2 == 0 ? DynastyTheme.Surface : DynastyTheme.Panel, MinimumHeightRequest = 44 };
+                var background = new BoxView { Color = r % 2 == 0 ? DynastyTheme.Surface : DynastyTheme.Background, MinimumHeightRequest = 44 };
                 grid.Add(background,0,r+1); Grid.SetColumnSpan(background,columns.Length);
                 for (var c = 0; c < visible[r].Length; c++)
                 {
                     var cell = visible[r][c]; cell.VerticalOptions = LayoutOptions.Center; cell.Margin = new Thickness(7,3);
                     if (cell is Label label) { label.FontSize = 12; label.LineBreakMode = LineBreakMode.TailTruncation; }
+                    if (cell is Button action)
+                    {
+                        action.BackgroundColor = DynastyTheme.Panel;
+                        action.TextColor = DynastyTheme.Text;
+                        action.BorderColor = DynastyTheme.ControlEdge;
+                        action.BorderWidth = 1;
+                        action.CornerRadius = 10;
+                    }
                     grid.Add(cell,c,r+1);
                 }
             }

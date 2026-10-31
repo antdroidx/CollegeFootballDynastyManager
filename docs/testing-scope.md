@@ -269,3 +269,12 @@ The guarded source-guarantee allocation follow-up adds two valid32-team disposab
 ## Accepted practical financial finish - Pro70
 
 App/core fabf464, successful run40613034696, APK12783469883/evidence12784307093.257 local Pro cases excluding unchanged generated20 passed1m40 (five sourced/three imported-cap seasons included),17 final source/hash guards passed and CI passed256 fast/16 helpers/source validator/Android packaging. Opening device scope verified new real-roster default, compact/expanded cap display, three first-round imports,32 allowances/735 source assessments, contract/void views, light/dark appearance, reinstall/save, unchanged-source migration and negotiated-contract/booked-debt/career preservation. Compact/expanded screenshots reviewed. Reuse unchanged College390/GameCast44/generated20 evidence; do not claim a new full walkthrough. Financial phase closes under the user's estimate policy, not a promise of exact agreement with every public financial source.
+
+## Pro scouting depth tier tests — codex local run
+
+Focused suite for the Pro scouting depth update and draft UI: dotnet test tests/ProFootball.Tests/ProFootball.Tests.csproj --filter "FullyQualifiedName~ScoutingDepthTests|FullyQualifiedName~FranchiseDepthAnalyticsTests|FullyQualifiedName~ManagementRefinementTests" --no-build --v=q
+- Result: 13 passed, 0 failed, ~5 s (run locally on codex/pro-scouting-depth branch).
+- Core+App MSBuild (net10.0-android): 0 errors.
+- APK produced: src/ProFootball.App/bin/Debug/net10.0-android/antdroid.profootball.franchise-Signed.apk.
+
+This environment requires escalated sandbox access for dotnet test (testhost IPC limitation; see docs/pro-local-validation-runbook.md).

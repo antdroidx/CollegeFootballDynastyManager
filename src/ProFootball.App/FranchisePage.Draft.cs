@@ -15,15 +15,15 @@ public sealed partial class FranchisePage
         var scouted=ProDraft.AutoScout(state!);if(!scouted.Scouting.SequenceEqual(state!.Scouting)){state=scouted;await Save();}
         var s=state!;var current=ProDraft.Current(s);var active=s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft;
         body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text($"{s.Year} Draft room",25,true));
-        var headline=current is null?"Draft complete":active?$("On the clock · R{current.Round} · Pick {ProDraft.Overall(s,current)} · {current.Owner}"):"Scouting & draft preparation";
+        var headline=current is null?"Draft complete":active?$"On the clock · R{current.Round} · Pick {ProDraft.Overall(s,current)} · {current.Owner}":"Scouting & draft preparation";
         var next=s.Picks.Where(p=>p.Year==s.Year&&p.Owner==s.UserTeam).OrderBy(p=>p.Round).ThenBy(p=>p.Slot).FirstOrDefault(p=>!s.DraftHistory.Any(h=>h.Year==s.Year&&h.Round==p.Round&&h.Slot==p.Slot));
         body.Add(Panel(headline,Text($"{s.DraftHistory.Count(h=>h.Year==s.Year)} selections made · {s.Prospects.Count} available · "+(next is null?"No team picks remaining":$"Your next pick: R{next.Round} · #{ProDraft.Overall(s,next)}"),13),Text($"Scout team · {ProScouting.DepthSummary(s)}",12)));
         var tools=new ActionRow();if(active)tools.Add(Action("Delegate remaining picks",async()=>{state=await Task.Run(()=>ProDraft.AutoUntilUser(state!,true));await Save();await Draft();},"pro-draft-auto"));
         if(s.DraftIndex==0)tools.Add(CollegeClassImportButton());tools.Add(Action("Free agents",FreeAgents));body.Add(tools);
-        var views=new ActionRow();foreach(var name in new[]={"Prospects","My board","Draft results","Order"}){var n=name;var button=Action(name,()=>{draftView=n;return Draft();},"pro-draft-view-"+name.Replace(" ","-").ToLowerInvariant());button.BackgroundColor=draftView==name?DynastyTheme.Selected:Colors.Transparent;views.Add(button);}body.Add(views);
+        var views=new ActionRow();foreach(var name in new[]{"Prospects","My board","Draft results","Order"}){var n=name;var button=Action(name,()=>{draftView=n;return Draft();},"pro-draft-view-"+name.Replace(" ","-").ToLowerInvariant());button.BackgroundColor=draftView==name?DynastyTheme.Selected:Colors.Transparent;views.Add(button);}body.Add(views);
         if(draftView=="Draft results")
         {
-            body.Add(Table([("Round",48),("Pick",48),("Team",185),("Player",180),("Pos",45)],s.DraftHistory.Where(h=>h.Year==s.Year).OrderBy(h=>h.Round).ThenBy(h=>h.Slot).Select(h=>new View[]{Text(h.Round.ToString()),Text((s.Picks.FirstOrDefault(p=>p.Year==h.Year&&p.Round==h.Round&&p.Slot==h.Slot) is {} pick?ProDraft.Overall(s,pick):h.Slot).ToString()),TeamCell(s.League.Teams.Single(t=>t.Name==h.Team)),Link(h.Player.Football.FullName,()=>Player(h.Player)),Text(h.Player.Football.Position.DisplayName())}))));OffseasonGuide();return;
+            body.Add(Table([("Round",48),("Pick",48),("Team",185),("Player",180),("Pos",45)],s.DraftHistory.Where(h=>h.Year==s.Year).OrderBy(h=>h.Round).ThenBy(h=>h.Slot).Select(h=>new View[]{Text(h.Round.ToString()),Text((s.Picks.FirstOrDefault(p=>p.Year==h.Year&&p.Round==h.Round&&p.Slot==h.Slot) is {} pick?ProDraft.Overall(s,pick):h.Slot).ToString()),TeamCell(s.League.Teams.Single(t=>t.Name==h.Team)),Link(h.Player.Football.FullName,()=>Player(h.Player)),Text(h.Player.Football.Position.DisplayName())})));OffseasonGuide();return;
         }
         if(draftView=="Order")
         {
@@ -58,7 +58,7 @@ public sealed partial class FranchisePage
     Task ProspectProfile(ProPlayer p)
     {
         var f=p.Football;var report=state!.Scouting.FirstOrDefault(r=>r.Team==state.UserTeam&&r.Year==state.Year&&r.PlayerId==f.PlayerId);var grade=report?.Grade??ProDraft.PublicGrade(p);var uncertainty=Math.Max(3,(100-(report?.Confidence??35))/5);
-        var views=new List<View>{new HorizontalStackLayout{Spacing=12,Children={Portrait(p,64),Text($"{f.FullName} · {f.Position.DisplayName()}",22,true)}},Text($"Age {p.Age} · {f.HeightInches/12}′{f.HeightInches%12}″ · {f.WeightPounds} lb"),Text($"Projected {ProDraft.PublicGrade(p)} · Scout grade {(report?.Grade.ToString()??"Pending")} · Confidence {(report?.Confidence??0)}%",14,true)}};
+        var views=new List<View>{new HorizontalStackLayout{Spacing=12,Children={Portrait(p,64),Text($"{f.FullName} · {f.Position.DisplayName()}",22,true)}},Text($"Age {p.Age} · {f.HeightInches/12}′{f.HeightInches%12}″ · {f.WeightPounds} lb"),Text($"Projected {ProDraft.PublicGrade(p)} · Scout grade {(report?.Grade.ToString()??"Pending")} · Confidence {(report?.Confidence??0)}%",14,true)};
         foreach(var group in PlayerAttributeCatalog.Groups(f))views.Add(Panel(group.Title,Table([("Attribute",180),("Scout range",110)],group.Attributes.Select(a=>{
             var estimate=Math.Clamp(a.Rating+grade-f.OverallRating,1,99);return new View[]{Text(a.Name),Text($"{Math.Max(1,estimate-uncertainty)}–{Math.Min(99,estimate+uncertainty)}")};
         }))));
