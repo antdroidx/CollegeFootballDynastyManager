@@ -367,3 +367,11 @@ Pro consistency pass: shared PageHeader and StatRow primitives; Player overview 
 College: coach profile gains a KEY RATINGS card (Overall, Leadership, Development, Recruiting) and the team staff table gains Lead and Scheme columns. College behavior otherwise unchanged.
 
 Checks: Pro app MSBuild 0 errors; 64 focused Pro tests passed; College app MSBuild 0 errors; 34 focused College coach tests passed.
+
+## Final branch state and CI (487c878..9bd88f2)
+
+Pushed everything outstanding to codex/pro-scouting-depth, including the kicker/punter split, Reserve roster table, Pro FM Touch page headers, College coach ratings card, and staff Leadership/Scheme columns.
+
+Two regressions from the kicker/punter split were found by College CI and fixed: College position-need lookup needed a Position.P entry (kept at 0 so College recruiting behavior is unchanged), and GameDayEngine now prefers P for punts and K for field goals.
+
+CI at the final commit: College Android 41178645152 success (artifact dynasty-manager-build-416); Pro Football Android 41178646670 success (artifact pro-football-apk-124).
