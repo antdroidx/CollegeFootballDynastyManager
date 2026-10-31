@@ -17,8 +17,9 @@ public static class DepthChartService
 
     public static int PositionalRating(DynastyPlayer player, int code)
     {
-        _ = PositionForCode(code);
-        return Ncaa06RatingService.CalculateOverall(player with { Position = PositionForCode(code), NcaaPositionCode = code });
+        var target = PositionForCode(code);
+        var raw = Ncaa06RatingService.CalculateOverall(player with { Position = target, NcaaPositionCode = code });
+        return PositionFit.Apply(raw, player.Position, target);
     }
 
     public static int AssignedCode(DynastyState state, DynastyPlayer player) => state.DepthChartAssignments

@@ -71,10 +71,11 @@ public sealed partial class FranchisePage : ContentPage
     }
     async Task Options()
     {
-        var choices=new List<string>{"Appearance","Career options","Data sources"};if(state is not null)choices.Add("Save & exit");
+        var choices=new List<string>{"Appearance","Career options","Data sources"};if(state is not null){choices.Add("Player & staff editor");choices.Add("Save & exit");}
         var pick = await GameDialogs.ActionSheetAsync(this, "Settings", "Cancel", null, choices.ToArray());
         if(pick=="Save & exit"&&await GameDialogs.AlertAsync(this,"Save and exit?","Save this franchise and return to your franchise library?","Save & exit","Cancel")){await Save();await Library();return;}
         if (pick == "Career options") { if (state is not null) await Open("Career"); else await GameDialogs.AlertAsync(this, "Career options", "Choose your coaching role and firing preference when creating a franchise.", "Close"); }
+        if(pick=="Player & staff editor"){await Editor();}
         if (pick == "Appearance") { var choice = await GameDialogs.ActionSheetAsync(this, "Appearance", "Cancel", null, "Dark", "Light"); if (choice is "Dark" or "Light") { Preferences.Set("app-theme", choice); Application.Current!.Resources = DynastyTheme.CreateResources(); Application.Current.UserAppTheme = DynastyTheme.RequestedTheme; BackgroundColor = DynastyTheme.Background; DynastyTheme.ApplyNativeAppearance(); if (state is null) await Library(); else Render(); } }
         if (pick == "Data sources") await GameDialogs.AlertAsync(this, "Data sources", "Rosters: nflverse (CC BY 4.0), 2026 Weeks 6–7. Staff: official team sites. Colors: nflverse. Player overall is calculated from shared football attributes using the college game's rating system. ", "Close");
     }

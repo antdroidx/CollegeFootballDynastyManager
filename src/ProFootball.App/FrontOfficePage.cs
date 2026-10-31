@@ -20,7 +20,7 @@ public sealed partial class FranchisePage
     {
         var before=state;
         var p = state!.Players.Single(x => x.Football.PlayerId == original.Football.PlayerId); var c = state.Contracts.LastOrDefault(c => c.Active && c.PlayerId == p.Football.PlayerId);
-        var choice = await GameDialogs.ActionSheetAsync(this, p.Football.FullName + " · " + p.Football.Position, "Close", null, "Player & contract", p.Reserve ? "Activate from reserve" : "Organize depth chart", "Extend contract", "Restructure contract", "Franchise tag", state.TradeBlock.Contains(p.Football.PlayerId) ? "Remove from trading block" : "Add to trading block", "Release player");
+        var choice = await GameDialogs.ActionSheetAsync(this, p.Football.FullName + " · " + p.Football.Position, "Close", null, "Player & contract", p.Reserve ? "Activate from reserve" : "Organize depth chart", "Extend contract", "Restructure contract", "Franchise tag", state.TradeBlock.Contains(p.Football.PlayerId) ? "Remove from trading block" : "Add to trading block", "Change position", "Release player");
         if (choice == "Player & contract") { await ShowPage("Player contract",ContractDetails(p,c),ContractComparisons(p)); }
 
         if (choice == "Organize depth chart") { await DepthChart(); return; }
@@ -29,6 +29,16 @@ public sealed partial class FranchisePage
         if(choice=="Restructure contract") await RestructureContract(p);
         if (choice is "Add to trading block" or "Remove from trading block") await Update(s => ProTradeMarket.List(s,s.UserTeam,p.Football.PlayerId,choice == "Add to trading block"));
         if (choice == "Franchise tag") await Manage("Franchise tag", p.Football.PlayerId, 0, s => ProEconomy.Tag(s, s.UserTeam, p.Football.PlayerId));
+        if (choice == "Change position")
+        {
+            var labels = PositionLabels.Names.ToArray();
+            var targetLabel = await GameDialogs.ActionSheetAsync(this, "Change " + p.Football.FullName + "'s position", "Cancel", null, labels);
+            if (targetLabel is not null && targetLabel != "Cancel")
+            {
+                var target = Enum.GetValues<Position>().First(pos => pos.DisplayName() == targetLabel);
+                await Update(s => ProPlayerPositions.Convert(s, p.Football.PlayerId, target));
+            }
+        }
         if (choice == "Release player") { var decision=await ConfirmRelease(p);if(decision.Release)await Manage("Release player", p.Football.PlayerId, 0, s => ProEconomy.Release(s, s.UserTeam, p.Football.PlayerId,postJune1:decision.PostJune1)); }
         if(!ReferenceEquals(before,state)&&Navigation.ModalStack.LastOrDefault()?.Title=="Player profile")
         {

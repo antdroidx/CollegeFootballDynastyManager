@@ -62,7 +62,8 @@ public sealed partial class FoundationPage
 
     private async Task ShowStartupOptionsAsync()
     {
-        var choice = await GameDialogs.ActionSheetAsync(this, "Options", "Close", null, "Appearance", "Default coaching role", "Coach firing");
+        var choice = await GameDialogs.ActionSheetAsync(this, "Options", "Close", null, "Appearance", "Default coaching role", "Coach firing", "Player & staff editor");
+        if (choice == "Player & staff editor") { await ShowEditorAsync(); return; }
         if (choice == "Appearance")
         {
             var theme = await GameDialogs.ActionSheetAsync(this, "Appearance", "Cancel", null, "Dark", "Light", "System");

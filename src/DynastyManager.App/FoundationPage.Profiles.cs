@@ -96,6 +96,18 @@ public sealed partial class FoundationPage
             new Label { Text = PlayerPhysicalService.Format(player.HeightInches, player.WeightPounds), FontSize = 13, TextColor = DynastyTheme.Accent },
             new Label { Text = FormatOriginalRecruitingStars(player), TextColor = DynastyTheme.Palette("#E8C979") }
         } };
+        if (active is not null && active.TeamName == state.UserTeamName)
+        {
+            var changePosition = new Button { Text = "Change playing position", FontSize = 11 };
+            changePosition.Clicked += async (_, _) =>
+            {
+                var choice = await GameDialogs.ActionSheetAsync(this, "Change position", "Cancel", null, PositionLabels.Names.ToArray());
+                if (choice is null or "Cancel") return;
+                var target = Enum.GetValues<Position>().First(p => p.DisplayName() == choice);
+                await ConvertPlayerPositionAsync(player.PlayerId, target);
+            };
+            content.Children.Add(changePosition);
+        }
         var hallEntry = state.HallOfFame.FirstOrDefault(e => e.PlayerId == id);
         if (hallEntry is not null) content.Children.Add(SectionTitle($"Hall of Fame · {hallEntry.InductionYear}", hallEntry.Citation));
         if (active is not null)
