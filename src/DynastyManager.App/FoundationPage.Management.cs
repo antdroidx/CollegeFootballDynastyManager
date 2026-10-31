@@ -66,13 +66,14 @@ public sealed partial class FoundationPage
         header.Add(_menuButton, 0, 0);
         _menuButton.Clicked += (_, _) => { _navigationExpanded = !_navigationExpanded; ArrangeManagementShell(); };
         root.SizeChanged += (_, _) => ArrangeManagementShell();
+        Loaded += (_, _) => { ArrangeManagementShell(); if (Window is { } window) window.SizeChanged += (_, _) => ArrangeManagementShell(); };
     }
 
     private void ArrangeManagementShell()
     {
         if (_managementRoot is null || _managementSidebar is null) return;
         var inDynasty = _currentDynasty is not null && _activeSection is not (AppSection.Home or AppSection.NewDynasty);
-        var width = _managementRoot.Width;
+        var width = Window?.Width > 0 ? Window.Width : _managementRoot.Width;
         var side = inDynasty && ManagementLayout.Sidebar(width, _navigationExpanded);
         var drawer = side && width < 600;
         _managementSidebar.IsVisible = side;

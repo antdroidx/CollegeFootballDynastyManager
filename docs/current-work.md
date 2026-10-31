@@ -414,3 +414,9 @@ Pro: single compact app header (crest + club + section/season + Settings) replac
 College: library is capped at 720dp and centred, with Settings and New dynasty inside a shared top bar so landscape no longer detaches them to the screen corners. Settings section gains the Player & staff editor entry.
 
 Verified on emulator: Pro portrait Overview (single header, 2-column season tiles), Pro tablet (sidebar + all sections + two-column task grid), College landscape library (actions centred within column). Screenshots captured locally during the run.
+
+## College in-dynasty visual QA and responsive sidebar
+
+Created a College dynasty on the emulator (Akron, 2026) and reviewed Overview, Roster, Coaching Hub, and Settings in phone portrait and landscape. Roster filters, depth chart table, coaching hub cards, and settings panels render correctly; the remaining duplicate team banner on Overview/Roster is a candidate for removal.
+
+College management shell now reacts to Window.SizeChanged and uses Window.Width, matching the Pro responsive fix, so tablet widths can switch to the sidebar rather than staying on bottom navigation.
