@@ -38,6 +38,20 @@ public sealed partial class FranchisePage
             }
             bracket.Add(Text("Championship",22,true));bracket.Add(Card(slots.Single(x=>x.Round==4)));
         }
-        picker.SelectedIndexChanged+=(_,_)=>Draw();Draw();
+        picker.SelectedIndexChanged+=(_,_)=>Draw();
+        Draw();
+        // Playoff stories surface alongside the bracket so the page feels complete.
+        state=ProNews.Refresh(state!);
+        var playoffStories=state.News.Where(x=>x.Category=="Playoffs"||x.Category=="Awards").Take(5).ToArray();
+        if(playoffStories.Length>0)
+        {
+            var list=new List<View>();
+            foreach(var story in playoffStories)
+            {
+                var n=story;
+                list.Add(new VerticalStackLayout{Spacing=2,Children={new Label{Text=n.Headline,FontSize=12,FontAttributes=FontAttributes.Bold,TextColor=DynastyTheme.Text},new Label{Text=$"{n.Year} · W{n.Week} · {n.Category}",FontSize=10,TextColor=DynastyTheme.Muted}}});
+            }
+            body.Add(SectionCard("Playoff & awards news",null,list.ToArray(),Action("See all ›",()=>Open("News"))));
+        }
     }
 }
