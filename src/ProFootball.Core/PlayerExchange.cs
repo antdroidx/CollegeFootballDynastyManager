@@ -11,7 +11,10 @@ public static class ProPlayerImport
             var random=new Random(BitConverter.ToInt32(p.PlayerId.ToByteArray(),0)^seed);
             int Scale(int n)=>Math.Clamp((int)Math.Round(35+n*.45)+random.Next(-4,5),30,95);
             var k=p.Skills!;var overall=Scale(p.OverallRating);
-            var football=p with{TeamName="Draft class",OverallRating=overall,SeasonStartOverall=overall,PotentialRating=Math.Clamp(Math.Max(overall,Scale(p.PotentialRating)+5),30,99),SpeedRating=Scale(p.SpeedRating),StrengthRating=Scale(p.StrengthRating),AgilityRating=Scale(p.AgilityRating),AwarenessRating=Scale(p.AwarenessRating),DepthChartOrder=99,PlayingPositionCode=null,ClassYear=0,IsRedshirted=false,HasRedshirted=false,IsWalkOn=false,
+            // Later-added specialist roles must survive the College -> Pro class conversion.
+            var mappedPosition = p.Position == Position.K && p.NcaaPositionCode == 20 ? Position.P : p.Position;
+            var mappedCode = mappedPosition switch { Position.FB => 2, Position.P => 20, Position.K => p.NcaaPositionCode == 20 ? 19 : p.NcaaPositionCode, _ => p.NcaaPositionCode };
+            var football=p with{Position=mappedPosition,NcaaPositionCode=mappedCode,TeamName="Draft class",OverallRating=overall,SeasonStartOverall=overall,PotentialRating=Math.Clamp(Math.Max(overall,Scale(p.PotentialRating)+5),30,99),SpeedRating=Scale(p.SpeedRating),StrengthRating=Scale(p.StrengthRating),AgilityRating=Scale(p.AgilityRating),AwarenessRating=Scale(p.AwarenessRating),DepthChartOrder=99,PlayingPositionCode=null,ClassYear=0,IsRedshirted=false,HasRedshirted=false,IsWalkOn=false,
                 Skills=k with{PassingPower=Scale(k.PassingPower),PassingAccuracy=Scale(k.PassingAccuracy),Catching=Scale(k.Catching),BreakTackle=Scale(k.BreakTackle),Tackling=Scale(k.Tackling),RunBlocking=Scale(k.RunBlocking),PassBlocking=Scale(k.PassBlocking),BallCarrying=Scale(k.BallCarrying),Acceleration=Scale(k.Acceleration),Leadership=Scale(k.Leadership),Discipline=Scale(k.Discipline),Jumping=Scale(k.Jumping),KickPower=Scale(k.KickPower),KickAccuracy=Scale(k.KickAccuracy)}};
             return ProPlayerRatingService.Refresh(new(football,Math.Clamp(18+original.ClassYear+(original.HasRedshirted?1:0),20,24),0,false){RatingSource="College draft class",ExternalId="college-"+p.PlayerId},true,true);
         }).ToList();

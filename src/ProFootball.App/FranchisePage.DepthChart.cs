@@ -10,6 +10,7 @@ public sealed partial class FranchisePage
         var team = state!.UserTeam;
         var picker = new Picker { Title = "Playing position", AutomationId = "pro-depth-position", ItemsSource = Enumerable.Range(0, 21).Select(ProDepthChart.Label).ToArray() };
         var search = new Entry { Placeholder = "Find any active player", AutomationId = "pro-depth-search" };
+        var auto = Action("CPU auto-assign", async () => { state = ProDepthChart.AutoAssign(state!, team); await Save(); Render(); }, "pro-depth-auto");
         var assigned = new VerticalStackLayout { Spacing = 6 };
         var candidates = new VerticalStackLayout { Spacing = 6 };
         var message = Text("Hold ≡ and drag onto a depth slot. Use Move to for a long move. Assign any active player; their natural position stays unchanged.", 12);
@@ -66,7 +67,7 @@ public sealed partial class FranchisePage
         {
             assigned.Clear(); candidates.Clear(); var code = picker.SelectedIndex; if (code < 0) return;
             var players = ProDepthChart.AtPosition(state!, team, code);
-            assigned.Add(Text($"{ProDepthChart.Label(code)} depth · {players.Count}", 19, true));
+            assigned.Add(Text($"{ProDepthChart.Label(code)} depth · {players.Count}/{ProDepthChart.MaxForCode(code)}", 19, true));
             for (var i = 0; i < players.Count; i++) assigned.Add(Card(players[i], code, i + 1, players.Count));
             if (players.Count == 0) assigned.Add(Text("No players assigned. Choose a player below."));
             var available = state!.Players.Where(p => ProDepthChart.Active(p) && p.Football.TeamName == team && ProDepthChart.AssignedCode(state, p) != code && (string.IsNullOrWhiteSpace(search.Text) || p.Football.FullName.Contains(search.Text, StringComparison.OrdinalIgnoreCase))).OrderByDescending(p => DepthChartService.PositionalRating(p.Football, code)).ThenBy(p => p.Football.FullName).ToArray();
@@ -74,6 +75,6 @@ public sealed partial class FranchisePage
             foreach (var p in available) candidates.Add(Card(p, code, 0, players.Count));
         }
         picker.SelectedIndexChanged += (_, _) => Draw(); search.TextChanged += (_, _) => Draw(); picker.SelectedIndex = 0;
-        return ShowPage("Depth chart", message, picker, assigned, search, candidates);
+        return ShowPage("Depth chart", message, picker, auto, assigned, search, candidates);
     }
 }

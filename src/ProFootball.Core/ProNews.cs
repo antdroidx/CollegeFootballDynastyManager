@@ -72,7 +72,15 @@ public static class ProNews
             var week = stamp.Success ? int.Parse(stamp.Groups[2].Value) : s.Week;
             Add(new(Key("transaction:" + text), year, week, category, text, "Confirmed league transaction."));
         }
-        var news = stories.Values.OrderByDescending(n => n.Year).ThenByDescending(n => n.Week).Take(1000).ToList();
+// Playoffs and awards occur after the regular season but carry small week numbers,
+        // so week-only ordering buried them at the bottom of the feed.
+        static int Stage(ProNewsStory n) => n.Category switch
+        {
+            "Awards" => 3,
+            "Playoffs" => 2,
+            _ => 0
+        };
+        var news = stories.Values.OrderByDescending(n => n.Year).ThenByDescending(Stage).ThenByDescending(n => n.Week).Take(1000).ToList();
         return s with { News = news, ReadNewsIds = s.ReadNewsIds.Where(id => news.Any(n => n.Id == id)).Distinct().ToList() };
     }
 }

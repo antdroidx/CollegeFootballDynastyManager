@@ -93,6 +93,30 @@ public sealed partial class FranchisePage
         meter.SizeChanged += (_, _) => fill.WidthRequest = Math.Max(0, meter.Width * pct);
         return new VerticalStackLayout { Spacing = 2, Children = { bar, meter } };
     }
+    // Two labelled value tiles side by side; stacks on narrow widths so text never overlaps.
+    static View SchemePair(string offense, string defense)
+    {
+        var grid = new Grid { ColumnSpacing = 10, RowSpacing = 8 };
+        View Tile(string label, string value) => new VerticalStackLayout { Spacing = 2, Children = {
+            new Label { Text = label, TextColor = DynastyTheme.Muted, FontSize = 11 },
+            new Label { Text = value, TextColor = DynastyTheme.Text, FontSize = 16, FontAttributes = FontAttributes.Bold, LineBreakMode = LineBreakMode.TailTruncation } } };
+        var items = new[] { Tile("Offense", offense), Tile("Defense", defense) };
+        var previous = 0;
+        void Arrange(int columns)
+        {
+            if (columns == previous) return; previous = columns;
+            grid.Children.Clear(); grid.ColumnDefinitions.Clear(); grid.RowDefinitions.Clear();
+            for (var c = 0; c < columns; c++) grid.ColumnDefinitions.Add(new(GridLength.Star));
+            for (var i = 0; i < items.Length; i++)
+            {
+                if (i % columns == 0) grid.RowDefinitions.Add(new(GridLength.Auto));
+                grid.Add(items[i], i % columns, i / columns);
+            }
+        }
+        Arrange(2);
+        grid.SizeChanged += (_, _) => Arrange(grid.Width >= 420 ? 2 : 1);
+        return grid;
+    }
     // Divider-free small header card used to group content sections.
     View SectionCard(string title, string? subtitle, params View[] views)
     {

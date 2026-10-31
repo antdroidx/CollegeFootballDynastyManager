@@ -18,6 +18,28 @@ public static class ProDepthChart
         var players = state.Players.ToDictionary(p => p.Football.PlayerId);
         return DepthChartService.AtPosition(Bridge(state), team, code).Select(p => players[p.PlayerId]).ToArray();
     }
+    // Per-slot depth limits keep every position chart readable and prevent duplicate starter stacks.
+    public static int MaxForCode(int code) => code switch
+    {
+        0 => 4, 1 => 4, 2 => 1, 3 => 8, 4 => 5,
+        >= 5 and <= 9 => 9,
+        10 or 11 => 6, 12 => 6, 13 => 6, 14 => 4, 15 => 6,
+        16 => 7, 17 => 4, 18 => 4, 19 => 1, 20 => 1, _ => 4
+    };
+
+    // CPU assistance: fill natural slots by positional rating, then trim each slot to its cap.
+    public static ProFranchise AutoAssign(ProFranchise state, string team, int? selectedCode = null)
+    {
+        var projected = DepthChartService.AutoSet(Bridge(state), team, selectedCode);
+        var rebuilt = projected.DepthChartAssignments
+            .Where(a => !string.Equals(a.TeamName, team, StringComparison.OrdinalIgnoreCase))
+            .Concat(projected.DepthChartAssignments
+                .Where(a => string.Equals(a.TeamName, team, StringComparison.OrdinalIgnoreCase))
+                .GroupBy(a => a.PositionCode)
+                .SelectMany(g => g.OrderBy(a => a.Order).Take(MaxForCode(g.Key)).Select((a, index) => a with { Order = index + 1 })))
+            .ToList();
+        return state with { DepthChartAssignments = rebuilt };
+    }
     public static ProFranchise Assign(ProFranchise state, string team, Guid playerId, int code, int order)
     {
         if (code < 0 || code >= DepthChartService.PositionNames.Count) throw new ArgumentOutOfRangeException(nameof(code));
@@ -26,6 +48,10 @@ public static class ProDepthChart
             throw new InvalidOperationException("Choose an active player on your team.");
         if (!ProCareer.Controls(state, player.Football.Position) || !ProCareer.Controls(state, DepthChartService.PositionForCode(AssignedCode(state, player))) || !ProCareer.Controls(state, DepthChartService.PositionForCode(code)))
             throw new InvalidOperationException("Your coaching role does not manage both positions.");
+        var current = AssignedCode(state, player);
+        var occupied = AtPosition(state, team, code).Count(p => p.Football.PlayerId != playerId);
+        if (current != code && occupied >= MaxForCode(code))
+            throw new InvalidOperationException($"{Label(code)} allows up to {MaxForCode(code)} players. Remove or move one first.");
         var next = DepthChartService.Assign(Bridge(state), team, playerId, code, order);
         return state with { DepthChartAssignments = next.DepthChartAssignments.ToList() };
     }

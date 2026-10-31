@@ -25,6 +25,16 @@ public static class ProPlayerRatingService
         ProPlayer Restore(ProPlayer p) => NeedsFullback(p) ? Refresh(p with {Football=p.Football with {Position=Position.FB,NcaaPositionCode=2}},true) : p;
         if(state.Players.Any(NeedsFullback)||state.Prospects.Any(NeedsFullback))
             state=state with {Players=state.Players.Select(Restore).ToList(),Prospects=state.Prospects.Select(Restore).ToList()};
+        // Source data historically bundled punters into K with NCAA code 20; split them into P.
+        static bool IsPunter(ProPlayer p) => p.Football.Position == Position.K && p.Football.NcaaPositionCode == 20;
+        ProPlayer AsPunter(ProPlayer p) => IsPunter(p) ? p with { Football = p.Football with { Position = Position.P } } : p;
+        if (state.Players.Any(IsPunter) || state.Prospects.Any(IsPunter) || state.DraftHistory.Any(d => IsPunter(d.Player)))
+            state = state with
+            {
+                Players = state.Players.Select(AsPunter).ToList(),
+                Prospects = state.Prospects.Select(AsPunter).ToList(),
+                DraftHistory = state.DraftHistory.Select(d => IsPunter(d.Player) ? d with { Player = AsPunter(d.Player) } : d).ToList()
+            };
         if (state.RatingSystemVersion >= Version) return state;
         return state with { RatingSystemVersion = Version, Players = state.Players.Select(p => Refresh(p, true)).ToList(),
             Prospects = state.Prospects.Select(p => Refresh(p, true)).ToList(),

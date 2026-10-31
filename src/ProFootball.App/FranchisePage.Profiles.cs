@@ -138,9 +138,7 @@ public sealed partial class FranchisePage
             AbilityBar("Player development", p.Development, DynastyTheme.Accent),
             AbilityBar("Leadership", p.Leadership, Color.FromArgb("#8E44AD")));
         var schemes = SectionCard("Preferred schemes", "Hired coaches bring a philosophy; balance it against your roster.",
-            new Grid { ColumnSpacing = 10, ColumnDefinitions = { new(GridLength.Star), new(GridLength.Star) }, Children = {
-                new VerticalStackLayout { Spacing = 2, Children = { new Label { Text = "Offense", TextColor = DynastyTheme.Muted, FontSize = 11 }, Text(p.OffenseScheme, 16, true) } },
-                new VerticalStackLayout { Spacing = 2, Children = { new Label { Text = "Defense", TextColor = DynastyTheme.Muted, FontSize = 11 }, Text(p.DefenseScheme, 16, true) } } } });
+            SchemePair(p.OffenseScheme, p.DefenseScheme));
         var role = SectionCard("Role & contract", "", Text($"Role · {RoleName(coach.Role)}"), Text($"Club · {team.Name}"), Text(coach.Vacant ? "Position currently vacant. Hire a replacement from Staff." : "Reports to the head coach. Managed through Staff."));
         return ShowPage("Coach profile", hero, tiles, abilities, schemes, role);
     }
