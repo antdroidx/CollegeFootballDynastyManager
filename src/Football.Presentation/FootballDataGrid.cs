@@ -58,11 +58,14 @@ public static class FootballDataGrid
                     if (cell is Label label) { label.FontSize = 12; label.LineBreakMode = LineBreakMode.TailTruncation; }
                     if (cell is Button action)
                     {
+                        if (action.BackgroundColor.Alpha >= 0.95f)
+                        {
                         action.BackgroundColor = DynastyTheme.Panel;
                         action.TextColor = DynastyTheme.Text;
                         action.BorderColor = DynastyTheme.ControlEdge;
                         action.BorderWidth = 1;
                         action.CornerRadius = 10;
+                        }
                     }
                     grid.Add(cell,c,r+1);
                 }
