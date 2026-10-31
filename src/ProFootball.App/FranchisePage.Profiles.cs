@@ -50,7 +50,7 @@ public sealed partial class FranchisePage
         var actions = new ActionRow(); actions.Add(Action("Edit appearance",()=>EditPlayerAppearance(p))); if (f.TeamName == s.UserTeam) actions.Add(Action("Contract & roster actions", () => ManagePlayer(p)));
         var status=Panel("Status", Text(p.Retired ? "Retired" : p.Football.TeamName=="Free agent" ? "Free agent" : p.Reserve ? "Reserve" : "Active roster"), Text(ProReserve.Availability(state!,p)), Text($"Morale {p.Morale} · Playing {ProDepthChart.Label(ProDepthChart.AssignedCode(s,p))} · Depth {ProDepthChart.AtPosition(s,f.TeamName,ProDepthChart.AssignedCode(s,p)).ToList().FindIndex(x=>x.Football.PlayerId==f.PlayerId)+1} · {ProMorale.Personality(p)}", 12), Text(p.TradeRequested ? "Trade requested · sustained dissatisfaction" : p.ContractConcernWeeks>0 ? "Concerned about contract value" : "No reported contract concern",12));
         await ShowPlayerTabs(identity,
-            ("Overview",()=>new VerticalStackLayout{Spacing=10,Children={Text($"OVR {f.OverallRating} · Projected ceiling {ProDevelopment.Ceiling(p)}",20,true),ReserveActivationControls(p),WaiverControls(p),status,actions}}),
+            ("Overview",()=>new VerticalStackLayout{Spacing=10,Children={StatRow(StatTile("Overall",f.OverallRating.ToString()),StatTile("Ceiling",ProDevelopment.Ceiling(p).ToString()),StatTile("Growth",ProDevelopment.Growth(p)),StatTile("Morale",p.Morale.ToString())),new HorizontalStackLayout{Spacing=8,Children={Text(p.PreviousSeasonOverall is not null?"Change since last offseason":"Change since season start",12),RatingDelta(p)}},ReserveActivationControls(p),WaiverControls(p),status,actions}}),
             ("Attributes",()=>Panel("Player attributes",attributes.ToArray())),
             ("Contract",()=>new VerticalStackLayout{Spacing=10,Children={ContractDetails(p,contract),f.TeamName==s.UserTeam?Action("Contract & roster actions",()=>ManagePlayer(p)):new VerticalStackLayout()}}),
             ("Statistics",()=>PlayerStatisticsPanel(p)),
@@ -168,7 +168,7 @@ public sealed partial class FranchisePage
     void News()
     {
         state = ProNews.Refresh(state!); var s = state!;
-        body.Add(Text("League news", 23, true));
+        body.Add(PageHeader("League news","Results, headlines, awards and transactions"));
         body.Add(Action("Filter: " + newsFilter, async () => { var filter = await GameDialogs.ActionSheetAsync(this, "News", "Cancel", null, new[] { "All", "My team", "Unread" }.Concat(s.News.Select(n => n.Category).Distinct()).ToArray()); if (filter is null or "Cancel") return; newsFilter = filter; Render(); }));
         var stories = s.News.Where(n => newsFilter == "All" || newsFilter == "My team" && (n.Team == s.UserTeam || n.Headline.Contains(s.UserTeam)) || newsFilter == "Unread" && !s.ReadNewsIds.Contains(n.Id) || n.Category == newsFilter).Take(60).ToArray();
         if (stories.Length == 0) body.Add(Text("No stories in this view yet. Completed games and league activity will appear here."));

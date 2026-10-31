@@ -8,7 +8,7 @@ public sealed partial class FranchisePage
     Task OpenTeamSchedule() { scheduleTeam="Your team"; scheduleWeek=null; schedulePhase=null;scheduleWeekPhase=null; return Open("Schedule"); }
     void Schedule()
     {
-        var s=state!;if(schedulePhase==ProPhase.Offseason){schedulePhase=null;scheduleWeek=null;scheduleWeekPhase=null;} body.Add(Text("Season schedule",23,true));
+        var s=state!;if(schedulePhase==ProPhase.Offseason){schedulePhase=null;scheduleWeek=null;scheduleWeekPhase=null;} body.Add(PageHeader("Season schedule","Games by phase, week and opponent"));
         var teams=new[] { "Your team","All teams" }.Concat(s.League.Teams.Select(t=>t.Name)).ToArray();
         var team=new Picker { Title="Team",ItemsSource=teams,SelectedIndex=Math.Max(0,Array.IndexOf(teams,scheduleTeam)) };
         var phases=new[] { "All phases","Preseason","Season","Playoffs" };

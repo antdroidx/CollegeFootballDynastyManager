@@ -20,7 +20,7 @@ public sealed partial class FranchisePage
     int analyticsSection;
     void Analytics()
     {
-        var s=state!;body.Add(Text("Franchise analytics",23,true));
+        var s=state!;body.Add(PageHeader("Franchise analytics","Team, roster, cap and development trends"));
         var sections=new[]{"Team performance","Roster quality","Cap & draft","Player development","Draft outcomes","Career records","Advanced efficiency"};
         var picker=new Picker{Title="Analytics category",AutomationId="pro-analytics-category",ItemsSource=sections,SelectedIndex=analyticsSection};body.Add(picker);
         var content=new VerticalStackLayout{Spacing=10};body.Add(content);

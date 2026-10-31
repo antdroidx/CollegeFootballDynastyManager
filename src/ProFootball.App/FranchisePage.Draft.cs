@@ -14,7 +14,7 @@ public sealed partial class FranchisePage
         }
         var scouted=ProDraft.AutoScout(state!);if(!scouted.Scouting.SequenceEqual(state!.Scouting)){state=scouted;await Save();}
         var s=state!;var current=ProDraft.Current(s);var active=s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft;
-        body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(Text($"{s.Year} Draft room",25,true));
+        body.Clear();body.Add(Action("‹ Front Office",()=>Open("Front Office")));body.Add(PageHeader($"{s.Year} Draft room","Scout, rank and select prospects"));
         var headline=current is null?"Draft complete":active?$"On the clock · R{current.Round} · Pick {ProDraft.Overall(s,current)} · {current.Owner}":"Scouting & draft preparation";
         var next=s.Picks.Where(p=>p.Year==s.Year&&p.Owner==s.UserTeam).OrderBy(p=>p.Round).ThenBy(p=>p.Slot).FirstOrDefault(p=>!s.DraftHistory.Any(h=>h.Year==s.Year&&h.Round==p.Round&&h.Slot==p.Slot));
                 var chips=new HorizontalStackLayout{Spacing=8};

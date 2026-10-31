@@ -202,7 +202,7 @@ public sealed partial class FranchisePage : ContentPage
 
     void Standings()
     {
-        body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
+        body.Add(PageHeader("Standings","Conference and division tables"));body.Add(Action("Playoff bracket ›",()=>Open("Playoffs")));
         foreach (var group in ProStandings.Build(state!).GroupBy(r => r.Team.Conference + " · " + r.Team.Division))
         { body.Add(SectionCard(group.Key,null,Table([("Team", 210), ("W", 40), ("L", 40), ("T", 40), ("Pct", 65), ("Diff", 65)], group.Select(r => new View[] { TeamCell(r.Team), Text(r.Wins.ToString()), Text(r.Losses.ToString()), Text(r.Ties.ToString()), Text(r.Percentage.ToString(".000")), Text(r.Differential.ToString()) })))); }
     }

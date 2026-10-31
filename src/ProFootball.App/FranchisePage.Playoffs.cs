@@ -5,7 +5,7 @@ public sealed partial class FranchisePage
 {
     void PlayoffTree()
     {
-        var s=state!;body.Add(Text("Playoff bracket",25,true));body.Add(Text("Wild card → Divisional → Conference → Championship. Divisional matchups are reseeded after wild-card results; unconfirmed matchups remain TBD.",12));
+        var s=state!;body.Add(PageHeader("Playoff bracket","Wild card → Divisional → Conference → Championship. Reseeded after wild-card results; TBD matchups unconfirmed."));
         var years=s.History.Select(h=>h.Year).Append(s.Year).Distinct().OrderDescending().ToArray();var picker=new Picker{Title="Season",ItemsSource=years.Select(y=>y.ToString()).ToArray(),SelectedIndex=0};body.Add(picker);var bracket=new VerticalStackLayout{Spacing=16};body.Add(bracket);
         View Card(ProPlayoffSlot slot)
         {

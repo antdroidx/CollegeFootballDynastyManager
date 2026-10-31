@@ -9,7 +9,7 @@ public sealed partial class FranchisePage
     bool statisticsPlayoffs;
     void Statistics()
     {
-        var s=state!;body.Add(Text("Player statistics",23,true));
+        var s=state!;body.Add(PageHeader("Player statistics","Regular season and playoff totals"));
         var category=new Picker{Title="Category",AutomationId="pro-stat-category",ItemsSource=PlayerStatCatalog.Categories,SelectedIndex=Array.IndexOf(PlayerStatCatalog.Categories,statisticsCategory)};
         var period=new Picker{AutomationId="pro-stat-period",ItemsSource=new[]{"Season","Career"},SelectedIndex=statisticsPeriod=="Career"?1:0};
         var competition=new Picker{AutomationId="pro-stat-competition",ItemsSource=new[]{"Regular season","Playoffs"},SelectedIndex=statisticsPlayoffs?1:0};

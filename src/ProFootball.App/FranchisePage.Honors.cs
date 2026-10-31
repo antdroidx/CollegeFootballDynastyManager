@@ -8,7 +8,7 @@ public sealed partial class FranchisePage
     string honorsTab="Awards";
     void Honors()
     {
-        var s=state!;body.Add(Text("Awards & All-Pros",25,true));
+        var s=state!;body.Add(PageHeader("Awards & All-Pros","Season honors and all-star selections"));
         if(s.Honors.Count==0){body.Add(Text("Season awards and All-Pro teams are announced after the regular season."));return;}
         var years=s.Honors.OrderByDescending(h=>h.Year).ToArray();var year=new Picker{ItemsSource=years.Select(h=>h.Year.ToString()).ToArray(),SelectedIndex=0};body.Add(year);var tabs=new Picker {ItemsSource=new[]{"Awards","All-Pros","Pro Bowl"},SelectedIndex=Array.IndexOf(new[]{"Awards","All-Pros","Pro Bowl"},honorsTab)};body.Add(tabs);var details=new VerticalStackLayout{Spacing=10};body.Add(details);
         void Draw()

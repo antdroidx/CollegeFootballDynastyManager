@@ -6,7 +6,7 @@ public sealed partial class FranchisePage
 {
     void Inbox()
     {
-        body.Add(Text("Franchise inbox",25,true));var notices=ProInbox.Build(state!);
+        body.Add(PageHeader("Franchise inbox","Action items and recent GM decisions"));var notices=ProInbox.Build(state!);
         body.Add(Text("Current action items and recent GM decisions. Resolved alerts disappear; read status is saved.",12));
         body.Add(Action("Mark all read",async()=>{state=state! with{ReadNotificationIds=state.ReadNotificationIds.Concat(notices.Select(n=>n.Id)).Distinct().ToList()};await Save();Render();}));
         if(notices.Count==0)body.Add(Text("No current action items."));

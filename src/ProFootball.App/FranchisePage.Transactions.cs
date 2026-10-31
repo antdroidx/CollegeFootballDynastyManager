@@ -4,7 +4,7 @@ public sealed partial class FranchisePage
 {
     void Transactions()
     {
-        state=ProTransactions.Migrate(state!);var s=state!;body.Add(Text("All transactions",25,true));
+        state=ProTransactions.Migrate(state!);var s=state!;body.Add(PageHeader("All transactions","League activity by season, week and stage"));
         var seasons=new[]{"All seasons"}.Concat(s.TransactionLog.Select(t=>t.Year).Distinct().OrderDescending().Select(y=>y.ToString())).ToArray();
         var season=new Picker{ItemsSource=seasons,SelectedIndex=0};var weeks=new[]{"All weeks"}.Concat(Enumerable.Range(1,18).Select(w=>"Week "+w)).ToArray();var week=new Picker{ItemsSource=weeks,SelectedIndex=0};var search=new Entry{Placeholder="Find a team, player or transaction"};
         body.Add(new HorizontalStackLayout{Spacing=12,Children={season,week}});body.Add(search);var rows=new VerticalStackLayout();body.Add(rows);

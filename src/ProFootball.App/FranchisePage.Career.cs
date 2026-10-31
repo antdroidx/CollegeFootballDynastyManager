@@ -6,7 +6,7 @@ public sealed partial class FranchisePage
 {
     void Career()
     {
-        var s = state!; var c = s.Career!;
+        var s = state!; var c = s.Career!; body.Add(PageHeader("Career","Your role, reputation and security"));
         var team = s.League.Teams.Single(t => t.Name == s.UserTeam);
         var coach = s.Coaches.FirstOrDefault(x => x.TeamId == team.Id && x.Role == c.Role);
         if (coach is not null && !c.Unemployed) body.Add(CoachIdentity(coach, team));

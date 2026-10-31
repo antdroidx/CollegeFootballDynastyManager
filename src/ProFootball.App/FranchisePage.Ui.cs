@@ -45,6 +45,30 @@ public sealed partial class FranchisePage
         return new Border { BackgroundColor = bg, StrokeShape = new RoundRectangle { CornerRadius = 8 }, Padding = new Thickness(8, 2), Content = new Label { Text = position.DisplayName(), TextColor = fg, FontSize = 11, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center } };
     }
 
+    // Consistent page header: large title, muted subtitle, optional action row.
+    View PageHeader(string title, string? subtitle = null, params View[] actions)
+    {
+        var stack = new VerticalStackLayout { Spacing = 4 };
+        stack.Add(new Label { Text = title, TextColor = DynastyTheme.Text, FontSize = 24, FontAttributes = FontAttributes.Bold });
+        if (!string.IsNullOrWhiteSpace(subtitle)) stack.Add(new Label { Text = subtitle, TextColor = DynastyTheme.Muted, FontSize = 12 });
+        if (actions.Length > 0)
+        {
+            var row = new ActionRow();
+            foreach (var a in actions) row.Add(a);
+            stack.Add(row);
+        }
+        return stack;
+    }
+
+    // Even row of stat tiles inside one card.
+    View StatRow(params View[] tiles)
+    {
+        var grid = new Grid { ColumnSpacing = 8 };
+        foreach (var _ in tiles) grid.ColumnDefinitions.Add(new(GridLength.Star));
+        for (var i = 0; i < tiles.Length; i++) grid.Add(tiles[i], i, 0);
+        return new Border { Padding = 12, BackgroundColor = DynastyTheme.Surface, StrokeThickness = 0,
+            StrokeShape = new RoundRectangle { CornerRadius = 12 }, Content = grid };
+    }
     // Compact stat tile: big value over muted caption.
     static View StatTile(string title, string value, string? caption = null)
     {
