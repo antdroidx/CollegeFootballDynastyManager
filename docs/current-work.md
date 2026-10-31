@@ -345,3 +345,5 @@ Shared UI primitives in src/ProFootball.App/FranchisePage.Ui.cs (PrimaryAction, 
 Verification: 27/27 focused tests pass (ScoutingDepthTests | FranchiseDepthAnalyticsTests | ManagementRefinementTests | SharedRatingsTests); Pro app MSBuild net10.0-android 0 errors; APK built and installed on emulator; Overview and Roster screenshots in dark theme reviewed (visual only, no automated device checks).
 
 Verified the FM Touch-style Pro UI on a Pixel 9 API 36 emulator in both portrait and landscape (phone aspect): Overview dashboard collapses to stacked cards on narrow and switches to summary + task-grid side-by-side on wide; sidebar navigation appears in landscape; Front Office stretch table, Roster position pills and cards all render correctly. Tablet (tablet-size emulator) not yet verified in this batch.
+
+Front Office reorganized into FM-Touch-style card sections (Money / Trading / Draft / Roster tools) — flat 10-button wall replaced with grouped tile grids. Visual verification from emulator screenshot; build only (no test scope change).
