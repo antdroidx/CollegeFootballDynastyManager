@@ -47,10 +47,32 @@ public sealed partial class FranchisePage
     {
         var s = state!; body.Add(CapSummary(s));
         if(ProCapInitialization.CanCorrectOpeningBudgets(s))body.Add(Action("Update 2026 cap budgets",CorrectOpeningBudgets));
-        var row = new ActionRow(); row.Add(Action("Financial overview",FinanceHub)); row.Add(Action("Free agents", FreeAgents, "pro-free-agents")); row.Add(Action("Trade center", () => Trade())); row.Add(Action("Trading block", TradingBlock)); row.Add(Action($"Trade offers ({ProTradeAi.OpenOffers(s).Count})", TradeOffers)); row.Add(Action("Trade history", TradeHistory)); if(s.Phase==ProPhase.Offseason&&s.OffseasonStep is OffseasonStep.FreeAgency or OffseasonStep.Draft)row.Add(Action("Draft & scouting", Draft)); row.Add(Action("Draft picks", DraftPicks, "pro-draft-picks")); if(s.Phase==ProPhase.Offseason&&s.OffseasonStep is OffseasonStep.FreeAgency or OffseasonStep.Draft)row.Add(CollegeClassImportButton()); if(s.Phase!=ProPhase.Offseason||s.OffseasonStep==OffseasonStep.Retention)row.Add(Action("Expiring contracts", Retention)); if(s.Phase==ProPhase.Offseason&&s.OffseasonStep==OffseasonStep.Draft)row.Add(Action("Rookie options", RookieOptions)); if(s.Phase==ProPhase.Offseason)row.Add(Action("Current offseason stage",()=>Open("Offseason"))); body.Add(row);
-        var rosterTools = new ActionRow(); rosterTools.Add(Action("Ask GM to fill roster", () => Update(x => ProCpu.Manage(x, true)))); rosterTools.Add(Action("Ask GM to trim to 53", () => Update(x => ProCpu.Trim(x, x.UserTeam)))); body.Add(rosterTools);
-        body.Add(Text("Contracts · select a player", 21, true)); body.Add(Table([("Player", 170), ("Ends", 55), ("Salary",100), ("Bonus / season",110), ("Cap hit", 100)], s.Contracts.Where(c => c.Active && c.Team == s.UserTeam).OrderByDescending(c => ProEconomy.CapHit(c, s.Year)).Select(c => { var p = s.Players.Single(p => p.Football.PlayerId == c.PlayerId); return new View[] { Link(p.Football.FullName, () => Player(p)), Text(ProContractInsights.PlayingEnd(c).ToString()), Text(Money(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0)), Text(Money(ProEconomy.BonusCharge(c,s.Year))),Text(Money(ProEconomy.CapHit(c, s.Year))) }; })));
-        body.Add(Panel("Dead money", Text(string.Join("\n", s.DeadCap.Where(d => d.Team == s.UserTeam && d.Year == s.Year).Select(d => $"{d.SourceName ?? s.Players.FirstOrDefault(p => p.Football.PlayerId == d.PlayerId)?.Football.FullName ?? "Prior contract"}: {Money(d.Amount)}")), 12)));
+        // Group actions into FM Touch-style card sections to reduce the flat button wall.
+        var money=new Grid{ColumnSpacing=10,RowSpacing=10,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};
+        money.Add(TaskTile("Financial overview","Budget, cap, dead money",FinanceHub),0,0);
+        money.Add(TaskTile("Free agents","Sign free agents, claims",FreeAgents,"pro-free-agents"),1,0);
+        money.Add(TaskTile("Expiring contracts","Retention decisions",Retention),2,0);
+        body.Add(SectionCard("Money",null,money));
+
+        var trades=new Grid{ColumnSpacing=10,RowSpacing=10,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};
+        trades.Add(TaskTile("Trade center","Search and submit trades",()=>Trade()),0,0);
+        trades.Add(TaskTile("Trading block","List and manage blocks",TradingBlock),1,0);
+        trades.Add(TaskTile($"Trade offers ({ProTradeAi.OpenOffers(s).Count})","Open offers from CPU",TradeOffers),2,0);
+        body.Add(SectionCard("Trading",null,trades,new[] {TaskTile("Trade history","Past trades",TradeHistory)}[0]));
+
+        var draft=new Grid{ColumnSpacing=10,RowSpacing=10,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};
+        if(s.Phase==ProPhase.Offseason&&s.OffseasonStep is OffseasonStep.FreeAgency or OffseasonStep.Draft){draft.Add(TaskTile("Draft & scouting","Prospects and visit slots",Draft),0,0);}
+        draft.Add(TaskTile("Draft picks","Owned and traded picks",DraftPicks,"pro-draft-picks"),1,0);
+        if(s.Phase==ProPhase.Offseason)draft.Add(TaskTile("Current offseason stage","Open guided stage",()=>Open("Offseason")),2,0);
+        body.Add(SectionCard("Draft",null,draft));
+
+        var rosterTools=new Grid{ColumnSpacing=10,RowSpacing=10,ColumnDefinitions=new(){new(GridLength.Star),new(GridLength.Star)},RowDefinitions=new(){new(GridLength.Auto)}};
+        rosterTools.Add(TaskTile("Ask GM to fill roster","Delegate fills to staff",()=>Update(x=>ProCpu.Manage(x,true))),0,0);
+        rosterTools.Add(TaskTile("Ask GM to trim to 53","Cut to active-roster limit",()=>Update(x=>ProCpu.Trim(x,x.UserTeam))),1,0);
+        body.Add(SectionCard("Roster tools",null,rosterTools));
+
+        body.Add(Text("Contracts · select a player",21,true)); body.Add(Table([("Player",170),("Ends",55),("Salary",100),("Bonus / season",110),("Cap hit",100)],s.Contracts.Where(c=>c.Active&&c.Team==s.UserTeam).OrderByDescending(c=>ProEconomy.CapHit(c,s.Year)).Select(c=>{var p=s.Players.Single(p=>p.Football.PlayerId==c.PlayerId);return new View[]{Link(p.Football.FullName,()=>Player(p)),Text(ProContractInsights.PlayingEnd(c).ToString()),Text(Money(c.Years.FirstOrDefault(y=>y.Year==s.Year)?.Salary??0)),Text(Money(ProEconomy.BonusCharge(c,s.Year))),Text(Money(ProEconomy.CapHit(c,s.Year)))};})));
+        body.Add(Panel("Dead money",Text(string.Join("\n",s.DeadCap.Where(d=>d.Team==s.UserTeam&&d.Year==s.Year).Select(d=>$"{d.SourceName??s.Players.FirstOrDefault(p=>p.Football.PlayerId==d.PlayerId)?.Football.FullName??"Prior contract"}: {Money(d.Amount)}")),12)));
     }
     string freeAgentPosition = "All positions", freeAgentSearch = "";
     Task FreeAgents()
