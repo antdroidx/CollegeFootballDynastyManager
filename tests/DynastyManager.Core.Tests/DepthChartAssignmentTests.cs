@@ -130,6 +130,8 @@ public class DepthChartAssignmentTests
         state = DepthChartService.Assign(state, "Home", receiver.PlayerId, 16, 1);
         var game = GameDayEngine.Start(source.Game, source.HomeProfile, source.AwayProfile, state.ActiveRoster, GameDayMode.Play, state.DepthChartAssignments);
         Assert.Equal(Position.CB, game.PlayersById[receiver.PlayerId].Position);
+        Assert.Equal(Position.K, game.PlayersById[kicker.PlayerId].Position);
+        Assert.Equal(Position.P, game.PlayersById[punter.PlayerId].Position);
         Assert.Equal(Position.WR, state.ActiveRoster.Single(p => p.PlayerId == receiver.PlayerId).Position);
         game.KickoffPending = false;
         game.PossessionTeamName = "Home";
@@ -145,6 +147,15 @@ public class DepthChartAssignmentTests
         var result = GameDayEngine.Finish(game);
         Assert.Equal(1, result.PlayerStats.Single(p => p.PlayerId == punter.PlayerId).Punts);
         Assert.Equal(1, result.PlayerStats.Single(p => p.PlayerId == kicker.PlayerId).FieldGoalsAttempted);
+    }
+
+    [Fact]
+    public void LegacyCollegeSaveNormalizesPunterFromSourceCode20()
+    {
+        var mislabeled = Player(20) with { Position = Position.K };
+        var normalized = PlayerRatingService.EnsureProfiles(State(mislabeled));
+        Assert.Equal(Position.P, normalized.ActiveRoster.Single().Position);
+        Assert.Equal(20, normalized.ActiveRoster.Single().NcaaPositionCode);
     }
 
     [Fact]

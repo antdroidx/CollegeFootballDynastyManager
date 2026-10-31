@@ -8,7 +8,7 @@ public static class UserCoachControlService
     public static bool ControlsDefense(DynastyState state) => state.UserCoachRole != StaffRole.OffensiveCoordinator;
     public static bool ControlsPosition(DynastyState state, Position position) => ControlsPosition(state.UserCoachRole, position);
     public static bool ControlsPosition(StaffRole role, Position position) => role == StaffRole.HeadCoach ||
-        position != Position.K && (GameDayCoachingService.IsOffense(position) ? role != StaffRole.DefensiveCoordinator : role != StaffRole.OffensiveCoordinator);
+        !position.IsSpecialist() && (GameDayCoachingService.IsOffense(position) ? role != StaffRole.DefensiveCoordinator : role != StaffRole.OffensiveCoordinator);
     public static string Label(StaffRole role) => role switch { StaffRole.OffensiveCoordinator => "Offensive coordinator", StaffRole.DefensiveCoordinator => "Defensive coordinator", _ => "Head coach" };
     public static CoachTalkAudience Audience(DynastyState state) => state.UserCoachRole switch {
         StaffRole.OffensiveCoordinator => CoachTalkAudience.Offense, StaffRole.DefensiveCoordinator => CoachTalkAudience.Defense, _ => CoachTalkAudience.Team };

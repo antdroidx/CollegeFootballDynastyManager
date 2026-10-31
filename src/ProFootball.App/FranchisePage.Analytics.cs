@@ -10,8 +10,8 @@ public sealed partial class FranchisePage
         var games = s.History.SelectMany(h => h.Games).Concat(s.Games).Where(g => g.Phase == ProPhase.RegularSeason && g.Football.HasPlayed).DistinctBy(g => g.Football.GameId).Select(g => g.Football).ToArray();
         var current = games.Where(g => g.SeasonYear == s.Year).Select(g => (Game: g, Line: g.PlayerStats.FirstOrDefault(p => p.PlayerId == id))).Where(x => x.Line is not null).ToArray();
         var career = games.SelectMany(g => g.PlayerStats).Where(p => p.PlayerId == id).GroupBy(p => p.SeasonYear).OrderBy(g => g.Key);
-        var metric = player.Football.Position == DynastyManager.Core.Models.Position.QB ? "Passing yards" : player.Football.Position is DynastyManager.Core.Models.Position.RB ? "Rushing yards" : player.Football.Position is DynastyManager.Core.Models.Position.WR or DynastyManager.Core.Models.Position.TE ? "Receiving yards" : "Tackles";
-        double Value(DynastyManager.Core.Models.PlayerSeasonStatLine x) => metric == "Passing yards" ? x.PassYards : metric == "Rushing yards" ? x.RushYards : metric == "Receiving yards" ? x.ReceivingYards : x.Tackles;
+        var metric = player.Football.Position switch { Position.QB => "Passing yards", Position.RB => "Rushing yards", Position.WR or Position.TE => "Receiving yards", Position.K => "Field goals made", Position.P => "Punts", _ => "Tackles" };
+        double Value(PlayerSeasonStatLine x) => metric switch { "Passing yards" => x.PassYards, "Rushing yards" => x.RushYards, "Receiving yards" => x.ReceivingYards, "Field goals made" => x.FieldGoalsMade, "Punts" => x.Punts, _ => x.Tackles };
         var peers = s.Players.Where(p => !p.Retired && p.Football.Position == player.Football.Position).ToArray();
         return Panel("Player analytics", PlayerEfficiencyView.Create(games.Where(g=>g.SeasonYear==s.Year).SelectMany(g=>g.PlayerStats),id), Text(metric + " · game log", 15, true), FootballBarChart.Create(current.Select(x => ($"Week {x.Game.Week}", Value(x.Line!)))),
             Text(metric + " · career by season", 15, true), FootballBarChart.Create(career.Select(g => (g.Key.ToString(), g.Sum(Value)))),

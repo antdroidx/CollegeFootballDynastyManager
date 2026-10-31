@@ -55,7 +55,7 @@ public static class ProLeagueService
     public static List<ProPlayer> GeneratePlayers(ProLeague league)
     {
         var random = new Random(2026); var players = new List<ProPlayer>();
-        (Position, int)[] positions = [(Position.QB, 3), (Position.RB, 4), (Position.WR, 6), (Position.TE, 3), (Position.OL, 9), (Position.DE, 4), (Position.DT, 4), (Position.MLB, 3), (Position.OLB, 4), (Position.CB, 5), (Position.FS, 3), (Position.SS, 3), (Position.K, 2)];
+        (Position, int)[] positions = [(Position.QB, 3), (Position.RB, 4), (Position.WR, 6), (Position.TE, 3), (Position.OL, 9), (Position.DE, 4), (Position.DT, 4), (Position.MLB, 3), (Position.OLB, 4), (Position.CB, 5), (Position.FS, 3), (Position.SS, 3), (Position.K, 1), (Position.P, 1)];
         string[] first = ["Marcus", "Jordan", "Evan", "Tyler", "Darius", "Noah", "Miles", "Andre", "Caleb", "Devin", "Cameron", "Isaiah"];
         string[] last = ["Carter", "Brooks", "Reed", "Bennett", "Hayes", "Morgan", "Coleman", "Foster", "Warren", "Price", "Marshall", "Grant", "Sullivan"];
         foreach (var team in league.Teams)
@@ -74,7 +74,7 @@ public static class ProLeagueService
                     FullName = first[random.Next(first.Length)] + " " + last[random.Next(last.Length)],
                     TeamName = team.Name,
                     Position = position,
-                    NcaaPositionCode = position==Position.FB?2:position == Position.K ? (depth == 2 ? 20 : 19) : position==Position.OL?5+(depth-1)%5:null,
+                    NcaaPositionCode = position==Position.FB?2:position == Position.K ? 19 : position == Position.P ? 20 : position==Position.OL?5+(depth-1)%5:null,
                     ClassYear = 4,
                     OverallRating = overall,
                     SeasonStartOverall = overall,
@@ -106,7 +106,7 @@ public static class ProLeagueService
             RushOffenseRating = Rating(Position.RB, Position.OL),
             PassDefenseRating = Rating(Position.CB, Position.FS, Position.SS),
             RushDefenseRating = Rating(Position.DE, Position.DT, Position.MLB, Position.OLB),
-            SpecialTeamsRating = Rating(Position.K),
+            SpecialTeamsRating = Rating(Position.K, Position.P),
             RosterSize = 53,
             GamePlan = state.GamePlans.FirstOrDefault(p => p.TeamName == team) ?? new() { TeamName = team },
             Morale = (int)state.Players.Where(p => p.Football.TeamName == team && !p.Retired).Select(p => (double)p.Morale).DefaultIfEmpty(60).Average(),

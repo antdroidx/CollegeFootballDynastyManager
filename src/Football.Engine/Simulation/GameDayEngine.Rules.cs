@@ -45,7 +45,7 @@ public static partial class GameDayEngine
         var home = session.PossessionTeamName == session.Game.HomeTeamName;
         var profile = home ? session.HomeProfile : session.AwayProfile;
         var defense = home ? session.AwayProfile : session.HomeProfile;
-        var kicker = GameDayCoachingService.Specialist(session, session.PossessionTeamName, Kicker(home ? session.HomeRoster : session.AwayRoster));
+        var kicker = GameDayCoachingService.Specialist(session, session.PossessionTeamName, Specialist(home ? session.HomeRoster : session.AwayRoster));
         var probability = two ? Math.Clamp(.44 + (profile.OffenseRating - defense.DefenseRating) * .006, .15, .75)
             : GameDayMatchupService.FieldGoalProbability(session.Rules.ExtraPointDistance, kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating,
                 kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating);

@@ -124,7 +124,8 @@ public static class HighSchoolRecruitingPoolFactory
         Position.OL => 5 + index % 5,
         Position.DE => 10 + index % 2,
         Position.OLB => index % 2 == 0 ? 13 : 15,
-        Position.K => 19 + index % 2,
+        Position.K => 19,
+        Position.P => 20,
         _ => Ncaa06RatingService.PositionCode(new DynastyPlayer { FullName = "", TeamName = "", Position = position })
     };
 

@@ -12,7 +12,7 @@ public static partial class GameDayEngine
     {
         var home = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var profile = home ? session.HomeProfile : session.AwayProfile;
-        var kicker = GameDayCoachingService.Specialist(session, session.PossessionTeamName, Kicker(home ? session.HomeRoster : session.AwayRoster));
+        var kicker = GameDayCoachingService.Specialist(session, session.PossessionTeamName, Specialist(home ? session.HomeRoster : session.AwayRoster));
         return GameWeatherService.KickProbability(session, GameDayMatchupService.FieldGoalProbability(117 - session.YardLine,
             kicker?.Skills?.KickAccuracy ?? profile.SpecialTeamsRating, kicker?.Skills?.KickPower ?? profile.SpecialTeamsRating));
     }
@@ -115,7 +115,7 @@ public static partial class GameDayEngine
         if (special is not null)
         {
             var kickStart = session.YardLine;
-            var kicker = GameDayCoachingService.Specialist(session, offense.TeamName, Kicker(offenseRoster, special == "special-punt"));
+            var kicker = GameDayCoachingService.Specialist(session, offense.TeamName, Specialist(offenseRoster, special == "special-punt"));
             var made = special == "special-field-goal" &&
                 session.Random.NextDouble() < FieldGoalProbability(session);
             var puntLanding = special == "special-punt"
@@ -482,7 +482,7 @@ public static partial class GameDayEngine
             var roster = session.Roster.Where(p => p.TeamName.Equals(team, StringComparison.OrdinalIgnoreCase)).ToArray();
             var specialEvents = session.Events.Where(e => e.OffenseTeamName.Equals(team, StringComparison.OrdinalIgnoreCase) &&
                 e.Outcome is SnapOutcome.FieldGoal or SnapOutcome.MissedFieldGoal or SnapOutcome.ExtraPoint or SnapOutcome.MissedExtraPoint or SnapOutcome.Punt);
-            foreach (var group in specialEvents.GroupBy(e => e.KickerId ?? Kicker(roster, e.Outcome == SnapOutcome.Punt)?.PlayerId))
+            foreach (var group in specialEvents.GroupBy(e => e.KickerId ?? Specialist(roster, e.Outcome == SnapOutcome.Punt)?.PlayerId))
             {
                 if (group.Key is not Guid id) continue;
                 var events = group.ToArray();
@@ -647,7 +647,7 @@ public static partial class GameDayEngine
         var receivingHome = session.PossessionTeamName.Equals(session.Game.HomeTeamName, StringComparison.OrdinalIgnoreCase);
         var receivingRoster = receivingHome ? session.HomeRoster : session.AwayRoster;
         var kickingRoster = receivingHome ? session.AwayRoster : session.HomeRoster;
-        var kicker = GameDayCoachingService.Specialist(session, kickingRoster.FirstOrDefault()?.TeamName ?? "", Kicker(kickingRoster));
+        var kicker = GameDayCoachingService.Specialist(session, kickingRoster.FirstOrDefault()?.TeamName ?? "", Specialist(kickingRoster));
         var returner = Returner(receivingRoster);
         var kickoffRandom = new Random(unchecked(session.Game.SimulationSeed * 397 ^ session.PossessionNumber * 7919 ^
             session.Quarter * 31 ^ 0x4B1C));
@@ -704,9 +704,9 @@ public static partial class GameDayEngine
         session.YardLine = 25; session.Down = 1; session.Distance = 10;
     }
 
-    private static DynastyPlayer? Kicker(IReadOnlyList<DynastyPlayer> roster, bool punting = false) => roster
+    private static DynastyPlayer? Specialist(IReadOnlyList<DynastyPlayer> roster, bool punting = false) => roster
         .Where(player => player.CurrentInjury is null && !player.IsRedshirted)
-        .OrderBy(player => player.Position == Position.K ? 0 : 1)
+        .OrderBy(player => player.Position == (punting ? Position.P : Position.K) ? 0 : player.Position.IsSpecialist() ? 1 : 2)
         .ThenBy(player => player.NcaaPositionCode == (punting ? 20 : 19) ? 0 : 1)
         .ThenBy(player => player.DepthChartOrder > 0 ? player.DepthChartOrder : int.MaxValue)
         .ThenByDescending(player => player.OverallRating).FirstOrDefault();

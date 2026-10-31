@@ -64,7 +64,7 @@ public static class DefensivePursuitService
         Guid? coverageDefender, double separation, Random random)
     {
         var starts = Alignments(defenders, play);
-        var candidates = defenders.Where(p => p.CurrentInjury is null && !p.IsRedshirted && p.Position != Position.K).ToArray();
+        var candidates = defenders.Where(p => p.CurrentInjury is null && !p.IsRedshirted && !p.Position.IsSpecialist()).ToArray();
         if (sack)
         {
             var roles = new Dictionary<Position, int>();

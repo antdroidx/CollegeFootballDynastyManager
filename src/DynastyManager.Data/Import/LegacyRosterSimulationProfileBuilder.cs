@@ -58,6 +58,7 @@ public static class LegacyRosterSimulationProfileBuilder
                 Position.FS,
                 Position.SS);
             var kicker = AverageTop(roster, rosterFallback, 1, Position.K);
+            var punter = AverageTop(roster, rosterFallback, 1, Position.P);
 
             profiles[team.Name] = new TeamSimulationProfile
             {
@@ -88,7 +89,7 @@ public static class LegacyRosterSimulationProfileBuilder
                     safety * 0.15 +
                     cb * 0.05,
                 SpecialTeamsRating =
-                    kicker * 0.85 +
+                    (kicker + punter) / 2.0 * 0.85 +
                     rosterFallback * 0.15,
                 RosterSize = roster.Length
             };

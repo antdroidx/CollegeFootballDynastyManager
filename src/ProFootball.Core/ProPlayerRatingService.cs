@@ -5,7 +5,7 @@ namespace ProFootball.Core;
 /// <summary>Professional lifecycle on the college game's canonical attribute and overall calculation.</summary>
 public static class ProPlayerRatingService
 {
-    public const int Version = 1;
+    public const int Version = 2;
     static readonly Lazy<HashSet<string>> FullbackIds = new(() => ProLeagueService.Snapshot().Players.Where(p=>p.Football.Position==Position.FB).Select(p=>p.ExternalId).ToHashSet());
     public static ProPlayer Refresh(ProPlayer player, bool preserveHeadroom = false, bool resetBaseline = false)
     {
@@ -19,6 +19,16 @@ public static class ProPlayerRatingService
     }
     public static ProFranchise Migrate(ProFranchise state)
     {
+        ProPlayer NormalizeSpecialist(ProPlayer player) => player with { Football = player.Football.NormalizeSpecialistPosition() };
+        if (state.Players.Any(p => p.Football.NcaaPositionCode is 19 or 20 && p.Football.Position != p.Football.NormalizeSpecialistPosition().Position) ||
+            state.Prospects.Any(p => p.Football.NcaaPositionCode is 19 or 20 && p.Football.Position != p.Football.NormalizeSpecialistPosition().Position) ||
+            state.DraftHistory.Any(p => p.Player.Football.NcaaPositionCode is 19 or 20 && p.Player.Football.Position != p.Player.Football.NormalizeSpecialistPosition().Position))
+            state = state with
+            {
+                Players = state.Players.Select(NormalizeSpecialist).ToList(),
+                Prospects = state.Prospects.Select(NormalizeSpecialist).ToList(),
+                DraftHistory = state.DraftHistory.Select(d => d with { Player = NormalizeSpecialist(d.Player) }).ToList()
+            };
         if(state.Players.Any(p=>!ReferenceEquals(p,ProBackfieldPositions.Correct(p)))||state.Prospects.Any(p=>!ReferenceEquals(p,ProBackfieldPositions.Correct(p))))
             state=state with{Players=state.Players.Select(ProBackfieldPositions.Correct).ToList(),Prospects=state.Prospects.Select(ProBackfieldPositions.Correct).ToList()};
         bool NeedsFullback(ProPlayer p) => p.Football.Position==Position.RB && (p.Football.NcaaPositionCode==2 || FullbackIds.Value.Contains(p.ExternalId));

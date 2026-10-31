@@ -18,7 +18,7 @@ public static class ProTradeAi
         &&!s.UnsignedRookies.Any(r=>r.PlayerId==p.Football.PlayerId);
     public static bool Window(ProFranchise s)=>ProTradeMarket.IsOpen(s)&&(s.Phase!=ProPhase.Offseason||s.OffseasonStep==OffseasonStep.FreeAgency);
     static bool Recent(ProFranchise s,Guid id)=>s.TradeHistory.Any(h=>h.Year==s.Year&&h.TransactionTick>=0&&s.TransactionTick-h.TransactionTick<4&&(h.GivenPlayers.Contains(id)||h.ReceivedPlayers.Contains(id)));
-    static string Role(ProPlayer p)=>p.Football.Position is Position.OL or Position.K&&p.Football.NcaaPositionCode is int code?$"{p.Football.Position}/{code}":OffensiveLineService.Label(p.Football);
+    static string Role(ProPlayer p)=>(p.Football.Position==Position.OL||p.Football.Position.IsSpecialist())&&p.Football.NcaaPositionCode is int code?$"{p.Football.Position}/{code}":OffensiveLineService.Label(p.Football);
     static bool SafeDeparture(ProFranchise s,ProPlayer p)
     {
         if(p.PracticeSquad)return true;

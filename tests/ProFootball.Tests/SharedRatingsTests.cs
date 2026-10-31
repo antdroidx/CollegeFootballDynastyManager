@@ -48,7 +48,7 @@ public sealed class SharedRatingsTests
             original = original with { Players = original.Players.Select(p => p == player ? p with { Football = p.Football with { OverallRating = 50, SeasonStartOverall = 50 } } : p).ToList() };
             var store = new ProSaveStore(directory); await store.Save(original);
             var loaded = await store.Load(original.Id);
-            Assert.Equal(1, loaded.RatingSystemVersion);
+            Assert.Equal(ProPlayerRatingService.Version, loaded.RatingSystemVersion);
             Assert.All(loaded.Players, p => Assert.Equal(PlayerRatingService.CalculateOverall(p.Football), p.Football.OverallRating));
             Assert.Equal(original.Contracts.Select(c => ProEconomy.CapHit(c, original.Year)), loaded.Contracts.Select(c => ProEconomy.CapHit(c, loaded.Year)));
             await store.Save(loaded); var twice = await store.Load(loaded.Id);

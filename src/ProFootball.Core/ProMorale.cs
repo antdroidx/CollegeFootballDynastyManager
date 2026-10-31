@@ -28,7 +28,7 @@ public static class ProMorale
     {
         if(!TalkAvailable(s))throw new InvalidOperationException("Your weekly coach talk has been used. Advance the calendar before speaking again.");
         var role=ProCareer.Role(s);if(role!=StaffRole.HeadCoach)audience=role==StaffRole.OffensiveCoordinator?CoachTalkAudience.Offense:CoachTalkAudience.Defense;
-        var roster=s.Players.Where(p=>p.Football.TeamName==s.UserTeam&&!p.Retired&&(audience==CoachTalkAudience.Team||GameDayCoachingService.IsOffense(p.Football.Position)==(audience==CoachTalkAudience.Offense)&&p.Football.Position!=Position.K)).Select(p=>p.Football).ToArray();
+        var roster=s.Players.Where(p=>p.Football.TeamName==s.UserTeam&&!p.Retired&&(audience==CoachTalkAudience.Team||GameDayCoachingService.IsOffense(p.Football.Position)==(audience==CoachTalkAudience.Offense)&&!p.Football.Position.IsSpecialist())).Select(p=>p.Football).ToArray();
         var form=s.Games.Where(g=>g.Phase==ProPhase.RegularSeason&&g.Football.HasPlayed&&g.Football.InvolvesTeam(s.UserTeam)).OrderByDescending(g=>g.Football.Week).Take(3).Sum(g=>g.Football.WinnerTeamName==s.UserTeam?1:-1);
         var talk=GameDayCoachingService.CreateTalk(roster,s.UserTeam,tone,s.Year,s.Week,0,s.TransactionTick,form,0) with{Audience=audience};
         s=Effects(s,talk.Reactions.ToDictionary(r=>r.PlayerId,r=>(r.Change,$"Weekly coach talk {s.Year}/{s.TransactionTick}")));

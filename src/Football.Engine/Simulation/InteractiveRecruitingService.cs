@@ -540,7 +540,7 @@ public static class InteractiveRecruitingService
         {
             Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL =>
                 StaffRole.OffensiveCoordinator,
-            Position.K => StaffRole.SpecialTeamsCoordinator,
+            Position.K or Position.P => StaffRole.SpecialTeamsCoordinator,
             _ => StaffRole.DefensiveCoordinator
         };
 

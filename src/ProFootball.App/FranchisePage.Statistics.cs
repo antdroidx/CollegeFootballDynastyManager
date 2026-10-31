@@ -32,7 +32,7 @@ public sealed partial class FranchisePage
     {
         var phase=new Picker{AutomationId="pro-profile-stat-competition",ItemsSource=new[]{"Regular season","Playoffs"},SelectedIndex=0};
         var period=new Picker{AutomationId="pro-profile-stat-period",ItemsSource=new[]{"Season","Career"},SelectedIndex=0};
-        var category=new Picker{AutomationId="pro-profile-stat-category",ItemsSource=PlayerStatCatalog.Categories,SelectedIndex=Array.IndexOf(PlayerStatCatalog.Categories,player.Football.Position is Position.OL or Position.FB?"Blocking":player.Football.Position==Position.QB?"Passing":"Playing time")};
+        var category=new Picker{AutomationId="pro-profile-stat-category",ItemsSource=PlayerStatCatalog.Categories,SelectedIndex=Array.IndexOf(PlayerStatCatalog.Categories,player.Football.Position switch{Position.K=>"Kicking",Position.P=>"Punting",Position.OL or Position.FB=>"Blocking",Position.QB=>"Passing",_=>"Playing time"})};
         var host=new ContentView();
         void Draw()
         {

@@ -523,7 +523,7 @@ public static class ScoutingDepartmentService
                 candidates.Where(item => item.Position == position),
             ScoutAssignmentScope.Offense => candidates.Where(item => IsOffense(item.Position)),
             ScoutAssignmentScope.Defense => candidates.Where(item => IsDefense(item.Position)),
-            ScoutAssignmentScope.SpecialTeams => candidates.Where(item => item.Position == Position.K),
+            ScoutAssignmentScope.SpecialTeams => candidates.Where(item => item.Position.IsSpecialist()),
             ScoutAssignmentScope.TeamNeeds => candidates.Where(item => GetPositionNeed(state, item.Position) > 0),
             _ => candidates
         };

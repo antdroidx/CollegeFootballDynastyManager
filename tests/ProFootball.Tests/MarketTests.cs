@@ -27,8 +27,8 @@ public class MarketTests
         Assert.InRange(ProEconomy.MarketSalary(Player(Position.WR,95)),25_000_000,45_000_000);
         Assert.InRange(ProEconomy.MarketSalary(Player(Position.DE,95)),25_000_000,50_000_000);
         Assert.True(ProEconomy.MarketSalary(Player(Position.QB,75))<12_000_000);
-        Assert.True(ProEconomy.MarketSalary(Player(Position.K,85,20))<5_000_000);
-        Assert.True(ProEconomy.MarketSalary(Player(Position.K,85,19))>ProEconomy.MarketSalary(Player(Position.K,85,20)));
+        Assert.True(ProEconomy.MarketSalary(Player(Position.P,85,20))<5_000_000);
+        Assert.True(ProEconomy.MarketSalary(Player(Position.K,85,19))>ProEconomy.MarketSalary(Player(Position.P,85,20)));
         Assert.InRange(ProEconomy.MarketSalary(Player(Position.K,99,19)),1_000_000,8_000_000);
     }
     [Fact] public void CapGrowthScalesTheCommonMarketWithoutUsingTeamCarryover()

@@ -8,10 +8,20 @@ public static class PlayerRatingService
     {
         ArgumentNullException.ThrowIfNull(state);
 
+        DynastyPlayer Normalize(DynastyPlayer player) => player.NormalizeSpecialistPosition();
+        var rosterSource = state.ActiveRoster.Select(Normalize)
+            .Concat(state.TransferPortalEntries.Select(entry => Normalize(entry.Player)))
+            .Concat(state.PendingTransferCommitments.Select(entry => Normalize(entry.Player)))
+            .Concat(state.HighSchoolRecruitingPool.Select(recruit => recruit.AttributeProfile).OfType<DynastyPlayer>().Select(Normalize))
+            .ToArray();
+        var punterIds = rosterSource.Where(player => player.NcaaPositionCode == 20).Select(player => player.PlayerId).ToHashSet();
+        var kickerIds = rosterSource.Where(player => player.NcaaPositionCode == 19).Select(player => player.PlayerId).ToHashSet();
+        Position Correct(Guid id, Position position) => punterIds.Contains(id) ? Position.P : kickerIds.Contains(id) ? Position.K : position;
+
         return state with
         {
             OverallCalibrationVersion = 1,
-            ActiveRoster = PlayerJerseyService.Assign(OffensiveLineService.AssignMissingRoles(state.ActiveRoster)
+            ActiveRoster = PlayerJerseyService.Assign(OffensiveLineService.AssignMissingRoles(rosterSource.Take(state.ActiveRoster.Count).ToArray())
                 .Select(player =>
                 {
                     var updated = InitializeForScale(state, player);
@@ -19,8 +29,8 @@ public static class PlayerRatingService
                         updated = updated with { RatingBaselineSeason = state.SeasonYear, SeasonStartOverall = updated.OverallRating };
                     return WithSeasonBaseline(state, updated);
                 }).ToArray()),
-            TransferPortalEntries = state.TransferPortalEntries.Select(e => e with { Player = InitializeForScale(state, e.Player) }).ToArray(),
-            PendingTransferCommitments = state.PendingTransferCommitments.Select(e => e with { Player = InitializeForScale(state, e.Player) }).ToArray(),
+            TransferPortalEntries = state.TransferPortalEntries.Select(e => e with { Player = InitializeForScale(state, Normalize(e.Player)) }).ToArray(),
+            PendingTransferCommitments = state.PendingTransferCommitments.Select(e => e with { Player = InitializeForScale(state, Normalize(e.Player)) }).ToArray(),
             HighSchoolRecruitingPool = state.OverallCalibrationVersion == 0
                 ? state.HighSchoolRecruitingPool.Select(r =>
                 {
@@ -31,8 +41,23 @@ public static class PlayerRatingService
                         TalentLevel = r.StarRating * 2, OriginalRecruitingStars = r.StarRating,
                         HeightInches = r.HeightInches, WeightPounds = r.WeightPounds
                     });
-                    return r with { AttributeProfile = profile, TrueOverallRating = profile.OverallRating, PotentialRating = profile.PotentialRating };
-                }).ToArray() : state.HighSchoolRecruitingPool
+                    return r with { Position = profile.Position, AttributeProfile = profile, TrueOverallRating = profile.OverallRating, PotentialRating = profile.PotentialRating };
+                }).ToArray()
+                : state.HighSchoolRecruitingPool.Select(r => r.AttributeProfile is { } profile
+                    ? r with { Position = Normalize(profile).Position, AttributeProfile = Normalize(profile) }
+                    : r).ToArray(),
+            PlayerSeasonStats = state.PlayerSeasonStats.Select(line => line with { Position = Correct(line.PlayerId, line.Position) }).ToArray(),
+            PlayerAwardHistory = state.PlayerAwardHistory.Select(award => award with { Position = Correct(award.PlayerId, award.Position) }).ToArray(),
+            HallOfFame = state.HallOfFame.Select(entry => entry with { Position = Correct(entry.PlayerId, entry.Position) }).ToArray(),
+            PlayerDepartureHistory = state.PlayerDepartureHistory.Select(entry => entry with { Position = Correct(entry.PlayerId, entry.Position) }).ToArray(),
+            RecentPlayerDepartures = state.RecentPlayerDepartures.Select(entry => entry with { Position = Correct(entry.PlayerId, entry.Position) }).ToArray(),
+            PlayerCareerHistory = state.PlayerCareerHistory.Select(entry => entry with { Position = Correct(entry.PlayerId, entry.Position) }).ToArray(),
+            PlayerGameAwardHistory = state.PlayerGameAwardHistory.Select(award => award with { Position = Correct(award.PlayerId, award.Position) }).ToArray(),
+            Schedule = state.Schedule.Select(game => game with
+            {
+                PlayerStats = game.PlayerStats.Select(line => line with { Position = Correct(line.PlayerId, line.Position) }).ToArray(),
+                PlayerOfGame = game.PlayerOfGame is { } award ? award with { Position = Correct(award.PlayerId, award.Position) } : null
+            }).ToArray()
         };
     }
 
@@ -52,6 +77,7 @@ public static class PlayerRatingService
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(player);
+        player = player.NormalizeSpecialistPosition();
         player = player.NcaaPositionCode == 2 && player.Position == Position.RB ? player with { Position = Position.FB } : player;
         player = PlayerPhysicalService.EnsureMeasurements(player);
 
@@ -73,7 +99,7 @@ public static class PlayerRatingService
             {
                 Position.RB => 1, Position.FB => 2, Position.OL => 5 + role % 5,
                 Position.DE => 10 + role % 2, Position.OLB => role % 2 == 0 ? 13 : 15,
-                Position.K => 19 + role % 2, _ => Ncaa06RatingService.PositionCode(player)
+                Position.K => 19, Position.P => 20, _ => Ncaa06RatingService.PositionCode(player)
             } };
         }
 
@@ -227,10 +253,10 @@ public static class PlayerRatingService
             (Position.OL, "speed") => -5,
             (Position.OL, "agility") => -2,
 
-            (Position.K, "technique") => 6,
-            (Position.K, "awareness") => 2,
-            (Position.K, "strength") => 1,
-            (Position.K, "speed") => -4,
+            (Position.K or Position.P, "technique") => 6,
+            (Position.K or Position.P, "awareness") => 2,
+            (Position.K or Position.P, "strength") => 1,
+            (Position.K or Position.P, "speed") => -4,
 
             (Position.DE, "strength") => 3,
             (Position.DE, "technique") => 3,

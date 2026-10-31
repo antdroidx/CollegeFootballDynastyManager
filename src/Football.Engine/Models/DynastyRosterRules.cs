@@ -5,7 +5,7 @@ public static class DynastyRosterRules
     public const int MaximumRosterSize = 85;
 
     // Modern position split of the legacy game's starter counts:
-    // QB1/RB2/WR3/TE1/OL5/K1/DL4/LB3/CB3/S2.
+    // QB1/RB2/WR3/TE1/OL5/K1/P1/DL4/LB3/CB3/S2.
     public static readonly IReadOnlyDictionary<Position, int> StarterPositionCounts =
         new Dictionary<Position, int>
         {
@@ -16,6 +16,7 @@ public static class DynastyRosterRules
             [Position.TE] = 1,
             [Position.OL] = 5,
             [Position.K] = 1,
+            [Position.P] = 1,
             [Position.DE] = 2,
             [Position.DT] = 2,
             [Position.OLB] = 2,
@@ -26,7 +27,7 @@ public static class DynastyRosterRules
         };
 
     // Modern position split of the legacy minimum playable depth:
-    // QB3/RB5/WR8/TE3/OL11/K2/DL9/LB7/CB7/S5.
+    // QB3/RB5/WR8/TE3/OL11/K1/P1/DL9/LB7/CB7/S5.
     public static readonly IReadOnlyDictionary<Position, int> MinimumPositionCounts =
         new Dictionary<Position, int>
         {
@@ -36,7 +37,8 @@ public static class DynastyRosterRules
             [Position.WR] = 8,
             [Position.TE] = 3,
             [Position.OL] = 11,
-            [Position.K] = 2,
+            [Position.K] = 1,
+            [Position.P] = 1,
             [Position.DE] = 5,
             [Position.DT] = 4,
             [Position.OLB] = 4,
@@ -54,8 +56,9 @@ public static class DynastyRosterRules
             [Position.RB] = 7,
             [Position.WR] = 11,
             [Position.TE] = 4,
-            [Position.OL] = 16,
-            [Position.K] = 3,
+            [Position.OL] = 15,
+            [Position.K] = 2,
+            [Position.P] = 2,
             [Position.DE] = 7,
             [Position.DT] = 6,
             [Position.OLB] = 6,

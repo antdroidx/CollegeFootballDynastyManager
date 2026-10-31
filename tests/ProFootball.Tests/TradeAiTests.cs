@@ -108,11 +108,13 @@ public class TradeAiTests
         Assert.Single(released);Assert.True(released[0].PracticeSquad);Assert.Equal(10,released[0].Football.OverallRating);
         Assert.True(ProEconomy.Room(next,o.Buyer)>=0);Assert.Equal(1,next.Players.Single(p=>p.Football.PlayerId==o.PlayerId).Football.DepthChartOrder);
     }
-    [Theory] [InlineData(Position.OL,9,5)] [InlineData(Position.K,19,20)]
-    public void CpuCannotSellItsOnlySpecificLineOrKickingRole(Position position,int targetCode,int otherCode)
+    [Theory] [InlineData(Position.OL,9,5)] [InlineData(Position.K,19,20)] [InlineData(Position.P,20,19)]
+    public void CpuCannotSellItsOnlySpecificLineOrSpecialistRole(Position position,int targetCode,int otherCode)
     {
         var(s,p)=Setup(true);var seller=p.Football.TeamName;p=p with{Football=p.Football with{Position=position,NcaaPositionCode=targetCode}};
-        s=s with{Players=s.Players.Select(x=>x.Football.PlayerId==p.Football.PlayerId?p:x.Football.TeamName==seller&&x.Football.Position==position?x with{Football=x.Football with{NcaaPositionCode=otherCode}}:x).ToList()};
+        s=s with{Players=s.Players.Select(x=>x.Football.PlayerId==p.Football.PlayerId?p:x.Football.TeamName==seller&&x.Football.Position==position
+            ?position.IsSpecialist()?x with{Football=x.Football with{Position=Position.TE,NcaaPositionCode=4}}:x with{Football=x.Football with{NcaaPositionCode=otherCode}}
+            :x).ToList()};
         var buyer=s.League.Teams.First(t=>t.Name!=s.UserTeam&&t.Name!=seller).Name;var pick=s.Picks.First(x=>x.Owner==buyer);
         var error=Assert.Throws<InvalidOperationException>(()=>ProTradeAi.Execute(s,buyer,seller,p.Football.PlayerId,[pick.Id]));
         Assert.Contains("cannot spare",error.Message);

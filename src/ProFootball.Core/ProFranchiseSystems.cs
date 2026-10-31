@@ -4,7 +4,7 @@ namespace ProFootball.Core;
 public static class ProTrade
 {
     public static bool Available(ProFranchise s, ProDraftPick p) => !p.AllocationPending && (p.Year > s.Year || p.Year == s.Year && !s.DraftHistory.Any(h => h.Year == p.Year && h.Round == p.Round && h.Slot == p.Slot));
-    public static double PositionWeight(Position p) => p switch { Position.QB => 1.8, Position.DE => 1.45, Position.CB => 1.35, Position.OL => 1.2, Position.WR or Position.DT => 1.1, Position.RB => .85, Position.K => .35, _ => 1 };
+    public static double PositionWeight(Position p) => p switch { Position.QB => 1.8, Position.DE => 1.45, Position.CB => 1.35, Position.OL => 1.2, Position.WR or Position.DT => 1.1, Position.RB => .85, Position.K or Position.P => .35, _ => 1 };
     public static double PlayerValue(ProPlayer p) => Math.Pow(Math.Max(0, p.Football.OverallRating - 55), 2) * .65
         * Math.Clamp((36 - p.Age) / 10d, .25, 1.5) * PositionWeight(p.Football.Position)
         * (1 + ProDevelopment.Headroom(p) / 100d);
@@ -163,7 +163,7 @@ public static class ProDraft
 
 public static class ProCpu
 {
-    public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.FB => s.GamePlans.LastOrDefault(p=>p.TeamName==team)?.Offense is OffensivePlaybook.PowerRun or OffensivePlaybook.Flexbone ? 1 : 0, Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
+    public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.FB => s.GamePlans.LastOrDefault(p=>p.TeamName==team)?.Offense is OffensivePlaybook.PowerRun or OffensivePlaybook.Flexbone ? 1 : 0, Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K or Position.P => 1, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
     public static ProFranchise MakeRoom(ProFranchise s, string team, long room,bool reserveRosterSlot=true,Func<ProPlayer,bool>? eligible=null)
     {
         s=ProCpuBudget.Relieve(s,team,room,eligible);
@@ -189,7 +189,7 @@ public static class ProCpu
         var remaining=s.Players.Where(x=>x.Football.TeamName==p.Football.TeamName&&!x.Retired&&!x.Reserve&&!x.PracticeSquad&&x.Football.PlayerId!=p.Football.PlayerId).ToArray();
         var next=s with{Players=remaining.ToList()};
         return Need(next,p.Football.TeamName,p.Football.Position)==0&&
-            (p.Football.Position is not (Position.OL or Position.K)||p.Football.NcaaPositionCode is null||remaining.Any(x=>x.Football.Position==p.Football.Position&&x.Football.NcaaPositionCode==p.Football.NcaaPositionCode));
+            (!p.Football.Position.IsSpecialist()&&p.Football.Position!=Position.OL||p.Football.NcaaPositionCode is null||remaining.Any(x=>x.Football.Position==p.Football.Position&&x.Football.NcaaPositionCode==p.Football.NcaaPositionCode));
     }
     static ProFranchise ReviewStaffRoster(ProFranchise s,ProFranchise candidate,string action)
     {
@@ -324,7 +324,7 @@ public static class ProOffseason
             {
                 var aged = ProDevelopment.AgeOneYear(p, random);
                 var age = aged.Age;
-                var retirement = p.Retired || age >= (p.Football.Position is Position.QB or Position.K ? 40 : 36) || age > 32 && aged.Football.OverallRating < 65 && random.NextDouble() < .3;
+                var retirement = p.Retired || age >= (p.Football.Position is Position.QB or Position.K or Position.P ? 40 : 36) || age > 32 && aged.Football.OverallRating < 65 && random.NextDouble() < .3;
                 return aged with { Experience = p.Experience + 1, CreditedSeasons=(p.CreditedSeasons??p.Experience)+(!p.PracticeSquad&&!p.Reserve&&credited.Contains(p.Football.PlayerId)?1:0), Retired = retirement, ReserveInjury=null, RosterStatus=p.ReserveInjury is not null?"ACT":p.RosterStatus, Reserve = s.UnsignedRookies.Any(r=>r.PlayerId==p.Football.PlayerId), Morale = Math.Clamp(p.Morale + (60 - p.Morale) / 3, 20, 90) };
             }).ToList();
             foreach (var p in players.Where(p => p.Retired && s.Contracts.Any(c => c.PlayerId == p.Football.PlayerId && c.Active)).ToArray()) s = ProEconomy.Release(s with { Year = year, Games = [] }, p.Football.TeamName, p.Football.PlayerId, false);

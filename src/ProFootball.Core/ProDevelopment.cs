@@ -10,7 +10,7 @@ public static class ProDevelopment
         Position.FB => 28, Position.RB => 25, Position.CB => 27,
         Position.WR or Position.DE or Position.MLB or Position.OLB or Position.SS => 28,
         Position.TE or Position.DT or Position.FS => 29,
-        Position.OL => 30, Position.QB => 31, Position.K => 33, _ => 28
+        Position.OL => 30, Position.QB => 31, Position.K or Position.P => 33, _ => 28
     };
 
     // A ceiling cannot imply lost present ability. Remaining upside narrows as the prime window closes.

@@ -84,4 +84,23 @@ public sealed class DepthChartTests
         }
     }
 
+    [Fact] public async Task LegacyProSaveNormalizesSourceCode20ToPunter()
+    {
+        var s = ProLeagueService.Create("Seattle Seahawks") with { Id = Guid.NewGuid() };
+        s = s with { Players = s.Players.Select(p => p.Football.FullName == "Michael Dickson"
+            ? p with { Football = p.Football with { Position = Position.K } }
+            : p).ToList() };
+        var dir = Path.Combine(Path.GetTempPath(), "pro-specialist-migration-" + Guid.NewGuid());
+        try
+        {
+            var store = new ProSaveStore(dir);
+            await store.Save(s);
+            var restored = await store.Load(s.Id);
+            var dickson = Assert.Single(restored.Players, p => p.Football.FullName == "Michael Dickson");
+            Assert.Equal(Position.P, dickson.Football.Position);
+            Assert.Equal(20, dickson.Football.NcaaPositionCode);
+        }
+        finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
+    }
+
 }

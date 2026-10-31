@@ -94,6 +94,10 @@ public static class DynastyRosterSimulationProfileBuilder
                 roster,
                 fallback,
                 Position.K);
+            var punter = AverageDepth(
+                roster,
+                fallback,
+                Position.P);
 
             var safety =
                 (fs + ss) / 2.0;
@@ -147,7 +151,7 @@ public static class DynastyRosterSimulationProfileBuilder
                     AverageDepth(roster, fallback, Position.CB, false) * .05 +
                     defenseModifier,
                 SpecialTeamsRating =
-                    kicker * .85 +
+                    ((kicker + punter) / 2.0) * .85 +
                     fallback * .15 +
                     specialTeamsModifier,
                 Morale = GameMoraleService.SeasonMorale(state, team.Name),

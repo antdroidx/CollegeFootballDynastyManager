@@ -34,6 +34,8 @@ public sealed class Next26StartingRosterTests
         Assert.Equal(136, pack.Players.Select(p => p.TeamName).Distinct().Count());
         Assert.All(pack.Players.GroupBy(p => p.TeamName), school => Assert.Equal(85, school.Count()));
         Assert.Equal(pack.Players.Count, pack.Players.Select(p => p.PlayerId).Distinct().Count());
+        Assert.Equal(251, pack.Players.Count(p => p.Position == Position.K));
+        Assert.Equal(195, pack.Players.Count(p => p.Position == Position.P));
         Assert.All(pack.Players, p => Assert.Contains(teams, t => t.Name == p.TeamName));
         using var sourceReader = new TextFieldParser(Data("next26-roster.csv")) { Delimiters = [","], HasFieldsEnclosedInQuotes = true };
         var header = sourceReader.ReadFields()!;
@@ -44,6 +46,7 @@ public sealed class Next26StartingRosterTests
             var p = pack.Players[i]; var fields = Ncaa06RosterRatings.Export(p);
             foreach (var field in Ncaa06RosterRatings.RatingFields) Assert.Equal(int.Parse(source[field]) + 40 + SpreadsheetDelta(int.Parse(source["PPOS"]), field), fields[field]);
             Assert.Equal(int.Parse(source["PPOS"]), p.NcaaPositionCode);
+            Assert.Equal(int.Parse(source["PPOS"]) == 19 ? Position.K : int.Parse(source["PPOS"]) == 20 ? Position.P : p.Position, p.Position);
             Assert.Equal(int.Parse(source["PYER"]) + 1, p.ClassYear);
             Assert.Equal(source["PRSD"] == "1", p.IsRedshirted);
             Assert.Equal(source["PRSD"] != "0", p.HasRedshirted);

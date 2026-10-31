@@ -31,7 +31,7 @@ public static class GameDayCoachingService
             if (snap is null) continue;
             var active = offense ? snap.OffensePersonnel : snap.DefensePersonnel;
             if (active.Count == 0) continue;
-            ids.RemoveWhere(id => IsOffense(s.PlayersById[id].Position) == offense && s.PlayersById[id].Position != Position.K);
+            ids.RemoveWhere(id => IsOffense(s.PlayersById[id].Position) == offense && !s.PlayersById[id].Position.IsSpecialist());
             ids.UnionWith(active);
         }
         return ApplySubstitutions(s, new SnapPersonnel { TeamName = team, PlayerIds = ids.ToArray() }).PlayerIds.ToHashSet();
@@ -73,12 +73,12 @@ public static class GameDayCoachingService
 
     public static DynastyPlayer? Specialist(GameDaySession s, string team, DynastyPlayer? fallback)
     {
-        if (s.ManualStarters.TryGetValue((team, Position.K), out var id) && s.PlayersById.TryGetValue(id, out var player)) return player;
+        var role = fallback?.Position.IsSpecialist() == true ? fallback.Position : Position.K;
+        if (s.ManualStarters.TryGetValue((team, role), out var id) && s.PlayersById.TryGetValue(id, out var player)) return player;
         if (s.SecondUnits.Contains(team) && (team != s.ControlledTeamName || s.UserCoachRole == StaffRole.HeadCoach))
         {
             var depth = team == s.Game.HomeTeamName ? s.HomeDepthChart : s.AwayDepthChart;
-            return depth.GetValueOrDefault(Position.K)?.FirstOrDefault(p => p.PlayerId != fallback?.PlayerId &&
-                (p.NcaaPositionCode ?? 19) == (fallback?.NcaaPositionCode ?? 19)) ?? fallback;
+            return depth.GetValueOrDefault(role)?.FirstOrDefault(p => p.PlayerId != fallback?.PlayerId) ?? fallback;
         }
         return fallback;
     }
@@ -178,7 +178,7 @@ public static class GameDayCoachingService
         var quarter = s.IsComplete ? 99 : s.Events.Count == 0 ? 0 : s.Quarter;
         var previous = s.CoachTalks.Where(t => t.TeamName == team).ToArray();
         var roster = s.Roster.Where(p => audience == CoachTalkAudience.Team ||
-            (audience == CoachTalkAudience.Offense ? IsOffense(p.Position) : !IsOffense(p.Position) && p.Position != Position.K)).ToArray();
+            (audience == CoachTalkAudience.Offense ? IsOffense(p.Position) : !IsOffense(p.Position) && !p.Position.IsSpecialist())).ToArray();
         var lead = team == s.Game.HomeTeamName ? s.HomeScore - s.AwayScore : s.AwayScore - s.HomeScore;
         var talk = CreateTalk(roster, team, tone, s.Game.SeasonYear, s.Game.Week, quarter,
             s.Events.Count, lead, previous.Count(t => t.Tone == tone)) with { Audience = audience };

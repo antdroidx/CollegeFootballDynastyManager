@@ -43,8 +43,8 @@ public static class PlayerSkillService
             Leadership = Skill(old.Leadership, "Leadership", null),
             Discipline = Skill(old.Discipline, "Discipline", null),
             Jumping = Skill(old.Jumping, "Jumping", player.Position is Position.WR or Position.CB or Position.FS or Position.SS),
-            KickPower = Skill(old.KickPower, "KickPower", player.Position is Position.K),
-            KickAccuracy = Skill(old.KickAccuracy, "KickAccuracy", player.Position is Position.K),
+            KickPower = Skill(old.KickPower, "KickPower", player.Position.IsSpecialist()),
+            KickAccuracy = Skill(old.KickAccuracy, "KickAccuracy", player.Position.IsSpecialist()),
         } };
     }
 
@@ -87,7 +87,7 @@ public static class PlayerSkillService
                 "RunBlocking" or "PassBlocking" => player.Position is Position.OL or Position.TE,
                 "BreakTackle" or "BallCarrying" => player.Position is Position.RB or Position.FB or Position.QB or Position.TE,
                 "Tackling" => player.Position is Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS,
-                "KickPower" or "KickAccuracy" => player.Position == Position.K,
+                "KickPower" or "KickAccuracy" => player.Position.IsSpecialist(),
                 _ => true
             };
             if (!focused) delta = (int)Math.Round(delta * .35);
@@ -144,14 +144,15 @@ public static class PlayerSkillService
             Position.CB or Position.FS or Position.SS => passing ? player.AwarenessRating * .65 + player.AgilityRating * .35 : s.Tackling,
             Position.OLB or Position.MLB => passing ? s.Tackling * .4 + player.AwarenessRating * .6 : s.Tackling,
             Position.DE or Position.DT => s.Tackling,
-            Position.K => (s.KickPower + s.KickAccuracy) / 2.0,
+            Position.K => s.KickAccuracy * .7 + s.KickPower * .3,
+            Position.P => s.KickPower * .75 + s.KickAccuracy * .25,
             _ => player.OverallRating
         };
         var athletic = player.Position switch
         {
             Position.OL or Position.DT => player.StrengthRating * .8 + player.AgilityRating * .2,
             Position.DE or Position.OLB or Position.MLB => player.StrengthRating * .5 + player.SpeedRating * .3 + player.AgilityRating * .2,
-            Position.K => player.StrengthRating * .5 + player.AwarenessRating * .5,
+            Position.K or Position.P => player.StrengthRating * .5 + player.AwarenessRating * .5,
             _ => player.SpeedRating * .4 + player.AgilityRating * .3 + s.Acceleration * .3
         };
         var support = player.InjuryRating * .6 + s.Leadership * .2 + s.Discipline * .2;

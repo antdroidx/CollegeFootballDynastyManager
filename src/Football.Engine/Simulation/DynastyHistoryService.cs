@@ -280,7 +280,19 @@ public static class DynastyHistoryService
                     ExtraPointsMade = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsMade ?? 0),
                     ExtraPointsAttempted = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.ExtraPointsAttempted ?? 0),
                     FieldGoalsMade = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.FieldGoalsMade ?? 0),
-                    FieldGoalsAttempted = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.FieldGoalsAttempted ?? 0),
+                    FieldGoalsAttempted = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.FieldGoalsAttempted ?? 0)
+                });
+            }
+
+            var punter = players.Where(player => player.Position == Position.P)
+                .OrderBy(player => player.DepthChartOrder).ThenByDescending(player => player.OverallRating).FirstOrDefault();
+            if (punter is not null)
+            {
+                result.Add(new PlayerSeasonStatLine
+                {
+                    SeasonYear = state.SeasonYear, PlayerId = punter.PlayerId,
+                    OriginalRecruitingStars = punter.OriginalRecruitingStars, RecruitingStarsEstimated = punter.RecruitingStarsEstimated, HeightInches = punter.HeightInches, WeightPounds = punter.WeightPounds, Appearance = punter.Appearance, JerseyNumber = punter.JerseyNumber, PlayerName = punter.FullName,
+                    TeamName = punter.TeamName, Position = punter.Position, Games = games.Length,
                     Punts = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.Punts ?? 0),
                     PuntYards = games.Sum(game => GetTeamStats(game, teamGroup.Key)?.PuntYards ?? 0),
                     LongPunt = games.Max(game => GetTeamStats(game, teamGroup.Key)?.LongPunt ?? 0),

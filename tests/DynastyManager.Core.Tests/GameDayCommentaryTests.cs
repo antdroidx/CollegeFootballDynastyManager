@@ -75,7 +75,7 @@ public class GameDayCommentaryTests
         var quarterback = Player("Quinn Quarterback", Position.QB);
         var defender = Player("Drew Defender", Position.MLB);
         var returner = Player("Riley Returner", Position.WR);
-        var kicker = Player("Pat Punter", Position.K);
+        var kicker = Player("Pat Punter", Position.P);
         var players = new[] { quarterback, defender, returner, kicker }.ToDictionary(player => player.PlayerId);
         var scramble = new GameSnapEvent
         {

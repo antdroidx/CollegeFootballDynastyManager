@@ -19,7 +19,7 @@ public sealed class DevelopmentTests
 
     [Theory]
     [InlineData(Position.RB, 28)] [InlineData(Position.CB, 30)] [InlineData(Position.DE, 32)]
-    [InlineData(Position.QB, 35)] [InlineData(Position.OL, 34)] [InlineData(Position.K, 37)]
+    [InlineData(Position.QB, 35)] [InlineData(Position.OL, 34)] [InlineData(Position.K, 37)] [InlineData(Position.P, 37)]
     public void PastPrimeVeteransLoseAbilityAndHeadroomWithoutChangingOverallFormula(Position position, int age)
     {
         var before = Player(position, age);

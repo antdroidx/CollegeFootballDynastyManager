@@ -24,7 +24,7 @@ public static class CoachSuccessionService
 
     public static StaffRole GraduateRole(Position position) => position switch
     {
-        Position.K => StaffRole.SpecialTeamsCoordinator,
+        Position.K or Position.P => StaffRole.SpecialTeamsCoordinator,
         Position.QB or Position.RB or Position.FB or Position.WR or Position.TE or Position.OL => StaffRole.OffensiveCoordinator,
         _ => StaffRole.DefensiveCoordinator
     };

@@ -68,7 +68,7 @@ public class RosterSimulationProfileTests
             Position.CB, Position.CB, Position.CB, Position.CB, Position.CB,
             Position.FS, Position.FS,
             Position.SS, Position.SS,
-            Position.K
+            Position.K, Position.P
         };
 
         return positions.Select((position, index) => new ImportedPlayerRow

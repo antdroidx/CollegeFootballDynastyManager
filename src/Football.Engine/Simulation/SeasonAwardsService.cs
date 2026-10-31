@@ -4,10 +4,10 @@ namespace DynastyManager.Core.Simulation;
 
 public static class SeasonAwardsService
 {
-    // A full starting eleven on each side, plus a kicker. OL is a shared five-man group.
+    // A full starting eleven on each side, plus a kicker and punter. OL is a shared five-man group.
     private static readonly (Position Position, int Count)[] Slots =
     [(Position.QB,1),(Position.RB,2),(Position.WR,2),(Position.TE,1),(Position.OL,5),
-     (Position.DE,2),(Position.DT,2),(Position.OLB,2),(Position.MLB,1),(Position.CB,2),(Position.FS,1),(Position.SS,1),(Position.K,1)];
+     (Position.DE,2),(Position.DT,2),(Position.OLB,2),(Position.MLB,1),(Position.CB,2),(Position.FS,1),(Position.SS,1),(Position.K,1),(Position.P,1)];
 
     public static IReadOnlyList<PlayerAwardRecord> Build(DynastyState state, bool preseason)
     {
@@ -52,7 +52,7 @@ public static class SeasonAwardsService
             }
             // Position-normalized excellence allows exceptional defenders and receivers into the Heisman race.
             var maximum = roster.GroupBy(p => p.Position).ToDictionary(g => g.Key, g => Math.Max(1, g.Max(Score)));
-            Trophy("Heisman Trophy", p => p.Position is not (Position.OL or Position.K), p =>
+            Trophy("Heisman Trophy", p => p.Position is not (Position.OL or Position.K or Position.P), p =>
                 Score(p) / maximum[p.Position] * 100 + Math.Log(1 + Math.Max(0, Score(p))) * 7 + TeamWins(state, p.TeamName) * 1.5);
             Trophy("Maxwell Award", p => p.Position is Position.QB or Position.RB or Position.FB or Position.WR or Position.TE);
             Trophy("Davey O’Brien Award", p => p.Position == Position.QB);
@@ -63,7 +63,7 @@ public static class SeasonAwardsService
             Trophy("Bednarik Award", p => p.Position is Position.DE or Position.DT or Position.OLB or Position.MLB or Position.CB or Position.FS or Position.SS);
             Trophy("Jim Thorpe Award", p => p.Position is Position.CB or Position.FS or Position.SS);
             Trophy("Lou Groza Award", p => p.Position == Position.K, p => stats.TryGetValue(p.PlayerId, out var s) ? s.FieldGoalsMade * 12 - (s.FieldGoalsAttempted - s.FieldGoalsMade) * 8 + s.ExtraPointsMade : 0);
-            Trophy("Ray Guy Award", p => stats.TryGetValue(p.PlayerId, out var s) && s.Punts >= 10, p => stats.TryGetValue(p.PlayerId, out var s) ? s.PuntYards / (double)Math.Max(1,s.Punts) * 10 + s.PuntsInside20 * 2 : 0);
+            Trophy("Ray Guy Award", p => p.Position == Position.P && stats.TryGetValue(p.PlayerId, out var s) && s.Punts >= 10, p => stats.TryGetValue(p.PlayerId, out var s) ? s.PuntYards / (double)Math.Max(1,s.Punts) * 10 + s.PuntsInside20 * 2 : 0);
         }
         return awards;
     }
@@ -75,7 +75,8 @@ public static class SeasonAwardsService
     {
         Position.QB => s.PassYards * .12 + s.PassingTouchdowns * 12 - s.InterceptionsThrown * 10 + s.RushYards * .15 + s.RushingTouchdowns * 12,
         Position.RB or Position.FB or Position.WR or Position.TE => (s.RushYards + s.ReceivingYards) * .3 + (s.RushingTouchdowns + s.ReceivingTouchdowns) * 16 + s.Receptions - (s.RushingFumbles + s.ReceivingFumbles) * 10,
-        Position.K => s.FieldGoalsMade * 12 - (s.FieldGoalsAttempted - s.FieldGoalsMade) * 8 + s.ExtraPointsMade + s.PuntsInside20 * 2,
+        Position.K => s.FieldGoalsMade * 12 - (s.FieldGoalsAttempted - s.FieldGoalsMade) * 8 + s.ExtraPointsMade,
+        Position.P => s.PuntYards / (double)Math.Max(1, s.Punts) * 10 + s.PuntsInside20 * 2 + s.PuntsInside10 * 3,
         Position.OL => s.Games * 12, // Individual blocking stats are not recorded; combine appearances/availability with talent.
         _ => s.Tackles * 2 + s.TacklesForLoss * 7 + s.Sacks * 12 + s.Interceptions * 20 + s.PassesDefended * 5 + s.FumbleRecoveries * 12
     };
@@ -85,7 +86,8 @@ public static class SeasonAwardsService
         Position.QB => $"{s.PassYards:N0} pass yds · {s.PassingTouchdowns} TD · {s.InterceptionsThrown} INT",
         Position.RB or Position.FB or Position.WR or Position.TE => $"{s.RushYards + s.ReceivingYards:N0} yards · {s.RushingTouchdowns + s.ReceivingTouchdowns} TD",
         Position.OL => $"{s.Games} appearances · OVR {p.OverallRating}",
-        Position.K => $"{s.FieldGoalsMade}/{s.FieldGoalsAttempted} FG · {s.Punts} punts",
+        Position.K => $"{s.FieldGoalsMade}/{s.FieldGoalsAttempted} FG · {s.ExtraPointsMade} XP",
+        Position.P => $"{s.Punts} punts · {s.PuntYards / (double)Math.Max(1, s.Punts):F1} avg · {s.PuntsInside20} inside 20",
         _ => $"{s.Tackles} tackles · {s.Sacks} sacks · {s.Interceptions} INT"
     };
 }

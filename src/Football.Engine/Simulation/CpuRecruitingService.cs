@@ -794,7 +794,7 @@ public static class CpuRecruitingService
             Position.WR or Position.TE or
             Position.OL =>
                 StaffRole.OffensiveCoordinator,
-            Position.K =>
+            Position.K or Position.P =>
                 StaffRole.SpecialTeamsCoordinator,
             _ =>
                 StaffRole.DefensiveCoordinator

@@ -129,6 +129,7 @@ public sealed class DetailedSkillsAndNewsTests
     [InlineData(Position.OL)]
     [InlineData(Position.CB)]
     [InlineData(Position.K)]
+    [InlineData(Position.P)]
     public void RelevantSkillsDriveOverallWithoutDependingOnStoredOverall(Position position)
     {
         var player = PlayerRatingService.EnsureInitialized(State(), Player(position));

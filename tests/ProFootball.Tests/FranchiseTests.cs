@@ -44,6 +44,15 @@ public class FranchiseTests
     [Fact] public void SnapshotHasRealIdentitiesStaffAndHonestRatingSources()
     {
         var s=New();Assert.Contains(s.Players,p=>p.Football.FullName=="Patrick Mahomes"&&p.RatingSource.StartsWith("Madden"));
+        Assert.Contains(s.Players,p=>p.Football.FullName=="Jason Myers"&&p.Football.Position==Position.K&&p.Football.NcaaPositionCode==19);
+        Assert.Contains(s.Players,p=>p.Football.FullName=="Michael Dickson"&&p.Football.Position==Position.P&&p.Football.NcaaPositionCode==20);
+        Assert.DoesNotContain(s.Players,p=>p.Football.NcaaPositionCode==20&&p.Football.Position!=Position.P);
+        Assert.DoesNotContain(s.Players,p=>p.Football.NcaaPositionCode==19&&p.Football.Position!=Position.K);
+        var snapshot=ProLeagueService.Snapshot();
+        Assert.All(s.League.Teams,t=>{
+            Assert.Contains(snapshot.Players,p=>p.Football.TeamName==t.Name&&p.Football.NcaaPositionCode==19);
+            Assert.Contains(snapshot.Players,p=>p.Football.TeamName==t.Name&&p.Football.NcaaPositionCode==20);
+        });
         Assert.All(s.League.Teams,t=>{Assert.InRange(t.Abbreviation.Length,2,4);Assert.Equal(4,s.Coaches.Count(c=>c.TeamId==t.Id));Assert.Equal(ProFinance.Limit(s,t.Name)-ProEconomy.Used(s,t.Name),ProEconomy.Room(s,t.Name));});
         Assert.Contains(s.Coaches,c=>c.TeamId=="SEA"&&c.Name=="Mike Macdonald");Assert.NotEmpty(s.CoachCandidates);
         Assert.All(s.Players,p=>Assert.InRange(p.Football.OverallRating,1,99));
