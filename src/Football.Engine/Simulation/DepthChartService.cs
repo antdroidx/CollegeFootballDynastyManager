@@ -12,7 +12,7 @@ public static class DepthChartService
         0 => Position.QB, 1 => Position.RB, 2 => Position.FB, 3 => Position.WR, 4 => Position.TE,
         >= 5 and <= 9 => Position.OL, 10 or 11 => Position.DE, 12 => Position.DT,
         13 or 15 => Position.OLB, 14 => Position.MLB, 16 => Position.CB, 17 => Position.FS,
-        18 => Position.SS, 19 or 20 => Position.K, _ => throw new ArgumentOutOfRangeException(nameof(code))
+        18 => Position.SS, 19 => Position.K, 20 => Position.P, _ => throw new ArgumentOutOfRangeException(nameof(code))
     };
 
     public static int PositionalRating(DynastyPlayer player, int code)

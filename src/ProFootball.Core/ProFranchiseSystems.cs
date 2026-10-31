@@ -4,7 +4,7 @@ namespace ProFootball.Core;
 public static class ProTrade
 {
     public static bool Available(ProFranchise s, ProDraftPick p) => !p.AllocationPending && (p.Year > s.Year || p.Year == s.Year && !s.DraftHistory.Any(h => h.Year == p.Year && h.Round == p.Round && h.Slot == p.Slot));
-    public static double PositionWeight(Position p) => p switch { Position.QB => 1.8, Position.DE => 1.45, Position.CB => 1.35, Position.OL => 1.2, Position.WR or Position.DT => 1.1, Position.RB => .85, Position.K => .35, _ => 1 };
+    public static double PositionWeight(Position p) => p switch { Position.QB => 1.8, Position.DE => 1.45, Position.CB => 1.35, Position.OL => 1.2, Position.WR or Position.DT => 1.1, Position.RB => .85, Position.K or Position.P => .35, _ => 1 };
     public static double PlayerValue(ProPlayer p) => Math.Pow(Math.Max(0, p.Football.OverallRating - 55), 2) * .65
         * Math.Clamp((36 - p.Age) / 10d, .25, 1.5) * PositionWeight(p.Football.Position)
         * (1 + ProDevelopment.Headroom(p) / 100d);
@@ -148,7 +148,7 @@ public static class ProDraft
 
 public static class ProCpu
 {
-    public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.FB => s.GamePlans.LastOrDefault(p=>p.TeamName==team)?.Offense is OffensivePlaybook.PowerRun or OffensivePlaybook.Flexbone ? 1 : 0, Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
+    public static int Need(ProFranchise s, string team, Position position) => Math.Max(0, (position switch { Position.FB => s.GamePlans.LastOrDefault(p=>p.TeamName==team)?.Offense is OffensivePlaybook.PowerRun or OffensivePlaybook.Flexbone ? 1 : 0, Position.QB => 2, Position.OL => 8, Position.WR => 5, Position.CB => 4, Position.RB => 3, Position.K => 2, Position.P => 1, _ => 2 }) - s.Players.Count(p => p.Football.TeamName == team && !p.PracticeSquad && !p.Reserve && !p.Retired && p.Football.Position == position));
     public static ProFranchise MakeRoom(ProFranchise s, string team, long room,bool reserveRosterSlot=true,Func<ProPlayer,bool>? eligible=null)
     {
         s=ProCpuBudget.Relieve(s,team,room,eligible);

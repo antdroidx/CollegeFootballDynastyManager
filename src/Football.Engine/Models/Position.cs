@@ -16,5 +16,6 @@ public enum Position
     SS,
     K,
     // Append to preserve numeric positions in existing saves.
-    FB
+    FB,
+    P
 }

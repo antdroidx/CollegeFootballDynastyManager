@@ -235,8 +235,13 @@ public sealed partial class FranchisePage : ContentPage
             foreach (var group in players.GroupBy(p => p.Reserve ? "Reserve" : "Active roster"))
             {
                 list.Add(Text(group.Key + " · " + group.Count(), 20, true));
-                // Group by position within each roster section.
-                foreach (var pg in group.OrderBy(x => x.Football.Position.RosterOrder()).GroupBy(p => p.Football.Position))
+                // Active roster reads as position cards; reserve reads as one flat table with a Pos column.
+                if(group.Key=="Reserve")
+                {
+                    var table=Table(new[]{("Pos",50),("Player",205),("Age",45),("OVR",50),("Delta",50),("Growth",90),("Morale",65),("Cap hit",90)},group.OrderBy(x=>x.Football.Position.RosterOrder()).ThenByDescending(x=>x.Football.OverallRating).Select(p=>new View[]{PosPill(p.Football.Position),PlayerCell(p),Text(p.Age.ToString()),Text(p.Football.OverallRating.ToString(),15,true),RatingDelta(p),Text(ProDevelopment.Growth(p)),Text(p.Morale.ToString()),Text(Money(s.Contracts.Where(cc=>cc.PlayerId==p.Football.PlayerId).Sum(cc=>ProEconomy.CapHit(cc,s.Year))),12)}));
+                    list.Add(SectionCard("", null, table));
+                }
+                else foreach (var pg in group.OrderBy(x => x.Football.Position.RosterOrder()).GroupBy(p => p.Football.Position))
                 {
                     var header=new HorizontalStackLayout{Spacing=8,Children={PosPill(pg.Key),Text(PositionGroupTitle(pg.Key),16,true),new Label{Text=$"· {pg.Count()}",FontSize=13,TextColor=DynastyTheme.Muted}}};
                     var innerTable=Table(new[]{("Player",215),("Age",45),("OVR",50),("Delta",50),("Growth",90),("Morale",65),("Cap hit",90)},pg.OrderBy(x=>x.Football.DepthChartOrder).ThenByDescending(x=>x.Football.OverallRating).Select(p=>{

@@ -24,7 +24,7 @@ public sealed partial class FranchisePage
         return b;
     }
 
-    static string PositionGroupTitle(Position p) => p switch { Position.QB=>"Quarterbacks",Position.RB=>"Running backs",Position.FB=>"Fullbacks",Position.WR=>"Wide receivers",Position.TE=>"Tight ends",Position.OL=>"Offensive line",Position.DT=>"Defensive tackles",Position.DE=>"Defensive ends",Position.OLB=>"Outside linebackers",Position.MLB=>"Middle linebackers",Position.CB=>"Cornerbacks",Position.FS=>"Free safeties",Position.SS=>"Strong safeties",Position.K=>"Kickers",_=>p.DisplayName() };
+    static string PositionGroupTitle(Position p) => p switch { Position.QB=>"Quarterbacks",Position.RB=>"Running backs",Position.FB=>"Fullbacks",Position.WR=>"Wide receivers",Position.TE=>"Tight ends",Position.OL=>"Offensive line",Position.DT=>"Defensive tackles",Position.DE=>"Defensive ends",Position.OLB=>"Outside linebackers",Position.MLB=>"Middle linebackers",Position.CB=>"Cornerbacks",Position.FS=>"Free safeties",Position.SS=>"Strong safeties",Position.K=>"Kickers",Position.P=>"Punters",_=>p.DisplayName() };
     // Rounded colored position chip.
     static View PosPill(Position position)
     {
@@ -39,7 +39,7 @@ public sealed partial class FranchisePage
             Position.OLB or Position.MLB => (Color.FromArgb("#D4A017"), Color.FromArgb("#172B40")),
             Position.CB => (Color.FromArgb("#2980B9"), Colors.White),
             Position.FS or Position.SS => (Color.FromArgb("#7F8C8D"), Colors.White),
-            Position.K => (Color.FromArgb("#34495E"), Colors.White),
+            Position.K => (Color.FromArgb("#34495E"), Colors.White), Position.P => (Color.FromArgb("#5D6D7E"), Colors.White),
             _ => (DynastyTheme.Panel, DynastyTheme.Text)
         };
         return new Border { BackgroundColor = bg, StrokeShape = new RoundRectangle { CornerRadius = 8 }, Padding = new Thickness(8, 2), Content = new Label { Text = position.DisplayName(), TextColor = fg, FontSize = 11, FontAttributes = FontAttributes.Bold, HorizontalTextAlignment = TextAlignment.Center } };
@@ -64,7 +64,7 @@ public sealed partial class FranchisePage
         bar.Add(new Label { Text = value.ToString(), TextColor = DynastyTheme.Text, FontSize = 12, FontAttributes = FontAttributes.Bold, VerticalTextAlignment = TextAlignment.Center }, 1, 0);
         var track = new BoxView { Color = DynastyTheme.Panel, CornerRadius = 4, HeightRequest = 8, VerticalOptions = LayoutOptions.Center };
         var fill = new BoxView { Color = color ?? DynastyTheme.Accent, CornerRadius = 4, HeightRequest = 8, VerticalOptions = LayoutOptions.Center, HorizontalOptions = LayoutOptions.Start };
-        var meter = new Grid { HeightRequest = 8, Margin = new Thickness(0, 2, 0, 0) };
+        var meter = new Grid { HeightRequest = 8, Margin = new Thickness(0, 2, 0, 0), ColumnDefinitions = { new(GridLength.Star) } };
         meter.Add(track); meter.Add(fill);
         meter.SizeChanged += (_, _) => fill.WidthRequest = Math.Max(0, meter.Width * pct);
         return new VerticalStackLayout { Spacing = 2, Children = { bar, meter } };
