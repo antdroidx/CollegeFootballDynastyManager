@@ -335,3 +335,5 @@ dotnet test requires escalated sandbox access in this environment for testhost I
 Added ProPlayerRatingService.Migrate to the Pro save-load chain so legacy saves with RatingSystemVersion=0 migrate to v1 and re-derive OverallRating from the shared rating system (SharedRatingsTests.OldSaveAdoptsSharedRatingsWithoutReplacingContracts now passes). Chain order: Pron.Migrate -> ProScouting.Migrate -> ProCareer -> ProEconomy -> ProContractData -> ProMorale -> ProReserve -> ProPracticeRetirement.
 
 Scoped verification: 27/27 passed across SharedRatingsTests + ScoutingDepthTests + FranchiseDepthAnalyticsTests + ManagementRefinementTests (~10 s). Pro app MSBuild net10.0-android: 0 errors.
+
+Accepted CI run 41150835916 on codex/pro-scouting-depth (commit 5fd00c9): pro-build passed 5m33s; artifact pro-football-apk-118 (id 13023655512, ~103.7 MB). Local focused run before push: 27/27 passed (SharedRatingsTests + ScoutingDepthTests + FranchiseDepthAnalyticsTests + ManagementRefinementTests, ~10 s); MSBuild Pro app (net10.0-android) 0 errors.
